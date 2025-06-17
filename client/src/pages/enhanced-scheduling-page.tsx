@@ -219,6 +219,8 @@ type CalendarView = 'next7days' | 'month' | 'daily';
 export default function EnhancedSchedulingPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
+  const [isShiftDetailsOpen, setIsShiftDetailsOpen] = useState(false);
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [shifts, setShifts] = useState<Shift[]>(mockShifts);
   const [selectedDate, setSelectedDate] = useState(new Date());

@@ -1,438 +1,425 @@
 import { useState } from "react";
-import { Settings, User, Shield, Bell, Globe, Key, Users, Building, Eye } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { SidebarNav } from "@/components/ui/sidebar-nav";
-import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { Settings, Building2, User, Shield, Bell, Moon, Globe, Save } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { UserRole } from "@shared/schema";
-import { Link } from "wouter";
+import { hasPermission } from "@/lib/permissions";
+import { useToast } from "@/hooks/use-toast";
+
+type AppView = 'facility' | 'clinician';
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("profile");
-
-  const [profileSettings, setProfileSettings] = useState({
-    firstName: user?.firstName || "",
-    lastName: user?.lastName || "",
-    email: user?.email || "",
-    phone: "",
-    timezone: "America/New_York",
-    language: "en"
-  });
-
-  const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    smsNotifications: false,
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [appView, setAppView] = useState<AppView>('facility');
+  const [notifications, setNotifications] = useState({
+    emailAlerts: true,
+    smsAlerts: false,
     pushNotifications: true,
+    scheduleChanges: true,
     shiftReminders: true,
-    invoiceAlerts: true,
-    complianceAlerts: true
+    systemUpdates: false
+  });
+  const [preferences, setPreferences] = useState({
+    darkMode: false,
+    language: 'en',
+    timezone: 'America/New_York',
+    defaultCalendarView: 'next7days',
+    autoRefresh: true,
+    soundAlerts: true
   });
 
-  const [securitySettings, setSecuritySettings] = useState({
-    twoFactorEnabled: false,
-    sessionTimeout: "8",
-    passwordExpiry: "90",
-    loginAlerts: true
-  });
+  if (!user) return null;
 
-  const handleSaveProfile = () => {
+  const isSuperUser = user.role === UserRole.SUPER_ADMIN || user.role === UserRole.FACILITY_MANAGER;
+
+  const handleSaveSettings = () => {
     toast({
-      title: "Profile updated",
-      description: "Your profile information has been saved successfully."
+      title: "Settings Saved",
+      description: "Your preferences have been updated successfully.",
     });
   };
 
-  const handleSaveNotifications = () => {
+  const switchAppView = (newView: AppView) => {
+    setAppView(newView);
     toast({
-      title: "Notification preferences updated",
-      description: "Your notification settings have been saved."
-    });
-  };
-
-  const handleSaveSecurity = () => {
-    toast({
-      title: "Security settings updated",
-      description: "Your security preferences have been saved."
+      title: `Switched to ${newView.charAt(0).toUpperCase() + newView.slice(1)} View`,
+      description: `You are now viewing the application from a ${newView} perspective.`,
     });
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav user={user!} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
+    <div className="flex h-screen bg-gray-50">
+      <SidebarNav 
+        user={user} 
+        expanded={sidebarExpanded}
+        onToggle={() => setSidebarExpanded(!sidebarExpanded)}
+      />
+
+      <main className="flex-1 overflow-x-hidden overflow-y-auto">
+        <header className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Settings</h1>
-              <p className="text-gray-600 dark:text-gray-300">Manage your account and platform preferences</p>
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
+                <Settings className="w-6 h-6" />
+                <span>Settings</span>
+              </h2>
+              <p className="text-sm text-gray-500">
+                Manage your account preferences and application settings
+              </p>
             </div>
-            {user?.role === UserRole.SUPER_ADMIN && (
-              <Link href="/admin/impersonation">
-                <Button>
-                  <Eye className="w-4 h-4 mr-2" />
-                  User Impersonation
-                </Button>
-              </Link>
-            )}
+            
+            <Button onClick={handleSaveSettings}>
+              <Save className="w-4 h-4 mr-2" />
+              Save Changes
+            </Button>
           </div>
+        </header>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="profile" className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                Profile
-              </TabsTrigger>
-              <TabsTrigger value="notifications" className="flex items-center gap-2">
-                <Bell className="w-4 h-4" />
-                Notifications
-              </TabsTrigger>
-              <TabsTrigger value="security" className="flex items-center gap-2">
-                <Shield className="w-4 h-4" />
-                Security
-              </TabsTrigger>
-              {user?.role === UserRole.SUPER_ADMIN && (
-                <TabsTrigger value="admin" className="flex items-center gap-2">
-                  <Settings className="w-4 h-4" />
-                  Admin
-                </TabsTrigger>
-              )}
-            </TabsList>
+        <div className="p-6 space-y-6">
+          {/* Super User App View Switcher */}
+          {isSuperUser && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2">
+                  <Shield className="w-5 h-5" />
+                  <span>Super User Controls</span>
+                </CardTitle>
+                <CardDescription>
+                  Switch between facility and clinician app views to experience different user perspectives
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium">Application View</Label>
+                    <div className="mt-2 grid grid-cols-2 gap-4">
+                      <Card 
+                        className={cn(
+                          "cursor-pointer transition-all border-2",
+                          appView === 'facility' 
+                            ? "border-blue-500 bg-blue-50" 
+                            : "border-gray-200 hover:border-gray-300"
+                        )}
+                        onClick={() => switchAppView('facility')}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-3">
+                            <Building2 className={cn(
+                              "w-6 h-6",
+                              appView === 'facility' ? "text-blue-600" : "text-gray-500"
+                            )} />
+                            <div>
+                              <h3 className="font-medium">Facility View</h3>
+                              <p className="text-sm text-gray-600">
+                                Manage schedules, staff, and operations
+                              </p>
+                            </div>
+                          </div>
+                          {appView === 'facility' && (
+                            <Badge className="mt-2 bg-blue-100 text-blue-800">
+                              Currently Active
+                            </Badge>
+                          )}
+                        </CardContent>
+                      </Card>
 
-            <TabsContent value="profile" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Profile Information</CardTitle>
-                  <CardDescription>
-                    Update your personal information and preferences
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="flex items-center space-x-4">
-                    <Avatar className="w-20 h-20">
-                      <AvatarImage src={undefined} />
-                      <AvatarFallback className="text-lg">
-                        {user?.firstName?.[0]}{user?.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <Button variant="outline">Change Photo</Button>
-                      <p className="text-sm text-gray-500 mt-1">
-                        JPG, GIF or PNG. 1MB max.
-                      </p>
+                      <Card 
+                        className={cn(
+                          "cursor-pointer transition-all border-2",
+                          appView === 'clinician' 
+                            ? "border-green-500 bg-green-50" 
+                            : "border-gray-200 hover:border-gray-300"
+                        )}
+                        onClick={() => switchAppView('clinician')}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex items-center space-x-3">
+                            <User className={cn(
+                              "w-6 h-6",
+                              appView === 'clinician' ? "text-green-600" : "text-gray-500"
+                            )} />
+                            <div>
+                              <h3 className="font-medium">Clinician View</h3>
+                              <p className="text-sm text-gray-600">
+                                View shifts, apply for jobs, track time
+                              </p>
+                            </div>
+                          </div>
+                          {appView === 'clinician' && (
+                            <Badge className="mt-2 bg-green-100 text-green-800">
+                              Currently Active
+                            </Badge>
+                          )}
+                        </CardContent>
+                      </Card>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      <Input
-                        id="firstName"
-                        value={profileSettings.firstName}
-                        onChange={(e) => setProfileSettings(prev => ({ ...prev, firstName: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      <Input
-                        id="lastName"
-                        value={profileSettings.lastName}
-                        onChange={(e) => setProfileSettings(prev => ({ ...prev, lastName: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={profileSettings.email}
-                      onChange={(e) => setProfileSettings(prev => ({ ...prev, email: e.target.value }))}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={profileSettings.phone}
-                      onChange={(e) => setProfileSettings(prev => ({ ...prev, phone: e.target.value }))}
-                      placeholder="(555) 123-4567"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="timezone">Timezone</Label>
-                      <Select value={profileSettings.timezone} onValueChange={(value) => setProfileSettings(prev => ({ ...prev, timezone: value }))}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="America/New_York">Eastern Time</SelectItem>
-                          <SelectItem value="America/Chicago">Central Time</SelectItem>
-                          <SelectItem value="America/Denver">Mountain Time</SelectItem>
-                          <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="language">Language</Label>
-                      <Select value={profileSettings.language} onValueChange={(value) => setProfileSettings(prev => ({ ...prev, language: value }))}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="es">Spanish</SelectItem>
-                          <SelectItem value="fr">French</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <Button onClick={handleSaveProfile}>Save Changes</Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="notifications" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Notification Preferences</CardTitle>
-                  <CardDescription>
-                    Choose how you want to receive notifications
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                    <div className="flex items-start space-x-2">
+                      <Shield className="w-5 h-5 text-amber-600 mt-0.5" />
                       <div>
-                        <Label>Email Notifications</Label>
-                        <p className="text-sm text-gray-500">Receive notifications via email</p>
-                      </div>
-                      <Switch
-                        checked={notificationSettings.emailNotifications}
-                        onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, emailNotifications: checked }))}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>SMS Notifications</Label>
-                        <p className="text-sm text-gray-500">Receive urgent notifications via SMS</p>
-                      </div>
-                      <Switch
-                        checked={notificationSettings.smsNotifications}
-                        onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, smsNotifications: checked }))}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>Push Notifications</Label>
-                        <p className="text-sm text-gray-500">Receive browser push notifications</p>
-                      </div>
-                      <Switch
-                        checked={notificationSettings.pushNotifications}
-                        onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, pushNotifications: checked }))}
-                      />
-                    </div>
-
-                    <hr />
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>Shift Reminders</Label>
-                        <p className="text-sm text-gray-500">Get reminders about upcoming shifts</p>
-                      </div>
-                      <Switch
-                        checked={notificationSettings.shiftReminders}
-                        onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, shiftReminders: checked }))}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>Invoice Alerts</Label>
-                        <p className="text-sm text-gray-500">Notifications about invoice status changes</p>
-                      </div>
-                      <Switch
-                        checked={notificationSettings.invoiceAlerts}
-                        onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, invoiceAlerts: checked }))}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>Compliance Alerts</Label>
-                        <p className="text-sm text-gray-500">Alerts about expiring credentials and compliance issues</p>
-                      </div>
-                      <Switch
-                        checked={notificationSettings.complianceAlerts}
-                        onCheckedChange={(checked) => setNotificationSettings(prev => ({ ...prev, complianceAlerts: checked }))}
-                      />
-                    </div>
-                  </div>
-
-                  <Button onClick={handleSaveNotifications}>Save Preferences</Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="security" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Security Settings</CardTitle>
-                  <CardDescription>
-                    Manage your account security and access controls
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>Two-Factor Authentication</Label>
-                        <p className="text-sm text-gray-500">Add an extra layer of security to your account</p>
-                      </div>
-                      <Switch
-                        checked={securitySettings.twoFactorEnabled}
-                        onCheckedChange={(checked) => setSecuritySettings(prev => ({ ...prev, twoFactorEnabled: checked }))}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <Label>Login Alerts</Label>
-                        <p className="text-sm text-gray-500">Get notified of new login attempts</p>
-                      </div>
-                      <Switch
-                        checked={securitySettings.loginAlerts}
-                        onCheckedChange={(checked) => setSecuritySettings(prev => ({ ...prev, loginAlerts: checked }))}
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label>Session Timeout (hours)</Label>
-                        <Select value={securitySettings.sessionTimeout} onValueChange={(value) => setSecuritySettings(prev => ({ ...prev, sessionTimeout: value }))}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="1">1 hour</SelectItem>
-                            <SelectItem value="4">4 hours</SelectItem>
-                            <SelectItem value="8">8 hours</SelectItem>
-                            <SelectItem value="24">24 hours</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Password Expiry (days)</Label>
-                        <Select value={securitySettings.passwordExpiry} onValueChange={(value) => setSecuritySettings(prev => ({ ...prev, passwordExpiry: value }))}>
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="30">30 days</SelectItem>
-                            <SelectItem value="60">60 days</SelectItem>
-                            <SelectItem value="90">90 days</SelectItem>
-                            <SelectItem value="never">Never</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <h4 className="font-medium text-amber-800">Super User Access</h4>
+                        <p className="text-sm text-amber-700">
+                          As a super user, you can switch between views to understand how different user types 
+                          experience the platform. This helps with training, troubleshooting, and system optimization.
+                        </p>
                       </div>
                     </div>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
-                  <div className="space-y-3">
-                    <Button variant="outline" className="w-full">
-                      <Key className="w-4 h-4 mr-2" />
-                      Change Password
-                    </Button>
-                    <Button variant="outline" className="w-full">
-                      <Globe className="w-4 h-4 mr-2" />
-                      View Active Sessions
-                    </Button>
+          {/* Account Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Account Information</CardTitle>
+              <CardDescription>Your basic account details and profile information</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input id="firstName" value={user.firstName} readOnly className="bg-gray-50" />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input id="lastName" value={user.lastName} readOnly className="bg-gray-50" />
+                </div>
+                <div>
+                  <Label htmlFor="email">Email Address</Label>
+                  <Input id="email" value={user.email} readOnly className="bg-gray-50" />
+                </div>
+                <div>
+                  <Label htmlFor="role">User Role</Label>
+                  <Input id="role" value={user.role} readOnly className="bg-gray-50" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notification Preferences */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Bell className="w-5 h-5" />
+                <span>Notification Preferences</span>
+              </CardTitle>
+              <CardDescription>Choose how you want to receive alerts and updates</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="emailAlerts">Email Alerts</Label>
+                    <p className="text-sm text-gray-500">Receive notifications via email</p>
+                  </div>
+                  <Switch
+                    id="emailAlerts"
+                    checked={notifications.emailAlerts}
+                    onCheckedChange={(checked) => 
+                      setNotifications(prev => ({ ...prev, emailAlerts: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="smsAlerts">SMS Alerts</Label>
+                    <p className="text-sm text-gray-500">Get urgent notifications via text message</p>
+                  </div>
+                  <Switch
+                    id="smsAlerts"
+                    checked={notifications.smsAlerts}
+                    onCheckedChange={(checked) => 
+                      setNotifications(prev => ({ ...prev, smsAlerts: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="pushNotifications">Push Notifications</Label>
+                    <p className="text-sm text-gray-500">Browser notifications for real-time updates</p>
+                  </div>
+                  <Switch
+                    id="pushNotifications"
+                    checked={notifications.pushNotifications}
+                    onCheckedChange={(checked) => 
+                      setNotifications(prev => ({ ...prev, pushNotifications: checked }))
+                    }
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="scheduleChanges">Schedule Changes</Label>
+                    <p className="text-sm text-gray-500">Alerts when shifts are modified or cancelled</p>
+                  </div>
+                  <Switch
+                    id="scheduleChanges"
+                    checked={notifications.scheduleChanges}
+                    onCheckedChange={(checked) => 
+                      setNotifications(prev => ({ ...prev, scheduleChanges: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="shiftReminders">Shift Reminders</Label>
+                    <p className="text-sm text-gray-500">Reminders before upcoming shifts</p>
+                  </div>
+                  <Switch
+                    id="shiftReminders"
+                    checked={notifications.shiftReminders}
+                    onCheckedChange={(checked) => 
+                      setNotifications(prev => ({ ...prev, shiftReminders: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="systemUpdates">System Updates</Label>
+                    <p className="text-sm text-gray-500">Information about platform updates and maintenance</p>
+                  </div>
+                  <Switch
+                    id="systemUpdates"
+                    checked={notifications.systemUpdates}
+                    onCheckedChange={(checked) => 
+                      setNotifications(prev => ({ ...prev, systemUpdates: checked }))
+                    }
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Application Preferences */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Globe className="w-5 h-5" />
+                <span>Application Preferences</span>
+              </CardTitle>
+              <CardDescription>Customize your application experience</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="darkMode">Dark Mode</Label>
+                    <p className="text-sm text-gray-500">Use dark theme for the interface</p>
+                  </div>
+                  <Switch
+                    id="darkMode"
+                    checked={preferences.darkMode}
+                    onCheckedChange={(checked) => 
+                      setPreferences(prev => ({ ...prev, darkMode: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="language">Language</Label>
+                    <Select value={preferences.language} onValueChange={(value) => 
+                      setPreferences(prev => ({ ...prev, language: value }))
+                    }>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="en">English</SelectItem>
+                        <SelectItem value="es">Spanish</SelectItem>
+                        <SelectItem value="fr">French</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  <Button onClick={handleSaveSecurity}>Save Security Settings</Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  <div>
+                    <Label htmlFor="timezone">Timezone</Label>
+                    <Select value={preferences.timezone} onValueChange={(value) => 
+                      setPreferences(prev => ({ ...prev, timezone: value }))
+                    }>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="America/New_York">Eastern Time</SelectItem>
+                        <SelectItem value="America/Chicago">Central Time</SelectItem>
+                        <SelectItem value="America/Denver">Mountain Time</SelectItem>
+                        <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-            {user?.role === UserRole.SUPER_ADMIN && (
-              <TabsContent value="admin" className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Super Admin Controls</CardTitle>
-                    <CardDescription>
-                      Advanced administration and system management
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <Link href="/admin/impersonation">
-                        <Button variant="outline" className="w-full h-20 flex-col">
-                          <Eye className="w-6 h-6 mb-2" />
-                          User Impersonation
-                        </Button>
-                      </Link>
-                      <Button variant="outline" className="w-full h-20 flex-col">
-                        <Users className="w-6 h-6 mb-2" />
-                        User Management
-                      </Button>
-                      <Button variant="outline" className="w-full h-20 flex-col">
-                        <Building className="w-6 h-6 mb-2" />
-                        Facility Management
-                      </Button>
-                      <Button variant="outline" className="w-full h-20 flex-col">
-                        <Settings className="w-6 h-6 mb-2" />
-                        System Settings
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                  <div>
+                    <Label htmlFor="defaultCalendarView">Default Calendar View</Label>
+                    <Select value={preferences.defaultCalendarView} onValueChange={(value) => 
+                      setPreferences(prev => ({ ...prev, defaultCalendarView: value }))
+                    }>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="next7days">Next 7 Days</SelectItem>
+                        <SelectItem value="month">Month View</SelectItem>
+                        <SelectItem value="daily">Daily Breakdown</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
-                <Card>
-                  <CardHeader>
-                    <CardTitle>System Information</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="font-medium">Platform Version</p>
-                        <p className="text-gray-600">v2.1.0</p>
-                      </div>
-                      <div>
-                        <p className="font-medium">Database Status</p>
-                        <p className="text-green-600">Connected</p>
-                      </div>
-                      <div>
-                        <p className="font-medium">Active Users</p>
-                        <p className="text-gray-600">1,247</p>
-                      </div>
-                      <div>
-                        <p className="font-medium">System Uptime</p>
-                        <p className="text-gray-600">99.9%</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            )}
-          </Tabs>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="autoRefresh">Auto Refresh</Label>
+                    <p className="text-sm text-gray-500">Automatically refresh data every 30 seconds</p>
+                  </div>
+                  <Switch
+                    id="autoRefresh"
+                    checked={preferences.autoRefresh}
+                    onCheckedChange={(checked) => 
+                      setPreferences(prev => ({ ...prev, autoRefresh: checked }))
+                    }
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="soundAlerts">Sound Alerts</Label>
+                    <p className="text-sm text-gray-500">Play sounds for important notifications</p>
+                  </div>
+                  <Switch
+                    id="soundAlerts"
+                    checked={preferences.soundAlerts}
+                    onCheckedChange={(checked) => 
+                      setPreferences(prev => ({ ...prev, soundAlerts: checked }))
+                    }
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
