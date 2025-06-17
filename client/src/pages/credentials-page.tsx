@@ -55,7 +55,7 @@ export default function CredentialsPage() {
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav />
+      <SidebarNav user={user!} />
       <div className="flex-1 overflow-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
@@ -138,7 +138,7 @@ export default function CredentialsPage() {
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Verified</p>
                     <p className="text-2xl font-bold text-green-600">
-                      {credentials.filter((c: any) => c.status === 'verified').length}
+                      {(credentials as any[]).filter((c: any) => c.status === 'verified').length}
                     </p>
                   </div>
                   <CheckCircle className="w-8 h-8 text-green-600" />
@@ -151,7 +151,7 @@ export default function CredentialsPage() {
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Pending</p>
                     <p className="text-2xl font-bold text-yellow-600">
-                      {credentials.filter((c: any) => c.status === 'pending').length}
+                      {(credentials as any[]).filter((c: any) => c.status === 'pending').length}
                     </p>
                   </div>
                   <Clock className="w-8 h-8 text-yellow-600" />
@@ -164,7 +164,7 @@ export default function CredentialsPage() {
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Expired</p>
                     <p className="text-2xl font-bold text-red-600">
-                      {credentials.filter((c: any) => c.status === 'expired').length}
+                      {(credentials as any[]).filter((c: any) => c.status === 'expired').length}
                     </p>
                   </div>
                   <XCircle className="w-8 h-8 text-red-600" />

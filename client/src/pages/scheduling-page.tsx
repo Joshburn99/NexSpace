@@ -21,7 +21,7 @@ export default function SchedulingPage() {
     enabled: !!user,
   });
 
-  const todayShifts = shifts.filter((shift: any) => {
+  const todayShifts = (shifts as any[]).filter((shift: any) => {
     const shiftDate = new Date(shift.startTime);
     return shiftDate.toDateString() === selectedDate.toDateString();
   });
@@ -141,7 +141,7 @@ export default function SchedulingPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {openShifts.map((shift: any) => (
+                {(openShifts as any[]).map((shift: any) => (
                   <div key={shift.id} className="p-4 border rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="font-medium">{shift.position}</h3>

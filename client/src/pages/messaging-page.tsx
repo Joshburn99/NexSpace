@@ -18,7 +18,7 @@ export default function MessagingPage() {
     enabled: !!user,
   });
 
-  const conversations = messages.reduce((acc: any, message: any) => {
+  const conversations = (messages as any[]).reduce((acc: any, message: any) => {
     const conversationId = message.conversationId;
     if (!acc[conversationId]) {
       acc[conversationId] = {

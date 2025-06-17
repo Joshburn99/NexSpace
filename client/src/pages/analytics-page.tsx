@@ -47,7 +47,7 @@ export default function AnalyticsPage() {
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav />
+      <SidebarNav user={user!} />
       <div className="flex-1 overflow-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
@@ -65,7 +65,7 @@ export default function AnalyticsPage() {
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{dashboardStats?.activeStaff || 0}</div>
+                <div className="text-2xl font-bold">{(dashboardStats as any)?.activeStaff || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   <span className="text-green-600 flex items-center">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -81,7 +81,7 @@ export default function AnalyticsPage() {
                 <Clock className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{dashboardStats?.openShifts || 0}</div>
+                <div className="text-2xl font-bold">{(dashboardStats as any)?.openShifts || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   <span className="text-red-600 flex items-center">
                     <TrendingDown className="w-3 h-3 mr-1" />
@@ -97,7 +97,7 @@ export default function AnalyticsPage() {
                 <AlertTriangle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{dashboardStats?.complianceRate || 0}%</div>
+                <div className="text-2xl font-bold">{(dashboardStats as any)?.complianceRate || 0}%</div>
                 <p className="text-xs text-muted-foreground">
                   <span className="text-green-600 flex items-center">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -113,7 +113,7 @@ export default function AnalyticsPage() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{dashboardStats?.monthlyHours || 0}</div>
+                <div className="text-2xl font-bold">{(dashboardStats as any)?.monthlyHours || 0}</div>
                 <p className="text-xs text-muted-foreground">
                   <span className="text-green-600 flex items-center">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -221,10 +221,10 @@ export default function AnalyticsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {recentActivity.length === 0 ? (
+                  {(recentActivity as any[]).length === 0 ? (
                     <p className="text-sm text-gray-500">No recent activity</p>
                   ) : (
-                    recentActivity.slice(0, 10).map((activity: any) => (
+                    (recentActivity as any[]).slice(0, 10).map((activity: any) => (
                       <div key={activity.id} className="flex items-start gap-3 text-sm">
                         <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
                         <div className="flex-1">
