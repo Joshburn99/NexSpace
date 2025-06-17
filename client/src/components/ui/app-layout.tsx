@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import nexspaceLogo from "@assets/ChatGPT Image Jun 17, 2025, 01_56_58 PM_1750200821645.png";
 import { 
   Activity, 
   Calendar, 
@@ -61,9 +62,16 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
     <div className="flex h-screen bg-gray-50">
       {/* Left Navigation Sidebar */}
       <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="p-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">Nexspace</h1>
-          <p className="text-sm text-gray-500 mt-1">Healthcare Staffing</p>
+        <div className="flex items-center p-6 border-b border-gray-200">
+          <img 
+            src={nexspaceLogo} 
+            alt="NexSpace Logo" 
+            className="h-10 w-auto mr-3"
+          />
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">NexSpace</h1>
+            <p className="text-sm text-gray-500">Healthcare Staffing</p>
+          </div>
         </div>
         
         <nav className="flex-1 mt-6 px-3 overflow-y-auto">

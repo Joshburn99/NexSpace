@@ -479,7 +479,7 @@ export default function JobBoard() {
               )}
             </div>
           )}
-        </div>
+          </div>
         </div>
       </div>
     </AppLayout>
