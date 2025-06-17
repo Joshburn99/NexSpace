@@ -36,22 +36,22 @@ export default function AnalyticsPage() {
   // Fetch real data
   const { data: shifts = [] } = useQuery({
     queryKey: ["/api/shifts/1"],
-    queryFn: getQueryFn()
+    queryFn: getQueryFn({ on401: "throw" })
   });
 
   const { data: users = [] } = useQuery({
     queryKey: ["/api/users"],
-    queryFn: getQueryFn()
+    queryFn: getQueryFn({ on401: "throw" })
   });
 
   const { data: credentials = [] } = useQuery({
     queryKey: ["/api/credentials"],
-    queryFn: getQueryFn()
+    queryFn: getQueryFn({ on401: "throw" })
   });
 
   const { data: jobs = [] } = useQuery({
     queryKey: ["/api/jobs"],
-    queryFn: getQueryFn()
+    queryFn: getQueryFn({ on401: "throw" })
   });
 
   // Calculate comprehensive metrics

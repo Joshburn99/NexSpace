@@ -105,17 +105,17 @@ export default function EnhancedSchedulingPage() {
   // Queries
   const { data: shifts = [], isLoading: loadingShifts } = useQuery<Shift[]>({
     queryKey: ["/api/shifts/1"],
-    queryFn: getQueryFn()
+    queryFn: getQueryFn({ on401: "throw" })
   });
 
   const { data: users = [], isLoading: loadingUsers } = useQuery<any[]>({
     queryKey: ["/api/users"],
-    queryFn: getQueryFn()
+    queryFn: getQueryFn({ on401: "throw" })
   });
 
   const { data: openShifts = [] } = useQuery<Shift[]>({
     queryKey: ["/api/shifts/open"],
-    queryFn: getQueryFn()
+    queryFn: getQueryFn({ on401: "throw" })
   });
 
   // Filter staff by internal employees
