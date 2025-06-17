@@ -118,11 +118,11 @@ export default function JobBoard() {
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
-              <h1 className="text-2xl font-bold text-gray-900">Job Board</h1>
-              <p className="text-sm text-gray-500">
-                Discover healthcare opportunities and connect with top facilities
-              </p>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900">Job Board</h1>
+            <p className="text-sm text-gray-500">
+              Discover healthcare opportunities and connect with top facilities
+            </p>
+          </div>
             
             {canPostJobs && (
               <Dialog>
@@ -482,7 +482,6 @@ export default function JobBoard() {
             </div>
           )}
         </div>
-      </main>
-    </div>
+    </AppLayout>
   );
 }

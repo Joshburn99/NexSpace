@@ -123,8 +123,7 @@ export default function AgencyUsagePage() {
     <AppLayout title="Agency Usage" subtitle="Track agency costs and identify savings opportunities">
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <div className="flex gap-2">
+          <div className="flex gap-2">
               <Button variant="outline">
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Generate Report
@@ -389,7 +388,6 @@ export default function AgencyUsagePage() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
+    </AppLayout>
   );
 }

@@ -402,7 +402,6 @@ export default function AttendancePage() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
+    </AppLayout>
   );
 }
