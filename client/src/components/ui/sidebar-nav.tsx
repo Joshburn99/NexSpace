@@ -52,12 +52,13 @@ const navigationItems: NavItem[] = [
     ],
   },
   {
-    label: "Staff Management",
+    label: "Workforce Management",
     icon: <Users className="w-5 h-5" />,
     roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
     children: [
       { label: "All Staff", href: "/staff", icon: <></> },
-      { label: "Contractors", href: "/staff/contractors", icon: <></> },
+      { label: "1099 Contractors", href: "/staff/contractors", icon: <></> },
+      { label: "Referral System", href: "/staff/referrals", icon: <></> },
       { label: "Credentials", href: "/credentials", icon: <></> },
       { label: "Onboarding", href: "/staff/onboarding", icon: <></> },
     ],
