@@ -47,12 +47,13 @@ const navigationItems: NavItem[] = [
     children: [
       { label: "Calendar View", href: "/calendar", icon: <></> },
       { label: "Open Shifts", href: "/shifts/open", icon: <></> },
+      { label: "Shift Requests", href: "/shifts/requests", icon: <></>, roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN] },
       { label: "Shift Templates", href: "/shifts/templates", icon: <></>, roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN] },
       { label: "Time Clock", href: "/time-clock", icon: <></> },
     ],
   },
   {
-    label: "Workforce Management",
+    label: "Workforce",
     icon: <Users className="w-5 h-5" />,
     roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
     children: [
@@ -64,12 +65,12 @@ const navigationItems: NavItem[] = [
     ],
   },
   {
-    label: "Job Board",
+    label: "Hiring",
     href: "/jobs",
     icon: <Briefcase className="w-5 h-5" />,
   },
   {
-    label: "Analytics",
+    label: "Insights",
     icon: <BarChart3 className="w-5 h-5" />,
     roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
     children: [
@@ -80,7 +81,7 @@ const navigationItems: NavItem[] = [
     ],
   },
   {
-    label: "Financial",
+    label: "Billing",
     icon: <DollarSign className="w-5 h-5" />,
     children: [
       { label: "Invoices", href: "/invoices", icon: <></> },

@@ -13,6 +13,7 @@ import MessagingPage from "@/pages/messaging-page";
 import AnalyticsPage from "@/pages/analytics-page";
 import CredentialsPage from "@/pages/credentials-page";
 import OpenShiftsPage from "@/pages/shifts-open-page";
+import ShiftRequestsPage from "@/pages/shift-requests-page";
 import StaffPage from "@/pages/staff-page";
 import TimeClockPage from "@/pages/time-clock-page";
 import InvoicesPage from "@/pages/invoices-page";
@@ -37,6 +38,7 @@ function Router() {
       <ProtectedRoute path="/scheduling" component={SchedulingPage} />
       <ProtectedRoute path="/calendar" component={SchedulingPage} />
       <ProtectedRoute path="/shifts/open" component={OpenShiftsPage} />
+      <ProtectedRoute path="/shifts/requests" component={ShiftRequestsPage} />
       <ProtectedRoute path="/time-clock" component={TimeClockPage} />
       <ProtectedRoute path="/staff" component={StaffPage} />
       <ProtectedRoute path="/staff/contractors" component={StaffPage} />
