@@ -126,7 +126,7 @@ export default function CredentialsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total</p>
-                    <p className="text-2xl font-bold">{credentials.length}</p>
+                    <p className="text-2xl font-bold">{(credentials as any[]).length}</p>
                   </div>
                   <Shield className="w-8 h-8 text-blue-600" />
                 </div>
@@ -182,7 +182,7 @@ export default function CredentialsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {credentials.length === 0 ? (
+              {(credentials as any[]).length === 0 ? (
                 <div className="text-center py-8">
                   <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
@@ -197,7 +197,7 @@ export default function CredentialsPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {credentials.map((credential: any) => {
+                  {(credentials as any[]).map((credential: any) => {
                     const daysUntilExpiry = getDaysUntilExpiry(credential.expiryDate);
                     const isExpiringSoon = daysUntilExpiry <= 30 && daysUntilExpiry > 0;
                     
