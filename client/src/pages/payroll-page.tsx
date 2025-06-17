@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { apiRequest, getQueryFn, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { AppLayout } from "@/components/ui/app-layout";
 
 interface Timesheet {
   id: number;
@@ -93,22 +94,22 @@ export default function PayrollPage() {
   // Queries
   const { data: timesheets = [], isLoading: loadingTimesheets } = useQuery({
     queryKey: ["/api/timesheets", selectedFacility],
-    queryFn: getQueryFn()
+    queryFn: getQueryFn({ on401: "throw" })
   });
 
   const { data: payments = [], isLoading: loadingPayments } = useQuery({
     queryKey: ["/api/payments", selectedFacility],
-    queryFn: getQueryFn()
+    queryFn: getQueryFn({ on401: "throw" })
   });
 
   const { data: payrollEmployees = [], isLoading: loadingEmployees } = useQuery({
     queryKey: ["/api/payroll/employees", selectedFacility],
-    queryFn: getQueryFn()
+    queryFn: getQueryFn({ on401: "throw" })
   });
 
   const { data: syncLogs = [] } = useQuery({
     queryKey: ["/api/payroll/sync-logs", selectedFacility],
-    queryFn: getQueryFn()
+    queryFn: getQueryFn({ on401: "throw" })
   });
 
   // Mutations
@@ -221,13 +222,8 @@ export default function PayrollPage() {
   const totalPendingAmount = pendingPayments.reduce((sum, p) => sum + parseFloat(p.netAmount), 0);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <AppLayout title="Payroll Management" subtitle="Automated payment processing and timesheet management">
       <div className="p-6">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Payroll Management</h1>
-          <p className="text-gray-600 mt-2">Automated payment processing and timesheet management</p>
-        </div>
 
         {/* Facility Filter */}
         <div className="mb-6">
@@ -667,6 +663,6 @@ export default function PayrollPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </AppLayout>
   );
 }
