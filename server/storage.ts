@@ -10,13 +10,14 @@ import {
 import { db } from "./db";
 import { eq, and, desc, asc, gte, lte, count, sql } from "drizzle-orm";
 import session from "express-session";
+import { Store } from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
 
 const PostgresSessionStore = connectPg(session);
 
 export interface IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: Store;
   
   // User methods
   getUser(id: number): Promise<User | undefined>;
@@ -99,7 +100,7 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  sessionStore: session.SessionStore;
+  sessionStore: Store;
 
   constructor() {
     this.sessionStore = new PostgresSessionStore({ 
@@ -475,12 +476,25 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getRecentActivity(facilityId: number, limit: number = 10): Promise<AuditLog[]> {
-    return await db.select()
+    const result = await db.select({
+      id: auditLogs.id,
+      userId: auditLogs.userId,
+      action: auditLogs.action,
+      resource: auditLogs.resource,
+      resourceId: auditLogs.resourceId,
+      oldValues: auditLogs.oldValues,
+      newValues: auditLogs.newValues,
+      ipAddress: auditLogs.ipAddress,
+      userAgent: auditLogs.userAgent,
+      createdAt: auditLogs.createdAt
+    })
       .from(auditLogs)
       .innerJoin(users, eq(auditLogs.userId, users.id))
       .where(eq(users.facilityId, facilityId))
       .orderBy(desc(auditLogs.createdAt))
       .limit(limit);
+    
+    return result;
   }
 }
 
