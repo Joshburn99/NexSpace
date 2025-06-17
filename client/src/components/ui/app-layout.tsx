@@ -214,7 +214,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                   // Direct items without grouping
                   group.items.map((item) => {
                     const Icon = item.icon;
-                    const active = isActive(item.path, item.exact);
+                    const active = isActive(item.path, item.exact || false);
                     
                     return (
                       <Link key={item.path} href={item.path}>
