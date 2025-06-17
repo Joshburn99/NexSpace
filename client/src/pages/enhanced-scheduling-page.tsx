@@ -1,747 +1,672 @@
 import { useState } from "react";
-import { Calendar, Plus, Filter, Search, MapPin, Phone, Mail, Clock, Users, ArrowLeft, ChevronLeft, ChevronRight, Building } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/hooks/use-auth";
-import { cn } from "@/lib/utils";
-import { Link } from "wouter";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { 
+  Calendar as CalendarIcon, 
+  Clock, 
+  Users, 
+  MapPin, 
+  Plus,
+  Edit,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Star,
+  Filter,
+  Search,
+  UserPlus,
+  Activity,
+  ChevronLeft,
+  ChevronRight
+} from "lucide-react";
+import { apiRequest, getQueryFn, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { format, addDays, startOfWeek, parseISO, isToday, isSameDay } from "date-fns";
+import { AppLayout } from "@/components/ui/app-layout";
 
 interface Shift {
-  id: string;
-  title: string;
-  start: Date;
-  end: Date;
-  unit: string;
-  position: string;
-  requiredStaff: number;
-  assignedStaff: Staff[];
-  hourlyRate: number;
-  status: 'open' | 'filled' | 'urgent' | 'cancelled' | 'in-progress' | 'completed';
+  id: number;
   facilityId: number;
-  createdBy: string;
-  requirements?: string[];
+  department: string;
+  position?: string;
+  startTime: string;
+  endTime: string;
+  requiredStaff: number;
+  assignedStaff?: number[];
+  hourlyRate: number;
+  shiftType: string;
+  status?: string;
   notes?: string;
-  room?: string;
-  premiumPay?: number;
-  shiftType: 'regular' | 'prn' | 'block';
+  createdById: number;
+  specialRequirements?: string[];
 }
 
 interface Staff {
-  id: string;
+  id: number;
   firstName: string;
   lastName: string;
-  position: string;
-  unit: string;
-  type: 'employee' | 'contractor';
+  role: string;
+  specialties: string[];
+  reliability: number;
   hourlyRate: number;
-  skills: string[];
-  reliabilityScore: number;
-  isFavorite: boolean;
-  availability: 'available' | 'unavailable' | 'limited';
-  contactInfo: {
-    phone: string;
-    email: string;
-  };
-  currentLocation?: {
-    lat: number;
-    lng: number;
-    distance: number;
-    lastUpdated: Date;
-    address: string;
-  };
-  clockedIn?: boolean;
-  color: string;
+  isAvailable: boolean;
+  department: string;
 }
 
-interface BulkScheduleTemplate {
-  id: string;
-  name: string;
-  description: string;
-  shifts: {
-    position: string;
-    unit: string;
-    startTime: string;
-    endTime: string;
-    daysOfWeek: number[];
-    requiredStaff: number;
-  }[];
-}
+const specialtyColors = {
+  RN: "bg-blue-500",
+  LPN: "bg-green-500", 
+  CNA: "bg-purple-500",
+  PT: "bg-orange-500",
+  OT: "bg-pink-500"
+};
 
-// Comprehensive shift data with proper staffing ratios
-const mockShifts: Shift[] = [
-  // Today's shifts
-  {
-    id: '1', title: 'Day Shift RN - ICU', start: new Date(2025, 5, 17, 7), end: new Date(2025, 5, 17, 19),
-    unit: 'ICU', position: 'RN', requiredStaff: 2, hourlyRate: 45, status: 'filled', facilityId: 1,
-    createdBy: 'Manager Smith', assignedStaff: ['staff1', 'staff2'] as any, shiftType: 'regular'
-  },
-  {
-    id: '2', title: 'Day Shift CNA - ICU', start: new Date(2025, 5, 17, 7), end: new Date(2025, 5, 17, 19),
-    unit: 'ICU', position: 'CNA', requiredStaff: 3, hourlyRate: 22, status: 'filled', facilityId: 1,
-    createdBy: 'Manager Smith', assignedStaff: ['staff3', 'staff4', 'staff5'] as any, shiftType: 'regular'
-  },
-  {
-    id: '3', title: 'Night Shift RN - ICU', start: new Date(2025, 5, 17, 19), end: new Date(2025, 5, 18, 7),
-    unit: 'ICU', position: 'RN', requiredStaff: 2, hourlyRate: 48, status: 'urgent', facilityId: 1,
-    createdBy: 'Manager Smith', assignedStaff: [] as any, premiumPay: 10, shiftType: 'prn'
-  },
-  {
-    id: '4', title: 'Night Shift CNA - ICU', start: new Date(2025, 5, 17, 19), end: new Date(2025, 5, 18, 7),
-    unit: 'ICU', position: 'CNA', requiredStaff: 3, hourlyRate: 25, status: 'urgent', facilityId: 1,
-    createdBy: 'Manager Smith', assignedStaff: [] as any, premiumPay: 5, shiftType: 'prn'
-  },
-  // Med-Surg shifts
-  {
-    id: '5', title: 'Day Shift RN - Med-Surg', start: new Date(2025, 5, 17, 7), end: new Date(2025, 5, 17, 19),
-    unit: 'Med-Surg', position: 'RN', requiredStaff: 1, hourlyRate: 42, status: 'filled', facilityId: 1,
-    createdBy: 'Supervisor Lee', assignedStaff: ['staff6'] as any, shiftType: 'regular'
-  },
-  {
-    id: '6', title: 'Day Shift LPN - Med-Surg', start: new Date(2025, 5, 17, 7), end: new Date(2025, 5, 17, 19),
-    unit: 'Med-Surg', position: 'LPN', requiredStaff: 1, hourlyRate: 32, status: 'filled', facilityId: 1,
-    createdBy: 'Supervisor Lee', assignedStaff: ['staff7'] as any, shiftType: 'regular'
-  },
-  {
-    id: '7', title: 'Day Shift CNA - Med-Surg', start: new Date(2025, 5, 17, 7), end: new Date(2025, 5, 17, 19),
-    unit: 'Med-Surg', position: 'CNA', requiredStaff: 3, hourlyRate: 20, status: 'filled', facilityId: 1,
-    createdBy: 'Supervisor Lee', assignedStaff: ['staff8', 'staff9', 'staff10'] as any, shiftType: 'regular'
-  },
-  // Memory Care shifts
-  {
-    id: '8', title: 'Day Shift RN - Memory Care', start: new Date(2025, 5, 17, 7), end: new Date(2025, 5, 17, 19),
-    unit: 'Memory Care', position: 'RN', requiredStaff: 1, hourlyRate: 40, status: 'filled', facilityId: 1,
-    createdBy: 'Director Johnson', assignedStaff: ['staff11'] as any, shiftType: 'regular'
-  },
-  {
-    id: '9', title: 'Day Shift CNA - Memory Care', start: new Date(2025, 5, 17, 7), end: new Date(2025, 5, 17, 19),
-    unit: 'Memory Care', position: 'CNA', requiredStaff: 3, hourlyRate: 21, status: 'open', facilityId: 1,
-    createdBy: 'Director Johnson', assignedStaff: ['staff12', 'staff13'] as any, shiftType: 'regular'
-  },
-  // Rehabilitation shifts
-  {
-    id: '10', title: 'Day Shift PT - Rehabilitation', start: new Date(2025, 5, 17, 8), end: new Date(2025, 5, 17, 17),
-    unit: 'Rehabilitation', position: 'PT', requiredStaff: 1, hourlyRate: 55, status: 'filled', facilityId: 1,
-    createdBy: 'Manager Davis', assignedStaff: ['staff14'] as any, shiftType: 'regular'
-  },
-  {
-    id: '11', title: 'Day Shift CNA - Rehabilitation', start: new Date(2025, 5, 17, 8), end: new Date(2025, 5, 17, 17),
-    unit: 'Rehabilitation', position: 'CNA', requiredStaff: 3, hourlyRate: 22, status: 'filled', facilityId: 1,
-    createdBy: 'Manager Davis', assignedStaff: ['staff15', 'staff16', 'staff17'] as any, shiftType: 'regular'
-  }
-];
-
-// Staff data with contact info and location
-const mockStaff: Staff[] = [
-  {
-    id: 'staff1', firstName: 'Sarah', lastName: 'Johnson', position: 'RN', unit: 'ICU', type: 'employee',
-    hourlyRate: 45, skills: ['Critical Care', 'IV Therapy'], reliabilityScore: 95, isFavorite: true,
-    availability: 'available', color: '#3B82F6', clockedIn: true,
-    contactInfo: { phone: '(555) 123-4567', email: 'sarah.johnson@facility.com' },
-    currentLocation: { lat: 40.7128, lng: -74.0060, distance: 0.2, lastUpdated: new Date(), address: 'Main Building, ICU Unit' }
-  },
-  {
-    id: 'staff2', firstName: 'Michael', lastName: 'Chen', position: 'RN', unit: 'ICU', type: 'contractor',
-    hourlyRate: 48, skills: ['Emergency Care', 'Ventilator Management'], reliabilityScore: 88, isFavorite: false,
-    availability: 'available', color: '#F59E0B', clockedIn: true,
-    contactInfo: { phone: '(555) 234-5678', email: 'mchen.contractor@email.com' },
-    currentLocation: { lat: 40.7130, lng: -74.0058, distance: 0.1, lastUpdated: new Date(), address: 'Main Building, ICU Unit' }
-  },
-  {
-    id: 'staff3', firstName: 'Emily', lastName: 'Rodriguez', position: 'CNA', unit: 'ICU', type: 'employee',
-    hourlyRate: 22, skills: ['Patient Care', 'Vital Signs'], reliabilityScore: 92, isFavorite: false,
-    availability: 'available', color: '#8B5CF6', clockedIn: true,
-    contactInfo: { phone: '(555) 345-6789', email: 'emily.rodriguez@facility.com' }
-  },
-  {
-    id: 'staff4', firstName: 'David', lastName: 'Park', position: 'CNA', unit: 'ICU', type: 'employee',
-    hourlyRate: 22, skills: ['Patient Care', 'Mobility Assistance'], reliabilityScore: 89, isFavorite: false,
-    availability: 'available', color: '#8B5CF6', clockedIn: true,
-    contactInfo: { phone: '(555) 456-7890', email: 'david.park@facility.com' }
-  },
-  {
-    id: 'staff5', firstName: 'Lisa', lastName: 'Wang', position: 'CNA', unit: 'ICU', type: 'contractor',
-    hourlyRate: 25, skills: ['Patient Care', 'Documentation'], reliabilityScore: 85, isFavorite: false,
-    availability: 'available', color: '#F59E0B', clockedIn: true,
-    contactInfo: { phone: '(555) 567-8901', email: 'lwang.contractor@email.com' }
-  }
-];
-
-// Bulk schedule templates
-const scheduleTemplates: BulkScheduleTemplate[] = [
-  {
-    id: '1',
-    name: 'Standard ICU Coverage',
-    description: 'Standard 24/7 ICU staffing with 2 RNs and 3 CNAs per shift',
-    shifts: [
-      { position: 'RN', unit: 'ICU', startTime: '07:00', endTime: '19:00', daysOfWeek: [1,2,3,4,5,6,0], requiredStaff: 2 },
-      { position: 'RN', unit: 'ICU', startTime: '19:00', endTime: '07:00', daysOfWeek: [1,2,3,4,5,6,0], requiredStaff: 2 },
-      { position: 'CNA', unit: 'ICU', startTime: '07:00', endTime: '19:00', daysOfWeek: [1,2,3,4,5,6,0], requiredStaff: 3 },
-      { position: 'CNA', unit: 'ICU', startTime: '19:00', endTime: '07:00', daysOfWeek: [1,2,3,4,5,6,0], requiredStaff: 3 }
-    ]
-  },
-  {
-    id: '2',
-    name: 'Med-Surg Day Shift',
-    description: 'Standard medical-surgical day shift coverage',
-    shifts: [
-      { position: 'RN', unit: 'Med-Surg', startTime: '07:00', endTime: '19:00', daysOfWeek: [1,2,3,4,5,6,0], requiredStaff: 1 },
-      { position: 'LPN', unit: 'Med-Surg', startTime: '07:00', endTime: '19:00', daysOfWeek: [1,2,3,4,5,6,0], requiredStaff: 1 },
-      { position: 'CNA', unit: 'Med-Surg', startTime: '07:00', endTime: '19:00', daysOfWeek: [1,2,3,4,5,6,0], requiredStaff: 3 }
-    ]
-  },
-  {
-    id: '3',
-    name: 'Weekend Emergency Coverage',
-    description: 'Enhanced weekend staffing for all units',
-    shifts: [
-      { position: 'RN', unit: 'ICU', startTime: '07:00', endTime: '19:00', daysOfWeek: [6,0], requiredStaff: 3 },
-      { position: 'RN', unit: 'Med-Surg', startTime: '07:00', endTime: '19:00', daysOfWeek: [6,0], requiredStaff: 2 },
-      { position: 'CNA', unit: 'ICU', startTime: '07:00', endTime: '19:00', daysOfWeek: [6,0], requiredStaff: 4 },
-      { position: 'CNA', unit: 'Med-Surg', startTime: '07:00', endTime: '19:00', daysOfWeek: [6,0], requiredStaff: 4 }
-    ]
-  }
-];
-
-type CalendarView = 'next7days' | 'month' | 'daily';
+const departments = ["ICU", "Med-Surg", "Memory Care", "Rehabilitation", "Emergency"];
+const positions = ["RN", "LPN", "CNA", "PT", "OT", "Aide"];
 
 export default function EnhancedSchedulingPage() {
   const { user } = useAuth();
-  const [calendarView, setCalendarView] = useState<CalendarView>('next7days');
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedBuilding, setSelectedBuilding] = useState('main');
-  const [selectedUnit, setSelectedUnit] = useState('all');
-  const [selectedPosition, setSelectedPosition] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
+  const { toast } = useToast();
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
+  const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
-  const [showBulkSchedule, setShowBulkSchedule] = useState(false);
-  const [bulkScheduleData, setBulkScheduleData] = useState({
-    selectedDays: [] as Date[],
-    startTime: '07:00',
-    endTime: '19:00',
+  const [filterDepartment, setFilterDepartment] = useState('all');
+  const [filterPosition, setFilterPosition] = useState('all');
+  const [searchStaff, setSearchStaff] = useState('');
+
+  // Form state for creating shifts
+  const [newShift, setNewShift] = useState({
+    department: '',
     position: '',
-    unit: '',
-    premiumPay: 0,
-    shiftType: 'regular' as 'regular' | 'prn' | 'block',
-    selectedTemplate: ''
+    startTime: '',
+    endTime: '',
+    requiredStaff: 1,
+    hourlyRate: 30,
+    shiftType: 'regular',
+    notes: '',
+    specialRequirements: [] as string[]
   });
 
-  const buildings = [
-    { id: 'main', name: 'Main Building', address: '123 Care St' },
-    { id: 'north', name: 'North Wing', address: '456 Health Ave' },
-    { id: 'south', name: 'South Campus', address: '789 Medical Blvd' }
-  ];
+  // Queries
+  const { data: shifts = [], isLoading: loadingShifts } = useQuery<Shift[]>({
+    queryKey: ["/api/shifts/1"],
+    queryFn: getQueryFn()
+  });
 
-  if (!user) return null;
+  const { data: users = [], isLoading: loadingUsers } = useQuery<any[]>({
+    queryKey: ["/api/users"],
+    queryFn: getQueryFn()
+  });
 
-  const getSpecialtyColor = (position: string, type: 'employee' | 'contractor') => {
-    const baseColors = {
-      'RN': '#3B82F6',
-      'LPN': '#10B981', 
-      'CNA': '#8B5CF6',
-      'PT': '#F59E0B',
-      'OT': '#EF4444'
-    };
-    return baseColors[position] || '#6B7280';
+  const { data: openShifts = [] } = useQuery<Shift[]>({
+    queryKey: ["/api/shifts/open"],
+    queryFn: getQueryFn()
+  });
+
+  // Filter staff by internal employees
+  const staff: Staff[] = users
+    .filter(user => user.role === 'INTERNAL_EMPLOYEE')
+    .map(user => ({
+      id: user.id,
+      firstName: user.firstName || 'Unknown',
+      lastName: user.lastName || 'User',
+      role: user.role,
+      specialties: ['RN'], // Default for now
+      reliability: 95,
+      hourlyRate: 35,
+      isAvailable: true,
+      department: 'ICU'
+    }));
+
+  // Mutations
+  const createShiftMutation = useMutation({
+    mutationFn: async (shiftData: any) => {
+      const res = await apiRequest("POST", "/api/shifts", {
+        ...shiftData,
+        facilityId: 1,
+        createdById: user?.id,
+        startTime: new Date(shiftData.startTime),
+        endTime: new Date(shiftData.endTime)
+      });
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Shift Created",
+        description: "New shift has been created successfully",
+      });
+      setIsCreateShiftOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+      resetForm();
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create shift",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const assignStaffMutation = useMutation({
+    mutationFn: async ({ shiftId, staffIds }: { shiftId: number; staffIds: number[] }) => {
+      const res = await apiRequest("PUT", `/api/shifts/${shiftId}/assign`, { staffIds });
+      return await res.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Staff Assigned",
+        description: "Staff has been assigned to the shift successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+    },
+    onError: () => {
+      toast({
+        title: "Assignment Failed",
+        description: "Failed to assign staff to shift",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const resetForm = () => {
+    setNewShift({
+      department: '',
+      position: '',
+      startTime: '',
+      endTime: '',
+      requiredStaff: 1,
+      hourlyRate: 30,
+      shiftType: 'regular',
+      notes: '',
+      specialRequirements: []
+    });
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'filled': return 'bg-green-100 text-green-800 border-green-200';
-      case 'open': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
-      case 'in-progress': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'completed': return 'bg-gray-100 text-gray-800 border-gray-200';
-      case 'cancelled': return 'bg-red-50 text-red-600 border-red-100';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  const handleCreateShift = () => {
+    if (!newShift.department || !newShift.startTime || !newShift.endTime) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
     }
+    createShiftMutation.mutate(newShift);
   };
 
-  const filteredShifts = mockShifts.filter(shift => {
-    return (selectedUnit === 'all' || shift.unit === selectedUnit) &&
-           (selectedPosition === 'all' || shift.position === selectedPosition) &&
-           (selectedStatus === 'all' || shift.status === selectedStatus);
-  });
+  const getSpecialtyColor = (specialty: string) => {
+    return specialtyColors[specialty as keyof typeof specialtyColors] || "bg-gray-500";
+  };
+
+  const getShiftStatusColor = (shift: Shift) => {
+    const assignedCount = shift.assignedStaff?.length || 0;
+    if (assignedCount === 0) return "bg-red-100 text-red-800";
+    if (assignedCount < shift.requiredStaff) return "bg-yellow-100 text-yellow-800";
+    return "bg-green-100 text-green-800";
+  };
+
+  const getShiftStatusText = (shift: Shift) => {
+    const assignedCount = shift.assignedStaff?.length || 0;
+    if (assignedCount === 0) return "Unfilled";
+    if (assignedCount < shift.requiredStaff) return "Partially Filled";
+    return "Fully Staffed";
+  };
+
+  const getWeekDates = (date: Date) => {
+    const start = startOfWeek(date);
+    return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+  };
 
   const getShiftsForDate = (date: Date) => {
-    return filteredShifts.filter(shift => 
-      shift.start.toDateString() === date.toDateString()
-    );
+    return shifts.filter(shift => {
+      const shiftDate = parseISO(shift.startTime);
+      return isSameDay(shiftDate, date);
+    });
   };
 
-  const next7Days = Array.from({length: 7}, (_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() + i);
-    return date;
-  });
-
-  const handleBulkScheduleSubmit = () => {
-    console.log('Bulk schedule data:', bulkScheduleData);
-    setShowBulkSchedule(false);
-  };
+  const weekDates = getWeekDates(selectedDate);
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="bg-white border-b px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Dashboard
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Enhanced Scheduling</h1>
-                <p className="text-gray-600">Manage shifts and staffing across all units</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Button variant="outline" onClick={() => setShowBulkSchedule(true)}>
-                <Calendar className="w-4 h-4 mr-2" />
-                Bulk Schedule
-              </Button>
-              <Link href="/shift-requests">
-                <Button variant="outline">
-                  <Users className="w-4 h-4 mr-2" />
-                  Shift Requests
-                </Button>
-              </Link>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Post Single Shift
-              </Button>
-            </div>
+    <AppLayout title="Advanced Scheduling" subtitle="Manage shifts and staff assignments">
+      <div className="p-6">
+        {/* Quick Actions and Filters */}
+        <div className="flex flex-wrap gap-4 mb-6">
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setIsCreateShiftOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Shift
+            </Button>
+            <Button variant="outline">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Quick Assign
+            </Button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Select value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="day">Day</SelectItem>
+                <SelectItem value="week">Week</SelectItem>
+                <SelectItem value="month">Month</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={filterDepartment} onValueChange={setFilterDepartment}>
+              <SelectTrigger className="w-40">
+                <SelectValue placeholder="Department" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                {departments.map(dept => (
+                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={filterPosition} onValueChange={setFilterPosition}>
+              <SelectTrigger className="w-32">
+                <SelectValue placeholder="Position" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Positions</SelectItem>
+                {positions.map(pos => (
+                  <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search staff..."
+              value={searchStaff}
+              onChange={(e) => setSearchStaff(e.target.value)}
+              className="pl-10 w-48"
+            />
           </div>
         </div>
 
-        <div className="flex-1 overflow-auto p-6">
-          {/* Filters */}
-          <div className="mb-6 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    if (calendarView === 'daily') {
-                      const newDate = new Date(selectedDate);
-                      newDate.setDate(newDate.getDate() - 1);
-                      setSelectedDate(newDate);
-                    } else if (calendarView === 'next7days') {
-                      const newDate = new Date(selectedDate);
-                      newDate.setDate(newDate.getDate() - 7);
-                      setSelectedDate(newDate);
-                    } else if (calendarView === 'month') {
-                      const newDate = new Date(selectedDate);
-                      newDate.setMonth(newDate.getMonth() - 1);
-                      setSelectedDate(newDate);
-                    }
-                  }}
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                
-                <Select value={calendarView} onValueChange={(value: CalendarView) => setCalendarView(value)}>
-                  <SelectTrigger className="w-40">
-                    <SelectValue />
+        {/* Calendar Navigation */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedDate(addDays(selectedDate, -7))}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <h2 className="text-lg font-semibold">
+              {format(selectedDate, 'MMMM yyyy')}
+            </h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSelectedDate(addDays(selectedDate, 7))}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline">
+                <CalendarIcon className="w-4 h-4 mr-2" />
+                {format(selectedDate, 'PPP')}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        <Tabs defaultValue="calendar" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="calendar">Calendar View</TabsTrigger>
+            <TabsTrigger value="shifts">Shifts List</TabsTrigger>
+            <TabsTrigger value="staff">Staff Availability</TabsTrigger>
+            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="calendar">
+            {viewMode === 'week' && (
+              <div className="grid grid-cols-8 gap-2">
+                <div className="font-medium text-sm text-gray-600 p-3"></div>
+                {weekDates.map(date => (
+                  <div key={date.toISOString()} className="text-center p-3 border-b">
+                    <div className="font-medium text-sm text-gray-900">
+                      {format(date, 'EEE')}
+                    </div>
+                    <div className={`text-lg font-bold ${isToday(date) ? 'text-blue-600' : 'text-gray-600'}`}>
+                      {format(date, 'd')}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Time slots */}
+                {Array.from({ length: 24 }, (_, hour) => (
+                  <div key={hour} className="grid grid-cols-8 col-span-8 gap-2">
+                    <div className="text-sm text-gray-500 p-2 text-right">
+                      {hour === 0 ? '12 AM' : hour <= 12 ? `${hour} AM` : `${hour - 12} PM`}
+                    </div>
+                    {weekDates.map(date => {
+                      const dayShifts = getShiftsForDate(date).filter(shift => {
+                        const shiftHour = new Date(shift.startTime).getHours();
+                        return shiftHour === hour;
+                      });
+
+                      return (
+                        <div key={`${date.toISOString()}-${hour}`} className="min-h-12 border border-gray-100 p-1">
+                          {dayShifts.map(shift => (
+                            <div
+                              key={shift.id}
+                              className="bg-blue-100 text-blue-800 text-xs p-1 rounded mb-1 cursor-pointer hover:bg-blue-200"
+                              onClick={() => setSelectedShift(shift)}
+                            >
+                              <div className="font-medium">{shift.department}</div>
+                              <div className="text-xs">{shift.position}</div>
+                              <div className="text-xs">{shift.assignedStaff?.length || 0}/{shift.requiredStaff}</div>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="shifts">
+            <Card>
+              <CardHeader>
+                <CardTitle>All Shifts</CardTitle>
+                <CardDescription>Manage and monitor all scheduled shifts</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Position</TableHead>
+                      <TableHead>Date & Time</TableHead>
+                      <TableHead>Staffing</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {shifts.map((shift) => (
+                      <TableRow key={shift.id}>
+                        <TableCell>{shift.department}</TableCell>
+                        <TableCell>
+                          <Badge className={getSpecialtyColor(shift.position || 'RN')}>
+                            {shift.position || 'General'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <div className="font-medium">
+                              {format(parseISO(shift.startTime), 'MMM d, yyyy')}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {format(parseISO(shift.startTime), 'h:mm a')} - {format(parseISO(shift.endTime), 'h:mm a')}
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4" />
+                            {shift.assignedStaff?.length || 0}/{shift.requiredStaff}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={getShiftStatusColor(shift)}>
+                            {getShiftStatusText(shift)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => setSelectedShift(shift)}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="outline">
+                              <UserPlus className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="staff">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Available Staff</CardTitle>
+                  <CardDescription>Staff members available for assignment</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {staff.filter(s => s.isAvailable).map((member) => (
+                      <div key={member.id} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-3 h-3 rounded-full ${getSpecialtyColor(member.specialties[0])}`}></div>
+                          <div>
+                            <div className="font-medium">{member.firstName} {member.lastName}</div>
+                            <div className="text-sm text-gray-600">{member.department}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1">
+                            <Star className="w-4 h-4 text-yellow-500" />
+                            <span className="text-sm">{member.reliability}%</span>
+                          </div>
+                          <Badge>{member.specialties[0]}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Open Shifts</CardTitle>
+                  <CardDescription>Shifts needing staff assignment</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {openShifts.slice(0, 5).map((shift) => (
+                      <div key={shift.id} className="p-3 border rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="font-medium">{shift.department}</div>
+                          <Badge variant="outline">{shift.position}</Badge>
+                        </div>
+                        <div className="text-sm text-gray-600 mb-2">
+                          {format(parseISO(shift.startTime), 'MMM d, h:mm a')} - {format(parseISO(shift.endTime), 'h:mm a')}
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm">Need {shift.requiredStaff} staff</span>
+                          <Button size="sm">Assign Staff</Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Open Shifts</p>
+                      <p className="text-3xl font-bold text-red-600">{openShifts.length}</p>
+                    </div>
+                    <AlertTriangle className="w-8 h-8 text-red-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Total Shifts</p>
+                      <p className="text-3xl font-bold text-blue-600">{shifts.length}</p>
+                    </div>
+                    <Activity className="w-8 h-8 text-blue-600" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600">Available Staff</p>
+                      <p className="text-3xl font-bold text-green-600">{staff.filter(s => s.isAvailable).length}</p>
+                    </div>
+                    <Users className="w-8 h-8 text-green-600" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* Create Shift Dialog */}
+        <Dialog open={isCreateShiftOpen} onOpenChange={setIsCreateShiftOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Create New Shift</DialogTitle>
+              <DialogDescription>Add a new shift to the schedule</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="department">Department</Label>
+                <Select value={newShift.department} onValueChange={(value) => setNewShift({...newShift, department: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select department" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="next7days">Next 7 Days</SelectItem>
-                    <SelectItem value="month">Month View</SelectItem>
-                    <SelectItem value="daily">Daily View</SelectItem>
+                    {departments.map(dept => (
+                      <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => {
-                    if (calendarView === 'daily') {
-                      const newDate = new Date(selectedDate);
-                      newDate.setDate(newDate.getDate() + 1);
-                      setSelectedDate(newDate);
-                    } else if (calendarView === 'next7days') {
-                      const newDate = new Date(selectedDate);
-                      newDate.setDate(newDate.getDate() + 7);
-                      setSelectedDate(newDate);
-                    } else if (calendarView === 'month') {
-                      const newDate = new Date(selectedDate);
-                      newDate.setMonth(newDate.getMonth() + 1);
-                      setSelectedDate(newDate);
-                    }
-                  }}
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
               </div>
 
-              {/* Building Filter */}
-              <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
-                <SelectTrigger className="w-48">
-                  <Building className="w-4 h-4 mr-2" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {buildings.map((building) => (
-                    <SelectItem key={building.id} value={building.id}>
-                      <div className="flex flex-col">
-                        <span>{building.name}</span>
-                        <span className="text-xs text-gray-500">{building.address}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedUnit} onValueChange={setSelectedUnit}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="All Units" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Units</SelectItem>
-                  <SelectItem value="ICU">ICU</SelectItem>
-                  <SelectItem value="Med-Surg">Med-Surg</SelectItem>
-                  <SelectItem value="Memory Care">Memory Care</SelectItem>
-                  <SelectItem value="Rehabilitation">Rehabilitation</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedPosition} onValueChange={setSelectedPosition}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="All Positions" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Positions</SelectItem>
-                  <SelectItem value="RN">RN</SelectItem>
-                  <SelectItem value="LPN">LPN</SelectItem>
-                  <SelectItem value="CNA">CNA</SelectItem>
-                  <SelectItem value="PT">PT</SelectItem>
-                  <SelectItem value="OT">OT</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                <SelectTrigger className="w-40">
-                  <SelectValue placeholder="All Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="open">Open</SelectItem>
-                  <SelectItem value="filled">Filled</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                  <SelectItem value="in-progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Input placeholder="Search shifts..." className="w-64" />
-              <Button variant="outline" size="icon">
-                <Search className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-
-          {/* Calendar View */}
-          {calendarView === 'next7days' && (
-            <div className="grid grid-cols-7 gap-4">
-              {next7Days.map((date, index) => (
-                <Card key={index} className="min-h-[400px]">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">
-                      {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {getShiftsForDate(date).map((shift) => (
-                      <div
-                        key={shift.id}
-                        className="p-2 rounded border cursor-pointer hover:shadow-sm transition-shadow"
-                        style={{ borderLeftColor: getSpecialtyColor(shift.position, 'employee'), borderLeftWidth: '4px' }}
-                        onClick={() => setSelectedShift(shift)}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <div className="text-xs font-medium" style={{ color: getSpecialtyColor(shift.position, 'employee') }}>
-                            {shift.position}
-                          </div>
-                          <Badge className={cn("text-xs", getStatusColor(shift.status))}>
-                            {shift.status}
-                          </Badge>
-                        </div>
-                        <div className="text-xs text-gray-600 mb-1">{shift.unit}</div>
-                        <div className="text-xs text-gray-500">
-                          {shift.start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - 
-                          {shift.end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                        </div>
-                        {shift.assignedStaff.length > 0 && (
-                          <div className="text-xs text-gray-500 mt-1">
-                            {shift.assignedStaff.length}/{shift.requiredStaff} staff
-                          </div>
-                        )}
-                        {shift.premiumPay && (
-                          <div className="text-xs text-green-600 mt-1">
-                            +${shift.premiumPay}/hr premium
-                          </div>
-                        )}
-                      </div>
+              <div>
+                <Label htmlFor="position">Position</Label>
+                <Select value={newShift.position} onValueChange={(value) => setNewShift({...newShift, position: value})}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select position" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {positions.map(pos => (
+                      <SelectItem key={pos} value={pos}>{pos}</SelectItem>
                     ))}
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          {/* Shift Details Dialog */}
-          <Dialog open={!!selectedShift} onOpenChange={() => setSelectedShift(null)}>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>{selectedShift?.title}</DialogTitle>
-                <DialogDescription>
-                  {selectedShift?.unit} • {selectedShift?.start.toLocaleDateString()}
-                </DialogDescription>
-              </DialogHeader>
-              
-              {selectedShift && (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700">Shift Time</Label>
-                      <p className="text-sm">
-                        {selectedShift.start.toLocaleString()} - {selectedShift.end.toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700">Hourly Rate</Label>
-                      <p className="text-sm">
-                        ${selectedShift.hourlyRate}/hour
-                        {selectedShift.premiumPay && (
-                          <span className="text-green-600"> (+${selectedShift.premiumPay} premium)</span>
-                        )}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium text-gray-700">Assigned Staff ({selectedShift.assignedStaff.length}/{selectedShift.requiredStaff})</Label>
-                    <div className="mt-2 space-y-3">
-                      {selectedShift.assignedStaff.map((staffId) => {
-                        const staff = mockStaff.find(s => s.id === staffId);
-                        if (!staff) return null;
-                        
-                        return (
-                          <div key={staff.id} className="flex items-center justify-between p-3 border rounded-lg">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2">
-                                <h4 className="font-medium">{staff.firstName} {staff.lastName}</h4>
-                                <Badge variant={staff.type === 'employee' ? 'default' : 'secondary'}>
-                                  {staff.type}
-                                </Badge>
-                                {staff.clockedIn && (
-                                  <Badge className="bg-green-100 text-green-800">
-                                    Clocked In
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="flex items-center space-x-4 mt-2 text-sm text-gray-600">
-                                <div className="flex items-center space-x-1">
-                                  <Phone className="w-3 h-3" />
-                                  <span>{staff.contactInfo.phone}</span>
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <Mail className="w-3 h-3" />
-                                  <span>{staff.contactInfo.email}</span>
-                                </div>
-                              </div>
-                              {staff.currentLocation && (
-                                <div className="flex items-center space-x-1 mt-1 text-sm text-gray-500">
-                                  <MapPin className="w-3 h-3" />
-                                  <span>{staff.currentLocation.address} • {staff.currentLocation.distance} miles</span>
-                                  <span className="text-xs">
-                                    (Updated: {staff.currentLocation.lastUpdated.toLocaleTimeString()})
-                                  </span>
-                                </div>
-                              )}
-                            </div>
-                            <div className="text-right">
-                              <div className="text-sm font-medium">${staff.hourlyRate}/hr</div>
-                              <div className="text-xs text-gray-500">Score: {staff.reliabilityScore}%</div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {selectedShift.notes && (
-                    <div>
-                      <Label className="text-sm font-medium text-gray-700">Notes</Label>
-                      <p className="text-sm mt-1">{selectedShift.notes}</p>
-                    </div>
-                  )}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="startTime">Start Time</Label>
+                  <Input
+                    type="datetime-local"
+                    value={newShift.startTime}
+                    onChange={(e) => setNewShift({...newShift, startTime: e.target.value})}
+                  />
                 </div>
-              )}
-            </DialogContent>
-          </Dialog>
+                <div>
+                  <Label htmlFor="endTime">End Time</Label>
+                  <Input
+                    type="datetime-local"
+                    value={newShift.endTime}
+                    onChange={(e) => setNewShift({...newShift, endTime: e.target.value})}
+                  />
+                </div>
+              </div>
 
-          {/* Bulk Schedule Dialog */}
-          <Dialog open={showBulkSchedule} onOpenChange={setShowBulkSchedule}>
-            <DialogContent className="max-w-4xl">
-              <DialogHeader>
-                <DialogTitle>Bulk Schedule Creator</DialogTitle>
-                <DialogDescription>
-                  Create multiple shifts at once using templates or custom settings
-                </DialogDescription>
-              </DialogHeader>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="requiredStaff">Required Staff</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={newShift.requiredStaff}
+                    onChange={(e) => setNewShift({...newShift, requiredStaff: parseInt(e.target.value)})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={newShift.hourlyRate}
+                    onChange={(e) => setNewShift({...newShift, hourlyRate: parseFloat(e.target.value)})}
+                  />
+                </div>
+              </div>
 
-              <Tabs defaultValue="custom" className="space-y-4">
-                <TabsList>
-                  <TabsTrigger value="custom">Custom Schedule</TabsTrigger>
-                  <TabsTrigger value="template">Use Template</TabsTrigger>
-                </TabsList>
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  placeholder="Additional notes or requirements..."
+                  value={newShift.notes}
+                  onChange={(e) => setNewShift({...newShift, notes: e.target.value})}
+                />
+              </div>
 
-                <TabsContent value="custom" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Select Days</Label>
-                      <div className="mt-2 grid grid-cols-7 gap-2">
-                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
-                          <div key={day} className="flex items-center space-x-2">
-                            <Checkbox id={`day-${index}`} />
-                            <Label htmlFor={`day-${index}`} className="text-xs">{day}</Label>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <Label>Time Range</Label>
-                      <div className="mt-2 flex items-center space-x-2">
-                        <Input 
-                          type="time" 
-                          value={bulkScheduleData.startTime}
-                          onChange={(e) => setBulkScheduleData({...bulkScheduleData, startTime: e.target.value})}
-                        />
-                        <span>to</span>
-                        <Input 
-                          type="time" 
-                          value={bulkScheduleData.endTime}
-                          onChange={(e) => setBulkScheduleData({...bulkScheduleData, endTime: e.target.value})}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label>Position</Label>
-                      <Select value={bulkScheduleData.position} onValueChange={(value) => setBulkScheduleData({...bulkScheduleData, position: value})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Position" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="RN">RN</SelectItem>
-                          <SelectItem value="LPN">LPN</SelectItem>
-                          <SelectItem value="CNA">CNA</SelectItem>
-                          <SelectItem value="PT">PT</SelectItem>
-                          <SelectItem value="OT">OT</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label>Unit</Label>
-                      <Select value={bulkScheduleData.unit} onValueChange={(value) => setBulkScheduleData({...bulkScheduleData, unit: value})}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select Unit" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="ICU">ICU</SelectItem>
-                          <SelectItem value="Med-Surg">Med-Surg</SelectItem>
-                          <SelectItem value="Memory Care">Memory Care</SelectItem>
-                          <SelectItem value="Rehabilitation">Rehabilitation</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div>
-                      <Label>Shift Type</Label>
-                      <Select value={bulkScheduleData.shiftType} onValueChange={(value: 'regular' | 'prn' | 'block') => setBulkScheduleData({...bulkScheduleData, shiftType: value})}>
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="regular">Regular</SelectItem>
-                          <SelectItem value="prn">PRN</SelectItem>
-                          <SelectItem value="block">Block Schedule</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label>Premium Pay ($/hour) - Permission Required</Label>
-                    <Input 
-                      type="number" 
-                      value={bulkScheduleData.premiumPay}
-                      onChange={(e) => setBulkScheduleData({...bulkScheduleData, premiumPay: Number(e.target.value)})}
-                      disabled={user.role !== 'admin'}
-                      placeholder={user.role !== 'admin' ? 'Admin permission required' : '0'}
-                    />
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="template" className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4">
-                    {scheduleTemplates.map((template) => (
-                      <Card key={template.id} className={cn(
-                        "cursor-pointer transition-all",
-                        bulkScheduleData.selectedTemplate === template.id ? "ring-2 ring-blue-500 bg-blue-50" : "hover:shadow-md"
-                      )} onClick={() => setBulkScheduleData({...bulkScheduleData, selectedTemplate: template.id})}>
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-semibold">{template.name}</h3>
-                              <p className="text-sm text-gray-600 mt-1">{template.description}</p>
-                              <div className="mt-2 text-xs text-gray-500">
-                                {template.shifts.length} shift types included
-                              </div>
-                            </div>
-                            <Checkbox 
-                              checked={bulkScheduleData.selectedTemplate === template.id}
-                              onChange={() => {}}
-                            />
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                </TabsContent>
-              </Tabs>
-
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button variant="outline" onClick={() => setShowBulkSchedule(false)}>
+              <div className="flex gap-3 pt-4">
+                <Button onClick={handleCreateShift} disabled={createShiftMutation.isPending}>
+                  {createShiftMutation.isPending ? 'Creating...' : 'Create Shift'}
+                </Button>
+                <Button variant="outline" onClick={() => setIsCreateShiftOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleBulkScheduleSubmit}>
-                  Create Shifts
-                </Button>
               </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
-    </div>
+    </AppLayout>
   );
 }

@@ -7,50 +7,85 @@ import {
 import { UserRole } from '@shared/schema';
 
 export async function seedDatabase() {
-  console.log('Seeding database with demo data...');
+  console.log('Seeding database with comprehensive healthcare staffing data...');
 
   try {
-    // Create facilities - 100-bed skilled nursing facility
+    // Create facilities - Multi-building healthcare campus
     const facilitiesData = [
       {
         name: 'Willowbrook Skilled Nursing & Rehabilitation',
         address: '1234 Healthcare Drive, Meadowbrook, FL 33157',
         phone: '(305) 555-0100',
         email: 'admin@willowbrooksnf.com',
-        licenseNumber: 'FL-SNF-12345',
-        capacity: 100,
-        currentCensus: 90
+        isActive: true
+      },
+      {
+        name: 'Maple Grove Memory Care',
+        address: '5678 Memory Lane, Meadowbrook, FL 33158',
+        phone: '(305) 555-0200',
+        email: 'admin@maplegrove.com',
+        isActive: true
+      },
+      {
+        name: 'Sunrise Assisted Living',
+        address: '9012 Sunrise Boulevard, Meadowbrook, FL 33159',
+        phone: '(305) 555-0300',
+        email: 'admin@sunriseassisted.com',
+        isActive: true
       }
     ];
 
     const insertedFacilities = await db.insert(facilities).values(facilitiesData).returning();
 
-    // Create comprehensive healthcare staff for 100-bed facility
+    // Create comprehensive healthcare staff
     const usersData = [
-      // Facility Management
+      // System Admin
       {
-        username: 'admin',
-        email: 'admin@willowbrooksnf.com',
+        username: 'JoshBurn',
+        email: 'joshburn99@gmail.com',
         password: '$2b$10$hashedpassword1',
+        firstName: 'Josh',
+        lastName: 'Burn',
+        role: UserRole.SUPER_ADMIN,
+        facilityId: insertedFacilities[0].id,
+        isActive: true
+      },
+      // Facility Managers
+      {
+        username: 'jennifer.martinez',
+        email: 'jennifer.martinez@willowbrooksnf.com',
+        password: '$2b$10$hashedpassword2',
         firstName: 'Jennifer',
         lastName: 'Martinez',
         role: UserRole.FACILITY_MANAGER,
-        facilityId: insertedFacilities[0].id
+        facilityId: insertedFacilities[0].id,
+        isActive: true
       },
-      // ICU Staff - Employees
+      {
+        username: 'david.thompson',
+        email: 'david.thompson@maplegrove.com',
+        password: '$2b$10$hashedpassword3',
+        firstName: 'David',
+        lastName: 'Thompson',
+        role: UserRole.FACILITY_MANAGER,
+        facilityId: insertedFacilities[1].id,
+        isActive: true
+      },
+      // Registered Nurses (RN) - Staff Employees
       {
         username: 'sarah.johnson',
         email: 'sarah.johnson@willowbrooksnf.com',
-        password: '$2b$10$hashedpassword2',
+        password: '$2b$10$hashedpassword4',
         firstName: 'Sarah',
         lastName: 'Johnson',
         role: UserRole.INTERNAL_EMPLOYEE,
-        facilityId: insertedFacilities[0].id
+        facilityId: insertedFacilities[0].id,
+        isActive: true
       },
       {
         username: 'michael.chen',
         email: 'michael.chen@willowbrooksnf.com',
-        password: '$2b$10$hashedpassword3',
+        password: '$2b$10$hashedpassword5',
         firstName: 'Michael',
         lastName: 'Chen',
         role: UserRole.INTERNAL_EMPLOYEE,
