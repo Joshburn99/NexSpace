@@ -115,8 +115,9 @@ export default function JobBoard() {
 
   return (
     <AppLayout title="Job Board" subtitle="Browse and apply for available positions">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
+      <div className="space-y-6">
+        <div className="p-6">
+          <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Job Board</h1>
             <p className="text-sm text-gray-500">
@@ -284,10 +285,8 @@ export default function JobBoard() {
             )}
         </div>
 
-        {/* Content */}
-        <div className="p-6">
-          {/* Search and Filters */}
-          <div className="mb-6 flex flex-col sm:flex-row gap-4">
+        {/* Search and Filters */}
+        <div className="mb-6 flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -481,6 +480,8 @@ export default function JobBoard() {
             </div>
           )}
         </div>
+        </div>
+      </div>
     </AppLayout>
   );
 }
