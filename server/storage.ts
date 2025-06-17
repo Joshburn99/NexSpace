@@ -1,11 +1,16 @@
 import { 
   users, facilities, jobs, jobApplications, shifts, timeClockEntries, 
   invoices, workLogs, credentials, messages, auditLogs, permissions, rolePermissions,
+  payrollProviders, payrollConfigurations, payrollEmployees, timesheets, timesheetEntries, payrollSyncLogs, payments,
   type User, type InsertUser, type Facility, type InsertFacility,
   type Job, type InsertJob, type JobApplication, type InsertJobApplication,
   type Shift, type InsertShift, type Invoice, type InsertInvoice,
   type WorkLog, type InsertWorkLog, type Credential, type InsertCredential,
-  type Message, type InsertMessage, type AuditLog, UserRole
+  type Message, type InsertMessage, type AuditLog, UserRole,
+  type PayrollProvider, type InsertPayrollProvider, type PayrollConfiguration, type InsertPayrollConfiguration,
+  type PayrollEmployee, type InsertPayrollEmployee, type Timesheet, type InsertTimesheet,
+  type TimesheetEntry, type InsertTimesheetEntry, type PayrollSyncLog, type InsertPayrollSyncLog,
+  type Payment, type InsertPayment
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc, gte, lte, count, sql } from "drizzle-orm";
@@ -97,6 +102,49 @@ export interface IStorage {
     monthlyHours: number;
   }>;
   getRecentActivity(facilityId: number, limit?: number): Promise<AuditLog[]>;
+
+  // Payroll system methods
+  createPayrollProvider(provider: InsertPayrollProvider): Promise<PayrollProvider>;
+  getPayrollProviders(): Promise<PayrollProvider[]>;
+  updatePayrollProvider(id: number, updates: Partial<InsertPayrollProvider>): Promise<PayrollProvider | undefined>;
+
+  createPayrollConfiguration(config: InsertPayrollConfiguration): Promise<PayrollConfiguration>;
+  getPayrollConfiguration(facilityId: number): Promise<PayrollConfiguration | undefined>;
+  updatePayrollConfiguration(id: number, updates: Partial<InsertPayrollConfiguration>): Promise<PayrollConfiguration | undefined>;
+
+  createPayrollEmployee(employee: InsertPayrollEmployee): Promise<PayrollEmployee>;
+  getPayrollEmployee(userId: number, facilityId: number): Promise<PayrollEmployee | undefined>;
+  updatePayrollEmployee(id: number, updates: Partial<InsertPayrollEmployee>): Promise<PayrollEmployee | undefined>;
+  getPayrollEmployeesByFacility(facilityId: number): Promise<PayrollEmployee[]>;
+
+  createTimesheet(timesheet: InsertTimesheet): Promise<Timesheet>;
+  getTimesheet(id: number): Promise<Timesheet | undefined>;
+  getTimesheetsByUser(userId: number, facilityId: number): Promise<Timesheet[]>;
+  getTimesheetsByPayPeriod(facilityId: number, startDate: Date, endDate: Date): Promise<Timesheet[]>;
+  updateTimesheetStatus(id: number, status: string, approvedBy?: number): Promise<Timesheet | undefined>;
+  getPendingTimesheets(facilityId: number): Promise<Timesheet[]>;
+
+  createTimesheetEntry(entry: InsertTimesheetEntry): Promise<TimesheetEntry>;
+  getTimesheetEntries(timesheetId: number): Promise<TimesheetEntry[]>;
+  updateTimesheetEntry(id: number, updates: Partial<InsertTimesheetEntry>): Promise<TimesheetEntry | undefined>;
+
+  createPayrollSyncLog(log: InsertPayrollSyncLog): Promise<PayrollSyncLog>;
+  getPayrollSyncLogs(facilityId: number, providerId?: number): Promise<PayrollSyncLog[]>;
+
+  createPayment(payment: InsertPayment): Promise<Payment>;
+  getPayment(id: number): Promise<Payment | undefined>;
+  getPaymentsByUser(userId: number): Promise<Payment[]>;
+  getPaymentsByTimesheet(timesheetId: number): Promise<Payment[]>;
+  updatePaymentStatus(id: number, status: string): Promise<Payment | undefined>;
+  getPendingPayments(facilityId: number): Promise<Payment[]>;
+
+  // Automated payroll processing
+  processPayroll(facilityId: number, payPeriodStart: Date, payPeriodEnd: Date): Promise<{
+    processedTimesheets: number;
+    totalPayments: number;
+    errors: string[];
+  }>;
+  syncWithPayrollProvider(facilityId: number, syncType: string): Promise<PayrollSyncLog>;
 }
 
 export class DatabaseStorage implements IStorage {

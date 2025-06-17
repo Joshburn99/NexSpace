@@ -189,6 +189,128 @@ export const auditLogs = pgTable("audit_logs", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+// Payroll Integration Tables
+export const payrollProviders = pgTable("payroll_providers", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  apiEndpoint: text("api_endpoint").notNull(),
+  authType: text("auth_type").notNull(), // 'oauth', 'api_key', 'basic'
+  isActive: boolean("is_active").default(true),
+  supportedFeatures: jsonb("supported_features"), // array of features like ['timesheet_sync', 'direct_deposit', 'tax_calc']
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const payrollConfigurations = pgTable("payroll_configurations", {
+  id: serial("id").primaryKey(),
+  facilityId: integer("facility_id").notNull(),
+  providerId: integer("provider_id").notNull(),
+  configuration: jsonb("configuration").notNull(), // provider-specific config
+  isActive: boolean("is_active").default(true),
+  lastSyncAt: timestamp("last_sync_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const payrollEmployees = pgTable("payroll_employees", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  facilityId: integer("facility_id").notNull(),
+  externalEmployeeId: text("external_employee_id"), // ID in payroll system
+  payrollProviderId: integer("payroll_provider_id").notNull(),
+  employeeType: text("employee_type").notNull(), // 'W2', '1099', 'hourly', 'salary'
+  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }),
+  salaryAmount: decimal("salary_amount", { precision: 10, scale: 2 }),
+  overtimeRate: decimal("overtime_rate", { precision: 10, scale: 2 }),
+  taxInformation: jsonb("tax_information"), // W4 info, state taxes, etc.
+  directDepositInfo: jsonb("direct_deposit_info"), // encrypted bank details
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const timesheets = pgTable("timesheets", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  facilityId: integer("facility_id").notNull(),
+  payPeriodStart: timestamp("pay_period_start").notNull(),
+  payPeriodEnd: timestamp("pay_period_end").notNull(),
+  totalHours: decimal("total_hours", { precision: 8, scale: 2 }).notNull(),
+  regularHours: decimal("regular_hours", { precision: 8, scale: 2 }).notNull(),
+  overtimeHours: decimal("overtime_hours", { precision: 8, scale: 2 }).default('0'),
+  holidayHours: decimal("holiday_hours", { precision: 8, scale: 2 }).default('0'),
+  sickHours: decimal("sick_hours", { precision: 8, scale: 2 }).default('0'),
+  vacationHours: decimal("vacation_hours", { precision: 8, scale: 2 }).default('0'),
+  grossPay: decimal("gross_pay", { precision: 10, scale: 2 }),
+  status: text("status").notNull().default('draft'), // 'draft', 'submitted', 'approved', 'processed', 'paid'
+  submittedAt: timestamp("submitted_at"),
+  approvedAt: timestamp("approved_at"),
+  approvedBy: integer("approved_by"),
+  processedAt: timestamp("processed_at"),
+  payrollSyncId: text("payroll_sync_id"), // reference to external payroll system
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+export const timesheetEntries = pgTable("timesheet_entries", {
+  id: serial("id").primaryKey(),
+  timesheetId: integer("timesheet_id").notNull(),
+  shiftId: integer("shift_id"),
+  workDate: timestamp("work_date").notNull(),
+  clockIn: timestamp("clock_in"),
+  clockOut: timestamp("clock_out"),
+  breakStart: timestamp("break_start"),
+  breakEnd: timestamp("break_end"),
+  hoursWorked: decimal("hours_worked", { precision: 8, scale: 2 }).notNull(),
+  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }).notNull(),
+  entryType: text("entry_type").notNull(), // 'regular', 'overtime', 'holiday', 'sick', 'vacation'
+  isApproved: boolean("is_approved").default(false),
+  approvedBy: integer("approved_by"),
+  approvedAt: timestamp("approved_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow()
+});
+
+export const payrollSyncLogs = pgTable("payroll_sync_logs", {
+  id: serial("id").primaryKey(),
+  facilityId: integer("facility_id").notNull(),
+  providerId: integer("provider_id").notNull(),
+  syncType: text("sync_type").notNull(), // 'employee_sync', 'timesheet_sync', 'payment_sync'
+  status: text("status").notNull(), // 'success', 'failed', 'partial'
+  recordsProcessed: integer("records_processed").default(0),
+  recordsSucceeded: integer("records_succeeded").default(0),
+  recordsFailed: integer("records_failed").default(0),
+  errorDetails: jsonb("error_details"),
+  syncData: jsonb("sync_data"), // data that was synced
+  startedAt: timestamp("started_at").notNull(),
+  completedAt: timestamp("completed_at"),
+  createdBy: integer("created_by")
+});
+
+export const payments = pgTable("payments", {
+  id: serial("id").primaryKey(),
+  timesheetId: integer("timesheet_id").notNull(),
+  userId: integer("user_id").notNull(),
+  facilityId: integer("facility_id").notNull(),
+  payrollProviderId: integer("payroll_provider_id").notNull(),
+  externalPaymentId: text("external_payment_id"), // reference in payroll system
+  grossAmount: decimal("gross_amount", { precision: 10, scale: 2 }).notNull(),
+  federalTax: decimal("federal_tax", { precision: 10, scale: 2 }).default('0'),
+  stateTax: decimal("state_tax", { precision: 10, scale: 2 }).default('0'),
+  socialSecurity: decimal("social_security", { precision: 10, scale: 2 }).default('0'),
+  medicare: decimal("medicare", { precision: 10, scale: 2 }).default('0'),
+  otherDeductions: decimal("other_deductions", { precision: 10, scale: 2 }).default('0'),
+  netAmount: decimal("net_amount", { precision: 10, scale: 2 }).notNull(),
+  paymentMethod: text("payment_method").notNull(), // 'direct_deposit', 'check', 'card'
+  paymentDate: timestamp("payment_date"),
+  status: text("status").notNull().default('pending'), // 'pending', 'processing', 'completed', 'failed', 'cancelled'
+  failureReason: text("failure_reason"),
+  metadata: jsonb("metadata"), // additional payment details
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   facility: one(facilities, { fields: [users.facilityId], references: [facilities.id] }),
@@ -277,6 +399,46 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   createdAt: true
 });
 
+// Payroll insert schemas
+export const insertPayrollProviderSchema = createInsertSchema(payrollProviders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertPayrollConfigurationSchema = createInsertSchema(payrollConfigurations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertPayrollEmployeeSchema = createInsertSchema(payrollEmployees).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertTimesheetSchema = createInsertSchema(timesheets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+export const insertTimesheetEntrySchema = createInsertSchema(timesheetEntries).omit({
+  id: true,
+  createdAt: true
+});
+
+export const insertPayrollSyncLogSchema = createInsertSchema(payrollSyncLogs).omit({
+  id: true
+});
+
+export const insertPaymentSchema = createInsertSchema(payments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
@@ -297,3 +459,19 @@ export type Credential = typeof credentials.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
 export type AuditLog = typeof auditLogs.$inferSelect;
+
+// Payroll types
+export type InsertPayrollProvider = z.infer<typeof insertPayrollProviderSchema>;
+export type PayrollProvider = typeof payrollProviders.$inferSelect;
+export type InsertPayrollConfiguration = z.infer<typeof insertPayrollConfigurationSchema>;
+export type PayrollConfiguration = typeof payrollConfigurations.$inferSelect;
+export type InsertPayrollEmployee = z.infer<typeof insertPayrollEmployeeSchema>;
+export type PayrollEmployee = typeof payrollEmployees.$inferSelect;
+export type InsertTimesheet = z.infer<typeof insertTimesheetSchema>;
+export type Timesheet = typeof timesheets.$inferSelect;
+export type InsertTimesheetEntry = z.infer<typeof insertTimesheetEntrySchema>;
+export type TimesheetEntry = typeof timesheetEntries.$inferSelect;
+export type InsertPayrollSyncLog = z.infer<typeof insertPayrollSyncLogSchema>;
+export type PayrollSyncLog = typeof payrollSyncLogs.$inferSelect;
+export type InsertPayment = z.infer<typeof insertPaymentSchema>;
+export type Payment = typeof payments.$inferSelect;
