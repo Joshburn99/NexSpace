@@ -25,6 +25,8 @@ import SettingsPage from "@/pages/settings-page";
 import AdminImpersonationPage from "@/pages/admin-impersonation-page";
 import FacilityManagementPage from "@/pages/facility-management-page";
 import EnhancedJobPostingPage from "@/pages/enhanced-job-posting-page";
+import WorkflowAutomationPage from "@/pages/workflow-automation-page";
+import AdvancedSchedulingPage from "@/pages/advanced-scheduling-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -51,6 +53,8 @@ function Router() {
       <ProtectedRoute path="/admin/impersonation" component={AdminImpersonationPage} />
       <ProtectedRoute path="/facility-management" component={FacilityManagementPage} />
       <ProtectedRoute path="/job-posting" component={EnhancedJobPostingPage} />
+      <ProtectedRoute path="/workflow-automation" component={WorkflowAutomationPage} />
+      <ProtectedRoute path="/advanced-scheduling" component={AdvancedSchedulingPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
