@@ -61,27 +61,24 @@ export default function SettingsPage() {
 
   return (
     <AppLayout title="Settings" subtitle="Manage your account and application preferences">
-      <div className="p-6">
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
-                <Settings className="w-6 h-6" />
-                <span>Settings</span>
-              </h2>
-              <p className="text-sm text-gray-500">
-                Manage your account preferences and application settings
-              </p>
-            </div>
-            
-            <Button onClick={handleSaveSettings}>
-              <Save className="w-4 h-4 mr-2" />
-              Save Changes
-            </Button>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
+              <Settings className="w-6 h-6" />
+              <span>Settings</span>
+            </h2>
+            <p className="text-sm text-gray-500">
+              Manage your account preferences and application settings
+            </p>
           </div>
-        </header>
+          
+          <Button onClick={handleSaveSettings}>
+            <Save className="w-4 h-4 mr-2" />
+            Save Changes
+          </Button>
+        </div>
 
-        <div className="p-6 space-y-6">
+        <div className="space-y-6">
           {/* Super User App View Switcher */}
           {isSuperUser && (
             <Card>
@@ -413,7 +410,7 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </div>
+      </div>
+    </AppLayout>
   );
 }

@@ -123,8 +123,8 @@ export default function JobBoard() {
               Discover healthcare opportunities and connect with top facilities
             </p>
           </div>
-            
-            {canPostJobs && (
+          
+          {canPostJobs && (
               <Dialog>
                 <DialogTrigger asChild>
                   <Button className="bg-blue-600 hover:bg-blue-700">
@@ -282,8 +282,7 @@ export default function JobBoard() {
                 </DialogContent>
               </Dialog>
             )}
-          </div>
-        </header>
+        </div>
 
         {/* Content */}
         <div className="p-6">

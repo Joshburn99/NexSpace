@@ -161,18 +161,17 @@ export default function AttendancePage() {
     <AppLayout title="Attendance Tracking" subtitle="Monitor shift attendance, cancellations, and punctuality">
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <div>
-            <div className="flex gap-2">
-              <Button variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Export Data
-              </Button>
-              <Button>
-                <Calendar className="w-4 h-4 mr-2" />
-                Schedule Report
-              </Button>
-            </div>
+          <div className="flex gap-2">
+            <Button variant="outline">
+              <Download className="w-4 h-4 mr-2" />
+              Export Data
+            </Button>
+            <Button>
+              <Calendar className="w-4 h-4 mr-2" />
+              Schedule Report
+            </Button>
           </div>
+        </div>
 
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">

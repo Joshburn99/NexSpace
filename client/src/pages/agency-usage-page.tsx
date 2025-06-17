@@ -124,16 +124,16 @@ export default function AgencyUsagePage() {
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex gap-2">
-              <Button variant="outline">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Generate Report
-              </Button>
-              <Button>
-                <PieChart className="w-4 h-4 mr-2" />
-                Cost Analysis
-              </Button>
-            </div>
+            <Button variant="outline">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Generate Report
+            </Button>
+            <Button>
+              <PieChart className="w-4 h-4 mr-2" />
+              Cost Analysis
+            </Button>
           </div>
+        </div>
 
           {/* Key Metrics */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
