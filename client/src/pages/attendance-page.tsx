@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import { SidebarNav } from "@/components/ui/sidebar-nav";
+import { AppLayout } from "@/components/ui/app-layout";
 
 const mockAttendanceData = [
   {
@@ -158,15 +158,10 @@ export default function AttendancePage() {
   const lateRate = (attendanceStats.lateArrivals / attendanceStats.totalShifts * 100).toFixed(1);
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav user={user!} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Attendance Tracking</h1>
-              <p className="text-gray-600 dark:text-gray-300">Monitor shift attendance, cancellations, and punctuality</p>
-            </div>
+    <AppLayout title="Attendance Tracking" subtitle="Monitor shift attendance, cancellations, and punctuality">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
             <div className="flex gap-2">
               <Button variant="outline">
                 <Download className="w-4 h-4 mr-2" />

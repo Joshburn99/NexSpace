@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
-import { SidebarNav } from "@/components/ui/sidebar-nav";
+import { AppLayout } from "@/components/ui/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -114,20 +114,10 @@ export default function JobBoard() {
   if (!user) return null;
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <SidebarNav 
-        user={user} 
-        expanded={sidebarExpanded}
-        onToggle={() => setSidebarExpanded(!sidebarExpanded)}
-      />
-
-      {/* Main Content */}
-      <main className="flex-1 overflow-x-hidden overflow-y-auto">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
+    <AppLayout title="Job Board" subtitle="Browse and apply for available positions">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
               <h1 className="text-2xl font-bold text-gray-900">Job Board</h1>
               <p className="text-sm text-gray-500">
                 Discover healthcare opportunities and connect with top facilities

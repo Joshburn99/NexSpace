@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import { SidebarNav } from "@/components/ui/sidebar-nav";
+import { AppLayout } from "@/components/ui/app-layout";
 import { useToast } from "@/hooks/use-toast";
 
 const mockAgencyData = [
@@ -120,15 +120,10 @@ export default function AgencyUsagePage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav user={user!} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Agency Usage</h1>
-              <p className="text-gray-600 dark:text-gray-300">Track agency costs and identify savings opportunities</p>
-            </div>
+    <AppLayout title="Agency Usage" subtitle="Track agency costs and identify savings opportunities">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div>
             <div className="flex gap-2">
               <Button variant="outline">
                 <BarChart3 className="w-4 h-4 mr-2" />

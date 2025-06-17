@@ -37,6 +37,7 @@ function Router() {
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/jobs" component={EnhancedJobBoard} />
+      <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />
       <ProtectedRoute path="/scheduling" component={SchedulingPage} />
       <ProtectedRoute path="/calendar" component={EnhancedSchedulingPage} />
       <ProtectedRoute path="/shifts/open" component={OpenShiftsPage} />

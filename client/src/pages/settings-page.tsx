@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { SidebarNav } from "@/components/ui/sidebar-nav";
+import { AppLayout } from "@/components/ui/app-layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -60,14 +60,8 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <SidebarNav 
-        user={user} 
-        expanded={sidebarExpanded}
-        onToggle={() => setSidebarExpanded(!sidebarExpanded)}
-      />
-
-      <main className="flex-1 overflow-x-hidden overflow-y-auto">
+    <AppLayout title="Settings" subtitle="Manage your account and application preferences">
+      <div className="p-6">
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
