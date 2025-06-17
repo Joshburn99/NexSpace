@@ -16,7 +16,9 @@ import {
   DollarSign,
   FileText,
   UserCheck,
-  Bell
+  Bell,
+  ChevronDown,
+  ChevronRight
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 
@@ -37,19 +39,86 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
   const [location] = useLocation();
   const [selectedBuilding, setSelectedBuilding] = useState("1");
 
-  const navigationItems = [
-    { path: "/", icon: Activity, label: "Dashboard", exact: true },
-    { path: "/scheduling", icon: Calendar, label: "Scheduling" },
-    { path: "/staff", icon: Users, label: "Staff" },
-    { path: "/job-board", icon: ClipboardList, label: "Job Board" },
-    { path: "/analytics", icon: BarChart3, label: "Analytics" },
-    { path: "/messaging", icon: MessageSquare, label: "Messages" },
-    { path: "/payroll", icon: DollarSign, label: "Payroll" },
-    { path: "/time-clock", icon: Clock, label: "Time Clock" },
-    { path: "/invoices", icon: FileText, label: "Invoices" },
-    { path: "/credentials", icon: UserCheck, label: "Credentials" },
-    { path: "/settings", icon: Settings, label: "Settings" }
+  const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({
+    scheduling: false,
+    workforce: false,
+    hiring: false,
+    insights: false,
+    billing: false
+  });
+
+  const navigationGroups = [
+    {
+      items: [
+        { path: "/", icon: Activity, label: "Dashboard", exact: true }
+      ]
+    },
+    {
+      key: "scheduling",
+      label: "Scheduling",
+      icon: Calendar,
+      items: [
+        { path: "/scheduling", icon: Calendar, label: "Schedule Management" },
+        { path: "/advanced-scheduling", icon: Calendar, label: "Advanced Scheduling" },
+        { path: "/enhanced-scheduling", icon: Calendar, label: "Enhanced Scheduling" },
+        { path: "/shift-requests", icon: Clock, label: "Shift Requests" },
+        { path: "/shifts-open", icon: ClipboardList, label: "Open Shifts" }
+      ]
+    },
+    {
+      key: "workforce",
+      label: "Workforce",
+      icon: Users,
+      items: [
+        { path: "/staff", icon: Users, label: "Staff" },
+        { path: "/attendance", icon: UserCheck, label: "Attendance" },
+        { path: "/time-clock", icon: Clock, label: "Time Clock" },
+        { path: "/credentials", icon: UserCheck, label: "Credentials" }
+      ]
+    },
+    {
+      key: "hiring",
+      label: "Hiring",
+      icon: Building,
+      items: [
+        { path: "/job-board", icon: ClipboardList, label: "Job Board" },
+        { path: "/enhanced-job-board", icon: ClipboardList, label: "Enhanced Job Board" },
+        { path: "/enhanced-job-posting", icon: FileText, label: "Job Posting" },
+        { path: "/referral", icon: Users, label: "Referrals" }
+      ]
+    },
+    {
+      key: "insights",
+      label: "Insights",
+      icon: BarChart3,
+      items: [
+        { path: "/analytics", icon: BarChart3, label: "Analytics" },
+        { path: "/overtime-report", icon: FileText, label: "Overtime Reports" }
+      ]
+    },
+    {
+      key: "billing",
+      label: "Billing",
+      icon: DollarSign,
+      items: [
+        { path: "/payroll", icon: DollarSign, label: "Payroll" },
+        { path: "/invoices", icon: FileText, label: "Invoices" }
+      ]
+    },
+    {
+      items: [
+        { path: "/messaging", icon: MessageSquare, label: "Messages", badge: 3 },
+        { path: "/settings", icon: Settings, label: "Settings" }
+      ]
+    }
   ];
+
+  const toggleGroup = (groupKey: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [groupKey]: !prev[groupKey]
+    }));
+  };
 
   const isActive = (path: string, exact = false) => {
     if (exact) {
@@ -76,25 +145,87 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
         
         <nav className="flex-1 mt-6 px-3 overflow-y-auto">
           <div className="space-y-1">
-            {navigationItems.map((item) => {
-              const Icon = item.icon;
-              const active = isActive(item.path, item.exact);
-              
-              return (
-                <Link key={item.path} href={item.path}>
-                  <button
-                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                      active
-                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5 mr-3" />
-                    {item.label}
-                  </button>
-                </Link>
-              );
-            })}
+            {navigationGroups.map((group, groupIndex) => (
+              <div key={groupIndex}>
+                {group.label ? (
+                  // Group with collapsible header
+                  <div>
+                    <button
+                      onClick={() => toggleGroup(group.key!)}
+                      className="w-full flex items-center justify-between px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                    >
+                      <div className="flex items-center">
+                        <group.icon className="w-5 h-5 mr-3" />
+                        {group.label}
+                      </div>
+                      {expandedGroups[group.key!] ? (
+                        <ChevronDown className="w-4 h-4" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4" />
+                      )}
+                    </button>
+                    {expandedGroups[group.key!] && (
+                      <div className="ml-8 space-y-1 mt-1">
+                        {group.items.map((item) => {
+                          const Icon = item.icon;
+                          const active = isActive(item.path, item.exact);
+                          
+                          return (
+                            <Link key={item.path} href={item.path}>
+                              <button
+                                className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                                  active
+                                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                }`}
+                              >
+                                <div className="flex items-center">
+                                  <Icon className="w-4 h-4 mr-3" />
+                                  {item.label}
+                                </div>
+                                {item.badge && (
+                                  <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] h-5 flex items-center justify-center">
+                                    {item.badge}
+                                  </span>
+                                )}
+                              </button>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  // Direct items without grouping
+                  group.items.map((item) => {
+                    const Icon = item.icon;
+                    const active = isActive(item.path, item.exact);
+                    
+                    return (
+                      <Link key={item.path} href={item.path}>
+                        <button
+                          className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                            active
+                              ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
+                              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center">
+                            <Icon className="w-5 h-5 mr-3" />
+                            {item.label}
+                          </div>
+                          {item.badge && (
+                            <span className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] h-5 flex items-center justify-center">
+                              {item.badge}
+                            </span>
+                          )}
+                        </button>
+                      </Link>
+                    );
+                  })
+                )}
+              </div>
+            ))}
           </div>
         </nav>
         
