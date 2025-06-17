@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import { SidebarNav } from "@/components/ui/sidebar-nav";
+import { AppLayout } from "@/components/ui/app-layout";
 import { useToast } from "@/hooks/use-toast";
 
 const jobTypes = [
@@ -113,10 +113,8 @@ export default function EnhancedJobPostingPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav user={user!} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
+    <AppLayout>
+      <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Create Job Posting</h1>
@@ -659,6 +657,6 @@ export default function EnhancedJobPostingPage() {
           </Card>
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 }

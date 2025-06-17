@@ -185,14 +185,8 @@ export default function ShiftRequestsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <SidebarNav 
-        user={user} 
-        expanded={sidebarExpanded}
-        onToggle={() => setSidebarExpanded(!sidebarExpanded)}
-      />
-
-      <main className="flex-1 overflow-x-hidden overflow-y-auto">
+    <AppLayout>
+      <main className="overflow-x-hidden overflow-y-auto">
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -558,6 +552,6 @@ export default function ShiftRequestsPage() {
           </Tabs>
         </div>
       </main>
-    </div>
+    </AppLayout>
   );
 }

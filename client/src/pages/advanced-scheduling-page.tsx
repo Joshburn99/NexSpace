@@ -305,10 +305,8 @@ export default function AdvancedSchedulingPage() {
   const timeSlots = getTimeSlots();
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav user={user!} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
+    <AppLayout>
+      <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Advanced Scheduling</h1>
@@ -616,6 +614,6 @@ export default function AdvancedSchedulingPage() {
           )}
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 }
