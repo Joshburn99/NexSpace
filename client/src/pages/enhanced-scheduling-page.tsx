@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
-import { Calendar, Clock, Users, MapPin, Filter, Plus, ChevronLeft, ChevronRight, Building, Stethoscope, Navigation, AlertCircle, Eye, User, DollarSign, FileText } from "lucide-react";
+import { Calendar, Clock, Users, MapPin, Filter, Plus, ChevronLeft, ChevronRight, Building, Stethoscope, Navigation, AlertCircle, Eye, User, DollarSign, FileText, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -221,6 +222,23 @@ export default function EnhancedSchedulingPage() {
   const { toast } = useToast();
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [isShiftDetailsOpen, setIsShiftDetailsOpen] = useState(false);
+  const [isBulkScheduleOpen, setIsBulkScheduleOpen] = useState(false);
+  const [bulkShifts, setBulkShifts] = useState<Array<{
+    title: string;
+    unit: string;
+    position: string;
+    startDate: string;
+    endDate: string;
+    startTime: string;
+    endTime: string;
+    requiredStaff: number;
+    hourlyRate: number;
+    requirements: string;
+    notes: string;
+    recurring: boolean;
+    daysOfWeek: string[];
+  }>>([]);
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('custom');
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [shifts, setShifts] = useState<Shift[]>(mockShifts);
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -321,6 +339,18 @@ export default function EnhancedSchedulingPage() {
     });
   };
 
+  const getSpecialtyColor = (position: string) => {
+    switch (position) {
+      case 'RN': return 'border-blue-300 bg-blue-100';
+      case 'LPN': return 'border-green-300 bg-green-100';
+      case 'CNA': return 'border-purple-300 bg-purple-100';
+      case 'PT': return 'border-orange-300 bg-orange-100';
+      case 'OT': return 'border-pink-300 bg-pink-100';
+      case 'RT': return 'border-cyan-300 bg-cyan-100';
+      default: return 'border-gray-300 bg-gray-100';
+    }
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'open': return 'bg-red-100 text-red-800 border-red-200';
@@ -329,6 +359,28 @@ export default function EnhancedSchedulingPage() {
       case 'in-progress': return 'bg-blue-100 text-blue-800 border-blue-200';
       case 'cancelled': return 'bg-gray-100 text-gray-800 border-gray-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'open': return <AlertCircle className="w-3 h-3 text-red-500" />;
+      case 'filled': return <Users className="w-3 h-3 text-green-500" />;
+      case 'urgent': return <AlertTriangle className="w-3 h-3 text-orange-500" />;
+      case 'cancelled': return <XCircle className="w-3 h-3 text-gray-500" />;
+      case 'in-progress': return <Clock className="w-3 h-3 text-blue-500" />;
+      default: return <Clock className="w-3 h-3 text-gray-500" />;
+    }
+  };
+
+  const getStatusDescription = (status: string) => {
+    switch (status) {
+      case 'open': return 'This shift is available and needs staff assignment';
+      case 'filled': return 'This shift has been fully staffed';
+      case 'urgent': return 'This shift requires immediate attention - understaffed or last minute';
+      case 'cancelled': return 'This shift has been cancelled';
+      case 'in-progress': return 'This shift is currently active';
+      default: return 'Unknown status';
     }
   };
 
@@ -428,51 +480,105 @@ export default function EnhancedSchedulingPage() {
             <CardContent>
               <div className="grid gap-3">
                 {getShiftsForUnit(unit.name, selectedDate).map(shift => (
+                  <TooltipProvider key={shift.id}>
+                    <div 
+                      className={cn("p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow", getSpecialtyColor(shift.position))}
+                      onClick={() => {
+                        setSelectedShift(shift);
+                        setIsShiftDetailsOpen(true);
+                      }}
+                    >
+                      <div className="flex justify-between items-center">
+                        <div className="space-y-1">
+                          <h4 className="font-medium text-sm">{shift.position}</h4>
+                          <div className="text-xs text-gray-600">
+                            {shift.assignedStaff.length > 0 ? (
+                              <span className="font-medium">{shift.assignedStaff[0].name}</span>
+                            ) : (
+                              <span className="text-gray-400 italic">Unassigned</span>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-1 text-xs text-gray-500">
+                            <Clock className="w-3 h-3" />
+                            <span>
+                              {shift.start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - 
+                              {shift.end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end space-y-1">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center space-x-1 cursor-help">
+                                {getStatusIcon(shift.status)}
+                                <Badge className={cn("text-xs", getStatusColor(shift.status))}>
+                                  {shift.status.charAt(0).toUpperCase() + shift.status.slice(1)}
+                                </Badge>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{getStatusDescription(shift.status)}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <Button variant="ghost" size="sm" className="h-6 px-2">
+                            <Eye className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </TooltipProvider>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  };
+
+  const renderNext7DaysView = () => {
+    const days = getNext7Days();
+    
+    return (
+      <div className="grid grid-cols-7 gap-2">
+        {days.map((date, index) => (
+          <div key={index} className="border rounded-lg p-3 bg-white min-h-[300px]">
+            <h3 className="font-semibold text-sm mb-2">
+              {date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+            </h3>
+            <div className="space-y-2">
+              {getShiftsForDate(date).slice(0, 4).map(shift => (
+                <TooltipProvider key={shift.id}>
                   <div 
-                    key={shift.id} 
-                    className={cn("p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow", getStatusColor(shift.status))}
+                    className={cn("p-2 rounded border cursor-pointer hover:shadow-sm transition-shadow text-xs", getSpecialtyColor(shift.position))}
                     onClick={() => {
                       setSelectedShift(shift);
                       setIsShiftDetailsOpen(true);
                     }}
                   >
-                    <div className="flex justify-between items-center">
-                      <div className="space-y-1">
-                        <h4 className="font-medium text-sm">{shift.position}</h4>
-                        <div className="text-xs text-gray-600">
-                          {shift.assignedStaff.length > 0 ? (
-                            <span className="font-medium">{shift.assignedStaff[0].name}</span>
-                          ) : (
-                            <span className="text-gray-400 italic">Unassigned</span>
-                          )}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium">{shift.position}</div>
+                        <div className="text-gray-600">
+                          {shift.assignedStaff.length > 0 ? shift.assignedStaff[0].name : 'Open'}
                         </div>
-                        <div className="flex items-center space-x-1 text-xs text-gray-500">
-                          <Clock className="w-3 h-3" />
-                          <span>
-                            {shift.start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - 
-                            {shift.end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                          </span>
+                        <div className="text-gray-500">
+                          {shift.start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                         </div>
                       </div>
-                      <div className="flex flex-col items-end space-y-1">
-                        <Badge className={cn("text-xs", getStatusColor(shift.status))}>
-                          {shift.status.charAt(0).toUpperCase() + shift.status.slice(1)}
-                        </Badge>
-                        <Button variant="ghost" size="sm" className="h-6 px-2">
-                          <Eye className="w-3 h-3" />
-                        </Button>
-                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="cursor-help">
+                            {getStatusIcon(shift.status)}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{getStatusDescription(shift.status)}</p>
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
-                    
-                    {shift.assignedStaff.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        <h5 className="text-sm font-medium">Assigned Staff:</h5>
-                        <div className="space-y-1">
-                          {shift.assignedStaff.map(staff => (
-                            <div key={staff.id} className="flex items-center justify-between text-sm">
-                              <div className="flex items-center space-x-2">
-                                <span className={getStaffTypeColor(staff.type)}>{staff.name}</span>
-                                <Badge variant="outline" className="text-xs">{staff.position}</Badge>
+                  </div>
+                </TooltipProvider>
                                 {staff.currentLocation && (
                                   <div className="flex items-center space-x-1 text-xs text-gray-500">
                                     <Navigation className="w-3 h-3" />
