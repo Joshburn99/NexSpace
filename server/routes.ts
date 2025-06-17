@@ -7,7 +7,9 @@ import { z } from "zod";
 import { 
   insertJobSchema, insertJobApplicationSchema, insertShiftSchema,
   insertInvoiceSchema, insertWorkLogSchema, insertCredentialSchema,
-  insertMessageSchema, UserRole
+  insertMessageSchema, insertPayrollProviderSchema, insertPayrollConfigurationSchema,
+  insertPayrollEmployeeSchema, insertTimesheetSchema, insertTimesheetEntrySchema,
+  insertPaymentSchema, UserRole
 } from "@shared/schema";
 
 export function registerRoutes(app: Express): Server {
@@ -488,6 +490,238 @@ export function registerRoutes(app: Express): Server {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to impersonate user" });
+    }
+  });
+
+  // ===================
+  // PAYROLL SYSTEM API
+  // ===================
+
+  // Payroll Providers
+  app.get("/api/payroll/providers", requireAuth, requirePermission("payroll.view"), async (req, res) => {
+    try {
+      const providers = await storage.getPayrollProviders();
+      res.json(providers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch payroll providers" });
+    }
+  });
+
+  app.post("/api/payroll/providers", requireAuth, requirePermission("payroll.manage"), auditLog("CREATE", "payroll_provider"), async (req, res) => {
+    try {
+      const validated = insertPayrollProviderSchema.parse(req.body);
+      const provider = await storage.createPayrollProvider(validated);
+      res.status(201).json(provider);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid provider data", error });
+    }
+  });
+
+  // Payroll Configuration
+  app.get("/api/payroll/config/:facilityId", requireAuth, requirePermission("payroll.view"), async (req, res) => {
+    try {
+      const facilityId = parseInt(req.params.facilityId);
+      const config = await storage.getPayrollConfiguration(facilityId);
+      res.json(config);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch payroll configuration" });
+    }
+  });
+
+  app.post("/api/payroll/config", requireAuth, requirePermission("payroll.manage"), auditLog("CREATE", "payroll_config"), async (req, res) => {
+    try {
+      const validated = insertPayrollConfigurationSchema.parse(req.body);
+      const config = await storage.createPayrollConfiguration(validated);
+      res.status(201).json(config);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid configuration data", error });
+    }
+  });
+
+  app.put("/api/payroll/config/:id", requireAuth, requirePermission("payroll.manage"), auditLog("UPDATE", "payroll_config"), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validated = insertPayrollConfigurationSchema.partial().parse(req.body);
+      const config = await storage.updatePayrollConfiguration(id, validated);
+      res.json(config);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update configuration", error });
+    }
+  });
+
+  // Payroll Employees
+  app.get("/api/payroll/employees/:facilityId", requireAuth, requirePermission("payroll.view"), async (req, res) => {
+    try {
+      const facilityId = parseInt(req.params.facilityId);
+      const employees = await storage.getPayrollEmployeesByFacility(facilityId);
+      res.json(employees);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch payroll employees" });
+    }
+  });
+
+  app.post("/api/payroll/employees", requireAuth, requirePermission("payroll.manage"), auditLog("CREATE", "payroll_employee"), async (req, res) => {
+    try {
+      const validated = insertPayrollEmployeeSchema.parse(req.body);
+      const employee = await storage.createPayrollEmployee(validated);
+      res.status(201).json(employee);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid employee data", error });
+    }
+  });
+
+  app.put("/api/payroll/employees/:id", requireAuth, requirePermission("payroll.manage"), auditLog("UPDATE", "payroll_employee"), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const validated = insertPayrollEmployeeSchema.partial().parse(req.body);
+      const employee = await storage.updatePayrollEmployee(id, validated);
+      res.json(employee);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update employee", error });
+    }
+  });
+
+  // Timesheets
+  app.get("/api/timesheets/:facilityId", requireAuth, requirePermission("payroll.view"), async (req, res) => {
+    try {
+      const facilityId = parseInt(req.params.facilityId);
+      const { startDate, endDate, userId } = req.query;
+
+      let timesheets;
+      if (userId) {
+        timesheets = await storage.getTimesheetsByUser(parseInt(userId as string), facilityId);
+      } else if (startDate && endDate) {
+        timesheets = await storage.getTimesheetsByPayPeriod(facilityId, new Date(startDate as string), new Date(endDate as string));
+      } else {
+        timesheets = await storage.getPendingTimesheets(facilityId);
+      }
+      
+      res.json(timesheets);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch timesheets" });
+    }
+  });
+
+  app.post("/api/timesheets", requireAuth, requirePermission("payroll.manage"), auditLog("CREATE", "timesheet"), async (req, res) => {
+    try {
+      const validated = insertTimesheetSchema.parse(req.body);
+      const timesheet = await storage.createTimesheet(validated);
+      res.status(201).json(timesheet);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid timesheet data", error });
+    }
+  });
+
+  app.put("/api/timesheets/:id/status", requireAuth, requirePermission("payroll.approve"), auditLog("UPDATE", "timesheet"), async (req: any, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      const timesheet = await storage.updateTimesheetStatus(id, status, req.user.id);
+      res.json(timesheet);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update timesheet status", error });
+    }
+  });
+
+  // Timesheet Entries
+  app.get("/api/timesheets/:id/entries", requireAuth, requirePermission("payroll.view"), async (req, res) => {
+    try {
+      const timesheetId = parseInt(req.params.id);
+      const entries = await storage.getTimesheetEntries(timesheetId);
+      res.json(entries);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch timesheet entries" });
+    }
+  });
+
+  app.post("/api/timesheets/:id/entries", requireAuth, requirePermission("payroll.manage"), auditLog("CREATE", "timesheet_entry"), async (req, res) => {
+    try {
+      const timesheetId = parseInt(req.params.id);
+      const validated = insertTimesheetEntrySchema.parse({ ...req.body, timesheetId });
+      const entry = await storage.createTimesheetEntry(validated);
+      res.status(201).json(entry);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid entry data", error });
+    }
+  });
+
+  // Payments
+  app.get("/api/payments/:facilityId", requireAuth, requirePermission("payroll.view"), async (req, res) => {
+    try {
+      const facilityId = parseInt(req.params.facilityId);
+      const { userId, timesheetId } = req.query;
+
+      let payments;
+      if (userId) {
+        payments = await storage.getPaymentsByUser(parseInt(userId as string));
+      } else if (timesheetId) {
+        payments = await storage.getPaymentsByTimesheet(parseInt(timesheetId as string));
+      } else {
+        payments = await storage.getPendingPayments(facilityId);
+      }
+      
+      res.json(payments);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch payments" });
+    }
+  });
+
+  app.post("/api/payments", requireAuth, requirePermission("payroll.manage"), auditLog("CREATE", "payment"), async (req, res) => {
+    try {
+      const validated = insertPaymentSchema.parse(req.body);
+      const payment = await storage.createPayment(validated);
+      res.status(201).json(payment);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid payment data", error });
+    }
+  });
+
+  app.put("/api/payments/:id/status", requireAuth, requirePermission("payroll.manage"), auditLog("UPDATE", "payment"), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { status } = req.body;
+      const payment = await storage.updatePaymentStatus(id, status);
+      res.json(payment);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update payment status", error });
+    }
+  });
+
+  // Automated Payroll Processing
+  app.post("/api/payroll/process", requireAuth, requirePermission("payroll.process"), auditLog("PROCESS", "payroll"), async (req, res) => {
+    try {
+      const { facilityId, payPeriodStart, payPeriodEnd } = req.body;
+      const result = await storage.processPayroll(
+        facilityId,
+        new Date(payPeriodStart),
+        new Date(payPeriodEnd)
+      );
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to process payroll", error });
+    }
+  });
+
+  // Payroll Provider Sync
+  app.post("/api/payroll/sync", requireAuth, requirePermission("payroll.sync"), auditLog("SYNC", "payroll"), async (req, res) => {
+    try {
+      const { facilityId, syncType } = req.body;
+      const syncLog = await storage.syncWithPayrollProvider(facilityId, syncType);
+      res.json(syncLog);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to sync with payroll provider", error });
+    }
+  });
+
+  // Payroll Sync Logs
+  app.get("/api/payroll/sync-logs/:facilityId", requireAuth, requirePermission("payroll.view"), async (req, res) => {
+    try {
+      const facilityId = parseInt(req.params.facilityId);
+      const { providerId } = req.query;
+      const logs = await storage.getPayrollSyncLogs(facilityId, providerId ? parseInt(providerId as string) : undefined);
+      res.json(logs);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch sync logs" });
     }
   });
 

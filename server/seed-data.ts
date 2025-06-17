@@ -1,5 +1,9 @@
 import { db } from './db';
-import { users, facilities, jobs, shifts, credentials, messages, invoices, workLogs } from '@shared/schema';
+import { 
+  users, facilities, jobs, shifts, credentials, messages, invoices, workLogs,
+  payrollProviders, payrollConfigurations, payrollEmployees, timesheets, 
+  timesheetEntries, payments
+} from '@shared/schema';
 import { UserRole } from '@shared/schema';
 
 export async function seedDatabase() {

@@ -544,6 +544,355 @@ export class DatabaseStorage implements IStorage {
     
     return result;
   }
+
+  // Payroll Provider methods
+  async createPayrollProvider(insertProvider: InsertPayrollProvider): Promise<PayrollProvider> {
+    const [provider] = await db.insert(payrollProviders).values(insertProvider).returning();
+    return provider;
+  }
+
+  async getPayrollProviders(): Promise<PayrollProvider[]> {
+    return await db.select().from(payrollProviders).where(eq(payrollProviders.isActive, true));
+  }
+
+  async updatePayrollProvider(id: number, updates: Partial<InsertPayrollProvider>): Promise<PayrollProvider | undefined> {
+    const [provider] = await db.update(payrollProviders)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(payrollProviders.id, id))
+      .returning();
+    return provider || undefined;
+  }
+
+  // Payroll Configuration methods
+  async createPayrollConfiguration(insertConfig: InsertPayrollConfiguration): Promise<PayrollConfiguration> {
+    const [config] = await db.insert(payrollConfigurations).values(insertConfig).returning();
+    return config;
+  }
+
+  async getPayrollConfiguration(facilityId: number): Promise<PayrollConfiguration | undefined> {
+    const [config] = await db.select().from(payrollConfigurations)
+      .where(and(eq(payrollConfigurations.facilityId, facilityId), eq(payrollConfigurations.isActive, true)));
+    return config || undefined;
+  }
+
+  async updatePayrollConfiguration(id: number, updates: Partial<InsertPayrollConfiguration>): Promise<PayrollConfiguration | undefined> {
+    const [config] = await db.update(payrollConfigurations)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(payrollConfigurations.id, id))
+      .returning();
+    return config || undefined;
+  }
+
+  // Payroll Employee methods
+  async createPayrollEmployee(insertEmployee: InsertPayrollEmployee): Promise<PayrollEmployee> {
+    const [employee] = await db.insert(payrollEmployees).values(insertEmployee).returning();
+    return employee;
+  }
+
+  async getPayrollEmployee(userId: number, facilityId: number): Promise<PayrollEmployee | undefined> {
+    const [employee] = await db.select().from(payrollEmployees)
+      .where(and(
+        eq(payrollEmployees.userId, userId),
+        eq(payrollEmployees.facilityId, facilityId),
+        eq(payrollEmployees.isActive, true)
+      ));
+    return employee || undefined;
+  }
+
+  async updatePayrollEmployee(id: number, updates: Partial<InsertPayrollEmployee>): Promise<PayrollEmployee | undefined> {
+    const [employee] = await db.update(payrollEmployees)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(payrollEmployees.id, id))
+      .returning();
+    return employee || undefined;
+  }
+
+  async getPayrollEmployeesByFacility(facilityId: number): Promise<PayrollEmployee[]> {
+    return await db.select().from(payrollEmployees)
+      .where(and(eq(payrollEmployees.facilityId, facilityId), eq(payrollEmployees.isActive, true)));
+  }
+
+  // Timesheet methods
+  async createTimesheet(insertTimesheet: InsertTimesheet): Promise<Timesheet> {
+    const [timesheet] = await db.insert(timesheets).values(insertTimesheet).returning();
+    return timesheet;
+  }
+
+  async getTimesheet(id: number): Promise<Timesheet | undefined> {
+    const [timesheet] = await db.select().from(timesheets).where(eq(timesheets.id, id));
+    return timesheet || undefined;
+  }
+
+  async getTimesheetsByUser(userId: number, facilityId: number): Promise<Timesheet[]> {
+    return await db.select().from(timesheets)
+      .where(and(eq(timesheets.userId, userId), eq(timesheets.facilityId, facilityId)))
+      .orderBy(desc(timesheets.payPeriodStart));
+  }
+
+  async getTimesheetsByPayPeriod(facilityId: number, startDate: Date, endDate: Date): Promise<Timesheet[]> {
+    return await db.select().from(timesheets)
+      .where(and(
+        eq(timesheets.facilityId, facilityId),
+        gte(timesheets.payPeriodStart, startDate),
+        lte(timesheets.payPeriodEnd, endDate)
+      ))
+      .orderBy(desc(timesheets.payPeriodStart));
+  }
+
+  async updateTimesheetStatus(id: number, status: string, approvedBy?: number): Promise<Timesheet | undefined> {
+    const updates: any = { status, updatedAt: new Date() };
+    if (status === 'approved' && approvedBy) {
+      updates.approvedBy = approvedBy;
+      updates.approvedAt = new Date();
+    }
+    if (status === 'processed') {
+      updates.processedAt = new Date();
+    }
+
+    const [timesheet] = await db.update(timesheets)
+      .set(updates)
+      .where(eq(timesheets.id, id))
+      .returning();
+    return timesheet || undefined;
+  }
+
+  async getPendingTimesheets(facilityId: number): Promise<Timesheet[]> {
+    return await db.select().from(timesheets)
+      .where(and(
+        eq(timesheets.facilityId, facilityId),
+        sql`${timesheets.status} IN ('submitted', 'approved')`
+      ))
+      .orderBy(asc(timesheets.submittedAt));
+  }
+
+  // Timesheet Entry methods
+  async createTimesheetEntry(insertEntry: InsertTimesheetEntry): Promise<TimesheetEntry> {
+    const [entry] = await db.insert(timesheetEntries).values(insertEntry).returning();
+    return entry;
+  }
+
+  async getTimesheetEntries(timesheetId: number): Promise<TimesheetEntry[]> {
+    return await db.select().from(timesheetEntries)
+      .where(eq(timesheetEntries.timesheetId, timesheetId))
+      .orderBy(asc(timesheetEntries.workDate));
+  }
+
+  async updateTimesheetEntry(id: number, updates: Partial<InsertTimesheetEntry>): Promise<TimesheetEntry | undefined> {
+    const [entry] = await db.update(timesheetEntries)
+      .set(updates)
+      .where(eq(timesheetEntries.id, id))
+      .returning();
+    return entry || undefined;
+  }
+
+  // Payroll Sync Log methods
+  async createPayrollSyncLog(insertLog: InsertPayrollSyncLog): Promise<PayrollSyncLog> {
+    const [log] = await db.insert(payrollSyncLogs).values(insertLog).returning();
+    return log;
+  }
+
+  async getPayrollSyncLogs(facilityId: number, providerId?: number): Promise<PayrollSyncLog[]> {
+    const conditions = [eq(payrollSyncLogs.facilityId, facilityId)];
+    if (providerId) {
+      conditions.push(eq(payrollSyncLogs.providerId, providerId));
+    }
+
+    return await db.select().from(payrollSyncLogs)
+      .where(and(...conditions))
+      .orderBy(desc(payrollSyncLogs.startedAt));
+  }
+
+  // Payment methods
+  async createPayment(insertPayment: InsertPayment): Promise<Payment> {
+    const [payment] = await db.insert(payments).values(insertPayment).returning();
+    return payment;
+  }
+
+  async getPayment(id: number): Promise<Payment | undefined> {
+    const [payment] = await db.select().from(payments).where(eq(payments.id, id));
+    return payment || undefined;
+  }
+
+  async getPaymentsByUser(userId: number): Promise<Payment[]> {
+    return await db.select().from(payments)
+      .where(eq(payments.userId, userId))
+      .orderBy(desc(payments.createdAt));
+  }
+
+  async getPaymentsByTimesheet(timesheetId: number): Promise<Payment[]> {
+    return await db.select().from(payments)
+      .where(eq(payments.timesheetId, timesheetId))
+      .orderBy(desc(payments.createdAt));
+  }
+
+  async updatePaymentStatus(id: number, status: string): Promise<Payment | undefined> {
+    const updates: any = { status, updatedAt: new Date() };
+    if (status === 'completed') {
+      updates.paymentDate = new Date();
+    }
+
+    const [payment] = await db.update(payments)
+      .set(updates)
+      .where(eq(payments.id, id))
+      .returning();
+    return payment || undefined;
+  }
+
+  async getPendingPayments(facilityId: number): Promise<Payment[]> {
+    return await db.select().from(payments)
+      .where(and(
+        eq(payments.facilityId, facilityId),
+        sql`${payments.status} IN ('pending', 'processing')`
+      ))
+      .orderBy(asc(payments.createdAt));
+  }
+
+  // Automated payroll processing
+  async processPayroll(facilityId: number, payPeriodStart: Date, payPeriodEnd: Date): Promise<{
+    processedTimesheets: number;
+    totalPayments: number;
+    errors: string[];
+  }> {
+    const errors: string[] = [];
+    let processedTimesheets = 0;
+    let totalPayments = 0;
+
+    try {
+      // Get approved timesheets for the pay period
+      const approvedTimesheets = await db.select().from(timesheets)
+        .where(and(
+          eq(timesheets.facilityId, facilityId),
+          eq(timesheets.status, 'approved'),
+          gte(timesheets.payPeriodStart, payPeriodStart),
+          lte(timesheets.payPeriodEnd, payPeriodEnd)
+        ));
+
+      for (const timesheet of approvedTimesheets) {
+        try {
+          // Get payroll employee info
+          const payrollEmployee = await this.getPayrollEmployee(timesheet.userId, facilityId);
+          if (!payrollEmployee) {
+            errors.push(`No payroll configuration found for user ${timesheet.userId}`);
+            continue;
+          }
+
+          // Calculate gross pay
+          const grossPay = Number(timesheet.grossPay) || 0;
+          
+          // Calculate taxes and deductions (simplified calculation)
+          const federalTax = grossPay * 0.12; // 12% federal tax
+          const stateTax = grossPay * 0.05; // 5% state tax
+          const socialSecurity = grossPay * 0.062; // 6.2% social security
+          const medicare = grossPay * 0.0145; // 1.45% medicare
+          
+          const totalDeductions = federalTax + stateTax + socialSecurity + medicare;
+          const netAmount = grossPay - totalDeductions;
+
+          // Create payment record
+          const payment = await this.createPayment({
+            timesheetId: timesheet.id,
+            userId: timesheet.userId,
+            facilityId: facilityId,
+            payrollProviderId: payrollEmployee.payrollProviderId,
+            grossAmount: grossPay.toString(),
+            federalTax: federalTax.toString(),
+            stateTax: stateTax.toString(),
+            socialSecurity: socialSecurity.toString(),
+            medicare: medicare.toString(),
+            otherDeductions: '0',
+            netAmount: netAmount.toString(),
+            paymentMethod: 'direct_deposit',
+            status: 'pending'
+          });
+
+          // Update timesheet status
+          await this.updateTimesheetStatus(timesheet.id, 'processed');
+
+          processedTimesheets++;
+          totalPayments += netAmount;
+
+        } catch (error) {
+          errors.push(`Error processing timesheet ${timesheet.id}: ${error}`);
+        }
+      }
+
+      // Create sync log
+      await this.createPayrollSyncLog({
+        facilityId,
+        providerId: 1, // Default provider
+        syncType: 'payment_sync',
+        status: errors.length > 0 ? 'partial' : 'success',
+        recordsProcessed: approvedTimesheets.length,
+        recordsSucceeded: processedTimesheets,
+        recordsFailed: approvedTimesheets.length - processedTimesheets,
+        errorDetails: errors.length > 0 ? { errors } : null,
+        startedAt: new Date(),
+        completedAt: new Date(),
+        createdBy: 1 // System user
+      });
+
+    } catch (error) {
+      errors.push(`System error during payroll processing: ${error}`);
+    }
+
+    return {
+      processedTimesheets,
+      totalPayments,
+      errors
+    };
+  }
+
+  async syncWithPayrollProvider(facilityId: number, syncType: string): Promise<PayrollSyncLog> {
+    const startTime = new Date();
+    
+    try {
+      // Get payroll configuration
+      const config = await this.getPayrollConfiguration(facilityId);
+      if (!config) {
+        throw new Error('No payroll configuration found for facility');
+      }
+
+      // Simulate sync with external payroll provider
+      // In real implementation, this would make API calls to providers like ADP, Paychex, etc.
+      
+      const syncLog = await this.createPayrollSyncLog({
+        facilityId,
+        providerId: config.providerId,
+        syncType,
+        status: 'success',
+        recordsProcessed: 1,
+        recordsSucceeded: 1,
+        recordsFailed: 0,
+        syncData: { message: 'Sync completed successfully' },
+        startedAt: startTime,
+        completedAt: new Date(),
+        createdBy: 1 // System user
+      });
+
+      // Update configuration last sync time
+      await this.updatePayrollConfiguration(config.id, {
+        lastSyncAt: new Date()
+      });
+
+      return syncLog;
+
+    } catch (error) {
+      // Create error log
+      return await this.createPayrollSyncLog({
+        facilityId,
+        providerId: 1, // Default provider
+        syncType,
+        status: 'failed',
+        recordsProcessed: 0,
+        recordsSucceeded: 0,
+        recordsFailed: 1,
+        errorDetails: { error: error.toString() },
+        startedAt: startTime,
+        completedAt: new Date(),
+        createdBy: 1 // System user
+      });
+    }
+  }
 }
 
 export const storage = new DatabaseStorage();
