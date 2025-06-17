@@ -1,3 +1,4 @@
+import React from "react";
 import { UserRole } from "@shared/schema";
 
 // Define all possible permissions in the system
