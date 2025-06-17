@@ -8,7 +8,9 @@ import { ProtectedRoute } from "./lib/protected-route";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import JobBoard from "@/pages/job-board";
+import EnhancedJobBoard from "@/pages/enhanced-job-board";
 import SchedulingPage from "@/pages/scheduling-page";
+import EnhancedSchedulingPage from "@/pages/enhanced-scheduling-page";
 import MessagingPage from "@/pages/messaging-page";
 import AnalyticsPage from "@/pages/analytics-page";
 import CredentialsPage from "@/pages/credentials-page";
@@ -34,9 +36,9 @@ function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
-      <ProtectedRoute path="/jobs" component={JobBoard} />
+      <ProtectedRoute path="/jobs" component={EnhancedJobBoard} />
       <ProtectedRoute path="/scheduling" component={SchedulingPage} />
-      <ProtectedRoute path="/calendar" component={SchedulingPage} />
+      <ProtectedRoute path="/calendar" component={EnhancedSchedulingPage} />
       <ProtectedRoute path="/shifts/open" component={OpenShiftsPage} />
       <ProtectedRoute path="/shifts/requests" component={ShiftRequestsPage} />
       <ProtectedRoute path="/time-clock" component={TimeClockPage} />

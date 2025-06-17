@@ -6,47 +6,108 @@ export async function seedDatabase() {
   console.log('Seeding database with demo data...');
 
   try {
-    // Create facilities
+    // Create facilities - 100-bed skilled nursing facility
     const facilitiesData = [
       {
-        name: 'Sunrise Senior Living',
-        address: '123 Wellness Blvd, Healthcare City, HC 12345',
-        phone: '(555) 123-4567',
-        email: 'admin@sunrisesenior.com',
-        licenseNumber: 'FL-12345',
-        capacity: 120,
-        currentCensus: 98
-      },
-      {
-        name: 'Golden Years Care Center',
-        address: '456 Memory Lane, Healthcare City, HC 12346',
-        phone: '(555) 234-5678',
-        email: 'info@goldenyears.com',
-        licenseNumber: 'FL-12346',
-        capacity: 80,
-        currentCensus: 72
-      },
-      {
-        name: 'Harmony Health Center',
-        address: '789 Peaceful Dr, Healthcare City, HC 12347',
-        phone: '(555) 345-6789',
-        email: 'contact@harmonyhealth.com',
-        licenseNumber: 'FL-12347',
-        capacity: 150,
-        currentCensus: 134
+        name: 'Willowbrook Skilled Nursing & Rehabilitation',
+        address: '1234 Healthcare Drive, Meadowbrook, FL 33157',
+        phone: '(305) 555-0100',
+        email: 'admin@willowbrooksnf.com',
+        licenseNumber: 'FL-SNF-12345',
+        capacity: 100,
+        currentCensus: 90
       }
     ];
 
     const insertedFacilities = await db.insert(facilities).values(facilitiesData).returning();
 
-    // Create users with realistic healthcare profiles
+    // Create comprehensive healthcare staff for 100-bed facility
     const usersData = [
+      // Facility Management
+      {
+        username: 'admin',
+        email: 'admin@willowbrooksnf.com',
+        password: '$2b$10$hashedpassword1',
+        firstName: 'Jennifer',
+        lastName: 'Martinez',
+        role: UserRole.FACILITY_MANAGER,
+        facilityId: insertedFacilities[0].id
+      },
+      // ICU Staff - Employees
       {
         username: 'sarah.johnson',
-        email: 'sarah.johnson@nexspace.com',
-        password: '$2b$10$hashedpassword1',
+        email: 'sarah.johnson@willowbrooksnf.com',
+        password: '$2b$10$hashedpassword2',
         firstName: 'Sarah',
         lastName: 'Johnson',
+        role: UserRole.INTERNAL_EMPLOYEE,
+        facilityId: insertedFacilities[0].id
+      },
+      {
+        username: 'michael.chen',
+        email: 'michael.chen@willowbrooksnf.com',
+        password: '$2b$10$hashedpassword3',
+        firstName: 'Michael',
+        lastName: 'Chen',
+        role: UserRole.INTERNAL_EMPLOYEE,
+        facilityId: insertedFacilities[0].id
+      },
+      // ICU Staff - Contractors
+      {
+        username: 'david.thompson',
+        email: 'david.thompson@contractornurse.com',
+        password: '$2b$10$hashedpassword4',
+        firstName: 'David',
+        lastName: 'Thompson',
+        role: UserRole.CONTRACTOR_1099,
+        facilityId: insertedFacilities[0].id
+      },
+      // Med-Surg Staff - Employees
+      {
+        username: 'emily.rodriguez',
+        email: 'emily.rodriguez@willowbrooksnf.com',
+        password: '$2b$10$hashedpassword5',
+        firstName: 'Emily',
+        lastName: 'Rodriguez',
+        role: UserRole.INTERNAL_EMPLOYEE,
+        facilityId: insertedFacilities[0].id
+      },
+      {
+        username: 'robert.davis',
+        email: 'robert.davis@willowbrooksnf.com',
+        password: '$2b$10$hashedpassword6',
+        firstName: 'Robert',
+        lastName: 'Davis',
+        role: UserRole.INTERNAL_EMPLOYEE,
+        facilityId: insertedFacilities[0].id
+      },
+      // Med-Surg Staff - Contractors
+      {
+        username: 'kevin.lee',
+        email: 'kevin.lee@healthcaretemps.com',
+        password: '$2b$10$hashedpassword7',
+        firstName: 'Kevin',
+        lastName: 'Lee',
+        role: UserRole.CONTRACTOR_1099,
+        facilityId: insertedFacilities[0].id
+      },
+      // Memory Care Staff - Employees
+      {
+        username: 'rachel.kim',
+        email: 'rachel.kim@willowbrooksnf.com',
+        password: '$2b$10$hashedpassword8',
+        firstName: 'Rachel',
+        lastName: 'Kim',
+        role: UserRole.INTERNAL_EMPLOYEE,
+        facilityId: insertedFacilities[0].id
+      },
+      // Rehabilitation Staff - Employees
+      {
+        username: 'nicole.adams',
+        email: 'nicole.adams@willowbrooksnf.com',
+        password: '$2b$10$hashedpassword9',
+        firstName: 'Nicole',
+        lastName: 'Adams',
         role: UserRole.INTERNAL_EMPLOYEE,
         facilityId: insertedFacilities[0].id,
         isActive: true
