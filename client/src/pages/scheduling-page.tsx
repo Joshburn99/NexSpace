@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import { SidebarNav } from "@/components/ui/sidebar-nav";
+import { AppLayout } from "@/components/ui/app-layout";
+import { getQueryFn } from "@/lib/queryClient";
 
 export default function SchedulingPage() {
   const { user } = useAuth();
@@ -13,11 +14,13 @@ export default function SchedulingPage() {
 
   const { data: shifts = [] } = useQuery({
     queryKey: ["/api/shifts"],
+    queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!user,
   });
 
   const { data: openShifts = [] } = useQuery({
     queryKey: ["/api/shifts/open"],
+    queryFn: getQueryFn({ on401: "throw" }),
     enabled: !!user,
   });
 
@@ -27,20 +30,14 @@ export default function SchedulingPage() {
   });
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav user={user!} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Scheduling</h1>
-              <p className="text-gray-600 dark:text-gray-300">Manage shifts and staff assignments</p>
-            </div>
-            <Button>
-              <Calendar className="w-4 h-4 mr-2" />
-              Create Shift
-            </Button>
-          </div>
+    <AppLayout title="Scheduling" subtitle="Manage shifts and staff assignments">
+      <div className="p-6">
+        <div className="flex items-center justify-end mb-6">
+          <Button>
+            <Calendar className="w-4 h-4 mr-2" />
+            Create Shift
+          </Button>
+        </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Calendar View */}
@@ -165,6 +162,6 @@ export default function SchedulingPage() {
           </Card>
         </div>
       </div>
-    </div>
+    </AppLayout>
   );
 }

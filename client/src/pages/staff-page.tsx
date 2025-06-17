@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
-import { SidebarNav } from "@/components/ui/sidebar-nav";
+import { AppLayout } from "@/components/ui/app-layout";
 
 const mockStaff = [
   {
@@ -136,17 +136,11 @@ export default function StaffPage() {
   const uniqueRoles = Array.from(new Set(mockStaff.map(staff => staff.role)));
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav user={user!} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Workforce Management</h1>
-              <p className="text-gray-600 dark:text-gray-300">Manage internal staff and 1099 contractors</p>
-            </div>
-            <Button>Add New Staff</Button>
-          </div>
+    <AppLayout title="Workforce Management" subtitle="Manage internal staff and 1099 contractors">
+      <div className="p-6">
+        <div className="flex items-center justify-end mb-6">
+          <Button>Add New Staff</Button>
+        </div>
 
           {/* Filters */}
           <Card className="mb-6">

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
-import { SidebarNav } from "@/components/ui/sidebar-nav";
+import { AppLayout } from "@/components/ui/app-layout";
 
 const mockTimeEntries = [
   {
@@ -83,24 +83,18 @@ export default function TimeClockPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav user={user!} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Time Clock</h1>
-              <p className="text-gray-600 dark:text-gray-300">Track work hours and manage time entries</p>
+    <AppLayout title="Time Clock" subtitle="Track work hours and manage time entries">
+      <div className="p-6">
+        <div className="flex items-center justify-end mb-6">
+          <div className="text-right">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white">
+              {currentTime.toLocaleTimeString()}
             </div>
-            <div className="text-right">
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {currentTime.toLocaleTimeString()}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-300">
-                {currentTime.toLocaleDateString()}
-              </div>
+            <div className="text-sm text-gray-600 dark:text-gray-300">
+              {currentTime.toLocaleDateString()}
             </div>
           </div>
+        </div>
 
           {/* Clock In/Out Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
