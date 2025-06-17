@@ -202,13 +202,21 @@ export default function EnhancedJobBoard() {
   const [isApplicationDialogOpen, setIsApplicationDialogOpen] = useState(false);
 
   // New job form
-  const [newJob, setNewJob] = useState({
+  const [newJob, setNewJob] = useState<{
+    title: string;
+    description: string;
+    department: string;
+    payRateMin: string;
+    payRateMax: string;
+    jobType: 'full-time' | 'part-time' | 'contract';
+    requirements: string;
+  }>({
     title: '',
     description: '',
     department: '',
     payRateMin: '',
     payRateMax: '',
-    jobType: 'full-time' as const,
+    jobType: 'full-time',
     requirements: ''
   });
 
