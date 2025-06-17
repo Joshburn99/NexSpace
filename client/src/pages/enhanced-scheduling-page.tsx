@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Calendar, Clock, Users, MapPin, Filter, Plus, ChevronLeft, ChevronRight, Building, Stethoscope, Navigation, AlertCircle } from "lucide-react";
+import { Calendar, Clock, Users, MapPin, Filter, Plus, ChevronLeft, ChevronRight, Building, Stethoscope, Navigation, AlertCircle, Eye, User, DollarSign, FileText } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -426,28 +426,40 @@ export default function EnhancedSchedulingPage() {
             <CardContent>
               <div className="grid gap-3">
                 {getShiftsForUnit(unit.name, selectedDate).map(shift => (
-                  <div key={shift.id} className={cn("p-4 rounded-lg border", getStatusColor(shift.status))}>
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2">
-                        <h4 className="font-medium">{shift.title}</h4>
-                        <div className="flex items-center space-x-4 text-sm">
-                          <span className="flex items-center space-x-1">
-                            <Clock className="w-4 h-4" />
-                            <span>
-                              {shift.start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - 
-                              {shift.end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                            </span>
+                  <div 
+                    key={shift.id} 
+                    className={cn("p-3 rounded-lg border cursor-pointer hover:shadow-md transition-shadow", getStatusColor(shift.status))}
+                    onClick={() => {
+                      setSelectedShift(shift);
+                      setIsShiftDetailsOpen(true);
+                    }}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="space-y-1">
+                        <h4 className="font-medium text-sm">{shift.position}</h4>
+                        <div className="text-xs text-gray-600">
+                          {shift.assignedStaff.length > 0 ? (
+                            <span className="font-medium">{shift.assignedStaff[0].name}</span>
+                          ) : (
+                            <span className="text-gray-400 italic">Unassigned</span>
+                          )}
+                        </div>
+                        <div className="flex items-center space-x-1 text-xs text-gray-500">
+                          <Clock className="w-3 h-3" />
+                          <span>
+                            {shift.start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - 
+                            {shift.end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                           </span>
-                          <span className="flex items-center space-x-1">
-                            <Users className="w-4 h-4" />
-                            <span>{shift.assignedStaff.length}/{shift.requiredStaff}</span>
-                          </span>
-                          <span>${shift.hourlyRate}/hr</span>
                         </div>
                       </div>
-                      <Badge className={getStatusColor(shift.status)}>
-                        {shift.status.charAt(0).toUpperCase() + shift.status.slice(1)}
-                      </Badge>
+                      <div className="flex flex-col items-end space-y-1">
+                        <Badge className={cn("text-xs", getStatusColor(shift.status))}>
+                          {shift.status.charAt(0).toUpperCase() + shift.status.slice(1)}
+                        </Badge>
+                        <Button variant="ghost" size="sm" className="h-6 px-2">
+                          <Eye className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
                     
                     {shift.assignedStaff.length > 0 && (
@@ -761,6 +773,126 @@ export default function EnhancedSchedulingPage() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Shift Details Modal */}
+        <Dialog open={isShiftDetailsOpen} onOpenChange={setIsShiftDetailsOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <Stethoscope className="w-5 h-5" />
+                <span>Shift Details</span>
+              </DialogTitle>
+              <DialogDescription>
+                Complete information for this shift assignment
+              </DialogDescription>
+            </DialogHeader>
+            
+            {selectedShift && (
+              <div className="space-y-6">
+                {/* Basic Info */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Position</Label>
+                    <div className="mt-1 text-sm">{selectedShift.position}</div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Unit</Label>
+                    <div className="mt-1 text-sm">{selectedShift.unit}</div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Shift Time</Label>
+                    <div className="mt-1 text-sm flex items-center space-x-1">
+                      <Clock className="w-4 h-4" />
+                      <span>
+                        {selectedShift.start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - 
+                        {selectedShift.end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Hourly Rate</Label>
+                    <div className="mt-1 text-sm flex items-center space-x-1">
+                      <DollarSign className="w-4 h-4" />
+                      <span>${selectedShift.hourlyRate}/hour</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Status</Label>
+                  <div className="mt-1">
+                    <Badge className={getStatusColor(selectedShift.status)}>
+                      {selectedShift.status.charAt(0).toUpperCase() + selectedShift.status.slice(1)}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Assigned Staff */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Assigned Staff ({selectedShift.assignedStaff.length}/{selectedShift.requiredStaff})</Label>
+                  <div className="mt-2 space-y-2">
+                    {selectedShift.assignedStaff.length > 0 ? (
+                      selectedShift.assignedStaff.map(staff => (
+                        <div key={staff.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className={cn("w-3 h-3 rounded-full", staff.type === 'employee' ? 'bg-blue-500' : 'bg-orange-500')}></div>
+                            <div>
+                              <div className="font-medium">{staff.name}</div>
+                              <div className="text-sm text-gray-600">{staff.position} • {staff.type}</div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-sm font-medium">${staff.hourlyRate}/hr</div>
+                            <div className="text-xs text-gray-500">Reliability: {staff.reliabilityScore}%</div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-gray-500 italic p-3 bg-gray-50 rounded-lg">
+                        No staff assigned to this shift
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Requirements */}
+                {selectedShift.requirements && selectedShift.requirements.length > 0 && (
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Requirements</Label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {selectedShift.requirements.map((req, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {req}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {selectedShift.notes && (
+                  <div>
+                    <Label className="text-sm font-medium text-gray-700">Notes</Label>
+                    <div className="mt-1 p-3 bg-gray-50 rounded-lg text-sm">
+                      {selectedShift.notes}
+                    </div>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex justify-end space-x-2 pt-4 border-t">
+                  <Button variant="outline" onClick={() => setIsShiftDetailsOpen(false)}>
+                    Close
+                  </Button>
+                  <Button>
+                    Edit Shift
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
