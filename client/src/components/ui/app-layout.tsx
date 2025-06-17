@@ -28,6 +28,21 @@ interface AppLayoutProps {
   subtitle?: string;
 }
 
+interface NavigationItem {
+  path: string;
+  icon: any;
+  label: string;
+  exact?: boolean;
+  badge?: number;
+}
+
+interface NavigationGroup {
+  key?: string;
+  label?: string;
+  icon?: any;
+  items: NavigationItem[];
+}
+
 const buildings = [
   { id: "1", name: "Willowbrook SNF", address: "1234 Healthcare Drive" },
   { id: "2", name: "Maple Grove Memory Care", address: "5678 Memory Lane" },
@@ -40,14 +55,14 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
   const [selectedBuilding, setSelectedBuilding] = useState("1");
 
   const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({
-    scheduling: false,
-    workforce: false,
-    hiring: false,
-    insights: false,
-    billing: false
+    scheduling: true,
+    workforce: true,
+    hiring: true,
+    insights: true,
+    billing: true
   });
 
-  const navigationGroups = [
+  const navigationGroups: NavigationGroup[] = [
     {
       items: [
         { path: "/", icon: Activity, label: "Dashboard", exact: true }
@@ -168,7 +183,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                       <div className="ml-8 space-y-1 mt-1">
                         {group.items.map((item) => {
                           const Icon = item.icon;
-                          const active = isActive(item.path, item.exact);
+                          const active = isActive(item.path, item.exact || false);
                           
                           return (
                             <Link key={item.path} href={item.path}>

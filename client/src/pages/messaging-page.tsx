@@ -657,7 +657,7 @@ export default function MessagingPage() {
                         <SelectValue placeholder="All Units" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Units</SelectItem>
+                        <SelectItem value="all">All Units</SelectItem>
                         <SelectItem value="ICU">ICU</SelectItem>
                         <SelectItem value="Med-Surg">Med-Surg</SelectItem>
                         <SelectItem value="Memory Care">Memory Care</SelectItem>
@@ -675,7 +675,7 @@ export default function MessagingPage() {
                         <SelectValue placeholder="All Roles" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Roles</SelectItem>
+                        <SelectItem value="all">All Roles</SelectItem>
                         <SelectItem value="RN">RN</SelectItem>
                         <SelectItem value="LPN">LPN</SelectItem>
                         <SelectItem value="CNA">CNA</SelectItem>
@@ -694,7 +694,7 @@ export default function MessagingPage() {
                         <SelectValue placeholder="All Types" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">All Types</SelectItem>
+                        <SelectItem value="all">All Types</SelectItem>
                         <SelectItem value="employee">Employees</SelectItem>
                         <SelectItem value="contractor">Contractors</SelectItem>
                       </SelectContent>
