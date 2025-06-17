@@ -21,6 +21,8 @@ import OvertimeReportPage from "@/pages/overtime-report-page";
 import AttendancePage from "@/pages/attendance-page";
 import AgencyUsagePage from "@/pages/agency-usage-page";
 import CompliancePage from "@/pages/compliance-page";
+import SettingsPage from "@/pages/settings-page";
+import AdminImpersonationPage from "@/pages/admin-impersonation-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -43,6 +45,8 @@ function Router() {
       <ProtectedRoute path="/analytics" component={AnalyticsPage} />
       <ProtectedRoute path="/credentials" component={CredentialsPage} />
       <ProtectedRoute path="/invoices" component={InvoicesPage} />
+      <ProtectedRoute path="/settings" component={SettingsPage} />
+      <ProtectedRoute path="/admin/impersonation" component={AdminImpersonationPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

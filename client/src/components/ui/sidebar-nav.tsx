@@ -251,9 +251,11 @@ export function SidebarNav({ user, expanded = true, onToggle }: SidebarNavProps)
                   Healthcare Professional
                 </p>
               </div>
-              <Button variant="ghost" size="sm">
-                <Settings className="h-4 w-4" />
-              </Button>
+              <Link href="/settings">
+                <Button variant="ghost" size="sm">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </Link>
             </div>
           </div>
         )}

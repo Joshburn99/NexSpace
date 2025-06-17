@@ -48,10 +48,10 @@ export default function TimeClockPage() {
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update clock every second
-  useState(() => {
+  React.useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
-  });
+  }, []);
 
   const currentUserEntry = mockTimeEntries.find(entry => 
     entry.employeeName.includes(user?.firstName || '') && entry.status === 'clocked_in'
