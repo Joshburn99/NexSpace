@@ -120,6 +120,9 @@ export default function InvoicesPage() {
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </Button>
+              <Button variant="outline">
+                Auto-Approval Settings
+              </Button>
               <Button>Create Invoice</Button>
             </div>
           </div>

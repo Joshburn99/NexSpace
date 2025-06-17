@@ -16,6 +16,11 @@ import OpenShiftsPage from "@/pages/shifts-open-page";
 import StaffPage from "@/pages/staff-page";
 import TimeClockPage from "@/pages/time-clock-page";
 import InvoicesPage from "@/pages/invoices-page";
+import ReferralPage from "@/pages/referral-page";
+import OvertimeReportPage from "@/pages/overtime-report-page";
+import AttendancePage from "@/pages/attendance-page";
+import AgencyUsagePage from "@/pages/agency-usage-page";
+import CompliancePage from "@/pages/compliance-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -29,6 +34,11 @@ function Router() {
       <ProtectedRoute path="/time-clock" component={TimeClockPage} />
       <ProtectedRoute path="/staff" component={StaffPage} />
       <ProtectedRoute path="/staff/contractors" component={StaffPage} />
+      <ProtectedRoute path="/staff/referrals" component={ReferralPage} />
+      <ProtectedRoute path="/analytics/overtime" component={OvertimeReportPage} />
+      <ProtectedRoute path="/analytics/attendance" component={AttendancePage} />
+      <ProtectedRoute path="/analytics/agency" component={AgencyUsagePage} />
+      <ProtectedRoute path="/analytics/compliance" component={CompliancePage} />
       <ProtectedRoute path="/messages" component={MessagingPage} />
       <ProtectedRoute path="/analytics" component={AnalyticsPage} />
       <ProtectedRoute path="/credentials" component={CredentialsPage} />

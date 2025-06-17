@@ -142,8 +142,8 @@ export default function StaffPage() {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Staff Management</h1>
-              <p className="text-gray-600 dark:text-gray-300">Manage all staff members and their information</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Workforce Management</h1>
+              <p className="text-gray-600 dark:text-gray-300">Manage internal staff and 1099 contractors</p>
             </div>
             <Button>Add New Staff</Button>
           </div>
