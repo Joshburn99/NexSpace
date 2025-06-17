@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   AlertTriangle, 
   Clock, 
@@ -21,7 +23,12 @@ import {
   Plus,
   UserCheck,
   DollarSign,
-  Building
+  Building,
+  BarChart3,
+  Settings,
+  UserCog,
+  ClipboardList,
+  Activity
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -222,8 +229,16 @@ const recentActivity = [
 
 export default function HomePage() {
   const { user } = useAuth();
+  const [selectedTab, setSelectedTab] = useState('overview');
+  const [selectedBuilding, setSelectedBuilding] = useState('main');
 
   if (!user) return null;
+
+  const buildings = [
+    { id: 'main', name: 'Main Building', address: '123 Care St' },
+    { id: 'north', name: 'North Wing', address: '456 Health Ave' },
+    { id: 'south', name: 'South Campus', address: '789 Medical Blvd' }
+  ];
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -256,14 +271,81 @@ export default function HomePage() {
 
   return (
     <div className="flex h-screen bg-gray-50">
+      {/* Left Navigation Tabs */}
+      <div className="w-64 bg-white border-r">
+        <div className="p-4 border-b">
+          <h2 className="text-lg font-semibold text-gray-900">Dashboard</h2>
+          <p className="text-sm text-gray-500">Welcome back, {user.firstName}</p>
+        </div>
+        
+        <Tabs value={selectedTab} onValueChange={setSelectedTab} orientation="vertical" className="flex-1">
+          <TabsList className="grid w-full grid-rows-6 h-auto">
+            <TabsTrigger value="overview" className="w-full justify-start">
+              <Activity className="w-4 h-4 mr-2" />
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="scheduling" className="w-full justify-start">
+              <Calendar className="w-4 h-4 mr-2" />
+              Scheduling
+            </TabsTrigger>
+            <TabsTrigger value="staff" className="w-full justify-start">
+              <Users className="w-4 h-4 mr-2" />
+              Staff Management
+            </TabsTrigger>
+            <TabsTrigger value="analytics" className="w-full justify-start">
+              <BarChart3 className="w-4 h-4 mr-2" />
+              Analytics
+            </TabsTrigger>
+            <TabsTrigger value="messages" className="w-full justify-start">
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Messages
+            </TabsTrigger>
+            <TabsTrigger value="settings" className="w-full justify-start">
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </div>
+
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <div className="bg-white border-b px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600">Welcome back, {user.firstName}</p>
+            <div className="flex items-center space-x-4">
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">
+                  {selectedTab === 'overview' && 'Dashboard Overview'}
+                  {selectedTab === 'scheduling' && 'Scheduling Management'}
+                  {selectedTab === 'staff' && 'Staff Management'}
+                  {selectedTab === 'analytics' && 'Analytics & Reports'}
+                  {selectedTab === 'messages' && 'Communication Center'}
+                  {selectedTab === 'settings' && 'System Settings'}
+                </h1>
+                <p className="text-gray-600">
+                  {buildings.find(b => b.id === selectedBuilding)?.name}
+                </p>
+              </div>
+              
+              {/* Building Filter */}
+              <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
+                <SelectTrigger className="w-48">
+                  <Building className="w-4 h-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {buildings.map((building) => (
+                    <SelectItem key={building.id} value={building.id}>
+                      <div className="flex flex-col">
+                        <span>{building.name}</span>
+                        <span className="text-xs text-gray-500">{building.address}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
+            
             <div className="flex items-center space-x-3">
               <Button variant="outline">
                 <Bell className="w-4 h-4 mr-2" />
@@ -280,142 +362,211 @@ export default function HomePage() {
         </div>
 
         <div className="flex-1 overflow-auto p-6">
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            {quickStats.map((stat, index) => (
-              <Card key={index}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                  <stat.icon className={`h-4 w-4 ${stat.color}`} />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stat.value}</div>
-                  <p className="text-xs text-muted-foreground">{stat.change}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Priority Tasks */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold">Priority Tasks</h2>
-              <Link href="/tasks">
-                <Button variant="outline" size="sm">
-                  View All
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </Link>
-            </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {priorityTasks.slice(0, 4).map((task) => (
-                <Link key={task.id} href={task.route}>
-                  <Card className={`cursor-pointer hover:shadow-md transition-shadow border-l-4 ${getPriorityColor(task.priority)}`}>
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-2 mb-2">
-                            <h3 className="font-semibold">{task.title}</h3>
-                            <Badge className={getPriorityBadgeColor(task.priority)}>
-                              {task.priority.toUpperCase()}
-                            </Badge>
-                            {task.count && (
-                              <Badge variant="secondary">
-                                {task.count}
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-sm text-gray-600 mb-2">{task.description}</p>
-                          {task.dueDate && (
-                            <p className="text-xs text-gray-500">
-                              Due: {task.dueDate.toLocaleDateString()}
-                            </p>
-                          )}
-                        </div>
-                        <ArrowRight className="w-4 h-4 text-gray-400 mt-1" />
-                      </div>
+          <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+            <TabsContent value="overview" className="space-y-6">
+              {/* Quick Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {quickStats.map((stat, index) => (
+                  <Card key={index} className="cursor-pointer hover:shadow-md transition-shadow">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
+                      <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{stat.value}</div>
+                      <p className="text-xs text-muted-foreground">{stat.change}</p>
                     </CardContent>
                   </Card>
-                </Link>
-              ))}
-            </div>
-          </div>
+                ))}
+              </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Today's Shifts */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Today's Shifts</CardTitle>
-                  <Link href="/scheduling">
-                    <Button variant="outline" size="sm">
-                      View Schedule
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </Link>
-                </div>
-                <CardDescription>Current staffing status across all units</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {todaysShifts.map((shift) => (
-                    <div key={shift.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-1">
-                          <h4 className="font-medium">{shift.unit}</h4>
-                          <Badge className={getShiftStatusColor(shift.status)}>
-                            {shift.status}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600">{shift.shift}</p>
-                        <div className="flex items-center space-x-4 mt-2 text-xs">
-                          {Object.entries(shift.required).map(([role, count]) => (
-                            <div key={role} className="flex items-center space-x-1">
-                              <span className="text-gray-500">{role}:</span>
-                              <span className={shift.assigned[role] >= count ? 'text-green-600' : 'text-red-600'}>
-                                {shift.assigned[role] || 0}/{count}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>Recent Activity</CardTitle>
-                  <Link href="/activity">
+              {/* Priority Tasks */}
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold">Priority Tasks</h2>
+                  <Link href="/tasks">
                     <Button variant="outline" size="sm">
                       View All
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
                   </Link>
                 </div>
-                <CardDescription>Latest updates and actions</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentActivity.map((activity) => (
-                    <div key={activity.id} className="flex items-start space-x-3">
-                      <div className="flex-shrink-0">
-                        <activity.icon className="w-4 h-4 text-gray-400 mt-1" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900">{activity.action}</p>
-                        <p className="text-xs text-gray-500">{activity.time}</p>
-                      </div>
-                    </div>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {priorityTasks.slice(0, 4).map((task) => (
+                    <Link key={task.id} href={task.route}>
+                      <Card className={`cursor-pointer hover:shadow-md transition-shadow border-l-4 ${getPriorityColor(task.priority)}`}>
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <h3 className="font-semibold">{task.title}</h3>
+                                <Badge className={getPriorityBadgeColor(task.priority)}>
+                                  {task.priority.toUpperCase()}
+                                </Badge>
+                                {task.count && (
+                                  <Badge variant="secondary">
+                                    {task.count}
+                                  </Badge>
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-600 mb-2">{task.description}</p>
+                              {task.dueDate && (
+                                <p className="text-xs text-gray-500">
+                                  Due: {task.dueDate.toLocaleDateString()}
+                                </p>
+                              )}
+                            </div>
+                            <ArrowRight className="w-4 h-4 text-gray-400 mt-1" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Today's Shifts */}
+                <Link href="/scheduling">
+                  <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle>Today's Shifts</CardTitle>
+                        <ArrowRight className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <CardDescription>Current staffing status across all units</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {todaysShifts.slice(0, 3).map((shift) => (
+                          <div key={shift.id} className="flex items-center justify-between p-3 border rounded-lg">
+                            <div className="flex-1">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <h4 className="font-medium">{shift.unit}</h4>
+                                <Badge className={getShiftStatusColor(shift.status)}>
+                                  {shift.status}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-gray-600">{shift.shift}</p>
+                              <div className="flex items-center space-x-4 mt-2 text-xs">
+                                {Object.entries(shift.required).map(([role, count]) => (
+                                  <div key={role} className="flex items-center space-x-1">
+                                    <span className="text-gray-500">{role}:</span>
+                                    <span className={(shift.assigned as any)[role] >= count ? 'text-green-600' : 'text-red-600'}>
+                                      {(shift.assigned as any)[role] || 0}/{count}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+
+                {/* Recent Activity */}
+                <Link href="/activity">
+                  <Card className="cursor-pointer hover:shadow-md transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle>Recent Activity</CardTitle>
+                        <ArrowRight className="w-4 h-4 text-gray-400" />
+                      </div>
+                      <CardDescription>Latest updates and actions</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {recentActivity.slice(0, 4).map((activity) => (
+                          <div key={activity.id} className="flex items-start space-x-3">
+                            <div className="flex-shrink-0">
+                              <activity.icon className="w-4 h-4 text-gray-400 mt-1" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm text-gray-900">{activity.action}</p>
+                              <p className="text-xs text-gray-500">{activity.time}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </div>
+            </TabsContent>
+
+            {/* Other Tab Contents */}
+            <TabsContent value="scheduling">
+              <div className="text-center py-12">
+                <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Scheduling Management</h3>
+                <p className="text-gray-500 mb-4">Manage shifts, staffing, and scheduling across all units</p>
+                <Link href="/scheduling">
+                  <Button>
+                    Go to Scheduling
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="staff">
+              <div className="text-center py-12">
+                <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Staff Management</h3>
+                <p className="text-gray-500 mb-4">Manage employees, contractors, and staffing assignments</p>
+                <Link href="/staff">
+                  <Button>
+                    Go to Staff Management
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="analytics">
+              <div className="text-center py-12">
+                <BarChart3 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Analytics & Reports</h3>
+                <p className="text-gray-500 mb-4">View insights, reports, and performance analytics</p>
+                <Link href="/analytics">
+                  <Button>
+                    Go to Analytics
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="messages">
+              <div className="text-center py-12">
+                <MessageSquare className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Communication Center</h3>
+                <p className="text-gray-500 mb-4">Send messages, announcements, and communicate with your team</p>
+                <Link href="/messaging">
+                  <Button>
+                    Go to Messages
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="settings">
+              <div className="text-center py-12">
+                <Settings className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">System Settings</h3>
+                <p className="text-gray-500 mb-4">Configure system preferences, user settings, and facility management</p>
+                <Link href="/settings">
+                  <Button>
+                    Go to Settings
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

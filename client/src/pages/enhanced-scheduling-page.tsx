@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Calendar, Plus, Filter, Search, MapPin, Phone, Mail, Clock, Users, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
+import { Calendar, Plus, Filter, Search, MapPin, Phone, Mail, Clock, Users, ArrowLeft, ChevronLeft, ChevronRight, Building } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -216,6 +216,7 @@ export default function EnhancedSchedulingPage() {
   const { user } = useAuth();
   const [calendarView, setCalendarView] = useState<CalendarView>('next7days');
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedBuilding, setSelectedBuilding] = useState('main');
   const [selectedUnit, setSelectedUnit] = useState('all');
   const [selectedPosition, setSelectedPosition] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -231,6 +232,12 @@ export default function EnhancedSchedulingPage() {
     shiftType: 'regular' as 'regular' | 'prn' | 'block',
     selectedTemplate: ''
   });
+
+  const buildings = [
+    { id: 'main', name: 'Main Building', address: '123 Care St' },
+    { id: 'north', name: 'North Wing', address: '456 Health Ave' },
+    { id: 'south', name: 'South Campus', address: '789 Medical Blvd' }
+  ];
 
   if (!user) return null;
 
@@ -321,14 +328,78 @@ export default function EnhancedSchedulingPage() {
           {/* Filters */}
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Select value={calendarView} onValueChange={(value: CalendarView) => setCalendarView(value)}>
-                <SelectTrigger className="w-40">
+              <div className="flex items-center space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    if (calendarView === 'daily') {
+                      const newDate = new Date(selectedDate);
+                      newDate.setDate(newDate.getDate() - 1);
+                      setSelectedDate(newDate);
+                    } else if (calendarView === 'next7days') {
+                      const newDate = new Date(selectedDate);
+                      newDate.setDate(newDate.getDate() - 7);
+                      setSelectedDate(newDate);
+                    } else if (calendarView === 'month') {
+                      const newDate = new Date(selectedDate);
+                      newDate.setMonth(newDate.getMonth() - 1);
+                      setSelectedDate(newDate);
+                    }
+                  }}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                
+                <Select value={calendarView} onValueChange={(value: CalendarView) => setCalendarView(value)}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="next7days">Next 7 Days</SelectItem>
+                    <SelectItem value="month">Month View</SelectItem>
+                    <SelectItem value="daily">Daily View</SelectItem>
+                  </SelectContent>
+                </Select>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    if (calendarView === 'daily') {
+                      const newDate = new Date(selectedDate);
+                      newDate.setDate(newDate.getDate() + 1);
+                      setSelectedDate(newDate);
+                    } else if (calendarView === 'next7days') {
+                      const newDate = new Date(selectedDate);
+                      newDate.setDate(newDate.getDate() + 7);
+                      setSelectedDate(newDate);
+                    } else if (calendarView === 'month') {
+                      const newDate = new Date(selectedDate);
+                      newDate.setMonth(newDate.getMonth() + 1);
+                      setSelectedDate(newDate);
+                    }
+                  }}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Building Filter */}
+              <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
+                <SelectTrigger className="w-48">
+                  <Building className="w-4 h-4 mr-2" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="next7days">Next 7 Days</SelectItem>
-                  <SelectItem value="month">Month View</SelectItem>
-                  <SelectItem value="daily">Daily View</SelectItem>
+                  {buildings.map((building) => (
+                    <SelectItem key={building.id} value={building.id}>
+                      <div className="flex flex-col">
+                        <span>{building.name}</span>
+                        <span className="text-xs text-gray-500">{building.address}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
