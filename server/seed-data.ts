@@ -2,7 +2,7 @@ import { db } from './db';
 import { 
   users, facilities, jobs, shifts, credentials, messages, invoices, workLogs,
   payrollProviders, payrollConfigurations, payrollEmployees, timesheets, 
-  timesheetEntries, payments
+  timesheetEntries, payments, auditLogs
 } from '@shared/schema';
 import { UserRole } from '@shared/schema';
 
@@ -10,6 +10,22 @@ export async function seedDatabase() {
   console.log('Seeding database with comprehensive healthcare staffing data...');
 
   try {
+    // Clear existing data
+    await db.delete(payments);
+    await db.delete(timesheetEntries);
+    await db.delete(timesheets);
+    await db.delete(payrollEmployees);
+    await db.delete(payrollConfigurations);
+    await db.delete(payrollProviders);
+    await db.delete(workLogs);
+    await db.delete(invoices);
+    await db.delete(messages);
+    await db.delete(credentials);
+    await db.delete(shifts);
+    await db.delete(jobs);
+    await db.delete(users);
+    await db.delete(facilities);
+
     // Create facilities - Multi-building healthcare campus
     const facilitiesData = [
       {
@@ -89,185 +105,211 @@ export async function seedDatabase() {
         firstName: 'Michael',
         lastName: 'Chen',
         role: UserRole.INTERNAL_EMPLOYEE,
-        facilityId: insertedFacilities[0].id
-      },
-      // ICU Staff - Contractors
-      {
-        username: 'david.thompson',
-        email: 'david.thompson@contractornurse.com',
-        password: '$2b$10$hashedpassword4',
-        firstName: 'David',
-        lastName: 'Thompson',
-        role: UserRole.CONTRACTOR_1099,
-        facilityId: insertedFacilities[0].id
-      },
-      // Med-Surg Staff - Employees
-      {
-        username: 'emily.rodriguez',
-        email: 'emily.rodriguez@willowbrooksnf.com',
-        password: '$2b$10$hashedpassword5',
-        firstName: 'Emily',
-        lastName: 'Rodriguez',
-        role: UserRole.INTERNAL_EMPLOYEE,
-        facilityId: insertedFacilities[0].id
+        facilityId: insertedFacilities[0].id,
+        isActive: true
       },
       {
-        username: 'robert.davis',
-        email: 'robert.davis@willowbrooksnf.com',
+        username: 'jessica.davis',
+        email: 'jessica.davis@willowbrooksnf.com',
         password: '$2b$10$hashedpassword6',
-        firstName: 'Robert',
+        firstName: 'Jessica',
         lastName: 'Davis',
         role: UserRole.INTERNAL_EMPLOYEE,
-        facilityId: insertedFacilities[0].id
+        facilityId: insertedFacilities[0].id,
+        isActive: true
       },
-      // Med-Surg Staff - Contractors
+      // Licensed Practical Nurses (LPN) - Staff Employees
       {
-        username: 'kevin.lee',
-        email: 'kevin.lee@healthcaretemps.com',
+        username: 'robert.wilson',
+        email: 'robert.wilson@willowbrooksnf.com',
         password: '$2b$10$hashedpassword7',
-        firstName: 'Kevin',
-        lastName: 'Lee',
-        role: UserRole.CONTRACTOR_1099,
-        facilityId: insertedFacilities[0].id
+        firstName: 'Robert',
+        lastName: 'Wilson',
+        role: UserRole.INTERNAL_EMPLOYEE,
+        facilityId: insertedFacilities[0].id,
+        isActive: true
       },
-      // Memory Care Staff - Employees
       {
-        username: 'rachel.kim',
-        email: 'rachel.kim@willowbrooksnf.com',
+        username: 'amanda.brown',
+        email: 'amanda.brown@willowbrooksnf.com',
         password: '$2b$10$hashedpassword8',
-        firstName: 'Rachel',
-        lastName: 'Kim',
+        firstName: 'Amanda',
+        lastName: 'Brown',
         role: UserRole.INTERNAL_EMPLOYEE,
-        facilityId: insertedFacilities[0].id
+        facilityId: insertedFacilities[0].id,
+        isActive: true
       },
-      // Rehabilitation Staff - Employees
+      // Certified Nursing Assistants (CNA) - Staff Employees
       {
-        username: 'nicole.adams',
-        email: 'nicole.adams@willowbrooksnf.com',
+        username: 'carlos.rodriguez',
+        email: 'carlos.rodriguez@willowbrooksnf.com',
         password: '$2b$10$hashedpassword9',
-        firstName: 'Nicole',
-        lastName: 'Adams',
+        firstName: 'Carlos',
+        lastName: 'Rodriguez',
         role: UserRole.INTERNAL_EMPLOYEE,
         facilityId: insertedFacilities[0].id,
         isActive: true
       },
       {
-        username: 'michael.chen',
-        email: 'michael.chen@nexspace.com',
-        password: '$2b$10$hashedpassword2',
-        firstName: 'Michael',
-        lastName: 'Chen',
-        role: UserRole.CONTRACTOR_1099,
-        facilityId: insertedFacilities[1].id,
+        username: 'maria.garcia',
+        email: 'maria.garcia@willowbrooksnf.com',
+        password: '$2b$10$hashedpassword10',
+        firstName: 'Maria',
+        lastName: 'Garcia',
+        role: UserRole.INTERNAL_EMPLOYEE,
+        facilityId: insertedFacilities[0].id,
         isActive: true
       },
+      // Physical Therapists (PT) - Staff Employees
       {
-        username: 'emily.rodriguez',
-        email: 'emily.rodriguez@nexspace.com',
-        password: '$2b$10$hashedpassword3',
-        firstName: 'Emily',
-        lastName: 'Rodriguez',
-        role: UserRole.CONTRACTOR_1099,
-        facilityId: insertedFacilities[2].id,
+        username: 'james.taylor',
+        email: 'james.taylor@willowbrooksnf.com',
+        password: '$2b$10$hashedpassword11',
+        firstName: 'James',
+        lastName: 'Taylor',
+        role: UserRole.INTERNAL_EMPLOYEE,
+        facilityId: insertedFacilities[0].id,
         isActive: true
       },
+      // Contractors
       {
-        username: 'david.thompson',
-        email: 'david.thompson@nexspace.com',
-        password: '$2b$10$hashedpassword4',
-        firstName: 'David',
-        lastName: 'Thompson',
-        role: UserRole.FACILITY_MANAGER,
+        username: 'lisa.anderson',
+        email: 'lisa.anderson@contractor.com',
+        password: '$2b$10$hashedpassword12',
+        firstName: 'Lisa',
+        lastName: 'Anderson',
+        role: UserRole.CONTRACTOR_1099,
         facilityId: insertedFacilities[0].id,
         isActive: true
       },
       {
-        username: 'lisa.williams',
-        email: 'lisa.williams@nexspace.com',
-        password: '$2b$10$hashedpassword5',
-        firstName: 'Lisa',
-        lastName: 'Williams',
-        role: UserRole.CLIENT_ADMINISTRATOR,
-        facilityId: insertedFacilities[1].id,
+        username: 'kevin.murphy',
+        email: 'kevin.murphy@contractor.com',
+        password: '$2b$10$hashedpassword13',
+        firstName: 'Kevin',
+        lastName: 'Murphy',
+        role: UserRole.CONTRACTOR_1099,
+        facilityId: insertedFacilities[0].id,
         isActive: true
       }
     ];
 
     const insertedUsers = await db.insert(users).values(usersData).returning();
 
-    // Create jobs
+    // Create realistic jobs
     const jobsData = [
       {
-        title: 'Registered Nurse - Night Shift',
-        description: 'Seeking experienced RN for overnight shifts in memory care unit',
         facilityId: insertedFacilities[0].id,
-        position: 'Registered Nurse',
-        department: 'Memory Care',
+        title: 'Registered Nurse - ICU Night Shift',
+        description: 'Full-time RN position in our Intensive Care Unit. Responsible for critical patient care during night shifts.',
+        jobType: 'full_time',
+        position: 'RN',
+        department: 'ICU',
         shiftType: 'Night',
-        hourlyRate: 45.00,
-        requirements: 'Current RN license, 2+ years experience, CPR certification',
+        hourlyRate: 42.50,
+        requirements: ['Current RN license', 'BLS certification', 'ACLS preferred', '2+ years ICU experience'],
         isActive: true,
-        postedById: insertedUsers[3].id
+        postedById: insertedUsers[1].id
       },
       {
-        title: 'Licensed Practical Nurse - Day Shift',
-        description: 'LPN needed for day shift in assisted living facility',
-        facilityId: insertedFacilities[1].id,
-        position: 'Licensed Practical Nurse',
-        department: 'Assisted Living',
+        facilityId: insertedFacilities[0].id,
+        title: 'Licensed Practical Nurse - Med-Surg',
+        description: 'Day shift LPN position in Medical-Surgical unit. Experience with post-operative care preferred.',
+        jobType: 'part_time',
+        position: 'LPN',
+        department: 'Med-Surg',
         shiftType: 'Day',
-        hourlyRate: 32.00,
-        requirements: 'Current LPN license, medication administration certification',
+        hourlyRate: 28.75,
+        requirements: ['Current LPN license', 'BLS certification', 'Med-Surg experience'],
         isActive: true,
-        postedById: insertedUsers[4].id
+        postedById: insertedUsers[1].id
       },
       {
-        title: 'Certified Nursing Assistant',
-        description: 'CNA position available for weekend shifts',
-        facilityId: insertedFacilities[2].id,
-        position: 'Certified Nursing Assistant',
-        department: 'Long Term Care',
-        shiftType: 'Weekend',
-        hourlyRate: 22.00,
-        requirements: 'Current CNA license, excellent communication skills',
+        facilityId: insertedFacilities[1].id,
+        title: 'CNA - Memory Care Specialist',
+        description: 'Certified Nursing Assistant specializing in dementia and Alzheimer\'s care.',
+        jobType: 'full_time',
+        position: 'CNA',
+        department: 'Memory Care',
+        shiftType: 'Day',
+        hourlyRate: 18.50,
+        requirements: ['CNA certification', 'Dementia care training', 'Compassionate patient care'],
         isActive: true,
-        postedById: insertedUsers[3].id
+        postedById: insertedUsers[2].id
+      },
+      {
+        facilityId: insertedFacilities[0].id,
+        title: 'Physical Therapist - Rehabilitation',
+        description: 'Physical Therapist for our rehabilitation department. Work with post-surgical and stroke patients.',
+        jobType: 'contract',
+        position: 'PT',
+        department: 'Rehabilitation',
+        shiftType: 'Day',
+        hourlyRate: 55.00,
+        requirements: ['DPT or Master\'s in PT', 'State PT license', 'Geriatric experience preferred'],
+        isActive: true,
+        postedById: insertedUsers[1].id
       }
     ];
 
     const insertedJobs = await db.insert(jobs).values(jobsData).returning();
 
-    // Create shifts
+    // Create realistic shifts
     const shiftsData = [
       {
         facilityId: insertedFacilities[0].id,
-        position: 'Registered Nurse',
         department: 'ICU',
-        startTime: new Date('2025-06-18T06:00:00Z'),
-        endTime: new Date('2025-06-18T18:00:00Z'),
+        startTime: new Date('2025-06-18T07:00:00Z'),
+        endTime: new Date('2025-06-18T19:00:00Z'),
         requiredStaff: 2,
-        hourlyRate: 48.00,
-        notes: 'High acuity patients, ICU experience required'
+        hourlyRate: 38.50,
+        shiftType: 'Day',
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: [insertedUsers[3].id, insertedUsers[4].id]
       },
       {
-        facilityId: insertedFacilities[1].id,
-        position: 'Licensed Practical Nurse',
-        department: 'Memory Care',
-        startTime: new Date('2025-06-18T18:00:00Z'),
-        endTime: new Date('2025-06-19T06:00:00Z'),
+        facilityId: insertedFacilities[0].id,
+        department: 'ICU',
+        startTime: new Date('2025-06-18T19:00:00Z'),
+        endTime: new Date('2025-06-19T07:00:00Z'),
         requiredStaff: 1,
-        hourlyRate: 35.00,
-        notes: 'Memory care unit, dementia experience preferred'
+        hourlyRate: 42.50,
+        shiftType: 'Night',
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: []
       },
       {
-        facilityId: insertedFacilities[2].id,
-        position: 'Certified Nursing Assistant',
-        department: 'Assisted Living',
-        startTime: new Date('2025-06-19T14:00:00Z'),
-        endTime: new Date('2025-06-19T22:00:00Z'),
+        facilityId: insertedFacilities[0].id,
+        department: 'Med-Surg',
+        startTime: new Date('2025-06-18T07:00:00Z'),
+        endTime: new Date('2025-06-18T15:00:00Z'),
+        requiredStaff: 2,
+        hourlyRate: 28.75,
+        shiftType: 'Day',
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: [insertedUsers[6].id]
+      },
+      {
+        facilityId: insertedFacilities[0].id,
+        department: 'Memory Care',
+        startTime: new Date('2025-06-18T15:00:00Z'),
+        endTime: new Date('2025-06-18T23:00:00Z'),
         requiredStaff: 3,
-        hourlyRate: 24.00,
-        notes: 'Evening shift, medication pass assistance needed'
+        hourlyRate: 18.50,
+        shiftType: 'Evening',
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: [insertedUsers[8].id, insertedUsers[9].id]
+      },
+      {
+        facilityId: insertedFacilities[0].id,
+        department: 'Rehabilitation',
+        startTime: new Date('2025-06-19T09:00:00Z'),
+        endTime: new Date('2025-06-19T17:00:00Z'),
+        requiredStaff: 1,
+        hourlyRate: 55.00,
+        shiftType: 'Day',
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: []
       }
     ];
 
@@ -276,97 +318,80 @@ export async function seedDatabase() {
     // Create credentials
     const credentialsData = [
       {
-        userId: insertedUsers[0].id,
-        type: 'license',
+        userId: insertedUsers[3].id,
+        credentialType: 'RN License',
         name: 'Registered Nurse License',
         issuingAuthority: 'Florida Board of Nursing',
         licenseNumber: 'RN-FL-123456',
-        issueDate: new Date('2023-01-15'),
-        expiryDate: new Date('2025-01-15'),
+        issueDate: new Date('2020-01-15'),
+        expiryDate: new Date('2026-01-15'),
         status: 'verified',
-        verifiedAt: new Date('2023-01-20'),
-        verifierId: insertedUsers[3].id
+        verifiedAt: new Date(),
+        verifiedById: insertedUsers[1].id
       },
       {
-        userId: insertedUsers[1].id,
-        type: 'certification',
-        name: 'CPR Certification',
+        userId: insertedUsers[3].id,
+        credentialType: 'BLS Certification',
+        name: 'Basic Life Support',
         issuingAuthority: 'American Heart Association',
-        licenseNumber: 'CPR-AHA-789012',
+        licenseNumber: 'BLS-2024-7891',
         issueDate: new Date('2024-03-10'),
         expiryDate: new Date('2026-03-10'),
         status: 'verified',
-        verifiedAt: new Date('2024-03-15'),
-        verifierId: insertedUsers[4].id
+        verifiedAt: new Date(),
+        verifiedById: insertedUsers[1].id
       },
       {
-        userId: insertedUsers[2].id,
-        type: 'license',
-        name: 'CNA License',
-        issuingAuthority: 'Florida Department of Health',
-        licenseNumber: 'CNA-FL-345678',
-        issueDate: new Date('2023-05-01'),
-        expiryDate: new Date('2025-05-01'),
+        userId: insertedUsers[4].id,
+        credentialType: 'RN License',
+        name: 'Registered Nurse License',
+        issuingAuthority: 'Florida Board of Nursing',
+        licenseNumber: 'RN-FL-789012',
+        issueDate: new Date('2019-05-20'),
+        expiryDate: new Date('2025-05-20'),
         status: 'pending',
         verifiedAt: null,
-        verifierId: null
+        verifiedById: null
+      },
+      {
+        userId: insertedUsers[6].id,
+        credentialType: 'LPN License',
+        name: 'Licensed Practical Nurse License',
+        issuingAuthority: 'Florida Board of Nursing',
+        licenseNumber: 'LPN-FL-345678',
+        issueDate: new Date('2021-08-12'),
+        expiryDate: new Date('2025-08-12'),
+        status: 'verified',
+        verifiedAt: new Date(),
+        verifiedById: insertedUsers[1].id
       }
     ];
 
     const insertedCredentials = await db.insert(credentials).values(credentialsData).returning();
 
-    // Create messages
-    const messagesData = [
-      {
-        senderId: insertedUsers[0].id,
-        recipientId: insertedUsers[3].id,
-        conversationId: 'conv-1',
-        content: 'Hi David, I wanted to discuss the upcoming shift schedule for next week.',
-        isRead: false
-      },
-      {
-        senderId: insertedUsers[3].id,
-        recipientId: insertedUsers[0].id,
-        conversationId: 'conv-1',
-        content: 'Of course Sarah! What specific concerns do you have about the schedule?',
-        isRead: true
-      },
-      {
-        senderId: insertedUsers[1].id,
-        recipientId: insertedUsers[4].id,
-        conversationId: 'conv-2',
-        content: 'Lisa, I need to update my availability for the memory care unit.',
-        isRead: false
-      }
-    ];
-
-    const insertedMessages = await db.insert(messages).values(messagesData).returning();
-
     // Create invoices
     const invoicesData = [
       {
-        contractorId: insertedUsers[1].id,
-        facilityId: insertedFacilities[1].id,
-        periodStart: new Date('2025-06-01'),
-        periodEnd: new Date('2025-06-15'),
-        hoursWorked: 72,
-        hourlyRate: 32.00,
-        totalAmount: 2304.00,
+        facilityId: insertedFacilities[0].id,
+        contractorId: insertedUsers[11].id,
+        invoiceNumber: 'INV-2025-001',
+        amount: 2240.00,
+        workPeriodStart: new Date('2025-06-01'),
+        workPeriodEnd: new Date('2025-06-07'),
         status: 'pending',
-        notes: 'Bi-weekly invoice for memory care shifts'
+        notes: 'Week 1 - ICU coverage'
       },
       {
-        contractorId: insertedUsers[2].id,
-        facilityId: insertedFacilities[2].id,
-        periodStart: new Date('2025-05-16'),
-        periodEnd: new Date('2025-05-31'),
-        hoursWorked: 88,
-        hourlyRate: 22.00,
-        totalAmount: 1936.00,
+        facilityId: insertedFacilities[0].id,
+        contractorId: insertedUsers[12].id,
+        invoiceNumber: 'INV-2025-002',
+        amount: 1980.00,
+        workPeriodStart: new Date('2025-06-08'),
+        workPeriodEnd: new Date('2025-06-14'),
         status: 'approved',
-        approvedById: insertedUsers[3].id,
-        approvedAt: new Date('2025-06-02T10:00:00Z'),
-        notes: 'End of month invoice, includes weekend differential'
+        approvedById: insertedUsers[1].id,
+        approvedAt: new Date(),
+        notes: 'Week 2 - PT services'
       }
     ];
 
@@ -375,45 +400,179 @@ export async function seedDatabase() {
     // Create work logs
     const workLogsData = [
       {
-        userId: insertedUsers[0].id,
-        shiftId: insertedShifts[0].id,
-        facilityId: insertedFacilities[0].id,
-        clockIn: new Date('2025-06-17T06:00:00Z'),
-        clockOut: new Date('2025-06-17T18:15:00Z'),
-        totalHours: 12.25,
-        notes: 'Covered extra 15 minutes for patient handoff',
+        userId: insertedUsers[3].id,
+        description: 'ICU shift - patient care and medication administration',
+        hoursWorked: '12.0',
+        workDate: new Date('2025-06-17'),
         status: 'approved',
-        reviewerId: insertedUsers[3].id,
-        reviewedAt: new Date('2025-06-18T08:00:00Z')
+        reviewedById: insertedUsers[1].id,
+        shiftId: insertedShifts[0].id
       },
       {
-        userId: insertedUsers[1].id,
-        shiftId: insertedShifts[1].id,
-        facilityId: insertedFacilities[1].id,
-        clockIn: new Date('2025-06-17T18:00:00Z'),
-        clockOut: new Date('2025-06-18T06:00:00Z'),
-        totalHours: 12.0,
-        notes: 'Night shift in memory care unit',
+        userId: insertedUsers[4].id,
+        description: 'ICU shift - critical patient monitoring',
+        hoursWorked: '12.0',
+        workDate: new Date('2025-06-17'),
+        status: 'approved',
+        reviewedById: insertedUsers[1].id,
+        shiftId: insertedShifts[0].id
+      },
+      {
+        userId: insertedUsers[11].id,
+        description: 'Contract RN - emergency coverage',
+        hoursWorked: '8.0',
+        workDate: new Date('2025-06-16'),
         status: 'pending',
-        reviewerId: null,
-        reviewedAt: null
+        reviewedById: null,
+        shiftId: null
       }
     ];
 
     const insertedWorkLogs = await db.insert(workLogs).values(workLogsData).returning();
 
-    console.log('Database seeded successfully!');
-    console.log(`Created ${insertedFacilities.length} facilities`);
-    console.log(`Created ${insertedUsers.length} users`);
-    console.log(`Created ${insertedJobs.length} jobs`);
-    console.log(`Created ${insertedShifts.length} shifts`);
-    console.log(`Created ${insertedCredentials.length} credentials`);
-    console.log(`Created ${insertedMessages.length} messages`);
-    console.log(`Created ${insertedInvoices.length} invoices`);
-    console.log(`Created ${insertedWorkLogs.length} work logs`);
+    // Create payroll providers
+    const payrollProvidersData = [
+      {
+        name: 'ADP Workforce Now',
+        apiEndpoint: 'https://api.adp.com/payroll/v1',
+        isActive: true,
+        configuration: { clientId: 'adp_client_123', environment: 'production' }
+      },
+      {
+        name: 'QuickBooks Payroll',
+        apiEndpoint: 'https://sandbox-quickbooks.api.intuit.com/v3',
+        isActive: false,
+        configuration: { companyId: 'qb_company_456', sandbox: true }
+      }
+    ];
+
+    const insertedProviders = await db.insert(payrollProviders).values(payrollProvidersData).returning();
+
+    // Create payroll configurations
+    const payrollConfigsData = [
+      {
+        facilityId: insertedFacilities[0].id,
+        providerId: insertedProviders[0].id,
+        payFrequency: 'bi_weekly',
+        overtimeThreshold: 40.0,
+        federalTaxRate: 0.22,
+        stateTaxRate: 0.06,
+        socialSecurityRate: 0.062,
+        medicareRate: 0.0145,
+        isActive: true
+      }
+    ];
+
+    const insertedConfigs = await db.insert(payrollConfigurations).values(payrollConfigsData).returning();
+
+    // Create payroll employees
+    const payrollEmployeesData = insertedUsers
+      .filter(user => user.role === UserRole.INTERNAL_EMPLOYEE)
+      .map((user, index) => ({
+        userId: user.id,
+        facilityId: user.facilityId,
+        employeeType: 'hourly',
+        hourlyRate: [38.50, 42.50, 35.00, 28.75, 26.50, 18.50, 55.00][index % 7].toFixed(2),
+        overtimeRate: ([38.50, 42.50, 35.00, 28.75, 26.50, 18.50, 55.00][index % 7] * 1.5).toFixed(2),
+        isActive: true
+      }));
+
+    const insertedPayrollEmployees = await db.insert(payrollEmployees).values(payrollEmployeesData).returning();
+
+    // Create timesheets
+    const timesheetsData = [
+      {
+        userId: insertedUsers[3].id,
+        facilityId: insertedFacilities[0].id,
+        payPeriodStart: new Date('2025-06-01'),
+        payPeriodEnd: new Date('2025-06-14'),
+        totalHours: '84.0',
+        regularHours: '80.0',
+        overtimeHours: '4.0',
+        grossPay: '3234.00',
+        status: 'approved',
+        approvedBy: insertedUsers[1].id,
+        approvedAt: new Date()
+      },
+      {
+        userId: insertedUsers[4].id,
+        facilityId: insertedFacilities[0].id,
+        payPeriodStart: new Date('2025-06-01'),
+        payPeriodEnd: new Date('2025-06-14'),
+        totalHours: '80.0',
+        regularHours: '80.0',
+        overtimeHours: '0.0',
+        grossPay: '3400.00',
+        status: 'submitted',
+        submittedAt: new Date()
+      }
+    ];
+
+    const insertedTimesheets = await db.insert(timesheets).values(timesheetsData).returning();
+
+    // Create payments
+    const paymentsData = [
+      {
+        timesheetId: insertedTimesheets[0].id,
+        userId: insertedUsers[3].id,
+        facilityId: insertedFacilities[0].id,
+        grossAmount: '3234.00',
+        federalTax: '711.48',
+        stateTax: '194.04',
+        socialSecurity: '200.51',
+        medicare: '46.89',
+        netAmount: '2081.08',
+        paymentMethod: 'direct_deposit',
+        status: 'completed',
+        paymentDate: new Date()
+      }
+    ];
+
+    const insertedPayments = await db.insert(payments).values(paymentsData).returning();
+
+    // Create audit logs for recent activities
+    const auditLogsData = [
+      {
+        userId: insertedUsers[1].id,
+        action: 'CREATE',
+        resource: 'shift',
+        resourceId: insertedShifts[0].id,
+        newValues: { department: 'ICU', shiftType: 'Day' },
+        ipAddress: '192.168.1.100',
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      },
+      {
+        userId: insertedUsers[1].id,
+        action: 'APPROVE',
+        resource: 'timesheet',
+        resourceId: insertedTimesheets[0].id,
+        oldValues: { status: 'submitted' },
+        newValues: { status: 'approved' },
+        ipAddress: '192.168.1.100',
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      }
+    ];
+
+    await db.insert(auditLogs).values(auditLogsData);
+
+    console.log('✅ Database seeded successfully with comprehensive healthcare staffing data!');
+    console.log(`📊 Created:`);
+    console.log(`   - ${insertedFacilities.length} facilities`);
+    console.log(`   - ${insertedUsers.length} users (staff, contractors, managers)`);
+    console.log(`   - ${insertedJobs.length} job postings`);
+    console.log(`   - ${insertedShifts.length} shifts`);
+    console.log(`   - ${insertedCredentials.length} professional credentials`);
+    console.log(`   - ${insertedInvoices.length} contractor invoices`);
+    console.log(`   - ${insertedWorkLogs.length} work log entries`);
+    console.log(`   - ${insertedProviders.length} payroll providers`);
+    console.log(`   - ${insertedConfigs.length} payroll configurations`);
+    console.log(`   - ${insertedPayrollEmployees.length} payroll employee records`);
+    console.log(`   - ${insertedTimesheets.length} timesheets`);
+    console.log(`   - ${insertedPayments.length} payments`);
+    console.log(`   - Complete audit trail and activity logs`);
 
   } catch (error) {
-    console.error('Error seeding database:', error);
+    console.error('❌ Error seeding database:', error);
     throw error;
   }
 }
