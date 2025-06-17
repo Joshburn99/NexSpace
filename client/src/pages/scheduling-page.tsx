@@ -39,7 +39,7 @@ export default function SchedulingPage() {
           </Button>
         </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Calendar View */}
             <Card className="lg:col-span-2">
               <CardHeader>
@@ -161,7 +161,6 @@ export default function SchedulingPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
     </AppLayout>
   );
 }

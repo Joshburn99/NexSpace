@@ -142,7 +142,7 @@ export default function StaffPage() {
           <Button>Add New Staff</Button>
         </div>
 
-          {/* Filters */}
+        {/* Filters */}
           <Card className="mb-6">
             <CardContent className="pt-6">
               <div className="flex flex-wrap gap-4">
@@ -331,7 +331,6 @@ export default function StaffPage() {
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </AppLayout>
   );
 }
