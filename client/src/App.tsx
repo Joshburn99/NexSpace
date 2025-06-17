@@ -23,6 +23,8 @@ import AgencyUsagePage from "@/pages/agency-usage-page";
 import CompliancePage from "@/pages/compliance-page";
 import SettingsPage from "@/pages/settings-page";
 import AdminImpersonationPage from "@/pages/admin-impersonation-page";
+import FacilityManagementPage from "@/pages/facility-management-page";
+import EnhancedJobPostingPage from "@/pages/enhanced-job-posting-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -47,6 +49,8 @@ function Router() {
       <ProtectedRoute path="/invoices" component={InvoicesPage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/admin/impersonation" component={AdminImpersonationPage} />
+      <ProtectedRoute path="/facility-management" component={FacilityManagementPage} />
+      <ProtectedRoute path="/job-posting" component={EnhancedJobPostingPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
