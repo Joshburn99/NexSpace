@@ -656,7 +656,6 @@ export default function EnhancedJobPostingPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
     </AppLayout>
   );
 }

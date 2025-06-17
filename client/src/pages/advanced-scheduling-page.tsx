@@ -307,7 +307,7 @@ export default function AdvancedSchedulingPage() {
   return (
     <AppLayout>
       <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Advanced Scheduling</h1>
               <p className="text-gray-600 dark:text-gray-300">Drag-and-drop shift management with role-based permissions</p>
@@ -613,7 +613,6 @@ export default function AdvancedSchedulingPage() {
             </div>
           )}
         </div>
-      </div>
     </AppLayout>
   );
 }
