@@ -1,336 +1,361 @@
 import { useState } from "react";
-import { TrendingUp, Clock, DollarSign, User, Calendar, Filter, Download } from "lucide-react";
+import { Calendar, Download, Filter, TrendingUp, Clock, Users, DollarSign, AlertTriangle, FileText } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
-import { SidebarNav } from "@/components/ui/sidebar-nav";
+import { cn } from "@/lib/utils";
 
-const mockOvertimeData = [
+interface OvertimeRecord {
+  id: string;
+  employeeName: string;
+  employeeId: string;
+  position: string;
+  unit: string;
+  regularHours: number;
+  overtimeHours: number;
+  doubleTimeHours: number;
+  regularRate: number;
+  overtimeRate: number;
+  doubleTimeRate: number;
+  totalPay: number;
+  weekEnding: Date;
+  approvedBy: string;
+  status: 'pending' | 'approved' | 'disputed';
+  type: 'employee' | 'contractor';
+}
+
+interface WeeklySummary {
+  week: string;
+  totalRegularHours: number;
+  totalOvertimeHours: number;
+  totalDoubleTimeHours: number;
+  totalCost: number;
+  employeeCount: number;
+}
+
+// Mock data
+const mockOvertimeRecords: OvertimeRecord[] = [
   {
-    id: 1,
-    employeeName: "Sarah Johnson",
-    position: "Registered Nurse",
-    department: "ICU",
-    regularHours: 40,
-    overtimeHours: 12,
-    totalHours: 52,
-    regularRate: 45,
-    overtimeRate: 67.5,
-    totalCost: 2610,
-    week: "2025-06-16",
-    facility: "Sunrise Senior Living"
+    id: '1', employeeName: 'Sarah Johnson', employeeId: 'EMP001', position: 'RN', unit: 'ICU',
+    regularHours: 40, overtimeHours: 12, doubleTimeHours: 0, regularRate: 35, overtimeRate: 52.5, doubleTimeRate: 70,
+    totalPay: 2030, weekEnding: new Date(2025, 5, 15), approvedBy: 'Manager Smith', status: 'approved', type: 'employee'
   },
   {
-    id: 2,
-    employeeName: "Michael Chen",
-    position: "Licensed Practical Nurse",
-    department: "Memory Care",
-    regularHours: 40,
-    overtimeHours: 8,
-    totalHours: 48,
-    regularRate: 32,
-    overtimeRate: 48,
-    totalCost: 1664,
-    week: "2025-06-16",
-    facility: "Golden Years Care"
+    id: '2', employeeName: 'Michael Chen', employeeId: 'CON001', position: 'CNA', unit: 'Med-Surg',
+    regularHours: 40, overtimeHours: 16, doubleTimeHours: 4, regularRate: 18, overtimeRate: 27, doubleTimeRate: 36,
+    totalPay: 1444, weekEnding: new Date(2025, 5, 15), approvedBy: 'Supervisor Lee', status: 'approved', type: 'contractor'
   },
   {
-    id: 3,
-    employeeName: "Emily Rodriguez",
-    position: "Certified Nursing Assistant",
-    department: "Assisted Living",
-    regularHours: 40,
-    overtimeHours: 6,
-    totalHours: 46,
-    regularRate: 22,
-    overtimeRate: 33,
-    totalCost: 1078,
-    week: "2025-06-16",
-    facility: "Harmony Health Center"
+    id: '3', employeeName: 'Emily Rodriguez', employeeId: 'EMP002', position: 'LPN', unit: 'Memory Care',
+    regularHours: 40, overtimeHours: 8, doubleTimeHours: 0, regularRate: 28, overtimeRate: 42, doubleTimeRate: 56,
+    totalPay: 1456, weekEnding: new Date(2025, 5, 15), approvedBy: 'Director Johnson', status: 'pending', type: 'employee'
   },
   {
-    id: 4,
-    employeeName: "David Thompson",
-    position: "Physical Therapist",
-    department: "Rehabilitation",
-    regularHours: 32,
-    overtimeHours: 4,
-    totalHours: 36,
-    regularRate: 55,
-    overtimeRate: 82.5,
-    totalCost: 2090,
-    week: "2025-06-16",
-    facility: "Rehabilitation Center East"
+    id: '4', employeeName: 'David Park', employeeId: 'CON002', position: 'PT', unit: 'Rehabilitation',
+    regularHours: 32, overtimeHours: 12, doubleTimeHours: 0, regularRate: 42, overtimeRate: 63, doubleTimeRate: 84,
+    totalPay: 2100, weekEnding: new Date(2025, 5, 15), approvedBy: 'Manager Davis', status: 'approved', type: 'contractor'
+  },
+  {
+    id: '5', employeeName: 'Lisa Wang', employeeId: 'EMP003', position: 'RN', unit: 'ICU',
+    regularHours: 40, overtimeHours: 20, doubleTimeHours: 8, regularRate: 38, overtimeRate: 57, doubleTimeRate: 76,
+    totalPay: 3288, weekEnding: new Date(2025, 5, 8), approvedBy: 'Manager Smith', status: 'approved', type: 'employee'
+  },
+  {
+    id: '6', employeeName: 'James Miller', employeeId: 'EMP004', position: 'CNA', unit: 'Med-Surg',
+    regularHours: 40, overtimeHours: 6, doubleTimeHours: 0, regularRate: 20, overtimeRate: 30, doubleTimeRate: 40,
+    totalPay: 980, weekEnding: new Date(2025, 5, 8), approvedBy: 'Supervisor Lee', status: 'disputed', type: 'employee'
   }
 ];
 
-const weeklyTrends = [
-  { week: "2025-05-19", totalOvertimeHours: 18, totalCost: 4125, employees: 3 },
-  { week: "2025-05-26", totalOvertimeHours: 24, totalCost: 5680, employees: 4 },
-  { week: "2025-06-02", totalOvertimeHours: 32, totalCost: 7250, employees: 5 },
-  { week: "2025-06-09", totalOvertimeHours: 28, totalCost: 6890, employees: 4 },
-  { week: "2025-06-16", totalOvertimeHours: 30, totalCost: 7442, employees: 4 }
-];
+const getWeeklySummaries = (records: OvertimeRecord[]): WeeklySummary[] => {
+  const summaries = new Map<string, WeeklySummary>();
+  
+  records.forEach(record => {
+    const weekKey = record.weekEnding.toISOString().split('T')[0];
+    const existing = summaries.get(weekKey);
+    
+    if (existing) {
+      existing.totalRegularHours += record.regularHours;
+      existing.totalOvertimeHours += record.overtimeHours;
+      existing.totalDoubleTimeHours += record.doubleTimeHours;
+      existing.totalCost += record.totalPay;
+      existing.employeeCount += 1;
+    } else {
+      summaries.set(weekKey, {
+        week: record.weekEnding.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        totalRegularHours: record.regularHours,
+        totalOvertimeHours: record.overtimeHours,
+        totalDoubleTimeHours: record.doubleTimeHours,
+        totalCost: record.totalPay,
+        employeeCount: 1
+      });
+    }
+  });
+  
+  return Array.from(summaries.values());
+};
 
 export default function OvertimeReportPage() {
   const { user } = useAuth();
-  const [timeframe, setTimeframe] = useState("current_week");
-  const [department, setDepartment] = useState("all");
-  const [employeeType, setEmployeeType] = useState("all");
+  const [records] = useState<OvertimeRecord[]>(mockOvertimeRecords);
+  const [selectedUnit, setSelectedUnit] = useState<string>('all');
+  const [selectedPosition, setSelectedPosition] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [dateRange, setDateRange] = useState<string>('last30days');
 
-  const currentWeekData = mockOvertimeData;
-  const totalOvertimeHours = currentWeekData.reduce((sum, emp) => sum + emp.overtimeHours, 0);
-  const totalOvertimeCost = currentWeekData.reduce((sum, emp) => sum + (emp.overtimeHours * emp.overtimeRate), 0);
-  const avgOvertimePerEmployee = totalOvertimeHours / currentWeekData.length;
+  if (!user) return null;
 
-  // Calculate WoW trends
-  const currentWeek = weeklyTrends[weeklyTrends.length - 1];
-  const previousWeek = weeklyTrends[weeklyTrends.length - 2];
-  const hoursChange = ((currentWeek.totalOvertimeHours - previousWeek.totalOvertimeHours) / previousWeek.totalOvertimeHours) * 100;
-  const costChange = ((currentWeek.totalCost - previousWeek.totalCost) / previousWeek.totalCost) * 100;
+  const filteredRecords = records.filter(record => {
+    return (selectedUnit === 'all' || record.unit === selectedUnit) &&
+           (selectedPosition === 'all' || record.position === selectedPosition) &&
+           (selectedStatus === 'all' || record.status === selectedStatus);
+  });
 
-  const departments = Array.from(new Set(mockOvertimeData.map(emp => emp.department)));
+  const weeklySummaries = getWeeklySummaries(filteredRecords);
+  
+  const totalStats = {
+    totalOvertimeHours: filteredRecords.reduce((sum, r) => sum + r.overtimeHours, 0),
+    totalDoubleTimeHours: filteredRecords.reduce((sum, r) => sum + r.doubleTimeHours, 0),
+    totalCost: filteredRecords.reduce((sum, r) => sum + r.totalPay, 0),
+    averageOvertimePerEmployee: filteredRecords.length > 0 ? 
+      filteredRecords.reduce((sum, r) => sum + r.overtimeHours, 0) / filteredRecords.length : 0
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'approved': return 'bg-green-100 text-green-800 border-green-200';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'disputed': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    return type === 'employee' ? 'text-blue-600' : 'text-orange-600';
+  };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav user={user!} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
+    <div className="flex h-screen bg-gray-50">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="bg-white border-b px-6 py-4">
+          <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Overtime Report</h1>
-              <p className="text-gray-600 dark:text-gray-300">Analyze overtime trends, costs, and individual insights</p>
+              <h1 className="text-2xl font-bold text-gray-900">Overtime Reports</h1>
+              <p className="text-gray-600">Track and analyze overtime costs across all units</p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center space-x-3">
               <Button variant="outline">
                 <Download className="w-4 h-4 mr-2" />
                 Export Report
               </Button>
               <Button>
-                <Calendar className="w-4 h-4 mr-2" />
-                Schedule Report
+                <FileText className="w-4 h-4 mr-2" />
+                Generate Summary
               </Button>
             </div>
           </div>
+        </div>
 
+        <div className="flex-1 overflow-auto p-6">
           {/* Filters */}
+          <div className="mb-6 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Select value={selectedUnit} onValueChange={setSelectedUnit}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All Units" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Units</SelectItem>
+                  <SelectItem value="ICU">ICU</SelectItem>
+                  <SelectItem value="Med-Surg">Med-Surg</SelectItem>
+                  <SelectItem value="Memory Care">Memory Care</SelectItem>
+                  <SelectItem value="Rehabilitation">Rehabilitation</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedPosition} onValueChange={setSelectedPosition}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All Positions" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Positions</SelectItem>
+                  <SelectItem value="RN">RN</SelectItem>
+                  <SelectItem value="LPN">LPN</SelectItem>
+                  <SelectItem value="CNA">CNA</SelectItem>
+                  <SelectItem value="PT">PT</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="All Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="disputed">Disputed</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select value={dateRange} onValueChange={setDateRange}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="last7days">Last 7 Days</SelectItem>
+                  <SelectItem value="last30days">Last 30 Days</SelectItem>
+                  <SelectItem value="last90days">Last 90 Days</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Overtime Hours</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalStats.totalOvertimeHours}</div>
+                <p className="text-xs text-muted-foreground">
+                  +12% from last period
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Double Time Hours</CardTitle>
+                <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalStats.totalDoubleTimeHours}</div>
+                <p className="text-xs text-muted-foreground">
+                  +8% from last period
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Overtime Cost</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">${totalStats.totalCost.toLocaleString()}</div>
+                <p className="text-xs text-muted-foreground">
+                  +15% from last period
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Avg OT per Employee</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{totalStats.averageOvertimePerEmployee.toFixed(1)}h</div>
+                <p className="text-xs text-muted-foreground">
+                  +5% from last period
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Weekly Summary */}
           <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="flex flex-wrap gap-4">
-                <Select value={timeframe} onValueChange={setTimeframe}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Time Period" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="current_week">Current Week</SelectItem>
-                    <SelectItem value="last_week">Last Week</SelectItem>
-                    <SelectItem value="last_4_weeks">Last 4 Weeks</SelectItem>
-                    <SelectItem value="current_month">Current Month</SelectItem>
-                    <SelectItem value="last_month">Last Month</SelectItem>
-                    <SelectItem value="quarter">This Quarter</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={department} onValueChange={setDepartment}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Departments</SelectItem>
-                    {departments.map(dept => (
-                      <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={employeeType} onValueChange={setEmployeeType}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Employee Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Staff</SelectItem>
-                    <SelectItem value="internal">Internal Staff</SelectItem>
-                    <SelectItem value="prn">PRN/Contract</SelectItem>
-                  </SelectContent>
-                </Select>
+            <CardHeader>
+              <CardTitle>Weekly Overtime Summary</CardTitle>
+              <CardDescription>Overtime trends by week</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {weeklySummaries.map((summary, index) => (
+                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div>
+                        <div className="font-medium">Week ending {summary.week}</div>
+                        <div className="text-sm text-gray-500">{summary.employeeCount} employees</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-6 text-sm">
+                      <div className="text-center">
+                        <div className="font-medium">{summary.totalOvertimeHours}h</div>
+                        <div className="text-gray-500">Overtime</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-medium">{summary.totalDoubleTimeHours}h</div>
+                        <div className="text-gray-500">Double Time</div>
+                      </div>
+                      <div className="text-center">
+                        <div className="font-medium">${summary.totalCost.toLocaleString()}</div>
+                        <div className="text-gray-500">Total Cost</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
 
-          {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total OT Hours</p>
-                    <p className="text-2xl font-bold">{totalOvertimeHours}h</p>
-                    <p className={`text-xs ${hoursChange >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                      {hoursChange >= 0 ? '+' : ''}{hoursChange.toFixed(1)}% WoW
-                    </p>
-                  </div>
-                  <Clock className="w-8 h-8 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">OT Cost</p>
-                    <p className="text-2xl font-bold">${totalOvertimeCost.toLocaleString()}</p>
-                    <p className={`text-xs ${costChange >= 0 ? 'text-red-500' : 'text-green-500'}`}>
-                      {costChange >= 0 ? '+' : ''}{costChange.toFixed(1)}% WoW
-                    </p>
-                  </div>
-                  <DollarSign className="w-8 h-8 text-red-600" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Avg OT/Employee</p>
-                    <p className="text-2xl font-bold">{avgOvertimePerEmployee.toFixed(1)}h</p>
-                    <p className="text-xs text-gray-500">Per week</p>
-                  </div>
-                  <User className="w-8 h-8 text-purple-600" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Employees w/ OT</p>
-                    <p className="text-2xl font-bold">{currentWeekData.length}</p>
-                    <p className="text-xs text-gray-500">This week</p>
-                  </div>
-                  <User className="w-8 h-8 text-orange-600" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Weekly Trends */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  Weekly Trends
-                </CardTitle>
-                <CardDescription>
-                  Overtime hours and costs over the last 5 weeks
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {weeklyTrends.map((week, index) => (
-                    <div key={week.week} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <div>
-                        <p className="font-medium">Week of {new Date(week.week).toLocaleDateString()}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">{week.employees} employees</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-bold">{week.totalOvertimeHours}h</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">${week.totalCost.toLocaleString()}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Department Breakdown */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Department Breakdown</CardTitle>
-                <CardDescription>
-                  Overtime distribution by department
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {departments.map(dept => {
-                    const deptData = currentWeekData.filter(emp => emp.department === dept);
-                    const deptOTHours = deptData.reduce((sum, emp) => sum + emp.overtimeHours, 0);
-                    const deptOTCost = deptData.reduce((sum, emp) => sum + (emp.overtimeHours * emp.overtimeRate), 0);
-                    
-                    return (
-                      <div key={dept} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <h4 className="font-medium">{dept}</h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">{deptData.length} employees</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold">{deptOTHours}h</p>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">${deptOTCost.toLocaleString()}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Individual Employee Details */}
+          {/* Detailed Records */}
           <Card>
             <CardHeader>
-              <CardTitle>Individual Overtime Details</CardTitle>
-              <CardDescription>
-                Detailed breakdown by employee for the selected time period
-              </CardDescription>
+              <CardTitle>Overtime Records</CardTitle>
+              <CardDescription>Detailed breakdown of overtime by employee</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {currentWeekData.map((employee) => (
-                  <div key={employee.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                {filteredRecords.map((record) => (
+                  <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                     <div className="flex items-center space-x-4">
-                      <Avatar className="w-12 h-12">
-                        <AvatarFallback>
-                          {employee.employeeName.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      
                       <div>
-                        <h4 className="font-medium">{employee.employeeName}</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">{employee.position}</p>
-                        <p className="text-sm text-gray-500">{employee.department} • {employee.facility}</p>
+                        <div className="font-medium">{record.employeeName}</div>
+                        <div className="text-sm text-gray-500">
+                          <span className={getTypeColor(record.type)}>{record.type === 'employee' ? 'Employee' : 'Contractor'}</span>
+                          {' • '} {record.position} - {record.unit}
+                        </div>
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-6 text-center">
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Regular Hours</p>
-                        <p className="font-bold">{employee.regularHours}h</p>
-                        <p className="text-xs text-gray-500">${employee.regularRate}/hr</p>
+                    <div className="flex items-center space-x-6 text-sm">
+                      <div className="text-center">
+                        <div className="font-medium">{record.regularHours}h</div>
+                        <div className="text-gray-500">Regular</div>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Overtime Hours</p>
-                        <p className="font-bold text-orange-600">{employee.overtimeHours}h</p>
-                        <p className="text-xs text-gray-500">${employee.overtimeRate}/hr</p>
+                      <div className="text-center">
+                        <div className="font-medium">{record.overtimeHours}h</div>
+                        <div className="text-gray-500">Overtime</div>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">Total Cost</p>
-                        <p className="font-bold text-green-600">${employee.totalCost.toLocaleString()}</p>
-                        <p className="text-xs text-gray-500">{employee.totalHours}h total</p>
+                      <div className="text-center">
+                        <div className="font-medium">{record.doubleTimeHours}h</div>
+                        <div className="text-gray-500">Double Time</div>
                       </div>
-                    </div>
-
-                    <div className="flex flex-col items-end">
-                      <Badge className={employee.overtimeHours > 10 ? "bg-red-100 text-red-800" : 
-                                      employee.overtimeHours > 5 ? "bg-yellow-100 text-yellow-800" : 
-                                      "bg-green-100 text-green-800"}>
-                        {employee.overtimeHours > 10 ? "High OT" : 
-                         employee.overtimeHours > 5 ? "Moderate OT" : "Low OT"}
-                      </Badge>
-                      <Button variant="outline" size="sm" className="mt-2">
-                        View Details
-                      </Button>
+                      <div className="text-center">
+                        <div className="font-medium">${record.totalPay.toLocaleString()}</div>
+                        <div className="text-gray-500">Total Pay</div>
+                      </div>
+                      <div className="text-center">
+                        <Badge className={cn("text-xs", getStatusColor(record.status))}>
+                          {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                        </Badge>
+                      </div>
+                      <div className="text-center">
+                        <div className="text-xs text-gray-500">
+                          Week ending {record.weekEnding.toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          Approved by {record.approvedBy}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 ))}

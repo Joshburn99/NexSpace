@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { Calendar, Clock, Users, MapPin, Filter, Plus, ChevronLeft, ChevronRight, Building, AlertCircle, Eye, Navigation, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Calendar, Clock, Users, MapPin, Filter, Plus, ChevronLeft, ChevronRight, Building, Stethoscope, Navigation, AlertCircle, Eye, User, DollarSign, FileText, CheckCircle, AlertTriangle, XCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Input } from "@/components/ui/input";
@@ -94,16 +95,6 @@ const mockStaff: Staff[] = [
     id: '4', name: 'David Park', position: 'PT', unit: 'Rehabilitation', type: 'contractor',
     hourlyRate: 42, skills: ['Physical Therapy', 'Mobility Training'], reliabilityScore: 92,
     isFavorite: false, availability: 'limited', clockedIn: false, color: '#F97316'
-  },
-  {
-    id: '5', name: 'Lisa Wang', position: 'RN', unit: 'ICU', type: 'employee',
-    hourlyRate: 38, skills: ['Critical Care', 'Emergency Response'], reliabilityScore: 98,
-    isFavorite: true, availability: 'available', clockedIn: false, color: '#3B82F6'
-  },
-  {
-    id: '6', name: 'James Miller', position: 'CNA', unit: 'Med-Surg', type: 'employee',
-    hourlyRate: 20, skills: ['Patient Transport', 'Vital Signs'], reliabilityScore: 85,
-    isFavorite: false, availability: 'available', clockedIn: true, color: '#3B82F6'
   }
 ];
 
@@ -116,7 +107,7 @@ const mockShifts: Shift[] = [
   },
   {
     id: '2', title: 'Day CNA - Med-Surg', start: new Date(2025, 5, 17, 7, 0), end: new Date(2025, 5, 17, 19, 0),
-    unit: 'Med-Surg', position: 'CNA', requiredStaff: 3, assignedStaff: [mockStaff[1], mockStaff[5]], hourlyRate: 18,
+    unit: 'Med-Surg', position: 'CNA', requiredStaff: 3, assignedStaff: [mockStaff[1]], hourlyRate: 18,
     status: 'filled', facilityId: 1, createdBy: 'Supervisor', notes: 'Patient care focus'
   },
   {
@@ -128,16 +119,6 @@ const mockShifts: Shift[] = [
     id: '4', title: 'Morning PT - Rehabilitation', start: new Date(2025, 5, 18, 8, 0), end: new Date(2025, 5, 18, 16, 0),
     unit: 'Rehabilitation', position: 'PT', requiredStaff: 1, assignedStaff: [], hourlyRate: 42,
     status: 'open', facilityId: 1, createdBy: 'Director', notes: 'Physical therapy certification required'
-  },
-  {
-    id: '5', title: 'Day Nurse - ICU', start: new Date(2025, 5, 18, 7, 0), end: new Date(2025, 5, 18, 19, 0),
-    unit: 'ICU', position: 'RN', requiredStaff: 3, assignedStaff: [mockStaff[4]], hourlyRate: 35,
-    status: 'open', facilityId: 1, createdBy: 'Charge Nurse', notes: 'ICU experience required'
-  },
-  {
-    id: '6', title: 'Night CNA - Memory Care', start: new Date(2025, 5, 18, 23, 0), end: new Date(2025, 5, 19, 7, 0),
-    unit: 'Memory Care', position: 'CNA', requiredStaff: 2, assignedStaff: [], hourlyRate: 20,
-    status: 'urgent', facilityId: 1, createdBy: 'Unit Manager', notes: 'Behavioral management skills needed'
   }
 ];
 
@@ -147,11 +128,12 @@ export default function EnhancedSchedulingPage() {
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [isShiftDetailsOpen, setIsShiftDetailsOpen] = useState(false);
   const [isBulkScheduleOpen, setIsBulkScheduleOpen] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [shifts, setShifts] = useState<Shift[]>(mockShifts);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedUnit, setSelectedUnit] = useState<string>('all');
   const [selectedPosition, setSelectedPosition] = useState<string>('all');
-  const [calendarView, setCalendarView] = useState<CalendarView>('daily');
+  const [calendarView, setCalendarView] = useState<CalendarView>('next7days');
 
   if (!user) return null;
 
@@ -184,13 +166,13 @@ export default function EnhancedSchedulingPage() {
 
   const getSpecialtyColor = (position: string) => {
     switch (position) {
-      case 'RN': return 'border-blue-300 bg-blue-100 text-blue-800';
-      case 'LPN': return 'border-green-300 bg-green-100 text-green-800';
-      case 'CNA': return 'border-purple-300 bg-purple-100 text-purple-800';
-      case 'PT': return 'border-orange-300 bg-orange-100 text-orange-800';
-      case 'OT': return 'border-pink-300 bg-pink-100 text-pink-800';
-      case 'RT': return 'border-cyan-300 bg-cyan-100 text-cyan-800';
-      default: return 'border-gray-300 bg-gray-100 text-gray-800';
+      case 'RN': return 'border-blue-300 bg-blue-100';
+      case 'LPN': return 'border-green-300 bg-green-100';
+      case 'CNA': return 'border-purple-300 bg-purple-100';
+      case 'PT': return 'border-orange-300 bg-orange-100';
+      case 'OT': return 'border-pink-300 bg-pink-100';
+      case 'RT': return 'border-cyan-300 bg-cyan-100';
+      default: return 'border-gray-300 bg-gray-100';
     }
   };
 
@@ -208,7 +190,7 @@ export default function EnhancedSchedulingPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'open': return <AlertCircle className="w-3 h-3 text-red-500" />;
-      case 'filled': return <CheckCircle className="w-3 h-3 text-green-500" />;
+      case 'filled': return <Users className="w-3 h-3 text-green-500" />;
       case 'urgent': return <AlertTriangle className="w-3 h-3 text-orange-500" />;
       case 'cancelled': return <XCircle className="w-3 h-3 text-gray-500" />;
       case 'in-progress': return <Clock className="w-3 h-3 text-blue-500" />;
@@ -297,58 +279,9 @@ export default function EnhancedSchedulingPage() {
                           </Button>
                         </div>
                       </div>
-
-                      {/* Staff Details */}
-                      {shift.assignedStaff.length > 0 && (
-                        <div className="mt-3 pt-3 border-t space-y-2">
-                          <h5 className="text-sm font-medium">Assigned Staff:</h5>
-                          <div className="space-y-1">
-                            {shift.assignedStaff.map(staff => (
-                              <div key={staff.id} className="flex items-center justify-between text-sm">
-                                <div className="flex items-center space-x-2">
-                                  <span className={getStaffTypeColor(staff.type)}>{staff.name}</span>
-                                  <Badge variant="outline" className="text-xs">{staff.position}</Badge>
-                                  {staff.currentLocation && (
-                                    <div className="flex items-center space-x-1 text-xs text-gray-500">
-                                      <Navigation className="w-3 h-3" />
-                                      <span>{staff.currentLocation.distance.toFixed(1)} mi away</span>
-                                    </div>
-                                  )}
-                                  {staff.clockedIn && (
-                                    <Badge variant="default" className="text-xs bg-green-600">Clocked In</Badge>
-                                  )}
-                                </div>
-                                <div className="flex items-center space-x-1">
-                                  <span className="text-xs">Reliability: {staff.reliabilityScore}%</span>
-                                  {staff.isFavorite && <span className="text-yellow-500">⭐</span>}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Live Tracking for In-Progress Shifts */}
-                      {shift.status === 'in-progress' && shift.assignedStaff.some(s => s.currentLocation) && (
-                        <div className="mt-3 p-2 bg-blue-50 rounded border">
-                          <h5 className="text-sm font-medium text-blue-800 mb-1">Live Tracking</h5>
-                          {shift.assignedStaff.filter(s => s.currentLocation).map(staff => (
-                            <div key={staff.id} className="text-xs text-blue-600">
-                              {staff.name}: {staff.currentLocation!.distance.toFixed(1)} miles from facility
-                              {staff.clockedIn ? ' (On-site)' : ' (En route)'}
-                            </div>
-                          ))}
-                        </div>
-                      )}
                     </div>
                   </TooltipProvider>
                 ))}
-                
-                {getShiftsForUnit(unit.name, selectedDate).length === 0 && (
-                  <div className="text-center text-gray-500 py-4">
-                    No shifts scheduled for this unit today
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -439,46 +372,8 @@ export default function EnhancedSchedulingPage() {
                     </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Template</Label>
-                        <Select defaultValue="weekly">
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="weekly">Weekly Schedule</SelectItem>
-                            <SelectItem value="monthly">Monthly Schedule</SelectItem>
-                            <SelectItem value="custom">Custom</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label>Unit</Label>
-                        <Select defaultValue="all">
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">All Units</SelectItem>
-                            <SelectItem value="ICU">ICU</SelectItem>
-                            <SelectItem value="Med-Surg">Med-Surg</SelectItem>
-                            <SelectItem value="Memory Care">Memory Care</SelectItem>
-                            <SelectItem value="Rehabilitation">Rehabilitation</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                    <div className="flex justify-end space-x-2">
-                      <Button variant="outline" onClick={() => setIsBulkScheduleOpen(false)}>
-                        Cancel
-                      </Button>
-                      <Button onClick={() => {
-                        toast({ title: "Bulk schedule created", description: "15 shifts have been scheduled successfully" });
-                        setIsBulkScheduleOpen(false);
-                      }}>
-                        Create Shifts
-                      </Button>
+                    <div className="text-center py-8 text-gray-500">
+                      Bulk scheduling functionality coming soon
                     </div>
                   </div>
                 </DialogContent>
@@ -600,22 +495,6 @@ export default function EnhancedSchedulingPage() {
                     {selectedShift.status.charAt(0).toUpperCase() + selectedShift.status.slice(1)}
                   </Badge>
                 </div>
-                <div>
-                  <Label className="text-sm font-medium">Required Staff</Label>
-                  <p className="text-sm text-gray-600">{selectedShift.requiredStaff}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Assigned Staff</Label>
-                  <p className="text-sm text-gray-600">{selectedShift.assignedStaff.length}</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Hourly Rate</Label>
-                  <p className="text-sm text-gray-600">${selectedShift.hourlyRate}/hr</p>
-                </div>
-                <div>
-                  <Label className="text-sm font-medium">Created By</Label>
-                  <p className="text-sm text-gray-600">{selectedShift.createdBy}</p>
-                </div>
               </div>
               {selectedShift.notes && (
                 <div>
@@ -623,29 +502,6 @@ export default function EnhancedSchedulingPage() {
                   <p className="text-sm text-gray-600">{selectedShift.notes}</p>
                 </div>
               )}
-              {selectedShift.requirements && selectedShift.requirements.length > 0 && (
-                <div>
-                  <Label className="text-sm font-medium">Requirements</Label>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {selectedShift.requirements.map((req, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {req}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="flex justify-end space-x-2 pt-4">
-                <Button variant="outline" onClick={() => setIsShiftDetailsOpen(false)}>
-                  Close
-                </Button>
-                <Button onClick={() => {
-                  toast({ title: "Shift updated", description: "Shift details have been saved" });
-                  setIsShiftDetailsOpen(false);
-                }}>
-                  Save Changes
-                </Button>
-              </div>
             </div>
           )}
         </DialogContent>
