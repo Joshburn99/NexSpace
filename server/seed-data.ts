@@ -719,7 +719,7 @@ export async function seedDatabase() {
     console.log(`   - ${insertedConfigs.length} payroll configurations`);
     console.log(`   - 0 payroll employee records (skipped for now)`);
     console.log(`   - ${insertedTimesheets.length} timesheets`);
-    console.log(`   - ${insertedPayments.length} payments`);
+    console.log(`   - 0 payments (skipped for now)`);
     console.log(`   - Complete audit trail and activity logs`);
 
   } catch (error) {
