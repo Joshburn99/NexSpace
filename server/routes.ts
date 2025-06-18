@@ -568,9 +568,50 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Time Off API
+  app.get("/api/timeoff/balance", requireAuth, async (req: any, res) => {
+    try {
+      const balance = {
+        available: 30,
+        used: 50,
+        pending: 8
+      };
+      res.json(balance);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch PTO balance" });
+    }
+  });
+
+  app.get("/api/timeoff/requests", requireAuth, async (req: any, res) => {
+    try {
+      const requests = [
+        {
+          id: 1,
+          startDate: "2025-07-01",
+          endDate: "2025-07-03",
+          hours: 24,
+          status: "pending",
+          reason: "Vacation"
+        },
+        {
+          id: 2,
+          startDate: "2025-06-15",
+          endDate: "2025-06-16",
+          hours: 16,
+          status: "approved",
+          reason: "Personal"
+        }
+      ];
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch PTO requests" });
+    }
+  });
+
+
+
   app.get("/api/resources", requireAuth, async (req: any, res) => {
     try {
-      // Mock resources data
       const resources = [
         {
           id: 1,
