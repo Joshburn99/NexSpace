@@ -11,6 +11,7 @@ import JobBoard from "@/pages/job-board";
 import EnhancedJobBoard from "@/pages/enhanced-job-board";
 import SchedulingPage from "@/pages/scheduling-page";
 import EnhancedSchedulingPage from "@/pages/enhanced-scheduling-page";
+import CalendarViewPage from "@/pages/calendar-view-page";
 import MessagingPage from "@/pages/messaging-page";
 import AnalyticsPage from "@/pages/analytics-page";
 import CredentialsPage from "@/pages/credentials-page";
@@ -39,9 +40,10 @@ function Router() {
       <ProtectedRoute path="/jobs" component={EnhancedJobBoard} />
       <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />
       <ProtectedRoute path="/scheduling" component={SchedulingPage} />
+      <ProtectedRoute path="/calendar-view" component={CalendarViewPage} />
       <ProtectedRoute path="/calendar" component={EnhancedSchedulingPage} />
-      <ProtectedRoute path="/shifts/open" component={OpenShiftsPage} />
-      <ProtectedRoute path="/shifts/requests" component={ShiftRequestsPage} />
+      <ProtectedRoute path="/shifts-open" component={OpenShiftsPage} />
+      <ProtectedRoute path="/shift-requests" component={ShiftRequestsPage} />
       <ProtectedRoute path="/time-clock" component={TimeClockPage} />
       <ProtectedRoute path="/staff" component={StaffPage} />
       <ProtectedRoute path="/staff/contractors" component={StaffPage} />
