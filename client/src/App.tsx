@@ -52,8 +52,8 @@ function Router() {
       <ProtectedRoute path="/analytics/attendance" component={AttendancePage} />
       <ProtectedRoute path="/analytics/agency" component={AgencyUsagePage} />
       <ProtectedRoute path="/analytics/compliance" component={CompliancePage} />
-      <ProtectedRoute path="/messages" component={MessagingPage} />
       <ProtectedRoute path="/analytics" component={AnalyticsPage} />
+      <ProtectedRoute path="/messages" component={MessagingPage} />
       <ProtectedRoute path="/credentials" component={CredentialsPage} />
       <ProtectedRoute path="/invoices" component={InvoicesPage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
