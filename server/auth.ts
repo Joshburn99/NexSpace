@@ -43,10 +43,13 @@ export function setupAuth(app: Express) {
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
+      console.log(`Authentication attempt for username: ${username}`);
       const user = await storage.getUserByUsername(username);
       if (!user) {
+        console.log(`User not found: ${username}`);
         return done(null, false);
       } else {
+        console.log(`User found: ${user.username}, role: ${user.role}`);
         return done(null, user);
       }
     }),
@@ -75,23 +78,25 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.post("/api/login", (req, res, next) => {
-    console.log("Login request body:", req.body); // Debug log
+  app.post("/api/login", async (req, res, next) => {
+    console.log("Login request body:", req.body);
     
     // Ensure we have a username
     if (!req.body.username) {
       return res.status(400).json({ message: "Username is required" });
     }
     
-    passport.authenticate("local", (err, user, info) => {
-      if (err) {
-        console.error("Passport error:", err);
-        return next(err);
-      }
+    try {
+      // Direct user lookup for username-only authentication
+      console.log("Looking up user:", req.body.username);
+      const user = await storage.getUserByUsername(req.body.username);
+      console.log("Database lookup result:", user ? `Found user: ${user.username}` : "No user found");
       if (!user) {
-        console.log("Authentication failed for user:", req.body.username);
+        console.log("User not found:", req.body.username);
         return res.status(401).json({ message: "Invalid username" });
       }
+      
+      // Log the user in directly
       req.login(user, (err) => {
         if (err) {
           console.error("Login error:", err);
@@ -100,7 +105,10 @@ export function setupAuth(app: Express) {
         console.log("Login successful for user:", user.username);
         return res.status(200).json(user);
       });
-    })(req, res, next);
+    } catch (error) {
+      console.error("Database error during login:", error);
+      return res.status(500).json({ message: "Internal server error" });
+    }
   });
 
   app.post("/api/logout", (req, res, next) => {
