@@ -43,13 +43,10 @@ export function setupAuth(app: Express) {
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      console.log(`Authentication attempt for username: ${username}`);
       const user = await storage.getUserByUsername(username);
-      if (!user) {
-        console.log(`User not found: ${username}`);
+      if (!user || !(await comparePasswords(password, user.password))) {
         return done(null, false);
       } else {
-        console.log(`User found: ${user.username}, role: ${user.role}`);
         return done(null, user);
       }
     }),
@@ -78,36 +75,37 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.post("/api/login", async (req, res, next) => {
-    console.log("Login request body:", req.body);
+  app.post("/api/login", passport.authenticate("local"), (req, res) => {
+    res.status(200).json(req.user);
+  });
+
+  app.post("/api/forgot-password", async (req, res) => {
+    const { username } = req.body;
     
-    // Ensure we have a username
-    if (!req.body.username) {
+    if (!username) {
       return res.status(400).json({ message: "Username is required" });
     }
-    
+
     try {
-      // Direct user lookup for username-only authentication
-      console.log("Looking up user:", req.body.username);
-      const user = await storage.getUserByUsername(req.body.username);
-      console.log("Database lookup result:", user ? `Found user: ${user.username}` : "No user found");
+      const user = await storage.getUserByUsername(username);
       if (!user) {
-        console.log("User not found:", req.body.username);
-        return res.status(401).json({ message: "Invalid username" });
+        // Don't reveal if user exists or not for security
+        return res.status(200).json({ message: "If the username exists, a temporary password has been set" });
       }
+
+      // Generate a simple temporary password
+      const tempPassword = Math.random().toString(36).slice(-8);
+      const hashedTempPassword = await hashPassword(tempPassword);
       
-      // Log the user in directly
-      req.login(user, (err) => {
-        if (err) {
-          console.error("Login error:", err);
-          return next(err);
-        }
-        console.log("Login successful for user:", user.username);
-        return res.status(200).json(user);
+      await storage.updateUser(user.id, { password: hashedTempPassword });
+      
+      res.status(200).json({ 
+        message: "Temporary password set successfully",
+        tempPassword: tempPassword // In production, this would be sent via email
       });
     } catch (error) {
-      console.error("Database error during login:", error);
-      return res.status(500).json({ message: "Internal server error" });
+      console.error("Password reset error:", error);
+      res.status(500).json({ message: "Failed to reset password" });
     }
   });
 
