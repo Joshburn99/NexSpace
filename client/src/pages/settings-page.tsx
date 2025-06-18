@@ -15,6 +15,8 @@ import { cn } from "@/lib/utils";
 import { UserRole } from "@shared/schema";
 import { hasPermission } from "@/lib/permissions";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 type AppView = 'facility' | 'clinician';
 
@@ -23,6 +25,7 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [appView, setAppView] = useState<AppView>('facility');
+  const [selectedRole, setSelectedRole] = useState(user?.role || '');
   const [notifications, setNotifications] = useState({
     emailAlerts: true,
     smsAlerts: false,
@@ -40,9 +43,47 @@ export default function SettingsPage() {
     soundAlerts: true
   });
 
+  // Role update mutation
+  const updateRoleMutation = useMutation({
+    mutationFn: async (newRole: string) => {
+      return apiRequest(`/api/user/${user!.id}`, 'PATCH', { role: newRole });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Role Updated",
+        description: "Your user role has been successfully updated.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update user role.",
+        variant: "destructive"
+      });
+      setSelectedRole(user?.role || ''); // Reset to original role on error
+    }
+  });
+
   if (!user) return null;
 
   const isSuperUser = user.role === UserRole.SUPER_ADMIN || user.role === UserRole.FACILITY_MANAGER;
+
+  const getRoleDisplay = (role: string) => {
+    switch (role) {
+      case UserRole.SUPER_ADMIN: return "Super Admin";
+      case UserRole.CLIENT_ADMINISTRATOR: return "Client Administrator";
+      case UserRole.FACILITY_MANAGER: return "Facility Manager";
+      case UserRole.INTERNAL_EMPLOYEE: return "Internal Employee";
+      case UserRole.CONTRACTOR_1099: return "1099 Contractor";
+      default: return role;
+    }
+  };
+
+  const handleRoleChange = (newRole: string) => {
+    setSelectedRole(newRole);
+    updateRoleMutation.mutate(newRole);
+  };
 
   const handleSaveSettings = () => {
     toast({
@@ -197,7 +238,22 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <Label htmlFor="role">User Role</Label>
-                  <Input id="role" value={user.role} readOnly className="bg-gray-50" />
+                  {user.role === UserRole.CLIENT_ADMINISTRATOR ? (
+                    <Select value={selectedRole} onValueChange={handleRoleChange} disabled={updateRoleMutation.isPending}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={UserRole.SUPER_ADMIN}>Super Admin</SelectItem>
+                        <SelectItem value={UserRole.CLIENT_ADMINISTRATOR}>Client Administrator</SelectItem>
+                        <SelectItem value={UserRole.FACILITY_MANAGER}>Facility Manager</SelectItem>
+                        <SelectItem value={UserRole.INTERNAL_EMPLOYEE}>Internal Employee</SelectItem>
+                        <SelectItem value={UserRole.CONTRACTOR_1099}>1099 Contractor</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input id="role" value={getRoleDisplay(user.role)} readOnly className="bg-gray-50" />
+                  )}
                 </div>
               </div>
             </CardContent>
