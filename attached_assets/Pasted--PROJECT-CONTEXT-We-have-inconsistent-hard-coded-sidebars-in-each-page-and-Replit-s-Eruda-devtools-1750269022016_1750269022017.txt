@@ -1,0 +1,48 @@
+# PROJECT CONTEXT
+We have inconsistent, hard-coded sidebars in each page and Replit’s Eruda devtools script is throwing a DOMException when we click around. We need to clean up both issues at once.
+
+# TASKS
+
+1. **Disable Eruda**  
+   - Open `public/index.html` (or your main HTML template)  
+   - **Remove** or comment out the line that loads `__replco/static/devtools/eruda/*.js`.  
+   - **Remove** any calls to `eruda.init()` in `/src` (there shouldn’t be any normally).
+
+2. **Sidebar Sync**  
+   - Create `/src/components/Sidebar.tsx` with the full menu (Dashboard, Scheduling, Workforce, Hiring, Insights, Billing, Messages), active-link highlighting via Wouter’s `useLocation()`, and collapse/expand logic for submenus.
+   - Create `/src/components/Layout.tsx` that renders:
+     ```tsx
+     import Sidebar from './Sidebar';
+     const Layout: React.FC<{children: React.ReactNode}> = ({ children }) => (
+       <div className="flex h-screen">
+         <Sidebar />
+         <main className="flex-1 overflow-auto">{children}</main>
+       </div>
+     );
+     export default Layout;
+     ```
+
+3. **Page Updates**  
+   - For **every** file in `/src/pages/*.tsx`:  
+     • **Remove** any `<nav>` or sidebar JSX.  
+     • **Wrap** the existing page markup in `<Layout>…</Layout>`.  
+     • **Ensure** all `<Link href="…">` targets match your actual route paths (e.g. `/workforce/posting`).
+
+4. **Router Alignment**  
+   - Open your router file (e.g. `/src/App.tsx`).  
+   - Import each page from `/src/pages`.  
+   - Wrap each `<Route>` so it renders its component inside `<Layout>` (or use `<Routes><Route element={<Layout><Page/></Layout>}…>`).
+
+# CONSTRAINTS
+* Do not touch any API or business-logic code.  
+* Only modify HTML template, the two new components, routing, and page wrappers.  
+* Keep Tailwind classes consistent.  
+* Generate only the new file contents or diffs—do not reprint unrelated files.
+
+# SUCCESS CRITERIA
+✅ Eruda no longer loads (no DOMException).  
+✅ A single `<Sidebar>` drives navigation across all pages.  
+✅ No more 404s when clicking the sidebar.  
+✅ `npm run dev` and all tests pass.
+
+BEGIN!

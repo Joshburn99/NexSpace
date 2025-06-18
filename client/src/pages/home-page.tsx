@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AppLayout } from "@/components/ui/app-layout";
+import Layout from "@/components/Layout";
 import { getQueryFn } from "@/lib/queryClient";
 import { 
   AlertTriangle, 
@@ -273,104 +273,8 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Left Navigation Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h1 className="text-xl font-bold text-gray-900">Nexspace</h1>
-          <p className="text-sm text-gray-500 mt-1">Healthcare Staffing</p>
-        </div>
-        
-        <nav className="mt-6 px-3">
-          <div className="space-y-1">
-            <button
-              onClick={() => setSelectedTab('overview')}
-              className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                selectedTab === 'overview'
-                  ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
-              }`}
-            >
-              <Activity className="w-5 h-5 mr-3" />
-              Dashboard
-            </button>
-            
-            <Link href="/scheduling">
-              <button className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                <Calendar className="w-5 h-5 mr-3" />
-                Scheduling
-              </button>
-            </Link>
-            
-            <Link href="/staff">
-              <button className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                <Users className="w-5 h-5 mr-3" />
-                Staff
-              </button>
-            </Link>
-            
-            <Link href="/analytics">
-              <button className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                <BarChart3 className="w-5 h-5 mr-3" />
-                Analytics
-              </button>
-            </Link>
-            
-            <Link href="/messaging">
-              <button className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                <MessageSquare className="w-5 h-5 mr-3" />
-                Messages
-              </button>
-            </Link>
-            
-            <Link href="/settings">
-              <button className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                <Settings className="w-5 h-5 mr-3" />
-                Settings
-              </button>
-            </Link>
-          </div>
-          
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <div className="px-3 py-2">
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Quick Actions</p>
-            </div>
-            <div className="space-y-1">
-              <Link href="/job-board">
-                <button className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                  <ClipboardList className="w-5 h-5 mr-3" />
-                  Job Board
-                </button>
-              </Link>
-              
-              <Link href="/time-clock">
-                <button className="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-colors">
-                  <Clock className="w-5 h-5 mr-3" />
-                  Time Clock
-                </button>
-              </Link>
-            </div>
-          </div>
-        </nav>
-        
-        <div className="absolute bottom-0 w-64 p-4 border-t border-gray-200 bg-white">
-          <div className="flex items-center">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-sm font-medium text-white">
-                  {user.firstName?.[0]}{user.lastName?.[0]}
-                </span>
-              </div>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-700">{user.firstName} {user.lastName}</p>
-              <p className="text-xs text-gray-500">{user.role.replace('_', ' ')}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <Layout>
+      <div className="flex flex-col h-full">
         {/* Header */}
         <div className="bg-white border-b px-6 py-4">
           <div className="flex items-center justify-between">
@@ -631,6 +535,7 @@ export default function HomePage() {
           </Tabs>
         </div>
       </div>
-    </div>
+    </Layout>
   );
+}
 }
