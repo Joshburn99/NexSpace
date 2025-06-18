@@ -321,8 +321,7 @@ export default function EnhancedJobBoard() {
   const departments = Array.from(new Set(jobPostings.map(job => job.department)));
 
   return (
-    <AppLayout>
-
+    <Layout>
       <main className="flex-1 overflow-x-hidden overflow-y-auto">
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -644,6 +643,6 @@ export default function EnhancedJobBoard() {
           </div>
         </div>
       </main>
-    </AppLayout>
+    </Layout>
   );
 }

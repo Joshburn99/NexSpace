@@ -30,7 +30,7 @@ export default function SchedulingPage() {
   });
 
   return (
-    <AppLayout title="Scheduling" subtitle="Manage shifts and staff assignments">
+    <Layout>
       <div className="p-6">
         <div className="flex items-center justify-end mb-6">
           <Button>
@@ -161,6 +161,6 @@ export default function SchedulingPage() {
             </CardContent>
           </Card>
         </div>
-    </AppLayout>
+    </Layout>
   );
 }

@@ -116,7 +116,7 @@ export default function AnalyticsPage() {
   ];
 
   return (
-    <AppLayout title="Analytics & Insights" subtitle="Comprehensive performance metrics and analytics">
+    <Layout>
       <div className="p-6">
         {/* Period and Metric Filters */}
         <div className="flex items-center gap-4 mb-6">
@@ -655,6 +655,6 @@ export default function AnalyticsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AppLayout>
+    </Layout>
   );
 }

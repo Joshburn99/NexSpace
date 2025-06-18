@@ -136,7 +136,7 @@ export default function StaffPage() {
   const uniqueRoles = Array.from(new Set(mockStaff.map(staff => staff.role)));
 
   return (
-    <AppLayout title="Workforce Management" subtitle="Manage internal staff and 1099 contractors">
+    <Layout>
       <div className="p-6">
         <div className="flex items-center justify-end mb-6">
           <Button>Add New Staff</Button>
@@ -331,6 +331,6 @@ export default function StaffPage() {
             </div>
           )}
         </div>
-    </AppLayout>
+    </Layout>
   );
 }
