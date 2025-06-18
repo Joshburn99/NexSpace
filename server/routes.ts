@@ -9,8 +9,9 @@ import {
   insertInvoiceSchema, insertWorkLogSchema, insertCredentialSchema,
   insertMessageSchema, insertPayrollProviderSchema, insertPayrollConfigurationSchema,
   insertPayrollEmployeeSchema, insertTimesheetSchema, insertTimesheetEntrySchema,
-  insertPaymentSchema, UserRole
+  insertPaymentSchema, UserRole, shifts
 } from "@shared/schema";
+import { db } from "./db";
 
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
@@ -448,14 +449,122 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Database seeding API (for development)
-  app.post("/api/seed-database", async (req, res) => {
+  app.post("/api/seed-shifts", async (req, res) => {
     try {
-      const { seedDatabase } = await import('./seed-data');
-      await seedDatabase();
-      res.json({ message: "Database seeded successfully" });
+      // Clear existing shifts
+      await db.delete(shifts);
+      
+      // Create shifts data directly
+      const currentFacility = await storage.getAllFacilities();
+      const facilityId = currentFacility[0]?.id || 1;
+      
+      const shiftsData = [
+        // Today's shifts with various statuses
+        {
+          facilityId,
+          department: 'ICU',
+          startTime: new Date('2025-06-18T07:00:00Z'),
+          endTime: new Date('2025-06-18T19:00:00Z'),
+          requiredStaff: 2,
+          shiftType: 'day',
+          status: 'filled',
+          specialRequirements: ['RN', 'BLS', 'Critical Care'],
+          createdById: 1,
+          assignedStaffIds: [3, 4]
+        },
+        {
+          facilityId,
+          department: 'ICU',
+          startTime: new Date('2025-06-18T19:00:00Z'),
+          endTime: new Date('2025-06-19T07:00:00Z'),
+          requiredStaff: 1,
+          shiftType: 'night',
+          status: 'open',
+          specialRequirements: ['RN', 'BLS'],
+          createdById: 1,
+          assignedStaffIds: []
+        },
+        {
+          facilityId,
+          department: 'Med-Surg',
+          startTime: new Date('2025-06-18T07:00:00Z'),
+          endTime: new Date('2025-06-18T15:00:00Z'),
+          requiredStaff: 2,
+          shiftType: 'day',
+          status: 'open',
+          specialRequirements: ['LPN', 'Med Administration'],
+          createdById: 1,
+          assignedStaffIds: [6]
+        },
+        {
+          facilityId,
+          department: 'Memory Care',
+          startTime: new Date('2025-06-18T15:00:00Z'),
+          endTime: new Date('2025-06-18T23:00:00Z'),
+          requiredStaff: 3,
+          shiftType: 'evening',
+          status: 'open',
+          specialRequirements: ['CNA', 'Dementia Care'],
+          createdById: 1,
+          assignedStaffIds: []
+        },
+        {
+          facilityId,
+          department: 'Rehabilitation',
+          startTime: new Date('2025-06-18T09:00:00Z'),
+          endTime: new Date('2025-06-18T17:00:00Z'),
+          requiredStaff: 1,
+          shiftType: 'day',
+          status: 'filled',
+          specialRequirements: ['PT', 'State License'],
+          createdById: 1,
+          assignedStaffIds: [10]
+        },
+        // Tomorrow's shifts
+        {
+          facilityId,
+          department: 'ICU',
+          startTime: new Date('2025-06-19T07:00:00Z'),
+          endTime: new Date('2025-06-19T19:00:00Z'),
+          requiredStaff: 2,
+          shiftType: 'day',
+          status: 'open',
+          specialRequirements: ['RN', 'Critical Care'],
+          createdById: 1,
+          assignedStaffIds: [3]
+        },
+        {
+          facilityId,
+          department: 'Med-Surg',
+          startTime: new Date('2025-06-19T15:00:00Z'),
+          endTime: new Date('2025-06-19T23:00:00Z'),
+          requiredStaff: 2,
+          shiftType: 'evening',
+          status: 'filled',
+          specialRequirements: ['LPN'],
+          createdById: 1,
+          assignedStaffIds: [6, 7]
+        },
+        // Weekend shifts
+        {
+          facilityId,
+          department: 'Memory Care',
+          startTime: new Date('2025-06-21T07:00:00Z'),
+          endTime: new Date('2025-06-21T19:00:00Z'),
+          requiredStaff: 4,
+          shiftType: 'weekend',
+          status: 'open',
+          specialRequirements: ['CNA', 'Weekend Rate'],
+          createdById: 1,
+          assignedStaffIds: [8, 9]
+        }
+      ];
+      
+      const createdShifts = await db.insert(shifts).values(shiftsData).returning();
+      res.json({ message: "Shifts seeded successfully", count: shifts.length });
     } catch (error) {
       console.error('Seeding error:', error);
-      res.status(500).json({ message: "Failed to seed database", error: (error as Error).message });
+      res.status(500).json({ message: "Failed to seed shifts", error: (error as Error).message });
     }
   });
 
