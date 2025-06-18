@@ -52,11 +52,11 @@ function Router() {
       <ProtectedRoute path="/staff" component={StaffPage} />
       <ProtectedRoute path="/staff/contractors" component={StaffPage} />
       <ProtectedRoute path="/staff/referrals" component={ReferralPage} />
+      <ProtectedRoute path="/analytics" component={AnalyticsPage} />
       <ProtectedRoute path="/analytics/overtime" component={OvertimeReportPage} />
       <ProtectedRoute path="/analytics/attendance" component={AttendancePage} />
       <ProtectedRoute path="/analytics/agency" component={AgencyUsagePage} />
       <ProtectedRoute path="/analytics/compliance" component={CompliancePage} />
-      <ProtectedRoute path="/analytics" component={AnalyticsPage} />
       <ProtectedRoute path="/messages" component={MessagingPage} />
       <ProtectedRoute path="/credentials" component={CredentialsPage} />
       <ProtectedRoute path="/invoices" component={InvoicesPage} />
