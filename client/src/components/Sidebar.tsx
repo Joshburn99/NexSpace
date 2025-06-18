@@ -44,6 +44,7 @@ const navigationItems: NavItem[] = [
     children: [
       { label: "Calendar View", href: "/calendar", icon: <Calendar className="w-4 h-4" /> },
       { label: "Enhanced Calendar", href: "/calendar-view", icon: <Calendar className="w-4 h-4" /> },
+      { label: "Scheduling", href: "/scheduling", icon: <Calendar className="w-4 h-4" /> },
       { label: "Advanced Scheduling", href: "/advanced-scheduling", icon: <Calendar className="w-4 h-4" /> },
       { label: "Open Shifts", href: "/shifts-open", icon: <Clock className="w-4 h-4" /> },
       { label: "Shift Requests", href: "/shift-requests", icon: <Clock className="w-4 h-4" />, roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN] },
@@ -59,6 +60,7 @@ const navigationItems: NavItem[] = [
       { label: "1099 Contractors", href: "/staff/contractors", icon: <Users className="w-4 h-4" /> },
       { label: "Referral System", href: "/staff/referrals", icon: <Users className="w-4 h-4" /> },
       { label: "Credentials", href: "/credentials", icon: <Shield className="w-4 h-4" /> },
+      { label: "Facility Management", href: "/facility-management", icon: <Users className="w-4 h-4" /> },
     ],
   },
   {
@@ -66,6 +68,7 @@ const navigationItems: NavItem[] = [
     icon: <Briefcase className="w-5 h-5" />,
     children: [
       { label: "Job Board", href: "/jobs", icon: <Briefcase className="w-4 h-4" /> },
+      { label: "Enhanced Job Board", href: "/job-board", icon: <Briefcase className="w-4 h-4" /> },
       { label: "Job Posting", href: "/job-posting", icon: <Briefcase className="w-4 h-4" /> },
     ],
   },
@@ -86,7 +89,7 @@ const navigationItems: NavItem[] = [
     icon: <DollarSign className="w-5 h-5" />,
     children: [
       { label: "Invoices", href: "/invoices", icon: <FileText className="w-4 h-4" /> },
-      { label: "Work Logs", href: "/work-logs", icon: <FileText className="w-4 h-4" /> },
+      { label: "Workflow Automation", href: "/workflow-automation", icon: <FileText className="w-4 h-4" /> },
     ],
   },
   {
@@ -94,6 +97,14 @@ const navigationItems: NavItem[] = [
     href: "/messages",
     icon: <MessageSquare className="w-5 h-5" />,
     badge: 3,
+  },
+  {
+    label: "Admin",
+    icon: <Shield className="w-5 h-5" />,
+    roles: [UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
+    children: [
+      { label: "Impersonation", href: "/admin/impersonation", icon: <Shield className="w-4 h-4" /> },
+    ],
   },
 ];
 
