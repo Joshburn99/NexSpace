@@ -35,6 +35,7 @@ import AdvancedSchedulingPage from "@/pages/advanced-scheduling-page";
 import ClinicianDashboardWrapper from "@/pages/clinician-dashboard-wrapper";
 import EmployeeDashboardWrapper from "@/pages/employee-dashboard-wrapper";
 import ContractorDashboardWrapper from "@/pages/contractor-dashboard-wrapper";
+import FloatPoolAnalyticsPage from "@/pages/float-pool-analytics-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -53,6 +54,7 @@ function Router() {
       <ProtectedRoute path="/staff/contractors" component={StaffPage} />
       <ProtectedRoute path="/staff/referrals" component={ReferralPage} />
       <ProtectedRoute path="/analytics" component={AnalyticsPage} />
+      <ProtectedRoute path="/analytics/float-pool" component={FloatPoolAnalyticsPage} />
       <ProtectedRoute path="/analytics/overtime" component={OvertimeReportPage} />
       <ProtectedRoute path="/analytics/attendance" component={AttendancePage} />
       <ProtectedRoute path="/analytics/agency" component={AgencyUsagePage} />
