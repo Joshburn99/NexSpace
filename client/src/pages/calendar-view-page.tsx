@@ -222,13 +222,23 @@ export default function CalendarViewPage() {
                   {day.getDate()}
                 </div>
                 <div className="space-y-1">
-                  {dayShifts.slice(0, 2).map((shift: any, idx: number) => (
-                    <div key={idx} className="text-xs p-1 rounded bg-blue-100 text-blue-800 truncate">
-                      {shift.role}
-                    </div>
-                  ))}
+                  {dayShifts.slice(0, 2).map((shift: any, idx: number) => {
+                    const specialty = getSpecialtyFromRequirements(shift.specialRequirements);
+                    const assignedCount = shift.assignedStaffIds?.length || 0;
+                    const statusColor = getStatusColor(shift.status, assignedCount, shift.requiredStaff);
+                    const specialtyColor = specialtyColors[specialty as keyof typeof specialtyColors];
+                    
+                    return (
+                      <div key={idx} className={`text-xs p-1 rounded border ${specialtyColor} truncate`}>
+                        <div className="font-medium">{specialty} - {shift.department}</div>
+                        <div className={`text-xs px-1 rounded ${statusColor} mt-1`}>
+                          {assignedCount}/{shift.requiredStaff} {shift.shiftType}
+                        </div>
+                      </div>
+                    );
+                  })}
                   {dayShifts.length > 2 && (
-                    <div className="text-xs text-gray-500">+{dayShifts.length - 2}</div>
+                    <div className="text-xs text-gray-500">+{dayShifts.length - 2} more</div>
                   )}
                 </div>
               </div>
@@ -280,6 +290,31 @@ export default function CalendarViewPage() {
             <Plus className="w-4 h-4 mr-2" />
             Create Shift
           </Button>
+        </div>
+
+        {/* Specialty Color Legend */}
+        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium text-gray-700">Specialty Color Coding:</div>
+            <div className="flex gap-4 text-xs">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-blue-100 border border-blue-200"></div>
+                <span>RN (Registered Nurse)</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-green-100 border border-green-200"></div>
+                <span>LPN (Licensed Practical Nurse)</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-purple-100 border border-purple-200"></div>
+                <span>CNA (Certified Nursing Assistant)</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded bg-orange-100 border border-orange-200"></div>
+                <span>PT (Physical Therapist)</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Calendar Navigation */}

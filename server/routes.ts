@@ -561,7 +561,7 @@ export function registerRoutes(app: Express): Server {
       ];
       
       const createdShifts = await db.insert(shifts).values(shiftsData).returning();
-      res.json({ message: "Shifts seeded successfully", count: shifts.length });
+      res.json({ message: "Shifts seeded successfully", count: shiftsData.length });
     } catch (error) {
       console.error('Seeding error:', error);
       res.status(500).json({ message: "Failed to seed shifts", error: (error as Error).message });
