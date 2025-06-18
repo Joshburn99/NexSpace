@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Settings, Building2, User, Shield, Bell, Moon, Globe, Save } from "lucide-react";
+import { Settings, Building2, User, Shield, Bell, Moon, Globe, Save, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@shared/schema";
 import { hasPermission } from "@/lib/permissions";
@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
-type AppView = 'facility' | 'clinician';
+type AppView = 'facility' | 'clinician' | 'employee' | 'contractor';
 
 export default function SettingsPage() {
   const { user } = useAuth();
@@ -94,6 +94,28 @@ export default function SettingsPage() {
 
   const switchAppView = (newView: AppView) => {
     setAppView(newView);
+    
+    // Navigate to appropriate dashboard based on view
+    let route = '/';
+    switch (newView) {
+      case 'clinician':
+        route = '/clinician-dashboard';
+        break;
+      case 'employee':
+        route = '/employee-dashboard';
+        break;
+      case 'contractor':
+        route = '/contractor-dashboard';
+        break;
+      case 'facility':
+      default:
+        route = '/';
+        break;
+    }
+    
+    // Navigate to the appropriate route
+    window.location.href = route;
+    
     toast({
       title: `Switched to ${newView.charAt(0).toUpperCase() + newView.slice(1)} View`,
       description: `You are now viewing the application from a ${newView} perspective.`,
@@ -129,14 +151,14 @@ export default function SettingsPage() {
                   <span>Super User Controls</span>
                 </CardTitle>
                 <CardDescription>
-                  Switch between facility and clinician app views to experience different user perspectives
+                  Switch between different app views to experience various user perspectives and role interfaces
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div>
                     <Label className="text-sm font-medium">Application View</Label>
-                    <div className="mt-2 grid grid-cols-2 gap-4">
+                    <div className="mt-2 grid grid-cols-2 lg:grid-cols-4 gap-4">
                       <Card 
                         className={cn(
                           "cursor-pointer transition-all border-2",
@@ -147,23 +169,23 @@ export default function SettingsPage() {
                         onClick={() => switchAppView('facility')}
                       >
                         <CardContent className="p-4">
-                          <div className="flex items-center space-x-3">
+                          <div className="flex flex-col items-center text-center space-y-2">
                             <Building2 className={cn(
-                              "w-6 h-6",
+                              "w-8 h-8",
                               appView === 'facility' ? "text-blue-600" : "text-gray-500"
                             )} />
                             <div>
                               <h3 className="font-medium">Facility View</h3>
-                              <p className="text-sm text-gray-600">
+                              <p className="text-xs text-gray-600">
                                 Manage schedules, staff, and operations
                               </p>
                             </div>
+                            {appView === 'facility' && (
+                              <Badge className="bg-blue-100 text-blue-800">
+                                Active
+                              </Badge>
+                            )}
                           </div>
-                          {appView === 'facility' && (
-                            <Badge className="mt-2 bg-blue-100 text-blue-800">
-                              Currently Active
-                            </Badge>
-                          )}
                         </CardContent>
                       </Card>
 
@@ -177,23 +199,83 @@ export default function SettingsPage() {
                         onClick={() => switchAppView('clinician')}
                       >
                         <CardContent className="p-4">
-                          <div className="flex items-center space-x-3">
+                          <div className="flex flex-col items-center text-center space-y-2">
                             <User className={cn(
-                              "w-6 h-6",
+                              "w-8 h-8",
                               appView === 'clinician' ? "text-green-600" : "text-gray-500"
                             )} />
                             <div>
                               <h3 className="font-medium">Clinician View</h3>
-                              <p className="text-sm text-gray-600">
-                                View shifts, apply for jobs, track time
+                              <p className="text-xs text-gray-600">
+                                Basic clinician dashboard
                               </p>
                             </div>
+                            {appView === 'clinician' && (
+                              <Badge className="bg-green-100 text-green-800">
+                                Active
+                              </Badge>
+                            )}
                           </div>
-                          {appView === 'clinician' && (
-                            <Badge className="mt-2 bg-green-100 text-green-800">
-                              Currently Active
-                            </Badge>
-                          )}
+                        </CardContent>
+                      </Card>
+
+                      <Card 
+                        className={cn(
+                          "cursor-pointer transition-all border-2",
+                          appView === 'employee' 
+                            ? "border-purple-500 bg-purple-50" 
+                            : "border-gray-200 hover:border-gray-300"
+                        )}
+                        onClick={() => switchAppView('employee')}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex flex-col items-center text-center space-y-2">
+                            <Shield className={cn(
+                              "w-8 h-8",
+                              appView === 'employee' ? "text-purple-600" : "text-gray-500"
+                            )} />
+                            <div>
+                              <h3 className="font-medium">Employee View</h3>
+                              <p className="text-xs text-gray-600">
+                                PTO, benefits, and employee tools
+                              </p>
+                            </div>
+                            {appView === 'employee' && (
+                              <Badge className="bg-purple-100 text-purple-800">
+                                Active
+                              </Badge>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card 
+                        className={cn(
+                          "cursor-pointer transition-all border-2",
+                          appView === 'contractor' 
+                            ? "border-orange-500 bg-orange-50" 
+                            : "border-gray-200 hover:border-gray-300"
+                        )}
+                        onClick={() => switchAppView('contractor')}
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex flex-col items-center text-center space-y-2">
+                            <FileText className={cn(
+                              "w-8 h-8",
+                              appView === 'contractor' ? "text-orange-600" : "text-gray-500"
+                            )} />
+                            <div>
+                              <h3 className="font-medium">Contractor View</h3>
+                              <p className="text-xs text-gray-600">
+                                Gig history, 1099s, and contractor tools
+                              </p>
+                            </div>
+                            {appView === 'contractor' && (
+                              <Badge className="bg-orange-100 text-orange-800">
+                                Active
+                              </Badge>
+                            )}
+                          </div>
                         </CardContent>
                       </Card>
                     </div>
@@ -203,10 +285,11 @@ export default function SettingsPage() {
                     <div className="flex items-start space-x-2">
                       <Shield className="w-5 h-5 text-amber-600 mt-0.5" />
                       <div>
-                        <h4 className="font-medium text-amber-800">Super User Access</h4>
+                        <h4 className="font-medium text-amber-800">Role-Based View Testing</h4>
                         <p className="text-sm text-amber-700">
-                          As a super user, you can switch between views to understand how different user types 
-                          experience the platform. This helps with training, troubleshooting, and system optimization.
+                          Switch between facility management, clinician, employee, and contractor views to experience 
+                          role-specific dashboards and interfaces. Each view shows different data, tools, and workflows 
+                          relevant to that user type.
                         </p>
                       </div>
                     </div>
