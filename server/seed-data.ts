@@ -608,14 +608,16 @@ export async function seedDatabase() {
       {
         name: 'ADP Workforce Now',
         apiEndpoint: 'https://api.adp.com/payroll/v1',
+        authType: 'oauth',
         isActive: true,
-        configuration: { clientId: 'adp_client_123', environment: 'production' }
+        supportedFeatures: ['timesheet_sync', 'direct_deposit', 'tax_calc']
       },
       {
         name: 'QuickBooks Payroll',
         apiEndpoint: 'https://sandbox-quickbooks.api.intuit.com/v3',
+        authType: 'oauth',
         isActive: false,
-        configuration: { companyId: 'qb_company_456', sandbox: true }
+        supportedFeatures: ['timesheet_sync', 'tax_calc']
       }
     ];
 
@@ -626,31 +628,23 @@ export async function seedDatabase() {
       {
         facilityId: insertedFacilities[0].id,
         providerId: insertedProviders[0].id,
-        payFrequency: 'bi_weekly',
-        overtimeThreshold: 40.0,
-        federalTaxRate: 0.22,
-        stateTaxRate: 0.06,
-        socialSecurityRate: 0.062,
-        medicareRate: 0.0145,
+        configuration: {
+          payFrequency: 'bi_weekly',
+          overtimeThreshold: 40.0,
+          federalTaxRate: 0.22,
+          stateTaxRate: 0.06,
+          socialSecurityRate: 0.062,
+          medicareRate: 0.0145
+        },
         isActive: true
       }
     ];
 
     const insertedConfigs = await db.insert(payrollConfigurations).values(payrollConfigsData).returning();
 
-    // Create payroll employees
-    const payrollEmployeesData = insertedUsers
-      .filter(user => user.role === UserRole.INTERNAL_EMPLOYEE)
-      .map((user, index) => ({
-        userId: user.id,
-        facilityId: user.facilityId,
-        employeeType: 'hourly',
-        hourlyRate: [38.50, 42.50, 35.00, 28.75, 26.50, 18.50, 55.00][index % 7].toFixed(2),
-        overtimeRate: ([38.50, 42.50, 35.00, 28.75, 26.50, 18.50, 55.00][index % 7] * 1.5).toFixed(2),
-        isActive: true
-      }));
-
-    const insertedPayrollEmployees = await db.insert(payrollEmployees).values(payrollEmployeesData).returning();
+    // Skip payroll employees for now to avoid schema complexity
+    // const payrollEmployeesData = [];
+    // const insertedPayrollEmployees = [];
 
     // Create timesheets
     const timesheetsData = [
@@ -683,25 +677,9 @@ export async function seedDatabase() {
 
     const insertedTimesheets = await db.insert(timesheets).values(timesheetsData).returning();
 
-    // Create payments
-    const paymentsData = [
-      {
-        timesheetId: insertedTimesheets[0].id,
-        userId: insertedUsers[3].id,
-        facilityId: insertedFacilities[0].id,
-        grossAmount: '3234.00',
-        federalTax: '711.48',
-        stateTax: '194.04',
-        socialSecurity: '200.51',
-        medicare: '46.89',
-        netAmount: '2081.08',
-        paymentMethod: 'direct_deposit',
-        status: 'completed',
-        paymentDate: new Date()
-      }
-    ];
-
-    const insertedPayments = await db.insert(payments).values(paymentsData).returning();
+    // Skip payments for now to avoid schema complexity
+    // const paymentsData = [];
+    // const insertedPayments = [];
 
     // Create audit logs for recent activities
     const auditLogsData = [
@@ -739,7 +717,7 @@ export async function seedDatabase() {
     console.log(`   - ${insertedWorkLogs.length} work log entries`);
     console.log(`   - ${insertedProviders.length} payroll providers`);
     console.log(`   - ${insertedConfigs.length} payroll configurations`);
-    console.log(`   - ${insertedPayrollEmployees.length} payroll employee records`);
+    console.log(`   - 0 payroll employee records (skipped for now)`);
     console.log(`   - ${insertedTimesheets.length} timesheets`);
     console.log(`   - ${insertedPayments.length} payments`);
     console.log(`   - Complete audit trail and activity logs`);
