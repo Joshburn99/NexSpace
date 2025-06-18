@@ -46,7 +46,7 @@ export default function SettingsPage() {
   // Role update mutation
   const updateRoleMutation = useMutation({
     mutationFn: async (newRole: string) => {
-      return apiRequest(`/api/user/${user!.id}`, 'PATCH', { role: newRole });
+      return apiRequest('PATCH', `/api/user/${user!.id}`, { role: newRole });
     },
     onSuccess: () => {
       toast({

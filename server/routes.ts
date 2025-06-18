@@ -448,6 +448,39 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Update user information
+  app.patch("/api/user/:id", requireAuth, async (req: any, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { role } = req.body;
+      
+      // Only allow role updates for Client Administrators or if updating own profile
+      if (req.user.role !== UserRole.CLIENT_ADMINISTRATOR && req.user.id !== userId) {
+        return res.status(403).json({ message: "Insufficient permissions" });
+      }
+      
+      // Validate role if provided
+      if (role && !Object.values(UserRole).includes(role)) {
+        return res.status(400).json({ message: "Invalid role" });
+      }
+      
+      const updatedUser = await storage.updateUser(userId, { role });
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // If updating own profile, update session
+      if (req.user.id === userId) {
+        req.user = updatedUser;
+      }
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error('User update error:', error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
   // Database seeding API (for development)
   app.post("/api/seed-shifts", async (req, res) => {
     try {
