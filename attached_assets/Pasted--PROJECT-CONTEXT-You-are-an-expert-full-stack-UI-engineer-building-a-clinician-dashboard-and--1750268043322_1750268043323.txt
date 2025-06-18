@@ -1,0 +1,77 @@
+# PROJECT CONTEXT
+You are an expert full-stack UI engineer building a **clinician dashboard** and **role-specific interfaces** for BIZ_NAME—a healthcare staffing & scheduling app.  
+We already have a working backend with authentication and shift data APIs. Your job is to scaffold the **frontend pages** & **components** for:
+
+- **Clinician Dashboard** (all users):  
+  • Time Off summary & request widget  
+  • Work History log (past shifts + hours)  
+  • Resource Library (PDFs, videos, FAQ)  
+  • Shift Reporting:  
+    – Upcoming Shifts (calendar/list)  
+    – Open Shifts (apply/book)  
+
+- **Employee vs Contractor Differences**:  
+  • **Employees** see PTO balance, submit PTO requests, benefits links.  
+  • **Contractors** see gig history, 1099 documents, no PTO.
+
+# TECH STACK & STYLES
+* Frontend: **TECH_STACK** (e.g. Vite + React 18 + TypeScript + Tailwind CSS + Wouter)  
+* State & Data-Fetch: React Query / SWR  
+* Auth Context: existing `useAuth()` hook  
+* Design System: Tailwind + Radix UI primitives  
+* File layout (all under `/src`):
+  - `/pages/ClinicianDashboardPage.tsx`  
+  - `/pages/EmployeeDashboardPage.tsx`  
+  - `/pages/ContractorDashboardPage.tsx`  
+  - `/components/TimeOffSection.tsx`  
+  - `/components/WorkHistorySection.tsx`  
+  - `/components/ResourceLibrary.tsx`  
+  - `/components/ShiftList.tsx`  
+  - `/components/ShiftCalendar.tsx`  
+
+# OUTPUT CONTRACT  
+When you run this prompt, **create or update** only the files above. For each page/component, scaffold:
+
+1. **JSX skeleton** with semantic markup  
+2. **Tailwind className** placeholders for layout (e.g., grid, flex)  
+3. **useQuery** hooks calling `/api/timeoff`, `/api/history`, `/api/shifts/upcoming`, `/api/shifts/open`, `/api/resources`  
+4. **Conditional rendering** based on `user.role === 'EMPLOYEE'` vs `'CONTRACTOR'`  
+5. **Props & types** in TS for all components  
+
+Do **not** modify any backend, routing, or auth code.
+
+# STEP-BY-STEP TASKS
+1. **ClinicianDashboardPage**  
+   - Import `useAuth()` & `useQuery`  
+   - Render `<TimeOffSection/>`, `<WorkHistorySection/>`, `<ResourceLibrary/>`, `<ShiftList status="upcoming"/>`, `<ShiftList status="open"/>`
+
+2. **EmployeeDashboardPage**  
+   - Wrap `<ClinicianDashboardPage/>`  
+   - Add `<PTORequestButton/>` under TimeOffSection
+
+3. **ContractorDashboardPage**  
+   - Wrap `<ClinicianDashboardPage/>`  
+   - Hide `<TimeOffSection/>` & show `<GigHistoryCTA/>`
+
+4. **TimeOffSection**  
+   - Fetch `/api/timeoff/balance` & `/api/timeoff/requests`  
+   - Show balance, list of pending/approved, and “Request PTO” button
+
+5. **WorkHistorySection**  
+   - Fetch `/api/history?userId=${user.id}`  
+   - Table of date, shift type, hours, facility name
+
+6. **ResourceLibrary**  
+   - Fetch `/api/resources` → list of titles + download links
+
+7. **ShiftList**  
+   - Prop: `status: 'upcoming' | 'open'`  
+   - Fetch `/api/shifts?status=${status}`  
+   - Render list or calendar view (toggle)
+
+# CODING RULES & TESTS
+* Use ES modules & TypeScript interfaces  
+* Tailwind utility classes only—no custom CSS yet  
+* Add one basic React Testing Library test per component  
+* Ensure `npm run dev` & `npm run test` pass with zero errors  
+* Only output the contents of each file in fenced code blocks

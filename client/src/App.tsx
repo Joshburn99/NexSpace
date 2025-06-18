@@ -31,6 +31,9 @@ import FacilityManagementPage from "@/pages/facility-management-page";
 import EnhancedJobPostingPage from "@/pages/enhanced-job-posting-page";
 import WorkflowAutomationPage from "@/pages/workflow-automation-page";
 import AdvancedSchedulingPage from "@/pages/advanced-scheduling-page";
+import ClinicianDashboardPage from "@/pages/clinician-dashboard-page";
+import EmployeeDashboardPage from "@/pages/employee-dashboard-page";
+import ContractorDashboardPage from "@/pages/contractor-dashboard-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
