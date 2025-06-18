@@ -75,8 +75,32 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+  app.post("/api/login", (req, res, next) => {
+    console.log("Login request body:", req.body); // Debug log
+    
+    // Ensure we have a username
+    if (!req.body.username) {
+      return res.status(400).json({ message: "Username is required" });
+    }
+    
+    passport.authenticate("local", (err, user, info) => {
+      if (err) {
+        console.error("Passport error:", err);
+        return next(err);
+      }
+      if (!user) {
+        console.log("Authentication failed for user:", req.body.username);
+        return res.status(401).json({ message: "Invalid username" });
+      }
+      req.login(user, (err) => {
+        if (err) {
+          console.error("Login error:", err);
+          return next(err);
+        }
+        console.log("Login successful for user:", user.username);
+        return res.status(200).json(user);
+      });
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res, next) => {
