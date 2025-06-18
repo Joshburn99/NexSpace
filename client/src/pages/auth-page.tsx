@@ -11,11 +11,13 @@ import { AlertCircle, CheckCircle, Users, Calendar, Shield, BarChart } from "luc
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Logo } from "@/components/ui/logo";
 import { UserRole } from "@shared/schema";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export default function AuthPage() {
-  const { user, loginMutation, registerMutation } = useAuth();
+  const { user, loginMutation, registerMutation, forgotPasswordMutation } = useAuth();
   const [, setLocation] = useLocation();
   const [loginData, setLoginData] = useState({ username: "", password: "" });
+  const [forgotPasswordUsername, setForgotPasswordUsername] = useState("");
   const [registerData, setRegisterData] = useState({
     username: "",
     email: "",
@@ -41,6 +43,11 @@ export default function AuthPage() {
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     registerMutation.mutate(registerData);
+  };
+
+  const handleForgotPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    forgotPasswordMutation.mutate({ username: forgotPasswordUsername });
   };
 
   return (
@@ -114,6 +121,43 @@ export default function AuthPage() {
                     >
                       {loginMutation.isPending ? "Signing In..." : "Sign In"}
                     </Button>
+
+                    <div className="text-center">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button variant="link" className="text-sm text-blue-600 hover:text-blue-800">
+                            Forgot your password?
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Reset Password</DialogTitle>
+                            <DialogDescription>
+                              Enter your username to receive a temporary password
+                            </DialogDescription>
+                          </DialogHeader>
+                          <form onSubmit={handleForgotPassword} className="space-y-4">
+                            <div className="space-y-2">
+                              <Label htmlFor="forgot-username">Username</Label>
+                              <Input
+                                id="forgot-username"
+                                type="text"
+                                value={forgotPasswordUsername}
+                                onChange={(e) => setForgotPasswordUsername(e.target.value)}
+                                required
+                              />
+                            </div>
+                            <Button
+                              type="submit"
+                              className="w-full"
+                              disabled={forgotPasswordMutation.isPending}
+                            >
+                              {forgotPasswordMutation.isPending ? "Resetting..." : "Reset Password"}
+                            </Button>
+                          </form>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </form>
                 </CardContent>
               </Card>

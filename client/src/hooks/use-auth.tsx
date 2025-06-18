@@ -82,6 +82,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     },
   });
 
+  const forgotPasswordMutation = useMutation({
+    mutationFn: async (data: { username: string }) => {
+      const res = await apiRequest("POST", "/api/forgot-password", data);
+      return await res.json();
+    },
+    onSuccess: (data: { message: string; tempPassword?: string }) => {
+      toast({
+        title: "Password Reset",
+        description: data.tempPassword 
+          ? `Your temporary password is: ${data.tempPassword}` 
+          : data.message,
+        variant: "default",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Password reset failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
   return (
     <AuthContext.Provider
       value={{
@@ -91,6 +114,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loginMutation,
         logoutMutation,
         registerMutation,
+        forgotPasswordMutation,
       }}
     >
       {children}
