@@ -15,10 +15,10 @@ interface ClinicianDashboardPageProps {
 export default function ClinicianDashboardPage({ 
   hideTimeOff = false, 
   additionalContent 
-}: ClinicianDashboardPageProps) {
+}: ClinicianDashboardPageProps = {}) {
   const { user } = useAuth();
 
-  if (!user) return null;
+  if (!user) return <div>Loading...</div>;
 
   return (
     <AppLayout title="Dashboard" subtitle="Welcome back! Here's your overview">

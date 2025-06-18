@@ -481,6 +481,131 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Dashboard API endpoints
+  app.get("/api/timeoff/balance", requireAuth, async (req: any, res) => {
+    try {
+      // Mock PTO balance data - in real implementation, this would come from HR system
+      const balance = {
+        available: 30,
+        used: 50,
+        pending: 8
+      };
+      res.json(balance);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch PTO balance" });
+    }
+  });
+
+  app.get("/api/timeoff/requests", requireAuth, async (req: any, res) => {
+    try {
+      // Mock PTO requests data
+      const requests = [
+        {
+          id: 1,
+          startDate: "2025-07-01",
+          endDate: "2025-07-03",
+          hours: 24,
+          status: "pending",
+          reason: "Vacation"
+        },
+        {
+          id: 2,
+          startDate: "2025-06-15",
+          endDate: "2025-06-15",
+          hours: 8,
+          status: "approved",
+          reason: "Personal"
+        }
+      ];
+      res.json(requests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch PTO requests" });
+    }
+  });
+
+  app.get("/api/history", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.query.userId || req.user.id;
+      // Mock work history data
+      const history = [
+        {
+          id: 1,
+          date: "2025-04-03",
+          shiftType: "Day Shift",
+          hours: 8,
+          facilityName: "General Hospital",
+          department: "ICU",
+          status: "completed",
+          rate: 45,
+          totalPay: 360
+        },
+        {
+          id: 2,
+          date: "2025-03-22",
+          shiftType: "Evening Shift",
+          hours: 6,
+          facilityName: "City Clinic",
+          department: "Med-Surg",
+          status: "completed",
+          rate: 32,
+          totalPay: 192
+        },
+        {
+          id: 3,
+          date: "2025-03-15",
+          shiftType: "Night Shift",
+          hours: 8,
+          facilityName: "City Clinic",
+          department: "Emergency",
+          status: "completed",
+          rate: 38,
+          totalPay: 304
+        }
+      ];
+      res.json(history);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch work history" });
+    }
+  });
+
+  app.get("/api/resources", requireAuth, async (req: any, res) => {
+    try {
+      // Mock resources data
+      const resources = [
+        {
+          id: 1,
+          title: "Employee Handbook",
+          type: "pdf",
+          category: "General",
+          downloadUrl: "/resources/handbook.pdf",
+          size: "2.4 MB",
+          description: "Complete employee handbook and policies"
+        },
+        {
+          id: 2,
+          title: "Safety Training Video",
+          type: "video",
+          category: "Training",
+          downloadUrl: "/resources/safety-training.mp4",
+          duration: "15:30",
+          description: "Workplace safety procedures and protocols"
+        },
+        {
+          id: 3,
+          title: "Benefits Overview",
+          type: "document",
+          category: "Benefits",
+          downloadUrl: "/resources/benefits.docx",
+          size: "1.2 MB",
+          description: "Overview of employee benefits and enrollment"
+        }
+      ];
+      res.json(resources);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch resources" });
+    }
+  });
+
   // Database seeding API (for development)
   app.post("/api/seed-shifts", async (req, res) => {
     try {

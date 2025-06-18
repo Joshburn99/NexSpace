@@ -65,6 +65,9 @@ function Router() {
       <ProtectedRoute path="/job-posting" component={EnhancedJobPostingPage} />
       <ProtectedRoute path="/workflow-automation" component={WorkflowAutomationPage} />
       <ProtectedRoute path="/advanced-scheduling" component={AdvancedSchedulingPage} />
+      <ProtectedRoute path="/clinician-dashboard" component={ClinicianDashboardPage} />
+      <ProtectedRoute path="/employee-dashboard" component={EmployeeDashboardPage} />
+      <ProtectedRoute path="/contractor-dashboard" component={ContractorDashboardPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
