@@ -322,9 +322,8 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
               {/* Role Switcher for Super Admin */}
               {user?.role === 'super_admin' && (
                 <Select value={user?.role} onValueChange={(newRole) => {
-                  // This would call an API to switch roles
-                  console.log('Switching to role:', newRole);
-                }}>
+                  switchRoleMutation.mutate(newRole);
+                }} disabled={switchRoleMutation.isPending}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Switch Role" />
                   </SelectTrigger>
