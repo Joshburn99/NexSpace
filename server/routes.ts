@@ -561,9 +561,15 @@ export function registerRoutes(app: Express): Server {
   // Dashboard API endpoints with role-based access
   app.get("/api/timeoff/balance", requireAuth, enforceDataAccess, async (req: any, res) => {
     try {
-      // Only employees can view their own PTO balance
-      if (req.user.role !== UserRole.INTERNAL_EMPLOYEE && req.user.role !== UserRole.CONTRACTOR_1099) {
-        return res.status(403).json({ message: "Access denied: Only employees can view PTO balance" });
+      // Allow employees, managers, and admins to view PTO data
+      if (!req.user.role || ![
+        UserRole.INTERNAL_EMPLOYEE, 
+        UserRole.CONTRACTOR_1099, 
+        UserRole.FACILITY_MANAGER,
+        UserRole.CLIENT_ADMINISTRATOR,
+        UserRole.SUPER_ADMIN
+      ].includes(req.user.role)) {
+        return res.status(403).json({ message: "Access denied: Insufficient permissions" });
       }
       
       const balance = {
@@ -579,9 +585,15 @@ export function registerRoutes(app: Express): Server {
 
   app.get("/api/timeoff/requests", requireAuth, enforceDataAccess, async (req: any, res) => {
     try {
-      // Only employees can view their own PTO requests
-      if (req.user.role !== UserRole.INTERNAL_EMPLOYEE && req.user.role !== UserRole.CONTRACTOR_1099) {
-        return res.status(403).json({ message: "Access denied: Only employees can view PTO requests" });
+      // Allow employees, managers, and admins to view PTO requests
+      if (!req.user.role || ![
+        UserRole.INTERNAL_EMPLOYEE, 
+        UserRole.CONTRACTOR_1099, 
+        UserRole.FACILITY_MANAGER,
+        UserRole.CLIENT_ADMINISTRATOR,
+        UserRole.SUPER_ADMIN
+      ].includes(req.user.role)) {
+        return res.status(403).json({ message: "Access denied: Insufficient permissions" });
       }
       
       const requests = [
@@ -646,7 +658,9 @@ export function registerRoutes(app: Express): Server {
           break;
           
         default:
-          return res.status(403).json({ message: "Access denied: Invalid role" });
+          // For backwards compatibility, allow access but log the unknown role
+          console.warn('Unknown user role accessing work history:', req.user.role);
+          break;
       }
       
       // Return user's own work history from database
