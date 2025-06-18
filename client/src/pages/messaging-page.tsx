@@ -254,22 +254,14 @@ export default function MessagingPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <Layout>
+      <div className="flex flex-col h-full">
         {/* Header */}
         <div className="bg-white border-b px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Link href="/">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Dashboard
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
-                <p className="text-gray-600">Communicate with your team members</p>
-              </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
+              <p className="text-gray-600">Communicate with your team members</p>
             </div>
             <div className="flex items-center space-x-3">
               <Button variant="outline" onClick={() => setShowMassMessage(true)}>
@@ -777,6 +769,6 @@ export default function MessagingPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </div>
+    </Layout>
   );
 }
