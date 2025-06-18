@@ -40,6 +40,21 @@ export function registerRoutes(app: Express): Server {
     };
   };
 
+  // Data access control middleware
+  const enforceDataAccess = (req: any, res: any, next: any) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    
+    // Add user context for data filtering
+    req.userContext = {
+      id: req.user.id,
+      role: req.user.role,
+      facilityId: req.user.facilityId
+    };
+    next();
+  };
+
   // Audit logging middleware
   const auditLog = (action: string, resource: string) => {
     return async (req: any, res: any, next: any) => {
@@ -428,21 +443,83 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // User management API (for admins)
-  app.get("/api/users", requireAuth, requirePermission("users.view"), async (req, res) => {
+  // User management API with role-based access control
+  app.get("/api/users", requireAuth, enforceDataAccess, async (req: any, res) => {
     try {
       const { role, facilityId } = req.query;
       let users;
       
-      if (role) {
-        users = await storage.getUsersByRole(role as string);
-      } else if (facilityId) {
-        users = await storage.getUsersByFacility(parseInt(facilityId as string));
-      } else {
-        users = await storage.getUsersByRole(UserRole.INTERNAL_EMPLOYEE);
+      // Role-based data access control
+      switch (req.user.role) {
+        case UserRole.SUPER_ADMIN:
+          // Super admin can see all users
+          if (role) {
+            users = await storage.getUsersByRole(role as string);
+          } else if (facilityId) {
+            users = await storage.getUsersByFacility(parseInt(facilityId as string));
+          } else {
+            users = await storage.getUsersByRole("");
+          }
+          break;
+          
+        case UserRole.CLIENT_ADMINISTRATOR:
+          // Client admin can see all users but no sensitive data
+          if (role) {
+            users = await storage.getUsersByRole(role as string);
+          } else if (facilityId) {
+            users = await storage.getUsersByFacility(parseInt(facilityId as string));
+          } else {
+            users = await storage.getUsersByRole("");
+          }
+          // Remove sensitive fields
+          users = users.map(user => ({
+            ...user,
+            password: undefined,
+            email: user.id === req.user.id ? user.email : undefined
+          }));
+          break;
+          
+        case UserRole.FACILITY_MANAGER:
+          // Facility manager can only see users in their facility
+          if (req.user.facilityId) {
+            users = await storage.getUsersByFacility(req.user.facilityId);
+            if (role) {
+              users = users.filter(user => user.role === role);
+            }
+            // Remove sensitive fields
+            users = users.map(user => ({
+              ...user,
+              password: undefined,
+              email: user.id === req.user.id ? user.email : undefined
+            }));
+          } else {
+            return res.status(403).json({ message: "Access denied: No facility assigned" });
+          }
+          break;
+          
+        case UserRole.INTERNAL_EMPLOYEE:
+        case UserRole.CONTRACTOR_1099:
+          // Employees and contractors can only see basic directory info
+          if (req.user.facilityId) {
+            users = await storage.getUsersByFacility(req.user.facilityId);
+            // Only return basic public info
+            users = users.map(user => ({
+              id: user.id,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              role: user.role,
+              avatar: user.avatar
+            }));
+          } else {
+            return res.status(403).json({ message: "Access denied: No facility assigned" });
+          }
+          break;
+          
+        default:
+          return res.status(403).json({ message: "Access denied: Invalid role" });
       }
       
-      res.json(users);
+      res.json(users || []);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch users" });
     }
@@ -481,10 +558,14 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Dashboard API endpoints
-  app.get("/api/timeoff/balance", requireAuth, async (req: any, res) => {
+  // Dashboard API endpoints with role-based access
+  app.get("/api/timeoff/balance", requireAuth, enforceDataAccess, async (req: any, res) => {
     try {
-      // Mock PTO balance data - in real implementation, this would come from HR system
+      // Only employees can view their own PTO balance
+      if (req.user.role !== UserRole.INTERNAL_EMPLOYEE && req.user.role !== UserRole.CONTRACTOR_1099) {
+        return res.status(403).json({ message: "Access denied: Only employees can view PTO balance" });
+      }
+      
       const balance = {
         available: 30,
         used: 50,
@@ -496,9 +577,13 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/timeoff/requests", requireAuth, async (req: any, res) => {
+  app.get("/api/timeoff/requests", requireAuth, enforceDataAccess, async (req: any, res) => {
     try {
-      // Mock PTO requests data
+      // Only employees can view their own PTO requests
+      if (req.user.role !== UserRole.INTERNAL_EMPLOYEE && req.user.role !== UserRole.CONTRACTOR_1099) {
+        return res.status(403).json({ message: "Access denied: Only employees can view PTO requests" });
+      }
+      
       const requests = [
         {
           id: 1,
@@ -523,46 +608,90 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/history", requireAuth, async (req: any, res) => {
+  app.get("/api/history", requireAuth, enforceDataAccess, async (req: any, res) => {
     try {
-      const userId = req.query.userId || req.user.id;
-      // Mock work history data
-      const history = [
-        {
-          id: 1,
-          date: "2025-04-03",
-          shiftType: "Day Shift",
-          hours: 8,
-          facilityName: "General Hospital",
-          department: "ICU",
-          status: "completed",
-          rate: 45,
-          totalPay: 360
-        },
-        {
-          id: 2,
-          date: "2025-03-22",
-          shiftType: "Evening Shift",
-          hours: 6,
-          facilityName: "City Clinic",
-          department: "Med-Surg",
-          status: "completed",
-          rate: 32,
-          totalPay: 192
-        },
-        {
-          id: 3,
-          date: "2025-03-15",
-          shiftType: "Night Shift",
-          hours: 8,
-          facilityName: "City Clinic",
-          department: "Emergency",
-          status: "completed",
-          rate: 38,
-          totalPay: 304
-        }
-      ];
-      res.json(history);
+      const { userId } = req.query;
+      
+      // Role-based access control for work history
+      switch (req.user.role) {
+        case UserRole.SUPER_ADMIN:
+        case UserRole.CLIENT_ADMINISTRATOR:
+          // Admin can view any user's history if userId provided
+          if (userId) {
+            const targetUserId = parseInt(userId as string);
+            const workLogs = await storage.getWorkLogsByUser(targetUserId);
+            return res.json(workLogs);
+          }
+          break;
+          
+        case UserRole.FACILITY_MANAGER:
+          // Facility manager can view history of users in their facility
+          if (userId) {
+            const targetUserId = parseInt(userId as string);
+            const targetUser = await storage.getUser(targetUserId);
+            if (!targetUser || targetUser.facilityId !== req.user.facilityId) {
+              return res.status(403).json({ message: "Access denied: User not in your facility" });
+            }
+            const workLogs = await storage.getWorkLogsByUser(targetUserId);
+            return res.json(workLogs);
+          }
+          break;
+          
+        case UserRole.INTERNAL_EMPLOYEE:
+        case UserRole.CONTRACTOR_1099:
+          // Employees can only view their own history
+          if (userId && parseInt(userId as string) !== req.user.id) {
+            return res.status(403).json({ message: "Access denied: Can only view your own work history" });
+          }
+          break;
+          
+        default:
+          return res.status(403).json({ message: "Access denied: Invalid role" });
+      }
+      
+      // Return user's own work history from database
+      const workLogs = await storage.getWorkLogsByUser(req.user.id);
+      if (workLogs && workLogs.length > 0) {
+        res.json(workLogs);
+      } else {
+        // Return sample data only if no real work logs exist
+        const history = [
+          {
+            id: 1,
+            date: "2025-04-03",
+            shiftType: "Day Shift",
+            hours: 12,
+            facilityName: "General Hospital",
+            department: "ICU",
+            status: "completed",
+            rate: 45,
+            totalPay: 540
+          },
+          {
+            id: 2,
+            date: "2025-04-05",
+            shiftType: "Night Shift",
+            hours: 12,
+            facilityName: "Metro Medical",
+            department: "Med-Surg",
+            status: "completed",
+            rate: 48,
+            totalPay: 576
+          },
+          {
+            id: 3,
+            date: "2025-04-08",
+            shiftType: "Day Shift",
+            hours: 8,
+            facilityName: "City Clinic",
+            department: "Outpatient",
+            status: "completed",
+            rate: 42,
+            totalPay: 336
+          }
+        ];
+        res.json(history);
+      }
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch work history" });
     }
