@@ -254,62 +254,235 @@ export async function seedDatabase() {
 
     const insertedJobs = await db.insert(jobs).values(jobsData).returning();
 
-    // Create realistic shifts
+    // Create comprehensive shift data with realistic scheduling scenarios
     const shiftsData = [
+      // TODAY'S SHIFTS (June 18, 2025) - Mix of assigned and open positions
+      
+      // ICU Day Shift - RN fully staffed
       {
         facilityId: insertedFacilities[0].id,
         department: 'ICU',
         startTime: new Date('2025-06-18T07:00:00Z'),
         endTime: new Date('2025-06-18T19:00:00Z'),
         requiredStaff: 2,
-        hourlyRate: 38.50,
-        shiftType: 'Day',
+        shiftType: 'day',
+        status: 'filled',
+        specialRequirements: ['RN', 'BLS', 'Critical Care'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: [insertedUsers[3].id, insertedUsers[4].id]
+        assignedStaffIds: [insertedUsers[3].id, insertedUsers[4].id] // Sarah & Emily RNs
       },
+      
+      // ICU Night Shift - OPEN (needs coverage)
       {
         facilityId: insertedFacilities[0].id,
         department: 'ICU',
         startTime: new Date('2025-06-18T19:00:00Z'),
         endTime: new Date('2025-06-19T07:00:00Z'),
         requiredStaff: 1,
-        hourlyRate: 42.50,
-        shiftType: 'Night',
+        shiftType: 'night',
+        status: 'open',
+        specialRequirements: ['RN', 'BLS', 'Night Differential'],
         createdById: insertedUsers[1].id,
         assignedStaffIds: []
       },
+      
+      // Med-Surg Day - LPN partially staffed (needs 1 more)
       {
         facilityId: insertedFacilities[0].id,
         department: 'Med-Surg',
         startTime: new Date('2025-06-18T07:00:00Z'),
         endTime: new Date('2025-06-18T15:00:00Z'),
         requiredStaff: 2,
-        hourlyRate: 28.75,
-        shiftType: 'Day',
+        shiftType: 'day',
+        status: 'open',
+        specialRequirements: ['LPN', 'Med Administration'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: [insertedUsers[6].id]
+        assignedStaffIds: [insertedUsers[6].id] // Robert LPN
       },
+      
+      // Med-Surg Evening - LPN fully staffed
+      {
+        facilityId: insertedFacilities[0].id,
+        department: 'Med-Surg',
+        startTime: new Date('2025-06-18T15:00:00Z'),
+        endTime: new Date('2025-06-18T23:00:00Z'),
+        requiredStaff: 2,
+        shiftType: 'evening',
+        status: 'filled',
+        specialRequirements: ['LPN', 'Med Administration'],
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: [insertedUsers[7].id, insertedUsers[12].id] // Amanda LPN + Kevin contractor
+      },
+      
+      // Memory Care Day - CNA mix of staff and contractor
+      {
+        facilityId: insertedFacilities[0].id,
+        department: 'Memory Care',
+        startTime: new Date('2025-06-18T07:00:00Z'),
+        endTime: new Date('2025-06-18T15:00:00Z'),
+        requiredStaff: 3,
+        shiftType: 'day',
+        status: 'filled',
+        specialRequirements: ['CNA', 'Dementia Care', 'Patient Lifting'],
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: [insertedUsers[8].id, insertedUsers[9].id, insertedUsers[11].id] // Carlos, Maria + Lisa contractor
+      },
+      
+      // Memory Care Evening - CNA (OPEN shift)
       {
         facilityId: insertedFacilities[0].id,
         department: 'Memory Care',
         startTime: new Date('2025-06-18T15:00:00Z'),
         endTime: new Date('2025-06-18T23:00:00Z'),
-        requiredStaff: 3,
-        hourlyRate: 18.50,
-        shiftType: 'Evening',
+        requiredStaff: 2,
+        shiftType: 'evening',
+        status: 'open',
+        specialRequirements: ['CNA', 'Dementia Care'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: [insertedUsers[8].id, insertedUsers[9].id]
+        assignedStaffIds: []
       },
+      
+      // Rehabilitation Day - PT assigned
       {
         facilityId: insertedFacilities[0].id,
         department: 'Rehabilitation',
-        startTime: new Date('2025-06-19T09:00:00Z'),
-        endTime: new Date('2025-06-19T17:00:00Z'),
+        startTime: new Date('2025-06-18T09:00:00Z'),
+        endTime: new Date('2025-06-18T17:00:00Z'),
         requiredStaff: 1,
-        hourlyRate: 55.00,
-        shiftType: 'Day',
+        shiftType: 'day',
+        status: 'filled',
+        specialRequirements: ['PT', 'State License', 'Geriatric Experience'],
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: [insertedUsers[10].id] // James PT
+      },
+      
+      // TOMORROW'S SHIFTS (June 19, 2025) - Planning ahead
+      
+      // ICU Day - RN (requesting coverage)
+      {
+        facilityId: insertedFacilities[0].id,
+        department: 'ICU',
+        startTime: new Date('2025-06-19T07:00:00Z'),
+        endTime: new Date('2025-06-19T19:00:00Z'),
+        requiredStaff: 2,
+        shiftType: 'day',
+        status: 'open',
+        specialRequirements: ['RN', 'BLS', 'Critical Care'],
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: [insertedUsers[3].id] // Sarah requesting backup
+      },
+      
+      // Med-Surg Day - LPN open positions
+      {
+        facilityId: insertedFacilities[0].id,
+        department: 'Med-Surg',
+        startTime: new Date('2025-06-19T07:00:00Z'),
+        endTime: new Date('2025-06-19T15:00:00Z'),
+        requiredStaff: 2,
+        shiftType: 'day',
+        status: 'open',
+        specialRequirements: ['LPN', 'Med Administration'],
         createdById: insertedUsers[1].id,
         assignedStaffIds: []
+      },
+      
+      // PAST SHIFTS (June 16-17, 2025) - Historical data
+      
+      // Yesterday - ICU fully covered
+      {
+        facilityId: insertedFacilities[0].id,
+        department: 'ICU',
+        startTime: new Date('2025-06-17T07:00:00Z'),
+        endTime: new Date('2025-06-17T19:00:00Z'),
+        requiredStaff: 2,
+        shiftType: 'day',
+        status: 'filled',
+        specialRequirements: ['RN', 'BLS'],
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: [insertedUsers[3].id, insertedUsers[4].id]
+      },
+      
+      {
+        facilityId: insertedFacilities[0].id,
+        department: 'ICU',
+        startTime: new Date('2025-06-17T19:00:00Z'),
+        endTime: new Date('2025-06-18T07:00:00Z'),
+        requiredStaff: 1,
+        shiftType: 'night',
+        status: 'filled',
+        specialRequirements: ['RN', 'BLS', 'Night Differential'],
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: [insertedUsers[11].id] // Lisa contractor covered
+      },
+      
+      // Day before yesterday - Mix of completed shifts
+      {
+        facilityId: insertedFacilities[0].id,
+        department: 'Med-Surg',
+        startTime: new Date('2025-06-16T07:00:00Z'),
+        endTime: new Date('2025-06-16T15:00:00Z'),
+        requiredStaff: 2,
+        shiftType: 'day',
+        status: 'filled',
+        specialRequirements: ['LPN', 'Med Administration'],
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: [insertedUsers[6].id, insertedUsers[7].id]
+      },
+      
+      {
+        facilityId: insertedFacilities[0].id,
+        department: 'Memory Care',
+        startTime: new Date('2025-06-16T15:00:00Z'),
+        endTime: new Date('2025-06-16T23:00:00Z'),
+        requiredStaff: 3,
+        shiftType: 'evening',
+        status: 'filled',
+        specialRequirements: ['CNA', 'Dementia Care'],
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: [insertedUsers[8].id, insertedUsers[9].id, insertedUsers[12].id]
+      },
+      
+      // NEXT WEEK SHIFTS (June 20-24, 2025) - Future planning
+      
+      // Friday - PT coverage needed
+      {
+        facilityId: insertedFacilities[0].id,
+        department: 'Rehabilitation',
+        startTime: new Date('2025-06-20T09:00:00Z'),
+        endTime: new Date('2025-06-20T17:00:00Z'),
+        requiredStaff: 2,
+        shiftType: 'day',
+        status: 'open',
+        specialRequirements: ['PT', 'State License', 'Weekend Rate'],
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: []
+      },
+      
+      // Weekend shifts - Higher rates for weekend coverage
+      {
+        facilityId: insertedFacilities[0].id,
+        department: 'ICU',
+        startTime: new Date('2025-06-21T07:00:00Z'),
+        endTime: new Date('2025-06-21T19:00:00Z'),
+        requiredStaff: 2,
+        shiftType: 'weekend',
+        status: 'open',
+        specialRequirements: ['RN', 'BLS', 'Weekend Differential'],
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: []
+      },
+      
+      {
+        facilityId: insertedFacilities[0].id,
+        department: 'Memory Care',
+        startTime: new Date('2025-06-22T07:00:00Z'),
+        endTime: new Date('2025-06-22T19:00:00Z'),
+        requiredStaff: 4, // Weekend minimum staffing
+        shiftType: 'weekend',
+        status: 'open',
+        specialRequirements: ['CNA', 'Dementia Care', 'Weekend Rate'],
+        createdById: insertedUsers[1].id,
+        assignedStaffIds: [insertedUsers[8].id, insertedUsers[9].id] // Need 2 more CNAs
       }
     ];
 

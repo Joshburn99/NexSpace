@@ -447,6 +447,18 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Database seeding API (for development)
+  app.post("/api/seed-database", async (req, res) => {
+    try {
+      const { seedDatabase } = await import('./seed-data');
+      await seedDatabase();
+      res.json({ message: "Database seeded successfully" });
+    } catch (error) {
+      console.error('Seeding error:', error);
+      res.status(500).json({ message: "Failed to seed database", error: (error as Error).message });
+    }
+  });
+
   // Facilities API
   app.get("/api/facilities", requireAuth, requirePermission("facilities.view"), async (req, res) => {
     try {

@@ -25,10 +25,25 @@ export default function CalendarViewPage() {
 
   const units = ['all', 'ICU', 'Med-Surg', 'Memory Care', 'Rehabilitation'];
   const specialtyColors = {
-    'RN': 'bg-blue-100 text-blue-800',
-    'LPN': 'bg-green-100 text-green-800',
-    'CNA': 'bg-purple-100 text-purple-800',
-    'PT': 'bg-orange-100 text-orange-800'
+    'RN': 'bg-blue-100 text-blue-800 border-blue-200',
+    'LPN': 'bg-green-100 text-green-800 border-green-200',
+    'CNA': 'bg-purple-100 text-purple-800 border-purple-200',
+    'PT': 'bg-orange-100 text-orange-800 border-orange-200'
+  };
+
+  const getSpecialtyFromRequirements = (requirements: string[] = []) => {
+    if (requirements.includes('RN')) return 'RN';
+    if (requirements.includes('LPN')) return 'LPN';
+    if (requirements.includes('CNA')) return 'CNA';
+    if (requirements.includes('PT')) return 'PT';
+    return 'RN'; // default
+  };
+
+  const getStatusColor = (status: string, assignedCount: number, requiredCount: number) => {
+    if (status === 'open') return 'bg-red-100 text-red-800 border-red-200';
+    if (status === 'filled' && assignedCount >= requiredCount) return 'bg-green-100 text-green-800 border-green-200';
+    if (assignedCount < requiredCount) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    return 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
   const getDateRange = () => {
@@ -110,11 +125,21 @@ export default function CalendarViewPage() {
                   {dayDate.getDate()}
                 </div>
                 <div className="space-y-1">
-                  {dayShifts.slice(0, 3).map((shift: any, idx: number) => (
-                    <div key={idx} className="text-xs p-1 rounded bg-blue-100 text-blue-800 truncate">
-                      {shift.role} - {shift.unit}
-                    </div>
-                  ))}
+                  {dayShifts.slice(0, 3).map((shift: any, idx: number) => {
+                    const specialty = getSpecialtyFromRequirements(shift.specialRequirements);
+                    const assignedCount = shift.assignedStaffIds?.length || 0;
+                    const statusColor = getStatusColor(shift.status, assignedCount, shift.requiredStaff);
+                    const specialtyColor = specialtyColors[specialty as keyof typeof specialtyColors];
+                    
+                    return (
+                      <div key={idx} className={`text-xs p-1 rounded border ${specialtyColor} truncate`}>
+                        <div className="font-medium">{specialty} - {shift.department}</div>
+                        <div className={`text-xs px-1 rounded ${statusColor} mt-1`}>
+                          {assignedCount}/{shift.requiredStaff} {shift.shiftType}
+                        </div>
+                      </div>
+                    );
+                  })}
                   {dayShifts.length > 3 && (
                     <div className="text-xs text-gray-500">+{dayShifts.length - 3} more</div>
                   )}
