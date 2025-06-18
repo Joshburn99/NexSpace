@@ -105,6 +105,11 @@ const navigationItems: NavItem[] = [
     roles: [UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
     children: [
       { label: "Impersonation", href: "/admin/impersonation", icon: <Shield className="w-4 h-4" /> },
+      { label: "User Management", href: "/admin/users", icon: <Users className="w-4 h-4" /> },
+      { label: "Facility Management", href: "/facility-management", icon: <Users className="w-4 h-4" /> },
+      { label: "System Settings", href: "/admin/settings", icon: <Settings className="w-4 h-4" /> },
+      { label: "Audit Logs", href: "/admin/audit", icon: <FileText className="w-4 h-4" /> },
+      { label: "Database Console", href: "/admin/database", icon: <FileText className="w-4 h-4" /> },
     ],
   },
 ];
