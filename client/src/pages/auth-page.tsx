@@ -35,7 +35,7 @@ export default function AuthPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    loginMutation.mutate(loginData);
+    loginMutation.mutate({ username: loginData.username, password: "" });
   };
 
   const handleRegister = (e: React.FormEvent) => {
@@ -72,7 +72,7 @@ export default function AuthPage() {
                 <CardHeader>
                   <CardTitle>Sign In</CardTitle>
                   <CardDescription>
-                    Enter your credentials to access your account
+                    Enter your username to access your account
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -87,16 +87,7 @@ export default function AuthPage() {
                         required
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        value={loginData.password}
-                        onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
-                        required
-                      />
-                    </div>
+
                     
                     {loginMutation.error && (
                       <Alert variant="destructive">
