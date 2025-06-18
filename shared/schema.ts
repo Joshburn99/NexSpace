@@ -35,10 +35,43 @@ export const facilities = pgTable("facilities", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  zipCode: text("zip_code"),
   phone: text("phone"),
   email: text("email"),
+  website: text("website"),
+  cmsId: text("cms_id").unique(),
+  npiNumber: text("npi_number"),
+  facilityType: text("facility_type"), // nursing_home, hospital, assisted_living, etc.
+  bedCount: integer("bed_count"),
+  privateRooms: integer("private_rooms"),
+  semiPrivateRooms: integer("semi_private_rooms"),
+  overallRating: integer("overall_rating"), // 1-5 star rating from CMS
+  healthInspectionRating: integer("health_inspection_rating"),
+  qualityMeasureRating: integer("quality_measure_rating"),
+  staffingRating: integer("staffing_rating"),
+  rnStaffingRating: integer("rn_staffing_rating"),
+  ownershipType: text("ownership_type"), // for-profit, non-profit, government
+  certificationDate: timestamp("certification_date"),
+  participatesMedicare: boolean("participates_medicare").default(false),
+  participatesMedicaid: boolean("participates_medicaid").default(false),
+  specialtyServices: jsonb("specialty_services"), // array of services offered
+  languagesSpoken: jsonb("languages_spoken"), // array of languages
+  adminName: text("admin_name"),
+  adminTitle: text("admin_title"),
+  medicalDirector: text("medical_director"),
+  emergencyContact: text("emergency_contact"),
+  lastInspectionDate: timestamp("last_inspection_date"),
+  deficiencyCount: integer("deficiency_count"),
+  complaintsCount: integer("complaints_count"),
+  finesTotal: decimal("fines_total", { precision: 10, scale: 2 }),
+  autoImported: boolean("auto_imported").default(false),
+  lastDataUpdate: timestamp("last_data_update"),
+  dataSource: text("data_source"), // cms, manual, api_import
   isActive: boolean("is_active").default(true),
-  createdAt: timestamp("created_at").defaultNow()
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 // Permissions table
@@ -356,7 +389,8 @@ export const insertUserSchema = createInsertSchema(users).omit({
 
 export const insertFacilitySchema = createInsertSchema(facilities).omit({
   id: true,
-  createdAt: true
+  createdAt: true,
+  updatedAt: true
 });
 
 export const insertJobSchema = createInsertSchema(jobs).omit({

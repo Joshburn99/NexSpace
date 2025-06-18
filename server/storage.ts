@@ -13,7 +13,7 @@ import {
   type Payment, type InsertPayment
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, asc, gte, lte, count, sql } from "drizzle-orm";
+import { eq, and, desc, asc, gte, lte, count, sql, or, ilike } from "drizzle-orm";
 import session from "express-session";
 import { Store } from "express-session";
 import connectPg from "connect-pg-simple";
@@ -36,7 +36,11 @@ export interface IStorage {
   // Facility methods
   getFacility(id: number): Promise<Facility | undefined>;
   createFacility(facility: InsertFacility): Promise<Facility>;
+  updateFacility(id: number, updates: Partial<InsertFacility>): Promise<Facility | undefined>;
   getAllFacilities(): Promise<Facility[]>;
+  searchFacilities(query: string): Promise<Facility[]>;
+  getFacilitiesByState(state: string): Promise<Facility[]>;
+  getFacilityByCMSId(cmsId: string): Promise<Facility | undefined>;
 
   // Job methods
   getJob(id: number): Promise<Job | undefined>;
@@ -202,8 +206,38 @@ export class DatabaseStorage implements IStorage {
     return facility;
   }
 
+  async updateFacility(id: number, updates: Partial<InsertFacility>): Promise<Facility | undefined> {
+    const [facility] = await db.update(facilities).set({ ...updates, updatedAt: new Date() }).where(eq(facilities.id, id)).returning();
+    return facility || undefined;
+  }
+
   async getAllFacilities(): Promise<Facility[]> {
     return await db.select().from(facilities).where(eq(facilities.isActive, true));
+  }
+
+  async searchFacilities(query: string): Promise<Facility[]> {
+    return await db.select().from(facilities).where(
+      and(
+        eq(facilities.isActive, true),
+        or(
+          ilike(facilities.name, `%${query}%`),
+          ilike(facilities.city, `%${query}%`),
+          ilike(facilities.state, `%${query}%`),
+          eq(facilities.cmsId, query)
+        )
+      )
+    );
+  }
+
+  async getFacilitiesByState(state: string): Promise<Facility[]> {
+    return await db.select().from(facilities).where(
+      and(eq(facilities.isActive, true), eq(facilities.state, state))
+    );
+  }
+
+  async getFacilityByCMSId(cmsId: string): Promise<Facility | undefined> {
+    const [facility] = await db.select().from(facilities).where(eq(facilities.cmsId, cmsId));
+    return facility || undefined;
   }
 
   // Job methods
