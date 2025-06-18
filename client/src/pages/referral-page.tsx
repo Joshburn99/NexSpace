@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
-import { SidebarNav } from "@/components/ui/sidebar-nav";
+import { AppLayout } from "@/components/ui/app-layout";
 import { useToast } from "@/hooks/use-toast";
 
 const mockReferrals = [
@@ -71,24 +71,6 @@ export default function ReferralPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleSubmitReferral = () => {
-    toast({
-      title: "Referral submitted!",
-      description: `We'll reach out to ${referralForm.name} within 24 hours.`
-    });
-    setReferralForm({ name: "", email: "", phone: "", position: "", message: "" });
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "hired": return "bg-green-100 text-green-800";
-      case "interviewing": return "bg-blue-100 text-blue-800";
-      case "applied": return "bg-yellow-100 text-yellow-800";
-      case "declined": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
   const totalEarned = mockReferrals
     .filter(r => r.bonusStatus === "paid")
     .reduce((sum, r) => sum + r.bonusAmount, 0);
@@ -98,223 +80,218 @@ export default function ReferralPage() {
     .reduce((sum, r) => sum + r.bonusAmount, 0);
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav user={user!} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Referral System</h1>
-              <p className="text-gray-600 dark:text-gray-300">Refer qualified healthcare professionals and earn rewards</p>
-            </div>
-            <Button>
-              <Share className="w-4 h-4 mr-2" />
-              Share Program
-            </Button>
-          </div>
+    <AppLayout title="Referral System" subtitle="Refer qualified healthcare professionals and earn rewards">
+      <div className="flex items-center justify-end mb-6">
+        <Button>
+          <Share className="w-4 h-4 mr-2" />
+          Share Program
+        </Button>
+      </div>
 
-          {/* Referral Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Referrals</p>
-                    <p className="text-2xl font-bold">{mockReferrals.length}</p>
-                  </div>
-                  <Users className="w-8 h-8 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Successful Hires</p>
-                    <p className="text-2xl font-bold text-green-600">
-                      {mockReferrals.filter(r => r.status === 'hired').length}
-                    </p>
-                  </div>
-                  <Trophy className="w-8 h-8 text-green-600" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Earnings Paid</p>
-                    <p className="text-2xl font-bold text-green-600">${totalEarned.toLocaleString()}</p>
-                  </div>
-                  <DollarSign className="w-8 h-8 text-green-600" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Pending Earnings</p>
-                    <p className="text-2xl font-bold text-yellow-600">${pendingEarnings.toLocaleString()}</p>
-                  </div>
-                  <Gift className="w-8 h-8 text-yellow-600" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-            {/* Referral Link */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Share className="w-5 h-5" />
-                  Your Referral Link
-                </CardTitle>
-                <CardDescription>
-                  Share this link with healthcare professionals you'd like to refer
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium mb-2">Referral Code: {referralCode}</p>
-                  <div className="flex gap-2">
-                    <Input value={referralLink} readOnly className="flex-1" />
-                    <Button onClick={handleCopyLink} variant="outline">
-                      {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Referral Bonuses</h4>
-                  <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
-                    <li>• Registered Nurse: $1,500</li>
-                    <li>• Licensed Practical Nurse: $1,000</li>
-                    <li>• Certified Nursing Assistant: $750</li>
-                    <li>• Physical Therapist: $2,000</li>
-                  </ul>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Direct Referral Form */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <UserPlus className="w-5 h-5" />
-                  Direct Referral
-                </CardTitle>
-                <CardDescription>
-                  Directly refer someone by providing their information
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <Input
-                    placeholder="Full Name"
-                    value={referralForm.name}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, name: e.target.value }))}
-                  />
-                  <Input
-                    placeholder="Email"
-                    type="email"
-                    value={referralForm.email}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, email: e.target.value }))}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Input
-                    placeholder="Phone Number"
-                    value={referralForm.phone}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, phone: e.target.value }))}
-                  />
-                  <Input
-                    placeholder="Position/Specialty"
-                    value={referralForm.position}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, position: e.target.value }))}
-                  />
-                </div>
-                <Textarea
-                  placeholder="Why would they be a great fit? (optional)"
-                  value={referralForm.message}
-                  onChange={(e) => setReferralForm(prev => ({ ...prev, message: e.target.value }))}
-                  className="h-20"
-                />
-                <Button onClick={handleSubmitReferral} className="w-full">
-                  <UserPlus className="w-4 h-4 mr-2" />
-                  Submit Referral
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Referral History */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Your Referrals</CardTitle>
-              <CardDescription>
-                Track the status of your referred candidates
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {mockReferrals.map((referral) => (
-                  <div key={referral.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="w-10 h-10">
-                        <AvatarFallback>
-                          {referral.referredName.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      
-                      <div>
-                        <h4 className="font-medium">{referral.referredName}</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">{referral.email}</p>
-                        <p className="text-sm text-gray-500">{referral.position}</p>
-                      </div>
-                    </div>
-
-                    <div className="text-center">
-                      <Badge className={getStatusColor(referral.status)}>
-                        {referral.status.charAt(0).toUpperCase() + referral.status.slice(1)}
-                      </Badge>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Referred: {new Date(referral.referralDate).toLocaleDateString()}
-                      </p>
-                      {referral.hireDate && (
-                        <p className="text-xs text-green-600">
-                          Hired: {new Date(referral.hireDate).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="text-right">
-                      <div className="text-lg font-bold text-green-600">
-                        ${referral.bonusAmount.toLocaleString()}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {referral.bonusStatus === 'paid' ? 'Paid' : 'Pending'}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+      {/* Referral Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Referrals</p>
+                <p className="text-2xl font-bold">{mockReferrals.length}</p>
               </div>
+              <Users className="w-8 h-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
 
-              {mockReferrals.length === 0 && (
-                <div className="text-center py-8">
-                  <UserPlus className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    No referrals yet
-                  </h3>
-                  <p className="text-gray-500">
-                    Start referring qualified healthcare professionals to earn rewards
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Successful Hires</p>
+                <p className="text-2xl font-bold">{mockReferrals.filter(r => r.status === "hired").length}</p>
+              </div>
+              <Trophy className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Earned</p>
+                <p className="text-2xl font-bold">${totalEarned.toLocaleString()}</p>
+              </div>
+              <DollarSign className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Pending Earnings</p>
+                <p className="text-2xl font-bold">${pendingEarnings.toLocaleString()}</p>
+              </div>
+              <Gift className="w-8 h-8 text-yellow-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        {/* Referral Link */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Share className="w-5 h-5" />
+              Your Referral Link
+            </CardTitle>
+            <CardDescription>
+              Share this link with healthcare professionals you'd like to refer
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <p className="text-sm font-medium mb-2">Referral Code: {referralCode}</p>
+              <div className="flex gap-2">
+                <Input value={referralLink} readOnly className="flex-1" />
+                <Button onClick={handleCopyLink} variant="outline">
+                  {copied ? <CheckCircle className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+              <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">Referral Bonuses</h4>
+              <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                <li>• Registered Nurse: $1,500</li>
+                <li>• Licensed Practical Nurse: $1,000</li>
+                <li>• Certified Nursing Assistant: $750</li>
+                <li>• Physical Therapist: $1,200</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Referral Form */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5" />
+              Quick Referral
+            </CardTitle>
+            <CardDescription>
+              Refer someone directly through our platform
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm font-medium">Full Name</label>
+                <Input 
+                  value={referralForm.name}
+                  onChange={(e) => setReferralForm({...referralForm, name: e.target.value})}
+                  placeholder="Enter full name"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Email Address</label>
+                <Input 
+                  type="email"
+                  value={referralForm.email}
+                  onChange={(e) => setReferralForm({...referralForm, email: e.target.value})}
+                  placeholder="Enter email address"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Phone Number</label>
+                <Input 
+                  value={referralForm.phone}
+                  onChange={(e) => setReferralForm({...referralForm, phone: e.target.value})}
+                  placeholder="Enter phone number"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Position</label>
+                <Input 
+                  value={referralForm.position}
+                  onChange={(e) => setReferralForm({...referralForm, position: e.target.value})}
+                  placeholder="e.g., Registered Nurse"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Additional Message</label>
+                <Textarea 
+                  value={referralForm.message}
+                  onChange={(e) => setReferralForm({...referralForm, message: e.target.value})}
+                  placeholder="Optional message about the referral"
+                  rows={3}
+                />
+              </div>
+              <Button className="w-full">
+                <Mail className="w-4 h-4 mr-2" />
+                Send Referral
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Referral History */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Referrals</CardTitle>
+          <CardDescription>
+            Track the status of your referrals and earnings
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {mockReferrals.map((referral) => (
+            <div key={referral.id} className="flex items-center justify-between p-4 border rounded-lg mb-4 last:mb-0">
+              <div className="flex items-center gap-4">
+                <Avatar>
+                  <AvatarFallback>
+                    {referral.referredName.split(' ').map(n => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="font-medium">{referral.referredName}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">{referral.position}</p>
+                  <p className="text-sm text-gray-500">Referred: {referral.referralDate}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-4">
+                <Badge variant={
+                  referral.status === "hired" ? "default" : 
+                  referral.status === "interviewing" ? "secondary" : 
+                  "outline"
+                }>
+                  {referral.status}
+                </Badge>
+                <div className="text-right">
+                  <p className="font-medium">${referral.bonusAmount.toLocaleString()}</p>
+                  <p className="text-sm text-gray-500">
+                    {referral.bonusStatus === "paid" ? "✓ Paid" : "Pending"}
                   </p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
+              </div>
+            </div>
+          ))}
+
+          {mockReferrals.length === 0 && (
+            <div className="text-center py-8">
+              <UserPlus className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                No referrals yet
+              </h3>
+              <p className="text-gray-500">
+                Start referring qualified healthcare professionals to earn rewards
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </AppLayout>
   );
 }
