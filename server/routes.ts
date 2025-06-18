@@ -9,7 +9,7 @@ import {
   insertInvoiceSchema, insertWorkLogSchema, insertCredentialSchema,
   insertMessageSchema, insertPayrollProviderSchema, insertPayrollConfigurationSchema,
   insertPayrollEmployeeSchema, insertTimesheetSchema, insertTimesheetEntrySchema,
-  insertPaymentSchema, UserRole, shifts
+  insertPaymentSchema, insertFacilitySchema, UserRole, shifts
 } from "@shared/schema";
 import { db } from "./db";
 
@@ -1185,6 +1185,116 @@ export function registerRoutes(app: Express): Server {
       res.json(logs);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch sync logs" });
+    }
+  });
+
+  // Facility management routes
+  app.get("/api/facilities", requireAuth, async (req, res) => {
+    try {
+      const { search, state } = req.query;
+      let facilities;
+      
+      if (search) {
+        facilities = await storage.searchFacilities(search as string);
+      } else if (state) {
+        facilities = await storage.getFacilitiesByState(state as string);
+      } else {
+        facilities = await storage.getAllFacilities();
+      }
+      
+      res.json(facilities);
+    } catch (error) {
+      console.error("Error fetching facilities:", error);
+      res.status(500).json({ message: "Failed to fetch facilities" });
+    }
+  });
+
+  app.get("/api/facilities/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const facility = await storage.getFacility(id);
+      
+      if (!facility) {
+        return res.status(404).json({ message: "Facility not found" });
+      }
+      
+      res.json(facility);
+    } catch (error) {
+      console.error("Error fetching facility:", error);
+      res.status(500).json({ message: "Failed to fetch facility" });
+    }
+  });
+
+  app.post("/api/facilities", requireAuth, requirePermission("facilities.create"), auditLog("CREATE", "facility"), async (req: any, res) => {
+    try {
+      const validatedData = insertFacilitySchema.parse(req.body);
+      const facility = await storage.createFacility(validatedData);
+      res.status(201).json(facility);
+    } catch (error) {
+      console.error("Error creating facility:", error);
+      res.status(400).json({ message: "Failed to create facility" });
+    }
+  });
+
+  app.patch("/api/facilities/:id", requireAuth, requirePermission("facilities.update"), auditLog("UPDATE", "facility"), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = req.body;
+      const facility = await storage.updateFacility(id, updates);
+      
+      if (!facility) {
+        return res.status(404).json({ message: "Facility not found" });
+      }
+      
+      res.json(facility);
+    } catch (error) {
+      console.error("Error updating facility:", error);
+      res.status(400).json({ message: "Failed to update facility" });
+    }
+  });
+
+  // External data import routes
+  app.post("/api/facilities/import/cms", requireAuth, requirePermission("facilities.create"), auditLog("IMPORT", "facility"), async (req, res) => {
+    try {
+      const { cmsId } = req.body;
+      if (!cmsId) {
+        return res.status(400).json({ message: "CMS ID is required" });
+      }
+      
+      const { facilityImportService } = await import("./facility-import");
+      const facility = await facilityImportService.importFacilityByCMSId(cmsId);
+      res.status(201).json(facility);
+    } catch (error) {
+      console.error("Error importing facility:", error);
+      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to import facility" });
+    }
+  });
+
+  app.post("/api/facilities/search/external", requireAuth, async (req, res) => {
+    try {
+      const { name, state, city } = req.body;
+      if (!name) {
+        return res.status(400).json({ message: "Facility name is required" });
+      }
+      
+      const { facilityImportService } = await import("./facility-import");
+      const results = await facilityImportService.searchByNameAndLocation(name, state, city);
+      res.json(results);
+    } catch (error) {
+      console.error("Error searching external facilities:", error);
+      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to search facilities" });
+    }
+  });
+
+  app.post("/api/facilities/:id/refresh", requireAuth, requirePermission("facilities.update"), auditLog("REFRESH", "facility"), async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { facilityImportService } = await import("./facility-import");
+      const facility = await facilityImportService.refreshFacilityData(id);
+      res.json(facility);
+    } catch (error) {
+      console.error("Error refreshing facility data:", error);
+      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to refresh facility data" });
     }
   });
 

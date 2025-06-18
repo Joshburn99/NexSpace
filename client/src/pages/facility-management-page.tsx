@@ -1,447 +1,1033 @@
 import { useState } from "react";
-import { Building, Users, TrendingUp, AlertTriangle, Calendar, Plus, Settings, BarChart3 } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useAuth } from "@/hooks/use-auth";
-import { SidebarNav } from "@/components/ui/sidebar-nav";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertFacilitySchema, type Facility, type InsertFacility } from "@shared/schema";
+import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Loader2, Plus, Search, Building2, MapPin, Phone, Mail, Users, Bed, Star, RefreshCw, Import, ExternalLink } from "lucide-react";
+import { z } from "zod";
 
-const mockFacilities = [
-  {
-    id: 1,
-    name: "Sunrise Senior Living",
-    address: "123 Wellness Blvd, Healthcare City, HC 12345",
-    phone: "(555) 123-4567",
-    licenseNumber: "FL-12345",
-    capacity: 120,
-    currentCensus: 98,
-    occupancyRate: 81.7,
-    requiredStaffing: {
-      day: { rn: 3, lpn: 4, cna: 8 },
-      evening: { rn: 2, lpn: 3, cna: 6 },
-      night: { rn: 1, lpn: 2, cna: 4 }
-    },
-    currentStaffing: {
-      day: { rn: 2, lpn: 4, cna: 7 },
-      evening: { rn: 2, lpn: 2, cna: 6 },
-      night: { rn: 1, lpn: 1, cna: 3 }
-    },
-    avgDailyRate: 128.50,
-    monthlyRevenue: 387600,
-    status: "active"
-  },
-  {
-    id: 2,
-    name: "Golden Years Care Center",
-    address: "456 Memory Lane, Healthcare City, HC 12346",
-    phone: "(555) 234-5678",
-    licenseNumber: "FL-12346",
-    capacity: 80,
-    currentCensus: 72,
-    occupancyRate: 90.0,
-    requiredStaffing: {
-      day: { rn: 2, lpn: 3, cna: 6 },
-      evening: { rn: 1, lpn: 2, cna: 4 },
-      night: { rn: 1, lpn: 1, cna: 3 }
-    },
-    currentStaffing: {
-      day: { rn: 2, lpn: 3, cna: 6 },
-      evening: { rn: 1, lpn: 2, cna: 4 },
-      night: { rn: 1, lpn: 1, cna: 2 }
-    },
-    avgDailyRate: 142.00,
-    monthlyRevenue: 306240,
-    status: "active"
-  }
-];
-
-const censusProjections = [
-  { month: "Jan", projected: 95, actual: 98 },
-  { month: "Feb", projected: 100, actual: 102 },
-  { month: "Mar", projected: 105, actual: 98 },
-  { month: "Apr", projected: 102, actual: 101 },
-  { month: "May", projected: 98, actual: 95 },
-  { month: "Jun", projected: 100, actual: 98 }
-];
+const createFacilitySchema = insertFacilitySchema.extend({
+  bedCount: z.number().optional(),
+  privateRooms: z.number().optional(),
+  semiPrivateRooms: z.number().optional(),
+});
 
 export default function FacilityManagementPage() {
-  const { user } = useAuth();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedState, setSelectedState] = useState("");
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
+  const [externalSearchResults, setExternalSearchResults] = useState<any[]>([]);
+  const [isSearchingExternal, setIsSearchingExternal] = useState(false);
+
   const { toast } = useToast();
-  const [selectedFacility, setSelectedFacility] = useState(mockFacilities[0]);
-  const [activeTab, setActiveTab] = useState("overview");
+  const queryClient = useQueryClient();
 
-  const calculateStaffingGap = (required: any, current: any) => {
-    const gaps = {
-      rn: Math.max(0, required.rn - current.rn),
-      lpn: Math.max(0, required.lpn - current.lpn),
-      cna: Math.max(0, required.cna - current.cna)
-    };
-    return gaps.rn + gaps.lpn + gaps.cna;
+  // Fetch facilities
+  const { data: facilities = [], isLoading } = useQuery({
+    queryKey: ["/api/facilities", { search: searchQuery, state: selectedState }],
+    queryFn: () => apiRequest("/api/facilities", { 
+      method: "GET",
+      params: { search: searchQuery || undefined, state: selectedState || undefined }
+    }),
+  });
+
+  // Create facility form
+  const createForm = useForm<z.infer<typeof createFacilitySchema>>({
+    resolver: zodResolver(createFacilitySchema),
+    defaultValues: {
+      name: "",
+      facilityType: "hospital",
+      address: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      phone: "",
+      email: "",
+      isActive: true,
+    },
+  });
+
+  // Import form for CMS ID
+  const importForm = useForm({
+    defaultValues: {
+      cmsId: "",
+      searchName: "",
+      searchState: "",
+      searchCity: "",
+    },
+  });
+
+  // Create facility mutation
+  const createFacilityMutation = useMutation({
+    mutationFn: (data: z.infer<typeof createFacilitySchema>) =>
+      apiRequest("/api/facilities", { method: "POST", body: data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
+      setIsCreateDialogOpen(false);
+      createForm.reset();
+      toast({
+        title: "Success",
+        description: "Facility created successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to create facility",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Import facility mutation
+  const importFacilityMutation = useMutation({
+    mutationFn: (cmsId: string) =>
+      apiRequest("/api/facilities/import/cms", { method: "POST", body: { cmsId } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
+      setIsImportDialogOpen(false);
+      importForm.reset();
+      toast({
+        title: "Success",
+        description: "Facility imported successfully from CMS database",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Import Failed",
+        description: error.message || "Failed to import facility from CMS database",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // External search mutation
+  const searchExternalMutation = useMutation({
+    mutationFn: (data: { name: string; state?: string; city?: string }) =>
+      apiRequest("/api/facilities/search/external", { method: "POST", body: data }),
+    onSuccess: (results) => {
+      setExternalSearchResults(results);
+      setIsSearchingExternal(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Search Failed",
+        description: error.message || "Failed to search external databases",
+        variant: "destructive",
+      });
+      setIsSearchingExternal(false);
+    },
+  });
+
+  // Refresh facility data mutation
+  const refreshFacilityMutation = useMutation({
+    mutationFn: (facilityId: number) =>
+      apiRequest(`/api/facilities/${facilityId}/refresh`, { method: "POST" }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
+      toast({
+        title: "Success",
+        description: "Facility data refreshed from external sources",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Refresh Failed",
+        description: error.message || "Failed to refresh facility data",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleExternalSearch = () => {
+    const data = importForm.getValues();
+    if (!data.searchName) {
+      toast({
+        title: "Error",
+        description: "Please enter a facility name to search",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setIsSearchingExternal(true);
+    searchExternalMutation.mutate({
+      name: data.searchName,
+      state: data.searchState || undefined,
+      city: data.searchCity || undefined,
+    });
   };
 
-  const getShiftGaps = (facility: any) => {
-    return {
-      day: calculateStaffingGap(facility.requiredStaffing.day, facility.currentStaffing.day),
-      evening: calculateStaffingGap(facility.requiredStaffing.evening, facility.currentStaffing.evening),
-      night: calculateStaffingGap(facility.requiredStaffing.night, facility.currentStaffing.night)
-    };
+  const handleImportFromExternal = (externalFacility: any) => {
+    if (externalFacility.federal_provider_number) {
+      importFacilityMutation.mutate(externalFacility.federal_provider_number);
+    }
   };
 
-  const totalGaps = getShiftGaps(selectedFacility);
-  const totalStaffingGap = totalGaps.day + totalGaps.evening + totalGaps.night;
+  const onCreateSubmit = (data: z.infer<typeof createFacilitySchema>) => {
+    createFacilityMutation.mutate(data);
+  };
+
+  const onImportSubmit = (data: any) => {
+    if (data.cmsId) {
+      importFacilityMutation.mutate(data.cmsId);
+    }
+  };
+
+  const getRatingColor = (rating: number | null) => {
+    if (!rating) return "bg-gray-500";
+    if (rating >= 4) return "bg-green-500";
+    if (rating >= 3) return "bg-yellow-500";
+    return "bg-red-500";
+  };
+
+  const formatAddress = (facility: Facility) => {
+    return [facility.address, facility.city, facility.state, facility.zipCode]
+      .filter(Boolean)
+      .join(", ");
+  };
+
+  const US_STATES = [
+    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+    "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+    "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+    "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+    "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
+  ];
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav user={user!} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Facility Management</h1>
-              <p className="text-gray-600 dark:text-gray-300">Monitor census, staffing requirements, and facility operations</p>
-            </div>
-            <div className="flex gap-2">
-              <Select value={selectedFacility.id.toString()} onValueChange={(value) => setSelectedFacility(mockFacilities.find(f => f.id === parseInt(value))!)}>
-                <SelectTrigger className="w-64">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockFacilities.map(facility => (
-                    <SelectItem key={facility.id} value={facility.id.toString()}>
-                      {facility.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Facility
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Facility Management</h1>
+          <p className="text-muted-foreground">
+            Manage healthcare facilities with comprehensive profiles and external data integration
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Import className="h-4 w-4 mr-2" />
+                Import Data
               </Button>
-            </div>
-          </div>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Import Facility Data</DialogTitle>
+              </DialogHeader>
+              <Tabs defaultValue="cms" className="w-full">
+                <TabsList>
+                  <TabsTrigger value="cms">CMS Import</TabsTrigger>
+                  <TabsTrigger value="search">External Search</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="cms" className="space-y-4">
+                  <Form {...importForm}>
+                    <form onSubmit={importForm.handleSubmit(onImportSubmit)} className="space-y-4">
+                      <FormField
+                        control={importForm.control}
+                        name="cmsId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CMS Provider Number</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Enter CMS Provider Number (e.g., 345678)"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button 
+                        type="submit" 
+                        disabled={importFacilityMutation.isPending}
+                        className="w-full"
+                      >
+                        {importFacilityMutation.isPending && (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        )}
+                        Import from CMS Database
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
 
-          {/* Key Metrics Dashboard */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Current Census</p>
-                    <p className="text-2xl font-bold">{selectedFacility.currentCensus}</p>
-                    <p className="text-xs text-gray-500">of {selectedFacility.capacity} capacity</p>
+                <TabsContent value="search" className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={importForm.control}
+                      name="searchName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Facility Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter facility name" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={importForm.control}
+                      name="searchState"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>State (Optional)</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select state" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {US_STATES.map((state) => (
+                                <SelectItem key={state} value={state}>
+                                  {state}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={importForm.control}
+                      name="searchCity"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>City (Optional)</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter city" {...field} />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                  <Users className="w-8 h-8 text-blue-600" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Occupancy Rate</p>
-                    <p className="text-2xl font-bold text-green-600">{selectedFacility.occupancyRate}%</p>
-                    <p className="text-xs text-green-500">+2.3% this month</p>
-                  </div>
-                  <TrendingUp className="w-8 h-8 text-green-600" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Staffing Gaps</p>
-                    <p className="text-2xl font-bold text-red-600">{totalStaffingGap}</p>
-                    <p className="text-xs text-gray-500">open positions</p>
-                  </div>
-                  <AlertTriangle className="w-8 h-8 text-red-600" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Monthly Revenue</p>
-                    <p className="text-2xl font-bold">${(selectedFacility.monthlyRevenue / 1000).toFixed(0)}K</p>
-                    <p className="text-xs text-gray-500">${selectedFacility.avgDailyRate}/day avg</p>
-                  </div>
-                  <BarChart3 className="w-8 h-8 text-purple-600" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                  
+                  <Button 
+                    onClick={handleExternalSearch}
+                    disabled={isSearchingExternal}
+                    className="w-full"
+                  >
+                    {isSearchingExternal && (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    )}
+                    Search External Databases
+                  </Button>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="staffing">Staffing Matrix</TabsTrigger>
-              <TabsTrigger value="census">Census Tracking</TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="overview" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Facility Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="font-medium">License Number</p>
-                        <p className="text-gray-600">{selectedFacility.licenseNumber}</p>
-                      </div>
-                      <div>
-                        <p className="font-medium">Phone</p>
-                        <p className="text-gray-600">{selectedFacility.phone}</p>
-                      </div>
-                      <div className="col-span-2">
-                        <p className="font-medium">Address</p>
-                        <p className="text-gray-600">{selectedFacility.address}</p>
-                      </div>
-                      <div>
-                        <p className="font-medium">Total Capacity</p>
-                        <p className="text-gray-600">{selectedFacility.capacity} beds</p>
-                      </div>
-                      <div>
-                        <p className="font-medium">Status</p>
-                        <Badge className="bg-green-100 text-green-800">Active</Badge>
-                      </div>
-                    </div>
-                    <Button variant="outline" className="w-full">
-                      <Settings className="w-4 h-4 mr-2" />
-                      Edit Facility Details
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Quick Actions</CardTitle>
-                    <CardDescription>Common facility management tasks</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Button variant="outline" className="w-full justify-start">
-                      <Users className="w-4 h-4 mr-2" />
-                      Update Census Count
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      Create Shift Schedule
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Post Open Shifts
-                    </Button>
-                    <Button variant="outline" className="w-full justify-start">
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      Generate Reports
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Daily Staffing Requirements vs Actual</CardTitle>
-                  <CardDescription>Real-time staffing coverage by shift</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    {['day', 'evening', 'night'].map((shift) => (
-                      <div key={shift} className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <h4 className="font-medium capitalize">{shift} Shift</h4>
-                          <Badge className={totalGaps[shift as keyof typeof totalGaps] > 0 ? "bg-red-100 text-red-800" : "bg-green-100 text-green-800"}>
-                            {totalGaps[shift as keyof typeof totalGaps] > 0 ? `${totalGaps[shift as keyof typeof totalGaps]} gaps` : "Fully staffed"}
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4">
-                          {['rn', 'lpn', 'cna'].map((role) => {
-                            const required = selectedFacility.requiredStaffing[shift as keyof typeof selectedFacility.requiredStaffing][role as keyof typeof selectedFacility.requiredStaffing.day];
-                            const current = selectedFacility.currentStaffing[shift as keyof typeof selectedFacility.currentStaffing][role as keyof typeof selectedFacility.currentStaffing.day];
-                            const gap = Math.max(0, required - current);
-                            
-                            return (
-                              <div key={role} className="p-3 border rounded-lg">
-                                <p className="text-sm font-medium uppercase">{role}</p>
-                                <p className="text-lg font-bold">
-                                  {current}/{required}
-                                </p>
-                                {gap > 0 && (
-                                  <p className="text-sm text-red-600">-{gap} needed</p>
+                  {externalSearchResults.length > 0 && (
+                    <div className="space-y-2 max-h-96 overflow-y-auto">
+                      <h4 className="font-semibold">Search Results:</h4>
+                      {externalSearchResults.map((facility, index) => (
+                        <Card key={index} className="p-3">
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                              <h5 className="font-medium">{facility.provider_name}</h5>
+                              <p className="text-sm text-muted-foreground">
+                                {facility.address}, {facility.city_name}, {facility.state_abbr} {facility.zip_code}
+                              </p>
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline">
+                                  CMS: {facility.federal_provider_number}
+                                </Badge>
+                                {facility.overall_rating && (
+                                  <Badge className={getRatingColor(facility.overall_rating)}>
+                                    {facility.overall_rating}★
+                                  </Badge>
                                 )}
                               </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="staffing" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Staffing Matrix Configuration</CardTitle>
-                  <CardDescription>Set required staffing levels based on census ratios</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-4 gap-4">
-                      <div className="font-medium">Shift</div>
-                      <div className="font-medium">RN Required</div>
-                      <div className="font-medium">LPN Required</div>
-                      <div className="font-medium">CNA Required</div>
-                    </div>
-                    {['day', 'evening', 'night'].map((shift) => (
-                      <div key={shift} className="grid grid-cols-4 gap-4 items-center">
-                        <div className="capitalize font-medium">{shift}</div>
-                        <Input 
-                          type="number" 
-                          defaultValue={selectedFacility.requiredStaffing[shift as keyof typeof selectedFacility.requiredStaffing].rn}
-                          className="w-20"
-                        />
-                        <Input 
-                          type="number" 
-                          defaultValue={selectedFacility.requiredStaffing[shift as keyof typeof selectedFacility.requiredStaffing].lpn}
-                          className="w-20"
-                        />
-                        <Input 
-                          type="number" 
-                          defaultValue={selectedFacility.requiredStaffing[shift as keyof typeof selectedFacility.requiredStaffing].cna}
-                          className="w-20"
-                        />
-                      </div>
-                    ))}
-                    <Button>Save Staffing Matrix</Button>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Census-Based Auto-Staffing</CardTitle>
-                  <CardDescription>Automatically calculate staffing needs based on current census</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label>RN Ratio (1:X residents)</Label>
-                      <Input type="number" defaultValue="15" />
-                    </div>
-                    <div>
-                      <Label>LPN Ratio (1:X residents)</Label>
-                      <Input type="number" defaultValue="12" />
-                    </div>
-                    <div>
-                      <Label>CNA Ratio (1:X residents)</Label>
-                      <Input type="number" defaultValue="8" />
-                    </div>
-                  </div>
-                  <Button variant="outline">Calculate Auto-Staffing</Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="census" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Census Tracking</CardTitle>
-                    <CardDescription>Monitor resident count and projections</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Current Census</Label>
-                        <Input type="number" defaultValue={selectedFacility.currentCensus} />
-                      </div>
-                      <div>
-                        <Label>Admissions Today</Label>
-                        <Input type="number" defaultValue="2" />
-                      </div>
-                      <div>
-                        <Label>Discharges Today</Label>
-                        <Input type="number" defaultValue="1" />
-                      </div>
-                      <div>
-                        <Label>Planned Admissions</Label>
-                        <Input type="number" defaultValue="3" />
-                      </div>
-                    </div>
-                    <Button>Update Census</Button>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Census Projections</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {censusProjections.map((month) => (
-                        <div key={month.month} className="flex items-center justify-between p-2 border rounded">
-                          <span className="font-medium">{month.month}</span>
-                          <div className="flex gap-4 text-sm">
-                            <span>Projected: {month.projected}</span>
-                            <span className={month.actual > month.projected ? "text-green-600" : "text-red-600"}>
-                              Actual: {month.actual}
-                            </span>
+                            </div>
+                            <Button
+                              size="sm"
+                              onClick={() => handleImportFromExternal(facility)}
+                              disabled={importFacilityMutation.isPending}
+                            >
+                              Import
+                            </Button>
                           </div>
-                        </div>
+                        </Card>
                       ))}
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </DialogContent>
+          </Dialog>
 
-            <TabsContent value="settings" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Facility Settings</CardTitle>
-                  <CardDescription>Configure facility-specific parameters</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Facility Name</Label>
-                      <Input defaultValue={selectedFacility.name} />
-                    </div>
-                    <div>
-                      <Label>License Number</Label>
-                      <Input defaultValue={selectedFacility.licenseNumber} />
-                    </div>
-                    <div>
-                      <Label>Phone Number</Label>
-                      <Input defaultValue={selectedFacility.phone} />
-                    </div>
-                    <div>
-                      <Label>Total Capacity</Label>
-                      <Input type="number" defaultValue={selectedFacility.capacity} />
-                    </div>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Facility
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Create New Facility</DialogTitle>
+              </DialogHeader>
+              <Form {...createForm}>
+                <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={createForm.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Facility Name *</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="facilityType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Facility Type *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="hospital">Hospital</SelectItem>
+                              <SelectItem value="nursing_home">Nursing Home</SelectItem>
+                              <SelectItem value="assisted_living">Assisted Living</SelectItem>
+                              <SelectItem value="home_health">Home Health</SelectItem>
+                              <SelectItem value="hospice">Hospice</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                  <div>
-                    <Label>Address</Label>
-                    <Textarea defaultValue={selectedFacility.address} />
+
+                  <FormField
+                    control={createForm.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Address *</FormLabel>
+                        <FormControl>
+                          <Input {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={createForm.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>City *</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="state"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>State *</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {US_STATES.map((state) => (
+                                <SelectItem key={state} value={state}>
+                                  {state}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="zipCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>ZIP Code *</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                  <Button>Save Changes</Button>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <FormField
+                      control={createForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone</FormLabel>
+                          <FormControl>
+                            <Input type="tel" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <FormField
+                      control={createForm.control}
+                      name="bedCount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Total Beds</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              {...field} 
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="privateRooms"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Private Rooms</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              {...field} 
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={createForm.control}
+                      name="semiPrivateRooms"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Semi-Private Rooms</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              {...field} 
+                              onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={createForm.control}
+                    name="isActive"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                        <div className="space-y-0.5">
+                          <FormLabel>Active Status</FormLabel>
+                          <div className="text-sm text-muted-foreground">
+                            Enable this facility for operations
+                          </div>
+                        </div>
+                        <FormControl>
+                          <Switch 
+                            checked={field.value} 
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="flex justify-end space-x-2">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setIsCreateDialogOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      disabled={createFacilityMutation.isPending}
+                    >
+                      {createFacilityMutation.isPending && (
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      )}
+                      Create Facility
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
+
+      {/* Search and Filter */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search facilities by name, city, or CMS ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <Select value={selectedState} onValueChange={setSelectedState}>
+              <SelectTrigger className="w-full md:w-48">
+                <SelectValue placeholder="Filter by state" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">All States</SelectItem>
+                {US_STATES.map((state) => (
+                  <SelectItem key={state} value={state}>
+                    {state}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Facilities Grid */}
+      {isLoading ? (
+        <div className="flex justify-center items-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {facilities.map((facility: Facility) => (
+            <Card key={facility.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <CardTitle className="text-lg">{facility.name}</CardTitle>
+                    <CardDescription className="flex items-center">
+                      <Building2 className="h-4 w-4 mr-1" />
+                      {facility.facilityType?.replace('_', ' ')}
+                    </CardDescription>
+                  </div>
+                  <div className="flex gap-1">
+                    {facility.cmsId && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => refreshFacilityMutation.mutate(facility.id)}
+                        disabled={refreshFacilityMutation.isPending}
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                      </Button>
+                    )}
+                    {facility.overallRating && (
+                      <Badge className={getRatingColor(facility.overallRating)}>
+                        {facility.overallRating}★
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-start text-sm">
+                    <MapPin className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
+                    <span>{formatAddress(facility)}</span>
+                  </div>
+                  {facility.phone && (
+                    <div className="flex items-center text-sm">
+                      <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>{facility.phone}</span>
+                    </div>
+                  )}
+                  {facility.email && (
+                    <div className="flex items-center text-sm">
+                      <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <span>{facility.email}</span>
+                    </div>
+                  )}
+                </div>
+
+                {(facility.bedCount || facility.privateRooms || facility.semiPrivateRooms) && (
+                  <div className="grid grid-cols-2 gap-2 text-sm">
+                    {facility.bedCount && (
+                      <div className="flex items-center">
+                        <Bed className="h-4 w-4 mr-1 text-muted-foreground" />
+                        <span>{facility.bedCount} beds</span>
+                      </div>
+                    )}
+                    {facility.privateRooms && (
+                      <div className="flex items-center">
+                        <Users className="h-4 w-4 mr-1 text-muted-foreground" />
+                        <span>{facility.privateRooms} private</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-2">
+                  {facility.cmsId && (
+                    <Badge variant="outline">CMS: {facility.cmsId}</Badge>
+                  )}
+                  {facility.autoImported && (
+                    <Badge variant="secondary">Auto-Imported</Badge>
+                  )}
+                  {facility.participatesMedicare && (
+                    <Badge variant="outline">Medicare</Badge>
+                  )}
+                  {facility.participatesMedicaid && (
+                    <Badge variant="outline">Medicaid</Badge>
+                  )}
+                </div>
+
+                <div className="flex justify-between items-center pt-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setSelectedFacility(facility)}
+                  >
+                    View Details
+                  </Button>
+                  <Badge variant={facility.isActive ? "default" : "secondary"}>
+                    {facility.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {facilities.length === 0 && !isLoading && (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <h3 className="text-lg font-semibold mb-2">No facilities found</h3>
+            <p className="text-muted-foreground mb-4">
+              {searchQuery || selectedState 
+                ? "No facilities match your search criteria."
+                : "Get started by adding your first facility or importing from external databases."
+              }
+            </p>
+            <div className="flex justify-center gap-2">
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Facility
+              </Button>
+              <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+                <Import className="h-4 w-4 mr-2" />
+                Import Data
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Facility Details Dialog */}
+      {selectedFacility && (
+        <Dialog open={!!selectedFacility} onOpenChange={() => setSelectedFacility(null)}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center justify-between">
+                <span>{selectedFacility.name}</span>
+                <div className="flex items-center gap-2">
+                  {selectedFacility.overallRating && (
+                    <Badge className={getRatingColor(selectedFacility.overallRating)}>
+                      {selectedFacility.overallRating}★ Overall
+                    </Badge>
+                  )}
+                  {selectedFacility.cmsId && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => refreshFacilityMutation.mutate(selectedFacility.id)}
+                      disabled={refreshFacilityMutation.isPending}
+                    >
+                      <RefreshCw className="h-3 w-3 mr-1" />
+                      Refresh Data
+                    </Button>
+                  )}
+                </div>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList>
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="ratings">Quality Ratings</TabsTrigger>
+                <TabsTrigger value="operations">Operations</TabsTrigger>
+                <TabsTrigger value="compliance">Compliance</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="overview" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Basic Information</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div>
+                        <Label className="text-sm font-medium">Type</Label>
+                        <p className="text-sm">{selectedFacility.facilityType?.replace('_', ' ')}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium">Address</Label>
+                        <p className="text-sm">{formatAddress(selectedFacility)}</p>
+                      </div>
+                      {selectedFacility.phone && (
+                        <div>
+                          <Label className="text-sm font-medium">Phone</Label>
+                          <p className="text-sm">{selectedFacility.phone}</p>
+                        </div>
+                      )}
+                      {selectedFacility.email && (
+                        <div>
+                          <Label className="text-sm font-medium">Email</Label>
+                          <p className="text-sm">{selectedFacility.email}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Capacity & Structure</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {selectedFacility.bedCount && (
+                        <div>
+                          <Label className="text-sm font-medium">Total Beds</Label>
+                          <p className="text-sm">{selectedFacility.bedCount}</p>
+                        </div>
+                      )}
+                      {selectedFacility.privateRooms && (
+                        <div>
+                          <Label className="text-sm font-medium">Private Rooms</Label>
+                          <p className="text-sm">{selectedFacility.privateRooms}</p>
+                        </div>
+                      )}
+                      {selectedFacility.semiPrivateRooms && (
+                        <div>
+                          <Label className="text-sm font-medium">Semi-Private Rooms</Label>
+                          <p className="text-sm">{selectedFacility.semiPrivateRooms}</p>
+                        </div>
+                      )}
+                      {selectedFacility.ownershipType && (
+                        <div>
+                          <Label className="text-sm font-medium">Ownership</Label>
+                          <p className="text-sm capitalize">{selectedFacility.ownershipType}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="ratings" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {selectedFacility.overallRating && (
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className={`w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center text-white font-bold ${getRatingColor(selectedFacility.overallRating)}`}>
+                          {selectedFacility.overallRating}
+                        </div>
+                        <p className="text-sm font-medium">Overall Rating</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {selectedFacility.healthInspectionRating && (
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className={`w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center text-white font-bold ${getRatingColor(selectedFacility.healthInspectionRating)}`}>
+                          {selectedFacility.healthInspectionRating}
+                        </div>
+                        <p className="text-sm font-medium">Health Inspection</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {selectedFacility.qualityMeasureRating && (
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className={`w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center text-white font-bold ${getRatingColor(selectedFacility.qualityMeasureRating)}`}>
+                          {selectedFacility.qualityMeasureRating}
+                        </div>
+                        <p className="text-sm font-medium">Quality Measures</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {selectedFacility.staffingRating && (
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className={`w-12 h-12 rounded-full mx-auto mb-2 flex items-center justify-center text-white font-bold ${getRatingColor(selectedFacility.staffingRating)}`}>
+                          {selectedFacility.staffingRating}
+                        </div>
+                        <p className="text-sm font-medium">Staffing</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="operations" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Administration</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {selectedFacility.adminName && (
+                        <div>
+                          <Label className="text-sm font-medium">Administrator</Label>
+                          <p className="text-sm">{selectedFacility.adminName}</p>
+                          {selectedFacility.adminTitle && (
+                            <p className="text-xs text-muted-foreground">{selectedFacility.adminTitle}</p>
+                          )}
+                        </div>
+                      )}
+                      {selectedFacility.medicalDirector && (
+                        <div>
+                          <Label className="text-sm font-medium">Medical Director</Label>
+                          <p className="text-sm">{selectedFacility.medicalDirector}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Payment Programs</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium">Medicare</Label>
+                        <Badge variant={selectedFacility.participatesMedicare ? "default" : "secondary"}>
+                          {selectedFacility.participatesMedicare ? "Accepted" : "Not Accepted"}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-medium">Medicaid</Label>
+                        <Badge variant={selectedFacility.participatesMedicaid ? "default" : "secondary"}>
+                          {selectedFacility.participatesMedicaid ? "Accepted" : "Not Accepted"}
+                        </Badge>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="compliance" className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {selectedFacility.deficiencyCount !== null && (
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-orange-600 mb-1">
+                          {selectedFacility.deficiencyCount}
+                        </div>
+                        <p className="text-sm font-medium">Standard Deficiencies</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {selectedFacility.complaintsCount !== null && (
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-red-600 mb-1">
+                          {selectedFacility.complaintsCount}
+                        </div>
+                        <p className="text-sm font-medium">Complaints</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                  {selectedFacility.finesTotal && (
+                    <Card>
+                      <CardContent className="p-4 text-center">
+                        <div className="text-2xl font-bold text-red-600 mb-1">
+                          ${parseFloat(selectedFacility.finesTotal).toLocaleString()}
+                        </div>
+                        <p className="text-sm font-medium">Total Fines</p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+                
+                {selectedFacility.lastInspectionDate && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base">Last Health Inspection</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm">
+                        {new Date(selectedFacility.lastInspectionDate).toLocaleDateString()}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+            </Tabs>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
