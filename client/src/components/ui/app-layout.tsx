@@ -307,7 +307,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                 </SelectTrigger>
                 <SelectContent>
                   {buildings.map((building) => (
-                    <SelectItem key={building.id} value={building.id}>
+                    <SelectItem key={building.id} value={building.id.toString()}>
                       <div className="flex flex-col">
                         <span>{building.name}</span>
                         <span className="text-xs text-gray-500">{building.address}</span>
