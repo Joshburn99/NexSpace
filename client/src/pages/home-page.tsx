@@ -538,4 +538,3 @@ export default function HomePage() {
     </Layout>
   );
 }
-}

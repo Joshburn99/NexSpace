@@ -26,7 +26,7 @@ import {
   Building
 } from "lucide-react";
 import { getQueryFn } from "@/lib/queryClient";
-import { AppLayout } from "@/components/ui/app-layout";
+import Layout from "@/components/Layout";
 
 export default function AnalyticsPage() {
   const { user } = useAuth();

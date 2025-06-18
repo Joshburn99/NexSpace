@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import { AppLayout } from "@/components/ui/app-layout";
+import Layout from "@/components/Layout";
 import { getQueryFn } from "@/lib/queryClient";
 
 export default function SchedulingPage() {
