@@ -90,4 +90,38 @@ export function setupAuth(app: Express) {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
   });
+
+  // Role switching endpoint for super admin
+  app.post("/api/user/switch-role", async (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const { role } = req.body;
+    const user = req.user;
+    
+    // Only super admin can switch roles
+    if (user?.role !== 'super_admin') {
+      return res.status(403).json({ message: "Only super admin can switch roles" });
+    }
+    
+    // Valid roles for switching
+    const validRoles = ['super_admin', 'facility_admin', 'nurse_manager', 'rn', 'lpn', 'cna', 'contractor'];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ message: "Invalid role" });
+    }
+    
+    try {
+      // Update user role temporarily
+      const updatedUser = await storage.updateUser(user.id, { role });
+      if (updatedUser) {
+        // Update session
+        req.user = updatedUser;
+        res.json(updatedUser);
+      } else {
+        res.status(500).json({ message: "Failed to switch role" });
+      }
+    } catch (error) {
+      console.error('Role switching error:', error);
+      res.status(500).json({ message: "Failed to switch role" });
+    }
+  });
 }

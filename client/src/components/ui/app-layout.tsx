@@ -1,7 +1,11 @@
 import { useState } from "react";
+import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import nexspaceLogo from "@assets/ChatGPT Image Jun 17, 2025, 01_56_58 PM_1750200821645.png";
 import { 
   Activity, 
@@ -20,7 +24,6 @@ import {
   ChevronDown,
   ChevronRight
 } from "lucide-react";
-import { Link, useLocation } from "wouter";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -53,6 +56,30 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
   const { user } = useAuth();
   const [location] = useLocation();
   const [selectedBuilding, setSelectedBuilding] = useState("1");
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Role switching mutation
+  const switchRoleMutation = useMutation({
+    mutationFn: async (newRole: string) => {
+      const res = await apiRequest("POST", "/api/user/switch-role", { role: newRole });
+      return await res.json();
+    },
+    onSuccess: (updatedUser) => {
+      queryClient.setQueryData(["/api/user"], updatedUser);
+      toast({
+        title: "Role switched successfully",
+        description: `Now viewing as ${updatedUser.role.replace('_', ' ')}`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Failed to switch role",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({
     scheduling: true,
@@ -292,6 +319,27 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
             </div>
             
             <div className="flex items-center space-x-3">
+              {/* Role Switcher for Super Admin */}
+              {user?.role === 'super_admin' && (
+                <Select value={user?.role} onValueChange={(newRole) => {
+                  // This would call an API to switch roles
+                  console.log('Switching to role:', newRole);
+                }}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Switch Role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="super_admin">Super Admin</SelectItem>
+                    <SelectItem value="facility_admin">Facility Admin</SelectItem>
+                    <SelectItem value="nurse_manager">Nurse Manager</SelectItem>
+                    <SelectItem value="rn">RN</SelectItem>
+                    <SelectItem value="lpn">LPN</SelectItem>
+                    <SelectItem value="cna">CNA</SelectItem>
+                    <SelectItem value="contractor">Contractor</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
+              
               <Button variant="outline" size="sm">
                 <Bell className="w-4 h-4" />
               </Button>
