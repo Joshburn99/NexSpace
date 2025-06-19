@@ -6,60 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useShifts } from "@/contexts/ShiftContext";
 
-const mockOpenShifts = [
-  {
-    id: 1,
-    position: "Registered Nurse (RN)",
-    facility: "Sunrise Senior Living",
-    startTime: "2025-06-18T06:00:00Z",
-    endTime: "2025-06-18T18:00:00Z",
-    hourlyRate: 45,
-    priority: "urgent",
-    department: "Medical",
-    requirements: ["Current RN License", "CPR Certification", "2+ years experience"],
-    shiftType: "Day Shift",
-    census: 24,
-  },
-  {
-    id: 2,
-    position: "Licensed Practical Nurse (LPN)",
-    facility: "Golden Years Care Center",
-    startTime: "2025-06-18T18:00:00Z",
-    endTime: "2025-06-19T06:00:00Z",
-    hourlyRate: 32,
-    priority: "high",
-    department: "Memory Care",
-    requirements: ["Current LPN License", "Memory Care Experience"],
-    shiftType: "Night Shift",
-    census: 18,
-  },
-  {
-    id: 3,
-    position: "Certified Nursing Assistant (CNA)",
-    facility: "Harmony Health Center",
-    startTime: "2025-06-19T14:00:00Z",
-    endTime: "2025-06-19T22:00:00Z",
-    hourlyRate: 22,
-    priority: "medium",
-    department: "Assisted Living",
-    requirements: ["Current CNA License", "Medication Administration"],
-    shiftType: "Evening Shift",
-    census: 32,
-  },
-  {
-    id: 4,
-    position: "Physical Therapist",
-    facility: "Rehabilitation Center East",
-    startTime: "2025-06-20T08:00:00Z",
-    endTime: "2025-06-20T16:00:00Z",
-    hourlyRate: 55,
-    priority: "medium",
-    department: "Rehabilitation",
-    requirements: ["PT License", "Geriatric Experience"],
-    shiftType: "Day Shift",
-    census: 15,
-  },
-];
+
 
 export default function OpenShiftsPage() {
   const { user } = useAuth();
@@ -92,15 +39,15 @@ export default function OpenShiftsPage() {
 
   return (
     <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Open Shifts</h1>
-              <p className="text-gray-600 dark:text-gray-300">
-                Available shifts requiring immediate staffing
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Open Shifts</h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              Available shifts requiring immediate staffing
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
                 variant={filter === "all" ? "default" : "outline"}
                 onClick={() => setFilter("all")}
                 size="sm"
@@ -203,7 +150,6 @@ export default function OpenShiftsPage() {
               <p className="text-gray-500">Check back later for new opportunities</p>
             </div>
           )}
-        </div>
       </div>
     </div>
   );
