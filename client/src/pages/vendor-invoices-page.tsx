@@ -6,11 +6,43 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Plus, Eye, DollarSign, Calendar, Building, TrendingUp, ArrowLeft, Home, Check, X, Upload } from "lucide-react";
+import {
+  FileText,
+  Plus,
+  Eye,
+  DollarSign,
+  Calendar,
+  Building,
+  TrendingUp,
+  ArrowLeft,
+  Home,
+  Check,
+  X,
+  Upload,
+} from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
 import PDFDropzone from "@/components/PDFDropzone";
@@ -71,17 +103,23 @@ export default function VendorInvoicesPage() {
 
   const filteredInvoices = vendorInvoices.filter((invoice: VendorInvoice) => {
     const matchesStatus = selectedStatus === "all" || invoice.status === selectedStatus;
-    const matchesVendorType = selectedVendorType === "all" || invoice.vendorType === selectedVendorType;
+    const matchesVendorType =
+      selectedVendorType === "all" || invoice.vendorType === selectedVendorType;
     return matchesStatus && matchesVendorType;
   });
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case "paid": return "default";
-      case "approved": return "secondary";
-      case "pending": return "outline";
-      case "overdue": return "destructive";
-      default: return "outline";
+      case "paid":
+        return "default";
+      case "approved":
+        return "secondary";
+      case "pending":
+        return "outline";
+      case "overdue":
+        return "destructive";
+      default:
+        return "outline";
     }
   };
 
@@ -103,7 +141,10 @@ export default function VendorInvoicesPage() {
   };
 
   // Calculate summary statistics
-  const totalAmount = filteredInvoices.reduce((sum: number, invoice: VendorInvoice) => sum + invoice.amount, 0);
+  const totalAmount = filteredInvoices.reduce(
+    (sum: number, invoice: VendorInvoice) => sum + invoice.amount,
+    0
+  );
   const paidAmount = filteredInvoices
     .filter((invoice: VendorInvoice) => invoice.status === "paid")
     .reduce((sum: number, invoice: VendorInvoice) => sum + invoice.amount, 0);
@@ -321,7 +362,9 @@ export default function VendorInvoicesPage() {
               {isLoading ? (
                 <div className="text-center py-8">Loading invoices...</div>
               ) : filteredInvoices.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">No vendor invoices found</div>
+                <div className="text-center py-8 text-muted-foreground">
+                  No vendor invoices found
+                </div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -343,19 +386,21 @@ export default function VendorInvoicesPage() {
                         <TableCell>
                           <div>
                             <div className="font-medium">{invoice.vendorName}</div>
-                            <div className="text-sm text-muted-foreground">{invoice.description}</div>
+                            <div className="text-sm text-muted-foreground">
+                              {invoice.description}
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline">
-                            {invoice.vendorType.replace('_', ' ').toUpperCase()}
+                            {invoice.vendorType.replace("_", " ").toUpperCase()}
                           </Badge>
                         </TableCell>
                         <TableCell>{invoice.facilityName}</TableCell>
-                        <TableCell className="font-medium">${invoice.amount.toLocaleString()}</TableCell>
-                        <TableCell>
-                          {format(new Date(invoice.dueDate), "MMM dd, yyyy")}
+                        <TableCell className="font-medium">
+                          ${invoice.amount.toLocaleString()}
                         </TableCell>
+                        <TableCell>{format(new Date(invoice.dueDate), "MMM dd, yyyy")}</TableCell>
                         <TableCell>
                           <Badge variant={getStatusBadgeVariant(invoice.status)}>
                             {invoice.status.toUpperCase()}
@@ -368,17 +413,27 @@ export default function VendorInvoicesPage() {
                             </Button>
                             {invoice.status === "pending" && (
                               <>
-                                <Button 
-                                  size="sm" 
+                                <Button
+                                  size="sm"
                                   variant="default"
-                                  onClick={() => updateInvoiceStatusMutation.mutate({ id: invoice.id, status: "approved" })}
+                                  onClick={() =>
+                                    updateInvoiceStatusMutation.mutate({
+                                      id: invoice.id,
+                                      status: "approved",
+                                    })
+                                  }
                                 >
                                   <Check className="h-3 w-3" />
                                 </Button>
-                                <Button 
-                                  size="sm" 
+                                <Button
+                                  size="sm"
                                   variant="destructive"
-                                  onClick={() => updateInvoiceStatusMutation.mutate({ id: invoice.id, status: "rejected" })}
+                                  onClick={() =>
+                                    updateInvoiceStatusMutation.mutate({
+                                      id: invoice.id,
+                                      status: "rejected",
+                                    })
+                                  }
                                 >
                                   <X className="h-3 w-3" />
                                 </Button>
@@ -403,15 +458,16 @@ export default function VendorInvoicesPage() {
                 PDF Invoice Scanner
               </CardTitle>
               <p className="text-sm text-muted-foreground">
-                Upload PDF invoices to automatically extract vendor information, amounts, and dates using AI technology.
+                Upload PDF invoices to automatically extract vendor information, amounts, and dates
+                using AI technology.
               </p>
             </CardHeader>
             <CardContent>
-              <PDFDropzone 
+              <PDFDropzone
                 onInvoiceExtracted={(data) => {
                   setExtractedData(data);
                   setIsCreateDialogOpen(true);
-                }} 
+                }}
               />
             </CardContent>
           </Card>
@@ -456,7 +512,7 @@ export default function VendorInvoicesPage() {
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4">
-                  <Button 
+                  <Button
                     onClick={() => {
                       createInvoiceMutation.mutate(extractedData);
                       setExtractedData(null);
@@ -465,10 +521,7 @@ export default function VendorInvoicesPage() {
                   >
                     Create Invoice
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => setExtractedData(null)}
-                  >
+                  <Button variant="outline" onClick={() => setExtractedData(null)}>
                     Cancel
                   </Button>
                 </div>
@@ -491,7 +544,7 @@ export default function VendorInvoicesPage() {
                   {Object.entries(vendorTypeStats).map(([type, stats]: [string, any]) => (
                     <div key={type} className="flex justify-between items-center">
                       <div>
-                        <div className="font-medium">{type.replace('_', ' ').toUpperCase()}</div>
+                        <div className="font-medium">{type.replace("_", " ").toUpperCase()}</div>
                         <div className="text-sm text-muted-foreground">{stats.count} invoices</div>
                       </div>
                       <div className="text-right">
@@ -532,7 +585,7 @@ export default function VendorInvoicesPage() {
                         <div>
                           <div className="font-medium">{vendor}</div>
                           <div className="text-sm text-muted-foreground">
-                            {stats.type.replace('_', ' ')} • {stats.count} invoices
+                            {stats.type.replace("_", " ")} • {stats.count} invoices
                           </div>
                         </div>
                         <div className="font-bold">${stats.amount.toLocaleString()}</div>

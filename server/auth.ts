@@ -49,7 +49,7 @@ export function setupAuth(app: Express) {
       } else {
         return done(null, user);
       }
-    }),
+    })
   );
 
   passport.serializeUser((user, done) => done(null, user.id));
@@ -81,7 +81,7 @@ export function setupAuth(app: Express) {
 
   app.post("/api/forgot-password", async (req, res) => {
     const { username } = req.body;
-    
+
     if (!username) {
       return res.status(400).json({ message: "Username is required" });
     }
@@ -90,18 +90,20 @@ export function setupAuth(app: Express) {
       const user = await storage.getUserByUsername(username);
       if (!user) {
         // Don't reveal if user exists or not for security
-        return res.status(200).json({ message: "If the username exists, a temporary password has been set" });
+        return res
+          .status(200)
+          .json({ message: "If the username exists, a temporary password has been set" });
       }
 
       // Generate a simple temporary password
       const tempPassword = Math.random().toString(36).slice(-8);
       const hashedTempPassword = await hashPassword(tempPassword);
-      
+
       await storage.updateUser(user.id, { password: hashedTempPassword });
-      
-      res.status(200).json({ 
+
+      res.status(200).json({
         message: "Temporary password set successfully",
-        tempPassword: tempPassword // In production, this would be sent via email
+        tempPassword: tempPassword, // In production, this would be sent via email
       });
     } catch (error) {
       console.error("Password reset error:", error);
@@ -124,21 +126,29 @@ export function setupAuth(app: Express) {
   // Role switching endpoint for super admin
   app.post("/api/user/switch-role", async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const { role } = req.body;
     const user = req.user;
-    
+
     // Only super admin can switch roles
-    if (user?.role !== 'super_admin') {
+    if (user?.role !== "super_admin") {
       return res.status(403).json({ message: "Only super admin can switch roles" });
     }
-    
+
     // Valid roles for switching
-    const validRoles = ['super_admin', 'facility_admin', 'nurse_manager', 'rn', 'lpn', 'cna', 'contractor'];
+    const validRoles = [
+      "super_admin",
+      "facility_admin",
+      "nurse_manager",
+      "rn",
+      "lpn",
+      "cna",
+      "contractor",
+    ];
     if (!validRoles.includes(role)) {
       return res.status(400).json({ message: "Invalid role" });
     }
-    
+
     try {
       // Update user role temporarily
       const updatedUser = await storage.updateUser(user.id, { role });
@@ -150,7 +160,7 @@ export function setupAuth(app: Express) {
         res.status(500).json({ message: "Failed to switch role" });
       }
     } catch (error) {
-      console.error('Role switching error:', error);
+      console.error("Role switching error:", error);
       res.status(500).json({ message: "Failed to switch role" });
     }
   });

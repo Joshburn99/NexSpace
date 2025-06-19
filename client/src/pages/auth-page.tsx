@@ -6,12 +6,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { AlertCircle, CheckCircle, Users, Calendar, Shield, BarChart } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Logo } from "@/components/ui/logo";
 import { UserRole } from "@shared/schema";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation, forgotPasswordMutation } = useAuth();
@@ -25,7 +38,7 @@ export default function AuthPage() {
     firstName: "",
     lastName: "",
     role: UserRole.INTERNAL_EMPLOYEE,
-    facilityId: 1
+    facilityId: 1,
   });
 
   // Redirect if already logged in
@@ -78,9 +91,7 @@ export default function AuthPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Sign In</CardTitle>
-                  <CardDescription>
-                    Enter your credentials to access your account
-                  </CardDescription>
+                  <CardDescription>Enter your credentials to access your account</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleLogin} className="space-y-4">
@@ -90,7 +101,9 @@ export default function AuthPage() {
                         id="username"
                         type="text"
                         value={loginData.username}
-                        onChange={(e) => setLoginData(prev => ({ ...prev, username: e.target.value }))}
+                        onChange={(e) =>
+                          setLoginData((prev) => ({ ...prev, username: e.target.value }))
+                        }
                         required
                       />
                     </div>
@@ -100,32 +113,31 @@ export default function AuthPage() {
                         id="password"
                         type="password"
                         value={loginData.password}
-                        onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
+                        onChange={(e) =>
+                          setLoginData((prev) => ({ ...prev, password: e.target.value }))
+                        }
                         required
                       />
                     </div>
-                    
+
                     {loginMutation.error && (
                       <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          {loginMutation.error.message}
-                        </AlertDescription>
+                        <AlertDescription>{loginMutation.error.message}</AlertDescription>
                       </Alert>
                     )}
 
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={loginMutation.isPending}
-                    >
+                    <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
                       {loginMutation.isPending ? "Signing In..." : "Sign In"}
                     </Button>
 
                     <div className="text-center">
                       <Dialog>
                         <DialogTrigger asChild>
-                          <Button variant="link" className="text-sm text-blue-600 hover:text-blue-800">
+                          <Button
+                            variant="link"
+                            className="text-sm text-blue-600 hover:text-blue-800"
+                          >
                             Forgot your password?
                           </Button>
                         </DialogTrigger>
@@ -168,9 +180,7 @@ export default function AuthPage() {
               <Card>
                 <CardHeader>
                   <CardTitle>Create Account</CardTitle>
-                  <CardDescription>
-                    Join the NexSpace healthcare staffing platform
-                  </CardDescription>
+                  <CardDescription>Join the NexSpace healthcare staffing platform</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleRegister} className="space-y-4">
@@ -180,7 +190,9 @@ export default function AuthPage() {
                         <Input
                           id="firstName"
                           value={registerData.firstName}
-                          onChange={(e) => setRegisterData(prev => ({ ...prev, firstName: e.target.value }))}
+                          onChange={(e) =>
+                            setRegisterData((prev) => ({ ...prev, firstName: e.target.value }))
+                          }
                           required
                         />
                       </div>
@@ -189,7 +201,9 @@ export default function AuthPage() {
                         <Input
                           id="lastName"
                           value={registerData.lastName}
-                          onChange={(e) => setRegisterData(prev => ({ ...prev, lastName: e.target.value }))}
+                          onChange={(e) =>
+                            setRegisterData((prev) => ({ ...prev, lastName: e.target.value }))
+                          }
                           required
                         />
                       </div>
@@ -200,7 +214,9 @@ export default function AuthPage() {
                       <Input
                         id="registerUsername"
                         value={registerData.username}
-                        onChange={(e) => setRegisterData(prev => ({ ...prev, username: e.target.value }))}
+                        onChange={(e) =>
+                          setRegisterData((prev) => ({ ...prev, username: e.target.value }))
+                        }
                         required
                       />
                     </div>
@@ -211,7 +227,9 @@ export default function AuthPage() {
                         id="email"
                         type="email"
                         value={registerData.email}
-                        onChange={(e) => setRegisterData(prev => ({ ...prev, email: e.target.value }))}
+                        onChange={(e) =>
+                          setRegisterData((prev) => ({ ...prev, email: e.target.value }))
+                        }
                         required
                       />
                     </div>
@@ -222,25 +240,35 @@ export default function AuthPage() {
                         id="registerPassword"
                         type="password"
                         value={registerData.password}
-                        onChange={(e) => setRegisterData(prev => ({ ...prev, password: e.target.value }))}
+                        onChange={(e) =>
+                          setRegisterData((prev) => ({ ...prev, password: e.target.value }))
+                        }
                         required
                       />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="role">Role</Label>
-                      <Select 
-                        value={registerData.role} 
-                        onValueChange={(value) => setRegisterData(prev => ({ ...prev, role: value as any }))}
+                      <Select
+                        value={registerData.role}
+                        onValueChange={(value) =>
+                          setRegisterData((prev) => ({ ...prev, role: value as any }))
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select your role" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value={UserRole.INTERNAL_EMPLOYEE}>Internal Employee</SelectItem>
+                          <SelectItem value={UserRole.INTERNAL_EMPLOYEE}>
+                            Internal Employee
+                          </SelectItem>
                           <SelectItem value={UserRole.CONTRACTOR_1099}>1099 Contractor</SelectItem>
-                          <SelectItem value={UserRole.FACILITY_MANAGER}>Facility Manager</SelectItem>
-                          <SelectItem value={UserRole.CLIENT_ADMINISTRATOR}>Client Administrator</SelectItem>
+                          <SelectItem value={UserRole.FACILITY_MANAGER}>
+                            Facility Manager
+                          </SelectItem>
+                          <SelectItem value={UserRole.CLIENT_ADMINISTRATOR}>
+                            Client Administrator
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -248,17 +276,11 @@ export default function AuthPage() {
                     {registerMutation.error && (
                       <Alert variant="destructive">
                         <AlertCircle className="h-4 w-4" />
-                        <AlertDescription>
-                          {registerMutation.error.message}
-                        </AlertDescription>
+                        <AlertDescription>{registerMutation.error.message}</AlertDescription>
                       </Alert>
                     )}
 
-                    <Button
-                      type="submit"
-                      className="w-full"
-                      disabled={registerMutation.isPending}
-                    >
+                    <Button type="submit" className="w-full" disabled={registerMutation.isPending}>
                       {registerMutation.isPending ? "Creating Account..." : "Create Account"}
                     </Button>
                   </form>
@@ -273,12 +295,10 @@ export default function AuthPage() {
       <div className="hidden lg:flex lg:flex-1 bg-gradient-to-br from-blue-50 to-indigo-100">
         <div className="flex flex-col justify-center px-12 py-16">
           <div className="max-w-lg">
-            <h1 className="text-4xl font-bold text-gray-900 mb-6">
-              Transform Healthcare Staffing
-            </h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-6">Transform Healthcare Staffing</h1>
             <p className="text-xl text-gray-600 mb-8">
-              Connect qualified healthcare professionals with facilities in need. 
-              Streamline scheduling, ensure compliance, and deliver exceptional patient care.
+              Connect qualified healthcare professionals with facilities in need. Streamline
+              scheduling, ensure compliance, and deliver exceptional patient care.
             </p>
 
             {/* Feature highlights */}
@@ -291,7 +311,9 @@ export default function AuthPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Smart Scheduling</h3>
-                  <p className="text-gray-600">Advanced scheduling with real-time availability and automated shift assignments.</p>
+                  <p className="text-gray-600">
+                    Advanced scheduling with real-time availability and automated shift assignments.
+                  </p>
                 </div>
               </div>
 
@@ -303,7 +325,10 @@ export default function AuthPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Compliance Management</h3>
-                  <p className="text-gray-600">Track credentials, certifications, and ensure regulatory compliance effortlessly.</p>
+                  <p className="text-gray-600">
+                    Track credentials, certifications, and ensure regulatory compliance
+                    effortlessly.
+                  </p>
                 </div>
               </div>
 
@@ -315,7 +340,9 @@ export default function AuthPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Staff Management</h3>
-                  <p className="text-gray-600">Comprehensive tools for managing employees, contractors, and facility staff.</p>
+                  <p className="text-gray-600">
+                    Comprehensive tools for managing employees, contractors, and facility staff.
+                  </p>
                 </div>
               </div>
 
@@ -327,7 +354,9 @@ export default function AuthPage() {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">Analytics & Insights</h3>
-                  <p className="text-gray-600">Data-driven insights for optimal staffing decisions and operational efficiency.</p>
+                  <p className="text-gray-600">
+                    Data-driven insights for optimal staffing decisions and operational efficiency.
+                  </p>
                 </div>
               </div>
             </div>

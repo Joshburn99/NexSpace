@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +23,7 @@ export default function InteractiveMap({
   onLocationSelect,
   height = "400px",
   showSearch = true,
-  readonly = false
+  readonly = false,
 }: InteractiveMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
@@ -37,28 +37,28 @@ export default function InteractiveMap({
     const initMap = async () => {
       try {
         // Check if Google Maps is already loaded
-        if (typeof google === 'undefined') {
+        if (typeof google === "undefined") {
           // Load Google Maps script
-          const script = document.createElement('script');
+          const script = document.createElement("script");
           script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
           script.async = true;
           script.defer = true;
-          
+
           script.onload = () => {
             createMap();
           };
-          
+
           script.onerror = () => {
-            console.error('Failed to load Google Maps script');
+            console.error("Failed to load Google Maps script");
             setIsLoading(false);
           };
-          
+
           document.head.appendChild(script);
         } else {
           createMap();
         }
       } catch (error) {
-        console.error('Error initializing map:', error);
+        console.error("Error initializing map:", error);
         setIsLoading(false);
       }
     };
@@ -76,36 +76,36 @@ export default function InteractiveMap({
           {
             featureType: "poi",
             elementType: "labels",
-            stylers: [{ visibility: "off" }]
-          }
-        ]
+            stylers: [{ visibility: "off" }],
+          },
+        ],
       });
 
       const markerInstance = new google.maps.Marker({
         position: currentLocation,
         map: mapInstance,
         draggable: !readonly,
-        title: "Facility Location"
+        title: "Facility Location",
       });
 
       if (!readonly) {
         // Add click listener to map
-        mapInstance.addListener('click', (event: google.maps.MapMouseEvent) => {
+        mapInstance.addListener("click", (event: google.maps.MapMouseEvent) => {
           if (event.latLng) {
             const newLocation = {
               lat: event.latLng.lat(),
-              lng: event.latLng.lng()
+              lng: event.latLng.lng(),
             };
             updateLocation(newLocation);
           }
         });
 
         // Add drag listener to marker
-        markerInstance.addListener('dragend', (event: google.maps.MapMouseEvent) => {
+        markerInstance.addListener("dragend", (event: google.maps.MapMouseEvent) => {
           if (event.latLng) {
             const newLocation = {
               lat: event.latLng.lat(),
-              lng: event.latLng.lng()
+              lng: event.latLng.lng(),
             };
             updateLocation(newLocation);
           }
@@ -122,11 +122,11 @@ export default function InteractiveMap({
 
   const updateLocation = async (location: MapLocation) => {
     setCurrentLocation(location);
-    
+
     if (marker) {
       marker.setPosition(location);
     }
-    
+
     if (map) {
       map.setCenter(location);
     }
@@ -135,7 +135,7 @@ export default function InteractiveMap({
     try {
       const geocoder = new google.maps.Geocoder();
       const response = await geocoder.geocode({ location });
-      
+
       if (response.results[0]) {
         const address = response.results[0].formatted_address;
         const locationWithAddress = { ...location, address };
@@ -145,7 +145,7 @@ export default function InteractiveMap({
         onLocationSelect?.(location);
       }
     } catch (error) {
-      console.error('Geocoding error:', error);
+      console.error("Geocoding error:", error);
       onLocationSelect?.(location);
     }
   };
@@ -156,26 +156,26 @@ export default function InteractiveMap({
     try {
       const geocoder = new google.maps.Geocoder();
       const response = await geocoder.geocode({ address: searchValue });
-      
+
       if (response.results[0]) {
         const location = response.results[0].geometry.location;
         const newLocation = {
           lat: location.lat(),
           lng: location.lng(),
-          address: response.results[0].formatted_address
+          address: response.results[0].formatted_address,
         };
-        
+
         updateLocation(newLocation);
         map.setZoom(15);
       }
     } catch (error) {
-      console.error('Geocoding error:', error);
+      console.error("Geocoding error:", error);
     }
   };
 
   const getCurrentLocation = () => {
     if (!navigator.geolocation) {
-      alert('Geolocation is not supported by this browser.');
+      alert("Geolocation is not supported by this browser.");
       return;
     }
 
@@ -184,7 +184,7 @@ export default function InteractiveMap({
       (position) => {
         const location = {
           lat: position.coords.latitude,
-          lng: position.coords.longitude
+          lng: position.coords.longitude,
         };
         updateLocation(location);
         if (map) {
@@ -193,20 +193,20 @@ export default function InteractiveMap({
         setIsLoading(false);
       },
       (error) => {
-        console.error('Geolocation error:', error);
+        console.error("Geolocation error:", error);
         setIsLoading(false);
-        alert('Unable to retrieve your location.');
+        alert("Unable to retrieve your location.");
       }
     );
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       searchLocation();
     }
   };
 
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     return (
       <Card style={{ height }}>
         <CardContent className="flex items-center justify-center h-full">
@@ -232,8 +232,8 @@ export default function InteractiveMap({
                 onChange={(e) => setSearchValue(e.target.value)}
                 onKeyPress={handleKeyPress}
               />
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={searchLocation}
                 disabled={!searchValue.trim()}
@@ -241,24 +241,17 @@ export default function InteractiveMap({
                 <Search className="h-4 w-4" />
               </Button>
             </div>
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={getCurrentLocation}
-              disabled={isLoading}
-            >
+            <Button variant="outline" size="sm" onClick={getCurrentLocation} disabled={isLoading}>
               <Target className="h-4 w-4" />
             </Button>
           </div>
           {currentLocation.address && (
-            <p className="text-sm text-muted-foreground">
-              {currentLocation.address}
-            </p>
+            <p className="text-sm text-muted-foreground">{currentLocation.address}</p>
           )}
         </CardHeader>
       )}
-      
-      <CardContent className={`${showSearch && !readonly ? 'pt-0' : 'p-0'}`}>
+
+      <CardContent className={`${showSearch && !readonly ? "pt-0" : "p-0"}`}>
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -266,7 +259,7 @@ export default function InteractiveMap({
               <p className="text-muted-foreground">Loading map...</p>
             </div>
           </div>
-        ) : typeof google === 'undefined' ? (
+        ) : typeof google === "undefined" ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -278,12 +271,12 @@ export default function InteractiveMap({
           </div>
         ) : (
           <>
-            <div 
-              ref={mapRef} 
-              style={{ 
-                height: showSearch && !readonly ? 'calc(100% - 120px)' : '100%',
-                minHeight: '300px',
-                width: '100%'
+            <div
+              ref={mapRef}
+              style={{
+                height: showSearch && !readonly ? "calc(100% - 120px)" : "100%",
+                minHeight: "300px",
+                width: "100%",
               }}
             />
             {!readonly && (

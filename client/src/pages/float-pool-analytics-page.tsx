@@ -6,10 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  DollarSign, 
-  TrendingUp, 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  DollarSign,
+  TrendingUp,
   Users,
   PieChart,
   BarChart3,
@@ -18,9 +24,23 @@ import {
   Clock,
   Building,
   Calendar,
-  Percent
+  Percent,
 } from "lucide-react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from "recharts";
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart as RechartsPieChart,
+  Pie,
+  Cell,
+} from "recharts";
 
 interface FloatPoolMetrics {
   totalSavings: number;
@@ -48,7 +68,7 @@ export default function FloatPoolAnalyticsPage() {
   const [timeRange, setTimeRange] = useState("6months");
 
   const { data: metrics, isLoading } = useQuery<FloatPoolMetrics>({
-    queryKey: [`/api/analytics/float-pool?range=${timeRange}`]
+    queryKey: [`/api/analytics/float-pool?range=${timeRange}`],
   });
 
   // Sample data for demonstration
@@ -65,35 +85,38 @@ export default function FloatPoolAnalyticsPage() {
       { month: "Mar", floatPoolCost: 19800, agencyCost: 31500, savings: 11700 },
       { month: "Apr", floatPoolCost: 24200, agencyCost: 38000, savings: 13800 },
       { month: "May", floatPoolCost: 26500, agencyCost: 42000, savings: 15500 },
-      { month: "Jun", floatPoolCost: 28900, agencyCost: 45500, savings: 16600 }
+      { month: "Jun", floatPoolCost: 28900, agencyCost: 45500, savings: 16600 },
     ],
     departmentBreakdown: [
       { department: "ICU", floatHours: 840, agencyHours: 420, savings: 32500 },
       { department: "Med-Surg", floatHours: 720, agencyHours: 380, savings: 28000 },
       { department: "Emergency", floatHours: 650, agencyHours: 290, savings: 24500 },
       { department: "Pediatrics", floatHours: 430, agencyHours: 120, savings: 18500 },
-      { department: "Surgery", floatHours: 200, agencyHours: 50, savings: 9000 }
-    ]
+      { department: "Surgery", floatHours: 200, agencyHours: 50, savings: 9000 },
+    ],
   };
 
   const displayMetrics = metrics || sampleMetrics;
-  const savingsRate = ((displayMetrics.avgAgencyCost - displayMetrics.avgFloatPoolCost) / displayMetrics.avgAgencyCost * 100);
+  const savingsRate =
+    ((displayMetrics.avgAgencyCost - displayMetrics.avgFloatPoolCost) /
+      displayMetrics.avgAgencyCost) *
+    100;
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+  const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
   const pieData = displayMetrics.departmentBreakdown.map((dept, index) => ({
     name: dept.department,
     value: dept.savings,
-    color: COLORS[index % COLORS.length]
+    color: COLORS[index % COLORS.length],
   }));
 
   return (
     <div className="p-6">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Float Pool Analytics</h1>
-          <p className="text-gray-600">Cost savings and utilization metrics</p>
-        </div>
-        <div className="space-y-6">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">Float Pool Analytics</h1>
+        <p className="text-gray-600">Cost savings and utilization metrics</p>
+      </div>
+      <div className="space-y-6">
         {/* Controls */}
         <div className="flex justify-between items-center">
           <div className="flex items-center space-x-4">
@@ -156,9 +179,7 @@ export default function FloatPoolAnalyticsPage() {
             <CardContent>
               <div className="text-2xl font-bold">{displayMetrics.utilizationRate}%</div>
               <Progress value={displayMetrics.utilizationRate} className="mt-2" />
-              <p className="text-xs text-muted-foreground mt-1">
-                Target: 85%
-              </p>
+              <p className="text-xs text-muted-foreground mt-1">Target: 85%</p>
             </CardContent>
           </Card>
 
@@ -169,7 +190,12 @@ export default function FloatPoolAnalyticsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {((displayMetrics.hoursFloat / (displayMetrics.hoursFloat + displayMetrics.hoursAgency)) * 100).toFixed(1)}%
+                {(
+                  (displayMetrics.hoursFloat /
+                    (displayMetrics.hoursFloat + displayMetrics.hoursAgency)) *
+                  100
+                ).toFixed(1)}
+                %
               </div>
               <p className="text-xs text-muted-foreground">
                 {displayMetrics.hoursFloat} float / {displayMetrics.hoursAgency} agency
@@ -187,9 +213,7 @@ export default function FloatPoolAnalyticsPage() {
                 <BarChart3 className="w-5 h-5" />
                 <span>Monthly Savings Trend</span>
               </CardTitle>
-              <CardDescription>
-                Comparison of float pool vs agency costs over time
-              </CardDescription>
+              <CardDescription>Comparison of float pool vs agency costs over time</CardDescription>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
@@ -197,26 +221,26 @@ export default function FloatPoolAnalyticsPage() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="month" />
                   <YAxis />
-                  <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, '']} />
+                  <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, ""]} />
                   <Legend />
-                  <Line 
-                    type="monotone" 
-                    dataKey="floatPoolCost" 
-                    stroke="#0088FE" 
+                  <Line
+                    type="monotone"
+                    dataKey="floatPoolCost"
+                    stroke="#0088FE"
                     name="Float Pool Cost"
                     strokeWidth={2}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="agencyCost" 
-                    stroke="#FF8042" 
+                  <Line
+                    type="monotone"
+                    dataKey="agencyCost"
+                    stroke="#FF8042"
                     name="Agency Cost"
                     strokeWidth={2}
                   />
-                  <Line 
-                    type="monotone" 
-                    dataKey="savings" 
-                    stroke="#00C49F" 
+                  <Line
+                    type="monotone"
+                    dataKey="savings"
+                    stroke="#00C49F"
                     name="Monthly Savings"
                     strokeWidth={3}
                   />
@@ -250,7 +274,7 @@ export default function FloatPoolAnalyticsPage() {
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Savings']} />
+                  <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, "Savings"]} />
                 </RechartsPieChart>
               </ResponsiveContainer>
             </CardContent>
@@ -306,7 +330,7 @@ export default function FloatPoolAnalyticsPage() {
                     const totalHours = dept.floatHours + dept.agencyHours;
                     const utilizationRate = (dept.floatHours / totalHours) * 100;
                     const avgSavingsPerHour = dept.savings / dept.floatHours;
-                    
+
                     return (
                       <tr key={index} className="border-b">
                         <td className="py-3 font-medium">{dept.department}</td>
@@ -320,9 +344,7 @@ export default function FloatPoolAnalyticsPage() {
                             {utilizationRate.toFixed(1)}%
                           </Badge>
                         </td>
-                        <td className="text-right py-3">
-                          ${avgSavingsPerHour.toFixed(2)}
-                        </td>
+                        <td className="text-right py-3">${avgSavingsPerHour.toFixed(2)}</td>
                       </tr>
                     );
                   })}
@@ -345,28 +367,28 @@ export default function FloatPoolAnalyticsPage() {
               <div className="p-4 bg-blue-50 rounded-lg">
                 <h4 className="font-semibold text-blue-900 mb-2">Expand ICU Float Pool</h4>
                 <p className="text-blue-800 text-sm">
-                  ICU shows highest savings potential. Consider adding 2-3 more float pool nurses 
-                  to reduce agency dependency by an estimated 25%.
+                  ICU shows highest savings potential. Consider adding 2-3 more float pool nurses to
+                  reduce agency dependency by an estimated 25%.
                 </p>
               </div>
               <div className="p-4 bg-green-50 rounded-lg">
                 <h4 className="font-semibold text-green-900 mb-2">Optimize Surgery Schedule</h4>
                 <p className="text-green-800 text-sm">
-                  Surgery department has the best float pool utilization rate. Use this model 
-                  for other departments to improve overall efficiency.
+                  Surgery department has the best float pool utilization rate. Use this model for
+                  other departments to improve overall efficiency.
                 </p>
               </div>
               <div className="p-4 bg-yellow-50 rounded-lg">
                 <h4 className="font-semibold text-yellow-900 mb-2">Cross-Train Emergency Staff</h4>
                 <p className="text-yellow-800 text-sm">
-                  Cross-training emergency float pool staff for Med-Surg could increase 
-                  utilization and reduce agency costs by an estimated $8,000/month.
+                  Cross-training emergency float pool staff for Med-Surg could increase utilization
+                  and reduce agency costs by an estimated $8,000/month.
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        </div>
       </div>
+    </div>
   );
 }

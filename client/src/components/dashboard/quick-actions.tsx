@@ -1,15 +1,15 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { 
-  Plus, 
-  CalendarPlus, 
-  FileUp, 
-  BarChart3, 
-  Users, 
+import {
+  Plus,
+  CalendarPlus,
+  FileUp,
+  BarChart3,
+  Users,
   Stethoscope,
   ClipboardCheck,
-  MessageSquare
+  MessageSquare,
 } from "lucide-react";
 import { UserRole } from "@shared/schema";
 import { Link } from "wouter";
@@ -34,58 +34,58 @@ export function QuickActions() {
       icon: <Plus className="h-5 w-5" />,
       color: "bg-blue-50 hover:bg-blue-100 text-blue-600",
       href: "/staff/new",
-      roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN]
+      roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
     },
     {
       label: "Create Shift",
       icon: <CalendarPlus className="h-5 w-5" />,
       color: "bg-green-50 hover:bg-green-100 text-green-600",
       href: "/shifts/new",
-      roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN]
+      roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
     },
     {
       label: "Upload Docs",
       icon: <FileUp className="h-5 w-5" />,
       color: "bg-purple-50 hover:bg-purple-100 text-purple-600",
-      href: "/credentials/upload"
+      href: "/credentials/upload",
     },
     {
       label: "View Reports",
       icon: <BarChart3 className="h-5 w-5" />,
       color: "bg-amber-50 hover:bg-amber-100 text-amber-600",
       href: "/analytics",
-      roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN]
+      roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
     },
     {
       label: "Time Clock",
       icon: <ClipboardCheck className="h-5 w-5" />,
       color: "bg-indigo-50 hover:bg-indigo-100 text-indigo-600",
       href: "/time-clock",
-      roles: [UserRole.INTERNAL_EMPLOYEE, UserRole.CONTRACTOR_1099]
+      roles: [UserRole.INTERNAL_EMPLOYEE, UserRole.CONTRACTOR_1099],
     },
     {
       label: "Messages",
       icon: <MessageSquare className="h-5 w-5" />,
       color: "bg-pink-50 hover:bg-pink-100 text-pink-600",
-      href: "/messages"
+      href: "/messages",
     },
     {
       label: "Job Board",
       icon: <Stethoscope className="h-5 w-5" />,
       color: "bg-cyan-50 hover:bg-cyan-100 text-cyan-600",
-      href: "/jobs"
+      href: "/jobs",
     },
     {
       label: "Staff List",
       icon: <Users className="h-5 w-5" />,
       color: "bg-rose-50 hover:bg-rose-100 text-rose-600",
       href: "/staff",
-      roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN]
-    }
+      roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
+    },
   ];
 
   // Filter actions based on user role
-  const availableActions = actions.filter(action => {
+  const availableActions = actions.filter((action) => {
     if (!action.roles) return true; // No role restriction
     return action.roles.includes(user.role as UserRole) || user.role === UserRole.SUPER_ADMIN;
   });
@@ -119,9 +119,7 @@ export function QuickActions() {
                     <div className="mb-2 group-hover:scale-110 transition-transform">
                       {action.icon}
                     </div>
-                    <span className="text-sm font-medium text-center">
-                      {action.label}
-                    </span>
+                    <span className="text-sm font-medium text-center">{action.label}</span>
                   </Button>
                 </Link>
               ) : (
@@ -133,9 +131,7 @@ export function QuickActions() {
                   <div className="mb-2 group-hover:scale-110 transition-transform">
                     {action.icon}
                   </div>
-                  <span className="text-sm font-medium text-center">
-                    {action.label}
-                  </span>
+                  <span className="text-sm font-medium text-center">{action.label}</span>
                 </Button>
               )}
             </div>

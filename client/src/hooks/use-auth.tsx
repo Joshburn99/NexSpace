@@ -1,9 +1,5 @@
 import { createContext, ReactNode, useContext } from "react";
-import {
-  useQuery,
-  useMutation,
-  UseMutationResult,
-} from "@tanstack/react-query";
+import { useQuery, useMutation, UseMutationResult } from "@tanstack/react-query";
 import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -15,7 +11,11 @@ type AuthContextType = {
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<SelectUser, Error, InsertUser>;
-  forgotPasswordMutation: UseMutationResult<{ message: string; tempPassword?: string }, Error, { username: string }>;
+  forgotPasswordMutation: UseMutationResult<
+    { message: string; tempPassword?: string },
+    Error,
+    { username: string }
+  >;
 };
 
 type LoginData = Pick<InsertUser, "username" | "password">;
@@ -90,8 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (data: { message: string; tempPassword?: string }) => {
       toast({
         title: "Password Reset",
-        description: data.tempPassword 
-          ? `Your temporary password is: ${data.tempPassword}` 
+        description: data.tempPassword
+          ? `Your temporary password is: ${data.tempPassword}`
           : data.message,
         variant: "default",
       });

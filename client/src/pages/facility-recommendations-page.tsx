@@ -6,11 +6,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import InteractiveMap from "@/components/InteractiveMap";
-import { MapPin, Clock, Star, Heart, Shield, Navigation, Phone, Mail, ArrowLeft, Home, Filter, Search } from "lucide-react";
+import {
+  MapPin,
+  Clock,
+  Star,
+  Heart,
+  Shield,
+  Navigation,
+  Phone,
+  Mail,
+  ArrowLeft,
+  Home,
+  Filter,
+  Search,
+} from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -48,7 +67,7 @@ interface FacilityRecommendation {
 }
 
 export default function FacilityRecommendationsPage() {
-  const [searchLocation, setSearchLocation] = useState<{lat: number; lng: number} | null>(null);
+  const [searchLocation, setSearchLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [addressSearch, setAddressSearch] = useState<string>("");
   const [criteria, setCriteria] = useState<RecommendationCriteria>({
     location: { lat: 39.7817, lng: -89.6501 }, // Springfield, IL default
@@ -57,80 +76,92 @@ export default function FacilityRecommendationsPage() {
     prioritizeQuality: true,
     prioritizeDistance: false,
   });
-  
+
   const [selectedRecommendationType, setSelectedRecommendationType] = useState<string>("general");
 
   const getRecommendationsMutation = useMutation({
     mutationFn: async (searchCriteria: RecommendationCriteria) => {
-      const endpoint = selectedRecommendationType === "emergency" 
-        ? "/api/facilities/recommendations/emergency"
-        : selectedRecommendationType === "specialized"
-        ? "/api/facilities/recommendations/specialized" 
-        : selectedRecommendationType === "insurance"
-        ? "/api/facilities/recommendations/insurance"
-        : "/api/facilities/recommendations";
+      const endpoint =
+        selectedRecommendationType === "emergency"
+          ? "/api/facilities/recommendations/emergency"
+          : selectedRecommendationType === "specialized"
+            ? "/api/facilities/recommendations/specialized"
+            : selectedRecommendationType === "insurance"
+              ? "/api/facilities/recommendations/insurance"
+              : "/api/facilities/recommendations";
 
-      const requestBody = selectedRecommendationType === "emergency" 
-        ? { location: searchCriteria.location, facilityType: searchCriteria.facilityType }
-        : selectedRecommendationType === "specialized"
-        ? { location: searchCriteria.location, specialty: "general", maxDistance: searchCriteria.maxDistance }
-        : selectedRecommendationType === "insurance"
-        ? { location: searchCriteria.location, insuranceType: "both", facilityType: searchCriteria.facilityType }
-        : searchCriteria;
+      const requestBody =
+        selectedRecommendationType === "emergency"
+          ? { location: searchCriteria.location, facilityType: searchCriteria.facilityType }
+          : selectedRecommendationType === "specialized"
+            ? {
+                location: searchCriteria.location,
+                specialty: "general",
+                maxDistance: searchCriteria.maxDistance,
+              }
+            : selectedRecommendationType === "insurance"
+              ? {
+                  location: searchCriteria.location,
+                  insuranceType: "both",
+                  facilityType: searchCriteria.facilityType,
+                }
+              : searchCriteria;
 
       const response = await apiRequest("POST", endpoint, requestBody);
       return await response.json();
     },
   });
 
-  const handleLocationSelect = (location: {lat: number; lng: number; address?: string}) => {
+  const handleLocationSelect = (location: { lat: number; lng: number; address?: string }) => {
     setSearchLocation(location);
-    setCriteria(prev => ({
+    setCriteria((prev) => ({
       ...prev,
-      location
+      location,
     }));
   };
 
   const handleAddressSearch = async () => {
     if (!addressSearch.trim()) return;
-    
+
     try {
       // Simple geocoding using a free service
-      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressSearch)}&limit=1`);
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressSearch)}&limit=1`
+      );
       const data = await response.json();
-      
+
       if (data && data.length > 0) {
         const location = {
           lat: parseFloat(data[0].lat),
           lng: parseFloat(data[0].lon),
-          address: data[0].display_name
+          address: data[0].display_name,
         };
         handleLocationSelect(location);
         setAddressSearch("");
       } else {
         // Fallback to common city coordinates
-        const commonCities: {[key: string]: {lat: number, lng: number}} = {
-          "chicago": {lat: 41.8781, lng: -87.6298},
-          "new york": {lat: 40.7128, lng: -74.0060},
-          "los angeles": {lat: 34.0522, lng: -118.2437},
-          "houston": {lat: 29.7604, lng: -95.3698},
-          "phoenix": {lat: 33.4484, lng: -112.0740},
-          "philadelphia": {lat: 39.9526, lng: -75.1652},
-          "san antonio": {lat: 29.4241, lng: -98.4936},
-          "san diego": {lat: 32.7157, lng: -117.1611},
-          "dallas": {lat: 32.7767, lng: -96.7970},
-          "springfield": {lat: 39.7817, lng: -89.6501}
+        const commonCities: { [key: string]: { lat: number; lng: number } } = {
+          chicago: { lat: 41.8781, lng: -87.6298 },
+          "new york": { lat: 40.7128, lng: -74.006 },
+          "los angeles": { lat: 34.0522, lng: -118.2437 },
+          houston: { lat: 29.7604, lng: -95.3698 },
+          phoenix: { lat: 33.4484, lng: -112.074 },
+          philadelphia: { lat: 39.9526, lng: -75.1652 },
+          "san antonio": { lat: 29.4241, lng: -98.4936 },
+          "san diego": { lat: 32.7157, lng: -117.1611 },
+          dallas: { lat: 32.7767, lng: -96.797 },
+          springfield: { lat: 39.7817, lng: -89.6501 },
         };
-        
+
         const searchKey = addressSearch.toLowerCase();
-        const foundCity = Object.keys(commonCities).find(city => 
-          city.includes(searchKey) || searchKey.includes(city)
+        const foundCity = Object.keys(commonCities).find(
+          (city) => city.includes(searchKey) || searchKey.includes(city)
         );
-        
+
         if (foundCity) {
           handleLocationSelect({
             ...commonCities[foundCity],
-            address: foundCity
+            address: foundCity,
           });
           setAddressSearch("");
         }
@@ -150,7 +181,7 @@ export default function FacilityRecommendationsPage() {
 
   const renderQualityBadge = (rating: number | undefined, label: string) => {
     if (!rating) return null;
-    
+
     const getVariant = (score: number) => {
       if (score >= 4) return "default";
       if (score >= 3) return "secondary";
@@ -172,21 +203,21 @@ export default function FacilityRecommendationsPage() {
             <CardTitle className="text-lg">{rec.facility.name}</CardTitle>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
               <MapPin className="h-4 w-4" />
-              <span>{rec.facility.address}, {rec.facility.city}, {rec.facility.state}</span>
+              <span>
+                {rec.facility.address}, {rec.facility.city}, {rec.facility.state}
+              </span>
             </div>
           </div>
           <div className="text-right">
             <Badge variant="outline" className="mb-1">
               Rank #{index + 1}
             </Badge>
-            <div className="text-lg font-bold text-primary">
-              {rec.score.toFixed(0)}%
-            </div>
+            <div className="text-lg font-bold text-primary">{rec.score.toFixed(0)}%</div>
             <div className="text-xs text-muted-foreground">Match Score</div>
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-4">
         <div className="flex items-center gap-4 text-sm">
           <div className="flex items-center gap-1">
@@ -243,9 +274,7 @@ export default function FacilityRecommendationsPage() {
           <Button size="sm" variant="outline">
             View Details
           </Button>
-          <Button size="sm">
-            Get Directions
-          </Button>
+          <Button size="sm">Get Directions</Button>
         </div>
       </CardContent>
     </Card>
@@ -287,11 +316,14 @@ export default function FacilityRecommendationsPage() {
                   <Filter className="h-4 w-4" />
                   <Label className="text-sm font-semibold">Search Filters</Label>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div>
                     <Label className="text-sm font-medium">Recommendation Type</Label>
-                    <Select value={selectedRecommendationType} onValueChange={setSelectedRecommendationType}>
+                    <Select
+                      value={selectedRecommendationType}
+                      onValueChange={setSelectedRecommendationType}
+                    >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -306,9 +338,15 @@ export default function FacilityRecommendationsPage() {
 
                   <div>
                     <Label className="text-sm font-medium">Facility Type</Label>
-                    <Select value={criteria.facilityType || "all"} onValueChange={(value) => 
-                      setCriteria(prev => ({ ...prev, facilityType: value === "all" ? undefined : value }))
-                    }>
+                    <Select
+                      value={criteria.facilityType || "all"}
+                      onValueChange={(value) =>
+                        setCriteria((prev) => ({
+                          ...prev,
+                          facilityType: value === "all" ? undefined : value,
+                        }))
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="All facility types" />
                       </SelectTrigger>
@@ -331,7 +369,9 @@ export default function FacilityRecommendationsPage() {
                 </Label>
                 <Slider
                   value={[criteria.maxDistance || 25]}
-                  onValueChange={([value]) => setCriteria(prev => ({ ...prev, maxDistance: value }))}
+                  onValueChange={([value]) =>
+                    setCriteria((prev) => ({ ...prev, maxDistance: value }))
+                  }
                   max={100}
                   min={1}
                   step={1}
@@ -345,7 +385,9 @@ export default function FacilityRecommendationsPage() {
                 </Label>
                 <Slider
                   value={[criteria.minRating || 3]}
-                  onValueChange={([value]) => setCriteria(prev => ({ ...prev, minRating: value }))}
+                  onValueChange={([value]) =>
+                    setCriteria((prev) => ({ ...prev, minRating: value }))
+                  }
                   max={5}
                   min={1}
                   step={0.5}
@@ -358,15 +400,19 @@ export default function FacilityRecommendationsPage() {
                   <Label className="text-sm font-medium">Prioritize Quality</Label>
                   <Switch
                     checked={criteria.prioritizeQuality}
-                    onCheckedChange={(checked) => setCriteria(prev => ({ ...prev, prioritizeQuality: checked }))}
+                    onCheckedChange={(checked) =>
+                      setCriteria((prev) => ({ ...prev, prioritizeQuality: checked }))
+                    }
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">Prioritize Distance</Label>
                   <Switch
                     checked={criteria.prioritizeDistance}
-                    onCheckedChange={(checked) => setCriteria(prev => ({ ...prev, prioritizeDistance: checked }))}
+                    onCheckedChange={(checked) =>
+                      setCriteria((prev) => ({ ...prev, prioritizeDistance: checked }))
+                    }
                   />
                 </div>
 
@@ -374,7 +420,9 @@ export default function FacilityRecommendationsPage() {
                   <Label className="text-sm font-medium">Accepts Medicare</Label>
                   <Switch
                     checked={criteria.participatesMedicare}
-                    onCheckedChange={(checked) => setCriteria(prev => ({ ...prev, participatesMedicare: checked }))}
+                    onCheckedChange={(checked) =>
+                      setCriteria((prev) => ({ ...prev, participatesMedicare: checked }))
+                    }
                   />
                 </div>
 
@@ -382,7 +430,9 @@ export default function FacilityRecommendationsPage() {
                   <Label className="text-sm font-medium">Accepts Medicaid</Label>
                   <Switch
                     checked={criteria.participatesMedicaid}
-                    onCheckedChange={(checked) => setCriteria(prev => ({ ...prev, participatesMedicaid: checked }))}
+                    onCheckedChange={(checked) =>
+                      setCriteria((prev) => ({ ...prev, participatesMedicaid: checked }))
+                    }
                   />
                 </div>
               </div>
@@ -398,21 +448,26 @@ export default function FacilityRecommendationsPage() {
                   <div className="space-y-3">
                     <div>
                       <Label className="text-xs">Quick City Selection</Label>
-                      <Select onValueChange={(value) => {
-                        const cities: {[key: string]: {lat: number, lng: number}} = {
-                          "chicago": {lat: 41.8781, lng: -87.6298},
-                          "new-york": {lat: 40.7128, lng: -74.0060},
-                          "los-angeles": {lat: 34.0522, lng: -118.2437},
-                          "houston": {lat: 29.7604, lng: -95.3698},
-                          "phoenix": {lat: 33.4484, lng: -112.0740},
-                          "philadelphia": {lat: 39.9526, lng: -75.1652},
-                          "dallas": {lat: 32.7767, lng: -96.7970},
-                          "springfield": {lat: 39.7817, lng: -89.6501}
-                        };
-                        if (cities[value]) {
-                          handleLocationSelect({...cities[value], address: value.replace('-', ' ')});
-                        }
-                      }}>
+                      <Select
+                        onValueChange={(value) => {
+                          const cities: { [key: string]: { lat: number; lng: number } } = {
+                            chicago: { lat: 41.8781, lng: -87.6298 },
+                            "new-york": { lat: 40.7128, lng: -74.006 },
+                            "los-angeles": { lat: 34.0522, lng: -118.2437 },
+                            houston: { lat: 29.7604, lng: -95.3698 },
+                            phoenix: { lat: 33.4484, lng: -112.074 },
+                            philadelphia: { lat: 39.9526, lng: -75.1652 },
+                            dallas: { lat: 32.7767, lng: -96.797 },
+                            springfield: { lat: 39.7817, lng: -89.6501 },
+                          };
+                          if (cities[value]) {
+                            handleLocationSelect({
+                              ...cities[value],
+                              address: value.replace("-", " "),
+                            });
+                          }
+                        }}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Select a major city..." />
                         </SelectTrigger>
@@ -428,7 +483,7 @@ export default function FacilityRecommendationsPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label className="text-xs">Custom Address Search</Label>
                       <div className="flex gap-2">
@@ -436,15 +491,19 @@ export default function FacilityRecommendationsPage() {
                           placeholder="Enter address, city, or ZIP code..."
                           value={addressSearch}
                           onChange={(e) => setAddressSearch(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && handleAddressSearch()}
+                          onKeyPress={(e) => e.key === "Enter" && handleAddressSearch()}
                         />
-                        <Button size="sm" onClick={handleAddressSearch} disabled={!addressSearch.trim()}>
+                        <Button
+                          size="sm"
+                          onClick={handleAddressSearch}
+                          disabled={!addressSearch.trim()}
+                        >
                           <Search className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <p className="text-xs text-muted-foreground">
                       Interactive map for precise location selection
@@ -455,7 +514,7 @@ export default function FacilityRecommendationsPage() {
                       showSearch={true}
                     />
                   </div>
-                  
+
                   {searchLocation && (
                     <div className="text-xs text-green-600 bg-green-50 dark:bg-green-900/20 p-2 rounded flex items-center gap-2">
                       <MapPin className="h-3 w-3" />
@@ -465,7 +524,7 @@ export default function FacilityRecommendationsPage() {
                 </div>
               </div>
 
-              <Button 
+              <Button
                 onClick={handleGetRecommendations}
                 className="w-full"
                 disabled={getRecommendationsMutation.isPending}
@@ -506,12 +565,16 @@ export default function FacilityRecommendationsPage() {
                   {recommendations.length} Recommended Facilities
                 </h2>
                 <Badge variant="outline">
-                  {selectedRecommendationType === "emergency" ? "Emergency Care" :
-                   selectedRecommendationType === "specialized" ? "Specialized Care" :
-                   selectedRecommendationType === "insurance" ? "Insurance-Based" : "General"}
+                  {selectedRecommendationType === "emergency"
+                    ? "Emergency Care"
+                    : selectedRecommendationType === "specialized"
+                      ? "Specialized Care"
+                      : selectedRecommendationType === "insurance"
+                        ? "Insurance-Based"
+                        : "General"}
                 </Badge>
               </div>
-              
+
               <div className="space-y-4">
                 {recommendations.map((rec, index) => renderRecommendationCard(rec, index))}
               </div>
@@ -523,7 +586,8 @@ export default function FacilityRecommendationsPage() {
               <CardContent className="py-8">
                 <div className="text-center">
                   <p className="text-muted-foreground">
-                    No facilities found matching your criteria. Try adjusting your search parameters.
+                    No facilities found matching your criteria. Try adjusting your search
+                    parameters.
                   </p>
                 </div>
               </CardContent>

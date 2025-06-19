@@ -27,12 +27,12 @@ export default function PDFDropzone({ onInvoiceExtracted }: PDFDropzoneProps) {
   const extractInvoiceDataMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
-      formData.append('pdf', file);
-      
+      formData.append("pdf", file);
+
       const response = await fetch("/api/vendor-invoices/extract-pdf", {
         method: "POST",
         body: formData,
-        credentials: "include"
+        credentials: "include",
       });
       return response.json();
     },
@@ -43,11 +43,11 @@ export default function PDFDropzone({ onInvoiceExtracted }: PDFDropzoneProps) {
     },
     onError: (error: any) => {
       setExtractionError(error.message || "Failed to extract invoice data from PDF");
-    }
+    },
   });
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const pdfFiles = acceptedFiles.filter(file => file.type === 'application/pdf');
+    const pdfFiles = acceptedFiles.filter((file) => file.type === "application/pdf");
     if (pdfFiles.length === 0) {
       setExtractionError("Please upload PDF files only");
       return;
@@ -59,14 +59,14 @@ export default function PDFDropzone({ onInvoiceExtracted }: PDFDropzoneProps) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'application/pdf': ['.pdf']
+      "application/pdf": [".pdf"],
     },
     maxFiles: 1,
-    multiple: false
+    multiple: false,
   });
 
   const removeFile = (fileToRemove: File) => {
-    setUploadedFiles(files => files.filter(file => file !== fileToRemove));
+    setUploadedFiles((files) => files.filter((file) => file !== fileToRemove));
   };
 
   const processFile = (file: File) => {
@@ -92,9 +92,7 @@ export default function PDFDropzone({ onInvoiceExtracted }: PDFDropzoneProps) {
             ) : (
               <div>
                 <p className="text-lg mb-2">Drag & drop a PDF invoice here</p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  or click to select a file
-                </p>
+                <p className="text-sm text-muted-foreground mb-4">or click to select a file</p>
                 <Button variant="outline" size="sm">
                   Choose PDF File
                 </Button>
@@ -110,7 +108,10 @@ export default function PDFDropzone({ onInvoiceExtracted }: PDFDropzoneProps) {
             <h3 className="font-medium mb-3">Uploaded Files</h3>
             <div className="space-y-2">
               {uploadedFiles.map((file, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                >
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-red-600" />
                     <div>

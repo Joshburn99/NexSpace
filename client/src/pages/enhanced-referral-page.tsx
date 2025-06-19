@@ -5,16 +5,55 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { 
-  Users, Building, DollarSign, QrCode, Copy, Share2, Mail, MessageSquare,
-  Gift, TrendingUp, Star, Award, ArrowLeft, Home, Settings, Plus,
-  Download, Scan, ExternalLink, MapPin, Phone, Calendar
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Users,
+  Building,
+  DollarSign,
+  QrCode,
+  Copy,
+  Share2,
+  Mail,
+  MessageSquare,
+  Gift,
+  TrendingUp,
+  Star,
+  Award,
+  ArrowLeft,
+  Home,
+  Settings,
+  Plus,
+  Download,
+  Scan,
+  ExternalLink,
+  MapPin,
+  Phone,
+  Calendar,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -41,7 +80,7 @@ interface StaffReferral {
   referrerName: string;
   refereeEmail: string;
   refereeName?: string;
-  status: 'pending' | 'qualified' | 'paid' | 'rejected';
+  status: "pending" | "qualified" | "paid" | "rejected";
   dateReferred: string;
   dateQualified?: string;
   bonusAmount: number;
@@ -53,14 +92,14 @@ interface FacilityReferral {
   referrerId: number;
   referrerName: string;
   facilityName: string;
-  facilityType: 'hospital' | 'ltc' | 'rehab' | 'clinic' | 'home_health';
-  facilitySize: 'small' | 'medium' | 'large' | 'enterprise';
+  facilityType: "hospital" | "ltc" | "rehab" | "clinic" | "home_health";
+  facilitySize: "small" | "medium" | "large" | "enterprise";
   contactName: string;
   contactEmail: string;
   contactPhone: string;
   estimatedBeds: number;
   location: string;
-  status: 'pending' | 'contacted' | 'meeting_scheduled' | 'contract_sent' | 'signed' | 'rejected';
+  status: "pending" | "contacted" | "meeting_scheduled" | "contract_sent" | "signed" | "rejected";
   dateReferred: string;
   dateContacted?: string;
   bonusAmount: number;
@@ -73,36 +112,36 @@ interface ReferralCode {
   userName: string;
   code: string;
   qrCodeUrl: string;
-  type: 'staff' | 'facility' | 'both';
+  type: "staff" | "facility" | "both";
   uses: number;
   maxUses?: number;
   isActive: boolean;
 }
 
 const facilityTypeLabels = {
-  hospital: 'Hospital',
-  ltc: 'Long Term Care',
-  rehab: 'Rehabilitation',
-  clinic: 'Clinic',
-  home_health: 'Home Health'
+  hospital: "Hospital",
+  ltc: "Long Term Care",
+  rehab: "Rehabilitation",
+  clinic: "Clinic",
+  home_health: "Home Health",
 };
 
 const facilitySizeLabels = {
-  small: 'Small (1-50 beds)',
-  medium: 'Medium (51-150 beds)',
-  large: 'Large (151-300 beds)',
-  enterprise: 'Enterprise (300+ beds)'
+  small: "Small (1-50 beds)",
+  medium: "Medium (51-150 beds)",
+  large: "Large (151-300 beds)",
+  enterprise: "Enterprise (300+ beds)",
 };
 
 const statusColors = {
-  pending: 'bg-yellow-500',
-  qualified: 'bg-blue-500',
-  paid: 'bg-green-500',
-  rejected: 'bg-red-500',
-  contacted: 'bg-blue-500',
-  meeting_scheduled: 'bg-purple-500',
-  contract_sent: 'bg-orange-500',
-  signed: 'bg-green-500'
+  pending: "bg-yellow-500",
+  qualified: "bg-blue-500",
+  paid: "bg-green-500",
+  rejected: "bg-red-500",
+  contacted: "bg-blue-500",
+  meeting_scheduled: "bg-purple-500",
+  contract_sent: "bg-orange-500",
+  signed: "bg-green-500",
 };
 
 export default function EnhancedReferralPage() {
@@ -117,11 +156,15 @@ export default function EnhancedReferralPage() {
     queryKey: ["/api/referral-settings"],
   });
 
-  const { data: staffReferrals = [], isLoading: staffReferralsLoading } = useQuery<StaffReferral[]>({
-    queryKey: ["/api/referrals/staff"],
-  });
+  const { data: staffReferrals = [], isLoading: staffReferralsLoading } = useQuery<StaffReferral[]>(
+    {
+      queryKey: ["/api/referrals/staff"],
+    }
+  );
 
-  const { data: facilityReferrals = [], isLoading: facilityReferralsLoading } = useQuery<FacilityReferral[]>({
+  const { data: facilityReferrals = [], isLoading: facilityReferralsLoading } = useQuery<
+    FacilityReferral[]
+  >({
     queryKey: ["/api/referrals/facilities"],
   });
 
@@ -136,17 +179,21 @@ export default function EnhancedReferralPage() {
   // Calculate statistics
   const staffStats = {
     total: staffReferrals.length,
-    pending: staffReferrals.filter(r => r.status === 'pending').length,
-    qualified: staffReferrals.filter(r => r.status === 'qualified').length,
-    paid: staffReferrals.filter(r => r.status === 'paid').length,
-    totalBonus: staffReferrals.filter(r => r.status === 'paid').reduce((sum, r) => sum + r.bonusAmount, 0)
+    pending: staffReferrals.filter((r) => r.status === "pending").length,
+    qualified: staffReferrals.filter((r) => r.status === "qualified").length,
+    paid: staffReferrals.filter((r) => r.status === "paid").length,
+    totalBonus: staffReferrals
+      .filter((r) => r.status === "paid")
+      .reduce((sum, r) => sum + r.bonusAmount, 0),
   };
 
   const facilityStats = {
     total: facilityReferrals.length,
-    pending: facilityReferrals.filter(r => r.status === 'pending').length,
-    signed: facilityReferrals.filter(r => r.status === 'signed').length,
-    totalBonus: facilityReferrals.filter(r => r.status === 'signed').reduce((sum, r) => sum + r.bonusAmount, 0)
+    pending: facilityReferrals.filter((r) => r.status === "pending").length,
+    signed: facilityReferrals.filter((r) => r.status === "signed").length,
+    totalBonus: facilityReferrals
+      .filter((r) => r.status === "signed")
+      .reduce((sum, r) => sum + r.bonusAmount, 0),
   };
 
   const updateSettingsMutation = useMutation({
@@ -209,7 +256,15 @@ export default function EnhancedReferralPage() {
   });
 
   const updateReferralStatusMutation = useMutation({
-    mutationFn: async ({ type, id, status }: { type: 'staff' | 'facility'; id: number; status: string }) => {
+    mutationFn: async ({
+      type,
+      id,
+      status,
+    }: {
+      type: "staff" | "facility";
+      id: number;
+      status: string;
+    }) => {
       const response = await apiRequest("PATCH", `/api/referrals/${type}/${id}`, { status });
       return response.json();
     },
@@ -227,18 +282,18 @@ export default function EnhancedReferralPage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const settings = {
-      staffReferralBonus: parseFloat(formData.get('staffReferralBonus') as string),
+      staffReferralBonus: parseFloat(formData.get("staffReferralBonus") as string),
       facilityReferralBonus: {
-        small: parseFloat(formData.get('smallFacilityBonus') as string),
-        medium: parseFloat(formData.get('mediumFacilityBonus') as string),
-        large: parseFloat(formData.get('largeFacilityBonus') as string),
-        enterprise: parseFloat(formData.get('enterpriseFacilityBonus') as string),
+        small: parseFloat(formData.get("smallFacilityBonus") as string),
+        medium: parseFloat(formData.get("mediumFacilityBonus") as string),
+        large: parseFloat(formData.get("largeFacilityBonus") as string),
+        enterprise: parseFloat(formData.get("enterpriseFacilityBonus") as string),
       },
-      qualificationPeriod: parseInt(formData.get('qualificationPeriod') as string),
-      payoutSchedule: formData.get('payoutSchedule') as string,
-      requireBackground: formData.get('requireBackground') === 'on',
-      minimumShifts: parseInt(formData.get('minimumShifts') as string),
-      qrCodeEnabled: formData.get('qrCodeEnabled') === 'on',
+      qualificationPeriod: parseInt(formData.get("qualificationPeriod") as string),
+      payoutSchedule: formData.get("payoutSchedule") as string,
+      requireBackground: formData.get("requireBackground") === "on",
+      minimumShifts: parseInt(formData.get("minimumShifts") as string),
+      qrCodeEnabled: formData.get("qrCodeEnabled") === "on",
     };
     updateSettingsMutation.mutate(settings);
   };
@@ -247,11 +302,11 @@ export default function EnhancedReferralPage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const referralData = {
-      referrerId: parseInt(formData.get('referrerId') as string),
-      refereeEmail: formData.get('refereeEmail') as string,
-      refereeName: formData.get('refereeName') as string,
-      notes: formData.get('notes') as string,
-      bonusAmount: referralSettings?.staffReferralBonus || 500
+      referrerId: parseInt(formData.get("referrerId") as string),
+      refereeEmail: formData.get("refereeEmail") as string,
+      refereeName: formData.get("refereeName") as string,
+      notes: formData.get("notes") as string,
+      bonusAmount: referralSettings?.staffReferralBonus || 500,
     };
     createStaffReferralMutation.mutate(referralData);
   };
@@ -259,19 +314,19 @@ export default function EnhancedReferralPage() {
   const handleCreateFacilityReferral = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const facilitySize = formData.get('facilitySize') as keyof typeof facilitySizeLabels;
+    const facilitySize = formData.get("facilitySize") as keyof typeof facilitySizeLabels;
     const referralData = {
-      referrerId: parseInt(formData.get('referrerId') as string),
-      facilityName: formData.get('facilityName') as string,
-      facilityType: formData.get('facilityType') as string,
+      referrerId: parseInt(formData.get("referrerId") as string),
+      facilityName: formData.get("facilityName") as string,
+      facilityType: formData.get("facilityType") as string,
       facilitySize,
-      contactName: formData.get('contactName') as string,
-      contactEmail: formData.get('contactEmail') as string,
-      contactPhone: formData.get('contactPhone') as string,
-      estimatedBeds: parseInt(formData.get('estimatedBeds') as string),
-      location: formData.get('location') as string,
-      notes: formData.get('notes') as string,
-      bonusAmount: referralSettings?.facilityReferralBonus[facilitySize] || 1000
+      contactName: formData.get("contactName") as string,
+      contactEmail: formData.get("contactEmail") as string,
+      contactPhone: formData.get("contactPhone") as string,
+      estimatedBeds: parseInt(formData.get("estimatedBeds") as string),
+      location: formData.get("location") as string,
+      notes: formData.get("notes") as string,
+      bonusAmount: referralSettings?.facilityReferralBonus[facilitySize] || 1000,
     };
     createFacilityReferralMutation.mutate(referralData);
   };
@@ -290,7 +345,7 @@ export default function EnhancedReferralPage() {
       const response = await fetch(qrCodeUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = `${fileName}.png`;
       document.body.appendChild(a);
@@ -347,74 +402,72 @@ export default function EnhancedReferralPage() {
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Referral Settings</DialogTitle>
-                  <DialogDescription>
-                    Configure referral bonuses and requirements
-                  </DialogDescription>
+                  <DialogDescription>Configure referral bonuses and requirements</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleUpdateSettings} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="staffReferralBonus">Staff Referral Bonus ($)</Label>
-                      <Input 
-                        name="staffReferralBonus" 
-                        type="number" 
+                      <Input
+                        name="staffReferralBonus"
+                        type="number"
                         step="0.01"
                         defaultValue={referralSettings?.staffReferralBonus}
-                        required 
+                        required
                       />
                     </div>
                     <div>
                       <Label htmlFor="qualificationPeriod">Qualification Period (days)</Label>
-                      <Input 
-                        name="qualificationPeriod" 
+                      <Input
+                        name="qualificationPeriod"
                         type="number"
                         defaultValue={referralSettings?.qualificationPeriod}
-                        required 
+                        required
                       />
                     </div>
                   </div>
-                  
+
                   <div>
                     <Label>Facility Referral Bonuses</Label>
                     <div className="grid grid-cols-2 gap-4 mt-2">
                       <div>
                         <Label htmlFor="smallFacilityBonus">Small Facility ($)</Label>
-                        <Input 
-                          name="smallFacilityBonus" 
-                          type="number" 
+                        <Input
+                          name="smallFacilityBonus"
+                          type="number"
                           step="0.01"
                           defaultValue={referralSettings?.facilityReferralBonus.small}
-                          required 
+                          required
                         />
                       </div>
                       <div>
                         <Label htmlFor="mediumFacilityBonus">Medium Facility ($)</Label>
-                        <Input 
-                          name="mediumFacilityBonus" 
-                          type="number" 
+                        <Input
+                          name="mediumFacilityBonus"
+                          type="number"
                           step="0.01"
                           defaultValue={referralSettings?.facilityReferralBonus.medium}
-                          required 
+                          required
                         />
                       </div>
                       <div>
                         <Label htmlFor="largeFacilityBonus">Large Facility ($)</Label>
-                        <Input 
-                          name="largeFacilityBonus" 
-                          type="number" 
+                        <Input
+                          name="largeFacilityBonus"
+                          type="number"
                           step="0.01"
                           defaultValue={referralSettings?.facilityReferralBonus.large}
-                          required 
+                          required
                         />
                       </div>
                       <div>
                         <Label htmlFor="enterpriseFacilityBonus">Enterprise Facility ($)</Label>
-                        <Input 
-                          name="enterpriseFacilityBonus" 
-                          type="number" 
+                        <Input
+                          name="enterpriseFacilityBonus"
+                          type="number"
                           step="0.01"
                           defaultValue={referralSettings?.facilityReferralBonus.enterprise}
-                          required 
+                          required
                         />
                       </div>
                     </div>
@@ -436,29 +489,31 @@ export default function EnhancedReferralPage() {
                     </div>
                     <div>
                       <Label htmlFor="minimumShifts">Minimum Shifts for Qualification</Label>
-                      <Input 
-                        name="minimumShifts" 
+                      <Input
+                        name="minimumShifts"
                         type="number"
                         defaultValue={referralSettings?.minimumShifts}
-                        required 
+                        required
                       />
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    <input 
-                      type="checkbox" 
-                      id="requireBackground" 
+                    <input
+                      type="checkbox"
+                      id="requireBackground"
                       name="requireBackground"
                       defaultChecked={referralSettings?.requireBackground}
                     />
-                    <Label htmlFor="requireBackground">Require background check for qualification</Label>
+                    <Label htmlFor="requireBackground">
+                      Require background check for qualification
+                    </Label>
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    <input 
-                      type="checkbox" 
-                      id="qrCodeEnabled" 
+                    <input
+                      type="checkbox"
+                      id="qrCodeEnabled"
                       name="qrCodeEnabled"
                       defaultChecked={referralSettings?.qrCodeEnabled}
                     />
@@ -466,7 +521,11 @@ export default function EnhancedReferralPage() {
                   </div>
 
                   <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setShowSettingsDialog(false)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowSettingsDialog(false)}
+                    >
                       Cancel
                     </Button>
                     <Button type="submit" disabled={updateSettingsMutation.isPending}>
@@ -518,7 +577,7 @@ export default function EnhancedReferralPage() {
                 <p className="text-sm font-medium">QR Codes</p>
                 <p className="text-2xl font-bold">{referralCodes.length}</p>
                 <p className="text-xs text-muted-foreground">
-                  {referralCodes.filter(c => c.isActive).length} active codes
+                  {referralCodes.filter((c) => c.isActive).length} active codes
                 </p>
               </div>
             </div>
@@ -530,7 +589,9 @@ export default function EnhancedReferralPage() {
               <DollarSign className="h-4 w-4 text-yellow-500" />
               <div>
                 <p className="text-sm font-medium">Total Bonuses</p>
-                <p className="text-2xl font-bold">${staffStats.totalBonus + facilityStats.totalBonus}</p>
+                <p className="text-2xl font-bold">
+                  ${staffStats.totalBonus + facilityStats.totalBonus}
+                </p>
                 <p className="text-xs text-muted-foreground">All referrals combined</p>
               </div>
             </div>
@@ -570,11 +631,12 @@ export default function EnhancedReferralPage() {
                         <SelectValue placeholder="Select staff member" />
                       </SelectTrigger>
                       <SelectContent>
-                        {Array.isArray(users) && users.map((user: any) => (
-                          <SelectItem key={user.id} value={user.id.toString()}>
-                            {user.username}
-                          </SelectItem>
-                        ))}
+                        {Array.isArray(users) &&
+                          users.map((user: any) => (
+                            <SelectItem key={user.id} value={user.id.toString()}>
+                              {user.username}
+                            </SelectItem>
+                          ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -591,7 +653,11 @@ export default function EnhancedReferralPage() {
                     <Textarea name="notes" placeholder="Additional information..." />
                   </div>
                   <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setShowStaffReferralDialog(false)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowStaffReferralDialog(false)}
+                    >
                       Cancel
                     </Button>
                     <Button type="submit" disabled={createStaffReferralMutation.isPending}>
@@ -622,8 +688,10 @@ export default function EnhancedReferralPage() {
                       <TableCell>{referral.referrerName}</TableCell>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{referral.refereeName || 'Pending'}</div>
-                          <div className="text-sm text-muted-foreground">{referral.refereeEmail}</div>
+                          <div className="font-medium">{referral.refereeName || "Pending"}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {referral.refereeEmail}
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell>{new Date(referral.dateReferred).toLocaleDateString()}</TableCell>
@@ -634,13 +702,13 @@ export default function EnhancedReferralPage() {
                       </TableCell>
                       <TableCell>${referral.bonusAmount}</TableCell>
                       <TableCell>
-                        <Select 
-                          value={referral.status} 
-                          onValueChange={(newStatus) => 
-                            updateReferralStatusMutation.mutate({ 
-                              type: 'staff', 
-                              id: referral.id, 
-                              status: newStatus 
+                        <Select
+                          value={referral.status}
+                          onValueChange={(newStatus) =>
+                            updateReferralStatusMutation.mutate({
+                              type: "staff",
+                              id: referral.id,
+                              status: newStatus,
                             })
                           }
                         >
@@ -689,11 +757,12 @@ export default function EnhancedReferralPage() {
                           <SelectValue placeholder="Select staff member" />
                         </SelectTrigger>
                         <SelectContent>
-                          {Array.isArray(users) && users.map((user: any) => (
-                            <SelectItem key={user.id} value={user.id.toString()}>
-                              {user.username}
-                            </SelectItem>
-                          ))}
+                          {Array.isArray(users) &&
+                            users.map((user: any) => (
+                              <SelectItem key={user.id} value={user.id.toString()}>
+                                {user.username}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -709,7 +778,9 @@ export default function EnhancedReferralPage() {
                         </SelectTrigger>
                         <SelectContent>
                           {Object.entries(facilityTypeLabels).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>{label}</SelectItem>
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -722,7 +793,9 @@ export default function EnhancedReferralPage() {
                         </SelectTrigger>
                         <SelectContent>
                           {Object.entries(facilitySizeLabels).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>{label}</SelectItem>
+                            <SelectItem key={value} value={value}>
+                              {label}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -750,10 +823,17 @@ export default function EnhancedReferralPage() {
                   </div>
                   <div>
                     <Label htmlFor="notes">Notes</Label>
-                    <Textarea name="notes" placeholder="Additional information about the facility..." />
+                    <Textarea
+                      name="notes"
+                      placeholder="Additional information about the facility..."
+                    />
                   </div>
                   <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={() => setShowFacilityReferralDialog(false)}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowFacilityReferralDialog(false)}
+                    >
                       Cancel
                     </Button>
                     <Button type="submit" disabled={createFacilityReferralMutation.isPending}>
@@ -787,7 +867,8 @@ export default function EnhancedReferralPage() {
                         <div>
                           <div className="font-medium">{referral.facilityName}</div>
                           <div className="text-sm text-muted-foreground">
-                            {facilityTypeLabels[referral.facilityType]} • {referral.estimatedBeds} beds
+                            {facilityTypeLabels[referral.facilityType]} • {referral.estimatedBeds}{" "}
+                            beds
                           </div>
                           <div className="text-sm text-muted-foreground flex items-center">
                             <MapPin className="h-3 w-3 mr-1" />
@@ -798,7 +879,9 @@ export default function EnhancedReferralPage() {
                       <TableCell>
                         <div>
                           <div className="font-medium">{referral.contactName}</div>
-                          <div className="text-sm text-muted-foreground">{referral.contactEmail}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {referral.contactEmail}
+                          </div>
                           <div className="text-sm text-muted-foreground flex items-center">
                             <Phone className="h-3 w-3 mr-1" />
                             {referral.contactPhone}
@@ -806,24 +889,23 @@ export default function EnhancedReferralPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline">
-                          {facilitySizeLabels[referral.facilitySize]}
-                        </Badge>
+                        <Badge variant="outline">{facilitySizeLabels[referral.facilitySize]}</Badge>
                       </TableCell>
                       <TableCell>
                         <Badge className={`${statusColors[referral.status]} text-white`}>
-                          {referral.status.replace('_', ' ').charAt(0).toUpperCase() + referral.status.slice(1)}
+                          {referral.status.replace("_", " ").charAt(0).toUpperCase() +
+                            referral.status.slice(1)}
                         </Badge>
                       </TableCell>
                       <TableCell>${referral.bonusAmount}</TableCell>
                       <TableCell>
-                        <Select 
-                          value={referral.status} 
-                          onValueChange={(newStatus) => 
-                            updateReferralStatusMutation.mutate({ 
-                              type: 'facility', 
-                              id: referral.id, 
-                              status: newStatus 
+                        <Select
+                          value={referral.status}
+                          onValueChange={(newStatus) =>
+                            updateReferralStatusMutation.mutate({
+                              type: "facility",
+                              id: referral.id,
+                              status: newStatus,
                             })
                           }
                         >
@@ -851,9 +933,9 @@ export default function EnhancedReferralPage() {
         <TabsContent value="qr-codes" className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">QR Codes</h2>
-            <Button 
+            <Button
               className="gap-2"
-              onClick={() => generateQRCodeMutation.mutate({ userId: 1, type: 'both' })}
+              onClick={() => generateQRCodeMutation.mutate({ userId: 1, type: "both" })}
               disabled={generateQRCodeMutation.isPending}
             >
               <QrCode className="h-4 w-4" />
@@ -869,7 +951,9 @@ export default function EnhancedReferralPage() {
                     <div>
                       <CardTitle className="text-lg">{code.userName}</CardTitle>
                       <p className="text-sm text-muted-foreground">
-                        {code.type === 'both' ? 'Staff & Facility' : code.type.charAt(0).toUpperCase() + code.type.slice(1)}
+                        {code.type === "both"
+                          ? "Staff & Facility"
+                          : code.type.charAt(0).toUpperCase() + code.type.slice(1)}
                       </p>
                     </div>
                     <Badge variant={code.isActive ? "default" : "secondary"}>
@@ -879,35 +963,33 @@ export default function EnhancedReferralPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex justify-center">
-                    <img 
-                      src={code.qrCodeUrl} 
+                    <img
+                      src={code.qrCodeUrl}
                       alt={`QR Code for ${code.userName}`}
                       className="w-32 h-32 border rounded-md"
                     />
                   </div>
-                  
+
                   <div className="text-center">
-                    <div className="font-mono text-sm bg-muted p-2 rounded">
-                      {code.code}
-                    </div>
+                    <div className="font-mono text-sm bg-muted p-2 rounded">{code.code}</div>
                     <p className="text-xs text-muted-foreground mt-1">
                       {code.uses} uses {code.maxUses && `/ ${code.maxUses} max`}
                     </p>
                   </div>
 
                   <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="flex-1"
                       onClick={() => copyReferralLink(code.code)}
                     >
                       <Copy className="h-3 w-3 mr-1" />
                       Copy
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="flex-1"
                       onClick={() => downloadQRCode(code.qrCodeUrl, `qr-${code.code}`)}
                     >

@@ -48,21 +48,27 @@ const EmployeeBenefits = () => (
             <Gift className="w-4 h-4 text-blue-500" />
             <span className="text-sm font-medium">Health Insurance</span>
           </div>
-          <Button variant="outline" size="sm">View</Button>
+          <Button variant="outline" size="sm">
+            View
+          </Button>
         </div>
         <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
           <div className="flex items-center space-x-2">
             <Clock className="w-4 h-4 text-green-500" />
             <span className="text-sm font-medium">401(k) Plan</span>
           </div>
-          <Button variant="outline" size="sm">View</Button>
+          <Button variant="outline" size="sm">
+            View
+          </Button>
         </div>
         <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
           <div className="flex items-center space-x-2">
             <Heart className="w-4 h-4 text-purple-500" />
             <span className="text-sm font-medium">Wellness Program</span>
           </div>
-          <Button variant="outline" size="sm">View</Button>
+          <Button variant="outline" size="sm">
+            View
+          </Button>
         </div>
       </div>
     </CardContent>
@@ -83,10 +89,5 @@ export default function EmployeeDashboardPage() {
     </div>
   );
 
-  return (
-    <ClinicianDashboardPage 
-      hideTimeOff={false} 
-      additionalContent={additionalContent} 
-    />
-  );
+  return <ClinicianDashboardPage hideTimeOff={false} additionalContent={additionalContent} />;
 }

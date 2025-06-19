@@ -1,8 +1,16 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 // Shift status types
-export type ShiftStatus = 'open' | 'assigned' | 'requested' | 'in_progress' | 'completed' | 'cancelled' | 'ncns' | 'facility_cancelled';
-export type ShiftUrgency = 'low' | 'medium' | 'high' | 'critical';
+export type ShiftStatus =
+  | "open"
+  | "assigned"
+  | "requested"
+  | "in_progress"
+  | "completed"
+  | "cancelled"
+  | "ncns"
+  | "facility_cancelled";
+export type ShiftUrgency = "low" | "medium" | "high" | "critical";
 
 // Shift data interface
 export interface Shift {
@@ -43,7 +51,7 @@ export interface BlockShift {
   quantity: number;
   rate: number;
   premiumMultiplier: number;
-  status: 'open' | 'partially_filled' | 'filled' | 'cancelled';
+  status: "open" | "partially_filled" | "filled" | "cancelled";
   urgency: ShiftUrgency;
   description?: string;
   specialRequirements: string[];
@@ -83,7 +91,7 @@ const sampleShifts: Shift[] = [
     date: "2025-06-20",
     startTime: "19:00",
     endTime: "07:00",
-    rate: 45.00,
+    rate: 45.0,
     premiumMultiplier: 1.25,
     status: "open",
     urgency: "high",
@@ -93,7 +101,7 @@ const sampleShifts: Shift[] = [
     specialRequirements: ["BLS", "ACLS", "Critical Care Experience"],
     createdById: 1,
     createdAt: "2025-06-19T10:00:00Z",
-    updatedAt: "2025-06-19T10:00:00Z"
+    updatedAt: "2025-06-19T10:00:00Z",
   },
   {
     id: 2,
@@ -105,7 +113,7 @@ const sampleShifts: Shift[] = [
     date: "2025-06-20",
     startTime: "07:00",
     endTime: "19:00",
-    rate: 42.00,
+    rate: 42.0,
     premiumMultiplier: 1.15,
     status: "requested",
     urgency: "critical",
@@ -115,7 +123,7 @@ const sampleShifts: Shift[] = [
     specialRequirements: ["BLS", "ACLS", "TNCC"],
     createdById: 2,
     createdAt: "2025-06-19T08:30:00Z",
-    updatedAt: "2025-06-19T14:20:00Z"
+    updatedAt: "2025-06-19T14:20:00Z",
   },
   {
     id: 3,
@@ -127,8 +135,8 @@ const sampleShifts: Shift[] = [
     date: "2025-06-20",
     startTime: "15:00",
     endTime: "23:00",
-    rate: 28.00,
-    premiumMultiplier: 1.10,
+    rate: 28.0,
+    premiumMultiplier: 1.1,
     status: "assigned",
     urgency: "medium",
     description: "Med/Surg evening shift coverage",
@@ -137,7 +145,7 @@ const sampleShifts: Shift[] = [
     specialRequirements: ["BLS", "Med/Surg Experience"],
     createdById: 3,
     createdAt: "2025-06-19T09:15:00Z",
-    updatedAt: "2025-06-19T16:45:00Z"
+    updatedAt: "2025-06-19T16:45:00Z",
   },
   {
     id: 4,
@@ -149,8 +157,8 @@ const sampleShifts: Shift[] = [
     date: "2025-06-21",
     startTime: "19:00",
     endTime: "07:00",
-    rate: 40.00,
-    premiumMultiplier: 1.30,
+    rate: 40.0,
+    premiumMultiplier: 1.3,
     status: "open",
     urgency: "high",
     description: "Telemetry night shift requiring cardiac monitoring experience",
@@ -159,7 +167,7 @@ const sampleShifts: Shift[] = [
     specialRequirements: ["BLS", "ACLS", "Telemetry Certification"],
     createdById: 1,
     createdAt: "2025-06-19T11:30:00Z",
-    updatedAt: "2025-06-19T11:30:00Z"
+    updatedAt: "2025-06-19T11:30:00Z",
   },
   {
     id: 5,
@@ -171,8 +179,8 @@ const sampleShifts: Shift[] = [
     date: "2025-06-21",
     startTime: "06:00",
     endTime: "14:00",
-    rate: 48.00,
-    premiumMultiplier: 1.20,
+    rate: 48.0,
+    premiumMultiplier: 1.2,
     status: "completed",
     urgency: "medium",
     description: "OR day shift - general surgery cases",
@@ -181,7 +189,7 @@ const sampleShifts: Shift[] = [
     specialRequirements: ["BLS", "ACLS", "OR Experience", "CNOR Preferred"],
     createdById: 4,
     createdAt: "2025-06-18T14:00:00Z",
-    updatedAt: "2025-06-19T18:00:00Z"
+    updatedAt: "2025-06-19T18:00:00Z",
   },
   {
     id: 6,
@@ -193,7 +201,7 @@ const sampleShifts: Shift[] = [
     date: "2025-06-22",
     startTime: "07:00",
     endTime: "19:00",
-    rate: 44.00,
+    rate: 44.0,
     premiumMultiplier: 1.15,
     status: "open",
     urgency: "medium",
@@ -203,7 +211,7 @@ const sampleShifts: Shift[] = [
     specialRequirements: ["BLS", "PALS", "Pediatric Experience"],
     createdById: 3,
     createdAt: "2025-06-19T12:00:00Z",
-    updatedAt: "2025-06-19T12:00:00Z"
+    updatedAt: "2025-06-19T12:00:00Z",
   },
   {
     id: 7,
@@ -215,7 +223,7 @@ const sampleShifts: Shift[] = [
     date: "2025-06-22",
     startTime: "19:00",
     endTime: "07:00",
-    rate: 46.00,
+    rate: 46.0,
     premiumMultiplier: 1.35,
     status: "requested",
     urgency: "high",
@@ -225,7 +233,7 @@ const sampleShifts: Shift[] = [
     specialRequirements: ["BLS", "NRP", "L&D Experience", "Electronic Fetal Monitoring"],
     createdById: 4,
     createdAt: "2025-06-19T13:15:00Z",
-    updatedAt: "2025-06-19T17:30:00Z"
+    updatedAt: "2025-06-19T17:30:00Z",
   },
   {
     id: 8,
@@ -237,8 +245,8 @@ const sampleShifts: Shift[] = [
     date: "2025-06-23",
     startTime: "07:00",
     endTime: "19:00",
-    rate: 47.00,
-    premiumMultiplier: 1.40,
+    rate: 47.0,
+    premiumMultiplier: 1.4,
     status: "open",
     urgency: "critical",
     description: "Weekend ICU coverage - high acuity patients",
@@ -247,8 +255,8 @@ const sampleShifts: Shift[] = [
     specialRequirements: ["BLS", "ACLS", "Critical Care Certification", "Ventilator Management"],
     createdById: 1,
     createdAt: "2025-06-19T14:45:00Z",
-    updatedAt: "2025-06-19T14:45:00Z"
-  }
+    updatedAt: "2025-06-19T14:45:00Z",
+  },
 ];
 
 const sampleBlockShifts: BlockShift[] = [
@@ -264,7 +272,7 @@ const sampleBlockShifts: BlockShift[] = [
     startTime: "19:00",
     endTime: "07:00",
     quantity: 2,
-    rate: 45.00,
+    rate: 45.0,
     premiumMultiplier: 1.25,
     status: "open",
     urgency: "high",
@@ -272,7 +280,7 @@ const sampleBlockShifts: BlockShift[] = [
     specialRequirements: ["BLS", "ACLS", "Critical Care Experience"],
     createdById: 1,
     createdAt: "2025-06-19T15:00:00Z",
-    updatedAt: "2025-06-19T15:00:00Z"
+    updatedAt: "2025-06-19T15:00:00Z",
   },
   {
     id: 2,
@@ -286,16 +294,16 @@ const sampleBlockShifts: BlockShift[] = [
     startTime: "07:00",
     endTime: "19:00",
     quantity: 3,
-    rate: 28.00,
-    premiumMultiplier: 1.20,
+    rate: 28.0,
+    premiumMultiplier: 1.2,
     status: "partially_filled",
     urgency: "medium",
     description: "Weekend med/surg coverage",
     specialRequirements: ["BLS", "Med/Surg Experience"],
     createdById: 3,
     createdAt: "2025-06-19T16:30:00Z",
-    updatedAt: "2025-06-19T16:30:00Z"
-  }
+    updatedAt: "2025-06-19T16:30:00Z",
+  },
 ];
 
 export function ShiftProvider({ children }: { children: ReactNode }) {
@@ -305,10 +313,12 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   // Computed properties for different shift categories
-  const openShifts = shifts.filter(shift => shift.status === 'open');
-  const requestedShifts = shifts.filter(shift => shift.status === 'requested');
-  const bookedShifts = shifts.filter(shift => shift.status === 'assigned' || shift.status === 'in_progress');
-  const completedShifts = shifts.filter(shift => shift.status === 'completed');
+  const openShifts = shifts.filter((shift) => shift.status === "open");
+  const requestedShifts = shifts.filter((shift) => shift.status === "requested");
+  const bookedShifts = shifts.filter(
+    (shift) => shift.status === "assigned" || shift.status === "in_progress"
+  );
+  const completedShifts = shifts.filter((shift) => shift.status === "completed");
 
   const refreshShifts = async () => {
     setIsLoading(true);
@@ -316,10 +326,10 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
     try {
       // In a real app, this would fetch from API
       // For now, we'll simulate API call with existing sample data
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       // setShifts(fetchedShifts);
     } catch (err) {
-      setError('Failed to refresh shifts');
+      setError("Failed to refresh shifts");
     } finally {
       setIsLoading(false);
     }
@@ -327,50 +337,48 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
 
   const updateShiftStatus = async (shiftId: number, status: ShiftStatus) => {
     try {
-      setShifts(prevShifts =>
-        prevShifts.map(shift =>
-          shift.id === shiftId
-            ? { ...shift, status, updatedAt: new Date().toISOString() }
-            : shift
+      setShifts((prevShifts) =>
+        prevShifts.map((shift) =>
+          shift.id === shiftId ? { ...shift, status, updatedAt: new Date().toISOString() } : shift
         )
       );
     } catch (err) {
-      setError('Failed to update shift status');
+      setError("Failed to update shift status");
     }
   };
 
   const assignStaffToShift = async (shiftId: number, staffIds: number[]) => {
     try {
-      setShifts(prevShifts =>
-        prevShifts.map(shift =>
+      setShifts((prevShifts) =>
+        prevShifts.map((shift) =>
           shift.id === shiftId
-            ? { 
-                ...shift, 
+            ? {
+                ...shift,
                 assignedStaffIds: staffIds,
-                status: staffIds.length > 0 ? 'assigned' : 'open',
-                updatedAt: new Date().toISOString()
+                status: staffIds.length > 0 ? "assigned" : "open",
+                updatedAt: new Date().toISOString(),
               }
             : shift
         )
       );
     } catch (err) {
-      setError('Failed to assign staff to shift');
+      setError("Failed to assign staff to shift");
     }
   };
 
   const requestShift = async (shiftId: number) => {
     try {
-      await updateShiftStatus(shiftId, 'requested');
+      await updateShiftStatus(shiftId, "requested");
     } catch (err) {
-      setError('Failed to request shift');
+      setError("Failed to request shift");
     }
   };
 
   const cancelShift = async (shiftId: number) => {
     try {
-      await updateShiftStatus(shiftId, 'cancelled');
+      await updateShiftStatus(shiftId, "cancelled");
     } catch (err) {
-      setError('Failed to cancel shift');
+      setError("Failed to cancel shift");
     }
   };
 
@@ -390,17 +398,13 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
     cancelShift,
   };
 
-  return (
-    <ShiftContext.Provider value={contextValue}>
-      {children}
-    </ShiftContext.Provider>
-  );
+  return <ShiftContext.Provider value={contextValue}>{children}</ShiftContext.Provider>;
 }
 
 export function useShifts() {
   const context = useContext(ShiftContext);
   if (context === undefined) {
-    throw new Error('useShifts must be used within a ShiftProvider');
+    throw new Error("useShifts must be used within a ShiftProvider");
   }
   return context;
 }

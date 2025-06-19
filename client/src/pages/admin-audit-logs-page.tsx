@@ -6,8 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { FileText, Search, ArrowLeft, Home, Clock, User, Activity } from "lucide-react";
 import { format } from "date-fns";
 
@@ -21,9 +34,10 @@ export default function AdminAuditLogsPage() {
   });
 
   const filteredLogs = auditLogs.filter((log: any) => {
-    const matchesSearch = log.action?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.resource?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.username?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      log.action?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.resource?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.username?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesAction = selectedAction === "all" || log.action === selectedAction;
     const matchesResource = selectedResource === "all" || log.resource === selectedResource;
     return matchesSearch && matchesAction && matchesResource;
@@ -31,12 +45,18 @@ export default function AdminAuditLogsPage() {
 
   const getActionBadgeVariant = (action: string) => {
     switch (action) {
-      case "CREATE": return "default";
-      case "UPDATE": return "secondary";
-      case "DELETE": return "destructive";
-      case "LOGIN": return "outline";
-      case "LOGOUT": return "outline";
-      default: return "outline";
+      case "CREATE":
+        return "default";
+      case "UPDATE":
+        return "secondary";
+      case "DELETE":
+        return "destructive";
+      case "LOGIN":
+        return "outline";
+      case "LOGOUT":
+        return "outline";
+      default:
+        return "outline";
     }
   };
 
@@ -85,7 +105,9 @@ export default function AdminAuditLogsPage() {
           <SelectContent>
             <SelectItem value="all">All Actions</SelectItem>
             {uniqueActions.map((action) => (
-              <SelectItem key={action} value={action}>{action}</SelectItem>
+              <SelectItem key={action} value={action}>
+                {action}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -96,7 +118,9 @@ export default function AdminAuditLogsPage() {
           <SelectContent>
             <SelectItem value="all">All Resources</SelectItem>
             {uniqueResources.map((resource) => (
-              <SelectItem key={resource} value={resource}>{resource}</SelectItem>
+              <SelectItem key={resource} value={resource}>
+                {resource}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -145,10 +169,12 @@ export default function AdminAuditLogsPage() {
               <div>
                 <p className="text-sm font-medium">Today's Actions</p>
                 <p className="text-2xl font-bold">
-                  {auditLogs.filter((log: any) => {
-                    const today = new Date().toDateString();
-                    return new Date(log.createdAt).toDateString() === today;
-                  }).length}
+                  {
+                    auditLogs.filter((log: any) => {
+                      const today = new Date().toDateString();
+                      return new Date(log.createdAt).toDateString() === today;
+                    }).length
+                  }
                 </p>
               </div>
             </div>
@@ -199,14 +225,10 @@ export default function AdminAuditLogsPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={getActionBadgeVariant(log.action)}>
-                        {log.action}
-                      </Badge>
+                      <Badge variant={getActionBadgeVariant(log.action)}>{log.action}</Badge>
                     </TableCell>
                     <TableCell>
-                      <code className="text-xs bg-muted px-1 py-0.5 rounded">
-                        {log.resource}
-                      </code>
+                      <code className="text-xs bg-muted px-1 py-0.5 rounded">{log.resource}</code>
                     </TableCell>
                     <TableCell>{log.resourceId || "-"}</TableCell>
                     <TableCell>

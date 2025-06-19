@@ -41,7 +41,7 @@ class WebSocketManager {
     try {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const wsUrl = `${protocol}//${window.location.host}/ws`;
-      
+
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
@@ -85,8 +85,10 @@ class WebSocketManager {
   private handleReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
-      
+      console.log(
+        `Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`
+      );
+
       setTimeout(() => {
         this.connect();
       }, this.reconnectDelay * this.reconnectAttempts);
@@ -99,7 +101,7 @@ class WebSocketManager {
   private notifyListeners(type: string, data: any) {
     const typeListeners = this.listeners.get(type);
     if (typeListeners) {
-      typeListeners.forEach(callback => callback(data));
+      typeListeners.forEach((callback) => callback(data));
     }
   }
 
@@ -107,7 +109,7 @@ class WebSocketManager {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, new Set());
     }
-    
+
     this.listeners.get(type)!.add(callback);
 
     // Return unsubscribe function
@@ -130,7 +132,12 @@ class WebSocketManager {
     }
   }
 
-  public sendChatMessage(recipientId: number, content: string, conversationId?: string, shiftId?: number) {
+  public sendChatMessage(
+    recipientId: number,
+    content: string,
+    conversationId?: string,
+    shiftId?: number
+  ) {
     this.send({
       type: "chat",
       data: {
@@ -138,15 +145,15 @@ class WebSocketManager {
         content,
         conversationId,
         shiftId,
-        messageType: "text"
-      }
+        messageType: "text",
+      },
     });
   }
 
   public sendShiftUpdate(shift: ShiftUpdate) {
     this.send({
       type: "shift_update",
-      data: { shift }
+      data: { shift },
     });
   }
 
@@ -172,7 +179,9 @@ const wsManager = new WebSocketManager();
  */
 export function useWebSocket() {
   const { user } = useAuth();
-  const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "disconnected" | "failed">("connecting");
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connecting" | "connected" | "disconnected" | "failed"
+  >("connecting");
 
   useEffect(() => {
     const unsubscribe = wsManager.subscribe("connection", ({ status }) => {
@@ -182,7 +191,12 @@ export function useWebSocket() {
     return unsubscribe;
   }, []);
 
-  const sendMessage = (recipientId: number, content: string, conversationId?: string, shiftId?: number) => {
+  const sendMessage = (
+    recipientId: number,
+    content: string,
+    conversationId?: string,
+    shiftId?: number
+  ) => {
     if (!user) {
       console.warn("Cannot send message: user not authenticated");
       return;
@@ -217,7 +231,7 @@ export function useChatMessages(conversationId?: string) {
     const unsubscribe = wsManager.subscribe("chat", (message: ChatMessage) => {
       // Filter messages by conversation if specified
       if (!conversationId || message.conversationId === conversationId) {
-        setMessages(prev => [...prev, message]);
+        setMessages((prev) => [...prev, message]);
       }
     });
 
@@ -235,7 +249,7 @@ export function useShiftUpdates() {
 
   useEffect(() => {
     const unsubscribe = wsManager.subscribe("shift_update", (update: { shift: ShiftUpdate }) => {
-      setShiftUpdates(prev => [...prev, update.shift]);
+      setShiftUpdates((prev) => [...prev, update.shift]);
     });
 
     return unsubscribe;

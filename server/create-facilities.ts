@@ -15,12 +15,13 @@ export async function createExampleFacilities() {
         email: "admin@sunnybrook.com",
         isActive: true,
         bedCount: 150,
-        description: "Full-service medical center with emergency, surgical, and rehabilitation services",
+        description:
+          "Full-service medical center with emergency, surgical, and rehabilitation services",
         cmsId: "140001",
         overallRating: 4.2,
         staffingRating: 4.0,
         qualityRating: 4.3,
-        safetyRating: 4.1
+        safetyRating: 4.1,
       },
       {
         name: "Golden Years Nursing Home",
@@ -38,7 +39,7 @@ export async function createExampleFacilities() {
         overallRating: 4.5,
         staffingRating: 4.6,
         qualityRating: 4.4,
-        safetyRating: 4.5
+        safetyRating: 4.5,
       },
       {
         name: "Riverside Assisted Living",
@@ -55,7 +56,7 @@ export async function createExampleFacilities() {
         overallRating: 4.7,
         staffingRating: 4.8,
         qualityRating: 4.6,
-        safetyRating: 4.7
+        safetyRating: 4.7,
       },
       {
         name: "Springfield General Hospital",
@@ -73,7 +74,7 @@ export async function createExampleFacilities() {
         overallRating: 4.0,
         staffingRating: 3.9,
         qualityRating: 4.1,
-        safetyRating: 4.0
+        safetyRating: 4.0,
       },
       {
         name: "Peaceful Meadows Hospice",
@@ -90,15 +91,15 @@ export async function createExampleFacilities() {
         overallRating: 4.9,
         staffingRating: 4.9,
         qualityRating: 4.8,
-        safetyRating: 4.9
-      }
+        safetyRating: 4.9,
+      },
     ];
 
     const createdFacilities = await db.insert(facilities).values(facilityData).returning();
     console.log(`Created ${createdFacilities.length} example facilities`);
     return createdFacilities;
   } catch (error) {
-    console.error('Error creating example facilities:', error);
+    console.error("Error creating example facilities:", error);
     throw error;
   }
 }

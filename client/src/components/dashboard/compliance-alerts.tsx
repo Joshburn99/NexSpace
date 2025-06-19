@@ -21,15 +21,17 @@ export function ComplianceAlerts() {
   const alerts: ComplianceAlert[] = expiringCredentials.map((credential) => {
     const expirationDate = new Date(credential.expirationDate!);
     const today = new Date();
-    const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    
+    const daysUntilExpiration = Math.ceil(
+      (expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
     if (daysUntilExpiration <= 0) {
       return {
         id: credential.id.toString(),
         type: "error",
         title: `${credential.credentialType} Expired`,
         description: `Credential expired ${Math.abs(daysUntilExpiration)} days ago`,
-        action: "Renew Now"
+        action: "Renew Now",
       };
     } else if (daysUntilExpiration <= 7) {
       return {
@@ -37,7 +39,7 @@ export function ComplianceAlerts() {
         type: "error",
         title: `${credential.credentialType} Expiring Soon`,
         description: `Expires in ${daysUntilExpiration} days`,
-        action: "Review Details"
+        action: "Review Details",
       };
     } else {
       return {
@@ -45,7 +47,7 @@ export function ComplianceAlerts() {
         type: "warning",
         title: `${credential.credentialType} Renewal Due`,
         description: `Expires in ${daysUntilExpiration} days`,
-        action: "Schedule Renewal"
+        action: "Schedule Renewal",
       };
     }
   });
@@ -57,8 +59,8 @@ export function ComplianceAlerts() {
       type: "success",
       title: "Training Completed",
       description: "Staff infection control training completed",
-      action: "Update Records"
-    }
+      action: "Update Records",
+    },
   ];
 
   const allAlerts = [...alerts.slice(0, 2), ...systemAlerts].slice(0, 3);
@@ -129,16 +131,12 @@ export function ComplianceAlerts() {
           <div className="space-y-4">
             {allAlerts.map((alert) => (
               <div key={alert.id} className="flex items-start space-x-3">
-                <div className="flex-shrink-0 mt-2">
-                  {getAlertIcon(alert.type)}
-                </div>
+                <div className="flex-shrink-0 mt-2">{getAlertIcon(alert.type)}</div>
                 <div className="flex-1">
                   <p className={`text-sm font-medium ${getAlertTextColor(alert.type)}`}>
                     {alert.title}
                   </p>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {alert.description}
-                  </p>
+                  <p className="text-sm text-gray-500 mt-1">{alert.description}</p>
                   {alert.action && (
                     <Button
                       variant="ghost"

@@ -6,11 +6,34 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Clock, CheckCircle, XCircle, Settings, Star, MapPin, Calendar, User, AlertTriangle } from "lucide-react";
+import {
+  Clock,
+  CheckCircle,
+  XCircle,
+  Settings,
+  Star,
+  MapPin,
+  Calendar,
+  User,
+  AlertTriangle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ShiftRequest {
@@ -18,13 +41,13 @@ interface ShiftRequest {
   shiftId: number;
   staffId: number;
   staffName: string;
-  staffType: 'employee' | 'contractor';
+  staffType: "employee" | "contractor";
   position: string;
   unit: string;
   shiftDate: string;
   shiftTime: string;
   requestedAt: string;
-  status: 'pending' | 'approved' | 'denied';
+  status: "pending" | "approved" | "denied";
   reliabilityScore: number;
   hoursUntilShift: number;
   isFavorite: boolean;
@@ -52,65 +75,65 @@ const mockShiftRequests: ShiftRequest[] = [
     shiftId: 101,
     staffId: 1,
     staffName: "Sarah Johnson",
-    staffType: 'employee',
+    staffType: "employee",
     position: "RN",
     unit: "ICU",
     shiftDate: "2024-12-19",
     shiftTime: "7:00 AM - 7:00 PM",
     requestedAt: "2024-12-18 10:30 AM",
-    status: 'pending',
+    status: "pending",
     reliabilityScore: 92,
     hoursUntilShift: 8,
-    isFavorite: true
+    isFavorite: true,
   },
   {
     id: 2,
     shiftId: 102,
     staffId: 2,
     staffName: "Michael Chen",
-    staffType: 'contractor',
+    staffType: "contractor",
     position: "CNA",
     unit: "Med-Surg",
     shiftDate: "2024-12-20",
     shiftTime: "11:00 PM - 7:00 AM",
     requestedAt: "2024-12-17 3:45 PM",
-    status: 'pending',
+    status: "pending",
     reliabilityScore: 85,
     hoursUntilShift: 36,
-    isFavorite: false
+    isFavorite: false,
   },
   {
     id: 3,
     shiftId: 103,
     staffId: 3,
     staffName: "Emily Rodriguez",
-    staffType: 'employee',
+    staffType: "employee",
     position: "LPN",
     unit: "Memory Care",
     shiftDate: "2024-12-21",
     shiftTime: "3:00 PM - 11:00 PM",
     requestedAt: "2024-12-16 9:15 AM",
-    status: 'approved',
+    status: "approved",
     reliabilityScore: 96,
     hoursUntilShift: 60,
-    isFavorite: true
+    isFavorite: true,
   },
   {
     id: 4,
     shiftId: 104,
     staffId: 4,
     staffName: "David Thompson",
-    staffType: 'contractor',
+    staffType: "contractor",
     position: "RN",
     unit: "Rehabilitation",
     shiftDate: "2024-12-19",
     shiftTime: "7:00 AM - 7:00 PM",
     requestedAt: "2024-12-14 2:20 PM",
-    status: 'pending',
+    status: "pending",
     reliabilityScore: 78,
     hoursUntilShift: 8,
-    isFavorite: false
-  }
+    isFavorite: false,
+  },
 ];
 
 export default function ShiftRequestsPage() {
@@ -123,65 +146,68 @@ export default function ShiftRequestsPage() {
       under24h: 90,
       days1to3: 80,
       days3to5: 70,
-      over5days: 60
+      over5days: 60,
     },
     contractors: {
       under24h: 95,
       days1to3: 85,
       days3to5: 75,
-      over5days: 65
-    }
+      over5days: 65,
+    },
   });
 
   if (!user) return null;
 
   const handleApproveRequest = (requestId: number) => {
-    setRequests(prev => prev.map(req => 
-      req.id === requestId ? { ...req, status: 'approved' as const } : req
-    ));
+    setRequests((prev) =>
+      prev.map((req) => (req.id === requestId ? { ...req, status: "approved" as const } : req))
+    );
   };
 
   const handleDenyRequest = (requestId: number) => {
-    setRequests(prev => prev.map(req => 
-      req.id === requestId ? { ...req, status: 'denied' as const } : req
-    ));
+    setRequests((prev) =>
+      prev.map((req) => (req.id === requestId ? { ...req, status: "denied" as const } : req))
+    );
   };
 
   const toggleFavorite = (requestId: number) => {
-    setRequests(prev => prev.map(req => 
-      req.id === requestId ? { ...req, isFavorite: !req.isFavorite } : req
-    ));
+    setRequests((prev) =>
+      prev.map((req) => (req.id === requestId ? { ...req, isFavorite: !req.isFavorite } : req))
+    );
   };
 
   const getTimeFrameCategory = (hours: number) => {
-    if (hours < 24) return 'under24h';
-    if (hours <= 72) return 'days1to3';
-    if (hours <= 120) return 'days3to5';
-    return 'over5days';
+    if (hours < 24) return "under24h";
+    if (hours <= 72) return "days1to3";
+    if (hours <= 120) return "days3to5";
+    return "over5days";
   };
 
   const getAutoApprovalThreshold = (request: ShiftRequest) => {
     const category = getTimeFrameCategory(request.hoursUntilShift);
-    return request.staffType === 'employee' 
+    return request.staffType === "employee"
       ? autoSettings.internal[category]
       : autoSettings.contractors[category];
   };
 
-  const filteredRequests = requests.filter(req => {
-    if (selectedTab === 'all') return true;
+  const filteredRequests = requests.filter((req) => {
+    if (selectedTab === "all") return true;
     return req.status === selectedTab;
   });
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'approved': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'denied': return <XCircle className="w-4 h-4 text-red-500" />;
-      default: return <Clock className="w-4 h-4 text-yellow-500" />;
+      case "approved":
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case "denied":
+        return <XCircle className="w-4 h-4 text-red-500" />;
+      default:
+        return <Clock className="w-4 h-4 text-yellow-500" />;
     }
   };
 
   const getStaffTypeColor = (type: string) => {
-    return type === 'employee' ? 'bg-blue-100 text-blue-800' : 'bg-orange-100 text-orange-800';
+    return type === "employee" ? "bg-blue-100 text-blue-800" : "bg-orange-100 text-orange-800";
   };
 
   return (
@@ -195,7 +221,7 @@ export default function ShiftRequestsPage() {
                 Manage shift requests and auto-assignment settings
               </p>
             </div>
-            
+
             <Dialog>
               <DialogTrigger asChild>
                 <Button>
@@ -207,10 +233,11 @@ export default function ShiftRequestsPage() {
                 <DialogHeader>
                   <DialogTitle>Auto-Assignment Settings</DialogTitle>
                   <DialogDescription>
-                    Configure reliability score thresholds for automatic shift assignments based on request timing.
+                    Configure reliability score thresholds for automatic shift assignments based on
+                    request timing.
                   </DialogDescription>
                 </DialogHeader>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Internal Employees */}
                   <Card>
@@ -221,12 +248,14 @@ export default function ShiftRequestsPage() {
                     <CardContent className="space-y-4">
                       <div>
                         <Label>&lt; 24 hours</Label>
-                        <Select 
-                          value={autoSettings.internal.under24h.toString()} 
-                          onValueChange={(value) => setAutoSettings(prev => ({
-                            ...prev,
-                            internal: { ...prev.internal, under24h: parseInt(value) }
-                          }))}
+                        <Select
+                          value={autoSettings.internal.under24h.toString()}
+                          onValueChange={(value) =>
+                            setAutoSettings((prev) => ({
+                              ...prev,
+                              internal: { ...prev.internal, under24h: parseInt(value) },
+                            }))
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -241,15 +270,17 @@ export default function ShiftRequestsPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <div>
                         <Label>1-3 days</Label>
-                        <Select 
-                          value={autoSettings.internal.days1to3.toString()} 
-                          onValueChange={(value) => setAutoSettings(prev => ({
-                            ...prev,
-                            internal: { ...prev.internal, days1to3: parseInt(value) }
-                          }))}
+                        <Select
+                          value={autoSettings.internal.days1to3.toString()}
+                          onValueChange={(value) =>
+                            setAutoSettings((prev) => ({
+                              ...prev,
+                              internal: { ...prev.internal, days1to3: parseInt(value) },
+                            }))
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -264,15 +295,17 @@ export default function ShiftRequestsPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <div>
                         <Label>3-5 days</Label>
-                        <Select 
-                          value={autoSettings.internal.days3to5.toString()} 
-                          onValueChange={(value) => setAutoSettings(prev => ({
-                            ...prev,
-                            internal: { ...prev.internal, days3to5: parseInt(value) }
-                          }))}
+                        <Select
+                          value={autoSettings.internal.days3to5.toString()}
+                          onValueChange={(value) =>
+                            setAutoSettings((prev) => ({
+                              ...prev,
+                              internal: { ...prev.internal, days3to5: parseInt(value) },
+                            }))
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -287,15 +320,17 @@ export default function ShiftRequestsPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <div>
                         <Label>&gt; 5 days</Label>
-                        <Select 
-                          value={autoSettings.internal.over5days.toString()} 
-                          onValueChange={(value) => setAutoSettings(prev => ({
-                            ...prev,
-                            internal: { ...prev.internal, over5days: parseInt(value) }
-                          }))}
+                        <Select
+                          value={autoSettings.internal.over5days.toString()}
+                          onValueChange={(value) =>
+                            setAutoSettings((prev) => ({
+                              ...prev,
+                              internal: { ...prev.internal, over5days: parseInt(value) },
+                            }))
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -317,17 +352,21 @@ export default function ShiftRequestsPage() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-orange-600">Independent Contractors</CardTitle>
-                      <CardDescription>Reliability score thresholds for contractors</CardDescription>
+                      <CardDescription>
+                        Reliability score thresholds for contractors
+                      </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
                         <Label>&lt; 24 hours</Label>
-                        <Select 
-                          value={autoSettings.contractors.under24h.toString()} 
-                          onValueChange={(value) => setAutoSettings(prev => ({
-                            ...prev,
-                            contractors: { ...prev.contractors, under24h: parseInt(value) }
-                          }))}
+                        <Select
+                          value={autoSettings.contractors.under24h.toString()}
+                          onValueChange={(value) =>
+                            setAutoSettings((prev) => ({
+                              ...prev,
+                              contractors: { ...prev.contractors, under24h: parseInt(value) },
+                            }))
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -342,15 +381,17 @@ export default function ShiftRequestsPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <div>
                         <Label>1-3 days</Label>
-                        <Select 
-                          value={autoSettings.contractors.days1to3.toString()} 
-                          onValueChange={(value) => setAutoSettings(prev => ({
-                            ...prev,
-                            contractors: { ...prev.contractors, days1to3: parseInt(value) }
-                          }))}
+                        <Select
+                          value={autoSettings.contractors.days1to3.toString()}
+                          onValueChange={(value) =>
+                            setAutoSettings((prev) => ({
+                              ...prev,
+                              contractors: { ...prev.contractors, days1to3: parseInt(value) },
+                            }))
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -365,15 +406,17 @@ export default function ShiftRequestsPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <div>
                         <Label>3-5 days</Label>
-                        <Select 
-                          value={autoSettings.contractors.days3to5.toString()} 
-                          onValueChange={(value) => setAutoSettings(prev => ({
-                            ...prev,
-                            contractors: { ...prev.contractors, days3to5: parseInt(value) }
-                          }))}
+                        <Select
+                          value={autoSettings.contractors.days3to5.toString()}
+                          onValueChange={(value) =>
+                            setAutoSettings((prev) => ({
+                              ...prev,
+                              contractors: { ...prev.contractors, days3to5: parseInt(value) },
+                            }))
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -388,15 +431,17 @@ export default function ShiftRequestsPage() {
                           </SelectContent>
                         </Select>
                       </div>
-                      
+
                       <div>
                         <Label>&gt; 5 days</Label>
-                        <Select 
-                          value={autoSettings.contractors.over5days.toString()} 
-                          onValueChange={(value) => setAutoSettings(prev => ({
-                            ...prev,
-                            contractors: { ...prev.contractors, over5days: parseInt(value) }
-                          }))}
+                        <Select
+                          value={autoSettings.contractors.over5days.toString()}
+                          onValueChange={(value) =>
+                            setAutoSettings((prev) => ({
+                              ...prev,
+                              contractors: { ...prev.contractors, over5days: parseInt(value) },
+                            }))
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -422,9 +467,15 @@ export default function ShiftRequestsPage() {
         <div className="p-6">
           <Tabs value={selectedTab} onValueChange={setSelectedTab}>
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="pending">Pending ({requests.filter(r => r.status === 'pending').length})</TabsTrigger>
-              <TabsTrigger value="approved">Approved ({requests.filter(r => r.status === 'approved').length})</TabsTrigger>
-              <TabsTrigger value="denied">Denied ({requests.filter(r => r.status === 'denied').length})</TabsTrigger>
+              <TabsTrigger value="pending">
+                Pending ({requests.filter((r) => r.status === "pending").length})
+              </TabsTrigger>
+              <TabsTrigger value="approved">
+                Approved ({requests.filter((r) => r.status === "approved").length})
+              </TabsTrigger>
+              <TabsTrigger value="denied">
+                Denied ({requests.filter((r) => r.status === "denied").length})
+              </TabsTrigger>
               <TabsTrigger value="all">All Requests ({requests.length})</TabsTrigger>
             </TabsList>
 
@@ -435,20 +486,25 @@ export default function ShiftRequestsPage() {
                     <div className="flex items-start justify-between">
                       <div className="flex items-start space-x-4">
                         <Avatar>
-                          <AvatarFallback>{request.staffName.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                          <AvatarFallback>
+                            {request.staffName
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </AvatarFallback>
                         </Avatar>
-                        
+
                         <div className="space-y-2">
                           <div className="flex items-center space-x-2">
                             <h3 className="font-semibold">{request.staffName}</h3>
                             <Badge className={getStaffTypeColor(request.staffType)}>
-                              {request.staffType === 'employee' ? 'Employee' : 'Contractor'}
+                              {request.staffType === "employee" ? "Employee" : "Contractor"}
                             </Badge>
                             {request.isFavorite && (
                               <Star className="w-4 h-4 text-yellow-500 fill-current" />
                             )}
                           </div>
-                          
+
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
                             <div className="flex items-center space-x-1">
                               <User className="w-4 h-4" />
@@ -471,7 +527,15 @@ export default function ShiftRequestsPage() {
                           <div className="flex items-center space-x-4 text-sm">
                             <div className="flex items-center space-x-1">
                               <span className="text-gray-500">Reliability Score:</span>
-                              <Badge variant={request.reliabilityScore >= 90 ? "default" : request.reliabilityScore >= 80 ? "secondary" : "destructive"}>
+                              <Badge
+                                variant={
+                                  request.reliabilityScore >= 90
+                                    ? "default"
+                                    : request.reliabilityScore >= 80
+                                      ? "secondary"
+                                      : "destructive"
+                                }
+                              >
                                 {request.reliabilityScore}%
                               </Badge>
                             </div>
@@ -481,39 +545,54 @@ export default function ShiftRequestsPage() {
                             </div>
                             <div className="flex items-center space-x-1">
                               <span className="text-gray-500">Hours until shift:</span>
-                              <span className={cn(
-                                request.hoursUntilShift < 24 ? "text-red-600 font-medium" : "text-gray-900"
-                              )}>
+                              <span
+                                className={cn(
+                                  request.hoursUntilShift < 24
+                                    ? "text-red-600 font-medium"
+                                    : "text-gray-900"
+                                )}
+                              >
                                 {request.hoursUntilShift}h
                               </span>
                             </div>
                           </div>
 
-                          {request.reliabilityScore >= getAutoApprovalThreshold(request) && request.status === 'pending' && (
-                            <div className="flex items-center space-x-1 text-green-600 text-sm">
-                              <CheckCircle className="w-4 h-4" />
-                              <span>Qualifies for auto-approval</span>
-                            </div>
-                          )}
+                          {request.reliabilityScore >= getAutoApprovalThreshold(request) &&
+                            request.status === "pending" && (
+                              <div className="flex items-center space-x-1 text-green-600 text-sm">
+                                <CheckCircle className="w-4 h-4" />
+                                <span>Qualifies for auto-approval</span>
+                              </div>
+                            )}
                         </div>
                       </div>
 
                       <div className="flex items-center space-x-2">
                         <div className="flex items-center space-x-1">
                           {getStatusIcon(request.status)}
-                          <Badge variant={request.status === 'approved' ? 'default' : request.status === 'denied' ? 'destructive' : 'secondary'}>
+                          <Badge
+                            variant={
+                              request.status === "approved"
+                                ? "default"
+                                : request.status === "denied"
+                                  ? "destructive"
+                                  : "secondary"
+                            }
+                          >
                             {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
                           </Badge>
                         </div>
 
-                        {request.status === 'pending' && (
+                        {request.status === "pending" && (
                           <div className="flex space-x-2">
                             <Button
                               size="sm"
                               onClick={() => toggleFavorite(request.id)}
                               variant={request.isFavorite ? "default" : "outline"}
                             >
-                              <Star className={cn("w-4 h-4", request.isFavorite && "fill-current")} />
+                              <Star
+                                className={cn("w-4 h-4", request.isFavorite && "fill-current")}
+                              />
                             </Button>
                             <Button
                               size="sm"

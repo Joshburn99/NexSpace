@@ -10,13 +10,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar 
-        expanded={sidebarExpanded} 
-        onToggle={() => setSidebarExpanded(!sidebarExpanded)} 
-      />
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
+      <Sidebar expanded={sidebarExpanded} onToggle={() => setSidebarExpanded(!sidebarExpanded)} />
+      <main className="flex-1 overflow-auto">{children}</main>
     </div>
   );
 };

@@ -6,9 +6,28 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Users, Plus, Edit, Trash2, Search, ArrowLeft, Home, UserCheck, UserX } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { UserRole } from "@shared/schema";
@@ -56,20 +75,25 @@ export default function AdminUserManagementPage() {
   });
 
   const filteredUsers = users.filter((user: any) => {
-    const matchesSearch = user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.lastName?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = selectedRole === "all" || user.role === selectedRole;
     return matchesSearch && matchesRole;
   });
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
-      case UserRole.SUPER_ADMIN: return "destructive";
-      case UserRole.CLIENT_ADMINISTRATOR: return "default";
-      case UserRole.FACILITY_MANAGER: return "secondary";
-      default: return "outline";
+      case UserRole.SUPER_ADMIN:
+        return "destructive";
+      case UserRole.CLIENT_ADMINISTRATOR:
+        return "default";
+      case UserRole.FACILITY_MANAGER:
+        return "secondary";
+      default:
+        return "outline";
     }
   };
 
@@ -189,7 +213,9 @@ export default function AdminUserManagementPage() {
                     <SelectItem value={UserRole.CLINICIAN}>Clinician</SelectItem>
                     <SelectItem value={UserRole.CONTRACTOR}>Contractor</SelectItem>
                     <SelectItem value={UserRole.FACILITY_MANAGER}>Facility Manager</SelectItem>
-                    <SelectItem value={UserRole.CLIENT_ADMINISTRATOR}>Client Administrator</SelectItem>
+                    <SelectItem value={UserRole.CLIENT_ADMINISTRATOR}>
+                      Client Administrator
+                    </SelectItem>
                     <SelectItem value={UserRole.SUPER_ADMIN}>Super Admin</SelectItem>
                   </SelectContent>
                 </Select>
@@ -237,26 +263,24 @@ export default function AdminUserManagementPage() {
                     <TableCell>{user.username}</TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant={getRoleBadgeVariant(user.role)}>
-                        {user.role}
-                      </Badge>
+                      <Badge variant={getRoleBadgeVariant(user.role)}>{user.role}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={user.isActive ? "default" : "secondary"}>
                         {user.isActive ? (
-                          <><UserCheck className="h-3 w-3 mr-1" /> Active</>
+                          <>
+                            <UserCheck className="h-3 w-3 mr-1" /> Active
+                          </>
                         ) : (
-                          <><UserX className="h-3 w-3 mr-1" /> Inactive</>
+                          <>
+                            <UserX className="h-3 w-3 mr-1" /> Inactive
+                          </>
                         )}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setSelectedUser(user)}
-                        >
+                        <Button size="sm" variant="outline" onClick={() => setSelectedUser(user)}>
                           <Edit className="h-3 w-3" />
                         </Button>
                         {user.isActive && (
@@ -288,20 +312,41 @@ export default function AdminUserManagementPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="editFirstName">First Name</Label>
-                  <Input id="editFirstName" name="firstName" defaultValue={selectedUser.firstName} required />
+                  <Input
+                    id="editFirstName"
+                    name="firstName"
+                    defaultValue={selectedUser.firstName}
+                    required
+                  />
                 </div>
                 <div>
                   <Label htmlFor="editLastName">Last Name</Label>
-                  <Input id="editLastName" name="lastName" defaultValue={selectedUser.lastName} required />
+                  <Input
+                    id="editLastName"
+                    name="lastName"
+                    defaultValue={selectedUser.lastName}
+                    required
+                  />
                 </div>
               </div>
               <div>
                 <Label htmlFor="editUsername">Username</Label>
-                <Input id="editUsername" name="username" defaultValue={selectedUser.username} required />
+                <Input
+                  id="editUsername"
+                  name="username"
+                  defaultValue={selectedUser.username}
+                  required
+                />
               </div>
               <div>
                 <Label htmlFor="editEmail">Email</Label>
-                <Input id="editEmail" name="email" type="email" defaultValue={selectedUser.email} required />
+                <Input
+                  id="editEmail"
+                  name="email"
+                  type="email"
+                  defaultValue={selectedUser.email}
+                  required
+                />
               </div>
               <div>
                 <Label htmlFor="editRole">Role</Label>
@@ -313,7 +358,9 @@ export default function AdminUserManagementPage() {
                     <SelectItem value={UserRole.CLINICIAN}>Clinician</SelectItem>
                     <SelectItem value={UserRole.CONTRACTOR}>Contractor</SelectItem>
                     <SelectItem value={UserRole.FACILITY_MANAGER}>Facility Manager</SelectItem>
-                    <SelectItem value={UserRole.CLIENT_ADMINISTRATOR}>Client Administrator</SelectItem>
+                    <SelectItem value={UserRole.CLIENT_ADMINISTRATOR}>
+                      Client Administrator
+                    </SelectItem>
                     <SelectItem value={UserRole.SUPER_ADMIN}>Super Admin</SelectItem>
                   </SelectContent>
                 </Select>

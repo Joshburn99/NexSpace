@@ -5,7 +5,7 @@ import { UserRole } from "@shared/schema";
 export const PERMISSIONS = {
   // User management
   USERS_VIEW: "users.view",
-  USERS_CREATE: "users.create", 
+  USERS_CREATE: "users.create",
   USERS_EDIT: "users.edit",
   USERS_DELETE: "users.delete",
   USERS_IMPERSONATE: "users.impersonate",
@@ -174,14 +174,14 @@ export function hasPermission(userRole: UserRole, permission: string): boolean {
  * Check if a user has any of the specified permissions
  */
 export function hasAnyPermission(userRole: UserRole, permissions: string[]): boolean {
-  return permissions.some(permission => hasPermission(userRole, permission));
+  return permissions.some((permission) => hasPermission(userRole, permission));
 }
 
 /**
  * Check if a user has all of the specified permissions
  */
 export function hasAllPermissions(userRole: UserRole, permissions: string[]): boolean {
-  return permissions.every(permission => hasPermission(userRole, permission));
+  return permissions.every((permission) => hasPermission(userRole, permission));
 }
 
 /**
@@ -198,7 +198,7 @@ export function filterByPermissions<T extends { requiredPermissions?: string[] }
   items: T[],
   userRole: UserRole
 ): T[] {
-  return items.filter(item => {
+  return items.filter((item) => {
     if (!item.requiredPermissions || item.requiredPermissions.length === 0) {
       return true;
     }
@@ -216,15 +216,15 @@ export function withPermissions<P extends object>(
 ) {
   return function PermissionWrappedComponent(props: P & { userRole: UserRole }) {
     const { userRole, ...componentProps } = props;
-    
+
     if (hasAnyPermission(userRole, requiredPermissions)) {
       return React.createElement(Component, componentProps as P);
     }
-    
+
     if (fallback) {
       return React.createElement(fallback, componentProps as P);
     }
-    
+
     return null;
   };
 }

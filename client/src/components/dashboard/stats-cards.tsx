@@ -79,8 +79,7 @@ export function StatsCards() {
               <p className="text-sm font-medium text-gray-500">Open Shifts</p>
               <p className="text-2xl font-bold text-gray-900">{stats.openShifts}</p>
               <p className="text-xs text-red-600 mt-1 flex items-center">
-                <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-1"></span>
-                5 urgent
+                <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-1"></span>5 urgent
               </p>
             </div>
           </div>
@@ -115,7 +114,9 @@ export function StatsCards() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Monthly Hours</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.monthlyHours.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats.monthlyHours.toLocaleString()}
+              </p>
               <p className="text-xs text-purple-600 mt-1 flex items-center">
                 <Clock className="h-3 w-3 mr-1" />
                 823 OT hours

@@ -7,7 +7,7 @@ import { FileText, Download, Play, BookOpen, Video, File } from "lucide-react";
 interface Resource {
   id: number;
   title: string;
-  type: 'pdf' | 'video' | 'document' | 'faq';
+  type: "pdf" | "video" | "document" | "faq";
   category: string;
   downloadUrl: string;
   size?: string;
@@ -17,18 +17,18 @@ interface Resource {
 
 export function ResourceLibrary() {
   const { data: resources, isLoading } = useQuery<Resource[]>({
-    queryKey: ['/api/resources']
+    queryKey: ["/api/resources"],
   });
 
   const getResourceIcon = (type: string) => {
     switch (type) {
-      case 'pdf':
+      case "pdf":
         return <FileText className="w-4 h-4 text-red-500" />;
-      case 'video':
+      case "video":
         return <Video className="w-4 h-4 text-blue-500" />;
-      case 'document':
+      case "document":
         return <File className="w-4 h-4 text-green-500" />;
-      case 'faq':
+      case "faq":
         return <BookOpen className="w-4 h-4 text-purple-500" />;
       default:
         return <FileText className="w-4 h-4 text-gray-500" />;
@@ -37,16 +37,16 @@ export function ResourceLibrary() {
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'pdf':
-        return 'bg-red-100 text-red-800';
-      case 'video':
-        return 'bg-blue-100 text-blue-800';
-      case 'document':
-        return 'bg-green-100 text-green-800';
-      case 'faq':
-        return 'bg-purple-100 text-purple-800';
+      case "pdf":
+        return "bg-red-100 text-red-800";
+      case "video":
+        return "bg-blue-100 text-blue-800";
+      case "document":
+        return "bg-green-100 text-green-800";
+      case "faq":
+        return "bg-purple-100 text-purple-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -83,9 +83,12 @@ export function ResourceLibrary() {
           {/* Recent Resources */}
           <div className="space-y-3">
             <h4 className="font-medium text-gray-900">Popular Resources</h4>
-            
+
             {resources?.slice(0, 5).map((resource) => (
-              <div key={resource.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <div
+                key={resource.id}
+                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <div className="flex items-center space-x-3">
                   {getResourceIcon(resource.type)}
                   <div className="flex-1">
@@ -104,7 +107,7 @@ export function ResourceLibrary() {
                   </div>
                 </div>
                 <Button variant="ghost" size="sm">
-                  {resource.type === 'video' ? (
+                  {resource.type === "video" ? (
                     <Play className="w-4 h-4" />
                   ) : (
                     <Download className="w-4 h-4" />
@@ -122,7 +125,9 @@ export function ResourceLibrary() {
                     <div>
                       <h5 className="text-sm font-medium text-gray-900">Employee Handbook</h5>
                       <div className="flex items-center space-x-2 mt-1">
-                        <Badge className="bg-red-100 text-red-800" variant="secondary">PDF</Badge>
+                        <Badge className="bg-red-100 text-red-800" variant="secondary">
+                          PDF
+                        </Badge>
                         <span className="text-xs text-gray-500">2.4 MB</span>
                       </div>
                     </div>
@@ -138,7 +143,9 @@ export function ResourceLibrary() {
                     <div>
                       <h5 className="text-sm font-medium text-gray-900">Safety Training Video</h5>
                       <div className="flex items-center space-x-2 mt-1">
-                        <Badge className="bg-blue-100 text-blue-800" variant="secondary">VIDEO</Badge>
+                        <Badge className="bg-blue-100 text-blue-800" variant="secondary">
+                          VIDEO
+                        </Badge>
                         <span className="text-xs text-gray-500">15:30</span>
                       </div>
                     </div>
@@ -152,9 +159,13 @@ export function ResourceLibrary() {
                   <div className="flex items-center space-x-3">
                     <BookOpen className="w-4 h-4 text-purple-500" />
                     <div>
-                      <h5 className="text-sm font-medium text-gray-900">Frequently Asked Questions</h5>
+                      <h5 className="text-sm font-medium text-gray-900">
+                        Frequently Asked Questions
+                      </h5>
                       <div className="flex items-center space-x-2 mt-1">
-                        <Badge className="bg-purple-100 text-purple-800" variant="secondary">FAQ</Badge>
+                        <Badge className="bg-purple-100 text-purple-800" variant="secondary">
+                          FAQ
+                        </Badge>
                       </div>
                     </div>
                   </div>

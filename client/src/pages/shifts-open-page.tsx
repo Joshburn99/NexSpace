@@ -18,7 +18,7 @@ const mockOpenShifts = [
     department: "Medical",
     requirements: ["Current RN License", "CPR Certification", "2+ years experience"],
     shiftType: "Day Shift",
-    census: 24
+    census: 24,
   },
   {
     id: 2,
@@ -31,7 +31,7 @@ const mockOpenShifts = [
     department: "Memory Care",
     requirements: ["Current LPN License", "Memory Care Experience"],
     shiftType: "Night Shift",
-    census: 18
+    census: 18,
   },
   {
     id: 3,
@@ -44,7 +44,7 @@ const mockOpenShifts = [
     department: "Assisted Living",
     requirements: ["Current CNA License", "Medication Administration"],
     shiftType: "Evening Shift",
-    census: 32
+    census: 32,
   },
   {
     id: 4,
@@ -57,8 +57,8 @@ const mockOpenShifts = [
     department: "Rehabilitation",
     requirements: ["PT License", "Geriatric Experience"],
     shiftType: "Day Shift",
-    census: 15
-  }
+    census: 15,
+  },
 ];
 
 export default function OpenShiftsPage() {
@@ -67,15 +67,19 @@ export default function OpenShiftsPage() {
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case "urgent": return "bg-red-100 text-red-800 border-red-200";
-      case "high": return "bg-orange-100 text-orange-800 border-orange-200";
-      case "medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case "urgent":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "high":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
-  const filteredShifts = filter === "all" ? mockOpenShifts : 
-    mockOpenShifts.filter(shift => shift.priority === filter);
+  const filteredShifts =
+    filter === "all" ? mockOpenShifts : mockOpenShifts.filter((shift) => shift.priority === filter);
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
@@ -85,20 +89,31 @@ export default function OpenShiftsPage() {
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Open Shifts</h1>
-              <p className="text-gray-600 dark:text-gray-300">Available shifts requiring immediate staffing</p>
+              <p className="text-gray-600 dark:text-gray-300">
+                Available shifts requiring immediate staffing
+              </p>
             </div>
             <div className="flex gap-2">
-              <Button variant={filter === "all" ? "default" : "outline"} 
-                      onClick={() => setFilter("all")} size="sm">
+              <Button
+                variant={filter === "all" ? "default" : "outline"}
+                onClick={() => setFilter("all")}
+                size="sm"
+              >
                 All ({mockOpenShifts.length})
               </Button>
-              <Button variant={filter === "urgent" ? "default" : "outline"} 
-                      onClick={() => setFilter("urgent")} size="sm">
-                Urgent ({mockOpenShifts.filter(s => s.priority === "urgent").length})
+              <Button
+                variant={filter === "urgent" ? "default" : "outline"}
+                onClick={() => setFilter("urgent")}
+                size="sm"
+              >
+                Urgent ({mockOpenShifts.filter((s) => s.priority === "urgent").length})
               </Button>
-              <Button variant={filter === "high" ? "default" : "outline"} 
-                      onClick={() => setFilter("high")} size="sm">
-                High Priority ({mockOpenShifts.filter(s => s.priority === "high").length})
+              <Button
+                variant={filter === "high" ? "default" : "outline"}
+                onClick={() => setFilter("high")}
+                size="sm"
+              >
+                High Priority ({mockOpenShifts.filter((s) => s.priority === "high").length})
               </Button>
             </div>
           </div>
@@ -115,9 +130,7 @@ export default function OpenShiftsPage() {
                         {shift.facility}
                       </CardDescription>
                     </div>
-                    <Badge className={getPriorityColor(shift.priority)}>
-                      {shift.priority}
-                    </Badge>
+                    <Badge className={getPriorityColor(shift.priority)}>{shift.priority}</Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -136,7 +149,13 @@ export default function OpenShiftsPage() {
                       <div>
                         <div className="font-medium">${shift.hourlyRate}/hr</div>
                         <div className="text-gray-500">
-                          {((new Date(shift.endTime).getTime() - new Date(shift.startTime).getTime()) / (1000 * 60 * 60) * shift.hourlyRate).toFixed(0)} total
+                          {(
+                            ((new Date(shift.endTime).getTime() -
+                              new Date(shift.startTime).getTime()) /
+                              (1000 * 60 * 60)) *
+                            shift.hourlyRate
+                          ).toFixed(0)}{" "}
+                          total
                         </div>
                       </div>
                     </div>
@@ -181,9 +200,7 @@ export default function OpenShiftsPage() {
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 No {filter !== "all" ? filter + " priority " : ""}shifts available
               </h3>
-              <p className="text-gray-500">
-                Check back later for new opportunities
-              </p>
+              <p className="text-gray-500">Check back later for new opportunities</p>
             </div>
           )}
         </div>

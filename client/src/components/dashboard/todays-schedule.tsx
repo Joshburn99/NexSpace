@@ -9,7 +9,7 @@ import { type Shift } from "@shared/schema";
 
 export function TodaysSchedule() {
   const { user } = useAuth();
-  
+
   const { data: shifts = [], isLoading } = useQuery<Shift[]>({
     queryKey: ["/api/shifts"],
     enabled: !!user?.facilityId,
@@ -74,7 +74,10 @@ export function TodaysSchedule() {
         <CardContent>
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg animate-pulse">
+              <div
+                key={i}
+                className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg animate-pulse"
+              >
                 <div className="w-12 h-12 bg-gray-200 rounded-full"></div>
                 <div className="flex-1">
                   <div className="h-4 bg-gray-200 rounded w-32 mb-2"></div>
@@ -125,9 +128,12 @@ export function TodaysSchedule() {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        {shift.shiftType === "day" ? "Day Shift" : 
-                         shift.shiftType === "night" ? "Night Shift" : 
-                         "Weekend Shift"} - {shift.department}
+                        {shift.shiftType === "day"
+                          ? "Day Shift"
+                          : shift.shiftType === "night"
+                            ? "Night Shift"
+                            : "Weekend Shift"}{" "}
+                        - {shift.department}
                       </p>
                       <p className="text-sm text-gray-500">
                         <Clock className="inline h-3 w-3 mr-1" />
@@ -140,9 +146,7 @@ export function TodaysSchedule() {
                         <div className="flex -space-x-2">
                           {shift.assignedStaffIds.slice(0, 3).map((staffId, index) => (
                             <Avatar key={staffId} className="w-8 h-8 border-2 border-white">
-                              <AvatarFallback className="text-xs">
-                                U{staffId}
-                              </AvatarFallback>
+                              <AvatarFallback className="text-xs">U{staffId}</AvatarFallback>
                             </Avatar>
                           ))}
                           {shift.assignedStaffIds.length > 3 && (

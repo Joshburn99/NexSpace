@@ -38,7 +38,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -135,22 +142,69 @@ export default function FacilityManagementPage() {
   };
 
   const US_STATES = [
-    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
-    "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-    "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-    "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-    "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
+    "AL",
+    "AK",
+    "AZ",
+    "AR",
+    "CA",
+    "CO",
+    "CT",
+    "DE",
+    "FL",
+    "GA",
+    "HI",
+    "ID",
+    "IL",
+    "IN",
+    "IA",
+    "KS",
+    "KY",
+    "LA",
+    "ME",
+    "MD",
+    "MA",
+    "MI",
+    "MN",
+    "MS",
+    "MO",
+    "MT",
+    "NE",
+    "NV",
+    "NH",
+    "NJ",
+    "NM",
+    "NY",
+    "NC",
+    "ND",
+    "OH",
+    "OK",
+    "OR",
+    "PA",
+    "RI",
+    "SC",
+    "SD",
+    "TN",
+    "TX",
+    "UT",
+    "VT",
+    "VA",
+    "WA",
+    "WV",
+    "WI",
+    "WY",
   ];
 
   // Filter facilities based on search and state
   const filteredFacilities = facilities.filter((facility: Facility) => {
-    const matchesSearch = !searchQuery || 
+    const matchesSearch =
+      !searchQuery ||
       facility.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       facility.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       facility.address?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesState = !selectedState || selectedState === 'all' || facility.state === selectedState;
-    
+
+    const matchesState =
+      !selectedState || selectedState === "all" || facility.state === selectedState;
+
     return matchesSearch && matchesState;
   });
 
@@ -160,7 +214,7 @@ export default function FacilityManagementPage() {
       <div>
         <h1 className="text-2xl font-bold">{facility.name}</h1>
         <p className="text-muted-foreground">
-          {facility.facilityType?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+          {facility.facilityType?.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
         </p>
       </div>
 
@@ -258,7 +312,11 @@ export default function FacilityManagementPage() {
                 </div>
                 <div>
                   <Label>Type</Label>
-                  <p className="text-sm">{facility.facilityType?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                  <p className="text-sm">
+                    {facility.facilityType
+                      ?.replace("_", " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase())}
+                  </p>
                 </div>
                 <div>
                   <Label>Status</Label>
@@ -307,9 +365,7 @@ export default function FacilityManagementPage() {
             </Link>
           </div>
           <h2 className="text-lg font-semibold">Facility Management</h2>
-          <p className="text-sm text-muted-foreground">
-            Manage healthcare facilities
-          </p>
+          <p className="text-sm text-muted-foreground">Manage healthcare facilities</p>
         </div>
 
         {/* Search in Sidebar */}
@@ -356,7 +412,9 @@ export default function FacilityManagementPage() {
               <div
                 key={facility.id}
                 className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
-                  selectedFacility?.id === facility.id ? 'bg-blue-50 border-r-2 border-r-blue-500' : ''
+                  selectedFacility?.id === facility.id
+                    ? "bg-blue-50 border-r-2 border-r-blue-500"
+                    : ""
                 }`}
                 onClick={() => setSelectedFacility(facility)}
               >
@@ -364,18 +422,18 @@ export default function FacilityManagementPage() {
                   <div className="flex-1 min-w-0">
                     <h3 className="font-medium text-sm truncate">{facility.name}</h3>
                     <p className="text-xs text-muted-foreground truncate mt-1">
-                      {facility.facilityType?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      {facility.facilityType
+                        ?.replace("_", " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
                     </p>
                     <p className="text-xs text-muted-foreground truncate">
                       {formatAddress(facility)}
                     </p>
                     {facility.bedCount && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {facility.bedCount} beds
-                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">{facility.bedCount} beds</p>
                     )}
                   </div>
-                  <Badge 
+                  <Badge
                     variant={facility.isActive ? "default" : "secondary"}
                     className="text-xs ml-2"
                   >
@@ -415,7 +473,7 @@ export default function FacilityManagementPage() {
                       </FormItem>
                     )}
                   />
-                  
+
                   <FormField
                     control={createForm.control}
                     name="facilityType"
@@ -454,7 +512,7 @@ export default function FacilityManagementPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={createForm.control}
                       name="city"
@@ -495,7 +553,7 @@ export default function FacilityManagementPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={createForm.control}
                       name="zipCode"
@@ -525,7 +583,7 @@ export default function FacilityManagementPage() {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={createForm.control}
                       name="email"
@@ -553,10 +611,7 @@ export default function FacilityManagementPage() {
                           </div>
                         </div>
                         <FormControl>
-                          <Switch
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
+                          <Switch checked={field.value} onCheckedChange={field.onChange} />
                         </FormControl>
                       </FormItem>
                     )}
@@ -570,10 +625,7 @@ export default function FacilityManagementPage() {
                     >
                       Cancel
                     </Button>
-                    <Button 
-                      type="submit" 
-                      disabled={createFacilityMutation.isPending}
-                    >
+                    <Button type="submit" disabled={createFacilityMutation.isPending}>
                       {createFacilityMutation.isPending ? "Creating..." : "Create Facility"}
                     </Button>
                   </div>
@@ -581,7 +633,7 @@ export default function FacilityManagementPage() {
               </Form>
             </DialogContent>
           </Dialog>
-          
+
           <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="w-full">

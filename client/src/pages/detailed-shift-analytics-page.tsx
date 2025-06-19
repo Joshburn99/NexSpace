@@ -3,17 +3,53 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, ScatterChart, Scatter
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  ScatterChart,
+  Scatter,
 } from "recharts";
-import { 
-  TrendingUp, Users, Clock, Target, ArrowLeft, Home, Filter,
-  Calendar, Award, Building, UserCheck, Timer, Percent
+import {
+  TrendingUp,
+  Users,
+  Clock,
+  Target,
+  ArrowLeft,
+  Home,
+  Filter,
+  Calendar,
+  Award,
+  Building,
+  UserCheck,
+  Timer,
+  Percent,
 } from "lucide-react";
 
 interface ShiftAnalytics {
@@ -35,20 +71,20 @@ interface ShiftAnalytics {
 
 // Medical specialty abbreviations mapping
 const specialtyAbbreviations: Record<string, string> = {
-  'Registered Nurse': 'RN',
-  'Licensed Practical Nurse': 'LPN', 
-  'Certified Nursing Assistant': 'CNA',
-  'Physical Therapist': 'PT',
-  'Respiratory Therapist': 'RT',
-  'Medical Doctor': 'MD',
-  'Nurse Practitioner': 'NP',
-  'Physician Assistant': 'PA',
-  'Occupational Therapist': 'OT',
-  'Speech Language Pathologist': 'SLP',
-  'Medical Assistant': 'MA',
-  'Pharmacy Technician': 'PharmTech',
-  'Radiology Technician': 'RadTech',
-  'Laboratory Technician': 'LabTech'
+  "Registered Nurse": "RN",
+  "Licensed Practical Nurse": "LPN",
+  "Certified Nursing Assistant": "CNA",
+  "Physical Therapist": "PT",
+  "Respiratory Therapist": "RT",
+  "Medical Doctor": "MD",
+  "Nurse Practitioner": "NP",
+  "Physician Assistant": "PA",
+  "Occupational Therapist": "OT",
+  "Speech Language Pathologist": "SLP",
+  "Medical Assistant": "MA",
+  "Pharmacy Technician": "PharmTech",
+  "Radiology Technician": "RadTech",
+  "Laboratory Technician": "LabTech",
 };
 
 export default function DetailedShiftAnalyticsPage() {
@@ -69,24 +105,29 @@ export default function DetailedShiftAnalyticsPage() {
   const shiftAnalytics = allShiftAnalytics.filter((shift: ShiftAnalytics) => {
     const specialtyMatch = selectedSpecialty === "all" || shift.specialty === selectedSpecialty;
     const workerTypeMatch = selectedWorkerType === "all" || shift.workerType === selectedWorkerType;
-    
+
     // Time range filter (days ago)
     const daysAgo = parseInt(timeRange);
     const shiftDate = new Date(shift.shiftDate);
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - daysAgo);
     const timeRangeMatch = shiftDate >= cutoffDate;
-    
+
     return specialtyMatch && workerTypeMatch && timeRangeMatch;
   });
 
   // Calculate aggregated metrics
   const totalShifts = shiftAnalytics.length;
-  const avgApplicationsPerShift = shiftAnalytics.reduce((sum: number, shift: ShiftAnalytics) => 
-    sum + shift.avgApplicationsPerOpening, 0) / totalShifts || 0;
-  const avgDaysToFill = shiftAnalytics.filter((s: ShiftAnalytics) => s.status === 'filled')
-    .reduce((sum: number, shift: ShiftAnalytics) => sum + shift.daysPosted, 0) / 
-    shiftAnalytics.filter((s: ShiftAnalytics) => s.status === 'filled').length || 0;
+  const avgApplicationsPerShift =
+    shiftAnalytics.reduce(
+      (sum: number, shift: ShiftAnalytics) => sum + shift.avgApplicationsPerOpening,
+      0
+    ) / totalShifts || 0;
+  const avgDaysToFill =
+    shiftAnalytics
+      .filter((s: ShiftAnalytics) => s.status === "filled")
+      .reduce((sum: number, shift: ShiftAnalytics) => sum + shift.daysPosted, 0) /
+      shiftAnalytics.filter((s: ShiftAnalytics) => s.status === "filled").length || 0;
 
   // Group by specialty
   const specialtyStats = shiftAnalytics.reduce((acc: any, shift: ShiftAnalytics) => {
@@ -95,18 +136,18 @@ export default function DetailedShiftAnalyticsPage() {
         totalShifts: 0,
         totalApplications: 0,
         avgDaysPosted: 0,
-        filledShifts: 0
+        filledShifts: 0,
       };
     }
     acc[shift.specialty].totalShifts++;
     acc[shift.specialty].totalApplications += shift.totalApplications;
     acc[shift.specialty].avgDaysPosted += shift.daysPosted;
-    if (shift.status === 'filled') acc[shift.specialty].filledShifts++;
+    if (shift.status === "filled") acc[shift.specialty].filledShifts++;
     return acc;
   }, {});
 
   // Calculate averages for specialty stats
-  Object.keys(specialtyStats).forEach(specialty => {
+  Object.keys(specialtyStats).forEach((specialty) => {
     const stats = specialtyStats[specialty];
     stats.avgApplicationsPerShift = stats.totalApplications / stats.totalShifts;
     stats.avgDaysPosted = stats.avgDaysPosted / stats.totalShifts;
@@ -120,18 +161,18 @@ export default function DetailedShiftAnalyticsPage() {
         totalShifts: 0,
         totalApplications: 0,
         avgDaysPosted: 0,
-        filledShifts: 0
+        filledShifts: 0,
       };
     }
     acc[shift.workerType].totalShifts++;
     acc[shift.workerType].totalApplications += shift.totalApplications;
     acc[shift.workerType].avgDaysPosted += shift.daysPosted;
-    if (shift.status === 'filled') acc[shift.workerType].filledShifts++;
+    if (shift.status === "filled") acc[shift.workerType].filledShifts++;
     return acc;
   }, {});
 
   // Calculate averages for worker type stats
-  Object.keys(workerTypeStats).forEach(type => {
+  Object.keys(workerTypeStats).forEach((type) => {
     const stats = workerTypeStats[type];
     stats.avgApplicationsPerShift = stats.totalApplications / stats.totalShifts;
     stats.avgDaysPosted = stats.avgDaysPosted / stats.totalShifts;
@@ -139,19 +180,23 @@ export default function DetailedShiftAnalyticsPage() {
   });
 
   // Prepare chart data
-  const specialtyChartData = Object.entries(specialtyStats).map(([specialty, stats]: [string, any]) => ({
-    specialty: specialty.replace('_', ' ').toUpperCase(),
-    avgApplications: Math.round(stats.avgApplicationsPerShift * 10) / 10,
-    avgDays: Math.round(stats.avgDaysPosted * 10) / 10,
-    fillRate: Math.round(stats.fillRate * 10) / 10
-  }));
+  const specialtyChartData = Object.entries(specialtyStats).map(
+    ([specialty, stats]: [string, any]) => ({
+      specialty: specialty.replace("_", " ").toUpperCase(),
+      avgApplications: Math.round(stats.avgApplicationsPerShift * 10) / 10,
+      avgDays: Math.round(stats.avgDaysPosted * 10) / 10,
+      fillRate: Math.round(stats.fillRate * 10) / 10,
+    })
+  );
 
-  const workerTypeChartData = Object.entries(workerTypeStats).map(([type, stats]: [string, any]) => ({
-    type: type.replace('_', ' ').toUpperCase(),
-    avgApplications: Math.round(stats.avgApplicationsPerShift * 10) / 10,
-    avgDays: Math.round(stats.avgDaysPosted * 10) / 10,
-    fillRate: Math.round(stats.fillRate * 10) / 10
-  }));
+  const workerTypeChartData = Object.entries(workerTypeStats).map(
+    ([type, stats]: [string, any]) => ({
+      type: type.replace("_", " ").toUpperCase(),
+      avgApplications: Math.round(stats.avgApplicationsPerShift * 10) / 10,
+      avgDays: Math.round(stats.avgDaysPosted * 10) / 10,
+      fillRate: Math.round(stats.fillRate * 10) / 10,
+    })
+  );
 
   const urgencyDistribution = shiftAnalytics.reduce((acc: any, shift: ShiftAnalytics) => {
     acc[shift.urgency] = (acc[shift.urgency] || 0) + 1;
@@ -161,11 +206,11 @@ export default function DetailedShiftAnalyticsPage() {
   const urgencyChartData = Object.entries(urgencyDistribution).map(([urgency, count]) => ({
     urgency: urgency.toUpperCase(),
     count,
-    percentage: Math.round((count as number / totalShifts) * 100)
+    percentage: Math.round(((count as number) / totalShifts) * 100),
   }));
 
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16'];
-  
+  const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#84cc16"];
+
   // Improved chart styling
   const chartMargin = { top: 20, right: 30, left: 40, bottom: 60 };
 
@@ -219,8 +264,12 @@ export default function DetailedShiftAnalyticsPage() {
                 <SelectContent>
                   <SelectItem value="all">All Specialties</SelectItem>
                   <SelectItem value="registered_nurse">RN (Registered Nurse)</SelectItem>
-                  <SelectItem value="licensed_practical_nurse">LPN (Licensed Practical Nurse)</SelectItem>
-                  <SelectItem value="certified_nursing_assistant">CNA (Certified Nursing Assistant)</SelectItem>
+                  <SelectItem value="licensed_practical_nurse">
+                    LPN (Licensed Practical Nurse)
+                  </SelectItem>
+                  <SelectItem value="certified_nursing_assistant">
+                    CNA (Certified Nursing Assistant)
+                  </SelectItem>
                   <SelectItem value="physical_therapist">PT (Physical Therapist)</SelectItem>
                   <SelectItem value="respiratory_therapist">RT (Respiratory Therapist)</SelectItem>
                   <SelectItem value="medical_technologist">MD (Medical Doctor)</SelectItem>
@@ -304,7 +353,12 @@ export default function DetailedShiftAnalyticsPage() {
               <div>
                 <p className="text-sm font-medium">Fill Rate</p>
                 <p className="text-2xl font-bold">
-                  {((shiftAnalytics.filter((s: ShiftAnalytics) => s.status === 'filled').length / totalShifts) * 100).toFixed(1)}%
+                  {(
+                    (shiftAnalytics.filter((s: ShiftAnalytics) => s.status === "filled").length /
+                      totalShifts) *
+                    100
+                  ).toFixed(1)}
+                  %
                 </p>
               </div>
             </div>
@@ -330,30 +384,23 @@ export default function DetailedShiftAnalyticsPage() {
                 <ResponsiveContainer width="100%" height={350}>
                   <BarChart data={specialtyChartData} margin={chartMargin}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis 
-                      dataKey="specialty" 
-                      angle={-45} 
-                      textAnchor="end" 
+                    <XAxis
+                      dataKey="specialty"
+                      angle={-45}
+                      textAnchor="end"
                       height={80}
                       fontSize={12}
-                      tick={{ fill: 'currentColor' }}
+                      tick={{ fill: "currentColor" }}
                     />
-                    <YAxis 
-                      fontSize={12}
-                      tick={{ fill: 'currentColor' }}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '6px'
+                    <YAxis fontSize={12} tick={{ fill: "currentColor" }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "6px",
                       }}
                     />
-                    <Bar 
-                      dataKey="avgApplications" 
-                      fill={COLORS[0]} 
-                      radius={[4, 4, 0, 0]}
-                    />
+                    <Bar dataKey="avgApplications" fill={COLORS[0]} radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -367,30 +414,23 @@ export default function DetailedShiftAnalyticsPage() {
                 <ResponsiveContainer width="100%" height={350}>
                   <BarChart data={specialtyChartData} margin={chartMargin}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis 
-                      dataKey="specialty" 
-                      angle={-45} 
-                      textAnchor="end" 
+                    <XAxis
+                      dataKey="specialty"
+                      angle={-45}
+                      textAnchor="end"
                       height={80}
                       fontSize={12}
-                      tick={{ fill: 'currentColor' }}
+                      tick={{ fill: "currentColor" }}
                     />
-                    <YAxis 
-                      fontSize={12}
-                      tick={{ fill: 'currentColor' }}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '6px'
+                    <YAxis fontSize={12} tick={{ fill: "currentColor" }} />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "6px",
                       }}
                     />
-                    <Bar 
-                      dataKey="avgDays" 
-                      fill={COLORS[1]} 
-                      radius={[4, 4, 0, 0]}
-                    />
+                    <Bar dataKey="avgDays" fill={COLORS[1]} radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -416,13 +456,21 @@ export default function DetailedShiftAnalyticsPage() {
                   {Object.entries(specialtyStats).map(([specialty, stats]: [string, any]) => (
                     <TableRow key={specialty}>
                       <TableCell className="font-medium">
-                        {getSpecialtyAbbreviation(specialty.replace('_', ' '))}
+                        {getSpecialtyAbbreviation(specialty.replace("_", " "))}
                       </TableCell>
                       <TableCell>{stats.totalShifts}</TableCell>
                       <TableCell>{stats.avgApplicationsPerShift.toFixed(1)}</TableCell>
                       <TableCell>{stats.avgDaysPosted.toFixed(1)}</TableCell>
                       <TableCell>
-                        <Badge variant={stats.fillRate > 80 ? "default" : stats.fillRate > 60 ? "secondary" : "destructive"}>
+                        <Badge
+                          variant={
+                            stats.fillRate > 80
+                              ? "default"
+                              : stats.fillRate > 60
+                                ? "secondary"
+                                : "destructive"
+                          }
+                        >
                           {stats.fillRate.toFixed(1)}%
                         </Badge>
                       </TableCell>
@@ -490,13 +538,21 @@ export default function DetailedShiftAnalyticsPage() {
                   {Object.entries(workerTypeStats).map(([type, stats]: [string, any]) => (
                     <TableRow key={type}>
                       <TableCell className="font-medium">
-                        {type.replace('_', ' ').toUpperCase()}
+                        {type.replace("_", " ").toUpperCase()}
                       </TableCell>
                       <TableCell>{stats.totalShifts}</TableCell>
                       <TableCell>{stats.avgApplicationsPerShift.toFixed(1)}</TableCell>
                       <TableCell>{stats.avgDaysPosted.toFixed(1)}</TableCell>
                       <TableCell>
-                        <Badge variant={stats.fillRate > 80 ? "default" : stats.fillRate > 60 ? "secondary" : "destructive"}>
+                        <Badge
+                          variant={
+                            stats.fillRate > 80
+                              ? "default"
+                              : stats.fillRate > 60
+                                ? "secondary"
+                                : "destructive"
+                          }
+                        >
                           {stats.fillRate.toFixed(1)}%
                         </Badge>
                       </TableCell>
@@ -546,7 +602,7 @@ export default function DetailedShiftAnalyticsPage() {
                   {urgencyChartData.map((item, index) => (
                     <div key={item.urgency} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <div 
+                        <div
                           className="w-4 h-4 rounded"
                           style={{ backgroundColor: COLORS[index % COLORS.length] }}
                         />
@@ -587,18 +643,36 @@ export default function DetailedShiftAnalyticsPage() {
                   {shiftAnalytics.slice(0, 20).map((shift: ShiftAnalytics) => (
                     <TableRow key={shift.id}>
                       <TableCell className="font-medium">{shift.title}</TableCell>
-                      <TableCell>{getSpecialtyAbbreviation(shift.specialty.replace('_', ' '))}</TableCell>
-                      <TableCell>{shift.workerType.replace('_', ' ').toUpperCase()}</TableCell>
+                      <TableCell>
+                        {getSpecialtyAbbreviation(shift.specialty.replace("_", " "))}
+                      </TableCell>
+                      <TableCell>{shift.workerType.replace("_", " ").toUpperCase()}</TableCell>
                       <TableCell>{shift.facilityName}</TableCell>
                       <TableCell>{shift.totalApplications}</TableCell>
                       <TableCell>{shift.daysPosted}</TableCell>
                       <TableCell>
-                        <Badge variant={shift.status === 'filled' ? "default" : shift.status === 'open' ? "secondary" : "destructive"}>
+                        <Badge
+                          variant={
+                            shift.status === "filled"
+                              ? "default"
+                              : shift.status === "open"
+                                ? "secondary"
+                                : "destructive"
+                          }
+                        >
                           {shift.status.toUpperCase()}
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={shift.urgency === 'urgent' ? "destructive" : shift.urgency === 'high' ? "secondary" : "outline"}>
+                        <Badge
+                          variant={
+                            shift.urgency === "urgent"
+                              ? "destructive"
+                              : shift.urgency === "high"
+                                ? "secondary"
+                                : "outline"
+                          }
+                        >
                           {shift.urgency.toUpperCase()}
                         </Badge>
                       </TableCell>

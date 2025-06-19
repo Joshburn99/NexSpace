@@ -17,7 +17,7 @@ interface ActivityItem {
 
 export function RecentActivity() {
   const { user } = useAuth();
-  
+
   const { data: auditLogs = [], isLoading } = useQuery<AuditLog[]>({
     queryKey: ["/api/dashboard/recent-activity"],
     enabled: !!user?.facilityId,
@@ -27,13 +27,13 @@ export function RecentActivity() {
     const date = new Date(dateString);
     const now = new Date();
     const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
-    
+
     if (diffInMinutes < 1) return "Just now";
     if (diffInMinutes < 60) return `${diffInMinutes} minutes ago`;
-    
+
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours} hours ago`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays} days ago`;
   };
@@ -79,7 +79,7 @@ export function RecentActivity() {
         name: `User ${log.userId}`, // This would be populated with actual user data in a real app
         action,
         time: formatTimeAgo(log.createdAt),
-        icon
+        icon,
       };
     });
   };
@@ -92,15 +92,17 @@ export function RecentActivity() {
       name: "Jennifer Wilson",
       action: "clocked in for ICU shift",
       time: "2 minutes ago",
-      avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&w=32&h=32&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?ixlib=rb-4.0.3&w=32&h=32&fit=crop&crop=face",
     },
     {
-      id: "mock-2", 
+      id: "mock-2",
       type: "user",
       name: "Dr. Michael Chen",
       action: "approved overtime request",
       time: "15 minutes ago",
-      avatar: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-4.0.3&w=32&h=32&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1582750433449-648ed127bb54?ixlib=rb-4.0.3&w=32&h=32&fit=crop&crop=face",
     },
     {
       id: "mock-3",
@@ -108,8 +110,8 @@ export function RecentActivity() {
       name: "System",
       action: "generated weekly compliance report",
       time: "1 hour ago",
-      icon: <Settings className="h-4 w-4 text-blue-600" />
-    }
+      icon: <Settings className="h-4 w-4 text-blue-600" />,
+    },
   ];
 
   const activities = transformAuditLogsToActivities(auditLogs);
@@ -158,7 +160,10 @@ export function RecentActivity() {
                   <Avatar className="w-8 h-8">
                     <AvatarImage src={activity.avatar} />
                     <AvatarFallback className="text-xs">
-                      {activity.name.split(' ').map(n => n[0]).join('')}
+                      {activity.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
                     </AvatarFallback>
                   </Avatar>
                 ) : (

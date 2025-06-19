@@ -12,16 +12,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "ICU",
       licenseNumber: "RN123456",
-      licenseExpiry: new Date('2025-12-31'),
+      licenseExpiry: new Date("2025-12-31"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "35.00",
       location: "Portland, OR",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
       bio: "Experienced ICU nurse with 8 years in critical care. Specializes in cardiac and trauma patients.",
       certifications: ["BLS", "ACLS", "CCRN", "NIH Stroke Scale"],
-      languages: ["English", "Spanish"]
+      languages: ["English", "Spanish"],
     },
     {
       name: "Michael Chen",
@@ -30,16 +31,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "Emergency",
       licenseNumber: "RN234567",
-      licenseExpiry: new Date('2025-11-15'),
+      licenseExpiry: new Date("2025-11-15"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "38.00",
       location: "Seattle, WA",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
       bio: "Emergency department nurse with expertise in trauma and emergency medicine procedures.",
       certifications: ["BLS", "ACLS", "PALS", "TNCC"],
-      languages: ["English", "Mandarin"]
+      languages: ["English", "Mandarin"],
     },
     {
       name: "Jessica Rodriguez",
@@ -48,16 +50,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "Med-Surg",
       licenseNumber: "RN345678",
-      licenseExpiry: new Date('2025-10-20'),
+      licenseExpiry: new Date("2025-10-20"),
       isActive: true,
       employmentType: "part_time",
       hourlyRate: "36.50",
       location: "Portland, OR",
       availabilityStatus: "on_assignment",
-      profilePhoto: "https://images.unsplash.com/photo-1594824309806-c70afda6a257?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1594824309806-c70afda6a257?w=150&h=150&fit=crop&crop=face",
       bio: "Medical-surgical nurse with strong patient advocacy skills and wound care expertise.",
       certifications: ["BLS", "ACLS", "Wound Care Certified"],
-      languages: ["English", "Spanish"]
+      languages: ["English", "Spanish"],
     },
     {
       name: "David Williams",
@@ -66,16 +69,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "NICU",
       licenseNumber: "RN456789",
-      licenseExpiry: new Date('2025-09-30'),
+      licenseExpiry: new Date("2025-09-30"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "42.00",
       location: "San Francisco, CA",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
       bio: "Neonatal intensive care specialist with 10+ years caring for premature and critically ill infants.",
       certifications: ["BLS", "NRP", "STABLE", "RNC-NIC"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Emily Davis",
@@ -84,16 +88,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "Pediatrics",
       licenseNumber: "RN567890",
-      licenseExpiry: new Date('2025-08-15'),
+      licenseExpiry: new Date("2025-08-15"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "37.25",
       location: "Denver, CO",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?w=150&h=150&fit=crop&crop=face",
       bio: "Pediatric nurse passionate about child health and family-centered care.",
       certifications: ["BLS", "PALS", "CPN"],
-      languages: ["English", "French"]
+      languages: ["English", "French"],
     },
     {
       name: "James Wilson",
@@ -102,16 +107,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "Oncology",
       licenseNumber: "RN678901",
-      licenseExpiry: new Date('2026-01-10'),
+      licenseExpiry: new Date("2026-01-10"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "39.75",
       location: "Phoenix, AZ",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=150&h=150&fit=crop&crop=face",
       bio: "Oncology nurse specializing in chemotherapy administration and cancer patient care.",
       certifications: ["BLS", "OCN", "Chemotherapy Certified"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Maria Garcia",
@@ -120,16 +126,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "Cardiology",
       licenseNumber: "RN789012",
-      licenseExpiry: new Date('2025-07-22'),
+      licenseExpiry: new Date("2025-07-22"),
       isActive: true,
       employmentType: "part_time",
       hourlyRate: "36.00",
       location: "Austin, TX",
       availabilityStatus: "on_assignment",
-      profilePhoto: "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=150&h=150&fit=crop&crop=face",
       bio: "Cardiac care nurse with expertise in post-operative cardiac surgery patients.",
       certifications: ["BLS", "ACLS", "CSC"],
-      languages: ["English", "Spanish", "Portuguese"]
+      languages: ["English", "Spanish", "Portuguese"],
     },
     {
       name: "Robert Lee",
@@ -138,16 +145,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "OR",
       licenseNumber: "RN890123",
-      licenseExpiry: new Date('2025-12-05'),
+      licenseExpiry: new Date("2025-12-05"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "45.00",
       location: "Los Angeles, CA",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face",
       bio: "Operating room nurse with extensive experience in orthopedic and cardiac surgeries.",
       certifications: ["BLS", "ACLS", "CNOR"],
-      languages: ["English", "Korean"]
+      languages: ["English", "Korean"],
     },
     {
       name: "Ashley Brown",
@@ -156,16 +164,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "Maternity",
       licenseNumber: "RN901234",
-      licenseExpiry: new Date('2025-11-18'),
+      licenseExpiry: new Date("2025-11-18"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "34.50",
       location: "Tampa, FL",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1594824309807-fe7e31dbbdb1?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1594824309807-fe7e31dbbdb1?w=150&h=150&fit=crop&crop=face",
       bio: "Labor and delivery nurse dedicated to supporting mothers and families during childbirth.",
       certifications: ["BLS", "NRP", "AWHONN", "Lactation Consultant"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Kevin Thompson",
@@ -174,16 +183,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "Telemetry",
       licenseNumber: "RN012345",
-      licenseExpiry: new Date('2026-02-14'),
+      licenseExpiry: new Date("2026-02-14"),
       isActive: true,
       employmentType: "part_time",
       hourlyRate: "35.75",
       location: "Nashville, TN",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
       bio: "Telemetry nurse skilled in cardiac monitoring and arrhythmia detection.",
       certifications: ["BLS", "ACLS", "Progressive Care Certified"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Nicole Martinez",
@@ -192,16 +202,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "Dialysis",
       licenseNumber: "RN123450",
-      licenseExpiry: new Date('2025-06-30'),
+      licenseExpiry: new Date("2025-06-30"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "38.25",
       location: "Miami, FL",
       availabilityStatus: "on_assignment",
-      profilePhoto: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=150&h=150&fit=crop&crop=face",
       bio: "Dialysis nurse with expertise in hemodialysis and peritoneal dialysis procedures.",
       certifications: ["BLS", "ACLS", "CDN"],
-      languages: ["English", "Spanish"]
+      languages: ["English", "Spanish"],
     },
     {
       name: "Christopher Johnson",
@@ -210,16 +221,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "Psychiatry",
       licenseNumber: "RN234501",
-      licenseExpiry: new Date('2025-09-12'),
+      licenseExpiry: new Date("2025-09-12"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "37.00",
       location: "Chicago, IL",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
       bio: "Psychiatric nurse specializing in mental health crisis intervention and patient stabilization.",
       certifications: ["BLS", "CPI", "PMH-BC"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Amanda White",
@@ -228,16 +240,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "Burn Unit",
       licenseNumber: "RN345012",
-      licenseExpiry: new Date('2025-10-28'),
+      licenseExpiry: new Date("2025-10-28"),
       isActive: true,
       employmentType: "part_time",
       hourlyRate: "40.50",
       location: "Boston, MA",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1559757175-8a5dc65765d7?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1559757175-8a5dc65765d7?w=150&h=150&fit=crop&crop=face",
       bio: "Burn unit specialist with advanced wound care and pain management expertise.",
       certifications: ["BLS", "ACLS", "CBRN"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Daniel Anderson",
@@ -246,16 +259,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "Neurology",
       licenseNumber: "RN456023",
-      licenseExpiry: new Date('2026-01-20'),
+      licenseExpiry: new Date("2026-01-20"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "41.25",
       location: "Atlanta, GA",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=150&h=150&fit=crop&crop=face",
       bio: "Neurology nurse with expertise in stroke care and neurological assessments.",
       certifications: ["BLS", "ACLS", "CNRN", "NIH Stroke Scale"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Stephanie Clark",
@@ -264,16 +278,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Registered Nurse",
       department: "Rehab",
       licenseNumber: "RN567034",
-      licenseExpiry: new Date('2025-08-08'),
+      licenseExpiry: new Date("2025-08-08"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "36.75",
       location: "Salt Lake City, UT",
       availabilityStatus: "on_assignment",
-      profilePhoto: "https://images.unsplash.com/photo-1594824309806-c70afda6a257?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1594824309806-c70afda6a257?w=150&h=150&fit=crop&crop=face",
       bio: "Rehabilitation nurse focused on helping patients regain independence after injury or illness.",
       certifications: ["BLS", "ACLS", "CRRN"],
-      languages: ["English", "German"]
+      languages: ["English", "German"],
     },
 
     // Licensed Practical Nurses (10 profiles)
@@ -284,16 +299,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Licensed Practical Nurse",
       department: "Med-Surg",
       licenseNumber: "LPN678045",
-      licenseExpiry: new Date('2025-11-30'),
+      licenseExpiry: new Date("2025-11-30"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "28.00",
       location: "Portland, OR",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
       bio: "Dedicated LPN with 5 years experience in medical-surgical nursing care.",
       certifications: ["BLS", "IV Therapy Certified"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Thomas Mitchell",
@@ -302,16 +318,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Licensed Practical Nurse",
       department: "Long Term Care",
       licenseNumber: "LPN789056",
-      licenseExpiry: new Date('2025-09-25'),
+      licenseExpiry: new Date("2025-09-25"),
       isActive: true,
       employmentType: "part_time",
       hourlyRate: "26.50",
       location: "Seattle, WA",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
       bio: "Compassionate LPN specializing in geriatric care and chronic disease management.",
       certifications: ["BLS", "Medication Administration"],
-      languages: ["English", "Russian"]
+      languages: ["English", "Russian"],
     },
     {
       name: "Lisa Thompson",
@@ -320,16 +337,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Licensed Practical Nurse",
       department: "Geriatrics",
       licenseNumber: "LPN890067",
-      licenseExpiry: new Date('2025-07-15'),
+      licenseExpiry: new Date("2025-07-15"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "29.25",
       location: "San Diego, CA",
       availabilityStatus: "on_assignment",
-      profilePhoto: "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=150&h=150&fit=crop&crop=face",
       bio: "Geriatric care specialist with expertise in dementia and Alzheimer's patient care.",
       certifications: ["BLS", "Dementia Care Specialist"],
-      languages: ["English", "Spanish"]
+      languages: ["English", "Spanish"],
     },
     {
       name: "Brian Davis",
@@ -338,16 +356,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Licensed Practical Nurse",
       department: "Orthopedics",
       licenseNumber: "LPN901078",
-      licenseExpiry: new Date('2025-12-10'),
+      licenseExpiry: new Date("2025-12-10"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "27.75",
       location: "Houston, TX",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
       bio: "Orthopedic LPN with experience in post-surgical care and mobility assistance.",
       certifications: ["BLS", "Orthopedic Certified"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Jennifer Wilson",
@@ -356,16 +375,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Licensed Practical Nurse",
       department: "Pediatrics",
       licenseNumber: "LPN012089",
-      licenseExpiry: new Date('2025-10-05'),
+      licenseExpiry: new Date("2025-10-05"),
       isActive: true,
       employmentType: "part_time",
       hourlyRate: "28.50",
       location: "Phoenix, AZ",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1594824309807-fe7e31dbbdb1?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1594824309807-fe7e31dbbdb1?w=150&h=150&fit=crop&crop=face",
       bio: "Pediatric LPN who loves working with children and supporting families.",
       certifications: ["BLS", "Pediatric Care Certified"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Mark Rodriguez",
@@ -374,16 +394,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Licensed Practical Nurse",
       department: "Urology",
       licenseNumber: "LPN123090",
-      licenseExpiry: new Date('2026-01-15'),
+      licenseExpiry: new Date("2026-01-15"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "29.00",
       location: "Denver, CO",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=150&h=150&fit=crop&crop=face",
       bio: "Urology specialist LPN with experience in pre and post-operative care.",
       certifications: ["BLS", "Urology Certified"],
-      languages: ["English", "Spanish"]
+      languages: ["English", "Spanish"],
     },
     {
       name: "Angela Taylor",
@@ -392,16 +413,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Licensed Practical Nurse",
       department: "Wound Care",
       licenseNumber: "LPN234001",
-      licenseExpiry: new Date('2025-08-20'),
+      licenseExpiry: new Date("2025-08-20"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "27.25",
       location: "Las Vegas, NV",
       availabilityStatus: "on_assignment",
-      profilePhoto: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=150&h=150&fit=crop&crop=face",
       bio: "Wound care specialist with advanced training in complex wound management.",
       certifications: ["BLS", "CWOCN"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Jason Lee",
@@ -410,16 +432,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Licensed Practical Nurse",
       department: "Endocrinology",
       licenseNumber: "LPN345012",
-      licenseExpiry: new Date('2025-11-12'),
+      licenseExpiry: new Date("2025-11-12"),
       isActive: true,
       employmentType: "part_time",
       hourlyRate: "28.75",
       location: "Minneapolis, MN",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face",
       bio: "Endocrinology LPN specializing in diabetes care and patient education.",
       certifications: ["BLS", "Diabetes Educator"],
-      languages: ["English", "Korean"]
+      languages: ["English", "Korean"],
     },
     {
       name: "Monica Garcia",
@@ -428,16 +451,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Licensed Practical Nurse",
       department: "Dermatology",
       licenseNumber: "LPN456023",
-      licenseExpiry: new Date('2025-09-08'),
+      licenseExpiry: new Date("2025-09-08"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "26.00",
       location: "San Antonio, TX",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
       bio: "Dermatology LPN with expertise in skin care treatments and patient education.",
       certifications: ["BLS", "Dermatology Certified"],
-      languages: ["English", "Spanish"]
+      languages: ["English", "Spanish"],
     },
     {
       name: "Steven Brown",
@@ -446,16 +470,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Licensed Practical Nurse",
       department: "Gastroenterology",
       licenseNumber: "LPN567034",
-      licenseExpiry: new Date('2025-12-25'),
+      licenseExpiry: new Date("2025-12-25"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "27.50",
       location: "Orlando, FL",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
       bio: "Gastroenterology LPN with experience in endoscopy and GI procedures.",
       certifications: ["BLS", "GI Certified"],
-      languages: ["English"]
+      languages: ["English"],
     },
 
     // Certified Nursing Assistants (10 profiles)
@@ -466,16 +491,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Certified Nursing Assistant",
       department: "Long Term Care",
       licenseNumber: "CNA678045",
-      licenseExpiry: new Date('2025-10-15'),
+      licenseExpiry: new Date("2025-10-15"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "18.00",
       location: "Portland, OR",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1594824309806-c70afda6a257?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1594824309806-c70afda6a257?w=150&h=150&fit=crop&crop=face",
       bio: "Caring CNA with 3 years experience in long-term care facilities.",
       certifications: ["CNA", "BLS"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Carlos Martinez",
@@ -484,16 +510,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Certified Nursing Assistant",
       department: "Memory Care",
       licenseNumber: "CNA789056",
-      licenseExpiry: new Date('2025-08-30'),
+      licenseExpiry: new Date("2025-08-30"),
       isActive: true,
       employmentType: "part_time",
       hourlyRate: "17.50",
       location: "Tucson, AZ",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
       bio: "Memory care specialist CNA with training in dementia patient care.",
       certifications: ["CNA", "Dementia Care Training"],
-      languages: ["English", "Spanish"]
+      languages: ["English", "Spanish"],
     },
     {
       name: "Rebecca White",
@@ -502,16 +529,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Certified Nursing Assistant",
       department: "Assisted Living",
       licenseNumber: "CNA890067",
-      licenseExpiry: new Date('2025-11-22'),
+      licenseExpiry: new Date("2025-11-22"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "19.25",
       location: "Spokane, WA",
       availabilityStatus: "on_assignment",
-      profilePhoto: "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=150&h=150&fit=crop&crop=face",
       bio: "Assisted living CNA focused on promoting resident independence and dignity.",
       certifications: ["CNA", "First Aid"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Antonio Davis",
@@ -520,16 +548,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Certified Nursing Assistant",
       department: "Hospice",
       licenseNumber: "CNA901078",
-      licenseExpiry: new Date('2025-09-18'),
+      licenseExpiry: new Date("2025-09-18"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "18.75",
       location: "Albuquerque, NM",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=150&h=150&fit=crop&crop=face",
       bio: "Compassionate hospice CNA providing comfort care for end-of-life patients.",
       certifications: ["CNA", "Hospice Certified"],
-      languages: ["English", "Spanish"]
+      languages: ["English", "Spanish"],
     },
     {
       name: "Michelle Thompson",
@@ -538,16 +567,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Certified Nursing Assistant",
       department: "Home Health",
       licenseNumber: "CNA012089",
-      licenseExpiry: new Date('2025-07-05'),
+      licenseExpiry: new Date("2025-07-05"),
       isActive: true,
       employmentType: "part_time",
       hourlyRate: "17.00",
       location: "Boise, ID",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1594824309807-fe7e31dbbdb1?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1594824309807-fe7e31dbbdb1?w=150&h=150&fit=crop&crop=face",
       bio: "Home health CNA helping patients maintain independence in their own homes.",
       certifications: ["CNA", "Home Health Aide"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Gregory Wilson",
@@ -556,16 +586,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Certified Nursing Assistant",
       department: "Rehabilitation",
       licenseNumber: "CNA123090",
-      licenseExpiry: new Date('2026-02-28'),
+      licenseExpiry: new Date("2026-02-28"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "18.50",
       location: "Fresno, CA",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face",
       bio: "Rehabilitation CNA supporting patients in their recovery and mobility goals.",
       certifications: ["CNA", "Rehab Aide"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Sandra Garcia",
@@ -574,16 +605,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Certified Nursing Assistant",
       department: "Skilled Nursing",
       licenseNumber: "CNA234001",
-      licenseExpiry: new Date('2025-12-08'),
+      licenseExpiry: new Date("2025-12-08"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "19.00",
       location: "Colorado Springs, CO",
       availabilityStatus: "on_assignment",
-      profilePhoto: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=150&h=150&fit=crop&crop=face",
       bio: "Skilled nursing CNA with experience in complex medical care.",
       certifications: ["CNA", "Med Tech"],
-      languages: ["English", "Spanish"]
+      languages: ["English", "Spanish"],
     },
     {
       name: "Kenneth Lee",
@@ -592,16 +624,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Certified Nursing Assistant",
       department: "Med-Surg",
       licenseNumber: "CNA345012",
-      licenseExpiry: new Date('2025-10-12'),
+      licenseExpiry: new Date("2025-10-12"),
       isActive: true,
       employmentType: "part_time",
       hourlyRate: "17.75",
       location: "Sacramento, CA",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
       bio: "Medical-surgical CNA with strong patient care and communication skills.",
       certifications: ["CNA", "BLS"],
-      languages: ["English", "Korean"]
+      languages: ["English", "Korean"],
     },
     {
       name: "Deborah Brown",
@@ -610,16 +643,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Certified Nursing Assistant",
       department: "ICU",
       licenseNumber: "CNA456023",
-      licenseExpiry: new Date('2025-08-15'),
+      licenseExpiry: new Date("2025-08-15"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "20.00",
       location: "Kansas City, MO",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
       bio: "ICU CNA with specialized training in critical care support.",
       certifications: ["CNA", "Critical Care Aide"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Paul Rodriguez",
@@ -628,16 +662,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Certified Nursing Assistant",
       department: "Emergency",
       licenseNumber: "CNA567034",
-      licenseExpiry: new Date('2025-11-01'),
+      licenseExpiry: new Date("2025-11-01"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "18.25",
       location: "Virginia Beach, VA",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
       bio: "Emergency department CNA with fast-paced patient care experience.",
       certifications: ["CNA", "Emergency Care"],
-      languages: ["English", "Spanish"]
+      languages: ["English", "Spanish"],
     },
 
     // Physical Therapists (8 profiles)
@@ -648,16 +683,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Physical Therapist",
       department: "Rehabilitation",
       licenseNumber: "PT678045",
-      licenseExpiry: new Date('2025-12-31'),
+      licenseExpiry: new Date("2025-12-31"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "42.00",
       location: "Portland, OR",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
       bio: "Physical therapist with DPT degree specializing in neurological rehabilitation.",
       certifications: ["DPT", "NCS", "Dry Needling"],
-      languages: ["English", "Mandarin"]
+      languages: ["English", "Mandarin"],
     },
     {
       name: "Dr. Laura Williams",
@@ -666,16 +702,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Physical Therapist",
       department: "Orthopedics",
       licenseNumber: "PT789056",
-      licenseExpiry: new Date('2025-09-15'),
+      licenseExpiry: new Date("2025-09-15"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "45.50",
       location: "San Jose, CA",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1594824309806-c70afda6a257?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1594824309806-c70afda6a257?w=150&h=150&fit=crop&crop=face",
       bio: "Orthopedic physical therapist with expertise in post-surgical rehabilitation.",
       certifications: ["DPT", "OCS", "Manual Therapy"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Dr. James Anderson",
@@ -684,16 +721,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Physical Therapist",
       department: "Sports Medicine",
       licenseNumber: "PT890067",
-      licenseExpiry: new Date('2025-11-20'),
+      licenseExpiry: new Date("2025-11-20"),
       isActive: true,
       employmentType: "part_time",
       hourlyRate: "48.00",
       location: "Denver, CO",
       availabilityStatus: "on_assignment",
-      profilePhoto: "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=150&h=150&fit=crop&crop=face",
       bio: "Sports medicine physical therapist working with athletes and active individuals.",
       certifications: ["DPT", "SCS", "CSCS"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Dr. Sarah Taylor",
@@ -702,16 +740,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Physical Therapist",
       department: "Neurology",
       licenseNumber: "PT901078",
-      licenseExpiry: new Date('2025-08-05'),
+      licenseExpiry: new Date("2025-08-05"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "44.25",
       location: "Austin, TX",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=150&h=150&fit=crop&crop=face",
       bio: "Neurological physical therapist specializing in stroke and brain injury recovery.",
       certifications: ["DPT", "NCS", "LSVT BIG"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Dr. Richard Clark",
@@ -720,16 +759,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Physical Therapist",
       department: "Geriatrics",
       licenseNumber: "PT012089",
-      licenseExpiry: new Date('2026-01-10'),
+      licenseExpiry: new Date("2026-01-10"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "41.75",
       location: "Seattle, WA",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face",
       bio: "Geriatric physical therapist focused on fall prevention and mobility improvement.",
       certifications: ["DPT", "GCS", "Balance Training"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Dr. Lisa Martinez",
@@ -738,16 +778,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Physical Therapist",
       department: "Pediatrics",
       licenseNumber: "PT123090",
-      licenseExpiry: new Date('2025-10-25'),
+      licenseExpiry: new Date("2025-10-25"),
       isActive: true,
       employmentType: "part_time",
       hourlyRate: "46.50",
       location: "Phoenix, AZ",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1594824309807-fe7e31dbbdb1?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1594824309807-fe7e31dbbdb1?w=150&h=150&fit=crop&crop=face",
       bio: "Pediatric physical therapist helping children with developmental delays and injuries.",
       certifications: ["DPT", "PCS", "NDT"],
-      languages: ["English", "Spanish"]
+      languages: ["English", "Spanish"],
     },
     {
       name: "Dr. David Wilson",
@@ -756,16 +797,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Physical Therapist",
       department: "Cardiac Rehab",
       licenseNumber: "PT234001",
-      licenseExpiry: new Date('2025-07-18'),
+      licenseExpiry: new Date("2025-07-18"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "43.00",
       location: "Miami, FL",
       availabilityStatus: "on_assignment",
-      profilePhoto: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
       bio: "Cardiac rehabilitation physical therapist specializing in cardiovascular recovery.",
       certifications: ["DPT", "CCS", "ACSM"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Dr. Jennifer Garcia",
@@ -774,16 +816,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Physical Therapist",
       department: "Hand Therapy",
       licenseNumber: "PT345012",
-      licenseExpiry: new Date('2025-12-12'),
+      licenseExpiry: new Date("2025-12-12"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "47.25",
       location: "Nashville, TN",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=150&h=150&fit=crop&crop=face",
       bio: "Hand therapy specialist with expertise in upper extremity rehabilitation.",
       certifications: ["DPT", "CHT", "Manual Therapy"],
-      languages: ["English", "Spanish"]
+      languages: ["English", "Spanish"],
     },
 
     // Respiratory Therapists (7 profiles)
@@ -794,16 +837,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Respiratory Therapist",
       department: "ICU",
       licenseNumber: "RT456023",
-      licenseExpiry: new Date('2025-09-30'),
+      licenseExpiry: new Date("2025-09-30"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "38.00",
       location: "Portland, OR",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
       bio: "ICU respiratory therapist with expertise in mechanical ventilation and critical care.",
       certifications: ["RRT", "ACLS", "PALS"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Christina Lee",
@@ -812,16 +856,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Respiratory Therapist",
       department: "NICU",
       licenseNumber: "RT567034",
-      licenseExpiry: new Date('2025-11-15'),
+      licenseExpiry: new Date("2025-11-15"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "40.50",
       location: "San Francisco, CA",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
       bio: "Neonatal respiratory therapist specializing in premature infant care.",
       certifications: ["RRT", "NRP", "NICU Specialist"],
-      languages: ["English", "Korean"]
+      languages: ["English", "Korean"],
     },
     {
       name: "Ryan Johnson",
@@ -830,16 +875,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Respiratory Therapist",
       department: "Emergency",
       licenseNumber: "RT678045",
-      licenseExpiry: new Date('2025-08-22'),
+      licenseExpiry: new Date("2025-08-22"),
       isActive: true,
       employmentType: "part_time",
       hourlyRate: "37.25",
       location: "Chicago, IL",
       availabilityStatus: "on_assignment",
-      profilePhoto: "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?w=150&h=150&fit=crop&crop=face",
       bio: "Emergency department respiratory therapist skilled in acute respiratory care.",
       certifications: ["RRT", "ACLS", "Emergency Care"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Maria Rodriguez",
@@ -848,16 +894,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Respiratory Therapist",
       department: "Pulmonology",
       licenseNumber: "RT789056",
-      licenseExpiry: new Date('2026-02-08'),
+      licenseExpiry: new Date("2026-02-08"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "39.75",
       location: "Dallas, TX",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1594824309806-c70afda6a257?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1594824309806-c70afda6a257?w=150&h=150&fit=crop&crop=face",
       bio: "Pulmonology respiratory therapist with expertise in chronic lung disease management.",
       certifications: ["RRT", "CPFT", "Asthma Educator"],
-      languages: ["English", "Spanish"]
+      languages: ["English", "Spanish"],
     },
     {
       name: "Andrew Brown",
@@ -866,16 +913,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Respiratory Therapist",
       department: "Sleep Lab",
       licenseNumber: "RT890067",
-      licenseExpiry: new Date('2025-10-01'),
+      licenseExpiry: new Date("2025-10-01"),
       isActive: true,
       employmentType: "contract",
       hourlyRate: "36.50",
       location: "Atlanta, GA",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face",
       bio: "Sleep lab respiratory therapist specializing in sleep disorder diagnosis and treatment.",
       certifications: ["RRT", "Sleep Tech", "CPAP Specialist"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Nicole Davis",
@@ -884,16 +932,17 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Respiratory Therapist",
       department: "OR",
       licenseNumber: "RT901078",
-      licenseExpiry: new Date('2025-12-20'),
+      licenseExpiry: new Date("2025-12-20"),
       isActive: true,
       employmentType: "part_time",
       hourlyRate: "41.00",
       location: "Las Vegas, NV",
       availabilityStatus: "available",
-      profilePhoto: "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=150&h=150&fit=crop&crop=face",
       bio: "Operating room respiratory therapist providing intraoperative respiratory care.",
       certifications: ["RRT", "ACLS", "OR Specialist"],
-      languages: ["English"]
+      languages: ["English"],
     },
     {
       name: "Joseph Wilson",
@@ -902,22 +951,23 @@ export async function createEnhancedStaffProfiles() {
       specialty: "Respiratory Therapist",
       department: "Home Care",
       licenseNumber: "RT012089",
-      licenseExpiry: new Date('2025-07-28'),
+      licenseExpiry: new Date("2025-07-28"),
       isActive: true,
       employmentType: "full_time",
       hourlyRate: "35.75",
       location: "Tampa, FL",
       availabilityStatus: "on_assignment",
-      profilePhoto: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
+      profilePhoto:
+        "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
       bio: "Home care respiratory therapist helping patients with respiratory equipment at home.",
       certifications: ["RRT", "Home Care Specialist"],
-      languages: ["English"]
-    }
+      languages: ["English"],
+    },
   ];
 
   // Insert the enhanced staff data
   await db.insert(staff).values(enhancedStaff);
-  
-  console.log('Created 50 enhanced staff profiles with photos and diverse specializations');
+
+  console.log("Created 50 enhanced staff profiles with photos and diverse specializations");
   return enhancedStaff;
 }

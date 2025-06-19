@@ -5,17 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/ui/logo";
-import { 
-  ChevronDown, 
-  BarChart3, 
-  Calendar, 
-  Users, 
-  Briefcase, 
-  DollarSign, 
-  MessageSquare, 
-  Settings, 
+import {
+  ChevronDown,
+  BarChart3,
+  Calendar,
+  Users,
+  Briefcase,
+  DollarSign,
+  MessageSquare,
+  Settings,
   LogOut,
-  Menu
+  Menu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { User, UserRole } from "@shared/schema";
@@ -47,8 +47,18 @@ const navigationItems: NavItem[] = [
     children: [
       { label: "Calendar View", href: "/calendar", icon: <></> },
       { label: "Open Shifts", href: "/shifts/open", icon: <></> },
-      { label: "Shift Requests", href: "/shifts/requests", icon: <></>, roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN] },
-      { label: "Shift Templates", href: "/shifts/templates", icon: <></>, roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN] },
+      {
+        label: "Shift Requests",
+        href: "/shifts/requests",
+        icon: <></>,
+        roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
+      },
+      {
+        label: "Shift Templates",
+        href: "/shifts/templates",
+        icon: <></>,
+        roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
+      },
       { label: "Time Clock", href: "/time-clock", icon: <></> },
     ],
   },
@@ -86,7 +96,12 @@ const navigationItems: NavItem[] = [
     children: [
       { label: "Invoices", href: "/invoices", icon: <></> },
       { label: "Work Logs", href: "/work-logs", icon: <></> },
-      { label: "Payroll Export", href: "/payroll", icon: <></>, roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN] },
+      {
+        label: "Payroll Export",
+        href: "/payroll",
+        icon: <></>,
+        roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
+      },
     ],
   },
   {
@@ -97,22 +112,26 @@ const navigationItems: NavItem[] = [
   },
 ];
 
-function NavItemComponent({ 
-  item, 
-  userRole, 
-  expanded, 
-  level = 0 
-}: { 
-  item: NavItem; 
-  userRole: string; 
-  expanded: boolean; 
-  level?: number; 
+function NavItemComponent({
+  item,
+  userRole,
+  expanded,
+  level = 0,
+}: {
+  item: NavItem;
+  userRole: string;
+  expanded: boolean;
+  level?: number;
 }) {
   const [location] = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
   // Check if user has permission to see this item
-  if (item.roles && !item.roles.includes(userRole as UserRole) && userRole !== UserRole.SUPER_ADMIN) {
+  if (
+    item.roles &&
+    !item.roles.includes(userRole as UserRole) &&
+    userRole !== UserRole.SUPER_ADMIN
+  ) {
     return null;
   }
 
@@ -126,21 +145,21 @@ function NavItemComponent({
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
             "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors",
-            level === 0 ? "text-gray-700 hover:bg-gray-100" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
+            level === 0
+              ? "text-gray-700 hover:bg-gray-100"
+              : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
             level > 0 && "ml-8"
           )}
         >
           <div className="flex items-center">
             {level === 0 && item.icon}
-            <span className={cn("ml-3", !expanded && level === 0 && "sr-only")}>
-              {item.label}
-            </span>
+            <span className={cn("ml-3", !expanded && level === 0 && "sr-only")}>{item.label}</span>
           </div>
           {expanded && (
             <ChevronDown className={cn("w-4 h-4 transition-transform", isOpen && "rotate-180")} />
           )}
         </button>
-        
+
         {isOpen && expanded && (
           <div className="space-y-1">
             {item.children?.map((child, index) => (
@@ -163,18 +182,16 @@ function NavItemComponent({
       <button
         className={cn(
           "w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
-          isActive 
-            ? "text-blue-700 bg-blue-50" 
-            : level === 0 
-              ? "text-gray-700 hover:bg-gray-100" 
+          isActive
+            ? "text-blue-700 bg-blue-50"
+            : level === 0
+              ? "text-gray-700 hover:bg-gray-100"
               : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
           level > 0 && "ml-8"
         )}
       >
         {level === 0 && item.icon}
-        <span className={cn("ml-3", !expanded && level === 0 && "sr-only")}>
-          {item.label}
-        </span>
+        <span className={cn("ml-3", !expanded && level === 0 && "sr-only")}>{item.label}</span>
         {item.badge && expanded && (
           <Badge variant="destructive" className="ml-auto">
             {item.badge}
@@ -206,10 +223,12 @@ export function SidebarNav({ user, expanded = true, onToggle }: SidebarNavProps)
   };
 
   return (
-    <aside className={cn(
-      "bg-white border-r border-gray-200 transition-all duration-300 ease-in-out flex-shrink-0",
-      expanded ? "w-64" : "w-16"
-    )}>
+    <aside
+      className={cn(
+        "bg-white border-r border-gray-200 transition-all duration-300 ease-in-out flex-shrink-0",
+        expanded ? "w-64" : "w-16"
+      )}
+    >
       <div className="flex flex-col h-full">
         {/* Logo Header */}
         <div className="flex items-center px-6 py-4 border-b border-gray-200">
@@ -222,13 +241,8 @@ export function SidebarNav({ user, expanded = true, onToggle }: SidebarNavProps)
               </div>
             )}
           </div>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggle}
-            className="ml-auto lg:hidden"
-          >
+
+          <Button variant="ghost" size="sm" onClick={onToggle} className="ml-auto lg:hidden">
             <Menu className="h-4 w-4" />
           </Button>
         </div>
@@ -240,7 +254,8 @@ export function SidebarNav({ user, expanded = true, onToggle }: SidebarNavProps)
               <Avatar>
                 <AvatarImage src={user.avatar || undefined} />
                 <AvatarFallback>
-                  {user.firstName[0]}{user.lastName[0]}
+                  {user.firstName[0]}
+                  {user.lastName[0]}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
@@ -264,12 +279,7 @@ export function SidebarNav({ user, expanded = true, onToggle }: SidebarNavProps)
         {/* Navigation Menu */}
         <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
           {navigationItems.map((item, index) => (
-            <NavItemComponent
-              key={index}
-              item={item}
-              userRole={user.role}
-              expanded={expanded}
-            />
+            <NavItemComponent key={index} item={item} userRole={user.role} expanded={expanded} />
           ))}
         </nav>
 

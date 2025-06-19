@@ -1,7 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { History, Building, Clock, ChevronRight } from "lucide-react";
@@ -14,7 +21,7 @@ interface WorkHistoryEntry {
   hours: number;
   facilityName: string;
   department: string;
-  status: 'completed' | 'pending' | 'cancelled';
+  status: "completed" | "pending" | "cancelled";
   rate: number;
   totalPay: number;
 }
@@ -23,19 +30,19 @@ export function WorkHistorySection() {
   const { user } = useAuth();
 
   const { data: history, isLoading } = useQuery<WorkHistoryEntry[]>({
-    queryKey: [`/api/history?userId=${user?.id}`]
+    queryKey: [`/api/history?userId=${user?.id}`],
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800';
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800';
+      case "completed":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -68,23 +75,25 @@ export function WorkHistorySection() {
               <p className="text-2xl font-bold text-blue-900">{totalHours}</p>
               <p className="text-xs text-blue-600">This month</p>
             </div>
-            
+
             <div className="text-center p-4 bg-green-50 rounded-lg">
               <div className="flex items-center justify-center space-x-2 mb-2">
                 <Building className="w-4 h-4 text-green-500" />
                 <span className="text-sm font-medium text-green-700">Facilities</span>
               </div>
               <p className="text-2xl font-bold text-green-900">
-                {new Set(history?.map(h => h.facilityName)).size || 0}
+                {new Set(history?.map((h) => h.facilityName)).size || 0}
               </p>
               <p className="text-xs text-green-600">Worked at</p>
             </div>
-            
+
             <div className="text-center p-4 bg-purple-50 rounded-lg">
               <div className="flex items-center justify-center space-x-2 mb-2">
                 <span className="text-sm font-medium text-purple-700">Earnings</span>
               </div>
-              <p className="text-2xl font-bold text-purple-900">${totalEarnings.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-purple-900">
+                ${totalEarnings.toLocaleString()}
+              </p>
               <p className="text-xs text-purple-600">This month</p>
             </div>
           </div>
@@ -108,7 +117,7 @@ export function WorkHistorySection() {
                   {history?.slice(0, 5).map((entry) => (
                     <TableRow key={entry.id}>
                       <TableCell className="font-medium">
-                        {format(new Date(entry.date), 'MMM d')}
+                        {format(new Date(entry.date), "MMM d")}
                       </TableCell>
                       <TableCell>
                         <div>
@@ -119,9 +128,7 @@ export function WorkHistorySection() {
                       <TableCell>{entry.department}</TableCell>
                       <TableCell>{entry.hours}h</TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(entry.status)}>
-                          {entry.status}
-                        </Badge>
+                        <Badge className={getStatusColor(entry.status)}>{entry.status}</Badge>
                       </TableCell>
                       <TableCell className="text-right font-medium">
                         ${entry.totalPay.toFixed(2)}

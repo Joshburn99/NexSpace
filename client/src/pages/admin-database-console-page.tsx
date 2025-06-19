@@ -6,7 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Database, Play, ArrowLeft, Home, AlertTriangle, CheckCircle, Info } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
@@ -39,23 +46,25 @@ export default function AdminDatabaseConsolePage() {
   const commonQueries = [
     {
       name: "View all tables",
-      query: "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;"
+      query:
+        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;",
     },
     {
       name: "User count by role",
-      query: "SELECT role, COUNT(*) as count FROM users GROUP BY role ORDER BY count DESC;"
+      query: "SELECT role, COUNT(*) as count FROM users GROUP BY role ORDER BY count DESC;",
     },
     {
       name: "Active facilities",
-      query: "SELECT name, city, state, facility_type FROM facilities WHERE is_active = true ORDER BY name;"
+      query:
+        "SELECT name, city, state, facility_type FROM facilities WHERE is_active = true ORDER BY name;",
     },
     {
       name: "Recent audit logs",
-      query: "SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 10;"
+      query: "SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 10;",
     },
     {
       name: "Database size",
-      query: "SELECT pg_size_pretty(pg_database_size(current_database())) as database_size;"
+      query: "SELECT pg_size_pretty(pg_database_size(current_database())) as database_size;",
     },
     {
       name: "Table sizes",
@@ -65,8 +74,8 @@ export default function AdminDatabaseConsolePage() {
         pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
       FROM pg_tables 
       WHERE schemaname = 'public'
-      ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;`
-    }
+      ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;`,
+    },
   ];
 
   const renderQueryResult = () => {
@@ -95,7 +104,7 @@ export default function AdminDatabaseConsolePage() {
                       <TableCell key={cellIndex}>
                         {value === null ? (
                           <span className="text-muted-foreground italic">NULL</span>
-                        ) : typeof value === 'object' ? (
+                        ) : typeof value === "object" ? (
                           <code className="text-xs">{JSON.stringify(value)}</code>
                         ) : (
                           String(value)
@@ -137,9 +146,7 @@ export default function AdminDatabaseConsolePage() {
           </Link>
         </div>
         <h1 className="text-3xl font-bold">Database Console</h1>
-        <p className="text-muted-foreground">
-          Execute SQL queries and manage database operations
-        </p>
+        <p className="text-muted-foreground">Execute SQL queries and manage database operations</p>
       </div>
 
       <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
@@ -148,7 +155,8 @@ export default function AdminDatabaseConsolePage() {
           <span className="font-medium">Warning</span>
         </div>
         <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-          This console allows direct database access. Use with caution as changes are permanent and can affect system stability.
+          This console allows direct database access. Use with caution as changes are permanent and
+          can affect system stability.
         </p>
       </div>
 
@@ -177,7 +185,7 @@ export default function AdminDatabaseConsolePage() {
                   className="font-mono text-sm min-h-32"
                 />
               </div>
-              <Button 
+              <Button
                 onClick={handleExecuteQuery}
                 disabled={executeQueryMutation.isPending || !sqlQuery.trim()}
                 className="gap-2"
@@ -221,8 +229,8 @@ export default function AdminDatabaseConsolePage() {
                   <pre className="text-sm bg-muted p-3 rounded-lg overflow-x-auto">
                     {item.query}
                   </pre>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     onClick={() => {
                       setSqlQuery(item.query);
                       executeQueryMutation.mutate(item.query);

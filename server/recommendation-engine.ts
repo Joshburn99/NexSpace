@@ -43,12 +43,7 @@ export class LocationBasedRecommendationEngine {
   /**
    * Calculate distance between two points using Haversine formula
    */
-  private calculateDistance(
-    lat1: number,
-    lon1: number,
-    lat2: number,
-    lon2: number
-  ): number {
+  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
     const R = 3959; // Earth's radius in miles
     const dLat = this.toRadians(lat2 - lat1);
     const dLon = this.toRadians(lon2 - lon1);
@@ -195,17 +190,21 @@ export class LocationBasedRecommendationEngine {
         messages: [
           {
             role: "system",
-            content: "You are a travel time estimation expert. Based on distance and typical traffic patterns, provide a realistic travel time estimate."
+            content:
+              "You are a travel time estimation expert. Based on distance and typical traffic patterns, provide a realistic travel time estimate.",
           },
           {
             role: "user",
-            content: `Estimate travel time for a ${distance.toFixed(1)} mile trip in an urban/suburban healthcare context. Provide just the time estimate (e.g., "15-20 minutes").`
-          }
+            content: `Estimate travel time for a ${distance.toFixed(1)} mile trip in an urban/suburban healthcare context. Provide just the time estimate (e.g., "15-20 minutes").`,
+          },
         ],
-        max_tokens: 50
+        max_tokens: 50,
       });
 
-      return response.choices[0].message.content?.trim() || `${Math.round(distance * 2.5)}-${Math.round(distance * 3)} minutes`;
+      return (
+        response.choices[0].message.content?.trim() ||
+        `${Math.round(distance * 2.5)}-${Math.round(distance * 3)} minutes`
+      );
     } catch (error) {
       // Fallback calculation
       return `${Math.round(distance * 2.5)}-${Math.round(distance * 3)} minutes`;
@@ -219,7 +218,7 @@ export class LocationBasedRecommendationEngine {
     try {
       // Get all active facilities
       const allFacilities = await storage.getAllFacilities();
-      
+
       // Filter and calculate recommendations
       const recommendations: FacilityRecommendation[] = [];
 
@@ -241,10 +240,18 @@ export class LocationBasedRecommendationEngine {
         if (criteria.facilityType && facility.facilityType !== criteria.facilityType) continue;
 
         // Apply minimum rating filter
-        if (criteria.minRating && (!facility.overallRating || facility.overallRating < criteria.minRating)) continue;
+        if (
+          criteria.minRating &&
+          (!facility.overallRating || facility.overallRating < criteria.minRating)
+        )
+          continue;
 
         // Apply bed count filter
-        if (criteria.bedCountMin && (!facility.bedCount || facility.bedCount < criteria.bedCountMin)) continue;
+        if (
+          criteria.bedCountMin &&
+          (!facility.bedCount || facility.bedCount < criteria.bedCountMin)
+        )
+          continue;
 
         // Calculate recommendation score
         const { score, reasons } = this.calculateRecommendationScore(facility, distance, criteria);
@@ -271,7 +278,7 @@ export class LocationBasedRecommendationEngine {
           },
           travelInfo: {
             estimatedTravelTime: travelTime,
-          }
+          },
         };
 
         recommendations.push(recommendation);
@@ -304,11 +311,9 @@ export class LocationBasedRecommendationEngine {
     };
 
     const recommendations = await this.getRecommendations(criteria);
-    
+
     // For emergency situations, prioritize the closest facilities
-    return recommendations
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, 5);
+    return recommendations.sort((a, b) => a.distance - b.distance).slice(0, 5);
   }
 
   /**
@@ -327,12 +332,11 @@ export class LocationBasedRecommendationEngine {
     };
 
     const recommendations = await this.getRecommendations(criteria);
-    
+
     // Filter for facilities that might offer specialized care
-    return recommendations.filter(rec => {
+    return recommendations.filter((rec) => {
       const facility = rec.facility;
-      return facility.facilityType === "hospital" || 
-             facility.bedCount && facility.bedCount > 100; // Larger facilities more likely to have specialties
+      return facility.facilityType === "hospital" || (facility.bedCount && facility.bedCount > 100); // Larger facilities more likely to have specialties
     });
   }
 

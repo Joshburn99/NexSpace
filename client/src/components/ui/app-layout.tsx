@@ -2,19 +2,25 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import nexspaceLogo from "@assets/ChatGPT Image Jun 17, 2025, 01_56_58 PM_1750200821645.png";
-import { 
-  Activity, 
-  Calendar, 
-  Users, 
-  BarChart3, 
-  MessageSquare, 
-  Settings, 
-  ClipboardList, 
+import {
+  Activity,
+  Calendar,
+  Users,
+  BarChart3,
+  MessageSquare,
+  Settings,
+  ClipboardList,
   Clock,
   Building,
   DollarSign,
@@ -22,7 +28,7 @@ import {
   UserCheck,
   Bell,
   ChevronDown,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 
 interface AppLayoutProps {
@@ -49,7 +55,7 @@ interface NavigationGroup {
 const buildings = [
   { id: "1", name: "Willowbrook SNF", address: "1234 Healthcare Drive" },
   { id: "2", name: "Maple Grove Memory Care", address: "5678 Memory Lane" },
-  { id: "3", name: "Sunrise Assisted Living", address: "9012 Sunrise Blvd" }
+  { id: "3", name: "Sunrise Assisted Living", address: "9012 Sunrise Blvd" },
 ];
 
 export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
@@ -69,7 +75,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
       queryClient.setQueryData(["/api/user"], updatedUser);
       toast({
         title: "Role switched successfully",
-        description: `Now viewing as ${updatedUser.role.replace('_', ' ')}`,
+        description: `Now viewing as ${updatedUser.role.replace("_", " ")}`,
       });
     },
     onError: (error: Error) => {
@@ -86,14 +92,12 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
     workforce: true,
     hiring: true,
     insights: true,
-    billing: true
+    billing: true,
   });
 
   const navigationGroups: NavigationGroup[] = [
     {
-      items: [
-        { path: "/", icon: Activity, label: "Dashboard", exact: true }
-      ]
+      items: [{ path: "/", icon: Activity, label: "Dashboard", exact: true }],
     },
     {
       key: "scheduling",
@@ -104,8 +108,8 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
         { path: "/shifts-open", icon: ClipboardList, label: "Open Shifts" },
         { path: "/shift-requests", icon: Clock, label: "Shift Requests" },
         { path: "/scheduling", icon: Calendar, label: "Shift Templates" },
-        { path: "/time-clock", icon: Clock, label: "Time Clock" }
-      ]
+        { path: "/time-clock", icon: Clock, label: "Time Clock" },
+      ],
     },
     {
       key: "workforce",
@@ -115,8 +119,8 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
         { path: "/staff", icon: Users, label: "Staff" },
         { path: "/attendance", icon: UserCheck, label: "Attendance" },
         { path: "/time-clock", icon: Clock, label: "Time Clock" },
-        { path: "/credentials", icon: UserCheck, label: "Credentials" }
-      ]
+        { path: "/credentials", icon: UserCheck, label: "Credentials" },
+      ],
     },
     {
       key: "hiring",
@@ -126,8 +130,8 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
         { path: "/job-board", icon: ClipboardList, label: "Job Board" },
         { path: "/enhanced-job-board", icon: ClipboardList, label: "Enhanced Job Board" },
         { path: "/enhanced-job-posting", icon: FileText, label: "Job Posting" },
-        { path: "/referral", icon: Users, label: "Referrals" }
-      ]
+        { path: "/referral", icon: Users, label: "Referrals" },
+      ],
     },
     {
       key: "insights",
@@ -135,8 +139,8 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
       icon: BarChart3,
       items: [
         { path: "/analytics", icon: BarChart3, label: "Analytics" },
-        { path: "/overtime-report", icon: FileText, label: "Overtime Reports" }
-      ]
+        { path: "/overtime-report", icon: FileText, label: "Overtime Reports" },
+      ],
     },
     {
       key: "billing",
@@ -144,21 +148,21 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
       icon: DollarSign,
       items: [
         { path: "/payroll", icon: DollarSign, label: "Payroll" },
-        { path: "/invoices", icon: FileText, label: "Invoices" }
-      ]
+        { path: "/invoices", icon: FileText, label: "Invoices" },
+      ],
     },
     {
       items: [
         { path: "/messaging", icon: MessageSquare, label: "Messages", badge: 3 },
-        { path: "/settings", icon: Settings, label: "Settings" }
-      ]
-    }
+        { path: "/settings", icon: Settings, label: "Settings" },
+      ],
+    },
   ];
 
   const toggleGroup = (groupKey: string) => {
-    setExpandedGroups(prev => ({
+    setExpandedGroups((prev) => ({
       ...prev,
-      [groupKey]: !prev[groupKey]
+      [groupKey]: !prev[groupKey],
     }));
   };
 
@@ -174,17 +178,13 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
       {/* Left Navigation Sidebar */}
       <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
         <div className="flex items-center p-6 border-b border-gray-200">
-          <img 
-            src={nexspaceLogo} 
-            alt="NexSpace Logo" 
-            className="h-10 w-auto mr-3"
-          />
+          <img src={nexspaceLogo} alt="NexSpace Logo" className="h-10 w-auto mr-3" />
           <div>
             <h1 className="text-xl font-bold text-gray-900">NexSpace</h1>
             <p className="text-sm text-gray-500">Healthcare Staffing</p>
           </div>
         </div>
-        
+
         <nav className="flex-1 mt-6 px-3 overflow-y-auto">
           <div className="space-y-1">
             {navigationGroups.map((group, groupIndex) => (
@@ -211,14 +211,14 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                         {group.items.map((item) => {
                           const Icon = item.icon;
                           const active = isActive(item.path, item.exact || false);
-                          
+
                           return (
                             <Link key={item.path} href={item.path}>
                               <button
                                 className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                                   active
-                                    ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                                    ? "bg-blue-50 text-blue-700 border-r-2 border-blue-700"
+                                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                                 }`}
                               >
                                 <div className="flex items-center">
@@ -242,14 +242,14 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                   group.items.map((item) => {
                     const Icon = item.icon;
                     const active = isActive(item.path, item.exact || false);
-                    
+
                     return (
                       <Link key={item.path} href={item.path}>
                         <button
                           className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                             active
-                              ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-700'
-                              : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                              ? "bg-blue-50 text-blue-700 border-r-2 border-blue-700"
+                              : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                           }`}
                         >
                           <div className="flex items-center">
@@ -270,19 +270,22 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
             ))}
           </div>
         </nav>
-        
+
         <div className="p-4 border-t border-gray-200 bg-white">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-sm font-medium text-white">
-                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  {user?.firstName?.[0]}
+                  {user?.lastName?.[0]}
                 </span>
               </div>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-700">{user?.firstName} {user?.lastName}</p>
-              <p className="text-xs text-gray-500">{user?.role?.replace('_', ' ')}</p>
+              <p className="text-sm font-medium text-gray-700">
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p className="text-xs text-gray-500">{user?.role?.replace("_", " ")}</p>
             </div>
           </div>
         </div>
@@ -298,7 +301,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                 <h1 className="text-xl font-bold text-gray-900">{title || "Dashboard"}</h1>
                 {subtitle && <p className="text-gray-600">{subtitle}</p>}
               </div>
-              
+
               {/* Building Filter */}
               <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
                 <SelectTrigger className="w-48">
@@ -317,13 +320,17 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               {/* Role Switcher for Super Admin */}
-              {user?.role === 'super_admin' && (
-                <Select value={user?.role} onValueChange={(newRole) => {
-                  switchRoleMutation.mutate(newRole);
-                }} disabled={switchRoleMutation.isPending}>
+              {user?.role === "super_admin" && (
+                <Select
+                  value={user?.role}
+                  onValueChange={(newRole) => {
+                    switchRoleMutation.mutate(newRole);
+                  }}
+                  disabled={switchRoleMutation.isPending}
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Switch Role" />
                   </SelectTrigger>
@@ -338,18 +345,16 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                   </SelectContent>
                 </Select>
               )}
-              
+
               <Button variant="outline" size="sm">
                 <Bell className="w-4 h-4" />
               </Button>
             </div>
           </div>
         </div>
-        
+
         {/* Page Content */}
-        <div className="flex-1 overflow-auto">
-          {children}
-        </div>
+        <div className="flex-1 overflow-auto">{children}</div>
       </div>
     </div>
   );

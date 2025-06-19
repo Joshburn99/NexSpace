@@ -4,12 +4,24 @@ import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { z } from "zod";
-import { 
-  insertJobSchema, insertJobApplicationSchema, insertShiftSchema,
-  insertInvoiceSchema, insertWorkLogSchema, insertCredentialSchema,
-  insertMessageSchema, insertPayrollProviderSchema, insertPayrollConfigurationSchema,
-  insertPayrollEmployeeSchema, insertTimesheetSchema, insertTimesheetEntrySchema,
-  insertPaymentSchema, insertFacilitySchema, UserRole, shifts, facilities
+import {
+  insertJobSchema,
+  insertJobApplicationSchema,
+  insertShiftSchema,
+  insertInvoiceSchema,
+  insertWorkLogSchema,
+  insertCredentialSchema,
+  insertMessageSchema,
+  insertPayrollProviderSchema,
+  insertPayrollConfigurationSchema,
+  insertPayrollEmployeeSchema,
+  insertTimesheetSchema,
+  insertTimesheetEntrySchema,
+  insertPaymentSchema,
+  insertFacilitySchema,
+  UserRole,
+  shifts,
+  facilities,
 } from "@shared/schema";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
@@ -29,10 +41,10 @@ export function registerRoutes(app: Express): Server {
       fileSize: 10 * 1024 * 1024, // 10MB limit
     },
     fileFilter: (req, file, cb) => {
-      if (file.mimetype === 'application/pdf') {
+      if (file.mimetype === "application/pdf") {
         cb(null, true);
       } else {
-        cb(new Error('Only PDF files are allowed'));
+        cb(new Error("Only PDF files are allowed"));
       }
     },
   });
@@ -56,7 +68,7 @@ export function registerRoutes(app: Express): Server {
       if (!req.user) {
         return res.status(401).json({ message: "Authentication required" });
       }
-      
+
       const hasPermission = await storage.hasPermission(req.user.role, permission);
       if (!hasPermission && req.user.role !== UserRole.SUPER_ADMIN) {
         return res.status(403).json({ message: "Insufficient permissions" });
@@ -70,12 +82,12 @@ export function registerRoutes(app: Express): Server {
     if (!req.user) {
       return res.status(401).json({ message: "Authentication required" });
     }
-    
+
     // Add user context for data filtering
     req.userContext = {
       id: req.user.id,
       role: req.user.role,
-      facilityId: req.user.facilityId
+      facilityId: req.user.facilityId,
     };
     next();
   };
@@ -84,7 +96,7 @@ export function registerRoutes(app: Express): Server {
   const auditLog = (action: string, resource: string) => {
     return async (req: any, res: any, next: any) => {
       const originalSend = res.json;
-      res.json = function(data: any) {
+      res.json = function (data: any) {
         // Log successful operations
         if (res.statusCode < 400 && req.user) {
           storage.createAuditLog(
@@ -95,7 +107,7 @@ export function registerRoutes(app: Express): Server {
             undefined,
             data,
             req.ip,
-            req.get('User-Agent')
+            req.get("User-Agent")
           );
         }
         return originalSend.call(this, data);
@@ -137,7 +149,7 @@ export function registerRoutes(app: Express): Server {
   // Jobs API
   app.get("/api/jobs", requireAuth, async (req: any, res) => {
     try {
-      const jobs = req.user.facilityId 
+      const jobs = req.user.facilityId
         ? await storage.getJobsByFacility(req.user.facilityId)
         : await storage.getActiveJobs();
       res.json(jobs);
@@ -146,24 +158,30 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/jobs", requireAuth, requirePermission("jobs.create"), auditLog("CREATE", "job"), async (req: any, res) => {
-    try {
-      const jobData = insertJobSchema.parse({
-        ...req.body,
-        facilityId: req.user.facilityId,
-        postedById: req.user.id
-      });
-      
-      const job = await storage.createJob(jobData);
-      res.status(201).json(job);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid job data", errors: error.errors });
-      } else {
-        res.status(500).json({ message: "Failed to create job" });
+  app.post(
+    "/api/jobs",
+    requireAuth,
+    requirePermission("jobs.create"),
+    auditLog("CREATE", "job"),
+    async (req: any, res) => {
+      try {
+        const jobData = insertJobSchema.parse({
+          ...req.body,
+          facilityId: req.user.facilityId,
+          postedById: req.user.id,
+        });
+
+        const job = await storage.createJob(jobData);
+        res.status(201).json(job);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          res.status(400).json({ message: "Invalid job data", errors: error.errors });
+        } else {
+          res.status(500).json({ message: "Failed to create job" });
+        }
       }
     }
-  });
+  );
 
   app.get("/api/jobs/:id", requireAuth, async (req, res) => {
     try {
@@ -178,59 +196,75 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Job Applications API
-  app.post("/api/jobs/:id/apply", requireAuth, auditLog("CREATE", "job_application"), async (req: any, res) => {
-    try {
-      const jobId = parseInt(req.params.id);
-      const job = await storage.getJob(jobId);
-      
-      if (!job) {
-        return res.status(404).json({ message: "Job not found" });
-      }
+  app.post(
+    "/api/jobs/:id/apply",
+    requireAuth,
+    auditLog("CREATE", "job_application"),
+    async (req: any, res) => {
+      try {
+        const jobId = parseInt(req.params.id);
+        const job = await storage.getJob(jobId);
 
-      const applicationData = insertJobApplicationSchema.parse({
-        ...req.body,
-        jobId,
-        applicantId: req.user.id
-      });
-      
-      const application = await storage.createJobApplication(applicationData);
-      res.status(201).json(application);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid application data", errors: error.errors });
-      } else {
-        res.status(500).json({ message: "Failed to submit application" });
+        if (!job) {
+          return res.status(404).json({ message: "Job not found" });
+        }
+
+        const applicationData = insertJobApplicationSchema.parse({
+          ...req.body,
+          jobId,
+          applicantId: req.user.id,
+        });
+
+        const application = await storage.createJobApplication(applicationData);
+        res.status(201).json(application);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          res.status(400).json({ message: "Invalid application data", errors: error.errors });
+        } else {
+          res.status(500).json({ message: "Failed to submit application" });
+        }
       }
     }
-  });
+  );
 
-  app.get("/api/jobs/:id/applications", requireAuth, requirePermission("jobs.manage"), async (req, res) => {
-    try {
-      const applications = await storage.getJobApplications(parseInt(req.params.id));
-      res.json(applications);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch applications" });
-    }
-  });
-
-  app.patch("/api/applications/:id", requireAuth, requirePermission("jobs.manage"), auditLog("UPDATE", "job_application"), async (req: any, res) => {
-    try {
-      const { status } = req.body;
-      const application = await storage.updateApplicationStatus(
-        parseInt(req.params.id),
-        status,
-        req.user.id
-      );
-      
-      if (!application) {
-        return res.status(404).json({ message: "Application not found" });
+  app.get(
+    "/api/jobs/:id/applications",
+    requireAuth,
+    requirePermission("jobs.manage"),
+    async (req, res) => {
+      try {
+        const applications = await storage.getJobApplications(parseInt(req.params.id));
+        res.json(applications);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch applications" });
       }
-      
-      res.json(application);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update application" });
     }
-  });
+  );
+
+  app.patch(
+    "/api/applications/:id",
+    requireAuth,
+    requirePermission("jobs.manage"),
+    auditLog("UPDATE", "job_application"),
+    async (req: any, res) => {
+      try {
+        const { status } = req.body;
+        const application = await storage.updateApplicationStatus(
+          parseInt(req.params.id),
+          status,
+          req.user.id
+        );
+
+        if (!application) {
+          return res.status(404).json({ message: "Application not found" });
+        }
+
+        res.json(application);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to update application" });
+      }
+    }
+  );
 
   // Shifts API with example data showing various statuses
   app.get("/api/shifts", requireAuth, async (req: any, res) => {
@@ -247,9 +281,9 @@ export function registerRoutes(app: Express): Server {
           status: "open",
           facilityId: 1,
           facilityName: "Portland General Hospital",
-          rate: 42.50,
+          rate: 42.5,
           urgency: "high",
-          description: "12-hour ICU nursing shift, ACLS certification required"
+          description: "12-hour ICU nursing shift, ACLS certification required",
         },
         {
           id: 2,
@@ -262,9 +296,9 @@ export function registerRoutes(app: Express): Server {
           status: "assigned",
           facilityId: 1,
           facilityName: "Portland General Hospital",
-          rate: 45.00,
+          rate: 45.0,
           urgency: "critical",
-          description: "Emergency department evening shift"
+          description: "Emergency department evening shift",
         },
         {
           id: 3,
@@ -279,7 +313,7 @@ export function registerRoutes(app: Express): Server {
           facilityName: "OHSU Hospital",
           rate: 38.75,
           urgency: "medium",
-          description: "Outpatient physical therapy clinic"
+          description: "Outpatient physical therapy clinic",
         },
         {
           id: 4,
@@ -292,9 +326,9 @@ export function registerRoutes(app: Express): Server {
           status: "in_progress",
           facilityId: 1,
           facilityName: "Portland General Hospital",
-          rate: 28.50,
+          rate: 28.5,
           urgency: "high",
-          description: "OR support for scheduled surgeries"
+          description: "OR support for scheduled surgeries",
         },
         {
           id: 5,
@@ -309,7 +343,7 @@ export function registerRoutes(app: Express): Server {
           facilityName: "Legacy Emanuel",
           rate: 35.25,
           urgency: "medium",
-          description: "Night shift respiratory therapy coverage"
+          description: "Night shift respiratory therapy coverage",
         },
         {
           id: 6,
@@ -322,9 +356,9 @@ export function registerRoutes(app: Express): Server {
           status: "cancelled",
           facilityId: 2,
           facilityName: "OHSU Hospital",
-          rate: 28.00,
+          rate: 28.0,
           urgency: "low",
-          description: "Night shift LPN position - cancelled due to low census"
+          description: "Night shift LPN position - cancelled due to low census",
         },
         {
           id: 7,
@@ -339,7 +373,7 @@ export function registerRoutes(app: Express): Server {
           facilityName: "Portland General Hospital",
           rate: 31.25,
           urgency: "medium",
-          description: "CT and MRI imaging support - no call/no show"
+          description: "CT and MRI imaging support - no call/no show",
         },
         {
           id: 8,
@@ -354,7 +388,7 @@ export function registerRoutes(app: Express): Server {
           facilityName: "Legacy Emanuel",
           rate: 29.75,
           urgency: "low",
-          description: "Night lab coverage - cancelled by facility"
+          description: "Night lab coverage - cancelled by facility",
         },
         {
           id: 9,
@@ -367,9 +401,9 @@ export function registerRoutes(app: Express): Server {
           status: "open",
           facilityId: 4,
           facilityName: "Providence Portland Medical Center",
-          rate: 43.00,
+          rate: 43.0,
           urgency: "medium",
-          description: "Pediatric nursing position, PALS certification preferred"
+          description: "Pediatric nursing position, PALS certification preferred",
         },
         {
           id: 10,
@@ -382,9 +416,9 @@ export function registerRoutes(app: Express): Server {
           status: "requested",
           facilityId: 5,
           facilityName: "Rose City Nursing Center",
-          rate: 18.50,
+          rate: 18.5,
           urgency: "low",
-          description: "Float pool CNA for long-term care facility"
+          description: "Float pool CNA for long-term care facility",
         },
         {
           id: 11,
@@ -397,9 +431,9 @@ export function registerRoutes(app: Express): Server {
           status: "completed",
           facilityId: 1,
           facilityName: "Portland General Hospital",
-          rate: 48.00,
+          rate: 48.0,
           urgency: "high",
-          description: "Completed ICU night coverage"
+          description: "Completed ICU night coverage",
         },
         {
           id: 12,
@@ -412,9 +446,9 @@ export function registerRoutes(app: Express): Server {
           status: "completed",
           facilityId: 2,
           facilityName: "OHSU Hospital",
-          rate: 42.00,
+          rate: 42.0,
           urgency: "medium",
-          description: "Completed respiratory therapy shift"
+          description: "Completed respiratory therapy shift",
         },
         {
           id: 13,
@@ -427,9 +461,9 @@ export function registerRoutes(app: Express): Server {
           status: "completed",
           facilityId: 4,
           facilityName: "Providence Portland Medical Center",
-          rate: 34.50,
+          rate: 34.5,
           urgency: "low",
-          description: "Completed float pool coverage"
+          description: "Completed float pool coverage",
         },
         {
           id: 14,
@@ -444,7 +478,7 @@ export function registerRoutes(app: Express): Server {
           facilityName: "Legacy Emanuel",
           rate: 40.75,
           urgency: "medium",
-          description: "Completed OR afternoon shift"
+          description: "Completed OR afternoon shift",
         },
         {
           id: 15,
@@ -457,9 +491,9 @@ export function registerRoutes(app: Express): Server {
           status: "open",
           facilityId: 1,
           facilityName: "Portland General Hospital",
-          rate: 52.00,
+          rate: 52.0,
           urgency: "critical",
-          description: "Weekend emergency department coverage needed"
+          description: "Weekend emergency department coverage needed",
         },
         {
           id: 16,
@@ -472,12 +506,12 @@ export function registerRoutes(app: Express): Server {
           status: "open",
           facilityId: 2,
           facilityName: "OHSU Hospital",
-          rate: 26.50,
+          rate: 26.5,
           urgency: "low",
-          description: "Pharmacy technician coverage needed"
-        }
+          description: "Pharmacy technician coverage needed",
+        },
       ];
-      
+
       res.json(exampleShifts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch shifts" });
@@ -494,24 +528,30 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/shifts", requireAuth, requirePermission("shifts.create"), auditLog("CREATE", "shift"), async (req: any, res) => {
-    try {
-      const shiftData = insertShiftSchema.parse({
-        ...req.body,
-        facilityId: req.user.facilityId,
-        createdById: req.user.id
-      });
-      
-      const shift = await storage.createShift(shiftData);
-      res.status(201).json(shift);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid shift data", errors: error.errors });
-      } else {
-        res.status(500).json({ message: "Failed to create shift" });
+  app.post(
+    "/api/shifts",
+    requireAuth,
+    requirePermission("shifts.create"),
+    auditLog("CREATE", "shift"),
+    async (req: any, res) => {
+      try {
+        const shiftData = insertShiftSchema.parse({
+          ...req.body,
+          facilityId: req.user.facilityId,
+          createdById: req.user.id,
+        });
+
+        const shift = await storage.createShift(shiftData);
+        res.status(201).json(shift);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          res.status(400).json({ message: "Invalid shift data", errors: error.errors });
+        } else {
+          res.status(500).json({ message: "Failed to create shift" });
+        }
       }
     }
-  });
+  );
 
   // Invoices API
   app.get("/api/invoices", requireAuth, async (req: any, res) => {
@@ -538,9 +578,9 @@ export function registerRoutes(app: Express): Server {
 
       const invoiceData = insertInvoiceSchema.parse({
         ...req.body,
-        contractorId: req.user.id
+        contractorId: req.user.id,
       });
-      
+
       const invoice = await storage.createInvoice(invoiceData);
       res.status(201).json(invoice);
     } catch (error) {
@@ -552,40 +592,50 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/invoices/:id", requireAuth, requirePermission("invoices.approve"), auditLog("UPDATE", "invoice"), async (req: any, res) => {
-    try {
-      const { status } = req.body;
-      const invoice = await storage.updateInvoiceStatus(
-        parseInt(req.params.id),
-        status,
-        req.user.id
-      );
-      
-      if (!invoice) {
-        return res.status(404).json({ message: "Invoice not found" });
+  app.patch(
+    "/api/invoices/:id",
+    requireAuth,
+    requirePermission("invoices.approve"),
+    auditLog("UPDATE", "invoice"),
+    async (req: any, res) => {
+      try {
+        const { status } = req.body;
+        const invoice = await storage.updateInvoiceStatus(
+          parseInt(req.params.id),
+          status,
+          req.user.id
+        );
+
+        if (!invoice) {
+          return res.status(404).json({ message: "Invoice not found" });
+        }
+
+        res.json(invoice);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to update invoice" });
       }
-      
-      res.json(invoice);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update invoice" });
     }
-  });
+  );
 
   // Work Logs API
   app.get("/api/work-logs", requireAuth, async (req: any, res) => {
     try {
       const { userId, shiftId } = req.query;
       let workLogs;
-      
+
       if (shiftId) {
         workLogs = await storage.getWorkLogsByShift(parseInt(shiftId as string));
-      } else if (userId || req.user.role === UserRole.CONTRACTOR_1099 || req.user.role === UserRole.INTERNAL_EMPLOYEE) {
+      } else if (
+        userId ||
+        req.user.role === UserRole.CONTRACTOR_1099 ||
+        req.user.role === UserRole.INTERNAL_EMPLOYEE
+      ) {
         const targetUserId = userId ? parseInt(userId as string) : req.user.id;
         workLogs = await storage.getWorkLogsByUser(targetUserId);
       } else {
         workLogs = await storage.getPendingWorkLogs();
       }
-      
+
       res.json(workLogs);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch work logs" });
@@ -596,9 +646,9 @@ export function registerRoutes(app: Express): Server {
     try {
       const workLogData = insertWorkLogSchema.parse({
         ...req.body,
-        userId: req.user.id
+        userId: req.user.id,
       });
-      
+
       const workLog = await storage.createWorkLog(workLogData);
       res.status(201).json(workLog);
     } catch (error) {
@@ -615,7 +665,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const { userId, expiring } = req.query;
       let credentials;
-      
+
       if (expiring) {
         const days = parseInt(expiring as string) || 30;
         credentials = await storage.getExpiringCredentials(days);
@@ -623,43 +673,48 @@ export function registerRoutes(app: Express): Server {
         const targetUserId = userId ? parseInt(userId as string) : req.user.id;
         credentials = await storage.getUserCredentials(targetUserId);
       }
-      
+
       res.json(credentials);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch credentials" });
     }
   });
 
-  app.post("/api/credentials", requireAuth, auditLog("CREATE", "credential"), async (req: any, res) => {
-    try {
-      const credentialData = insertCredentialSchema.parse({
-        ...req.body,
-        userId: req.user.id
-      });
-      
-      const credential = await storage.createCredential(credentialData);
-      res.status(201).json(credential);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid credential data", errors: error.errors });
-      } else {
-        res.status(500).json({ message: "Failed to create credential" });
+  app.post(
+    "/api/credentials",
+    requireAuth,
+    auditLog("CREATE", "credential"),
+    async (req: any, res) => {
+      try {
+        const credentialData = insertCredentialSchema.parse({
+          ...req.body,
+          userId: req.user.id,
+        });
+
+        const credential = await storage.createCredential(credentialData);
+        res.status(201).json(credential);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          res.status(400).json({ message: "Invalid credential data", errors: error.errors });
+        } else {
+          res.status(500).json({ message: "Failed to create credential" });
+        }
       }
     }
-  });
+  );
 
   // Messages API
   app.get("/api/messages", requireAuth, async (req: any, res) => {
     try {
       const { conversationId } = req.query;
       let messages;
-      
+
       if (conversationId) {
         messages = await storage.getConversationMessages(conversationId as string);
       } else {
         messages = await storage.getUserMessages(req.user.id);
       }
-      
+
       res.json(messages);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch messages" });
@@ -670,9 +725,9 @@ export function registerRoutes(app: Express): Server {
     try {
       const messageData = insertMessageSchema.parse({
         ...req.body,
-        senderId: req.user.id
+        senderId: req.user.id,
       });
-      
+
       const message = await storage.createMessage(messageData);
       res.status(201).json(message);
     } catch (error) {
@@ -698,7 +753,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const { role, facilityId } = req.query;
       let users;
-      
+
       // Role-based data access control
       switch (req.user.role) {
         case UserRole.SUPER_ADMIN:
@@ -711,7 +766,7 @@ export function registerRoutes(app: Express): Server {
             users = await storage.getUsersByRole("");
           }
           break;
-          
+
         case UserRole.CLIENT_ADMINISTRATOR:
           // Client admin can see all users but no sensitive data
           if (role) {
@@ -722,53 +777,53 @@ export function registerRoutes(app: Express): Server {
             users = await storage.getUsersByRole("");
           }
           // Remove sensitive fields
-          users = users.map(user => ({
+          users = users.map((user) => ({
             ...user,
             password: undefined,
-            email: user.id === req.user.id ? user.email : undefined
+            email: user.id === req.user.id ? user.email : undefined,
           }));
           break;
-          
+
         case UserRole.FACILITY_MANAGER:
           // Facility manager can only see users in their facility
           if (req.user.facilityId) {
             users = await storage.getUsersByFacility(req.user.facilityId);
             if (role) {
-              users = users.filter(user => user.role === role);
+              users = users.filter((user) => user.role === role);
             }
             // Remove sensitive fields
-            users = users.map(user => ({
+            users = users.map((user) => ({
               ...user,
               password: undefined,
-              email: user.id === req.user.id ? user.email : undefined
+              email: user.id === req.user.id ? user.email : undefined,
             }));
           } else {
             return res.status(403).json({ message: "Access denied: No facility assigned" });
           }
           break;
-          
+
         case UserRole.INTERNAL_EMPLOYEE:
         case UserRole.CONTRACTOR_1099:
           // Employees and contractors can only see basic directory info
           if (req.user.facilityId) {
             users = await storage.getUsersByFacility(req.user.facilityId);
             // Only return basic public info
-            users = users.map(user => ({
+            users = users.map((user) => ({
               id: user.id,
               firstName: user.firstName,
               lastName: user.lastName,
               role: user.role,
-              avatar: user.avatar
+              avatar: user.avatar,
             }));
           } else {
             return res.status(403).json({ message: "Access denied: No facility assigned" });
           }
           break;
-          
+
         default:
           return res.status(403).json({ message: "Access denied: Invalid role" });
       }
-      
+
       res.json(users || []);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch users" });
@@ -780,30 +835,30 @@ export function registerRoutes(app: Express): Server {
     try {
       const userId = parseInt(req.params.id);
       const { role } = req.body;
-      
+
       // Only allow role updates for Client Administrators or if updating own profile
       if (req.user.role !== UserRole.CLIENT_ADMINISTRATOR && req.user.id !== userId) {
         return res.status(403).json({ message: "Insufficient permissions" });
       }
-      
+
       // Validate role if provided
       if (role && !Object.values(UserRole).includes(role)) {
         return res.status(400).json({ message: "Invalid role" });
       }
-      
+
       const updatedUser = await storage.updateUser(userId, { role });
       if (!updatedUser) {
         return res.status(404).json({ message: "User not found" });
       }
-      
+
       // If updating own profile, update session
       if (req.user.id === userId) {
         req.user = updatedUser;
       }
-      
+
       res.json(updatedUser);
     } catch (error) {
-      console.error('User update error:', error);
+      console.error("User update error:", error);
       res.status(500).json({ message: "Failed to update user" });
     }
   });
@@ -812,20 +867,23 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/timeoff/balance", requireAuth, enforceDataAccess, async (req: any, res) => {
     try {
       // Allow employees, managers, and admins to view PTO data
-      if (!req.user.role || ![
-        UserRole.INTERNAL_EMPLOYEE, 
-        UserRole.CONTRACTOR_1099, 
-        UserRole.FACILITY_MANAGER,
-        UserRole.CLIENT_ADMINISTRATOR,
-        UserRole.SUPER_ADMIN
-      ].includes(req.user.role)) {
+      if (
+        !req.user.role ||
+        ![
+          UserRole.INTERNAL_EMPLOYEE,
+          UserRole.CONTRACTOR_1099,
+          UserRole.FACILITY_MANAGER,
+          UserRole.CLIENT_ADMINISTRATOR,
+          UserRole.SUPER_ADMIN,
+        ].includes(req.user.role)
+      ) {
         return res.status(403).json({ message: "Access denied: Insufficient permissions" });
       }
-      
+
       const balance = {
         available: 30,
         used: 50,
-        pending: 8
+        pending: 8,
       };
       res.json(balance);
     } catch (error) {
@@ -836,16 +894,19 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/timeoff/requests", requireAuth, enforceDataAccess, async (req: any, res) => {
     try {
       // Allow employees, managers, and admins to view PTO requests
-      if (!req.user.role || ![
-        UserRole.INTERNAL_EMPLOYEE, 
-        UserRole.CONTRACTOR_1099, 
-        UserRole.FACILITY_MANAGER,
-        UserRole.CLIENT_ADMINISTRATOR,
-        UserRole.SUPER_ADMIN
-      ].includes(req.user.role)) {
+      if (
+        !req.user.role ||
+        ![
+          UserRole.INTERNAL_EMPLOYEE,
+          UserRole.CONTRACTOR_1099,
+          UserRole.FACILITY_MANAGER,
+          UserRole.CLIENT_ADMINISTRATOR,
+          UserRole.SUPER_ADMIN,
+        ].includes(req.user.role)
+      ) {
         return res.status(403).json({ message: "Access denied: Insufficient permissions" });
       }
-      
+
       const requests = [
         {
           id: 1,
@@ -853,7 +914,7 @@ export function registerRoutes(app: Express): Server {
           endDate: "2025-07-03",
           hours: 24,
           status: "pending",
-          reason: "Vacation"
+          reason: "Vacation",
         },
         {
           id: 2,
@@ -861,8 +922,8 @@ export function registerRoutes(app: Express): Server {
           endDate: "2025-06-15",
           hours: 8,
           status: "approved",
-          reason: "Personal"
-        }
+          reason: "Personal",
+        },
       ];
       res.json(requests);
     } catch (error) {
@@ -873,7 +934,7 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/history", requireAuth, enforceDataAccess, async (req: any, res) => {
     try {
       const { userId } = req.query;
-      
+
       // Role-based access control for work history
       switch (req.user.role) {
         case UserRole.SUPER_ADMIN:
@@ -885,7 +946,7 @@ export function registerRoutes(app: Express): Server {
             return res.json(workLogs);
           }
           break;
-          
+
         case UserRole.FACILITY_MANAGER:
           // Facility manager can view history of users in their facility
           if (userId) {
@@ -898,21 +959,23 @@ export function registerRoutes(app: Express): Server {
             return res.json(workLogs);
           }
           break;
-          
+
         case UserRole.INTERNAL_EMPLOYEE:
         case UserRole.CONTRACTOR_1099:
           // Employees can only view their own history
           if (userId && parseInt(userId as string) !== req.user.id) {
-            return res.status(403).json({ message: "Access denied: Can only view your own work history" });
+            return res
+              .status(403)
+              .json({ message: "Access denied: Can only view your own work history" });
           }
           break;
-          
+
         default:
           // For backwards compatibility, allow access but log the unknown role
-          console.warn('Unknown user role accessing work history:', req.user.role);
+          console.warn("Unknown user role accessing work history:", req.user.role);
           break;
       }
-      
+
       // Return user's own work history from database
       const workLogs = await storage.getWorkLogsByUser(req.user.id);
       if (workLogs && workLogs.length > 0) {
@@ -929,7 +992,7 @@ export function registerRoutes(app: Express): Server {
             department: "ICU",
             status: "completed",
             rate: 45,
-            totalPay: 540
+            totalPay: 540,
           },
           {
             id: 2,
@@ -940,7 +1003,7 @@ export function registerRoutes(app: Express): Server {
             department: "Med-Surg",
             status: "completed",
             rate: 48,
-            totalPay: 576
+            totalPay: 576,
           },
           {
             id: 3,
@@ -951,8 +1014,8 @@ export function registerRoutes(app: Express): Server {
             department: "Outpatient",
             status: "completed",
             rate: 42,
-            totalPay: 336
-          }
+            totalPay: 336,
+          },
         ];
         res.json(history);
       }
@@ -967,7 +1030,7 @@ export function registerRoutes(app: Express): Server {
       const balance = {
         available: 30,
         used: 50,
-        pending: 8
+        pending: 8,
       };
       res.json(balance);
     } catch (error) {
@@ -984,7 +1047,7 @@ export function registerRoutes(app: Express): Server {
           endDate: "2025-07-03",
           hours: 24,
           status: "pending",
-          reason: "Vacation"
+          reason: "Vacation",
         },
         {
           id: 2,
@@ -992,16 +1055,14 @@ export function registerRoutes(app: Express): Server {
           endDate: "2025-06-16",
           hours: 16,
           status: "approved",
-          reason: "Personal"
-        }
+          reason: "Personal",
+        },
       ];
       res.json(requests);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch PTO requests" });
     }
   });
-
-
 
   app.get("/api/resources", requireAuth, async (req: any, res) => {
     try {
@@ -1013,7 +1074,7 @@ export function registerRoutes(app: Express): Server {
           category: "General",
           downloadUrl: "/resources/handbook.pdf",
           size: "2.4 MB",
-          description: "Complete employee handbook and policies"
+          description: "Complete employee handbook and policies",
         },
         {
           id: 2,
@@ -1022,7 +1083,7 @@ export function registerRoutes(app: Express): Server {
           category: "Training",
           downloadUrl: "/resources/safety-training.mp4",
           duration: "15:30",
-          description: "Workplace safety procedures and protocols"
+          description: "Workplace safety procedures and protocols",
         },
         {
           id: 3,
@@ -1031,8 +1092,8 @@ export function registerRoutes(app: Express): Server {
           category: "Benefits",
           downloadUrl: "/resources/benefits.docx",
           size: "1.2 MB",
-          description: "Overview of employee benefits and enrollment"
-        }
+          description: "Overview of employee benefits and enrollment",
+        },
       ];
       res.json(resources);
     } catch (error) {
@@ -1058,7 +1119,7 @@ export function registerRoutes(app: Express): Server {
           cmsId: "140001",
           overallRating: 4,
           staffingRating: 4,
-          qualityMeasureRating: 4
+          qualityMeasureRating: 4,
         },
         {
           name: "Golden Years Nursing Home",
@@ -1074,7 +1135,7 @@ export function registerRoutes(app: Express): Server {
           cmsId: "140002",
           overallRating: 4,
           staffingRating: 4,
-          qualityMeasureRating: 4
+          qualityMeasureRating: 4,
         },
         {
           name: "Riverside Assisted Living",
@@ -1089,7 +1150,7 @@ export function registerRoutes(app: Express): Server {
           bedCount: 80,
           overallRating: 5,
           staffingRating: 5,
-          qualityMeasureRating: 5
+          qualityMeasureRating: 5,
         },
         {
           name: "Springfield General Hospital",
@@ -1105,7 +1166,7 @@ export function registerRoutes(app: Express): Server {
           cmsId: "140003",
           overallRating: 4,
           staffingRating: 4,
-          qualityMeasureRating: 4
+          qualityMeasureRating: 4,
         },
         {
           name: "Peaceful Meadows Hospice",
@@ -1120,15 +1181,20 @@ export function registerRoutes(app: Express): Server {
           bedCount: 24,
           overallRating: 5,
           staffingRating: 5,
-          qualityMeasureRating: 5
-        }
+          qualityMeasureRating: 5,
+        },
       ];
 
       const createdFacilities = await db.insert(facilities).values(facilityData).returning();
-      res.json({ message: "Example facilities created successfully", facilities: createdFacilities });
+      res.json({
+        message: "Example facilities created successfully",
+        facilities: createdFacilities,
+      });
     } catch (error) {
-      console.error('Error creating example facilities:', error);
-      res.status(500).json({ message: "Failed to create example facilities", error: (error as Error).message });
+      console.error("Error creating example facilities:", error);
+      res
+        .status(500)
+        .json({ message: "Failed to create example facilities", error: (error as Error).message });
     }
   });
 
@@ -1137,63 +1203,63 @@ export function registerRoutes(app: Express): Server {
     try {
       // Clear existing shifts
       await db.delete(shifts);
-      
+
       // Create shifts data with correct schema
       const currentFacility = await storage.getAllFacilities();
       const facilityId = currentFacility[0]?.id || 1;
-      
+
       const shiftsData = [
         {
-          date: '2025-06-18',
-          title: 'ICU Day Shift',
-          specialty: 'RN',
-          startTime: '07:00',
-          endTime: '19:00',
+          date: "2025-06-18",
+          title: "ICU Day Shift",
+          specialty: "RN",
+          startTime: "07:00",
+          endTime: "19:00",
           facilityId,
-          department: 'ICU',
+          department: "ICU",
           rate: "45.00",
           premiumMultiplier: "1.20",
-          urgency: 'high',
-          status: 'open',
-          description: 'Critical care nursing position',
-          createdById: 1
+          urgency: "high",
+          status: "open",
+          description: "Critical care nursing position",
+          createdById: 1,
         },
         {
-          date: '2025-06-18',
-          title: 'Emergency Night Shift',
-          specialty: 'RN',
-          startTime: '19:00',
-          endTime: '07:00',
+          date: "2025-06-18",
+          title: "Emergency Night Shift",
+          specialty: "RN",
+          startTime: "19:00",
+          endTime: "07:00",
           facilityId,
-          department: 'Emergency',
+          department: "Emergency",
           rate: "50.00",
           premiumMultiplier: "1.50",
-          urgency: 'critical',
-          status: 'open',
-          description: 'Emergency department coverage',
-          createdById: 1
+          urgency: "critical",
+          status: "open",
+          description: "Emergency department coverage",
+          createdById: 1,
         },
         {
-          date: '2025-06-19',
-          title: 'Med-Surg Day',
-          specialty: 'LPN',
-          startTime: '07:00',
-          endTime: '15:00',
+          date: "2025-06-19",
+          title: "Med-Surg Day",
+          specialty: "LPN",
+          startTime: "07:00",
+          endTime: "15:00",
           facilityId,
-          department: 'Med-Surg',
+          department: "Med-Surg",
           rate: "32.00",
           premiumMultiplier: "1.10",
-          urgency: 'medium',
-          status: 'assigned',
-          description: 'Medical surgical unit',
-          createdById: 1
-        }
+          urgency: "medium",
+          status: "assigned",
+          description: "Medical surgical unit",
+          createdById: 1,
+        },
       ];
-      
+
       const createdShifts = await db.insert(shifts).values(shiftsData).returning();
       res.json({ message: "Shifts seeded successfully", count: shiftsData.length });
     } catch (error) {
-      console.error('Seeding error:', error);
+      console.error("Seeding error:", error);
       res.status(500).json({ message: "Failed to seed shifts", error: (error as Error).message });
     }
   });
@@ -1223,14 +1289,14 @@ export function registerRoutes(app: Express): Server {
           latitude: 45.4992,
           longitude: -122.6853,
           createdAt: "2025-01-15T00:00:00Z",
-          updatedAt: "2025-06-19T00:00:00Z"
+          updatedAt: "2025-06-19T00:00:00Z",
         },
         {
           id: 2,
           name: "OHSU Hospital",
           facilityType: "hospital",
           address: "3181 SW Sam Jackson Park Rd",
-          city: "Portland", 
+          city: "Portland",
           state: "OR",
           zipCode: "97239",
           phone: "(503) 494-8311",
@@ -1246,7 +1312,7 @@ export function registerRoutes(app: Express): Server {
           latitude: 45.4992,
           longitude: -122.6853,
           createdAt: "2025-01-15T00:00:00Z",
-          updatedAt: "2025-06-19T00:00:00Z"
+          updatedAt: "2025-06-19T00:00:00Z",
         },
         {
           id: 3,
@@ -1269,7 +1335,7 @@ export function registerRoutes(app: Express): Server {
           latitude: 45.5375,
           longitude: -122.6669,
           createdAt: "2025-01-15T00:00:00Z",
-          updatedAt: "2025-06-19T00:00:00Z"
+          updatedAt: "2025-06-19T00:00:00Z",
         },
         {
           id: 4,
@@ -1292,8 +1358,8 @@ export function registerRoutes(app: Express): Server {
           latitude: 45.5368,
           longitude: -122.6035,
           createdAt: "2025-01-15T00:00:00Z",
-          updatedAt: "2025-06-19T00:00:00Z"
-        }
+          updatedAt: "2025-06-19T00:00:00Z",
+        },
       ];
       res.json(exampleFacilities);
     } catch (error) {
@@ -1322,7 +1388,7 @@ export function registerRoutes(app: Express): Server {
         undefined,
         { impersonatedUser: targetUser.id },
         req.ip,
-        req.get('User-Agent')
+        req.get("User-Agent")
       );
 
       // Set session to impersonated user
@@ -1342,232 +1408,346 @@ export function registerRoutes(app: Express): Server {
   // ===================
 
   // Payroll Providers
-  app.get("/api/payroll/providers", requireAuth, requirePermission("payroll.view"), async (req, res) => {
-    try {
-      const providers = await storage.getPayrollProviders();
-      res.json(providers);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch payroll providers" });
+  app.get(
+    "/api/payroll/providers",
+    requireAuth,
+    requirePermission("payroll.view"),
+    async (req, res) => {
+      try {
+        const providers = await storage.getPayrollProviders();
+        res.json(providers);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch payroll providers" });
+      }
     }
-  });
+  );
 
-  app.post("/api/payroll/providers", requireAuth, requirePermission("payroll.manage"), auditLog("CREATE", "payroll_provider"), async (req, res) => {
-    try {
-      const validated = insertPayrollProviderSchema.parse(req.body);
-      const provider = await storage.createPayrollProvider(validated);
-      res.status(201).json(provider);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid provider data", error });
+  app.post(
+    "/api/payroll/providers",
+    requireAuth,
+    requirePermission("payroll.manage"),
+    auditLog("CREATE", "payroll_provider"),
+    async (req, res) => {
+      try {
+        const validated = insertPayrollProviderSchema.parse(req.body);
+        const provider = await storage.createPayrollProvider(validated);
+        res.status(201).json(provider);
+      } catch (error) {
+        res.status(400).json({ message: "Invalid provider data", error });
+      }
     }
-  });
+  );
 
   // Payroll Configuration
-  app.get("/api/payroll/config/:facilityId", requireAuth, requirePermission("payroll.view"), async (req, res) => {
-    try {
-      const facilityId = parseInt(req.params.facilityId);
-      const config = await storage.getPayrollConfiguration(facilityId);
-      res.json(config);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch payroll configuration" });
+  app.get(
+    "/api/payroll/config/:facilityId",
+    requireAuth,
+    requirePermission("payroll.view"),
+    async (req, res) => {
+      try {
+        const facilityId = parseInt(req.params.facilityId);
+        const config = await storage.getPayrollConfiguration(facilityId);
+        res.json(config);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch payroll configuration" });
+      }
     }
-  });
+  );
 
-  app.post("/api/payroll/config", requireAuth, requirePermission("payroll.manage"), auditLog("CREATE", "payroll_config"), async (req, res) => {
-    try {
-      const validated = insertPayrollConfigurationSchema.parse(req.body);
-      const config = await storage.createPayrollConfiguration(validated);
-      res.status(201).json(config);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid configuration data", error });
+  app.post(
+    "/api/payroll/config",
+    requireAuth,
+    requirePermission("payroll.manage"),
+    auditLog("CREATE", "payroll_config"),
+    async (req, res) => {
+      try {
+        const validated = insertPayrollConfigurationSchema.parse(req.body);
+        const config = await storage.createPayrollConfiguration(validated);
+        res.status(201).json(config);
+      } catch (error) {
+        res.status(400).json({ message: "Invalid configuration data", error });
+      }
     }
-  });
+  );
 
-  app.put("/api/payroll/config/:id", requireAuth, requirePermission("payroll.manage"), auditLog("UPDATE", "payroll_config"), async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const validated = insertPayrollConfigurationSchema.partial().parse(req.body);
-      const config = await storage.updatePayrollConfiguration(id, validated);
-      res.json(config);
-    } catch (error) {
-      res.status(400).json({ message: "Failed to update configuration", error });
+  app.put(
+    "/api/payroll/config/:id",
+    requireAuth,
+    requirePermission("payroll.manage"),
+    auditLog("UPDATE", "payroll_config"),
+    async (req, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        const validated = insertPayrollConfigurationSchema.partial().parse(req.body);
+        const config = await storage.updatePayrollConfiguration(id, validated);
+        res.json(config);
+      } catch (error) {
+        res.status(400).json({ message: "Failed to update configuration", error });
+      }
     }
-  });
+  );
 
   // Payroll Employees
-  app.get("/api/payroll/employees/:facilityId", requireAuth, requirePermission("payroll.view"), async (req, res) => {
-    try {
-      const facilityId = parseInt(req.params.facilityId);
-      const employees = await storage.getPayrollEmployeesByFacility(facilityId);
-      res.json(employees);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch payroll employees" });
+  app.get(
+    "/api/payroll/employees/:facilityId",
+    requireAuth,
+    requirePermission("payroll.view"),
+    async (req, res) => {
+      try {
+        const facilityId = parseInt(req.params.facilityId);
+        const employees = await storage.getPayrollEmployeesByFacility(facilityId);
+        res.json(employees);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch payroll employees" });
+      }
     }
-  });
+  );
 
-  app.post("/api/payroll/employees", requireAuth, requirePermission("payroll.manage"), auditLog("CREATE", "payroll_employee"), async (req, res) => {
-    try {
-      const validated = insertPayrollEmployeeSchema.parse(req.body);
-      const employee = await storage.createPayrollEmployee(validated);
-      res.status(201).json(employee);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid employee data", error });
+  app.post(
+    "/api/payroll/employees",
+    requireAuth,
+    requirePermission("payroll.manage"),
+    auditLog("CREATE", "payroll_employee"),
+    async (req, res) => {
+      try {
+        const validated = insertPayrollEmployeeSchema.parse(req.body);
+        const employee = await storage.createPayrollEmployee(validated);
+        res.status(201).json(employee);
+      } catch (error) {
+        res.status(400).json({ message: "Invalid employee data", error });
+      }
     }
-  });
+  );
 
-  app.put("/api/payroll/employees/:id", requireAuth, requirePermission("payroll.manage"), auditLog("UPDATE", "payroll_employee"), async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const validated = insertPayrollEmployeeSchema.partial().parse(req.body);
-      const employee = await storage.updatePayrollEmployee(id, validated);
-      res.json(employee);
-    } catch (error) {
-      res.status(400).json({ message: "Failed to update employee", error });
+  app.put(
+    "/api/payroll/employees/:id",
+    requireAuth,
+    requirePermission("payroll.manage"),
+    auditLog("UPDATE", "payroll_employee"),
+    async (req, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        const validated = insertPayrollEmployeeSchema.partial().parse(req.body);
+        const employee = await storage.updatePayrollEmployee(id, validated);
+        res.json(employee);
+      } catch (error) {
+        res.status(400).json({ message: "Failed to update employee", error });
+      }
     }
-  });
+  );
 
   // Timesheets
-  app.get("/api/timesheets/:facilityId", requireAuth, requirePermission("payroll.view"), async (req, res) => {
-    try {
-      const facilityId = parseInt(req.params.facilityId);
-      const { startDate, endDate, userId } = req.query;
+  app.get(
+    "/api/timesheets/:facilityId",
+    requireAuth,
+    requirePermission("payroll.view"),
+    async (req, res) => {
+      try {
+        const facilityId = parseInt(req.params.facilityId);
+        const { startDate, endDate, userId } = req.query;
 
-      let timesheets;
-      if (userId) {
-        timesheets = await storage.getTimesheetsByUser(parseInt(userId as string), facilityId);
-      } else if (startDate && endDate) {
-        timesheets = await storage.getTimesheetsByPayPeriod(facilityId, new Date(startDate as string), new Date(endDate as string));
-      } else {
-        timesheets = await storage.getPendingTimesheets(facilityId);
+        let timesheets;
+        if (userId) {
+          timesheets = await storage.getTimesheetsByUser(parseInt(userId as string), facilityId);
+        } else if (startDate && endDate) {
+          timesheets = await storage.getTimesheetsByPayPeriod(
+            facilityId,
+            new Date(startDate as string),
+            new Date(endDate as string)
+          );
+        } else {
+          timesheets = await storage.getPendingTimesheets(facilityId);
+        }
+
+        res.json(timesheets);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch timesheets" });
       }
-      
-      res.json(timesheets);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch timesheets" });
     }
-  });
+  );
 
-  app.post("/api/timesheets", requireAuth, requirePermission("payroll.manage"), auditLog("CREATE", "timesheet"), async (req, res) => {
-    try {
-      const validated = insertTimesheetSchema.parse(req.body);
-      const timesheet = await storage.createTimesheet(validated);
-      res.status(201).json(timesheet);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid timesheet data", error });
+  app.post(
+    "/api/timesheets",
+    requireAuth,
+    requirePermission("payroll.manage"),
+    auditLog("CREATE", "timesheet"),
+    async (req, res) => {
+      try {
+        const validated = insertTimesheetSchema.parse(req.body);
+        const timesheet = await storage.createTimesheet(validated);
+        res.status(201).json(timesheet);
+      } catch (error) {
+        res.status(400).json({ message: "Invalid timesheet data", error });
+      }
     }
-  });
+  );
 
-  app.put("/api/timesheets/:id/status", requireAuth, requirePermission("payroll.approve"), auditLog("UPDATE", "timesheet"), async (req: any, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { status } = req.body;
-      const timesheet = await storage.updateTimesheetStatus(id, status, req.user.id);
-      res.json(timesheet);
-    } catch (error) {
-      res.status(400).json({ message: "Failed to update timesheet status", error });
+  app.put(
+    "/api/timesheets/:id/status",
+    requireAuth,
+    requirePermission("payroll.approve"),
+    auditLog("UPDATE", "timesheet"),
+    async (req: any, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        const { status } = req.body;
+        const timesheet = await storage.updateTimesheetStatus(id, status, req.user.id);
+        res.json(timesheet);
+      } catch (error) {
+        res.status(400).json({ message: "Failed to update timesheet status", error });
+      }
     }
-  });
+  );
 
   // Timesheet Entries
-  app.get("/api/timesheets/:id/entries", requireAuth, requirePermission("payroll.view"), async (req, res) => {
-    try {
-      const timesheetId = parseInt(req.params.id);
-      const entries = await storage.getTimesheetEntries(timesheetId);
-      res.json(entries);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch timesheet entries" });
+  app.get(
+    "/api/timesheets/:id/entries",
+    requireAuth,
+    requirePermission("payroll.view"),
+    async (req, res) => {
+      try {
+        const timesheetId = parseInt(req.params.id);
+        const entries = await storage.getTimesheetEntries(timesheetId);
+        res.json(entries);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch timesheet entries" });
+      }
     }
-  });
+  );
 
-  app.post("/api/timesheets/:id/entries", requireAuth, requirePermission("payroll.manage"), auditLog("CREATE", "timesheet_entry"), async (req, res) => {
-    try {
-      const timesheetId = parseInt(req.params.id);
-      const validated = insertTimesheetEntrySchema.parse({ ...req.body, timesheetId });
-      const entry = await storage.createTimesheetEntry(validated);
-      res.status(201).json(entry);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid entry data", error });
+  app.post(
+    "/api/timesheets/:id/entries",
+    requireAuth,
+    requirePermission("payroll.manage"),
+    auditLog("CREATE", "timesheet_entry"),
+    async (req, res) => {
+      try {
+        const timesheetId = parseInt(req.params.id);
+        const validated = insertTimesheetEntrySchema.parse({ ...req.body, timesheetId });
+        const entry = await storage.createTimesheetEntry(validated);
+        res.status(201).json(entry);
+      } catch (error) {
+        res.status(400).json({ message: "Invalid entry data", error });
+      }
     }
-  });
+  );
 
   // Payments
-  app.get("/api/payments/:facilityId", requireAuth, requirePermission("payroll.view"), async (req, res) => {
-    try {
-      const facilityId = parseInt(req.params.facilityId);
-      const { userId, timesheetId } = req.query;
+  app.get(
+    "/api/payments/:facilityId",
+    requireAuth,
+    requirePermission("payroll.view"),
+    async (req, res) => {
+      try {
+        const facilityId = parseInt(req.params.facilityId);
+        const { userId, timesheetId } = req.query;
 
-      let payments;
-      if (userId) {
-        payments = await storage.getPaymentsByUser(parseInt(userId as string));
-      } else if (timesheetId) {
-        payments = await storage.getPaymentsByTimesheet(parseInt(timesheetId as string));
-      } else {
-        payments = await storage.getPendingPayments(facilityId);
+        let payments;
+        if (userId) {
+          payments = await storage.getPaymentsByUser(parseInt(userId as string));
+        } else if (timesheetId) {
+          payments = await storage.getPaymentsByTimesheet(parseInt(timesheetId as string));
+        } else {
+          payments = await storage.getPendingPayments(facilityId);
+        }
+
+        res.json(payments);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch payments" });
       }
-      
-      res.json(payments);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch payments" });
     }
-  });
+  );
 
-  app.post("/api/payments", requireAuth, requirePermission("payroll.manage"), auditLog("CREATE", "payment"), async (req, res) => {
-    try {
-      const validated = insertPaymentSchema.parse(req.body);
-      const payment = await storage.createPayment(validated);
-      res.status(201).json(payment);
-    } catch (error) {
-      res.status(400).json({ message: "Invalid payment data", error });
+  app.post(
+    "/api/payments",
+    requireAuth,
+    requirePermission("payroll.manage"),
+    auditLog("CREATE", "payment"),
+    async (req, res) => {
+      try {
+        const validated = insertPaymentSchema.parse(req.body);
+        const payment = await storage.createPayment(validated);
+        res.status(201).json(payment);
+      } catch (error) {
+        res.status(400).json({ message: "Invalid payment data", error });
+      }
     }
-  });
+  );
 
-  app.put("/api/payments/:id/status", requireAuth, requirePermission("payroll.manage"), auditLog("UPDATE", "payment"), async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { status } = req.body;
-      const payment = await storage.updatePaymentStatus(id, status);
-      res.json(payment);
-    } catch (error) {
-      res.status(400).json({ message: "Failed to update payment status", error });
+  app.put(
+    "/api/payments/:id/status",
+    requireAuth,
+    requirePermission("payroll.manage"),
+    auditLog("UPDATE", "payment"),
+    async (req, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        const { status } = req.body;
+        const payment = await storage.updatePaymentStatus(id, status);
+        res.json(payment);
+      } catch (error) {
+        res.status(400).json({ message: "Failed to update payment status", error });
+      }
     }
-  });
+  );
 
   // Automated Payroll Processing
-  app.post("/api/payroll/process", requireAuth, requirePermission("payroll.process"), auditLog("PROCESS", "payroll"), async (req, res) => {
-    try {
-      const { facilityId, payPeriodStart, payPeriodEnd } = req.body;
-      const result = await storage.processPayroll(
-        facilityId,
-        new Date(payPeriodStart),
-        new Date(payPeriodEnd)
-      );
-      res.json(result);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to process payroll", error });
+  app.post(
+    "/api/payroll/process",
+    requireAuth,
+    requirePermission("payroll.process"),
+    auditLog("PROCESS", "payroll"),
+    async (req, res) => {
+      try {
+        const { facilityId, payPeriodStart, payPeriodEnd } = req.body;
+        const result = await storage.processPayroll(
+          facilityId,
+          new Date(payPeriodStart),
+          new Date(payPeriodEnd)
+        );
+        res.json(result);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to process payroll", error });
+      }
     }
-  });
+  );
 
   // Payroll Provider Sync
-  app.post("/api/payroll/sync", requireAuth, requirePermission("payroll.sync"), auditLog("SYNC", "payroll"), async (req, res) => {
-    try {
-      const { facilityId, syncType } = req.body;
-      const syncLog = await storage.syncWithPayrollProvider(facilityId, syncType);
-      res.json(syncLog);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to sync with payroll provider", error });
+  app.post(
+    "/api/payroll/sync",
+    requireAuth,
+    requirePermission("payroll.sync"),
+    auditLog("SYNC", "payroll"),
+    async (req, res) => {
+      try {
+        const { facilityId, syncType } = req.body;
+        const syncLog = await storage.syncWithPayrollProvider(facilityId, syncType);
+        res.json(syncLog);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to sync with payroll provider", error });
+      }
     }
-  });
+  );
 
   // Payroll Sync Logs
-  app.get("/api/payroll/sync-logs/:facilityId", requireAuth, requirePermission("payroll.view"), async (req, res) => {
-    try {
-      const facilityId = parseInt(req.params.facilityId);
-      const { providerId } = req.query;
-      const logs = await storage.getPayrollSyncLogs(facilityId, providerId ? parseInt(providerId as string) : undefined);
-      res.json(logs);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch sync logs" });
+  app.get(
+    "/api/payroll/sync-logs/:facilityId",
+    requireAuth,
+    requirePermission("payroll.view"),
+    async (req, res) => {
+      try {
+        const facilityId = parseInt(req.params.facilityId);
+        const { providerId } = req.query;
+        const logs = await storage.getPayrollSyncLogs(
+          facilityId,
+          providerId ? parseInt(providerId as string) : undefined
+        );
+        res.json(logs);
+      } catch (error) {
+        res.status(500).json({ message: "Failed to fetch sync logs" });
+      }
     }
-  });
+  );
 
   // Additional facility management routes
   // Note: Main facilities endpoint is already defined above
@@ -1586,7 +1766,7 @@ export function registerRoutes(app: Express): Server {
           shiftType: "day",
           startTime: "07:00",
           endTime: "19:00",
-          isActive: true
+          isActive: true,
         },
         {
           id: 2,
@@ -1598,7 +1778,7 @@ export function registerRoutes(app: Express): Server {
           shiftType: "night",
           startTime: "19:00",
           endTime: "07:00",
-          isActive: true
+          isActive: true,
         },
         {
           id: 3,
@@ -1610,8 +1790,8 @@ export function registerRoutes(app: Express): Server {
           shiftType: "day",
           startTime: "06:00",
           endTime: "14:00",
-          isActive: true
-        }
+          isActive: true,
+        },
       ];
       res.json(templates);
     } catch (error) {
@@ -1625,7 +1805,7 @@ export function registerRoutes(app: Express): Server {
         id: Date.now(),
         ...req.body,
         createdAt: "2025-06-19T00:00:00Z",
-        updatedAt: "2025-06-19T00:00:00Z"
+        updatedAt: "2025-06-19T00:00:00Z",
       };
       res.status(201).json(template);
     } catch (error) {
@@ -1638,7 +1818,7 @@ export function registerRoutes(app: Express): Server {
       const template = {
         id: parseInt(req.params.id),
         ...req.body,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
       res.json(template);
     } catch (error) {
@@ -1666,7 +1846,7 @@ export function registerRoutes(app: Express): Server {
           requiresCertification: true,
           certificationTypes: ["BLS", "ACLS", "CCRN"],
           priorityLevel: "critical",
-          isActive: true
+          isActive: true,
         },
         {
           id: 2,
@@ -1677,7 +1857,7 @@ export function registerRoutes(app: Express): Server {
           requiresCertification: true,
           certificationTypes: ["BLS", "ACLS", "TNCC"],
           priorityLevel: "critical",
-          isActive: true
+          isActive: true,
         },
         {
           id: 3,
@@ -1688,7 +1868,7 @@ export function registerRoutes(app: Express): Server {
           requiresCertification: false,
           certificationTypes: [],
           priorityLevel: "medium",
-          isActive: true
+          isActive: true,
         },
         {
           id: 4,
@@ -1699,8 +1879,8 @@ export function registerRoutes(app: Express): Server {
           requiresCertification: true,
           certificationTypes: ["BLS", "CNOR"],
           priorityLevel: "high",
-          isActive: true
-        }
+          isActive: true,
+        },
       ];
       res.json(requirements);
     } catch (error) {
@@ -1714,7 +1894,7 @@ export function registerRoutes(app: Express): Server {
         id: Date.now(),
         ...req.body,
         createdAt: "2025-06-19T00:00:00Z",
-        updatedAt: "2025-06-19T00:00:00Z"
+        updatedAt: "2025-06-19T00:00:00Z",
       };
       res.status(201).json(requirement);
     } catch (error) {
@@ -1727,7 +1907,7 @@ export function registerRoutes(app: Express): Server {
       const requirement = {
         id: parseInt(req.params.id),
         ...req.body,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
       res.json(requirement);
     } catch (error) {
@@ -1748,21 +1928,21 @@ export function registerRoutes(app: Express): Server {
     try {
       const requestId = parseInt(req.params.id);
       const { workerId, workerName } = req.body;
-      
+
       // Update shift status to assigned
       const assignedShift = {
         id: requestId,
-        status: 'assigned',
+        status: "assigned",
         assignedWorker: {
           id: workerId,
-          name: workerName
+          name: workerName,
         },
-        assignedAt: new Date()
+        assignedAt: new Date(),
       };
-      
-      res.json({ 
+
+      res.json({
         message: "Shift assigned successfully",
-        shift: assignedShift
+        shift: assignedShift,
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to assign shift" });
@@ -1794,7 +1974,7 @@ export function registerRoutes(app: Express): Server {
               isFavorite: true,
               specialty: "Physical Therapist",
               certifications: ["BLS", "PT License"],
-              profileUrl: "/staff/15"
+              profileUrl: "/staff/15",
             },
             {
               id: 23,
@@ -1804,7 +1984,7 @@ export function registerRoutes(app: Express): Server {
               isFavorite: false,
               specialty: "Physical Therapist",
               certifications: ["BLS", "PT License", "Orthopedic Cert"],
-              profileUrl: "/staff/23"
+              profileUrl: "/staff/23",
             },
             {
               id: 31,
@@ -1814,9 +1994,9 @@ export function registerRoutes(app: Express): Server {
               isFavorite: true,
               specialty: "Physical Therapist",
               certifications: ["BLS", "PT License", "Neuro Cert"],
-              profileUrl: "/staff/31"
-            }
-          ]
+              profileUrl: "/staff/31",
+            },
+          ],
         },
         {
           id: 2,
@@ -1839,7 +2019,7 @@ export function registerRoutes(app: Express): Server {
               isFavorite: true,
               specialty: "Registered Nurse",
               certifications: ["BLS", "PALS", "RN License"],
-              profileUrl: "/staff/7"
+              profileUrl: "/staff/7",
             },
             {
               id: 12,
@@ -1849,9 +2029,9 @@ export function registerRoutes(app: Express): Server {
               isFavorite: false,
               specialty: "Registered Nurse",
               certifications: ["BLS", "ACLS", "PALS", "RN License"],
-              profileUrl: "/staff/12"
-            }
-          ]
+              profileUrl: "/staff/12",
+            },
+          ],
         },
         {
           id: 3,
@@ -1874,7 +2054,7 @@ export function registerRoutes(app: Express): Server {
               isFavorite: true,
               specialty: "Certified Nursing Assistant",
               certifications: ["BLS", "CNA License"],
-              profileUrl: "/staff/18"
+              profileUrl: "/staff/18",
             },
             {
               id: 25,
@@ -1884,7 +2064,7 @@ export function registerRoutes(app: Express): Server {
               isFavorite: false,
               specialty: "Certified Nursing Assistant",
               certifications: ["BLS", "CNA License"],
-              profileUrl: "/staff/25"
+              profileUrl: "/staff/25",
             },
             {
               id: 33,
@@ -1894,10 +2074,10 @@ export function registerRoutes(app: Express): Server {
               isFavorite: false,
               specialty: "Certified Nursing Assistant",
               certifications: ["BLS", "CNA License", "Med Tech"],
-              profileUrl: "/staff/33"
-            }
-          ]
-        }
+              profileUrl: "/staff/33",
+            },
+          ],
+        },
       ];
       res.json(shiftRequests);
     } catch (error) {
@@ -1913,7 +2093,7 @@ export function registerRoutes(app: Express): Server {
         ...req.body,
         isActive: true,
         createdAt: "2025-06-19T00:00:00Z",
-        updatedAt: "2025-06-19T00:00:00Z"
+        updatedAt: "2025-06-19T00:00:00Z",
       };
       res.status(201).json(newFacility);
     } catch (error) {
@@ -1928,7 +2108,7 @@ export function registerRoutes(app: Express): Server {
       const updatedFacility = {
         id: parseInt(req.params.id),
         ...req.body,
-        updatedAt: "2025-06-19T00:00:00Z"
+        updatedAt: "2025-06-19T00:00:00Z",
       };
       res.json(updatedFacility);
     } catch (error) {
@@ -1954,8 +2134,8 @@ export function registerRoutes(app: Express): Server {
           bedCount: 200,
           overallRating: 4,
           staffingRating: 4,
-          qualityMeasureRating: 4
-        }
+          qualityMeasureRating: 4,
+        },
       ];
       res.json(mockResults);
     } catch (error) {
@@ -1985,7 +2165,7 @@ export function registerRoutes(app: Express): Server {
         staffingRating: 4,
         qualityMeasureRating: 4,
         createdAt: "2025-06-19T00:00:00Z",
-        updatedAt: "2025-06-19T00:00:00Z"
+        updatedAt: "2025-06-19T00:00:00Z",
       };
       res.status(201).json(importedFacility);
     } catch (error) {
@@ -1998,11 +2178,11 @@ export function registerRoutes(app: Express): Server {
     try {
       const id = parseInt(req.params.id);
       const facility = await storage.getFacility(id);
-      
+
       if (!facility) {
         return res.status(404).json({ message: "Facility not found" });
       }
-      
+
       res.json(facility);
     } catch (error) {
       console.error("Error fetching facility:", error);
@@ -2010,50 +2190,70 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/facilities", requireAuth, requirePermission("facilities.create"), auditLog("CREATE", "facility"), async (req: any, res) => {
-    try {
-      const validatedData = insertFacilitySchema.parse(req.body);
-      const facility = await storage.createFacility(validatedData);
-      res.status(201).json(facility);
-    } catch (error) {
-      console.error("Error creating facility:", error);
-      res.status(400).json({ message: "Failed to create facility" });
-    }
-  });
-
-  app.patch("/api/facilities/:id", requireAuth, requirePermission("facilities.update"), auditLog("UPDATE", "facility"), async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const updates = req.body;
-      const facility = await storage.updateFacility(id, updates);
-      
-      if (!facility) {
-        return res.status(404).json({ message: "Facility not found" });
+  app.post(
+    "/api/facilities",
+    requireAuth,
+    requirePermission("facilities.create"),
+    auditLog("CREATE", "facility"),
+    async (req: any, res) => {
+      try {
+        const validatedData = insertFacilitySchema.parse(req.body);
+        const facility = await storage.createFacility(validatedData);
+        res.status(201).json(facility);
+      } catch (error) {
+        console.error("Error creating facility:", error);
+        res.status(400).json({ message: "Failed to create facility" });
       }
-      
-      res.json(facility);
-    } catch (error) {
-      console.error("Error updating facility:", error);
-      res.status(400).json({ message: "Failed to update facility" });
     }
-  });
+  );
+
+  app.patch(
+    "/api/facilities/:id",
+    requireAuth,
+    requirePermission("facilities.update"),
+    auditLog("UPDATE", "facility"),
+    async (req, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        const updates = req.body;
+        const facility = await storage.updateFacility(id, updates);
+
+        if (!facility) {
+          return res.status(404).json({ message: "Facility not found" });
+        }
+
+        res.json(facility);
+      } catch (error) {
+        console.error("Error updating facility:", error);
+        res.status(400).json({ message: "Failed to update facility" });
+      }
+    }
+  );
 
   // External data import routes
-  app.post("/api/facilities/import/cms", requireAuth, requirePermission("facilities.create"), auditLog("IMPORT", "facility"), async (req, res) => {
-    try {
-      const { cmsId } = req.body;
-      if (!cmsId) {
-        return res.status(400).json({ message: "CMS ID is required" });
+  app.post(
+    "/api/facilities/import/cms",
+    requireAuth,
+    requirePermission("facilities.create"),
+    auditLog("IMPORT", "facility"),
+    async (req, res) => {
+      try {
+        const { cmsId } = req.body;
+        if (!cmsId) {
+          return res.status(400).json({ message: "CMS ID is required" });
+        }
+
+        const { facilityImportService } = await import("./facility-import");
+        const facility = await facilityImportService.importFacilityByCMSId(cmsId);
+        res.status(201).json(facility);
+      } catch (error) {
+        console.error("Error importing facility:", error);
+        res
+          .status(400)
+          .json({ message: error instanceof Error ? error.message : "Failed to import facility" });
       }
-      
-      const { facilityImportService } = await import("./facility-import");
-      const facility = await facilityImportService.importFacilityByCMSId(cmsId);
-      res.status(201).json(facility);
-    } catch (error) {
-      console.error("Error importing facility:", error);
-      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to import facility" });
     }
-  });
+  );
 
   app.post("/api/facilities/search/external", requireAuth, async (req, res) => {
     try {
@@ -2061,33 +2261,45 @@ export function registerRoutes(app: Express): Server {
       if (!name) {
         return res.status(400).json({ message: "Facility name is required" });
       }
-      
+
       const { facilityImportService } = await import("./facility-import");
       const results = await facilityImportService.searchByNameAndLocation(name, state, city);
       res.json(results);
     } catch (error) {
       console.error("Error searching external facilities:", error);
-      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to search facilities" });
+      res
+        .status(400)
+        .json({ message: error instanceof Error ? error.message : "Failed to search facilities" });
     }
   });
 
-  app.post("/api/facilities/:id/refresh", requireAuth, requirePermission("facilities.update"), auditLog("REFRESH", "facility"), async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { facilityImportService } = await import("./facility-import");
-      const facility = await facilityImportService.refreshFacilityData(id);
-      res.json(facility);
-    } catch (error) {
-      console.error("Error refreshing facility data:", error);
-      res.status(400).json({ message: error instanceof Error ? error.message : "Failed to refresh facility data" });
+  app.post(
+    "/api/facilities/:id/refresh",
+    requireAuth,
+    requirePermission("facilities.update"),
+    auditLog("REFRESH", "facility"),
+    async (req, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        const { facilityImportService } = await import("./facility-import");
+        const facility = await facilityImportService.refreshFacilityData(id);
+        res.json(facility);
+      } catch (error) {
+        console.error("Error refreshing facility data:", error);
+        res
+          .status(400)
+          .json({
+            message: error instanceof Error ? error.message : "Failed to refresh facility data",
+          });
+      }
     }
-  });
+  );
 
   // Facility Recommendation API
   app.post("/api/facilities/recommendations", requireAuth, async (req, res) => {
     try {
       const criteria = req.body as RecommendationCriteria;
-      
+
       // Validate required fields
       if (!criteria.location || !criteria.location.lat || !criteria.location.lng) {
         return res.status(400).json({ message: "Location coordinates are required" });
@@ -2104,12 +2316,15 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/facilities/recommendations/emergency", requireAuth, async (req, res) => {
     try {
       const { location, facilityType } = req.body;
-      
+
       if (!location || !location.lat || !location.lng) {
         return res.status(400).json({ message: "Location coordinates are required" });
       }
 
-      const recommendations = await recommendationEngine.getEmergencyRecommendations(location, facilityType);
+      const recommendations = await recommendationEngine.getEmergencyRecommendations(
+        location,
+        facilityType
+      );
       res.json(recommendations);
     } catch (error) {
       console.error("Error generating emergency recommendations:", error);
@@ -2120,7 +2335,7 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/facilities/recommendations/specialized", requireAuth, async (req, res) => {
     try {
       const { location, specialty, maxDistance } = req.body;
-      
+
       if (!location || !location.lat || !location.lng) {
         return res.status(400).json({ message: "Location coordinates are required" });
       }
@@ -2129,7 +2344,11 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ message: "Specialty is required" });
       }
 
-      const recommendations = await recommendationEngine.getSpecializedCareRecommendations(location, specialty, maxDistance);
+      const recommendations = await recommendationEngine.getSpecializedCareRecommendations(
+        location,
+        specialty,
+        maxDistance
+      );
       res.json(recommendations);
     } catch (error) {
       console.error("Error generating specialized care recommendations:", error);
@@ -2140,16 +2359,22 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/facilities/recommendations/insurance", requireAuth, async (req, res) => {
     try {
       const { location, insuranceType, facilityType } = req.body;
-      
+
       if (!location || !location.lat || !location.lng) {
         return res.status(400).json({ message: "Location coordinates are required" });
       }
 
       if (!insuranceType || !["medicare", "medicaid", "both"].includes(insuranceType)) {
-        return res.status(400).json({ message: "Valid insurance type is required (medicare, medicaid, or both)" });
+        return res
+          .status(400)
+          .json({ message: "Valid insurance type is required (medicare, medicaid, or both)" });
       }
 
-      const recommendations = await recommendationEngine.getInsuranceBasedRecommendations(location, insuranceType, facilityType);
+      const recommendations = await recommendationEngine.getInsuranceBasedRecommendations(
+        location,
+        insuranceType,
+        facilityType
+      );
       res.json(recommendations);
     } catch (error) {
       console.error("Error generating insurance-based recommendations:", error);
@@ -2202,17 +2427,19 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/admin/database/query", requireAuth, async (req: any, res) => {
     try {
       const { query } = req.body;
-      if (!query || typeof query !== 'string') {
+      if (!query || typeof query !== "string") {
         return res.status(400).json({ message: "SQL query is required" });
       }
 
       // Safety checks for dangerous operations
-      const dangerousKeywords = ['DROP', 'DELETE', 'TRUNCATE', 'ALTER'];
+      const dangerousKeywords = ["DROP", "DELETE", "TRUNCATE", "ALTER"];
       const upperQuery = query.toUpperCase();
-      const isDangerous = dangerousKeywords.some(keyword => upperQuery.includes(keyword));
+      const isDangerous = dangerousKeywords.some((keyword) => upperQuery.includes(keyword));
 
-      if (isDangerous && req.user?.role !== 'super_admin') {
-        return res.status(403).json({ message: "Dangerous queries require super admin privileges" });
+      if (isDangerous && req.user?.role !== "super_admin") {
+        return res
+          .status(403)
+          .json({ message: "Dangerous queries require super admin privileges" });
       }
 
       const result = await db.execute(sql.raw(query));
@@ -2232,42 +2459,42 @@ export function registerRoutes(app: Express): Server {
           vendorName: "Premier Staffing Solutions",
           vendorType: "staffing_agency",
           invoiceNumber: "PSS-2025-001",
-          amount: 15750.00,
+          amount: 15750.0,
           status: "pending",
           dueDate: "2025-07-15",
           serviceDate: "2025-06-01",
           description: "Nursing staff - June 2025",
           facilityId: 1,
           facilityName: "Chicago General Hospital",
-          createdAt: "2025-06-19T00:00:00Z"
+          createdAt: "2025-06-19T00:00:00Z",
         },
         {
           id: 2,
           vendorName: "MedSupply Plus",
           vendorType: "medical_supply",
           invoiceNumber: "MSP-INV-5432",
-          amount: 8900.50,
+          amount: 8900.5,
           status: "approved",
           dueDate: "2025-07-10",
           serviceDate: "2025-06-15",
           description: "PPE and medical supplies",
           facilityId: 2,
           facilityName: "Springfield Care Center",
-          createdAt: "2025-06-18T00:00:00Z"
+          createdAt: "2025-06-18T00:00:00Z",
         },
         {
           id: 3,
           vendorName: "TechCare IT Services",
           vendorType: "it_services",
           invoiceNumber: "TCIT-2025-0089",
-          amount: 12400.00,
+          amount: 12400.0,
           status: "paid",
           dueDate: "2025-06-30",
           serviceDate: "2025-05-20",
           description: "Network infrastructure upgrade",
           facilityId: 1,
           facilityName: "Chicago General Hospital",
-          createdAt: "2025-06-01T00:00:00Z"
+          createdAt: "2025-06-01T00:00:00Z",
         },
         {
           id: 4,
@@ -2281,22 +2508,22 @@ export function registerRoutes(app: Express): Server {
           description: "Facility deep cleaning services",
           facilityId: 3,
           facilityName: "Metro Community Clinic",
-          createdAt: "2025-05-16T00:00:00Z"
+          createdAt: "2025-05-16T00:00:00Z",
         },
         {
           id: 5,
           vendorName: "EquipRent Medical",
           vendorType: "equipment_rental",
           invoiceNumber: "ERM-2025-Q2-15",
-          amount: 7800.00,
+          amount: 7800.0,
           status: "pending",
           dueDate: "2025-07-20",
           serviceDate: "2025-06-01",
           description: "Hospital bed rentals - Q2",
           facilityId: 4,
           facilityName: "Dallas Medical Center",
-          createdAt: "2025-06-19T00:00:00Z"
-        }
+          createdAt: "2025-06-19T00:00:00Z",
+        },
       ];
       res.json(vendorInvoices);
     } catch (error) {
@@ -2311,7 +2538,7 @@ export function registerRoutes(app: Express): Server {
       const newInvoice = {
         id: Date.now(),
         ...req.body,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
       res.json(newInvoice);
     } catch (error) {
@@ -2338,7 +2565,7 @@ export function registerRoutes(app: Express): Server {
         { id: 2, name: "MedSupply Plus", type: "medical_supply" },
         { id: 3, name: "TechCare IT Services", type: "it_services" },
         { id: 4, name: "CleanCare Maintenance", type: "maintenance" },
-        { id: 5, name: "EquipRent Medical", type: "equipment_rental" }
+        { id: 5, name: "EquipRent Medical", type: "equipment_rental" },
       ];
       res.json(vendors);
     } catch (error) {
@@ -2360,7 +2587,8 @@ export function registerRoutes(app: Express): Server {
           department: "ICU",
           workerType: "internal_employee",
           status: "active",
-          avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
+          avatar:
+            "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
           location: "Chicago, IL",
           yearsExperience: 8,
           certifications: ["ACLS", "BLS", "CCRN"],
@@ -2370,7 +2598,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 45,
           joinDate: "2022-03-15",
           skills: ["Critical Care", "Patient Assessment", "IV Therapy"],
-          bio: "Experienced ICU nurse with expertise in critical care and patient management."
+          bio: "Experienced ICU nurse with expertise in critical care and patient management.",
         },
         {
           id: 2,
@@ -2381,7 +2609,8 @@ export function registerRoutes(app: Express): Server {
           department: "Med-Surg",
           workerType: "contractor_1099",
           status: "active",
-          avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
+          avatar:
+            "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
           location: "Los Angeles, CA",
           yearsExperience: 5,
           certifications: ["BLS", "Medication Administration"],
@@ -2391,7 +2620,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 28,
           joinDate: "2023-01-20",
           skills: ["Wound Care", "Patient Education", "Medication Management"],
-          bio: "Dedicated LPN with strong patient care skills and medication expertise."
+          bio: "Dedicated LPN with strong patient care skills and medication expertise.",
         },
         {
           id: 3,
@@ -2402,7 +2631,8 @@ export function registerRoutes(app: Express): Server {
           department: "Emergency",
           workerType: "internal_employee",
           status: "active",
-          avatar: "https://images.unsplash.com/photo-1594824022574-1a9b45c1e2b5?w=150&h=150&fit=crop&crop=face",
+          avatar:
+            "https://images.unsplash.com/photo-1594824022574-1a9b45c1e2b5?w=150&h=150&fit=crop&crop=face",
           location: "Miami, FL",
           yearsExperience: 12,
           certifications: ["ACLS", "ATLS", "PALS", "Board Certified Emergency Medicine"],
@@ -2412,7 +2642,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 120,
           joinDate: "2021-08-10",
           skills: ["Emergency Medicine", "Trauma Care", "Procedures"],
-          bio: "Board-certified emergency physician with extensive trauma experience."
+          bio: "Board-certified emergency physician with extensive trauma experience.",
         },
         {
           id: 4,
@@ -2423,7 +2653,8 @@ export function registerRoutes(app: Express): Server {
           department: "Long Term Care",
           workerType: "contractor_1099",
           status: "active",
-          avatar: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=150&h=150&fit=crop&crop=face",
+          avatar:
+            "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=150&h=150&fit=crop&crop=face",
           location: "Denver, CO",
           yearsExperience: 3,
           certifications: ["CNA", "CPR", "First Aid"],
@@ -2433,7 +2664,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 18,
           joinDate: "2023-06-12",
           skills: ["Patient Care", "ADL Assistance", "Vital Signs"],
-          bio: "Compassionate CNA with experience in long-term care and patient support."
+          bio: "Compassionate CNA with experience in long-term care and patient support.",
         },
         {
           id: 5,
@@ -2444,7 +2675,8 @@ export function registerRoutes(app: Express): Server {
           department: "Respiratory",
           workerType: "internal_employee",
           status: "active",
-          avatar: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
+          avatar:
+            "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
           location: "Houston, TX",
           yearsExperience: 10,
           certifications: ["RRT", "CRT", "ACLS", "NRP"],
@@ -2454,7 +2686,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 38,
           joinDate: "2020-11-03",
           skills: ["Mechanical Ventilation", "Pulmonary Function", "ECMO"],
-          bio: "Experienced respiratory therapist specializing in critical care ventilation."
+          bio: "Experienced respiratory therapist specializing in critical care ventilation.",
         },
         {
           id: 6,
@@ -2465,7 +2697,8 @@ export function registerRoutes(app: Express): Server {
           department: "Family Practice",
           workerType: "contractor_1099",
           status: "active",
-          avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
+          avatar:
+            "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
           location: "Seattle, WA",
           yearsExperience: 7,
           certifications: ["FNP-BC", "ACLS", "BLS"],
@@ -2475,7 +2708,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 65,
           joinDate: "2022-09-18",
           skills: ["Primary Care", "Diagnosis", "Treatment Planning"],
-          bio: "Board-certified family nurse practitioner with comprehensive primary care experience."
+          bio: "Board-certified family nurse practitioner with comprehensive primary care experience.",
         },
         {
           id: 7,
@@ -2486,7 +2719,8 @@ export function registerRoutes(app: Express): Server {
           department: "Rehabilitation",
           workerType: "internal_employee",
           status: "active",
-          avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
+          avatar:
+            "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
           location: "Phoenix, AZ",
           yearsExperience: 6,
           certifications: ["DPT", "Orthopedic Specialist", "Manual Therapy"],
@@ -2496,7 +2730,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 42,
           joinDate: "2023-02-28",
           skills: ["Orthopedic Rehab", "Manual Therapy", "Exercise Prescription"],
-          bio: "Licensed physical therapist with orthopedic specialization and manual therapy expertise."
+          bio: "Licensed physical therapist with orthopedic specialization and manual therapy expertise.",
         },
         {
           id: 8,
@@ -2507,7 +2741,8 @@ export function registerRoutes(app: Express): Server {
           department: "Surgery",
           workerType: "contractor_1099",
           status: "active",
-          avatar: "https://images.unsplash.com/photo-1594824022574-1a9b45c1e2b5?w=150&h=150&fit=crop&crop=face",
+          avatar:
+            "https://images.unsplash.com/photo-1594824022574-1a9b45c1e2b5?w=150&h=150&fit=crop&crop=face",
           location: "Boston, MA",
           yearsExperience: 9,
           certifications: ["PA-C", "ACLS", "ATLS"],
@@ -2517,8 +2752,8 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 58,
           joinDate: "2021-12-05",
           skills: ["Surgical Assistance", "Pre-op Assessment", "Post-op Care"],
-          bio: "Certified physician assistant with extensive surgical experience and patient care."
-        }
+          bio: "Certified physician assistant with extensive surgical experience and patient care.",
+        },
       ];
       res.json(staff);
     } catch (error) {
@@ -2534,35 +2769,41 @@ export function registerRoutes(app: Express): Server {
           id: 1,
           authorId: 1,
           authorName: "Sarah Johnson",
-          authorAvatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
-          content: "Just completed a challenging 12-hour shift in the ICU. Every day brings new learning opportunities and the chance to make a real difference in patients' lives. Grateful for our amazing team! 💪",
+          authorAvatar:
+            "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
+          content:
+            "Just completed a challenging 12-hour shift in the ICU. Every day brings new learning opportunities and the chance to make a real difference in patients' lives. Grateful for our amazing team! 💪",
           timestamp: "2025-06-19T10:30:00Z",
           likes: 24,
           comments: 8,
-          type: "update"
+          type: "update",
         },
         {
           id: 2,
           authorId: 3,
           authorName: "Dr. Emma Rodriguez",
-          authorAvatar: "https://images.unsplash.com/photo-1594824022574-1a9b45c1e2b5?w=150&h=150&fit=crop&crop=face",
-          content: "Attended an excellent trauma workshop today. New protocols for managing complex cases will definitely improve our patient outcomes. Knowledge sharing is so important in our field!",
+          authorAvatar:
+            "https://images.unsplash.com/photo-1594824022574-1a9b45c1e2b5?w=150&h=150&fit=crop&crop=face",
+          content:
+            "Attended an excellent trauma workshop today. New protocols for managing complex cases will definitely improve our patient outcomes. Knowledge sharing is so important in our field!",
           timestamp: "2025-06-18T16:45:00Z",
           likes: 31,
           comments: 12,
-          type: "educational"
+          type: "educational",
         },
         {
           id: 3,
           authorId: 5,
           authorName: "Robert Thompson",
-          authorAvatar: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
-          content: "Successfully completed ECMO certification! Excited to bring these advanced skills to our respiratory therapy team. Always learning, always growing! 🎓",
+          authorAvatar:
+            "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
+          content:
+            "Successfully completed ECMO certification! Excited to bring these advanced skills to our respiratory therapy team. Always learning, always growing! 🎓",
           timestamp: "2025-06-17T14:20:00Z",
           likes: 18,
           comments: 6,
-          type: "achievement"
-        }
+          type: "achievement",
+        },
       ];
       res.json(posts);
     } catch (error) {
@@ -2577,12 +2818,14 @@ export function registerRoutes(app: Express): Server {
         id: Date.now(),
         authorId: req.user.id,
         authorName: req.user.username,
-        authorAvatar: req.user.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+        authorAvatar:
+          req.user.avatar ||
+          "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
         content: req.body.content,
         timestamp: new Date().toISOString(),
         likes: 0,
         comments: 0,
-        type: req.body.type || "update"
+        type: req.body.type || "update",
       };
       res.json(newPost);
     } catch (error) {
@@ -2601,13 +2844,13 @@ export function registerRoutes(app: Express): Server {
           small: 1000,
           medium: 2500,
           large: 5000,
-          enterprise: 10000
+          enterprise: 10000,
         },
         qualificationPeriod: 90,
         payoutSchedule: "monthly",
         requireBackground: true,
         minimumShifts: 5,
-        qrCodeEnabled: true
+        qrCodeEnabled: true,
       };
       res.json(settings);
     } catch (error) {
@@ -2628,7 +2871,7 @@ export function registerRoutes(app: Express): Server {
           dateReferred: "2025-05-15T00:00:00Z",
           dateQualified: "2025-06-10T00:00:00Z",
           bonusAmount: 500,
-          notes: "Experienced RN from previous facility"
+          notes: "Experienced RN from previous facility",
         },
         {
           id: 2,
@@ -2639,8 +2882,8 @@ export function registerRoutes(app: Express): Server {
           status: "pending",
           dateReferred: "2025-06-01T00:00:00Z",
           bonusAmount: 500,
-          notes: "Recent graduate with strong clinical skills"
-        }
+          notes: "Recent graduate with strong clinical skills",
+        },
       ];
       res.json(referrals);
     } catch (error) {
@@ -2654,41 +2897,60 @@ export function registerRoutes(app: Express): Server {
       // Generate comprehensive 12-month shift data for 100-bed skilled nursing facility
       const generateShifts = () => {
         const shifts = [];
-        const startDate = new Date('2024-07-01');
-        const endDate = new Date('2025-06-30');
-        const departments = ['ICU', 'Emergency Department', 'Medical/Surgical', 'Pediatrics', 'Rehabilitation', 'Operating Room'];
-        const specialties = ['Registered Nurse', 'Licensed Practical Nurse', 'Certified Nursing Assistant', 'Physical Therapist', 'Respiratory Therapist'];
-        const statuses = ['open', 'assigned', 'completed', 'requested', 'in_progress'];
-        const urgencies = ['low', 'medium', 'high', 'critical'];
+        const startDate = new Date("2024-07-01");
+        const endDate = new Date("2025-06-30");
+        const departments = [
+          "ICU",
+          "Emergency Department",
+          "Medical/Surgical",
+          "Pediatrics",
+          "Rehabilitation",
+          "Operating Room",
+        ];
+        const specialties = [
+          "Registered Nurse",
+          "Licensed Practical Nurse",
+          "Certified Nursing Assistant",
+          "Physical Therapist",
+          "Respiratory Therapist",
+        ];
+        const statuses = ["open", "assigned", "completed", "requested", "in_progress"];
+        const urgencies = ["low", "medium", "high", "critical"];
         const shiftTimes = [
-          { start: '07:00', end: '19:00', type: 'Day' },
-          { start: '19:00', end: '07:00', type: 'Night' },
-          { start: '06:00', end: '18:00', type: 'Day' },
-          { start: '18:00', end: '06:00', type: 'Night' }
+          { start: "07:00", end: "19:00", type: "Day" },
+          { start: "19:00", end: "07:00", type: "Night" },
+          { start: "06:00", end: "18:00", type: "Day" },
+          { start: "18:00", end: "06:00", type: "Night" },
         ];
 
         let id = 1;
         for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
           // Generate 15-25 shifts per day for large facility
           const shiftsPerDay = Math.floor(Math.random() * 11) + 15;
-          
+
           for (let i = 0; i < shiftsPerDay; i++) {
             const department = departments[Math.floor(Math.random() * departments.length)];
             const specialty = specialties[Math.floor(Math.random() * specialties.length)];
             const shiftTime = shiftTimes[Math.floor(Math.random() * shiftTimes.length)];
             const status = statuses[Math.floor(Math.random() * statuses.length)];
             const urgency = urgencies[Math.floor(Math.random() * urgencies.length)];
-            
+
             // Base rates with premium adjustments
-            const baseRates = { 'Registered Nurse': 35, 'Licensed Practical Nurse': 28, 'Certified Nursing Assistant': 18, 'Physical Therapist': 45, 'Respiratory Therapist': 32 };
+            const baseRates = {
+              "Registered Nurse": 35,
+              "Licensed Practical Nurse": 28,
+              "Certified Nursing Assistant": 18,
+              "Physical Therapist": 45,
+              "Respiratory Therapist": 32,
+            };
             const baseRate = baseRates[specialty] || 30;
-            const premiumMultiplier = 1 + (Math.random() * 0.7); // 100-170% of base rate
+            const premiumMultiplier = 1 + Math.random() * 0.7; // 100-170% of base rate
             const rate = Math.round(baseRate * premiumMultiplier);
 
             shifts.push({
               id: id++,
               title: `${department} ${shiftTime.type} Shift`,
-              date: d.toISOString().split('T')[0],
+              date: d.toISOString().split("T")[0],
               startTime: shiftTime.start,
               endTime: shiftTime.end,
               department,
@@ -2698,7 +2960,7 @@ export function registerRoutes(app: Express): Server {
               facilityName: "Sunrise Manor Skilled Nursing",
               rate,
               urgency,
-              description: `${department} coverage needed, ${specialty} position`
+              description: `${department} coverage needed, ${specialty} position`,
             });
           }
         }
@@ -2721,7 +2983,7 @@ export function registerRoutes(app: Express): Server {
         ...shiftData,
         status: "open",
         createdById: req.user?.id,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
       res.json(newShift);
     } catch (error) {
@@ -2743,7 +3005,7 @@ export function registerRoutes(app: Express): Server {
           specialty: "Registered Nurse",
           quantity: 3,
           rate: 45,
-          description: "Week-long ICU coverage needed, multiple positions available"
+          description: "Week-long ICU coverage needed, multiple positions available",
         },
         {
           id: 2,
@@ -2754,7 +3016,7 @@ export function registerRoutes(app: Express): Server {
           specialty: "Registered Nurse",
           quantity: 2,
           rate: 52,
-          description: "Weekend emergency department coverage"
+          description: "Weekend emergency department coverage",
         },
         {
           id: 3,
@@ -2765,8 +3027,8 @@ export function registerRoutes(app: Express): Server {
           specialty: "Physical Therapist",
           quantity: 1,
           rate: 62,
-          description: "Full week rehabilitation services coverage"
-        }
+          description: "Full week rehabilitation services coverage",
+        },
       ];
       res.json(blockShifts);
     } catch (error) {
@@ -2783,7 +3045,7 @@ export function registerRoutes(app: Express): Server {
         ...blockShiftData,
         status: "open",
         createdById: req.user?.id,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
       res.json(newBlockShift);
     } catch (error) {
@@ -2806,7 +3068,7 @@ export function registerRoutes(app: Express): Server {
           "Respiratory Therapist": 32,
           "Medical Doctor": 85,
           "Nurse Practitioner": 55,
-          "Physician Assistant": 50
+          "Physician Assistant": 50,
         },
         presetTimes: [
           { label: "7:00 AM - 7:00 PM", start: "07:00", end: "19:00" },
@@ -2814,12 +3076,12 @@ export function registerRoutes(app: Express): Server {
           { label: "6:00 AM - 6:00 PM", start: "06:00", end: "18:00" },
           { label: "6:00 PM - 6:00 AM", start: "18:00", end: "06:00" },
           { label: "8:00 AM - 8:00 PM", start: "08:00", end: "20:00" },
-          { label: "8:00 PM - 8:00 AM", start: "20:00", end: "08:00" }
+          { label: "8:00 PM - 8:00 AM", start: "20:00", end: "08:00" },
         ],
         allowedPremiums: {
           min: 1.0,
           max: 1.7,
-          step: 0.05
+          step: 0.05,
         },
         departments: [
           "Emergency Department",
@@ -2831,7 +3093,7 @@ export function registerRoutes(app: Express): Server {
           "Orthopedics",
           "Rehabilitation",
           "Operating Room",
-          "Labor & Delivery"
+          "Labor & Delivery",
         ],
         specialtyServices: [
           "Registered Nurse",
@@ -2841,8 +3103,8 @@ export function registerRoutes(app: Express): Server {
           "Respiratory Therapist",
           "Medical Doctor",
           "Nurse Practitioner",
-          "Physician Assistant"
-        ]
+          "Physician Assistant",
+        ],
       };
       res.json(settings);
     } catch (error) {
@@ -2857,7 +3119,7 @@ export function registerRoutes(app: Express): Server {
         id: 1,
         facilityId: parseInt(req.params.facilityId),
         ...req.body,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
       res.json(updatedSettings);
     } catch (error) {
@@ -2885,8 +3147,8 @@ export function registerRoutes(app: Express): Server {
           dateReferred: "2025-05-20T00:00:00Z",
           dateContacted: "2025-05-25T00:00:00Z",
           bonusAmount: 2500,
-          notes: "Looking for staffing partnership for summer months"
-        }
+          notes: "Looking for staffing partnership for summer months",
+        },
       ];
       res.json(referrals);
     } catch (error) {
@@ -2902,23 +3164,25 @@ export function registerRoutes(app: Express): Server {
           userId: 1,
           userName: "Sarah Johnson",
           code: "SJ2025REF",
-          qrCodeUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+          qrCodeUrl:
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
           type: "both",
           uses: 3,
           maxUses: 50,
-          isActive: true
+          isActive: true,
         },
         {
           id: 2,
           userId: 3,
           userName: "Dr. Emma Rodriguez",
           code: "ER2025REF",
-          qrCodeUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+          qrCodeUrl:
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
           type: "staff",
           uses: 1,
           maxUses: 25,
-          isActive: true
-        }
+          isActive: true,
+        },
       ];
       res.json(codes);
     } catch (error) {
@@ -2927,15 +3191,19 @@ export function registerRoutes(app: Express): Server {
   });
 
   // PDF invoice extraction endpoint
-  app.post("/api/vendor-invoices/extract-pdf", requireAuth, upload.single('pdf'), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No PDF file uploaded" });
-      }
+  app.post(
+    "/api/vendor-invoices/extract-pdf",
+    requireAuth,
+    upload.single("pdf"),
+    async (req, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: "No PDF file uploaded" });
+        }
 
-      // For demo purposes, simulate PDF text extraction
-      // In production, you would use a proper PDF parsing library
-      const simulatedPdfText = `
+        // For demo purposes, simulate PDF text extraction
+        // In production, you would use a proper PDF parsing library
+        const simulatedPdfText = `
         INVOICE
         
         From: MedSupply Plus Corp
@@ -2965,16 +3233,16 @@ export function registerRoutes(app: Express): Server {
         Thank you for your business!
       `;
 
-      const pdfText = simulatedPdfText;
+        const pdfText = simulatedPdfText;
 
-      // Use OpenAI to extract invoice data
-      // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: `You are an AI assistant that extracts invoice information from text. 
+        // Use OpenAI to extract invoice data
+        // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
+            {
+              role: "system",
+              content: `You are an AI assistant that extracts invoice information from text. 
             Extract the following fields from the invoice text and respond with JSON:
             - vendorName: The company/vendor name issuing the invoice
             - invoiceNumber: The invoice number or reference
@@ -2985,40 +3253,43 @@ export function registerRoutes(app: Express): Server {
             - vendorType: Categorize as one of: staffing_agency, medical_supply, equipment_rental, maintenance, consulting, it_services, or other
             
             If any field cannot be determined, use reasonable defaults or null.
-            Respond only with valid JSON.`
-          },
-          {
-            role: "user",
-            content: `Extract invoice information from this text:\n\n${pdfText}`
-          }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.1
-      });
+            Respond only with valid JSON.`,
+            },
+            {
+              role: "user",
+              content: `Extract invoice information from this text:\n\n${pdfText}`,
+            },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.1,
+        });
 
-      const extractedData = JSON.parse(response.choices[0].message.content || '{}');
-      
-      // Validate and clean the extracted data
-      const cleanedData = {
-        vendorName: extractedData.vendorName || "Unknown Vendor",
-        invoiceNumber: extractedData.invoiceNumber || `INV-${Date.now()}`,
-        amount: parseFloat(extractedData.amount) || 0,
-        dueDate: extractedData.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        serviceDate: extractedData.serviceDate || new Date().toISOString().split('T')[0],
-        description: extractedData.description || "Services provided",
-        vendorType: extractedData.vendorType || "other",
-        status: "pending"
-      };
+        const extractedData = JSON.parse(response.choices[0].message.content || "{}");
 
-      res.json(cleanedData);
-    } catch (error: any) {
-      console.error("Error extracting PDF data:", error);
-      res.status(500).json({ 
-        message: "Failed to extract invoice data from PDF",
-        error: error.message 
-      });
+        // Validate and clean the extracted data
+        const cleanedData = {
+          vendorName: extractedData.vendorName || "Unknown Vendor",
+          invoiceNumber: extractedData.invoiceNumber || `INV-${Date.now()}`,
+          amount: parseFloat(extractedData.amount) || 0,
+          dueDate:
+            extractedData.dueDate ||
+            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+          serviceDate: extractedData.serviceDate || new Date().toISOString().split("T")[0],
+          description: extractedData.description || "Services provided",
+          vendorType: extractedData.vendorType || "other",
+          status: "pending",
+        };
+
+        res.json(cleanedData);
+      } catch (error: any) {
+        console.error("Error extracting PDF data:", error);
+        res.status(500).json({
+          message: "Failed to extract invoice data from PDF",
+          error: error.message,
+        });
+      }
     }
-  });
+  );
 
   // System settings API
   app.get("/api/system-settings", requireAuth, async (req, res) => {
@@ -3067,7 +3338,7 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/shift-analytics", requireAuth, async (req, res) => {
     try {
       const { specialty, workerType, timeRange } = req.query;
-      
+
       const shiftAnalytics = [
         {
           id: 1,
@@ -3081,9 +3352,9 @@ export function registerRoutes(app: Express): Server {
           filledDate: "2025-06-16T00:00:00Z",
           status: "filled",
           urgency: "urgent",
-          hourlyRate: 45.50,
+          hourlyRate: 45.5,
           shiftDate: "2025-06-20T19:00:00Z",
-          duration: 12
+          duration: 12,
         },
         {
           id: 2,
@@ -3099,7 +3370,7 @@ export function registerRoutes(app: Express): Server {
           urgency: "normal",
           hourlyRate: 18.75,
           shiftDate: "2025-06-21T07:00:00Z",
-          duration: 8
+          duration: 8,
         },
         {
           id: 3,
@@ -3113,9 +3384,9 @@ export function registerRoutes(app: Express): Server {
           filledDate: null,
           status: "open",
           urgency: "high",
-          hourlyRate: 55.00,
+          hourlyRate: 55.0,
           shiftDate: "2025-06-22T08:00:00Z",
-          duration: 8
+          duration: 8,
         },
         {
           id: 4,
@@ -3129,9 +3400,9 @@ export function registerRoutes(app: Express): Server {
           filledDate: "2025-06-18T00:00:00Z",
           status: "filled",
           urgency: "urgent",
-          hourlyRate: 28.50,
+          hourlyRate: 28.5,
           shiftDate: "2025-06-22T07:00:00Z",
-          duration: 12
+          duration: 12,
         },
         {
           id: 5,
@@ -3145,9 +3416,9 @@ export function registerRoutes(app: Express): Server {
           filledDate: null,
           status: "open",
           urgency: "high",
-          hourlyRate: 42.00,
+          hourlyRate: 42.0,
           shiftDate: "2025-06-23T15:00:00Z",
-          duration: 8
+          duration: 8,
         },
         {
           id: 6,
@@ -3163,7 +3434,7 @@ export function registerRoutes(app: Express): Server {
           urgency: "normal",
           hourlyRate: 32.25,
           shiftDate: "2025-06-21T06:00:00Z",
-          duration: 10
+          duration: 10,
         },
         {
           id: 7,
@@ -3179,7 +3450,7 @@ export function registerRoutes(app: Express): Server {
           urgency: "urgent",
           hourlyRate: 52.75,
           shiftDate: "2025-06-20T19:00:00Z",
-          duration: 12
+          duration: 12,
         },
         {
           id: 8,
@@ -3193,9 +3464,9 @@ export function registerRoutes(app: Express): Server {
           filledDate: null,
           status: "open",
           urgency: "normal",
-          hourlyRate: 20.00,
+          hourlyRate: 20.0,
           shiftDate: "2025-06-24T07:00:00Z",
-          duration: 8
+          duration: 8,
         },
         {
           id: 9,
@@ -3211,7 +3482,7 @@ export function registerRoutes(app: Express): Server {
           urgency: "high",
           hourlyRate: 26.75,
           shiftDate: "2025-06-21T15:00:00Z",
-          duration: 8
+          duration: 8,
         },
         {
           id: 10,
@@ -3225,9 +3496,9 @@ export function registerRoutes(app: Express): Server {
           filledDate: null,
           status: "open",
           urgency: "normal",
-          hourlyRate: 48.50,
+          hourlyRate: 48.5,
           shiftDate: "2025-06-22T08:00:00Z",
-          duration: 10
+          duration: 10,
         },
         {
           id: 11,
@@ -3243,7 +3514,7 @@ export function registerRoutes(app: Express): Server {
           urgency: "urgent",
           hourlyRate: 44.25,
           shiftDate: "2025-06-20T19:00:00Z",
-          duration: 12
+          duration: 12,
         },
         {
           id: 12,
@@ -3257,9 +3528,9 @@ export function registerRoutes(app: Express): Server {
           filledDate: null,
           status: "open",
           urgency: "high",
-          hourlyRate: 35.00,
+          hourlyRate: 35.0,
           shiftDate: "2025-06-23T22:00:00Z",
-          duration: 8
+          duration: 8,
         },
         {
           id: 13,
@@ -3273,9 +3544,9 @@ export function registerRoutes(app: Express): Server {
           filledDate: "2025-06-19T00:00:00Z",
           status: "filled",
           urgency: "urgent",
-          hourlyRate: 58.00,
+          hourlyRate: 58.0,
           shiftDate: "2025-06-21T06:00:00Z",
-          duration: 10
+          duration: 10,
         },
         {
           id: 14,
@@ -3291,7 +3562,7 @@ export function registerRoutes(app: Express): Server {
           urgency: "normal",
           hourlyRate: 19.25,
           shiftDate: "2025-06-22T07:00:00Z",
-          duration: 12
+          duration: 12,
         },
         {
           id: 15,
@@ -3305,21 +3576,21 @@ export function registerRoutes(app: Express): Server {
           filledDate: "2025-06-18T00:00:00Z",
           status: "filled",
           urgency: "urgent",
-          hourlyRate: 31.50,
+          hourlyRate: 31.5,
           shiftDate: "2025-06-20T07:00:00Z",
-          duration: 12
-        }
+          duration: 12,
+        },
       ];
 
       // Apply filters if provided
       let filteredData = shiftAnalytics;
-      
-      if (specialty && specialty !== 'all') {
-        filteredData = filteredData.filter(shift => shift.specialty === specialty);
+
+      if (specialty && specialty !== "all") {
+        filteredData = filteredData.filter((shift) => shift.specialty === specialty);
       }
-      
-      if (workerType && workerType !== 'all') {
-        filteredData = filteredData.filter(shift => shift.workerType === workerType);
+
+      if (workerType && workerType !== "all") {
+        filteredData = filteredData.filter((shift) => shift.workerType === workerType);
       }
 
       res.json(filteredData);
@@ -3332,58 +3603,62 @@ export function registerRoutes(app: Express): Server {
   const httpServer = createServer(app);
 
   // WebSocket setup for real-time messaging
-  const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
+  const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
 
-  wss.on('connection', (ws: WebSocket, req) => {
-    console.log('WebSocket connection established');
+  wss.on("connection", (ws: WebSocket, req) => {
+    console.log("WebSocket connection established");
 
-    ws.on('message', async (data) => {
+    ws.on("message", async (data) => {
       try {
         const message = JSON.parse(data.toString());
-        
+
         // Handle different message types
         switch (message.type) {
-          case 'chat':
+          case "chat":
             // Broadcast chat message to conversation participants
             const chatMessage = await storage.createMessage({
               senderId: message.senderId,
               recipientId: message.recipientId,
               conversationId: message.conversationId,
               content: message.content,
-              messageType: 'text',
-              shiftId: message.shiftId
+              messageType: "text",
+              shiftId: message.shiftId,
             });
 
             // Broadcast to all connected clients in the conversation
             wss.clients.forEach((client) => {
               if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify({
-                  type: 'chat',
-                  message: chatMessage
-                }));
+                client.send(
+                  JSON.stringify({
+                    type: "chat",
+                    message: chatMessage,
+                  })
+                );
               }
             });
             break;
 
-          case 'shift_update':
+          case "shift_update":
             // Broadcast shift updates to facility staff
             wss.clients.forEach((client) => {
               if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify({
-                  type: 'shift_update',
-                  shift: message.shift
-                }));
+                client.send(
+                  JSON.stringify({
+                    type: "shift_update",
+                    shift: message.shift,
+                  })
+                );
               }
             });
             break;
         }
       } catch (error) {
-        console.error('WebSocket message error:', error);
+        console.error("WebSocket message error:", error);
       }
     });
 
-    ws.on('close', () => {
-      console.log('WebSocket connection closed');
+    ws.on("close", () => {
+      console.log("WebSocket connection closed");
     });
   });
 

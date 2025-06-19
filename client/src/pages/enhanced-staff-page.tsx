@@ -5,17 +5,54 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { 
-  Users, Plus, Search, Filter, Edit, Star, MapPin, Phone, Mail, 
-  Calendar, Building, Award, FileText, Camera, Upload, Linkedin,
-  ExternalLink, Heart, MessageCircle, Share2, Briefcase, GraduationCap,
-  Clock, DollarSign, ArrowLeft, Home, UserPlus, Settings
+import {
+  Users,
+  Plus,
+  Search,
+  Filter,
+  Edit,
+  Star,
+  MapPin,
+  Phone,
+  Mail,
+  Calendar,
+  Building,
+  Award,
+  FileText,
+  Camera,
+  Upload,
+  Linkedin,
+  ExternalLink,
+  Heart,
+  MessageCircle,
+  Share2,
+  Briefcase,
+  GraduationCap,
+  Clock,
+  DollarSign,
+  ArrowLeft,
+  Home,
+  UserPlus,
+  Settings,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -32,8 +69,8 @@ interface StaffMember {
   yearsExperience: number;
   hourlyRate: number;
   location: string;
-  workerType: 'internal_employee' | 'contractor_1099' | 'agency_staff' | 'float_pool';
-  status: 'active' | 'inactive' | 'pending' | 'suspended';
+  workerType: "internal_employee" | "contractor_1099" | "agency_staff" | "float_pool";
+  status: "active" | "inactive" | "pending" | "suspended";
   rating: number;
   totalShifts: number;
   bio?: string;
@@ -80,30 +117,30 @@ interface StaffPost {
   authorName: string;
   authorImage?: string;
   content: string;
-  type: 'achievement' | 'certification' | 'shift_completion' | 'general';
+  type: "achievement" | "certification" | "shift_completion" | "general";
   timestamp: string;
   likes: number;
   comments: number;
   hasLiked: boolean;
   attachments?: Array<{
-    type: 'image' | 'document';
+    type: "image" | "document";
     url: string;
     name: string;
   }>;
 }
 
 const workerTypeLabels = {
-  internal_employee: 'Internal Employee',
-  contractor_1099: '1099 Contractor',
-  agency_staff: 'Agency Staff',
-  float_pool: 'Float Pool'
+  internal_employee: "Internal Employee",
+  contractor_1099: "1099 Contractor",
+  agency_staff: "Agency Staff",
+  float_pool: "Float Pool",
 };
 
 const statusColors = {
-  active: 'bg-green-500',
-  inactive: 'bg-gray-500',
-  pending: 'bg-yellow-500',
-  suspended: 'bg-red-500'
+  active: "bg-green-500",
+  inactive: "bg-gray-500",
+  pending: "bg-yellow-500",
+  suspended: "bg-red-500",
 };
 
 export default function EnhancedStaffPage() {
@@ -127,21 +164,23 @@ export default function EnhancedStaffPage() {
   });
 
   // Filter staff members
-  const filteredStaff = staffMembers.filter(staff => {
-    const matchesSearch = searchTerm === "" || 
+  const filteredStaff = staffMembers.filter((staff) => {
+    const matchesSearch =
+      searchTerm === "" ||
       `${staff.firstName} ${staff.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
       staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       staff.specialty.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesWorkerType = selectedWorkerType === "all" || staff.workerType === selectedWorkerType;
+
+    const matchesWorkerType =
+      selectedWorkerType === "all" || staff.workerType === selectedWorkerType;
     const matchesSpecialty = selectedSpecialty === "all" || staff.specialty === selectedSpecialty;
     const matchesStatus = selectedStatus === "all" || staff.status === selectedStatus;
-    
+
     return matchesSearch && matchesWorkerType && matchesSpecialty && matchesStatus;
   });
 
   // Get unique values for filters
-  const specialties = Array.from(new Set(staffMembers.map(s => s.specialty)));
+  const specialties = Array.from(new Set(staffMembers.map((s) => s.specialty)));
 
   const createStaffMutation = useMutation({
     mutationFn: async (staffData: any) => {
@@ -176,7 +215,7 @@ export default function EnhancedStaffPage() {
   const uploadProfileImageMutation = useMutation({
     mutationFn: async ({ id, file }: { id: number; file: File }) => {
       const formData = new FormData();
-      formData.append('profileImage', file);
+      formData.append("profileImage", file);
       const response = await apiRequest("POST", `/api/staff/${id}/profile-image`, formData);
       return response.json();
     },
@@ -203,17 +242,20 @@ export default function EnhancedStaffPage() {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const staffData = {
-      firstName: formData.get('firstName') as string,
-      lastName: formData.get('lastName') as string,
-      email: formData.get('email') as string,
-      phone: formData.get('phone') as string,
-      specialty: formData.get('specialty') as string,
-      workerType: formData.get('workerType') as string,
-      hourlyRate: parseFloat(formData.get('hourlyRate') as string),
-      yearsExperience: parseInt(formData.get('yearsExperience') as string),
-      location: formData.get('location') as string,
-      certifications: (formData.get('certifications') as string).split(',').map(c => c.trim()).filter(c => c),
-      status: 'pending'
+      firstName: formData.get("firstName") as string,
+      lastName: formData.get("lastName") as string,
+      email: formData.get("email") as string,
+      phone: formData.get("phone") as string,
+      specialty: formData.get("specialty") as string,
+      workerType: formData.get("workerType") as string,
+      hourlyRate: parseFloat(formData.get("hourlyRate") as string),
+      yearsExperience: parseInt(formData.get("yearsExperience") as string),
+      location: formData.get("location") as string,
+      certifications: (formData.get("certifications") as string)
+        .split(",")
+        .map((c) => c.trim())
+        .filter((c) => c),
+      status: "pending",
     };
     createStaffMutation.mutate(staffData);
   };
@@ -225,17 +267,23 @@ export default function EnhancedStaffPage() {
   const handleUpdateProfile = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedStaff) return;
-    
+
     const formData = new FormData(e.currentTarget);
     const updateData = {
-      bio: formData.get('bio') as string,
-      linkedinUrl: formData.get('linkedinUrl') as string,
-      portfolioUrl: formData.get('portfolioUrl') as string,
-      skills: (formData.get('skills') as string).split(',').map(s => s.trim()).filter(s => s),
-      availability: (formData.get('availability') as string).split(',').map(a => a.trim()).filter(a => a),
-      hourlyRate: parseFloat(formData.get('hourlyRate') as string),
+      bio: formData.get("bio") as string,
+      linkedinUrl: formData.get("linkedinUrl") as string,
+      portfolioUrl: formData.get("portfolioUrl") as string,
+      skills: (formData.get("skills") as string)
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s),
+      availability: (formData.get("availability") as string)
+        .split(",")
+        .map((a) => a.trim())
+        .filter((a) => a),
+      hourlyRate: parseFloat(formData.get("hourlyRate") as string),
     };
-    
+
     updateStaffMutation.mutate({ id: selectedStaff.id, data: updateData });
   };
 
@@ -275,9 +323,7 @@ export default function EnhancedStaffPage() {
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Add New Staff Member</DialogTitle>
-                <DialogDescription>
-                  Create a profile for a new staff member
-                </DialogDescription>
+                <DialogDescription>Create a profile for a new staff member</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateStaff} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -323,7 +369,9 @@ export default function EnhancedStaffPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {Object.entries(workerTypeLabels).map(([value, label]) => (
-                          <SelectItem key={value} value={value}>{label}</SelectItem>
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -346,7 +394,11 @@ export default function EnhancedStaffPage() {
                   <Input name="certifications" placeholder="BLS, ACLS, RN License" />
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setShowAddStaffDialog(false)}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowAddStaffDialog(false)}
+                  >
                     Cancel
                   </Button>
                   <Button type="submit" disabled={createStaffMutation.isPending}>
@@ -399,7 +451,9 @@ export default function EnhancedStaffPage() {
                     <SelectContent>
                       <SelectItem value="all">All Types</SelectItem>
                       {Object.entries(workerTypeLabels).map(([value, label]) => (
-                        <SelectItem key={value} value={value}>{label}</SelectItem>
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -412,9 +466,9 @@ export default function EnhancedStaffPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Specialties</SelectItem>
-                      {specialties.map(specialty => (
+                      {specialties.map((specialty) => (
                         <SelectItem key={specialty} value={specialty}>
-                          {specialty.replace('_', ' ').toUpperCase()}
+                          {specialty.replace("_", " ").toUpperCase()}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -442,14 +496,18 @@ export default function EnhancedStaffPage() {
           {/* Staff Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredStaff.map((staff) => (
-              <Card key={staff.id} className="cursor-pointer hover:shadow-lg transition-shadow" 
-                    onClick={() => setSelectedStaff(staff)}>
+              <Card
+                key={staff.id}
+                className="cursor-pointer hover:shadow-lg transition-shadow"
+                onClick={() => setSelectedStaff(staff)}
+              >
                 <CardHeader className="pb-2">
                   <div className="flex items-center space-x-3">
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={staff.profileImage} />
                       <AvatarFallback>
-                        {staff.firstName?.[0] || ''}{staff.lastName?.[0] || ''}
+                        {staff.firstName?.[0] || ""}
+                        {staff.lastName?.[0] || ""}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
@@ -457,7 +515,7 @@ export default function EnhancedStaffPage() {
                         {staff.firstName} {staff.lastName}
                       </h3>
                       <p className="text-sm text-muted-foreground truncate">
-                        {staff.specialty.replace('_', ' ')}
+                        {staff.specialty.replace("_", " ")}
                       </p>
                     </div>
                   </div>
@@ -467,27 +525,24 @@ export default function EnhancedStaffPage() {
                     <Badge className={`${statusColors[staff.status]} text-white`}>
                       {staff.status.charAt(0).toUpperCase() + staff.status.slice(1)}
                     </Badge>
-                    <Badge variant="outline">
-                      {workerTypeLabels[staff.workerType]}
-                    </Badge>
+                    <Badge variant="outline">{workerTypeLabels[staff.workerType]}</Badge>
                   </div>
-                  
+
                   <div className="flex items-center text-sm text-muted-foreground">
                     <MapPin className="h-3 w-3 mr-1" />
                     {staff.location}
                   </div>
-                  
+
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center">
                       <Star className="h-3 w-3 mr-1 text-yellow-500" />
                       {staff.rating}/5
                     </div>
                     <div className="flex items-center">
-                      <DollarSign className="h-3 w-3 mr-1" />
-                      ${staff.hourlyRate}/hr
+                      <DollarSign className="h-3 w-3 mr-1" />${staff.hourlyRate}/hr
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-wrap gap-1">
                     {staff.certifications.slice(0, 2).map((cert, i) => (
                       <Badge key={i} variant="secondary" className="text-xs">
@@ -516,7 +571,10 @@ export default function EnhancedStaffPage() {
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={post.authorImage} />
                         <AvatarFallback>
-                          {post.authorName?.split(' ').map(n => n?.[0] || '').join('') || ''}
+                          {post.authorName
+                            ?.split(" ")
+                            .map((n) => n?.[0] || "")
+                            .join("") || ""}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
@@ -525,14 +583,12 @@ export default function EnhancedStaffPage() {
                           {new Date(post.timestamp).toLocaleDateString()}
                         </p>
                       </div>
-                      <Badge variant="outline">
-                        {post.type.replace('_', ' ')}
-                      </Badge>
+                      <Badge variant="outline">{post.type.replace("_", " ")}</Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <p>{post.content}</p>
-                    
+
                     {post.attachments && post.attachments.length > 0 && (
                       <div className="grid grid-cols-2 gap-2">
                         {post.attachments.map((attachment, i) => (
@@ -545,16 +601,16 @@ export default function EnhancedStaffPage() {
                         ))}
                       </div>
                     )}
-                    
+
                     <div className="flex items-center justify-between pt-2 border-t">
                       <div className="flex items-center space-x-4">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className={`gap-2 ${post.hasLiked ? 'text-red-500' : ''}`}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`gap-2 ${post.hasLiked ? "text-red-500" : ""}`}
                           onClick={() => likePostMutation.mutate(post.id)}
                         >
-                          <Heart className={`h-4 w-4 ${post.hasLiked ? 'fill-current' : ''}`} />
+                          <Heart className={`h-4 w-4 ${post.hasLiked ? "fill-current" : ""}`} />
                           {post.likes}
                         </Button>
                         <Button variant="ghost" size="sm" className="gap-2">
@@ -571,7 +627,7 @@ export default function EnhancedStaffPage() {
                 </Card>
               ))}
             </div>
-            
+
             <div className="space-y-4">
               <Card>
                 <CardHeader>
@@ -586,7 +642,8 @@ export default function EnhancedStaffPage() {
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={staff.profileImage} />
                           <AvatarFallback className="text-xs">
-                            {staff.firstName?.[0] || ''}{staff.lastName?.[0] || ''}
+                            {staff.firstName?.[0] || ""}
+                            {staff.lastName?.[0] || ""}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
@@ -595,23 +652,21 @@ export default function EnhancedStaffPage() {
                           </p>
                           <div className="flex items-center">
                             <Star className="h-3 w-3 text-yellow-500 mr-1" />
-                            <span className="text-xs text-muted-foreground">
-                              {staff.rating}/5
-                            </span>
+                            <span className="text-xs text-muted-foreground">{staff.rating}/5</span>
                           </div>
                         </div>
                       </div>
                     ))}
                 </CardContent>
               </Card>
-              
+
               <Card>
                 <CardHeader>
                   <CardTitle>Recent Certifications</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {staffPosts
-                    .filter(post => post.type === 'certification')
+                    .filter((post) => post.type === "certification")
                     .slice(0, 3)
                     .map((post) => (
                       <div key={post.id} className="text-sm">
@@ -645,7 +700,7 @@ export default function EnhancedStaffPage() {
                   <div>
                     <p className="text-sm font-medium">Active Staff</p>
                     <p className="text-2xl font-bold">
-                      {staffMembers.filter(s => s.status === 'active').length}
+                      {staffMembers.filter((s) => s.status === "active").length}
                     </p>
                   </div>
                 </div>
@@ -658,7 +713,7 @@ export default function EnhancedStaffPage() {
                   <div>
                     <p className="text-sm font-medium">1099 Contractors</p>
                     <p className="text-2xl font-bold">
-                      {staffMembers.filter(s => s.workerType === 'contractor_1099').length}
+                      {staffMembers.filter((s) => s.workerType === "contractor_1099").length}
                     </p>
                   </div>
                 </div>
@@ -671,7 +726,9 @@ export default function EnhancedStaffPage() {
                   <div>
                     <p className="text-sm font-medium">Avg Rating</p>
                     <p className="text-2xl font-bold">
-                      {(staffMembers.reduce((sum, s) => sum + s.rating, 0) / staffMembers.length).toFixed(1)}
+                      {(
+                        staffMembers.reduce((sum, s) => sum + s.rating, 0) / staffMembers.length
+                      ).toFixed(1)}
                     </p>
                   </div>
                 </div>
@@ -692,7 +749,8 @@ export default function EnhancedStaffPage() {
                     <Avatar className="h-16 w-16">
                       <AvatarImage src={selectedStaff.profileImage} />
                       <AvatarFallback>
-                        {selectedStaff.firstName?.[0] || ''}{selectedStaff.lastName?.[0] || ''}
+                        {selectedStaff.firstName?.[0] || ""}
+                        {selectedStaff.lastName?.[0] || ""}
                       </AvatarFallback>
                     </Avatar>
                     <Button
@@ -721,7 +779,8 @@ export default function EnhancedStaffPage() {
                       {selectedStaff.firstName} {selectedStaff.lastName}
                     </DialogTitle>
                     <DialogDescription className="text-base">
-                      {selectedStaff.specialty.replace('_', ' ')} • {workerTypeLabels[selectedStaff.workerType]}
+                      {selectedStaff.specialty.replace("_", " ")} •{" "}
+                      {workerTypeLabels[selectedStaff.workerType]}
                     </DialogDescription>
                   </div>
                 </div>
@@ -752,50 +811,50 @@ export default function EnhancedStaffPage() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="bio">Bio</Label>
-                        <Textarea 
-                          name="bio" 
+                        <Textarea
+                          name="bio"
                           defaultValue={selectedStaff.bio}
                           placeholder="Tell us about yourself..."
                         />
                       </div>
                       <div>
                         <Label htmlFor="skills">Skills (comma-separated)</Label>
-                        <Textarea 
-                          name="skills" 
-                          defaultValue={selectedStaff.skills?.join(', ')}
+                        <Textarea
+                          name="skills"
+                          defaultValue={selectedStaff.skills?.join(", ")}
                           placeholder="Critical care, IV therapy, wound care..."
                         />
                       </div>
                       <div>
                         <Label htmlFor="linkedinUrl">LinkedIn URL</Label>
-                        <Input 
-                          name="linkedinUrl" 
+                        <Input
+                          name="linkedinUrl"
                           defaultValue={selectedStaff.linkedinUrl}
                           placeholder="https://linkedin.com/in/username"
                         />
                       </div>
                       <div>
                         <Label htmlFor="portfolioUrl">Portfolio URL</Label>
-                        <Input 
-                          name="portfolioUrl" 
+                        <Input
+                          name="portfolioUrl"
                           defaultValue={selectedStaff.portfolioUrl}
                           placeholder="https://portfolio.com"
                         />
                       </div>
                       <div>
                         <Label htmlFor="hourlyRate">Hourly Rate</Label>
-                        <Input 
-                          name="hourlyRate" 
-                          type="number" 
+                        <Input
+                          name="hourlyRate"
+                          type="number"
                           step="0.01"
                           defaultValue={selectedStaff.hourlyRate}
                         />
                       </div>
                       <div>
                         <Label htmlFor="availability">Availability</Label>
-                        <Input 
-                          name="availability" 
-                          defaultValue={selectedStaff.availability?.join(', ')}
+                        <Input
+                          name="availability"
+                          defaultValue={selectedStaff.availability?.join(", ")}
                           placeholder="Monday, Tuesday, Weekends..."
                         />
                       </div>
@@ -864,9 +923,9 @@ export default function EnhancedStaffPage() {
                           <h3 className="font-medium mb-2">Links</h3>
                           <div className="space-y-2">
                             {selectedStaff.linkedinUrl && (
-                              <a 
-                                href={selectedStaff.linkedinUrl} 
-                                target="_blank" 
+                              <a
+                                href={selectedStaff.linkedinUrl}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 text-blue-600 hover:underline"
                               >
@@ -876,9 +935,9 @@ export default function EnhancedStaffPage() {
                               </a>
                             )}
                             {selectedStaff.portfolioUrl && (
-                              <a 
-                                href={selectedStaff.portfolioUrl} 
-                                target="_blank" 
+                              <a
+                                href={selectedStaff.portfolioUrl}
+                                target="_blank"
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 text-blue-600 hover:underline"
                               >
@@ -932,13 +991,11 @@ export default function EnhancedStaffPage() {
                               <h4 className="font-medium">{work.position}</h4>
                               <p className="text-sm text-muted-foreground">{work.facility}</p>
                               <p className="text-xs text-muted-foreground mt-1">
-                                {work.startDate} - {work.endDate || 'Present'}
+                                {work.startDate} - {work.endDate || "Present"}
                               </p>
                             </div>
                           </div>
-                          {work.description && (
-                            <p className="text-sm mt-2">{work.description}</p>
-                          )}
+                          {work.description && <p className="text-sm mt-2">{work.description}</p>}
                         </CardContent>
                       </Card>
                     )) || <p className="text-muted-foreground">No work history available.</p>}
@@ -980,7 +1037,8 @@ export default function EnhancedStaffPage() {
                             <div>
                               <h4 className="font-medium">{doc.name}</h4>
                               <p className="text-sm text-muted-foreground">
-                                {doc.type} • Uploaded {new Date(doc.uploadDate).toLocaleDateString()}
+                                {doc.type} • Uploaded{" "}
+                                {new Date(doc.uploadDate).toLocaleDateString()}
                               </p>
                             </div>
                           </div>
@@ -1007,25 +1065,33 @@ export default function EnhancedStaffPage() {
                 <div className="grid grid-cols-4 gap-4">
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold">{selectedStaff.socialStats?.profileViews || 0}</div>
+                      <div className="text-2xl font-bold">
+                        {selectedStaff.socialStats?.profileViews || 0}
+                      </div>
                       <div className="text-sm text-muted-foreground">Profile Views</div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold">{selectedStaff.socialStats?.shiftsCompleted || 0}</div>
+                      <div className="text-2xl font-bold">
+                        {selectedStaff.socialStats?.shiftsCompleted || 0}
+                      </div>
                       <div className="text-sm text-muted-foreground">Shifts Completed</div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold">{selectedStaff.socialStats?.ratings || 0}</div>
+                      <div className="text-2xl font-bold">
+                        {selectedStaff.socialStats?.ratings || 0}
+                      </div>
                       <div className="text-sm text-muted-foreground">Reviews</div>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold">{selectedStaff.socialStats?.endorsements || 0}</div>
+                      <div className="text-2xl font-bold">
+                        {selectedStaff.socialStats?.endorsements || 0}
+                      </div>
                       <div className="text-sm text-muted-foreground">Endorsements</div>
                     </CardContent>
                   </Card>

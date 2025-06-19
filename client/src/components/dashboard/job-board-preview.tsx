@@ -3,7 +3,15 @@ import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, DollarSign, MapPin, MoreHorizontal, Stethoscope, UserRound, Briefcase } from "lucide-react";
+import {
+  Clock,
+  DollarSign,
+  MapPin,
+  MoreHorizontal,
+  Stethoscope,
+  UserRound,
+  Briefcase,
+} from "lucide-react";
 import { type Job } from "@shared/schema";
 
 export function JobBoardPreview() {
@@ -21,10 +29,10 @@ export function JobBoardPreview() {
     const date = new Date(dateString);
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+
     if (diffInHours < 1) return "Just posted";
     if (diffInHours < 24) return `${diffInHours} hours ago`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     return `${diffInDays} days ago`;
   };
@@ -68,7 +76,10 @@ export function JobBoardPreview() {
         <CardContent>
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg animate-pulse">
+              <div
+                key={i}
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg animate-pulse"
+              >
                 <div className="flex items-center space-x-4">
                   <div className="w-10 h-10 bg-gray-200 rounded-lg"></div>
                   <div className="space-y-2">
@@ -113,7 +124,9 @@ export function JobBoardPreview() {
                 className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-blue-300 transition-colors cursor-pointer group"
               >
                 <div className="flex items-center space-x-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${getDepartmentColor(job.department || "")}`}>
+                  <div
+                    className={`w-10 h-10 rounded-lg flex items-center justify-center ${getDepartmentColor(job.department || "")}`}
+                  >
                     {getDepartmentIcon(job.department || "")}
                   </div>
                   <div>
@@ -146,7 +159,11 @@ export function JobBoardPreview() {
                     {/* This would show actual application count from the API */}
                     Active
                   </Badge>
-                  <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </div>

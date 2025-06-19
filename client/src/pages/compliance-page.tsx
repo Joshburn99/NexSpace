@@ -1,9 +1,24 @@
 import { useState } from "react";
-import { AlertTriangle, Calendar, Shield, FileText, Download, Users, Clock, CheckCircle } from "lucide-react";
+import {
+  AlertTriangle,
+  Calendar,
+  Shield,
+  FileText,
+  Download,
+  Users,
+  Clock,
+  CheckCircle,
+} from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
@@ -22,7 +37,7 @@ const mockComplianceData = [
     daysUntilExpiry: 212,
     status: "active",
     issuingAuthority: "Florida Board of Nursing",
-    licenseNumber: "RN-FL-123456"
+    licenseNumber: "RN-FL-123456",
   },
   {
     id: 2,
@@ -35,7 +50,7 @@ const mockComplianceData = [
     daysUntilExpiry: 82,
     status: "expiring_soon",
     issuingAuthority: "American Heart Association",
-    licenseNumber: "CPR-AHA-789012"
+    licenseNumber: "CPR-AHA-789012",
   },
   {
     id: 3,
@@ -48,7 +63,7 @@ const mockComplianceData = [
     daysUntilExpiry: -17,
     status: "expired",
     issuingAuthority: "Florida Department of Health",
-    licenseNumber: "CNA-FL-345678"
+    licenseNumber: "CNA-FL-345678",
   },
   {
     id: 4,
@@ -61,7 +76,7 @@ const mockComplianceData = [
     daysUntilExpiry: 510,
     status: "active",
     issuingAuthority: "Florida Board of Physical Therapy",
-    licenseNumber: "PT-FL-987654"
+    licenseNumber: "PT-FL-987654",
   },
   {
     id: 5,
@@ -74,8 +89,8 @@ const mockComplianceData = [
     daysUntilExpiry: 30,
     status: "expiring_soon",
     issuingAuthority: "American Heart Association",
-    licenseNumber: "BLS-AHA-456789"
-  }
+    licenseNumber: "BLS-AHA-456789",
+  },
 ];
 
 const complianceIssues = [
@@ -85,7 +100,7 @@ const complianceIssues = [
     description: "3 employees missing TB test results",
     severity: "high",
     affectedCount: 3,
-    dueDate: "2025-06-30"
+    dueDate: "2025-06-30",
   },
   {
     id: 2,
@@ -93,7 +108,7 @@ const complianceIssues = [
     description: "Annual safety training overdue for 5 staff members",
     severity: "medium",
     affectedCount: 5,
-    dueDate: "2025-07-15"
+    dueDate: "2025-07-15",
   },
   {
     id: 3,
@@ -101,8 +116,8 @@ const complianceIssues = [
     description: "Background check renewal needed for 2 contractors",
     severity: "high",
     affectedCount: 2,
-    dueDate: "2025-06-25"
-  }
+    dueDate: "2025-06-25",
+  },
 ];
 
 export default function CompliancePage() {
@@ -115,53 +130,69 @@ export default function CompliancePage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active": return "bg-green-100 text-green-800";
-      case "expiring_soon": return "bg-yellow-100 text-yellow-800";
-      case "expired": return "bg-red-100 text-red-800";
-      case "pending": return "bg-blue-100 text-blue-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "expiring_soon":
+        return "bg-yellow-100 text-yellow-800";
+      case "expired":
+        return "bg-red-100 text-red-800";
+      case "pending":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "active": return <CheckCircle className="w-4 h-4" />;
-      case "expiring_soon": return <Clock className="w-4 h-4" />;
-      case "expired": return <AlertTriangle className="w-4 h-4" />;
-      default: return <Shield className="w-4 h-4" />;
+      case "active":
+        return <CheckCircle className="w-4 h-4" />;
+      case "expiring_soon":
+        return <Clock className="w-4 h-4" />;
+      case "expired":
+        return <AlertTriangle className="w-4 h-4" />;
+      default:
+        return <Shield className="w-4 h-4" />;
     }
   };
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
-      case "high": return "bg-red-100 text-red-800";
-      case "medium": return "bg-yellow-100 text-yellow-800";
-      case "low": return "bg-blue-100 text-blue-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "high":
+        return "bg-red-100 text-red-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "low":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  const filteredData = mockComplianceData.filter(record => {
-    const matchesSearch = searchTerm === "" || 
+  const filteredData = mockComplianceData.filter((record) => {
+    const matchesSearch =
+      searchTerm === "" ||
       record.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       record.credentialType.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = credentialType === "all" || record.credentialType === credentialType;
     const matchesStatus = statusFilter === "all" || record.status === statusFilter;
-    
+
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  const credentialTypes = Array.from(new Set(mockComplianceData.map(record => record.credentialType)));
+  const credentialTypes = Array.from(
+    new Set(mockComplianceData.map((record) => record.credentialType))
+  );
 
-  const activeCredentials = mockComplianceData.filter(c => c.status === "active").length;
-  const expiringSoon = mockComplianceData.filter(c => c.status === "expiring_soon").length;
-  const expired = mockComplianceData.filter(c => c.status === "expired").length;
+  const activeCredentials = mockComplianceData.filter((c) => c.status === "active").length;
+  const expiringSoon = mockComplianceData.filter((c) => c.status === "expiring_soon").length;
+  const expired = mockComplianceData.filter((c) => c.status === "expired").length;
   const totalIssues = complianceIssues.length;
 
   const generateReport = (type: string) => {
     toast({
       title: `${type} report generated`,
-      description: "Report has been generated and will be emailed to you shortly."
+      description: "Report has been generated and will be emailed to you shortly.",
     });
   };
 
@@ -172,21 +203,19 @@ export default function CompliancePage() {
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Compliance Tracking</h1>
-              <p className="text-gray-600 dark:text-gray-300">Monitor credentials, certifications, and compliance issues</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Compliance Tracking
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300">
+                Monitor credentials, certifications, and compliance issues
+              </p>
             </div>
             <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => generateReport("Weekly")}
-              >
+              <Button variant="outline" onClick={() => generateReport("Weekly")}>
                 <FileText className="w-4 h-4 mr-2" />
                 Weekly Report
               </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => generateReport("Monthly")}
-              >
+              <Button variant="outline" onClick={() => generateReport("Monthly")}>
                 <Calendar className="w-4 h-4 mr-2" />
                 Monthly Report
               </Button>
@@ -203,7 +232,9 @@ export default function CompliancePage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Active Credentials</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      Active Credentials
+                    </p>
                     <p className="text-2xl font-bold text-green-600">{activeCredentials}</p>
                     <p className="text-xs text-gray-500">Up to date</p>
                   </div>
@@ -215,7 +246,9 @@ export default function CompliancePage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Expiring Soon</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      Expiring Soon
+                    </p>
                     <p className="text-2xl font-bold text-yellow-600">{expiringSoon}</p>
                     <p className="text-xs text-gray-500">Next 90 days</p>
                   </div>
@@ -239,7 +272,9 @@ export default function CompliancePage() {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Compliance Issues</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      Compliance Issues
+                    </p>
                     <p className="text-2xl font-bold text-orange-600">{totalIssues}</p>
                     <p className="text-xs text-gray-500">Active issues</p>
                   </div>
@@ -264,7 +299,10 @@ export default function CompliancePage() {
               <CardContent>
                 <div className="space-y-3">
                   {complianceIssues.map((issue) => (
-                    <div key={issue.id} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg">
+                    <div
+                      key={issue.id}
+                      className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg"
+                    >
                       <div className="flex-1">
                         <div className="flex items-center gap-3">
                           <Badge className={getSeverityColor(issue.severity)}>
@@ -272,9 +310,12 @@ export default function CompliancePage() {
                           </Badge>
                           <h4 className="font-medium">{issue.type}</h4>
                         </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">{issue.description}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                          {issue.description}
+                        </p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {issue.affectedCount} staff affected • Due: {new Date(issue.dueDate).toLocaleDateString()}
+                          {issue.affectedCount} staff affected • Due:{" "}
+                          {new Date(issue.dueDate).toLocaleDateString()}
                         </p>
                       </div>
                       <Button variant="outline" size="sm">
@@ -315,8 +356,10 @@ export default function CompliancePage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
-                    {credentialTypes.map(type => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                    {credentialTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -346,36 +389,50 @@ export default function CompliancePage() {
             <CardContent>
               <div className="space-y-4">
                 {filteredData.map((record) => (
-                  <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+                  <div
+                    key={record.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
+                  >
                     <div className="flex items-center space-x-4">
                       <Avatar className="w-12 h-12">
                         <AvatarFallback>
-                          {record.employeeName.split(' ').map(n => n[0]).join('')}
+                          {record.employeeName
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
                         </AvatarFallback>
                       </Avatar>
-                      
+
                       <div>
                         <h4 className="font-medium">{record.employeeName}</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">{record.position}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                          {record.position}
+                        </p>
                         <p className="text-sm text-gray-500">{record.department}</p>
                       </div>
                     </div>
 
                     <div className="text-center">
                       <h4 className="font-medium">{record.credentialType}</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">{record.issuingAuthority}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {record.issuingAuthority}
+                      </p>
                       <p className="text-sm text-gray-500">{record.licenseNumber}</p>
                     </div>
 
                     <div className="text-center">
                       <p className="text-sm">
-                        <span className="font-medium">Issued:</span> {new Date(record.issueDate).toLocaleDateString()}
+                        <span className="font-medium">Issued:</span>{" "}
+                        {new Date(record.issueDate).toLocaleDateString()}
                       </p>
                       <p className="text-sm">
-                        <span className="font-medium">Expires:</span> {new Date(record.expiryDate).toLocaleDateString()}
+                        <span className="font-medium">Expires:</span>{" "}
+                        {new Date(record.expiryDate).toLocaleDateString()}
                       </p>
                       {record.daysUntilExpiry >= 0 ? (
-                        <p className={`text-sm ${record.daysUntilExpiry <= 90 ? 'text-yellow-600' : 'text-green-600'}`}>
+                        <p
+                          className={`text-sm ${record.daysUntilExpiry <= 90 ? "text-yellow-600" : "text-green-600"}`}
+                        >
                           {record.daysUntilExpiry} days remaining
                         </p>
                       ) : (
@@ -389,9 +446,11 @@ export default function CompliancePage() {
                       <Badge className={getStatusColor(record.status)}>
                         <div className="flex items-center gap-1">
                           {getStatusIcon(record.status)}
-                          {record.status === "expiring_soon" ? "Expiring Soon" : 
-                           record.status === "expired" ? "Expired" : 
-                           record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                          {record.status === "expiring_soon"
+                            ? "Expiring Soon"
+                            : record.status === "expired"
+                              ? "Expired"
+                              : record.status.charAt(0).toUpperCase() + record.status.slice(1)}
                         </div>
                       </Badge>
                     </div>
@@ -401,9 +460,7 @@ export default function CompliancePage() {
                         View Details
                       </Button>
                       {(record.status === "expired" || record.status === "expiring_soon") && (
-                        <Button size="sm">
-                          Renew
-                        </Button>
+                        <Button size="sm">Renew</Button>
                       )}
                     </div>
                   </div>
@@ -416,9 +473,7 @@ export default function CompliancePage() {
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                     No credentials found
                   </h3>
-                  <p className="text-gray-500">
-                    Try adjusting your search criteria or filters
-                  </p>
+                  <p className="text-gray-500">Try adjusting your search criteria or filters</p>
                 </div>
               )}
             </CardContent>

@@ -6,10 +6,30 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Search, MapPin, Clock, DollarSign, Plus, Briefcase } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,7 +43,7 @@ const jobApplicationFormSchema = insertJobApplicationSchema.extend({
 });
 
 const jobFormSchema = insertJobSchema.extend({
-  requirements: z.string().transform(val => val.split('\n').filter(r => r.trim())),
+  requirements: z.string().transform((val) => val.split("\n").filter((r) => r.trim())),
 });
 
 export default function JobBoard() {
@@ -100,16 +120,18 @@ export default function JobBoard() {
   };
 
   // Filter jobs
-  const filteredJobs = jobs.filter(job => {
-    const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         job.description?.toLowerCase().includes(searchTerm.toLowerCase());
+  const filteredJobs = jobs.filter((job) => {
+    const matchesSearch =
+      job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      job.description?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesDepartment = selectedDepartment === "all" || job.department === selectedDepartment;
     return matchesSearch && matchesDepartment;
   });
 
-  const canPostJobs = user?.role === UserRole.FACILITY_MANAGER || 
-                     user?.role === UserRole.CLIENT_ADMINISTRATOR || 
-                     user?.role === UserRole.SUPER_ADMIN;
+  const canPostJobs =
+    user?.role === UserRole.FACILITY_MANAGER ||
+    user?.role === UserRole.CLIENT_ADMINISTRATOR ||
+    user?.role === UserRole.SUPER_ADMIN;
 
   if (!user) return null;
 
@@ -118,14 +140,14 @@ export default function JobBoard() {
       <div className="space-y-6">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Job Board</h1>
-            <p className="text-sm text-gray-500">
-              Discover healthcare opportunities and connect with top facilities
-            </p>
-          </div>
-          
-          {canPostJobs && (
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Job Board</h1>
+              <p className="text-sm text-gray-500">
+                Discover healthcare opportunities and connect with top facilities
+              </p>
+            </div>
+
+            {canPostJobs && (
               <Dialog>
                 <DialogTrigger asChild>
                   <Button className="bg-blue-600 hover:bg-blue-700">
@@ -188,10 +210,10 @@ export default function JobBoard() {
                           <FormItem>
                             <FormLabel>Job Description</FormLabel>
                             <FormControl>
-                              <Textarea 
+                              <Textarea
                                 placeholder="Describe the role, responsibilities, and requirements..."
                                 className="min-h-[100px]"
-                                {...field} 
+                                {...field}
                               />
                             </FormControl>
                             <FormMessage />
@@ -260,9 +282,9 @@ export default function JobBoard() {
                           <FormItem>
                             <FormLabel>Requirements (one per line)</FormLabel>
                             <FormControl>
-                              <Textarea 
+                              <Textarea
                                 placeholder="BSN required&#10;2+ years ICU experience&#10;BLS certification"
-                                {...field} 
+                                {...field}
                               />
                             </FormControl>
                             <FormMessage />
@@ -283,10 +305,10 @@ export default function JobBoard() {
                 </DialogContent>
               </Dialog>
             )}
-        </div>
+          </div>
 
-        {/* Search and Filters */}
-        <div className="mb-6 flex flex-col sm:flex-row gap-4">
+          {/* Search and Filters */}
+          <div className="mb-6 flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
@@ -336,8 +358,8 @@ export default function JobBoard() {
                     <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">No jobs found</h3>
                     <p className="text-gray-500">
-                      {searchTerm || selectedDepartment !== "all" 
-                        ? "Try adjusting your search criteria" 
+                      {searchTerm || selectedDepartment !== "all"
+                        ? "Try adjusting your search criteria"
                         : "Check back later for new opportunities"}
                     </p>
                   </CardContent>
@@ -348,13 +370,11 @@ export default function JobBoard() {
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-4">
                         <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                            {job.title}
-                          </h3>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-1">{job.title}</h3>
                           <p className="text-sm text-gray-500 mb-2">
                             Posted {new Date(job.createdAt!).toLocaleDateString()}
                           </p>
-                          
+
                           <div className="flex flex-wrap gap-4 mb-3 text-sm text-gray-600">
                             {job.department && (
                               <div className="flex items-center">
@@ -368,22 +388,20 @@ export default function JobBoard() {
                             </div>
                             {job.payRateMin && job.payRateMax && (
                               <div className="flex items-center">
-                                <DollarSign className="h-4 w-4 mr-1" />
-                                ${job.payRateMin}-${job.payRateMax}/hour
+                                <DollarSign className="h-4 w-4 mr-1" />${job.payRateMin}-$
+                                {job.payRateMax}/hour
                               </div>
                             )}
                           </div>
                         </div>
-                        
+
                         <Badge variant={job.isActive ? "default" : "secondary"}>
                           {job.isActive ? "Active" : "Closed"}
                         </Badge>
                       </div>
 
                       {job.description && (
-                        <p className="text-gray-700 mb-4 line-clamp-3">
-                          {job.description}
-                        </p>
+                        <p className="text-gray-700 mb-4 line-clamp-3">{job.description}</p>
                       )}
 
                       {job.requirements && job.requirements.length > 0 && (
@@ -404,74 +422,83 @@ export default function JobBoard() {
                         <div className="text-sm text-gray-500">
                           {/* Application count would go here */}
                         </div>
-                        
-                        {job.isActive && (user?.role === UserRole.INTERNAL_EMPLOYEE || user?.role === UserRole.CONTRACTOR_1099) && (
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <Button 
-                                onClick={() => applicationForm.setValue("jobId", job.id)}
-                                className="bg-blue-600 hover:bg-blue-700"
-                              >
-                                Apply Now
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Apply for {job.title}</DialogTitle>
-                                <DialogDescription>
-                                  Submit your application with a cover letter.
-                                </DialogDescription>
-                              </DialogHeader>
-                              <Form {...applicationForm}>
-                                <form onSubmit={applicationForm.handleSubmit((data) => handleApply(job.id, data))} className="space-y-4">
-                                  <FormField
-                                    control={applicationForm.control}
-                                    name="coverLetter"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Cover Letter</FormLabel>
-                                        <FormControl>
-                                          <Textarea 
-                                            placeholder="Explain why you're interested in this position and what qualifications you bring..."
-                                            className="min-h-[120px]"
-                                            {...field} 
-                                          />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
-                                    )}
-                                  />
 
-                                  <FormField
-                                    control={applicationForm.control}
-                                    name="resume"
-                                    render={({ field }) => (
-                                      <FormItem>
-                                        <FormLabel>Resume URL (optional)</FormLabel>
-                                        <FormControl>
-                                          <Input 
-                                            placeholder="https://example.com/resume.pdf"
-                                            {...field} 
-                                          />
-                                        </FormControl>
-                                        <FormMessage />
-                                      </FormItem>
+                        {job.isActive &&
+                          (user?.role === UserRole.INTERNAL_EMPLOYEE ||
+                            user?.role === UserRole.CONTRACTOR_1099) && (
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  onClick={() => applicationForm.setValue("jobId", job.id)}
+                                  className="bg-blue-600 hover:bg-blue-700"
+                                >
+                                  Apply Now
+                                </Button>
+                              </DialogTrigger>
+                              <DialogContent>
+                                <DialogHeader>
+                                  <DialogTitle>Apply for {job.title}</DialogTitle>
+                                  <DialogDescription>
+                                    Submit your application with a cover letter.
+                                  </DialogDescription>
+                                </DialogHeader>
+                                <Form {...applicationForm}>
+                                  <form
+                                    onSubmit={applicationForm.handleSubmit((data) =>
+                                      handleApply(job.id, data)
                                     )}
-                                  />
+                                    className="space-y-4"
+                                  >
+                                    <FormField
+                                      control={applicationForm.control}
+                                      name="coverLetter"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Cover Letter</FormLabel>
+                                          <FormControl>
+                                            <Textarea
+                                              placeholder="Explain why you're interested in this position and what qualifications you bring..."
+                                              className="min-h-[120px]"
+                                              {...field}
+                                            />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
 
-                                  <div className="flex justify-end space-x-2">
-                                    <Button type="button" variant="outline">
-                                      Cancel
-                                    </Button>
-                                    <Button type="submit" disabled={applyMutation.isPending}>
-                                      {applyMutation.isPending ? "Submitting..." : "Submit Application"}
-                                    </Button>
-                                  </div>
-                                </form>
-                              </Form>
-                            </DialogContent>
-                          </Dialog>
-                        )}
+                                    <FormField
+                                      control={applicationForm.control}
+                                      name="resume"
+                                      render={({ field }) => (
+                                        <FormItem>
+                                          <FormLabel>Resume URL (optional)</FormLabel>
+                                          <FormControl>
+                                            <Input
+                                              placeholder="https://example.com/resume.pdf"
+                                              {...field}
+                                            />
+                                          </FormControl>
+                                          <FormMessage />
+                                        </FormItem>
+                                      )}
+                                    />
+
+                                    <div className="flex justify-end space-x-2">
+                                      <Button type="button" variant="outline">
+                                        Cancel
+                                      </Button>
+                                      <Button type="submit" disabled={applyMutation.isPending}>
+                                        {applyMutation.isPending
+                                          ? "Submitting..."
+                                          : "Submit Application"}
+                                      </Button>
+                                    </div>
+                                  </form>
+                                </Form>
+                              </DialogContent>
+                            </Dialog>
+                          )}
                       </div>
                     </CardContent>
                   </Card>
@@ -479,8 +506,8 @@ export default function JobBoard() {
               )}
             </div>
           )}
-          </div>
         </div>
+      </div>
     </div>
   );
 }

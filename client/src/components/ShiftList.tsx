@@ -16,52 +16,51 @@ interface Shift {
   endTime: string;
   duration: string;
   rate: number;
-  status: 'open' | 'applied' | 'confirmed' | 'completed';
-  urgency?: 'high' | 'medium' | 'low';
+  status: "open" | "applied" | "confirmed" | "completed";
+  urgency?: "high" | "medium" | "low";
   requirements?: string[];
 }
 
 interface ShiftListProps {
-  status: 'upcoming' | 'open';
+  status: "upcoming" | "open";
 }
 
 export function ShiftList({ status }: ShiftListProps) {
   const { user } = useAuth();
-  
+
   const { data: shifts, isLoading } = useQuery<Shift[]>({
-    queryKey: [`/api/shifts?status=${status}`]
+    queryKey: [`/api/shifts?status=${status}`],
   });
 
   const getUrgencyColor = (urgency?: string) => {
     switch (urgency) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
+      case "high":
+        return "bg-red-100 text-red-800";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "low":
+        return "bg-green-100 text-green-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusColor = (shiftStatus: string) => {
     switch (shiftStatus) {
-      case 'confirmed':
-        return 'bg-green-100 text-green-800';
-      case 'applied':
-        return 'bg-blue-100 text-blue-800';
-      case 'open':
-        return 'bg-gray-100 text-gray-800';
+      case "confirmed":
+        return "bg-green-100 text-green-800";
+      case "applied":
+        return "bg-blue-100 text-blue-800";
+      case "open":
+        return "bg-gray-100 text-gray-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  const title = status === 'upcoming' ? 'Upcoming Shifts' : 'Open Shifts';
-  const emptyMessage = status === 'upcoming' 
-    ? 'No upcoming shifts scheduled'
-    : 'No open shifts available';
+  const title = status === "upcoming" ? "Upcoming Shifts" : "Open Shifts";
+  const emptyMessage =
+    status === "upcoming" ? "No upcoming shifts scheduled" : "No open shifts available";
 
   return (
     <Card>
@@ -71,7 +70,7 @@ export function ShiftList({ status }: ShiftListProps) {
             <Calendar className="w-5 h-5" />
             <span>{title}</span>
           </CardTitle>
-          {status === 'upcoming' && (
+          {status === "upcoming" && (
             <Button variant="outline" size="sm">
               <Calendar className="w-4 h-4 mr-2" />
               View Calendar
@@ -82,7 +81,10 @@ export function ShiftList({ status }: ShiftListProps) {
       <CardContent>
         <div className="space-y-4">
           {shifts?.slice(0, 5).map((shift) => (
-            <div key={shift.id} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+            <div
+              key={shift.id}
+              className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
+            >
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <h4 className="font-medium text-gray-900">{shift.position}</h4>
@@ -94,9 +96,7 @@ export function ShiftList({ status }: ShiftListProps) {
                   </div>
                 </div>
                 <div className="flex flex-col items-end space-y-1">
-                  <Badge className={getStatusColor(shift.status)}>
-                    {shift.status}
-                  </Badge>
+                  <Badge className={getStatusColor(shift.status)}>{shift.status}</Badge>
                   {shift.urgency && (
                     <Badge className={getUrgencyColor(shift.urgency)} variant="outline">
                       {shift.urgency} priority
@@ -108,18 +108,16 @@ export function ShiftList({ status }: ShiftListProps) {
               <div className="grid grid-cols-2 gap-4 mb-3">
                 <div className="flex items-center space-x-2 text-sm">
                   <Clock className="w-4 h-4 text-gray-400" />
-                  <span>{format(new Date(shift.startTime), 'MMM d')}</span>
+                  <span>{format(new Date(shift.startTime), "MMM d")}</span>
                   <span>{shift.duration}</span>
                 </div>
-                <div className="text-sm font-medium text-right">
-                  ${shift.rate}/hour
-                </div>
+                <div className="text-sm font-medium text-right">${shift.rate}/hour</div>
               </div>
 
               <div className="flex items-center space-x-2 text-xs text-gray-600 mb-3">
-                <span>{format(new Date(shift.startTime), 'h:mm a')}</span>
+                <span>{format(new Date(shift.startTime), "h:mm a")}</span>
                 <span>—</span>
-                <span>{format(new Date(shift.endTime), 'h:mm a')}</span>
+                <span>{format(new Date(shift.endTime), "h:mm a")}</span>
               </div>
 
               {shift.requirements && shift.requirements.length > 0 && (
@@ -138,14 +136,20 @@ export function ShiftList({ status }: ShiftListProps) {
               )}
 
               <div className="flex justify-between items-center">
-                {status === 'upcoming' ? (
+                {status === "upcoming" ? (
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">View Details</Button>
-                    <Button variant="outline" size="sm">Time Clock</Button>
+                    <Button variant="outline" size="sm">
+                      View Details
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      Time Clock
+                    </Button>
                   </div>
                 ) : (
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm">View Details</Button>
+                    <Button variant="outline" size="sm">
+                      View Details
+                    </Button>
                     <Button size="sm">Apply</Button>
                   </div>
                 )}
@@ -157,7 +161,7 @@ export function ShiftList({ status }: ShiftListProps) {
           {/* Default content when no shifts are loaded */}
           {(!shifts || shifts.length === 0) && !isLoading && (
             <>
-              {status === 'upcoming' ? (
+              {status === "upcoming" ? (
                 <>
                   <div className="border border-gray-200 rounded-lg p-4">
                     <div className="flex items-start justify-between mb-3">
@@ -187,8 +191,12 @@ export function ShiftList({ status }: ShiftListProps) {
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">View Details</Button>
-                        <Button variant="outline" size="sm">Time Clock</Button>
+                        <Button variant="outline" size="sm">
+                          View Details
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Time Clock
+                        </Button>
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-400" />
                     </div>
@@ -222,8 +230,12 @@ export function ShiftList({ status }: ShiftListProps) {
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">View Details</Button>
-                        <Button variant="outline" size="sm">Time Clock</Button>
+                        <Button variant="outline" size="sm">
+                          View Details
+                        </Button>
+                        <Button variant="outline" size="sm">
+                          Time Clock
+                        </Button>
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-400" />
                     </div>
@@ -244,7 +256,9 @@ export function ShiftList({ status }: ShiftListProps) {
                       </div>
                       <div className="flex flex-col items-end space-y-1">
                         <Badge className="bg-gray-100 text-gray-800">open</Badge>
-                        <Badge className="bg-red-100 text-red-800" variant="outline">high priority</Badge>
+                        <Badge className="bg-red-100 text-red-800" variant="outline">
+                          high priority
+                        </Badge>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4 mb-3">
@@ -261,13 +275,21 @@ export function ShiftList({ status }: ShiftListProps) {
                       <span>08:00 PM</span>
                     </div>
                     <div className="flex flex-wrap gap-1 mb-3">
-                      <Badge variant="outline" className="text-xs">BLS</Badge>
-                      <Badge variant="outline" className="text-xs">ACLS</Badge>
-                      <Badge variant="outline" className="text-xs">2+ years exp</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        BLS
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        ACLS
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        2+ years exp
+                      </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">View Details</Button>
+                        <Button variant="outline" size="sm">
+                          View Details
+                        </Button>
                         <Button size="sm">Apply</Button>
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-400" />
@@ -301,12 +323,18 @@ export function ShiftList({ status }: ShiftListProps) {
                       <span>07:00 AM</span>
                     </div>
                     <div className="flex flex-wrap gap-1 mb-3">
-                      <Badge variant="outline" className="text-xs">CNA License</Badge>
-                      <Badge variant="outline" className="text-xs">Dementia Care</Badge>
+                      <Badge variant="outline" className="text-xs">
+                        CNA License
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        Dementia Care
+                      </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <div className="flex space-x-2">
-                        <Button variant="outline" size="sm">View Details</Button>
+                        <Button variant="outline" size="sm">
+                          View Details
+                        </Button>
                         <Button size="sm">Apply</Button>
                       </div>
                       <ChevronRight className="w-4 h-4 text-gray-400" />
@@ -318,7 +346,7 @@ export function ShiftList({ status }: ShiftListProps) {
           )}
 
           <Button variant="outline" className="w-full">
-            {status === 'upcoming' ? 'View All Shifts' : 'Browse All Open Shifts'}
+            {status === "upcoming" ? "View All Shifts" : "Browse All Open Shifts"}
             <ChevronRight className="w-4 h-4 ml-2" />
           </Button>
         </div>

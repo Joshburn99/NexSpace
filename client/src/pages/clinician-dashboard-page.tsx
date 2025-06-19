@@ -12,9 +12,9 @@ interface ClinicianDashboardPageProps {
   additionalContent?: React.ReactNode;
 }
 
-export default function ClinicianDashboardPage({ 
-  hideTimeOff = false, 
-  additionalContent 
+export default function ClinicianDashboardPage({
+  hideTimeOff = false,
+  additionalContent,
 }: ClinicianDashboardPageProps = {}) {
   const { user } = useAuth();
 
@@ -36,7 +36,7 @@ export default function ClinicianDashboardPage({
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
@@ -48,7 +48,7 @@ export default function ClinicianDashboardPage({
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
@@ -60,7 +60,7 @@ export default function ClinicianDashboardPage({
               </div>
             </CardContent>
           </Card>
-          
+
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">

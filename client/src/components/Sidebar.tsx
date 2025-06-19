@@ -5,20 +5,20 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/ui/logo";
-import { 
-  ChevronDown, 
-  BarChart3, 
-  Calendar, 
-  Users, 
-  Briefcase, 
-  DollarSign, 
-  MessageSquare, 
-  Settings, 
+import {
+  ChevronDown,
+  BarChart3,
+  Calendar,
+  Users,
+  Briefcase,
+  DollarSign,
+  MessageSquare,
+  Settings,
   LogOut,
   Menu,
   FileText,
   Shield,
-  Clock
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@shared/schema";
@@ -43,11 +43,24 @@ const navigationItems: NavItem[] = [
     icon: <Calendar className="w-5 h-5" />,
     children: [
       { label: "Calendar View", href: "/calendar", icon: <Calendar className="w-4 h-4" /> },
-      { label: "Enhanced Calendar", href: "/calendar-view", icon: <Calendar className="w-4 h-4" /> },
+      {
+        label: "Enhanced Calendar",
+        href: "/calendar-view",
+        icon: <Calendar className="w-4 h-4" />,
+      },
       { label: "Scheduling", href: "/scheduling", icon: <Calendar className="w-4 h-4" /> },
-      { label: "Advanced Scheduling", href: "/advanced-scheduling", icon: <Calendar className="w-4 h-4" /> },
+      {
+        label: "Advanced Scheduling",
+        href: "/advanced-scheduling",
+        icon: <Calendar className="w-4 h-4" />,
+      },
       { label: "Open Shifts", href: "/shifts-open", icon: <Clock className="w-4 h-4" /> },
-      { label: "Shift Requests", href: "/shift-requests", icon: <Clock className="w-4 h-4" />, roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN] },
+      {
+        label: "Shift Requests",
+        href: "/shift-requests",
+        icon: <Clock className="w-4 h-4" />,
+        roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
+      },
       { label: "Time Clock", href: "/time-clock", icon: <Clock className="w-4 h-4" /> },
     ],
   },
@@ -57,11 +70,23 @@ const navigationItems: NavItem[] = [
     roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
     children: [
       { label: "All Staff", href: "/staff", icon: <Users className="w-4 h-4" /> },
-      { label: "1099 Contractors", href: "/staff/contractors", icon: <Users className="w-4 h-4" /> },
+      {
+        label: "1099 Contractors",
+        href: "/staff/contractors",
+        icon: <Users className="w-4 h-4" />,
+      },
       { label: "Referral System", href: "/staff/referrals", icon: <Users className="w-4 h-4" /> },
       { label: "Credentials", href: "/credentials", icon: <Shield className="w-4 h-4" /> },
-      { label: "Facility Management", href: "/facility-management", icon: <Users className="w-4 h-4" /> },
-      { label: "Facility Recommendations", href: "/facility-recommendations", icon: <Users className="w-4 h-4" /> },
+      {
+        label: "Facility Management",
+        href: "/facility-management",
+        icon: <Users className="w-4 h-4" />,
+      },
+      {
+        label: "Facility Recommendations",
+        href: "/facility-recommendations",
+        icon: <Users className="w-4 h-4" />,
+      },
     ],
   },
   {
@@ -79,11 +104,31 @@ const navigationItems: NavItem[] = [
     roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
     children: [
       { label: "Analytics", href: "/analytics", icon: <BarChart3 className="w-4 h-4" /> },
-      { label: "Shift Analytics", href: "/analytics/shifts", icon: <BarChart3 className="w-4 h-4" /> },
-      { label: "Float Pool Savings", href: "/analytics/float-pool", icon: <DollarSign className="w-4 h-4" /> },
-      { label: "Overtime Report", href: "/analytics/overtime", icon: <FileText className="w-4 h-4" /> },
-      { label: "Attendance", href: "/analytics/attendance", icon: <BarChart3 className="w-4 h-4" /> },
-      { label: "Agency Usage", href: "/analytics/agency-usage", icon: <BarChart3 className="w-4 h-4" /> },
+      {
+        label: "Shift Analytics",
+        href: "/analytics/shifts",
+        icon: <BarChart3 className="w-4 h-4" />,
+      },
+      {
+        label: "Float Pool Savings",
+        href: "/analytics/float-pool",
+        icon: <DollarSign className="w-4 h-4" />,
+      },
+      {
+        label: "Overtime Report",
+        href: "/analytics/overtime",
+        icon: <FileText className="w-4 h-4" />,
+      },
+      {
+        label: "Attendance",
+        href: "/analytics/attendance",
+        icon: <BarChart3 className="w-4 h-4" />,
+      },
+      {
+        label: "Agency Usage",
+        href: "/analytics/agency-usage",
+        icon: <BarChart3 className="w-4 h-4" />,
+      },
       { label: "Compliance", href: "/analytics/compliance", icon: <Shield className="w-4 h-4" /> },
     ],
   },
@@ -92,8 +137,16 @@ const navigationItems: NavItem[] = [
     icon: <DollarSign className="w-5 h-5" />,
     children: [
       { label: "Professional Invoices", href: "/invoices", icon: <FileText className="w-4 h-4" /> },
-      { label: "Vendor Invoices", href: "/vendor-invoices", icon: <FileText className="w-4 h-4" /> },
-      { label: "Workflow Automation", href: "/workflow-automation", icon: <FileText className="w-4 h-4" /> },
+      {
+        label: "Vendor Invoices",
+        href: "/vendor-invoices",
+        icon: <FileText className="w-4 h-4" />,
+      },
+      {
+        label: "Workflow Automation",
+        href: "/workflow-automation",
+        icon: <FileText className="w-4 h-4" />,
+      },
     ],
   },
   {
@@ -107,12 +160,28 @@ const navigationItems: NavItem[] = [
     icon: <Shield className="w-5 h-5" />,
     roles: [UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
     children: [
-      { label: "Impersonation", href: "/admin/impersonation", icon: <Shield className="w-4 h-4" /> },
+      {
+        label: "Impersonation",
+        href: "/admin/impersonation",
+        icon: <Shield className="w-4 h-4" />,
+      },
       { label: "User Management", href: "/admin/users", icon: <Users className="w-4 h-4" /> },
-      { label: "Facility Management", href: "/facility-management", icon: <Users className="w-4 h-4" /> },
-      { label: "System Settings", href: "/system-settings", icon: <Settings className="w-4 h-4" /> },
+      {
+        label: "Facility Management",
+        href: "/facility-management",
+        icon: <Users className="w-4 h-4" />,
+      },
+      {
+        label: "System Settings",
+        href: "/system-settings",
+        icon: <Settings className="w-4 h-4" />,
+      },
       { label: "Audit Logs", href: "/admin/audit", icon: <FileText className="w-4 h-4" /> },
-      { label: "Database Console", href: "/admin/database", icon: <FileText className="w-4 h-4" /> },
+      {
+        label: "Database Console",
+        href: "/admin/database",
+        icon: <FileText className="w-4 h-4" />,
+      },
     ],
   },
 ];
@@ -130,9 +199,9 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
   if (!user) return null;
 
   const toggleItem = (label: string) => {
-    setExpandedItems(prev => ({
+    setExpandedItems((prev) => ({
       ...prev,
-      [label]: !prev[label]
+      [label]: !prev[label],
     }));
   };
 
@@ -189,15 +258,14 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
               </span>
             </div>
             {expanded && (
-              <ChevronDown className={cn(
-                "w-4 h-4 transition-transform",
-                isExpanded && "rotate-180"
-              )} />
+              <ChevronDown
+                className={cn("w-4 h-4 transition-transform", isExpanded && "rotate-180")}
+              />
             )}
           </button>
           {isExpanded && expanded && (
             <div className="mt-1">
-              {item.children?.map(child => renderNavItem(child, level + 1))}
+              {item.children?.map((child) => renderNavItem(child, level + 1))}
             </div>
           )}
         </div>
@@ -209,18 +277,16 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
         <button
           className={cn(
             "w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
-            itemIsActive 
-              ? "text-blue-700 bg-blue-50" 
-              : level === 0 
-                ? "text-gray-700 hover:bg-gray-100" 
+            itemIsActive
+              ? "text-blue-700 bg-blue-50"
+              : level === 0
+                ? "text-gray-700 hover:bg-gray-100"
                 : "text-gray-600 hover:text-gray-900 hover:bg-gray-50",
             level > 0 && "ml-8"
           )}
         >
           {level === 0 && item.icon}
-          <span className={cn("ml-3", !expanded && level === 0 && "sr-only")}>
-            {item.label}
-          </span>
+          <span className={cn("ml-3", !expanded && level === 0 && "sr-only")}>{item.label}</span>
           {item.badge && expanded && (
             <Badge variant="destructive" className="ml-auto">
               {item.badge}
@@ -232,10 +298,12 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
   };
 
   return (
-    <div className={cn(
-      "flex flex-col h-full bg-white border-r border-gray-200 transition-all duration-300",
-      expanded ? "w-64" : "w-16"
-    )}>
+    <div
+      className={cn(
+        "flex flex-col h-full bg-white border-r border-gray-200 transition-all duration-300",
+        expanded ? "w-64" : "w-16"
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         {expanded ? (
@@ -250,12 +318,7 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
           <Logo className="h-8 w-8" />
         )}
         {onToggle && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggle}
-            className="p-1"
-          >
+          <Button variant="ghost" size="sm" onClick={onToggle} className="p-1">
             <Menu className="w-4 h-4" />
           </Button>
         )}
@@ -263,9 +326,7 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
 
       {/* Navigation */}
       <nav className="flex-1 p-3 overflow-y-auto">
-        <div className="space-y-1">
-          {navigationItems.map(item => renderNavItem(item))}
-        </div>
+        <div className="space-y-1">{navigationItems.map((item) => renderNavItem(item))}</div>
       </nav>
 
       {/* Settings */}
@@ -274,9 +335,7 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
           <button
             className={cn(
               "w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
-              isActive("/settings")
-                ? "text-blue-700 bg-blue-50"
-                : "text-gray-700 hover:bg-gray-100"
+              isActive("/settings") ? "text-blue-700 bg-blue-50" : "text-gray-700 hover:bg-gray-100"
             )}
           >
             <Settings className="w-5 h-5" />
@@ -287,24 +346,15 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
 
       {/* User Profile */}
       <div className="p-3 border-t border-gray-200">
-        <div className={cn(
-          "flex items-center",
-          expanded ? "space-x-3" : "justify-center"
-        )}>
+        <div className={cn("flex items-center", expanded ? "space-x-3" : "justify-center")}>
           <Avatar className="h-8 w-8">
             <AvatarImage src={user.avatar || undefined} />
-            <AvatarFallback>
-              {user.username?.slice(0, 2).toUpperCase() || "U"}
-            </AvatarFallback>
+            <AvatarFallback>{user.username?.slice(0, 2).toUpperCase() || "U"}</AvatarFallback>
           </Avatar>
           {expanded && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {user.username}
-              </p>
-              <p className="text-xs text-gray-500 truncate">
-                {getRoleDisplay(user.role)}
-              </p>
+              <p className="text-sm font-medium text-gray-900 truncate">{user.username}</p>
+              <p className="text-xs text-gray-500 truncate">{getRoleDisplay(user.role)}</p>
             </div>
           )}
         </div>

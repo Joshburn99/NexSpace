@@ -16,7 +16,7 @@ interface PTORequest {
   startDate: string;
   endDate: string;
   hours: number;
-  status: 'pending' | 'approved' | 'denied';
+  status: "pending" | "approved" | "denied";
   reason: string;
 }
 
@@ -24,20 +24,20 @@ export function TimeOffSection() {
   const { user } = useAuth();
 
   const { data: balance, isLoading: balanceLoading } = useQuery<PTOBalance>({
-    queryKey: ['/api/timeoff/balance']
+    queryKey: ["/api/timeoff/balance"],
   });
 
   const { data: requests, isLoading: requestsLoading } = useQuery<PTORequest[]>({
-    queryKey: ['/api/timeoff/requests']
+    queryKey: ["/api/timeoff/requests"],
   });
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'approved':
+      case "approved":
         return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'denied':
+      case "denied":
         return <XCircle className="w-4 h-4 text-red-500" />;
-      case 'pending':
+      case "pending":
       default:
         return <AlertCircle className="w-4 h-4 text-yellow-500" />;
     }
@@ -45,13 +45,13 @@ export function TimeOffSection() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'approved':
-        return 'bg-green-100 text-green-800';
-      case 'denied':
-        return 'bg-red-100 text-red-800';
-      case 'pending':
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "denied":
+        return "bg-red-100 text-red-800";
+      case "pending":
       default:
-        return 'bg-yellow-100 text-yellow-800';
+        return "bg-yellow-100 text-yellow-800";
     }
   };
 
@@ -113,19 +113,23 @@ export function TimeOffSection() {
             <div className="space-y-3">
               <h4 className="font-medium text-gray-900">Recent Requests</h4>
               {requests.slice(0, 3).map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div
+                  key={request.id}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                >
                   <div className="flex items-center space-x-3">
                     {getStatusIcon(request.status)}
                     <div>
                       <p className="text-sm font-medium">
-                        {new Date(request.startDate).toLocaleDateString()} - {new Date(request.endDate).toLocaleDateString()}
+                        {new Date(request.startDate).toLocaleDateString()} -{" "}
+                        {new Date(request.endDate).toLocaleDateString()}
                       </p>
-                      <p className="text-xs text-gray-600">{request.hours} hours • {request.reason}</p>
+                      <p className="text-xs text-gray-600">
+                        {request.hours} hours • {request.reason}
+                      </p>
                     </div>
                   </div>
-                  <Badge className={getStatusColor(request.status)}>
-                    {request.status}
-                  </Badge>
+                  <Badge className={getStatusColor(request.status)}>{request.status}</Badge>
                 </div>
               ))}
             </div>
