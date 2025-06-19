@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Calendar, Download, Filter, TrendingUp, Clock, Users, DollarSign, AlertTriangle, FileText } from "lucide-react";
+import { Calendar, Download, Filter, TrendingUp, Clock, Users, DollarSign, AlertTriangle, FileText, Home } from "lucide-react";
+import { Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -138,21 +139,94 @@ export default function OvertimeReportPage() {
     return type === 'employee' ? 'text-blue-600' : 'text-orange-600';
   };
 
+  const handleExportReport = () => {
+    const csvData = filteredRecords.map(record => ({
+      'Employee Name': record.employeeName,
+      'Employee ID': record.employeeId,
+      'Position': record.position,
+      'Unit': record.unit,
+      'Regular Hours': record.regularHours,
+      'Overtime Hours': record.overtimeHours,
+      'Double Time Hours': record.doubleTimeHours,
+      'Total Pay': `$${record.totalPay.toFixed(2)}`,
+      'Week Ending': record.weekEnding.toLocaleDateString(),
+      'Status': record.status,
+      'Type': record.type
+    }));
+
+    const csvContent = [
+      Object.keys(csvData[0]).join(','),
+      ...csvData.map(row => Object.values(row).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `overtime-report-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const handleGenerateSummary = () => {
+    const summaryData = {
+      totalOvertimeHours: totalStats.totalOvertimeHours,
+      totalDoubleTimeHours: totalStats.totalDoubleTimeHours,
+      totalCost: totalStats.totalCost,
+      affectedEmployees: totalStats.affectedEmployees,
+      dateRange: dateRange,
+      generatedOn: new Date().toLocaleDateString()
+    };
+
+    const summaryText = `
+OVERTIME SUMMARY REPORT
+Generated: ${summaryData.generatedOn}
+Period: ${summaryData.dateRange}
+
+TOTALS:
+- Overtime Hours: ${summaryData.totalOvertimeHours}
+- Double Time Hours: ${summaryData.totalDoubleTimeHours} 
+- Total Cost: $${summaryData.totalCost.toFixed(2)}
+- Affected Employees: ${summaryData.affectedEmployees}
+
+RECOMMENDATIONS:
+- Consider staffing adjustments to reduce overtime
+- Review high overtime departments for process improvements
+- Implement predictive scheduling to optimize coverage
+    `.trim();
+
+    const blob = new Blob([summaryText], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `overtime-summary-${new Date().toISOString().split('T')[0]}.txt`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="bg-white border-b px-6 py-4">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Overtime Reports</h1>
-              <p className="text-gray-600">Track and analyze overtime costs across all units</p>
+            <div className="flex items-center gap-4">
+              <Link href="/">
+                <Button variant="outline" size="sm">
+                  <Home className="h-4 w-4 mr-2" />
+                  Home
+                </Button>
+              </Link>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Overtime Reports</h1>
+                <p className="text-gray-600">Track and analyze overtime costs across all units</p>
+              </div>
             </div>
             <div className="flex items-center space-x-3">
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => handleExportReport()}>
                 <Download className="w-4 h-4 mr-2" />
                 Export Report
               </Button>
-              <Button>
+              <Button onClick={() => handleGenerateSummary()}>
                 <FileText className="w-4 h-4 mr-2" />
                 Generate Summary
               </Button>

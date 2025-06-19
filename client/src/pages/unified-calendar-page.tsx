@@ -13,7 +13,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar, Clock, DollarSign, MapPin, Users, Building, Plus, Filter, ChevronLeft, ChevronRight, ArrowLeft, CalendarDays } from 'lucide-react';
+import { Calendar, Clock, DollarSign, MapPin, Users, Building, Plus, Filter, ChevronLeft, ChevronRight, ArrowLeft, CalendarDays, Home } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
 import { Link } from 'wouter';
@@ -309,6 +309,12 @@ export default function UnifiedCalendarPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
+          <Link href="/">
+            <Button variant="outline" size="sm">
+              <Home className="h-4 w-4 mr-2" />
+              Home
+            </Button>
+          </Link>
           <Link href="/scheduling">
             <Button variant="outline" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
