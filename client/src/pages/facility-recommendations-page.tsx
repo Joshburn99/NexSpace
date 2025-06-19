@@ -236,14 +236,14 @@ export default function FacilityRecommendationsPage() {
 
               <div>
                 <Label className="text-sm font-medium">Facility Type</Label>
-                <Select value={criteria.facilityType || ""} onValueChange={(value) => 
-                  setCriteria(prev => ({ ...prev, facilityType: value || undefined }))
+                <Select value={criteria.facilityType || "any"} onValueChange={(value) => 
+                  setCriteria(prev => ({ ...prev, facilityType: value === "any" ? undefined : value }))
                 }>
                   <SelectTrigger>
                     <SelectValue placeholder="Any type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Any Type</SelectItem>
+                    <SelectItem value="any">Any Type</SelectItem>
                     <SelectItem value="hospital">Hospital</SelectItem>
                     <SelectItem value="nursing_home">Nursing Home</SelectItem>
                     <SelectItem value="clinic">Clinic</SelectItem>
@@ -322,7 +322,6 @@ export default function FacilityRecommendationsPage() {
                   height="200px"
                   onLocationSelect={handleLocationSelect}
                   showSearch={true}
-                  initialCenter={criteria.location}
                 />
                 {searchLocation && (
                   <div className="text-xs text-muted-foreground mt-2">
