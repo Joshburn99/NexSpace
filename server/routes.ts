@@ -12,6 +12,7 @@ import {
   insertPaymentSchema, insertFacilitySchema, UserRole, shifts
 } from "@shared/schema";
 import { db } from "./db";
+import { sql } from "drizzle-orm";
 import { recommendationEngine } from "./recommendation-engine";
 import type { RecommendationCriteria } from "./recommendation-engine";
 
@@ -1371,6 +1372,196 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error generating insurance-based recommendations:", error);
       res.status(500).json({ message: "Failed to generate insurance-based recommendations" });
+    }
+  });
+
+  // Admin API endpoints
+  app.get("/api/admin/users", requireAuth, async (req, res) => {
+    try {
+      const users = await storage.getUsersByRole("");
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/admin/users", requireAuth, async (req, res) => {
+    try {
+      const user = await storage.createUser(req.body);
+      res.json(user);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  app.patch("/api/admin/users/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const user = await storage.updateUser(id, req.body);
+      res.json(user);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.get("/api/admin/audit-logs", requireAuth, async (req, res) => {
+    try {
+      const logs = await storage.getAuditLogs();
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching audit logs:", error);
+      res.status(500).json({ message: "Failed to fetch audit logs" });
+    }
+  });
+
+  app.post("/api/admin/database/query", requireAuth, async (req: any, res) => {
+    try {
+      const { query } = req.body;
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ message: "SQL query is required" });
+      }
+
+      // Safety checks for dangerous operations
+      const dangerousKeywords = ['DROP', 'DELETE', 'TRUNCATE', 'ALTER'];
+      const upperQuery = query.toUpperCase();
+      const isDangerous = dangerousKeywords.some(keyword => upperQuery.includes(keyword));
+
+      if (isDangerous && req.user?.role !== 'super_admin') {
+        return res.status(403).json({ message: "Dangerous queries require super admin privileges" });
+      }
+
+      const result = await db.execute(sql.raw(query));
+      res.json(result);
+    } catch (error: any) {
+      console.error("Database query error:", error);
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  // Vendor invoices API
+  app.get("/api/vendor-invoices", requireAuth, async (req, res) => {
+    try {
+      const vendorInvoices = [
+        {
+          id: 1,
+          vendorName: "Premier Staffing Solutions",
+          vendorType: "staffing_agency",
+          invoiceNumber: "PSS-2025-001",
+          amount: 15750.00,
+          status: "pending",
+          dueDate: "2025-07-15",
+          serviceDate: "2025-06-01",
+          description: "Nursing staff - June 2025",
+          facilityId: 1,
+          facilityName: "Chicago General Hospital",
+          createdAt: "2025-06-19T00:00:00Z"
+        },
+        {
+          id: 2,
+          vendorName: "MedSupply Plus",
+          vendorType: "medical_supply",
+          invoiceNumber: "MSP-INV-5432",
+          amount: 8900.50,
+          status: "approved",
+          dueDate: "2025-07-10",
+          serviceDate: "2025-06-15",
+          description: "PPE and medical supplies",
+          facilityId: 2,
+          facilityName: "Springfield Care Center",
+          createdAt: "2025-06-18T00:00:00Z"
+        },
+        {
+          id: 3,
+          vendorName: "TechCare IT Services",
+          vendorType: "it_services",
+          invoiceNumber: "TCIT-2025-0089",
+          amount: 12400.00,
+          status: "paid",
+          dueDate: "2025-06-30",
+          serviceDate: "2025-05-20",
+          description: "Network infrastructure upgrade",
+          facilityId: 1,
+          facilityName: "Chicago General Hospital",
+          createdAt: "2025-06-01T00:00:00Z"
+        },
+        {
+          id: 4,
+          vendorName: "CleanCare Maintenance",
+          vendorType: "maintenance",
+          invoiceNumber: "CCM-MAY-2025",
+          amount: 3200.75,
+          status: "overdue",
+          dueDate: "2025-06-01",
+          serviceDate: "2025-05-15",
+          description: "Facility deep cleaning services",
+          facilityId: 3,
+          facilityName: "Metro Community Clinic",
+          createdAt: "2025-05-16T00:00:00Z"
+        },
+        {
+          id: 5,
+          vendorName: "EquipRent Medical",
+          vendorType: "equipment_rental",
+          invoiceNumber: "ERM-2025-Q2-15",
+          amount: 7800.00,
+          status: "pending",
+          dueDate: "2025-07-20",
+          serviceDate: "2025-06-01",
+          description: "Hospital bed rentals - Q2",
+          facilityId: 4,
+          facilityName: "Dallas Medical Center",
+          createdAt: "2025-06-19T00:00:00Z"
+        }
+      ];
+      res.json(vendorInvoices);
+    } catch (error) {
+      console.error("Error fetching vendor invoices:", error);
+      res.status(500).json({ message: "Failed to fetch vendor invoices" });
+    }
+  });
+
+  app.post("/api/vendor-invoices", requireAuth, async (req, res) => {
+    try {
+      // In a real app, this would save to database
+      const newInvoice = {
+        id: Date.now(),
+        ...req.body,
+        createdAt: new Date().toISOString()
+      };
+      res.json(newInvoice);
+    } catch (error) {
+      console.error("Error creating vendor invoice:", error);
+      res.status(500).json({ message: "Failed to create vendor invoice" });
+    }
+  });
+
+  app.patch("/api/vendor-invoices/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      // In a real app, this would update the database
+      res.json({ id, ...req.body });
+    } catch (error) {
+      console.error("Error updating vendor invoice:", error);
+      res.status(500).json({ message: "Failed to update vendor invoice" });
+    }
+  });
+
+  app.get("/api/vendors", requireAuth, async (req, res) => {
+    try {
+      const vendors = [
+        { id: 1, name: "Premier Staffing Solutions", type: "staffing_agency" },
+        { id: 2, name: "MedSupply Plus", type: "medical_supply" },
+        { id: 3, name: "TechCare IT Services", type: "it_services" },
+        { id: 4, name: "CleanCare Maintenance", type: "maintenance" },
+        { id: 5, name: "EquipRent Medical", type: "equipment_rental" }
+      ];
+      res.json(vendors);
+    } catch (error) {
+      console.error("Error fetching vendors:", error);
+      res.status(500).json({ message: "Failed to fetch vendors" });
     }
   });
 
