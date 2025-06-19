@@ -943,7 +943,7 @@ export class DatabaseStorage implements IStorage {
         
         return distance <= radiusMiles;
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in getFacilitiesWithinRadius:', error);
       return [];
     }

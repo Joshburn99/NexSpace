@@ -78,7 +78,10 @@ export default function FacilityRecommendationsPage() {
 
       return await apiRequest(endpoint, {
         method: "POST",
-        body: requestBody
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody)
       });
     },
   });

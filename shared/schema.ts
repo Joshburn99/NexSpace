@@ -69,6 +69,8 @@ export const facilities = pgTable("facilities", {
   autoImported: boolean("auto_imported").default(false),
   lastDataUpdate: timestamp("last_data_update"),
   dataSource: text("data_source"), // cms, manual, api_import
+  latitude: decimal("latitude", { precision: 10, scale: 8 }),
+  longitude: decimal("longitude", { precision: 11, scale: 8 }),
   isActive: boolean("is_active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow()
