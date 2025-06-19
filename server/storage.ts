@@ -241,6 +241,26 @@ export class DatabaseStorage implements IStorage {
     return facility || undefined;
   }
 
+  // Staff methods
+  async getAllStaff(): Promise<Staff[]> {
+    return await db.select().from(staff).where(eq(staff.isActive, true));
+  }
+
+  async getStaffMember(id: number): Promise<Staff | undefined> {
+    const [staffMember] = await db.select().from(staff).where(eq(staff.id, id));
+    return staffMember || undefined;
+  }
+
+  async createStaffMember(insertStaff: InsertStaff): Promise<Staff> {
+    const [newStaff] = await db.insert(staff).values(insertStaff).returning();
+    return newStaff;
+  }
+
+  async updateStaffMember(id: number, updates: Partial<InsertStaff>): Promise<Staff | undefined> {
+    const [updatedStaff] = await db.update(staff).set({ ...updates, updatedAt: new Date() }).where(eq(staff.id, id)).returning();
+    return updatedStaff || undefined;
+  }
+
   // Job methods
   async getJob(id: number): Promise<Job | undefined> {
     const [job] = await db.select().from(jobs).where(eq(jobs.id, id));

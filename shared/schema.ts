@@ -271,6 +271,30 @@ export const auditLogs = pgTable("audit_logs", {
   createdAt: timestamp("created_at").defaultNow()
 });
 
+// Staff table for enhanced profiles
+export const staff = pgTable("staff", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  phone: text("phone"),
+  specialty: text("specialty").notNull(),
+  department: text("department").notNull(),
+  licenseNumber: text("license_number"),
+  licenseExpiry: timestamp("license_expiry"),
+  isActive: boolean("is_active").default(true),
+  employmentType: text("employment_type").notNull(), // full_time, part_time, contract
+  hourlyRate: decimal("hourly_rate", { precision: 6, scale: 2 }),
+  location: text("location"),
+  availabilityStatus: text("availability_status").default('available'), // available, on_assignment, unavailable
+  profilePhoto: text("profile_photo"),
+  bio: text("bio"),
+  certifications: text("certifications").array(),
+  languages: text("languages").array(),
+  userId: integer("user_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
 // Payroll Integration Tables
 export const payrollProviders = pgTable("payroll_providers", {
   id: serial("id").primaryKey(),
@@ -482,6 +506,12 @@ export const insertMessageSchema = createInsertSchema(messages).omit({
   createdAt: true
 });
 
+export const insertStaffSchema = createInsertSchema(staff).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
 // Payroll insert schemas
 export const insertPayrollProviderSchema = createInsertSchema(payrollProviders).omit({
   id: true,
@@ -541,6 +571,8 @@ export type InsertCredential = z.infer<typeof insertCredentialSchema>;
 export type Credential = typeof credentials.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
+export type InsertStaff = z.infer<typeof insertStaffSchema>;
+export type Staff = typeof staff.$inferSelect;
 export type AuditLog = typeof auditLogs.$inferSelect;
 
 // Payroll types
