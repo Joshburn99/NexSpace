@@ -1265,7 +1265,20 @@ export function registerRoutes(app: Express): Server {
         facilities = await storage.getAllFacilities();
       }
       
-      res.json(facilities);
+      // Ensure all required fields are present and properly typed
+      const formattedFacilities = facilities.map(facility => ({
+        ...facility,
+        address: facility.address || '',
+        city: facility.city || '',
+        state: facility.state || '',
+        zipCode: facility.zipCode || '',
+        phone: facility.phone || '',
+        email: facility.email || '',
+        latitude: facility.latitude ? parseFloat(facility.latitude.toString()) : null,
+        longitude: facility.longitude ? parseFloat(facility.longitude.toString()) : null
+      }));
+      
+      res.json(formattedFacilities);
     } catch (error) {
       console.error("Error fetching facilities:", error);
       res.status(500).json({ message: "Failed to fetch facilities" });

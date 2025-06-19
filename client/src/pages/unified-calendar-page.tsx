@@ -329,12 +329,6 @@ export default function UnifiedCalendarPage() {
               Home
             </Button>
           </Link>
-          <Link href="/scheduling">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Scheduling
-            </Button>
-          </Link>
           <div>
             <h1 className="text-3xl font-bold">Unified Calendar</h1>
             <p className="text-muted-foreground">
