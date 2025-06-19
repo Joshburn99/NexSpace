@@ -42,16 +42,12 @@ export default function FacilityManagementPage() {
   // Fetch facilities
   const { data: facilities = [], isLoading } = useQuery({
     queryKey: ["/api/facilities"],
-    queryFn: () => apiRequest("/api/facilities"),
   });
 
   // Create facility mutation
   const createFacilityMutation = useMutation({
     mutationFn: async (facilityData: z.infer<typeof createFacilitySchema>) => {
-      return apiRequest("/api/facilities", {
-        method: "POST",
-        body: JSON.stringify(facilityData),
-      });
+      return apiRequest("/api/facilities", "POST", facilityData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
@@ -77,7 +73,7 @@ export default function FacilityManagementPage() {
       const params = new URLSearchParams({ name });
       if (state) params.append('state', state);
       if (city) params.append('city', city);
-      return apiRequest(`/api/facilities/search-external?${params.toString()}`);
+      return fetch(`/api/facilities/search-external?${params.toString()}`).then(res => res.json());
     },
     onMutate: () => {
       setIsSearchingExternal(true);
@@ -99,10 +95,7 @@ export default function FacilityManagementPage() {
   // Import facility mutation
   const importFacilityMutation = useMutation({
     mutationFn: async (cmsId: string) => {
-      return apiRequest("/api/facilities/import", {
-        method: "POST",
-        body: JSON.stringify({ cmsId }),
-      });
+      return apiRequest("/api/facilities/import", "POST", { cmsId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
