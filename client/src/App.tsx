@@ -41,6 +41,8 @@ import VendorInvoicesPage from "@/pages/vendor-invoices-page";
 import AdminUserManagementPage from "@/pages/admin-user-management-page";
 import AdminAuditLogsPage from "@/pages/admin-audit-logs-page";
 import AdminDatabaseConsolePage from "@/pages/admin-database-console-page";
+import SystemSettingsPage from "@/pages/system-settings-page";
+import DetailedShiftAnalyticsPage from "@/pages/detailed-shift-analytics-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -69,6 +71,7 @@ function Router() {
       <ProtectedRoute path="/invoices" component={InvoicesPage} />
       <ProtectedRoute path="/vendor-invoices" component={VendorInvoicesPage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
+      <ProtectedRoute path="/system-settings" component={SystemSettingsPage} />
       <ProtectedRoute path="/admin/impersonation" component={AdminImpersonationPage} />
       <ProtectedRoute path="/admin/users" component={AdminUserManagementPage} />
       <ProtectedRoute path="/admin/audit" component={AdminAuditLogsPage} />
@@ -81,6 +84,7 @@ function Router() {
       <ProtectedRoute path="/employee-dashboard" component={EmployeeDashboardWrapper} />
       <ProtectedRoute path="/contractor-dashboard" component={ContractorDashboardWrapper} />
       <ProtectedRoute path="/facility-recommendations" component={FacilityRecommendationsPage} />
+      <ProtectedRoute path="/detailed-shift-analytics" component={DetailedShiftAnalyticsPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

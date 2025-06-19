@@ -1681,6 +1681,315 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // System settings API
+  app.get("/api/system-settings", requireAuth, async (req, res) => {
+    try {
+      const settings = {
+        id: 1,
+        organizationName: "NexSpace Healthcare",
+        organizationLogo: "/logo.png",
+        timezone: "America/Chicago",
+        dateFormat: "MM/DD/YYYY",
+        currency: "USD",
+        emailNotifications: true,
+        smsNotifications: false,
+        autoApproveShifts: false,
+        requireManagerApproval: true,
+        allowSelfCancellation: true,
+        cancellationDeadlineHours: 24,
+        defaultShiftDuration: 8,
+        overtimeThreshold: 40,
+        backupEmailFrequency: "weekly",
+        sessionTimeout: 30,
+        passwordMinLength: 8,
+        requireTwoFactor: false,
+        allowRemoteWork: true,
+        maintenanceMode: false,
+      };
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching system settings:", error);
+      res.status(500).json({ message: "Failed to fetch system settings" });
+    }
+  });
+
+  app.patch("/api/system-settings", requireAuth, async (req, res) => {
+    try {
+      // In a real app, this would update the database
+      const updatedSettings = { id: 1, ...req.body };
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error("Error updating system settings:", error);
+      res.status(500).json({ message: "Failed to update system settings" });
+    }
+  });
+
+  // Detailed shift analytics API
+  app.get("/api/shift-analytics", requireAuth, async (req, res) => {
+    try {
+      const { specialty, workerType, timeRange } = req.query;
+      
+      const shiftAnalytics = [
+        {
+          id: 1,
+          title: "Night Shift RN - ICU",
+          specialty: "registered_nurse",
+          facilityName: "Chicago General Hospital",
+          workerType: "internal_employee",
+          totalApplications: 12,
+          avgApplicationsPerOpening: 12,
+          daysPosted: 3,
+          filledDate: "2025-06-16T00:00:00Z",
+          status: "filled",
+          urgency: "urgent",
+          hourlyRate: 45.50,
+          shiftDate: "2025-06-20T19:00:00Z",
+          duration: 12
+        },
+        {
+          id: 2,
+          title: "Day Shift CNA - Med/Surg",
+          specialty: "certified_nursing_assistant",
+          facilityName: "Springfield Care Center",
+          workerType: "contractor_1099",
+          totalApplications: 8,
+          avgApplicationsPerOpening: 8,
+          daysPosted: 5,
+          filledDate: "2025-06-17T00:00:00Z",
+          status: "filled",
+          urgency: "normal",
+          hourlyRate: 18.75,
+          shiftDate: "2025-06-21T07:00:00Z",
+          duration: 8
+        },
+        {
+          id: 3,
+          title: "Physical Therapist - Outpatient",
+          specialty: "physical_therapist",
+          facilityName: "Metro Community Clinic",
+          workerType: "agency_staff",
+          totalApplications: 6,
+          avgApplicationsPerOpening: 6,
+          daysPosted: 7,
+          filledDate: null,
+          status: "open",
+          urgency: "high",
+          hourlyRate: 55.00,
+          shiftDate: "2025-06-22T08:00:00Z",
+          duration: 8
+        },
+        {
+          id: 4,
+          title: "Weekend LPN - Long Term Care",
+          specialty: "licensed_practical_nurse",
+          facilityName: "Dallas Medical Center",
+          workerType: "float_pool",
+          totalApplications: 15,
+          avgApplicationsPerOpening: 15,
+          daysPosted: 2,
+          filledDate: "2025-06-18T00:00:00Z",
+          status: "filled",
+          urgency: "urgent",
+          hourlyRate: 28.50,
+          shiftDate: "2025-06-22T07:00:00Z",
+          duration: 12
+        },
+        {
+          id: 5,
+          title: "Respiratory Therapist - Emergency",
+          specialty: "respiratory_therapist",
+          facilityName: "Chicago General Hospital",
+          workerType: "internal_employee",
+          totalApplications: 4,
+          avgApplicationsPerOpening: 4,
+          daysPosted: 9,
+          filledDate: null,
+          status: "open",
+          urgency: "high",
+          hourlyRate: 42.00,
+          shiftDate: "2025-06-23T15:00:00Z",
+          duration: 8
+        },
+        {
+          id: 6,
+          title: "Medical Tech - Laboratory",
+          specialty: "medical_technologist",
+          facilityName: "Regional Medical Center",
+          workerType: "contractor_1099",
+          totalApplications: 7,
+          avgApplicationsPerOpening: 7,
+          daysPosted: 4,
+          filledDate: "2025-06-17T00:00:00Z",
+          status: "filled",
+          urgency: "normal",
+          hourlyRate: 32.25,
+          shiftDate: "2025-06-21T06:00:00Z",
+          duration: 10
+        },
+        {
+          id: 7,
+          title: "Night RN - Emergency Department",
+          specialty: "registered_nurse",
+          facilityName: "Metro Community Clinic",
+          workerType: "agency_staff",
+          totalApplications: 18,
+          avgApplicationsPerOpening: 18,
+          daysPosted: 1,
+          filledDate: "2025-06-19T00:00:00Z",
+          status: "filled",
+          urgency: "urgent",
+          hourlyRate: 52.75,
+          shiftDate: "2025-06-20T19:00:00Z",
+          duration: 12
+        },
+        {
+          id: 8,
+          title: "Day Shift CNA - Pediatrics",
+          specialty: "certified_nursing_assistant",
+          facilityName: "Children's Hospital",
+          workerType: "internal_employee",
+          totalApplications: 9,
+          avgApplicationsPerOpening: 9,
+          daysPosted: 6,
+          filledDate: null,
+          status: "open",
+          urgency: "normal",
+          hourlyRate: 20.00,
+          shiftDate: "2025-06-24T07:00:00Z",
+          duration: 8
+        },
+        {
+          id: 9,
+          title: "Evening LPN - Rehabilitation",
+          specialty: "licensed_practical_nurse",
+          facilityName: "Springfield Care Center",
+          workerType: "float_pool",
+          totalApplications: 11,
+          avgApplicationsPerOpening: 11,
+          daysPosted: 3,
+          filledDate: "2025-06-18T00:00:00Z",
+          status: "filled",
+          urgency: "high",
+          hourlyRate: 26.75,
+          shiftDate: "2025-06-21T15:00:00Z",
+          duration: 8
+        },
+        {
+          id: 10,
+          title: "Weekend PT - Orthopedics",
+          specialty: "physical_therapist",
+          facilityName: "Dallas Medical Center",
+          workerType: "contractor_1099",
+          totalApplications: 5,
+          avgApplicationsPerOpening: 5,
+          daysPosted: 8,
+          filledDate: null,
+          status: "open",
+          urgency: "normal",
+          hourlyRate: 48.50,
+          shiftDate: "2025-06-22T08:00:00Z",
+          duration: 10
+        },
+        {
+          id: 11,
+          title: "Night Respiratory Tech - ICU",
+          specialty: "respiratory_therapist",
+          facilityName: "Regional Medical Center",
+          workerType: "agency_staff",
+          totalApplications: 13,
+          avgApplicationsPerOpening: 13,
+          daysPosted: 2,
+          filledDate: "2025-06-18T00:00:00Z",
+          status: "filled",
+          urgency: "urgent",
+          hourlyRate: 44.25,
+          shiftDate: "2025-06-20T19:00:00Z",
+          duration: 12
+        },
+        {
+          id: 12,
+          title: "Lab Tech - Blood Bank",
+          specialty: "medical_technologist",
+          facilityName: "Chicago General Hospital",
+          workerType: "internal_employee",
+          totalApplications: 6,
+          avgApplicationsPerOpening: 6,
+          daysPosted: 5,
+          filledDate: null,
+          status: "open",
+          urgency: "high",
+          hourlyRate: 35.00,
+          shiftDate: "2025-06-23T22:00:00Z",
+          duration: 8
+        },
+        {
+          id: 13,
+          title: "Per Diem RN - Surgery",
+          specialty: "registered_nurse",
+          facilityName: "Surgical Center West",
+          workerType: "float_pool",
+          totalApplications: 20,
+          avgApplicationsPerOpening: 20,
+          daysPosted: 1,
+          filledDate: "2025-06-19T00:00:00Z",
+          status: "filled",
+          urgency: "urgent",
+          hourlyRate: 58.00,
+          shiftDate: "2025-06-21T06:00:00Z",
+          duration: 10
+        },
+        {
+          id: 14,
+          title: "Weekend CNA - Memory Care",
+          specialty: "certified_nursing_assistant",
+          facilityName: "Memory Care Facility",
+          workerType: "contractor_1099",
+          totalApplications: 7,
+          avgApplicationsPerOpening: 7,
+          daysPosted: 4,
+          filledDate: "2025-06-17T00:00:00Z",
+          status: "filled",
+          urgency: "normal",
+          hourlyRate: 19.25,
+          shiftDate: "2025-06-22T07:00:00Z",
+          duration: 12
+        },
+        {
+          id: 15,
+          title: "Travel LPN - Cardiac Unit",
+          specialty: "licensed_practical_nurse",
+          facilityName: "Heart Institute",
+          workerType: "agency_staff",
+          totalApplications: 14,
+          avgApplicationsPerOpening: 14,
+          daysPosted: 2,
+          filledDate: "2025-06-18T00:00:00Z",
+          status: "filled",
+          urgency: "urgent",
+          hourlyRate: 31.50,
+          shiftDate: "2025-06-20T07:00:00Z",
+          duration: 12
+        }
+      ];
+
+      // Apply filters if provided
+      let filteredData = shiftAnalytics;
+      
+      if (specialty && specialty !== 'all') {
+        filteredData = filteredData.filter(shift => shift.specialty === specialty);
+      }
+      
+      if (workerType && workerType !== 'all') {
+        filteredData = filteredData.filter(shift => shift.workerType === workerType);
+      }
+
+      res.json(filteredData);
+    } catch (error) {
+      console.error("Error fetching shift analytics:", error);
+      res.status(500).json({ message: "Failed to fetch shift analytics" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   // WebSocket setup for real-time messaging
