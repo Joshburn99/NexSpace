@@ -1,47 +1,79 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { FileText, Search, ArrowLeft, Home, Clock, User, Activity } from "lucide-react";
-import { format } from "date-fns";
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  FileText,
+  Search,
+  ArrowLeft,
+  Home,
+  Clock,
+  User,
+  Activity,
+} from 'lucide-react';
+import { format } from 'date-fns';
 
 export default function AdminAuditLogsPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedAction, setSelectedAction] = useState<string>("all");
-  const [selectedResource, setSelectedResource] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedAction, setSelectedAction] = useState<string>('all');
+  const [selectedResource, setSelectedResource] = useState<string>('all');
 
   const { data: auditLogs = [], isLoading } = useQuery({
-    queryKey: ["/api/admin/audit-logs"],
+    queryKey: ['/api/admin/audit-logs'],
   });
 
   const filteredLogs = auditLogs.filter((log: any) => {
-    const matchesSearch = log.action?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.resource?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         log.username?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesAction = selectedAction === "all" || log.action === selectedAction;
-    const matchesResource = selectedResource === "all" || log.resource === selectedResource;
+    const matchesSearch =
+      log.action?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.resource?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      log.username?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesAction =
+      selectedAction === 'all' || log.action === selectedAction;
+    const matchesResource =
+      selectedResource === 'all' || log.resource === selectedResource;
     return matchesSearch && matchesAction && matchesResource;
   });
 
   const getActionBadgeVariant = (action: string) => {
     switch (action) {
-      case "CREATE": return "default";
-      case "UPDATE": return "secondary";
-      case "DELETE": return "destructive";
-      case "LOGIN": return "outline";
-      case "LOGOUT": return "outline";
-      default: return "outline";
+      case 'CREATE':
+        return 'default';
+      case 'UPDATE':
+        return 'secondary';
+      case 'DELETE':
+        return 'destructive';
+      case 'LOGIN':
+        return 'outline';
+      case 'LOGOUT':
+        return 'outline';
+      default:
+        return 'outline';
     }
   };
 
   const uniqueActions = [...new Set(auditLogs.map((log: any) => log.action))];
-  const uniqueResources = [...new Set(auditLogs.map((log: any) => log.resource))];
+  const uniqueResources = [
+    ...new Set(auditLogs.map((log: any) => log.resource)),
+  ];
 
   return (
     <div className="space-y-6">
@@ -62,7 +94,8 @@ export default function AdminAuditLogsPage() {
         </div>
         <h1 className="text-3xl font-bold">Audit Logs</h1>
         <p className="text-muted-foreground">
-          View system activity and user actions for security and compliance monitoring
+          View system activity and user actions for security and compliance
+          monitoring
         </p>
       </div>
 
@@ -73,7 +106,7 @@ export default function AdminAuditLogsPage() {
             <Input
               placeholder="Search by action, resource, or user..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -84,8 +117,10 @@ export default function AdminAuditLogsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Actions</SelectItem>
-            {uniqueActions.map((action) => (
-              <SelectItem key={action} value={action}>{action}</SelectItem>
+            {uniqueActions.map(action => (
+              <SelectItem key={action} value={action}>
+                {action}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -95,8 +130,10 @@ export default function AdminAuditLogsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Resources</SelectItem>
-            {uniqueResources.map((resource) => (
-              <SelectItem key={resource} value={resource}>{resource}</SelectItem>
+            {uniqueResources.map(resource => (
+              <SelectItem key={resource} value={resource}>
+                {resource}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -145,10 +182,12 @@ export default function AdminAuditLogsPage() {
               <div>
                 <p className="text-sm font-medium">Today's Actions</p>
                 <p className="text-2xl font-bold">
-                  {auditLogs.filter((log: any) => {
-                    const today = new Date().toDateString();
-                    return new Date(log.createdAt).toDateString() === today;
-                  }).length}
+                  {
+                    auditLogs.filter((log: any) => {
+                      const today = new Date().toDateString();
+                      return new Date(log.createdAt).toDateString() === today;
+                    }).length
+                  }
                 </p>
               </div>
             </div>
@@ -167,7 +206,9 @@ export default function AdminAuditLogsPage() {
           {isLoading ? (
             <div className="text-center py-8">Loading audit logs...</div>
           ) : filteredLogs.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">No audit logs found</div>
+            <div className="text-center py-8 text-muted-foreground">
+              No audit logs found
+            </div>
           ) : (
             <Table>
               <TableHeader>
@@ -186,16 +227,20 @@ export default function AdminAuditLogsPage() {
                   <TableRow key={log.id}>
                     <TableCell>
                       <div className="text-sm">
-                        {format(new Date(log.createdAt), "MMM dd, yyyy")}
+                        {format(new Date(log.createdAt), 'MMM dd, yyyy')}
                         <div className="text-xs text-muted-foreground">
-                          {format(new Date(log.createdAt), "HH:mm:ss")}
+                          {format(new Date(log.createdAt), 'HH:mm:ss')}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{log.username || "System"}</div>
-                        <div className="text-xs text-muted-foreground">ID: {log.userId}</div>
+                        <div className="font-medium">
+                          {log.username || 'System'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          ID: {log.userId}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -208,9 +253,9 @@ export default function AdminAuditLogsPage() {
                         {log.resource}
                       </code>
                     </TableCell>
-                    <TableCell>{log.resourceId || "-"}</TableCell>
+                    <TableCell>{log.resourceId || '-'}</TableCell>
                     <TableCell>
-                      <code className="text-xs">{log.ipAddress || "-"}</code>
+                      <code className="text-xs">{log.ipAddress || '-'}</code>
                     </TableCell>
                     <TableCell>
                       {log.userAgent && (

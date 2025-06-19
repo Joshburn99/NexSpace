@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, Users, Calendar, Shield, Clock } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent } from '@/components/ui/card';
+import { TrendingUp, Users, Calendar, Shield, Clock } from 'lucide-react';
 
 interface StatsData {
   activeStaff: number;
@@ -11,7 +11,7 @@ interface StatsData {
 
 export function StatsCards() {
   const { data: stats, isLoading } = useQuery<StatsData>({
-    queryKey: ["/api/dashboard/stats"],
+    queryKey: ['/api/dashboard/stats'],
   });
 
   if (isLoading) {
@@ -58,7 +58,9 @@ export function StatsCards() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Active Staff</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.activeStaff}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats.activeStaff}
+              </p>
               <p className="text-xs text-green-600 mt-1 flex items-center">
                 <TrendingUp className="h-3 w-3 mr-1" />
                 +12% from last month
@@ -77,7 +79,9 @@ export function StatsCards() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Open Shifts</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.openShifts}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats.openShifts}
+              </p>
               <p className="text-xs text-red-600 mt-1 flex items-center">
                 <span className="inline-block w-2 h-2 bg-red-500 rounded-full mr-1"></span>
                 5 urgent
@@ -95,8 +99,12 @@ export function StatsCards() {
               <Shield className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500">Compliance Rate</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.complianceRate}%</p>
+              <p className="text-sm font-medium text-gray-500">
+                Compliance Rate
+              </p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats.complianceRate}%
+              </p>
               <p className="text-xs text-green-600 mt-1 flex items-center">
                 <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1"></span>
                 All critical items
@@ -115,7 +123,9 @@ export function StatsCards() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-500">Monthly Hours</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.monthlyHours.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {stats.monthlyHours.toLocaleString()}
+              </p>
               <p className="text-xs text-purple-600 mt-1 flex items-center">
                 <Clock className="h-3 w-3 mr-1" />
                 823 OT hours

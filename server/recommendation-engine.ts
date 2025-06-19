@@ -1,6 +1,6 @@
-import { storage } from "./storage";
-import type { Facility } from "@shared/schema";
-import OpenAI from "openai";
+import { storage } from './storage';
+import type { Facility } from '@shared/schema';
+import OpenAI from 'openai';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -47,7 +47,7 @@ export class LocationBasedRecommendationEngine {
     lat1: number,
     lon1: number,
     lat2: number,
-    lon2: number
+    lon2: number,
   ): number {
     const R = 3959; // Earth's radius in miles
     const dLat = this.toRadians(lat2 - lat1);
@@ -102,7 +102,7 @@ export class LocationBasedRecommendationEngine {
   private calculateRecommendationScore(
     facility: Facility,
     distance: number,
-    criteria: RecommendationCriteria
+    criteria: RecommendationCriteria,
   ): { score: number; reasons: string[] } {
     let score = 0;
     const reasons: string[] = [];
@@ -114,9 +114,9 @@ export class LocationBasedRecommendationEngine {
     score += distanceScore * distanceWeight;
 
     if (distance <= 5) {
-      reasons.push("Very close to your location");
+      reasons.push('Very close to your location');
     } else if (distance <= 15) {
-      reasons.push("Convenient distance");
+      reasons.push('Convenient distance');
     }
 
     // Quality score
@@ -125,53 +125,64 @@ export class LocationBasedRecommendationEngine {
     score += qualityScore * qualityWeight;
 
     if (facility.overallRating && facility.overallRating >= 4) {
-      reasons.push("High overall rating");
+      reasons.push('High overall rating');
     }
 
     if (facility.staffingRating && facility.staffingRating >= 4) {
-      reasons.push("Excellent staffing ratings");
+      reasons.push('Excellent staffing ratings');
     }
 
     // Facility type match
-    if (criteria.facilityType && facility.facilityType === criteria.facilityType) {
+    if (
+      criteria.facilityType &&
+      facility.facilityType === criteria.facilityType
+    ) {
       score += 10;
-      reasons.push("Matches requested facility type");
+      reasons.push('Matches requested facility type');
     }
 
     // Bed capacity
-    if (criteria.bedCountMin && facility.bedCount && facility.bedCount >= criteria.bedCountMin) {
+    if (
+      criteria.bedCountMin &&
+      facility.bedCount &&
+      facility.bedCount >= criteria.bedCountMin
+    ) {
       score += 5;
-      reasons.push("Meets capacity requirements");
+      reasons.push('Meets capacity requirements');
     }
 
     // Insurance acceptance
     if (criteria.participatesMedicare && facility.participatesMedicare) {
       score += 5;
-      reasons.push("Accepts Medicare");
+      reasons.push('Accepts Medicare');
     }
 
     if (criteria.participatesMedicaid && facility.participatesMedicaid) {
       score += 5;
-      reasons.push("Accepts Medicaid");
+      reasons.push('Accepts Medicaid');
     }
 
     // Safety factors
     if (facility.deficiencyCount !== null && facility.deficiencyCount === 0) {
       score += 10;
-      reasons.push("No recent deficiencies");
-    } else if (facility.deficiencyCount !== null && facility.deficiencyCount > 5) {
+      reasons.push('No recent deficiencies');
+    } else if (
+      facility.deficiencyCount !== null &&
+      facility.deficiencyCount > 5
+    ) {
       score -= 10;
-      reasons.push("Has recent deficiencies");
+      reasons.push('Has recent deficiencies');
     }
 
     // Recent data
     if (facility.lastDataUpdate) {
       const daysSinceUpdate = Math.floor(
-        (Date.now() - new Date(facility.lastDataUpdate).getTime()) / (1000 * 60 * 60 * 24)
+        (Date.now() - new Date(facility.lastDataUpdate).getTime()) /
+          (1000 * 60 * 60 * 24),
       );
       if (daysSinceUpdate <= 30) {
         score += 5;
-        reasons.push("Recently updated information");
+        reasons.push('Recently updated information');
       }
     }
 
@@ -186,26 +197,30 @@ export class LocationBasedRecommendationEngine {
     fromLng: number,
     toLat: number,
     toLng: number,
-    distance: number
+    distance: number,
   ): Promise<string> {
     try {
       // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
       const response = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: 'gpt-4o',
         messages: [
           {
-            role: "system",
-            content: "You are a travel time estimation expert. Based on distance and typical traffic patterns, provide a realistic travel time estimate."
+            role: 'system',
+            content:
+              'You are a travel time estimation expert. Based on distance and typical traffic patterns, provide a realistic travel time estimate.',
           },
           {
-            role: "user",
-            content: `Estimate travel time for a ${distance.toFixed(1)} mile trip in an urban/suburban healthcare context. Provide just the time estimate (e.g., "15-20 minutes").`
-          }
+            role: 'user',
+            content: `Estimate travel time for a ${distance.toFixed(1)} mile trip in an urban/suburban healthcare context. Provide just the time estimate (e.g., "15-20 minutes").`,
+          },
         ],
-        max_tokens: 50
+        max_tokens: 50,
       });
 
-      return response.choices[0].message.content?.trim() || `${Math.round(distance * 2.5)}-${Math.round(distance * 3)} minutes`;
+      return (
+        response.choices[0].message.content?.trim() ||
+        `${Math.round(distance * 2.5)}-${Math.round(distance * 3)} minutes`
+      );
     } catch (error) {
       // Fallback calculation
       return `${Math.round(distance * 2.5)}-${Math.round(distance * 3)} minutes`;
@@ -215,11 +230,13 @@ export class LocationBasedRecommendationEngine {
   /**
    * Main recommendation function
    */
-  async getRecommendations(criteria: RecommendationCriteria): Promise<FacilityRecommendation[]> {
+  async getRecommendations(
+    criteria: RecommendationCriteria,
+  ): Promise<FacilityRecommendation[]> {
     try {
       // Get all active facilities
       const allFacilities = await storage.getAllFacilities();
-      
+
       // Filter and calculate recommendations
       const recommendations: FacilityRecommendation[] = [];
 
@@ -231,23 +248,40 @@ export class LocationBasedRecommendationEngine {
           criteria.location.lat,
           criteria.location.lng,
           parseFloat(facility.latitude.toString()),
-          parseFloat(facility.longitude.toString())
+          parseFloat(facility.longitude.toString()),
         );
 
         // Apply distance filter
         if (criteria.maxDistance && distance > criteria.maxDistance) continue;
 
         // Apply facility type filter
-        if (criteria.facilityType && facility.facilityType !== criteria.facilityType) continue;
+        if (
+          criteria.facilityType &&
+          facility.facilityType !== criteria.facilityType
+        )
+          continue;
 
         // Apply minimum rating filter
-        if (criteria.minRating && (!facility.overallRating || facility.overallRating < criteria.minRating)) continue;
+        if (
+          criteria.minRating &&
+          (!facility.overallRating ||
+            facility.overallRating < criteria.minRating)
+        )
+          continue;
 
         // Apply bed count filter
-        if (criteria.bedCountMin && (!facility.bedCount || facility.bedCount < criteria.bedCountMin)) continue;
+        if (
+          criteria.bedCountMin &&
+          (!facility.bedCount || facility.bedCount < criteria.bedCountMin)
+        )
+          continue;
 
         // Calculate recommendation score
-        const { score, reasons } = this.calculateRecommendationScore(facility, distance, criteria);
+        const { score, reasons } = this.calculateRecommendationScore(
+          facility,
+          distance,
+          criteria,
+        );
 
         // Get travel time estimate
         const travelTime = await this.getEstimatedTravelTime(
@@ -255,7 +289,7 @@ export class LocationBasedRecommendationEngine {
           criteria.location.lng,
           parseFloat(facility.latitude.toString()),
           parseFloat(facility.longitude.toString()),
-          distance
+          distance,
         );
 
         const recommendation: FacilityRecommendation = {
@@ -271,7 +305,7 @@ export class LocationBasedRecommendationEngine {
           },
           travelInfo: {
             estimatedTravelTime: travelTime,
-          }
+          },
         };
 
         recommendations.push(recommendation);
@@ -283,7 +317,7 @@ export class LocationBasedRecommendationEngine {
       // Return top 10 recommendations
       return recommendations.slice(0, 10);
     } catch (error) {
-      console.error("Error generating recommendations:", error);
+      console.error('Error generating recommendations:', error);
       throw error;
     }
   }
@@ -293,7 +327,7 @@ export class LocationBasedRecommendationEngine {
    */
   async getEmergencyRecommendations(
     location: { lat: number; lng: number },
-    facilityType: string = "hospital"
+    facilityType: string = 'hospital',
   ): Promise<FacilityRecommendation[]> {
     const criteria: RecommendationCriteria = {
       location,
@@ -304,11 +338,9 @@ export class LocationBasedRecommendationEngine {
     };
 
     const recommendations = await this.getRecommendations(criteria);
-    
+
     // For emergency situations, prioritize the closest facilities
-    return recommendations
-      .sort((a, b) => a.distance - b.distance)
-      .slice(0, 5);
+    return recommendations.sort((a, b) => a.distance - b.distance).slice(0, 5);
   }
 
   /**
@@ -317,7 +349,7 @@ export class LocationBasedRecommendationEngine {
   async getSpecializedCareRecommendations(
     location: { lat: number; lng: number },
     specialty: string,
-    maxDistance: number = 50
+    maxDistance: number = 50,
   ): Promise<FacilityRecommendation[]> {
     const criteria: RecommendationCriteria = {
       location,
@@ -327,12 +359,14 @@ export class LocationBasedRecommendationEngine {
     };
 
     const recommendations = await this.getRecommendations(criteria);
-    
+
     // Filter for facilities that might offer specialized care
     return recommendations.filter(rec => {
       const facility = rec.facility;
-      return facility.facilityType === "hospital" || 
-             facility.bedCount && facility.bedCount > 100; // Larger facilities more likely to have specialties
+      return (
+        facility.facilityType === 'hospital' ||
+        (facility.bedCount && facility.bedCount > 100)
+      ); // Larger facilities more likely to have specialties
     });
   }
 
@@ -341,15 +375,17 @@ export class LocationBasedRecommendationEngine {
    */
   async getInsuranceBasedRecommendations(
     location: { lat: number; lng: number },
-    insuranceType: "medicare" | "medicaid" | "both",
-    facilityType?: string
+    insuranceType: 'medicare' | 'medicaid' | 'both',
+    facilityType?: string,
   ): Promise<FacilityRecommendation[]> {
     const criteria: RecommendationCriteria = {
       location,
       facilityType,
       maxDistance: 30,
-      participatesMedicare: insuranceType === "medicare" || insuranceType === "both",
-      participatesMedicaid: insuranceType === "medicaid" || insuranceType === "both",
+      participatesMedicare:
+        insuranceType === 'medicare' || insuranceType === 'both',
+      participatesMedicaid:
+        insuranceType === 'medicaid' || insuranceType === 'both',
     };
 
     return this.getRecommendations(criteria);

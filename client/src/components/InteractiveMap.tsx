@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { MapPin, Search, Target } from "lucide-react";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MapPin, Search, Target } from 'lucide-react';
 
 interface MapLocation {
   lat: number;
@@ -21,15 +21,16 @@ interface InteractiveMapProps {
 export default function InteractiveMap({
   initialLocation = { lat: 39.8283, lng: -98.5795 }, // Center of US
   onLocationSelect,
-  height = "400px",
+  height = '400px',
   showSearch = true,
-  readonly = false
+  readonly = false,
 }: InteractiveMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [marker, setMarker] = useState<google.maps.Marker | null>(null);
-  const [searchValue, setSearchValue] = useState("");
-  const [currentLocation, setCurrentLocation] = useState<MapLocation>(initialLocation);
+  const [searchValue, setSearchValue] = useState('');
+  const [currentLocation, setCurrentLocation] =
+    useState<MapLocation>(initialLocation);
   const [isLoading, setIsLoading] = useState(true);
 
   // Initialize Google Maps
@@ -43,16 +44,16 @@ export default function InteractiveMap({
           script.src = `https://maps.googleapis.com/maps/api/js?key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}&libraries=places`;
           script.async = true;
           script.defer = true;
-          
+
           script.onload = () => {
             createMap();
           };
-          
+
           script.onerror = () => {
             console.error('Failed to load Google Maps script');
             setIsLoading(false);
           };
-          
+
           document.head.appendChild(script);
         } else {
           createMap();
@@ -74,18 +75,18 @@ export default function InteractiveMap({
         fullscreenControl: false,
         styles: [
           {
-            featureType: "poi",
-            elementType: "labels",
-            stylers: [{ visibility: "off" }]
-          }
-        ]
+            featureType: 'poi',
+            elementType: 'labels',
+            stylers: [{ visibility: 'off' }],
+          },
+        ],
       });
 
       const markerInstance = new google.maps.Marker({
         position: currentLocation,
         map: mapInstance,
         draggable: !readonly,
-        title: "Facility Location"
+        title: 'Facility Location',
       });
 
       if (!readonly) {
@@ -94,22 +95,25 @@ export default function InteractiveMap({
           if (event.latLng) {
             const newLocation = {
               lat: event.latLng.lat(),
-              lng: event.latLng.lng()
+              lng: event.latLng.lng(),
             };
             updateLocation(newLocation);
           }
         });
 
         // Add drag listener to marker
-        markerInstance.addListener('dragend', (event: google.maps.MapMouseEvent) => {
-          if (event.latLng) {
-            const newLocation = {
-              lat: event.latLng.lat(),
-              lng: event.latLng.lng()
-            };
-            updateLocation(newLocation);
-          }
-        });
+        markerInstance.addListener(
+          'dragend',
+          (event: google.maps.MapMouseEvent) => {
+            if (event.latLng) {
+              const newLocation = {
+                lat: event.latLng.lat(),
+                lng: event.latLng.lng(),
+              };
+              updateLocation(newLocation);
+            }
+          },
+        );
       }
 
       setMap(mapInstance);
@@ -122,11 +126,11 @@ export default function InteractiveMap({
 
   const updateLocation = async (location: MapLocation) => {
     setCurrentLocation(location);
-    
+
     if (marker) {
       marker.setPosition(location);
     }
-    
+
     if (map) {
       map.setCenter(location);
     }
@@ -135,7 +139,7 @@ export default function InteractiveMap({
     try {
       const geocoder = new google.maps.Geocoder();
       const response = await geocoder.geocode({ location });
-      
+
       if (response.results[0]) {
         const address = response.results[0].formatted_address;
         const locationWithAddress = { ...location, address };
@@ -156,15 +160,15 @@ export default function InteractiveMap({
     try {
       const geocoder = new google.maps.Geocoder();
       const response = await geocoder.geocode({ address: searchValue });
-      
+
       if (response.results[0]) {
         const location = response.results[0].geometry.location;
         const newLocation = {
           lat: location.lat(),
           lng: location.lng(),
-          address: response.results[0].formatted_address
+          address: response.results[0].formatted_address,
         };
-        
+
         updateLocation(newLocation);
         map.setZoom(15);
       }
@@ -181,10 +185,10 @@ export default function InteractiveMap({
 
     setIsLoading(true);
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      position => {
         const location = {
           lat: position.coords.latitude,
-          lng: position.coords.longitude
+          lng: position.coords.longitude,
         };
         updateLocation(location);
         if (map) {
@@ -192,11 +196,11 @@ export default function InteractiveMap({
         }
         setIsLoading(false);
       },
-      (error) => {
+      error => {
         console.error('Geolocation error:', error);
         setIsLoading(false);
         alert('Unable to retrieve your location.');
-      }
+      },
     );
   };
 
@@ -229,11 +233,11 @@ export default function InteractiveMap({
               <Input
                 placeholder="Search for an address..."
                 value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
+                onChange={e => setSearchValue(e.target.value)}
                 onKeyPress={handleKeyPress}
               />
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="sm"
                 onClick={searchLocation}
                 disabled={!searchValue.trim()}
@@ -241,8 +245,8 @@ export default function InteractiveMap({
                 <Search className="h-4 w-4" />
               </Button>
             </div>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={getCurrentLocation}
               disabled={isLoading}
@@ -257,7 +261,7 @@ export default function InteractiveMap({
           )}
         </CardHeader>
       )}
-      
+
       <CardContent className={`${showSearch && !readonly ? 'pt-0' : 'p-0'}`}>
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
@@ -270,7 +274,9 @@ export default function InteractiveMap({
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
               <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Maps require an API key to load</p>
+              <p className="text-muted-foreground">
+                Maps require an API key to load
+              </p>
               <p className="text-xs text-muted-foreground mt-2">
                 Add VITE_GOOGLE_MAPS_API_KEY to environment variables
               </p>
@@ -278,12 +284,12 @@ export default function InteractiveMap({
           </div>
         ) : (
           <>
-            <div 
-              ref={mapRef} 
-              style={{ 
+            <div
+              ref={mapRef}
+              style={{
                 height: showSearch && !readonly ? 'calc(100% - 120px)' : '100%',
                 minHeight: '300px',
-                width: '100%'
+                width: '100%',
               }}
             />
             {!readonly && (

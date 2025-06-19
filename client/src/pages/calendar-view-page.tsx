@@ -1,13 +1,25 @@
-import { useState } from "react";
-import { Calendar, ChevronLeft, ChevronRight, Filter, Plus } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useState } from 'react';
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  Plus,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useAuth } from '@/hooks/use-auth';
+import { useQuery } from '@tanstack/react-query';
 
-import { getQueryFn } from "@/lib/queryClient";
+import { getQueryFn } from '@/lib/queryClient';
 
 type ViewType = 'daily' | 'weekly' | 'monthly';
 
@@ -18,17 +30,17 @@ export default function CalendarViewPage() {
   const [selectedUnit, setSelectedUnit] = useState('all');
 
   const { data: shifts = [] } = useQuery({
-    queryKey: ["/api/shifts"],
-    queryFn: getQueryFn({ on401: "throw" }),
+    queryKey: ['/api/shifts'],
+    queryFn: getQueryFn({ on401: 'throw' }),
     enabled: !!user,
   });
 
   const units = ['all', 'ICU', 'Med-Surg', 'Memory Care', 'Rehabilitation'];
   const specialtyColors = {
-    'RN': 'bg-blue-100 text-blue-800 border-blue-200',
-    'LPN': 'bg-green-100 text-green-800 border-green-200',
-    'CNA': 'bg-purple-100 text-purple-800 border-purple-200',
-    'PT': 'bg-orange-100 text-orange-800 border-orange-200'
+    RN: 'bg-blue-100 text-blue-800 border-blue-200',
+    LPN: 'bg-green-100 text-green-800 border-green-200',
+    CNA: 'bg-purple-100 text-purple-800 border-purple-200',
+    PT: 'bg-orange-100 text-orange-800 border-orange-200',
   };
 
   const getSpecialtyFromRequirements = (requirements: string[] = []) => {
@@ -39,17 +51,23 @@ export default function CalendarViewPage() {
     return 'RN'; // default
   };
 
-  const getStatusColor = (status: string, assignedCount: number, requiredCount: number) => {
+  const getStatusColor = (
+    status: string,
+    assignedCount: number,
+    requiredCount: number,
+  ) => {
     if (status === 'open') return 'bg-red-100 text-red-800 border-red-200';
-    if (status === 'filled' && assignedCount >= requiredCount) return 'bg-green-100 text-green-800 border-green-200';
-    if (assignedCount < requiredCount) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    if (status === 'filled' && assignedCount >= requiredCount)
+      return 'bg-green-100 text-green-800 border-green-200';
+    if (assignedCount < requiredCount)
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     return 'bg-gray-100 text-gray-800 border-gray-200';
   };
 
   const getDateRange = () => {
     const start = new Date(currentDate);
     const end = new Date(currentDate);
-    
+
     switch (viewType) {
       case 'daily':
         return { start, end };
@@ -84,32 +102,38 @@ export default function CalendarViewPage() {
     const { start, end } = getDateRange();
     switch (viewType) {
       case 'daily':
-        return currentDate.toLocaleDateString('en-US', { 
-          weekday: 'long', 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric' 
+        return currentDate.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
         });
       case 'weekly':
         return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
       case 'monthly':
-        return currentDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        return currentDate.toLocaleDateString('en-US', {
+          month: 'long',
+          year: 'numeric',
+        });
     }
   };
 
   const renderCalendarContent = () => {
     const { start, end } = getDateRange();
-    
+
     if (viewType === 'weekly') {
       return (
         <div className="grid grid-cols-7 gap-1">
           {/* Days header */}
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="p-3 text-center font-medium text-gray-600 border-b">
+            <div
+              key={day}
+              className="p-3 text-center font-medium text-gray-600 border-b"
+            >
               {day}
             </div>
           ))}
-          
+
           {/* Week days */}
           {Array.from({ length: 7 }, (_, i) => {
             const dayDate = new Date(start);
@@ -118,7 +142,7 @@ export default function CalendarViewPage() {
               const shiftDate = new Date(shift.startTime);
               return shiftDate.toDateString() === dayDate.toDateString();
             });
-            
+
             return (
               <div key={i} className="min-h-[120px] p-2 border border-gray-200">
                 <div className="font-medium text-sm mb-2">
@@ -126,22 +150,41 @@ export default function CalendarViewPage() {
                 </div>
                 <div className="space-y-1">
                   {dayShifts.slice(0, 3).map((shift: any, idx: number) => {
-                    const specialty = getSpecialtyFromRequirements(shift.specialRequirements);
+                    const specialty = getSpecialtyFromRequirements(
+                      shift.specialRequirements,
+                    );
                     const assignedCount = shift.assignedStaffIds?.length || 0;
-                    const statusColor = getStatusColor(shift.status, assignedCount, shift.requiredStaff);
-                    const specialtyColor = specialtyColors[specialty as keyof typeof specialtyColors];
-                    
+                    const statusColor = getStatusColor(
+                      shift.status,
+                      assignedCount,
+                      shift.requiredStaff,
+                    );
+                    const specialtyColor =
+                      specialtyColors[
+                        specialty as keyof typeof specialtyColors
+                      ];
+
                     return (
-                      <div key={idx} className={`text-xs p-1 rounded border ${specialtyColor} truncate`}>
-                        <div className="font-medium">{specialty} - {shift.department}</div>
-                        <div className={`text-xs px-1 rounded ${statusColor} mt-1`}>
-                          {assignedCount}/{shift.requiredStaff} {shift.shiftType}
+                      <div
+                        key={idx}
+                        className={`text-xs p-1 rounded border ${specialtyColor} truncate`}
+                      >
+                        <div className="font-medium">
+                          {specialty} - {shift.department}
+                        </div>
+                        <div
+                          className={`text-xs px-1 rounded ${statusColor} mt-1`}
+                        >
+                          {assignedCount}/{shift.requiredStaff}{' '}
+                          {shift.shiftType}
                         </div>
                       </div>
                     );
                   })}
                   {dayShifts.length > 3 && (
-                    <div className="text-xs text-gray-500">+{dayShifts.length - 3} more</div>
+                    <div className="text-xs text-gray-500">
+                      +{dayShifts.length - 3} more
+                    </div>
                   )}
                 </div>
               </div>
@@ -172,9 +215,16 @@ export default function CalendarViewPage() {
                     return shiftStart.getHours() === hour;
                   })
                   .map((shift: any, idx: number) => (
-                    <div key={idx} className="mb-1 p-2 rounded bg-blue-100 text-blue-800 text-sm">
-                      <div className="font-medium">{shift.role} - {shift.unit}</div>
-                      <div className="text-xs">{shift.startTime} - {shift.endTime}</div>
+                    <div
+                      key={idx}
+                      className="mb-1 p-2 rounded bg-blue-100 text-blue-800 text-sm"
+                    >
+                      <div className="font-medium">
+                        {shift.role} - {shift.unit}
+                      </div>
+                      <div className="text-xs">
+                        {shift.startTime} - {shift.endTime}
+                      </div>
                     </div>
                   ))}
               </div>
@@ -185,11 +235,19 @@ export default function CalendarViewPage() {
     }
 
     if (viewType === 'monthly') {
-      const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
-      const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+      const firstDay = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1,
+      );
+      const lastDay = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0,
+      );
       const startCalendar = new Date(firstDay);
       startCalendar.setDate(startCalendar.getDate() - firstDay.getDay());
-      
+
       const calendarDays = [];
       for (let i = 0; i < 42; i++) {
         const day = new Date(startCalendar);
@@ -201,11 +259,14 @@ export default function CalendarViewPage() {
         <div className="grid grid-cols-7 gap-1">
           {/* Days header */}
           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-            <div key={day} className="p-3 text-center font-medium text-gray-600 border-b">
+            <div
+              key={day}
+              className="p-3 text-center font-medium text-gray-600 border-b"
+            >
               {day}
             </div>
           ))}
-          
+
           {/* Calendar days */}
           {calendarDays.map((day, i) => {
             const isCurrentMonth = day.getMonth() === currentDate.getMonth();
@@ -213,32 +274,52 @@ export default function CalendarViewPage() {
               const shiftDate = new Date(shift.startTime);
               return shiftDate.toDateString() === day.toDateString();
             });
-            
+
             return (
-              <div key={i} className={`min-h-[100px] p-2 border border-gray-200 ${
-                !isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
-              }`}>
-                <div className="font-medium text-sm mb-1">
-                  {day.getDate()}
-                </div>
+              <div
+                key={i}
+                className={`min-h-[100px] p-2 border border-gray-200 ${
+                  !isCurrentMonth ? 'bg-gray-50 text-gray-400' : ''
+                }`}
+              >
+                <div className="font-medium text-sm mb-1">{day.getDate()}</div>
                 <div className="space-y-1">
                   {dayShifts.slice(0, 2).map((shift: any, idx: number) => {
-                    const specialty = getSpecialtyFromRequirements(shift.specialRequirements);
+                    const specialty = getSpecialtyFromRequirements(
+                      shift.specialRequirements,
+                    );
                     const assignedCount = shift.assignedStaffIds?.length || 0;
-                    const statusColor = getStatusColor(shift.status, assignedCount, shift.requiredStaff);
-                    const specialtyColor = specialtyColors[specialty as keyof typeof specialtyColors];
-                    
+                    const statusColor = getStatusColor(
+                      shift.status,
+                      assignedCount,
+                      shift.requiredStaff,
+                    );
+                    const specialtyColor =
+                      specialtyColors[
+                        specialty as keyof typeof specialtyColors
+                      ];
+
                     return (
-                      <div key={idx} className={`text-xs p-1 rounded border ${specialtyColor} truncate`}>
-                        <div className="font-medium">{specialty} - {shift.department}</div>
-                        <div className={`text-xs px-1 rounded ${statusColor} mt-1`}>
-                          {assignedCount}/{shift.requiredStaff} {shift.shiftType}
+                      <div
+                        key={idx}
+                        className={`text-xs p-1 rounded border ${specialtyColor} truncate`}
+                      >
+                        <div className="font-medium">
+                          {specialty} - {shift.department}
+                        </div>
+                        <div
+                          className={`text-xs px-1 rounded ${statusColor} mt-1`}
+                        >
+                          {assignedCount}/{shift.requiredStaff}{' '}
+                          {shift.shiftType}
                         </div>
                       </div>
                     );
                   })}
                   {dayShifts.length > 2 && (
-                    <div className="text-xs text-gray-500">+{dayShifts.length - 2} more</div>
+                    <div className="text-xs text-gray-500">
+                      +{dayShifts.length - 2} more
+                    </div>
                   )}
                 </div>
               </div>
@@ -257,7 +338,7 @@ export default function CalendarViewPage() {
           <div className="flex items-center space-x-4">
             {/* View Type Selector */}
             <div className="flex border rounded-lg p-1">
-              {(['daily', 'weekly', 'monthly'] as ViewType[]).map((type) => (
+              {(['daily', 'weekly', 'monthly'] as ViewType[]).map(type => (
                 <Button
                   key={type}
                   variant={viewType === type ? 'default' : 'ghost'}
@@ -295,7 +376,9 @@ export default function CalendarViewPage() {
         {/* Specialty Color Legend */}
         <div className="mb-4 p-3 bg-gray-50 rounded-lg">
           <div className="flex items-center justify-between">
-            <div className="text-sm font-medium text-gray-700">Specialty Color Coding:</div>
+            <div className="text-sm font-medium text-gray-700">
+              Specialty Color Coding:
+            </div>
             <div className="flex gap-4 text-xs">
               <div className="flex items-center gap-1">
                 <div className="w-3 h-3 rounded bg-blue-100 border border-blue-200"></div>
@@ -326,11 +409,9 @@ export default function CalendarViewPage() {
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          
-          <h2 className="text-xl font-semibold">
-            {formatDateHeader()}
-          </h2>
-          
+
+          <h2 className="text-xl font-semibold">{formatDateHeader()}</h2>
+
           <Button
             variant="outline"
             size="sm"
@@ -342,9 +423,7 @@ export default function CalendarViewPage() {
 
         {/* Calendar Content */}
         <Card>
-          <CardContent className="p-0">
-            {renderCalendarContent()}
-          </CardContent>
+          <CardContent className="p-0">{renderCalendarContent()}</CardContent>
         </Card>
 
         {/* Legend */}

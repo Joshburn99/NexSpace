@@ -1,20 +1,26 @@
-import { useState } from "react";
-import { Link, useLocation } from "wouter";
-import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import nexspaceLogo from "@assets/ChatGPT Image Jun 17, 2025, 01_56_58 PM_1750200821645.png";
-import { 
-  Activity, 
-  Calendar, 
-  Users, 
-  BarChart3, 
-  MessageSquare, 
-  Settings, 
-  ClipboardList, 
+import { useState } from 'react';
+import { Link, useLocation } from 'wouter';
+import { useAuth } from '@/hooks/use-auth';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
+import nexspaceLogo from '@assets/ChatGPT Image Jun 17, 2025, 01_56_58 PM_1750200821645.png';
+import {
+  Activity,
+  Calendar,
+  Users,
+  BarChart3,
+  MessageSquare,
+  Settings,
+  ClipboardList,
   Clock,
   Building,
   DollarSign,
@@ -22,8 +28,8 @@ import {
   UserCheck,
   Bell,
   ChevronDown,
-  ChevronRight
-} from "lucide-react";
+  ChevronRight,
+} from 'lucide-react';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -47,118 +53,129 @@ interface NavigationGroup {
 }
 
 const buildings = [
-  { id: "1", name: "Willowbrook SNF", address: "1234 Healthcare Drive" },
-  { id: "2", name: "Maple Grove Memory Care", address: "5678 Memory Lane" },
-  { id: "3", name: "Sunrise Assisted Living", address: "9012 Sunrise Blvd" }
+  { id: '1', name: 'Willowbrook SNF', address: '1234 Healthcare Drive' },
+  { id: '2', name: 'Maple Grove Memory Care', address: '5678 Memory Lane' },
+  { id: '3', name: 'Sunrise Assisted Living', address: '9012 Sunrise Blvd' },
 ];
 
 export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
   const { user } = useAuth();
   const [location] = useLocation();
-  const [selectedBuilding, setSelectedBuilding] = useState("1");
+  const [selectedBuilding, setSelectedBuilding] = useState('1');
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   // Role switching mutation
   const switchRoleMutation = useMutation({
     mutationFn: async (newRole: string) => {
-      const res = await apiRequest("POST", "/api/user/switch-role", { role: newRole });
+      const res = await apiRequest('POST', '/api/user/switch-role', {
+        role: newRole,
+      });
       return await res.json();
     },
-    onSuccess: (updatedUser) => {
-      queryClient.setQueryData(["/api/user"], updatedUser);
+    onSuccess: updatedUser => {
+      queryClient.setQueryData(['/api/user'], updatedUser);
       toast({
-        title: "Role switched successfully",
+        title: 'Role switched successfully',
         description: `Now viewing as ${updatedUser.role.replace('_', ' ')}`,
       });
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to switch role",
+        title: 'Failed to switch role',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
   });
 
-  const [expandedGroups, setExpandedGroups] = useState<{ [key: string]: boolean }>({
+  const [expandedGroups, setExpandedGroups] = useState<{
+    [key: string]: boolean;
+  }>({
     scheduling: true,
     workforce: true,
     hiring: true,
     insights: true,
-    billing: true
+    billing: true,
   });
 
   const navigationGroups: NavigationGroup[] = [
     {
-      items: [
-        { path: "/", icon: Activity, label: "Dashboard", exact: true }
-      ]
+      items: [{ path: '/', icon: Activity, label: 'Dashboard', exact: true }],
     },
     {
-      key: "scheduling",
-      label: "Scheduling",
+      key: 'scheduling',
+      label: 'Scheduling',
       icon: Calendar,
       items: [
-        { path: "/calendar-view", icon: Calendar, label: "Calendar View" },
-        { path: "/shifts-open", icon: ClipboardList, label: "Open Shifts" },
-        { path: "/shift-requests", icon: Clock, label: "Shift Requests" },
-        { path: "/scheduling", icon: Calendar, label: "Shift Templates" },
-        { path: "/time-clock", icon: Clock, label: "Time Clock" }
-      ]
+        { path: '/calendar-view', icon: Calendar, label: 'Calendar View' },
+        { path: '/shifts-open', icon: ClipboardList, label: 'Open Shifts' },
+        { path: '/shift-requests', icon: Clock, label: 'Shift Requests' },
+        { path: '/scheduling', icon: Calendar, label: 'Shift Templates' },
+        { path: '/time-clock', icon: Clock, label: 'Time Clock' },
+      ],
     },
     {
-      key: "workforce",
-      label: "Workforce",
+      key: 'workforce',
+      label: 'Workforce',
       icon: Users,
       items: [
-        { path: "/staff", icon: Users, label: "Staff" },
-        { path: "/attendance", icon: UserCheck, label: "Attendance" },
-        { path: "/time-clock", icon: Clock, label: "Time Clock" },
-        { path: "/credentials", icon: UserCheck, label: "Credentials" }
-      ]
+        { path: '/staff', icon: Users, label: 'Staff' },
+        { path: '/attendance', icon: UserCheck, label: 'Attendance' },
+        { path: '/time-clock', icon: Clock, label: 'Time Clock' },
+        { path: '/credentials', icon: UserCheck, label: 'Credentials' },
+      ],
     },
     {
-      key: "hiring",
-      label: "Hiring",
+      key: 'hiring',
+      label: 'Hiring',
       icon: Building,
       items: [
-        { path: "/job-board", icon: ClipboardList, label: "Job Board" },
-        { path: "/enhanced-job-board", icon: ClipboardList, label: "Enhanced Job Board" },
-        { path: "/enhanced-job-posting", icon: FileText, label: "Job Posting" },
-        { path: "/referral", icon: Users, label: "Referrals" }
-      ]
+        { path: '/job-board', icon: ClipboardList, label: 'Job Board' },
+        {
+          path: '/enhanced-job-board',
+          icon: ClipboardList,
+          label: 'Enhanced Job Board',
+        },
+        { path: '/enhanced-job-posting', icon: FileText, label: 'Job Posting' },
+        { path: '/referral', icon: Users, label: 'Referrals' },
+      ],
     },
     {
-      key: "insights",
-      label: "Insights",
+      key: 'insights',
+      label: 'Insights',
       icon: BarChart3,
       items: [
-        { path: "/analytics", icon: BarChart3, label: "Analytics" },
-        { path: "/overtime-report", icon: FileText, label: "Overtime Reports" }
-      ]
+        { path: '/analytics', icon: BarChart3, label: 'Analytics' },
+        { path: '/overtime-report', icon: FileText, label: 'Overtime Reports' },
+      ],
     },
     {
-      key: "billing",
-      label: "Billing",
+      key: 'billing',
+      label: 'Billing',
       icon: DollarSign,
       items: [
-        { path: "/payroll", icon: DollarSign, label: "Payroll" },
-        { path: "/invoices", icon: FileText, label: "Invoices" }
-      ]
+        { path: '/payroll', icon: DollarSign, label: 'Payroll' },
+        { path: '/invoices', icon: FileText, label: 'Invoices' },
+      ],
     },
     {
       items: [
-        { path: "/messaging", icon: MessageSquare, label: "Messages", badge: 3 },
-        { path: "/settings", icon: Settings, label: "Settings" }
-      ]
-    }
+        {
+          path: '/messaging',
+          icon: MessageSquare,
+          label: 'Messages',
+          badge: 3,
+        },
+        { path: '/settings', icon: Settings, label: 'Settings' },
+      ],
+    },
   ];
 
   const toggleGroup = (groupKey: string) => {
     setExpandedGroups(prev => ({
       ...prev,
-      [groupKey]: !prev[groupKey]
+      [groupKey]: !prev[groupKey],
     }));
   };
 
@@ -174,9 +191,9 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
       {/* Left Navigation Sidebar */}
       <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
         <div className="flex items-center p-6 border-b border-gray-200">
-          <img 
-            src={nexspaceLogo} 
-            alt="NexSpace Logo" 
+          <img
+            src={nexspaceLogo}
+            alt="NexSpace Logo"
             className="h-10 w-auto mr-3"
           />
           <div>
@@ -184,7 +201,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
             <p className="text-sm text-gray-500">Healthcare Staffing</p>
           </div>
         </div>
-        
+
         <nav className="flex-1 mt-6 px-3 overflow-y-auto">
           <div className="space-y-1">
             {navigationGroups.map((group, groupIndex) => (
@@ -208,10 +225,13 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                     </button>
                     {expandedGroups[group.key!] && (
                       <div className="ml-8 space-y-1 mt-1">
-                        {group.items.map((item) => {
+                        {group.items.map(item => {
                           const Icon = item.icon;
-                          const active = isActive(item.path, item.exact || false);
-                          
+                          const active = isActive(
+                            item.path,
+                            item.exact || false,
+                          );
+
                           return (
                             <Link key={item.path} href={item.path}>
                               <button
@@ -239,10 +259,10 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                   </div>
                 ) : (
                   // Direct items without grouping
-                  group.items.map((item) => {
+                  group.items.map(item => {
                     const Icon = item.icon;
                     const active = isActive(item.path, item.exact || false);
-                    
+
                     return (
                       <Link key={item.path} href={item.path}>
                         <button
@@ -270,19 +290,24 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
             ))}
           </div>
         </nav>
-        
+
         <div className="p-4 border-t border-gray-200 bg-white">
           <div className="flex items-center">
             <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
                 <span className="text-sm font-medium text-white">
-                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                  {user?.firstName?.[0]}
+                  {user?.lastName?.[0]}
                 </span>
               </div>
             </div>
             <div className="ml-3">
-              <p className="text-sm font-medium text-gray-700">{user?.firstName} {user?.lastName}</p>
-              <p className="text-xs text-gray-500">{user?.role?.replace('_', ' ')}</p>
+              <p className="text-sm font-medium text-gray-700">
+                {user?.firstName} {user?.lastName}
+              </p>
+              <p className="text-xs text-gray-500">
+                {user?.role?.replace('_', ' ')}
+              </p>
             </div>
           </div>
         </div>
@@ -295,41 +320,57 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div>
-                <h1 className="text-xl font-bold text-gray-900">{title || "Dashboard"}</h1>
+                <h1 className="text-xl font-bold text-gray-900">
+                  {title || 'Dashboard'}
+                </h1>
                 {subtitle && <p className="text-gray-600">{subtitle}</p>}
               </div>
-              
+
               {/* Building Filter */}
-              <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>
+              <Select
+                value={selectedBuilding}
+                onValueChange={setSelectedBuilding}
+              >
                 <SelectTrigger className="w-48">
                   <Building className="w-4 h-4 mr-2" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {buildings.map((building) => (
-                    <SelectItem key={building.id} value={building.id.toString()}>
+                  {buildings.map(building => (
+                    <SelectItem
+                      key={building.id}
+                      value={building.id.toString()}
+                    >
                       <div className="flex flex-col">
                         <span>{building.name}</span>
-                        <span className="text-xs text-gray-500">{building.address}</span>
+                        <span className="text-xs text-gray-500">
+                          {building.address}
+                        </span>
                       </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               {/* Role Switcher for Super Admin */}
               {user?.role === 'super_admin' && (
-                <Select value={user?.role} onValueChange={(newRole) => {
-                  switchRoleMutation.mutate(newRole);
-                }} disabled={switchRoleMutation.isPending}>
+                <Select
+                  value={user?.role}
+                  onValueChange={newRole => {
+                    switchRoleMutation.mutate(newRole);
+                  }}
+                  disabled={switchRoleMutation.isPending}
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Switch Role" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="super_admin">Super Admin</SelectItem>
-                    <SelectItem value="facility_admin">Facility Admin</SelectItem>
+                    <SelectItem value="facility_admin">
+                      Facility Admin
+                    </SelectItem>
                     <SelectItem value="nurse_manager">Nurse Manager</SelectItem>
                     <SelectItem value="rn">RN</SelectItem>
                     <SelectItem value="lpn">LPN</SelectItem>
@@ -338,18 +379,16 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                   </SelectContent>
                 </Select>
               )}
-              
+
               <Button variant="outline" size="sm">
                 <Bell className="w-4 h-4" />
               </Button>
             </div>
           </div>
         </div>
-        
+
         {/* Page Content */}
-        <div className="flex-1 overflow-auto">
-          {children}
-        </div>
+        <div className="flex-1 overflow-auto">{children}</div>
       </div>
     </div>
   );

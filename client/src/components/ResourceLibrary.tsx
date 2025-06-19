@@ -1,8 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { FileText, Download, Play, BookOpen, Video, File } from "lucide-react";
+import { useQuery } from '@tanstack/react-query';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { FileText, Download, Play, BookOpen, Video, File } from 'lucide-react';
 
 interface Resource {
   id: number;
@@ -17,7 +17,7 @@ interface Resource {
 
 export function ResourceLibrary() {
   const { data: resources, isLoading } = useQuery<Resource[]>({
-    queryKey: ['/api/resources']
+    queryKey: ['/api/resources'],
   });
 
   const getResourceIcon = (type: string) => {
@@ -83,22 +83,34 @@ export function ResourceLibrary() {
           {/* Recent Resources */}
           <div className="space-y-3">
             <h4 className="font-medium text-gray-900">Popular Resources</h4>
-            
-            {resources?.slice(0, 5).map((resource) => (
-              <div key={resource.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+
+            {resources?.slice(0, 5).map(resource => (
+              <div
+                key={resource.id}
+                className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <div className="flex items-center space-x-3">
                   {getResourceIcon(resource.type)}
                   <div className="flex-1">
-                    <h5 className="text-sm font-medium text-gray-900">{resource.title}</h5>
+                    <h5 className="text-sm font-medium text-gray-900">
+                      {resource.title}
+                    </h5>
                     <div className="flex items-center space-x-2 mt-1">
-                      <Badge className={getTypeColor(resource.type)} variant="secondary">
+                      <Badge
+                        className={getTypeColor(resource.type)}
+                        variant="secondary"
+                      >
                         {resource.type.toUpperCase()}
                       </Badge>
                       {resource.size && (
-                        <span className="text-xs text-gray-500">{resource.size}</span>
+                        <span className="text-xs text-gray-500">
+                          {resource.size}
+                        </span>
                       )}
                       {resource.duration && (
-                        <span className="text-xs text-gray-500">{resource.duration}</span>
+                        <span className="text-xs text-gray-500">
+                          {resource.duration}
+                        </span>
                       )}
                     </div>
                   </div>
@@ -120,9 +132,16 @@ export function ResourceLibrary() {
                   <div className="flex items-center space-x-3">
                     <FileText className="w-4 h-4 text-red-500" />
                     <div>
-                      <h5 className="text-sm font-medium text-gray-900">Employee Handbook</h5>
+                      <h5 className="text-sm font-medium text-gray-900">
+                        Employee Handbook
+                      </h5>
                       <div className="flex items-center space-x-2 mt-1">
-                        <Badge className="bg-red-100 text-red-800" variant="secondary">PDF</Badge>
+                        <Badge
+                          className="bg-red-100 text-red-800"
+                          variant="secondary"
+                        >
+                          PDF
+                        </Badge>
                         <span className="text-xs text-gray-500">2.4 MB</span>
                       </div>
                     </div>
@@ -136,9 +155,16 @@ export function ResourceLibrary() {
                   <div className="flex items-center space-x-3">
                     <Video className="w-4 h-4 text-blue-500" />
                     <div>
-                      <h5 className="text-sm font-medium text-gray-900">Safety Training Video</h5>
+                      <h5 className="text-sm font-medium text-gray-900">
+                        Safety Training Video
+                      </h5>
                       <div className="flex items-center space-x-2 mt-1">
-                        <Badge className="bg-blue-100 text-blue-800" variant="secondary">VIDEO</Badge>
+                        <Badge
+                          className="bg-blue-100 text-blue-800"
+                          variant="secondary"
+                        >
+                          VIDEO
+                        </Badge>
                         <span className="text-xs text-gray-500">15:30</span>
                       </div>
                     </div>
@@ -152,9 +178,16 @@ export function ResourceLibrary() {
                   <div className="flex items-center space-x-3">
                     <BookOpen className="w-4 h-4 text-purple-500" />
                     <div>
-                      <h5 className="text-sm font-medium text-gray-900">Frequently Asked Questions</h5>
+                      <h5 className="text-sm font-medium text-gray-900">
+                        Frequently Asked Questions
+                      </h5>
                       <div className="flex items-center space-x-2 mt-1">
-                        <Badge className="bg-purple-100 text-purple-800" variant="secondary">FAQ</Badge>
+                        <Badge
+                          className="bg-purple-100 text-purple-800"
+                          variant="secondary"
+                        >
+                          FAQ
+                        </Badge>
                       </div>
                     </div>
                   </div>

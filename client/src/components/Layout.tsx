@@ -1,5 +1,5 @@
-import { useState } from "react";
-import Sidebar from "./Sidebar";
+import { useState } from 'react';
+import Sidebar from './Sidebar';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,13 +10,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar 
-        expanded={sidebarExpanded} 
-        onToggle={() => setSidebarExpanded(!sidebarExpanded)} 
+      <Sidebar
+        expanded={sidebarExpanded}
+        onToggle={() => setSidebarExpanded(!sidebarExpanded)}
       />
-      <main className="flex-1 overflow-auto">
-        {children}
-      </main>
+      <main className="flex-1 overflow-auto">{children}</main>
     </div>
   );
 };

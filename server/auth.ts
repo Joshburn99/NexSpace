@@ -1,11 +1,11 @@
-import passport from "passport";
-import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
-import session from "express-session";
-import { scrypt, randomBytes, timingSafeEqual } from "crypto";
-import { promisify } from "util";
-import { storage } from "./storage";
-import { User as SelectUser } from "@shared/schema";
+import passport from 'passport';
+import { Strategy as LocalStrategy } from 'passport-local';
+import { Express } from 'express';
+import session from 'express-session';
+import { scrypt, randomBytes, timingSafeEqual } from 'crypto';
+import { promisify } from 'util';
+import { storage } from './storage';
+import { User as SelectUser } from '@shared/schema';
 
 declare global {
   namespace Express {
@@ -16,14 +16,14 @@ declare global {
 const scryptAsync = promisify(scrypt);
 
 async function hashPassword(password: string) {
-  const salt = randomBytes(16).toString("hex");
+  const salt = randomBytes(16).toString('hex');
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${buf.toString("hex")}.${salt}`;
+  return `${buf.toString('hex')}.${salt}`;
 }
 
 async function comparePasswords(supplied: string, stored: string) {
-  const [hashed, salt] = stored.split(".");
-  const hashedBuf = Buffer.from(hashed, "hex");
+  const [hashed, salt] = stored.split('.');
+  const hashedBuf = Buffer.from(hashed, 'hex');
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
@@ -36,7 +36,7 @@ export function setupAuth(app: Express) {
     store: storage.sessionStore,
   };
 
-  app.set("trust proxy", 1);
+  app.set('trust proxy', 1);
   app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
@@ -58,10 +58,10 @@ export function setupAuth(app: Express) {
     done(null, user);
   });
 
-  app.post("/api/register", async (req, res, next) => {
+  app.post('/api/register', async (req, res, next) => {
     const existingUser = await storage.getUserByUsername(req.body.username);
     if (existingUser) {
-      return res.status(400).send("Username already exists");
+      return res.status(400).send('Username already exists');
     }
 
     const user = await storage.createUser({
@@ -69,76 +69,91 @@ export function setupAuth(app: Express) {
       password: await hashPassword(req.body.password),
     });
 
-    req.login(user, (err) => {
+    req.login(user, err => {
       if (err) return next(err);
       res.status(201).json(user);
     });
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
+  app.post('/api/login', passport.authenticate('local'), (req, res) => {
     res.status(200).json(req.user);
   });
 
-  app.post("/api/forgot-password", async (req, res) => {
+  app.post('/api/forgot-password', async (req, res) => {
     const { username } = req.body;
-    
+
     if (!username) {
-      return res.status(400).json({ message: "Username is required" });
+      return res.status(400).json({ message: 'Username is required' });
     }
 
     try {
       const user = await storage.getUserByUsername(username);
       if (!user) {
         // Don't reveal if user exists or not for security
-        return res.status(200).json({ message: "If the username exists, a temporary password has been set" });
+        return res
+          .status(200)
+          .json({
+            message:
+              'If the username exists, a temporary password has been set',
+          });
       }
 
       // Generate a simple temporary password
       const tempPassword = Math.random().toString(36).slice(-8);
       const hashedTempPassword = await hashPassword(tempPassword);
-      
+
       await storage.updateUser(user.id, { password: hashedTempPassword });
-      
-      res.status(200).json({ 
-        message: "Temporary password set successfully",
-        tempPassword: tempPassword // In production, this would be sent via email
+
+      res.status(200).json({
+        message: 'Temporary password set successfully',
+        tempPassword: tempPassword, // In production, this would be sent via email
       });
     } catch (error) {
-      console.error("Password reset error:", error);
-      res.status(500).json({ message: "Failed to reset password" });
+      console.error('Password reset error:', error);
+      res.status(500).json({ message: 'Failed to reset password' });
     }
   });
 
-  app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
+  app.post('/api/logout', (req, res, next) => {
+    req.logout(err => {
       if (err) return next(err);
       res.sendStatus(200);
     });
   });
 
-  app.get("/api/user", (req, res) => {
+  app.get('/api/user', (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
     res.json(req.user);
   });
 
   // Role switching endpoint for super admin
-  app.post("/api/user/switch-role", async (req, res) => {
+  app.post('/api/user/switch-role', async (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    
+
     const { role } = req.body;
     const user = req.user;
-    
+
     // Only super admin can switch roles
     if (user?.role !== 'super_admin') {
-      return res.status(403).json({ message: "Only super admin can switch roles" });
+      return res
+        .status(403)
+        .json({ message: 'Only super admin can switch roles' });
     }
-    
+
     // Valid roles for switching
-    const validRoles = ['super_admin', 'facility_admin', 'nurse_manager', 'rn', 'lpn', 'cna', 'contractor'];
+    const validRoles = [
+      'super_admin',
+      'facility_admin',
+      'nurse_manager',
+      'rn',
+      'lpn',
+      'cna',
+      'contractor',
+    ];
     if (!validRoles.includes(role)) {
-      return res.status(400).json({ message: "Invalid role" });
+      return res.status(400).json({ message: 'Invalid role' });
     }
-    
+
     try {
       // Update user role temporarily
       const updatedUser = await storage.updateUser(user.id, { role });
@@ -147,11 +162,11 @@ export function setupAuth(app: Express) {
         req.user = updatedUser;
         res.json(updatedUser);
       } else {
-        res.status(500).json({ message: "Failed to switch role" });
+        res.status(500).json({ message: 'Failed to switch role' });
       }
     } catch (error) {
       console.error('Role switching error:', error);
-      res.status(500).json({ message: "Failed to switch role" });
+      res.status(500).json({ message: 'Failed to switch role' });
     }
   });
 }

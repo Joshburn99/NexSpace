@@ -1,13 +1,27 @@
 import { db } from './db';
-import { 
-  users, facilities, jobs, shifts, credentials, messages, invoices, workLogs,
-  payrollProviders, payrollConfigurations, payrollEmployees, timesheets, 
-  timesheetEntries, payments, auditLogs
+import {
+  users,
+  facilities,
+  jobs,
+  shifts,
+  credentials,
+  messages,
+  invoices,
+  workLogs,
+  payrollProviders,
+  payrollConfigurations,
+  payrollEmployees,
+  timesheets,
+  timesheetEntries,
+  payments,
+  auditLogs,
 } from '@shared/schema';
 import { UserRole } from '@shared/schema';
 
 export async function seedDatabase() {
-  console.log('Seeding database with comprehensive healthcare staffing data...');
+  console.log(
+    'Seeding database with comprehensive healthcare staffing data...',
+  );
 
   try {
     // Clear existing data
@@ -33,25 +47,28 @@ export async function seedDatabase() {
         address: '1234 Healthcare Drive, Meadowbrook, FL 33157',
         phone: '(305) 555-0100',
         email: 'admin@willowbrooksnf.com',
-        isActive: true
+        isActive: true,
       },
       {
         name: 'Maple Grove Memory Care',
         address: '5678 Memory Lane, Meadowbrook, FL 33158',
         phone: '(305) 555-0200',
         email: 'admin@maplegrove.com',
-        isActive: true
+        isActive: true,
       },
       {
         name: 'Sunrise Assisted Living',
         address: '9012 Sunrise Boulevard, Meadowbrook, FL 33159',
         phone: '(305) 555-0300',
         email: 'admin@sunriseassisted.com',
-        isActive: true
-      }
+        isActive: true,
+      },
     ];
 
-    const insertedFacilities = await db.insert(facilities).values(facilitiesData).returning();
+    const insertedFacilities = await db
+      .insert(facilities)
+      .values(facilitiesData)
+      .returning();
 
     // Create comprehensive healthcare staff
     const usersData = [
@@ -64,7 +81,7 @@ export async function seedDatabase() {
         lastName: 'Burn',
         role: UserRole.SUPER_ADMIN,
         facilityId: insertedFacilities[0].id,
-        isActive: true
+        isActive: true,
       },
       // Facility Managers
       {
@@ -75,7 +92,7 @@ export async function seedDatabase() {
         lastName: 'Martinez',
         role: UserRole.FACILITY_MANAGER,
         facilityId: insertedFacilities[0].id,
-        isActive: true
+        isActive: true,
       },
       {
         username: 'david.thompson',
@@ -85,7 +102,7 @@ export async function seedDatabase() {
         lastName: 'Thompson',
         role: UserRole.FACILITY_MANAGER,
         facilityId: insertedFacilities[1].id,
-        isActive: true
+        isActive: true,
       },
       // Registered Nurses (RN) - Staff Employees
       {
@@ -96,7 +113,7 @@ export async function seedDatabase() {
         lastName: 'Johnson',
         role: UserRole.INTERNAL_EMPLOYEE,
         facilityId: insertedFacilities[0].id,
-        isActive: true
+        isActive: true,
       },
       {
         username: 'michael.chen',
@@ -106,7 +123,7 @@ export async function seedDatabase() {
         lastName: 'Chen',
         role: UserRole.INTERNAL_EMPLOYEE,
         facilityId: insertedFacilities[0].id,
-        isActive: true
+        isActive: true,
       },
       {
         username: 'jessica.davis',
@@ -116,7 +133,7 @@ export async function seedDatabase() {
         lastName: 'Davis',
         role: UserRole.INTERNAL_EMPLOYEE,
         facilityId: insertedFacilities[0].id,
-        isActive: true
+        isActive: true,
       },
       // Licensed Practical Nurses (LPN) - Staff Employees
       {
@@ -127,7 +144,7 @@ export async function seedDatabase() {
         lastName: 'Wilson',
         role: UserRole.INTERNAL_EMPLOYEE,
         facilityId: insertedFacilities[0].id,
-        isActive: true
+        isActive: true,
       },
       {
         username: 'amanda.brown',
@@ -137,7 +154,7 @@ export async function seedDatabase() {
         lastName: 'Brown',
         role: UserRole.INTERNAL_EMPLOYEE,
         facilityId: insertedFacilities[0].id,
-        isActive: true
+        isActive: true,
       },
       // Certified Nursing Assistants (CNA) - Staff Employees
       {
@@ -148,7 +165,7 @@ export async function seedDatabase() {
         lastName: 'Rodriguez',
         role: UserRole.INTERNAL_EMPLOYEE,
         facilityId: insertedFacilities[0].id,
-        isActive: true
+        isActive: true,
       },
       {
         username: 'maria.garcia',
@@ -158,7 +175,7 @@ export async function seedDatabase() {
         lastName: 'Garcia',
         role: UserRole.INTERNAL_EMPLOYEE,
         facilityId: insertedFacilities[0].id,
-        isActive: true
+        isActive: true,
       },
       // Physical Therapists (PT) - Staff Employees
       {
@@ -169,7 +186,7 @@ export async function seedDatabase() {
         lastName: 'Taylor',
         role: UserRole.INTERNAL_EMPLOYEE,
         facilityId: insertedFacilities[0].id,
-        isActive: true
+        isActive: true,
       },
       // Contractors
       {
@@ -180,7 +197,7 @@ export async function seedDatabase() {
         lastName: 'Anderson',
         role: UserRole.CONTRACTOR_1099,
         facilityId: insertedFacilities[0].id,
-        isActive: true
+        isActive: true,
       },
       {
         username: 'kevin.murphy',
@@ -190,8 +207,8 @@ export async function seedDatabase() {
         lastName: 'Murphy',
         role: UserRole.CONTRACTOR_1099,
         facilityId: insertedFacilities[0].id,
-        isActive: true
-      }
+        isActive: true,
+      },
     ];
 
     const insertedUsers = await db.insert(users).values(usersData).returning();
@@ -201,55 +218,76 @@ export async function seedDatabase() {
       {
         facilityId: insertedFacilities[0].id,
         title: 'Registered Nurse - ICU Night Shift',
-        description: 'Full-time RN position in our Intensive Care Unit. Responsible for critical patient care during night shifts.',
+        description:
+          'Full-time RN position in our Intensive Care Unit. Responsible for critical patient care during night shifts.',
         jobType: 'full_time',
         position: 'RN',
         department: 'ICU',
         shiftType: 'Night',
-        hourlyRate: 42.50,
-        requirements: ['Current RN license', 'BLS certification', 'ACLS preferred', '2+ years ICU experience'],
+        hourlyRate: 42.5,
+        requirements: [
+          'Current RN license',
+          'BLS certification',
+          'ACLS preferred',
+          '2+ years ICU experience',
+        ],
         isActive: true,
-        postedById: insertedUsers[1].id
+        postedById: insertedUsers[1].id,
       },
       {
         facilityId: insertedFacilities[0].id,
         title: 'Licensed Practical Nurse - Med-Surg',
-        description: 'Day shift LPN position in Medical-Surgical unit. Experience with post-operative care preferred.',
+        description:
+          'Day shift LPN position in Medical-Surgical unit. Experience with post-operative care preferred.',
         jobType: 'part_time',
         position: 'LPN',
         department: 'Med-Surg',
         shiftType: 'Day',
         hourlyRate: 28.75,
-        requirements: ['Current LPN license', 'BLS certification', 'Med-Surg experience'],
+        requirements: [
+          'Current LPN license',
+          'BLS certification',
+          'Med-Surg experience',
+        ],
         isActive: true,
-        postedById: insertedUsers[1].id
+        postedById: insertedUsers[1].id,
       },
       {
         facilityId: insertedFacilities[1].id,
         title: 'CNA - Memory Care Specialist',
-        description: 'Certified Nursing Assistant specializing in dementia and Alzheimer\'s care.',
+        description:
+          "Certified Nursing Assistant specializing in dementia and Alzheimer's care.",
         jobType: 'full_time',
         position: 'CNA',
         department: 'Memory Care',
         shiftType: 'Day',
-        hourlyRate: 18.50,
-        requirements: ['CNA certification', 'Dementia care training', 'Compassionate patient care'],
+        hourlyRate: 18.5,
+        requirements: [
+          'CNA certification',
+          'Dementia care training',
+          'Compassionate patient care',
+        ],
         isActive: true,
-        postedById: insertedUsers[2].id
+        postedById: insertedUsers[2].id,
       },
       {
         facilityId: insertedFacilities[0].id,
         title: 'Physical Therapist - Rehabilitation',
-        description: 'Physical Therapist for our rehabilitation department. Work with post-surgical and stroke patients.',
+        description:
+          'Physical Therapist for our rehabilitation department. Work with post-surgical and stroke patients.',
         jobType: 'contract',
         position: 'PT',
         department: 'Rehabilitation',
         shiftType: 'Day',
-        hourlyRate: 55.00,
-        requirements: ['DPT or Master\'s in PT', 'State PT license', 'Geriatric experience preferred'],
+        hourlyRate: 55.0,
+        requirements: [
+          "DPT or Master's in PT",
+          'State PT license',
+          'Geriatric experience preferred',
+        ],
         isActive: true,
-        postedById: insertedUsers[1].id
-      }
+        postedById: insertedUsers[1].id,
+      },
     ];
 
     const insertedJobs = await db.insert(jobs).values(jobsData).returning();
@@ -257,7 +295,7 @@ export async function seedDatabase() {
     // Create comprehensive shift data with realistic scheduling scenarios
     const shiftsData = [
       // TODAY'S SHIFTS (June 18, 2025) - Mix of assigned and open positions
-      
+
       // ICU Day Shift - RN fully staffed
       {
         facilityId: insertedFacilities[0].id,
@@ -269,9 +307,9 @@ export async function seedDatabase() {
         status: 'filled',
         specialRequirements: ['RN', 'BLS', 'Critical Care'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: [insertedUsers[3].id, insertedUsers[4].id] // Sarah & Emily RNs
+        assignedStaffIds: [insertedUsers[3].id, insertedUsers[4].id], // Sarah & Emily RNs
       },
-      
+
       // ICU Night Shift - OPEN (needs coverage)
       {
         facilityId: insertedFacilities[0].id,
@@ -283,9 +321,9 @@ export async function seedDatabase() {
         status: 'open',
         specialRequirements: ['RN', 'BLS', 'Night Differential'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: []
+        assignedStaffIds: [],
       },
-      
+
       // Med-Surg Day - LPN partially staffed (needs 1 more)
       {
         facilityId: insertedFacilities[0].id,
@@ -297,9 +335,9 @@ export async function seedDatabase() {
         status: 'open',
         specialRequirements: ['LPN', 'Med Administration'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: [insertedUsers[6].id] // Robert LPN
+        assignedStaffIds: [insertedUsers[6].id], // Robert LPN
       },
-      
+
       // Med-Surg Evening - LPN fully staffed
       {
         facilityId: insertedFacilities[0].id,
@@ -311,9 +349,9 @@ export async function seedDatabase() {
         status: 'filled',
         specialRequirements: ['LPN', 'Med Administration'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: [insertedUsers[7].id, insertedUsers[12].id] // Amanda LPN + Kevin contractor
+        assignedStaffIds: [insertedUsers[7].id, insertedUsers[12].id], // Amanda LPN + Kevin contractor
       },
-      
+
       // Memory Care Day - CNA mix of staff and contractor
       {
         facilityId: insertedFacilities[0].id,
@@ -325,9 +363,13 @@ export async function seedDatabase() {
         status: 'filled',
         specialRequirements: ['CNA', 'Dementia Care', 'Patient Lifting'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: [insertedUsers[8].id, insertedUsers[9].id, insertedUsers[11].id] // Carlos, Maria + Lisa contractor
+        assignedStaffIds: [
+          insertedUsers[8].id,
+          insertedUsers[9].id,
+          insertedUsers[11].id,
+        ], // Carlos, Maria + Lisa contractor
       },
-      
+
       // Memory Care Evening - CNA (OPEN shift)
       {
         facilityId: insertedFacilities[0].id,
@@ -339,9 +381,9 @@ export async function seedDatabase() {
         status: 'open',
         specialRequirements: ['CNA', 'Dementia Care'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: []
+        assignedStaffIds: [],
       },
-      
+
       // Rehabilitation Day - PT assigned
       {
         facilityId: insertedFacilities[0].id,
@@ -353,11 +395,11 @@ export async function seedDatabase() {
         status: 'filled',
         specialRequirements: ['PT', 'State License', 'Geriatric Experience'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: [insertedUsers[10].id] // James PT
+        assignedStaffIds: [insertedUsers[10].id], // James PT
       },
-      
+
       // TOMORROW'S SHIFTS (June 19, 2025) - Planning ahead
-      
+
       // ICU Day - RN (requesting coverage)
       {
         facilityId: insertedFacilities[0].id,
@@ -369,9 +411,9 @@ export async function seedDatabase() {
         status: 'open',
         specialRequirements: ['RN', 'BLS', 'Critical Care'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: [insertedUsers[3].id] // Sarah requesting backup
+        assignedStaffIds: [insertedUsers[3].id], // Sarah requesting backup
       },
-      
+
       // Med-Surg Day - LPN open positions
       {
         facilityId: insertedFacilities[0].id,
@@ -383,11 +425,11 @@ export async function seedDatabase() {
         status: 'open',
         specialRequirements: ['LPN', 'Med Administration'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: []
+        assignedStaffIds: [],
       },
-      
+
       // PAST SHIFTS (June 16-17, 2025) - Historical data
-      
+
       // Yesterday - ICU fully covered
       {
         facilityId: insertedFacilities[0].id,
@@ -399,9 +441,9 @@ export async function seedDatabase() {
         status: 'filled',
         specialRequirements: ['RN', 'BLS'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: [insertedUsers[3].id, insertedUsers[4].id]
+        assignedStaffIds: [insertedUsers[3].id, insertedUsers[4].id],
       },
-      
+
       {
         facilityId: insertedFacilities[0].id,
         department: 'ICU',
@@ -412,9 +454,9 @@ export async function seedDatabase() {
         status: 'filled',
         specialRequirements: ['RN', 'BLS', 'Night Differential'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: [insertedUsers[11].id] // Lisa contractor covered
+        assignedStaffIds: [insertedUsers[11].id], // Lisa contractor covered
       },
-      
+
       // Day before yesterday - Mix of completed shifts
       {
         facilityId: insertedFacilities[0].id,
@@ -426,9 +468,9 @@ export async function seedDatabase() {
         status: 'filled',
         specialRequirements: ['LPN', 'Med Administration'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: [insertedUsers[6].id, insertedUsers[7].id]
+        assignedStaffIds: [insertedUsers[6].id, insertedUsers[7].id],
       },
-      
+
       {
         facilityId: insertedFacilities[0].id,
         department: 'Memory Care',
@@ -439,11 +481,15 @@ export async function seedDatabase() {
         status: 'filled',
         specialRequirements: ['CNA', 'Dementia Care'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: [insertedUsers[8].id, insertedUsers[9].id, insertedUsers[12].id]
+        assignedStaffIds: [
+          insertedUsers[8].id,
+          insertedUsers[9].id,
+          insertedUsers[12].id,
+        ],
       },
-      
+
       // NEXT WEEK SHIFTS (June 20-24, 2025) - Future planning
-      
+
       // Friday - PT coverage needed
       {
         facilityId: insertedFacilities[0].id,
@@ -455,9 +501,9 @@ export async function seedDatabase() {
         status: 'open',
         specialRequirements: ['PT', 'State License', 'Weekend Rate'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: []
+        assignedStaffIds: [],
       },
-      
+
       // Weekend shifts - Higher rates for weekend coverage
       {
         facilityId: insertedFacilities[0].id,
@@ -469,9 +515,9 @@ export async function seedDatabase() {
         status: 'open',
         specialRequirements: ['RN', 'BLS', 'Weekend Differential'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: []
+        assignedStaffIds: [],
       },
-      
+
       {
         facilityId: insertedFacilities[0].id,
         department: 'Memory Care',
@@ -482,11 +528,14 @@ export async function seedDatabase() {
         status: 'open',
         specialRequirements: ['CNA', 'Dementia Care', 'Weekend Rate'],
         createdById: insertedUsers[1].id,
-        assignedStaffIds: [insertedUsers[8].id, insertedUsers[9].id] // Need 2 more CNAs
-      }
+        assignedStaffIds: [insertedUsers[8].id, insertedUsers[9].id], // Need 2 more CNAs
+      },
     ];
 
-    const insertedShifts = await db.insert(shifts).values(shiftsData).returning();
+    const insertedShifts = await db
+      .insert(shifts)
+      .values(shiftsData)
+      .returning();
 
     // Create credentials
     const credentialsData = [
@@ -500,7 +549,7 @@ export async function seedDatabase() {
         expiryDate: new Date('2026-01-15'),
         status: 'verified',
         verifiedAt: new Date(),
-        verifiedById: insertedUsers[1].id
+        verifiedById: insertedUsers[1].id,
       },
       {
         userId: insertedUsers[3].id,
@@ -512,7 +561,7 @@ export async function seedDatabase() {
         expiryDate: new Date('2026-03-10'),
         status: 'verified',
         verifiedAt: new Date(),
-        verifiedById: insertedUsers[1].id
+        verifiedById: insertedUsers[1].id,
       },
       {
         userId: insertedUsers[4].id,
@@ -524,7 +573,7 @@ export async function seedDatabase() {
         expiryDate: new Date('2025-05-20'),
         status: 'pending',
         verifiedAt: null,
-        verifiedById: null
+        verifiedById: null,
       },
       {
         userId: insertedUsers[6].id,
@@ -536,11 +585,14 @@ export async function seedDatabase() {
         expiryDate: new Date('2025-08-12'),
         status: 'verified',
         verifiedAt: new Date(),
-        verifiedById: insertedUsers[1].id
-      }
+        verifiedById: insertedUsers[1].id,
+      },
     ];
 
-    const insertedCredentials = await db.insert(credentials).values(credentialsData).returning();
+    const insertedCredentials = await db
+      .insert(credentials)
+      .values(credentialsData)
+      .returning();
 
     // Create invoices
     const invoicesData = [
@@ -552,7 +604,7 @@ export async function seedDatabase() {
         workPeriodStart: new Date('2025-06-01'),
         workPeriodEnd: new Date('2025-06-07'),
         status: 'pending',
-        notes: 'Week 1 - ICU coverage'
+        notes: 'Week 1 - ICU coverage',
       },
       {
         facilityId: insertedFacilities[0].id,
@@ -564,11 +616,14 @@ export async function seedDatabase() {
         status: 'approved',
         approvedById: insertedUsers[1].id,
         approvedAt: new Date(),
-        notes: 'Week 2 - PT services'
-      }
+        notes: 'Week 2 - PT services',
+      },
     ];
 
-    const insertedInvoices = await db.insert(invoices).values(invoicesData).returning();
+    const insertedInvoices = await db
+      .insert(invoices)
+      .values(invoicesData)
+      .returning();
 
     // Create work logs
     const workLogsData = [
@@ -579,7 +634,7 @@ export async function seedDatabase() {
         workDate: new Date('2025-06-17'),
         status: 'approved',
         reviewedById: insertedUsers[1].id,
-        shiftId: insertedShifts[0].id
+        shiftId: insertedShifts[0].id,
       },
       {
         userId: insertedUsers[4].id,
@@ -588,7 +643,7 @@ export async function seedDatabase() {
         workDate: new Date('2025-06-17'),
         status: 'approved',
         reviewedById: insertedUsers[1].id,
-        shiftId: insertedShifts[0].id
+        shiftId: insertedShifts[0].id,
       },
       {
         userId: insertedUsers[11].id,
@@ -597,11 +652,14 @@ export async function seedDatabase() {
         workDate: new Date('2025-06-16'),
         status: 'pending',
         reviewedById: null,
-        shiftId: null
-      }
+        shiftId: null,
+      },
     ];
 
-    const insertedWorkLogs = await db.insert(workLogs).values(workLogsData).returning();
+    const insertedWorkLogs = await db
+      .insert(workLogs)
+      .values(workLogsData)
+      .returning();
 
     // Create payroll providers
     const payrollProvidersData = [
@@ -610,18 +668,21 @@ export async function seedDatabase() {
         apiEndpoint: 'https://api.adp.com/payroll/v1',
         authType: 'oauth',
         isActive: true,
-        supportedFeatures: ['timesheet_sync', 'direct_deposit', 'tax_calc']
+        supportedFeatures: ['timesheet_sync', 'direct_deposit', 'tax_calc'],
       },
       {
         name: 'QuickBooks Payroll',
         apiEndpoint: 'https://sandbox-quickbooks.api.intuit.com/v3',
         authType: 'oauth',
         isActive: false,
-        supportedFeatures: ['timesheet_sync', 'tax_calc']
-      }
+        supportedFeatures: ['timesheet_sync', 'tax_calc'],
+      },
     ];
 
-    const insertedProviders = await db.insert(payrollProviders).values(payrollProvidersData).returning();
+    const insertedProviders = await db
+      .insert(payrollProviders)
+      .values(payrollProvidersData)
+      .returning();
 
     // Create payroll configurations
     const payrollConfigsData = [
@@ -634,13 +695,16 @@ export async function seedDatabase() {
           federalTaxRate: 0.22,
           stateTaxRate: 0.06,
           socialSecurityRate: 0.062,
-          medicareRate: 0.0145
+          medicareRate: 0.0145,
         },
-        isActive: true
-      }
+        isActive: true,
+      },
     ];
 
-    const insertedConfigs = await db.insert(payrollConfigurations).values(payrollConfigsData).returning();
+    const insertedConfigs = await db
+      .insert(payrollConfigurations)
+      .values(payrollConfigsData)
+      .returning();
 
     // Skip payroll employees for now to avoid schema complexity
     // const payrollEmployeesData = [];
@@ -659,7 +723,7 @@ export async function seedDatabase() {
         grossPay: '3234.00',
         status: 'approved',
         approvedBy: insertedUsers[1].id,
-        approvedAt: new Date()
+        approvedAt: new Date(),
       },
       {
         userId: insertedUsers[4].id,
@@ -671,11 +735,14 @@ export async function seedDatabase() {
         overtimeHours: '0.0',
         grossPay: '3400.00',
         status: 'submitted',
-        submittedAt: new Date()
-      }
+        submittedAt: new Date(),
+      },
     ];
 
-    const insertedTimesheets = await db.insert(timesheets).values(timesheetsData).returning();
+    const insertedTimesheets = await db
+      .insert(timesheets)
+      .values(timesheetsData)
+      .returning();
 
     // Skip payments for now to avoid schema complexity
     // const paymentsData = [];
@@ -690,7 +757,8 @@ export async function seedDatabase() {
         resourceId: insertedShifts[0].id,
         newValues: { department: 'ICU', shiftType: 'Day' },
         ipAddress: '192.168.1.100',
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        userAgent:
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },
       {
         userId: insertedUsers[1].id,
@@ -700,16 +768,21 @@ export async function seedDatabase() {
         oldValues: { status: 'submitted' },
         newValues: { status: 'approved' },
         ipAddress: '192.168.1.100',
-        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
+        userAgent:
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
     ];
 
     await db.insert(auditLogs).values(auditLogsData);
 
-    console.log('✅ Database seeded successfully with comprehensive healthcare staffing data!');
+    console.log(
+      '✅ Database seeded successfully with comprehensive healthcare staffing data!',
+    );
     console.log(`📊 Created:`);
     console.log(`   - ${insertedFacilities.length} facilities`);
-    console.log(`   - ${insertedUsers.length} users (staff, contractors, managers)`);
+    console.log(
+      `   - ${insertedUsers.length} users (staff, contractors, managers)`,
+    );
     console.log(`   - ${insertedJobs.length} job postings`);
     console.log(`   - ${insertedShifts.length} shifts`);
     console.log(`   - ${insertedCredentials.length} professional credentials`);
@@ -721,7 +794,6 @@ export async function seedDatabase() {
     console.log(`   - ${insertedTimesheets.length} timesheets`);
     console.log(`   - 0 payments (skipped for now)`);
     console.log(`   - Complete audit trail and activity logs`);
-
   } catch (error) {
     console.error('❌ Error seeding database:', error);
     throw error;
