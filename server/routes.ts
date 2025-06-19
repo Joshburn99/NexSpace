@@ -830,12 +830,10 @@ export function registerRoutes(app: Express): Server {
           email: "admin@sunnybrook.com",
           isActive: true,
           bedCount: 150,
-          description: "Full-service medical center with emergency, surgical, and rehabilitation services",
           cmsId: "140001",
           overallRating: 4,
           staffingRating: 4,
-          qualityMeasureRating: 4,
-          emergencyContact: "(217) 555-0199"
+          qualityMeasureRating: 4
         },
         {
           name: "Golden Years Nursing Home",
@@ -848,7 +846,6 @@ export function registerRoutes(app: Express): Server {
           email: "contact@goldenyears.com",
           isActive: true,
           bedCount: 120,
-          description: "Skilled nursing facility specializing in long-term care and rehabilitation",
           cmsId: "140002",
           overallRating: 4,
           staffingRating: 4,
@@ -865,7 +862,6 @@ export function registerRoutes(app: Express): Server {
           email: "info@riverside-al.com",
           isActive: true,
           bedCount: 80,
-          description: "Luxury assisted living community with memory care services",
           overallRating: 5,
           staffingRating: 5,
           qualityMeasureRating: 5
@@ -881,7 +877,6 @@ export function registerRoutes(app: Express): Server {
           email: "administration@sggeneral.org",
           isActive: true,
           bedCount: 200,
-          description: "Major teaching hospital with trauma center and specialty services",
           cmsId: "140003",
           overallRating: 4,
           staffingRating: 4,
@@ -898,7 +893,6 @@ export function registerRoutes(app: Express): Server {
           email: "care@peacefulmeadows.org",
           isActive: true,
           bedCount: 24,
-          description: "Compassionate end-of-life care with family support services",
           overallRating: 5,
           staffingRating: 5,
           qualityMeasureRating: 5
