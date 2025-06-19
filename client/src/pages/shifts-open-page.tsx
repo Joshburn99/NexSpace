@@ -80,13 +80,18 @@ export default function OpenShiftsPage() {
   };
 
   const filteredShifts =
-    filter === "all" ? mockOpenShifts : mockOpenShifts.filter((shift) => shift.priority === filter);
+    filter === "all" ? openShifts : openShifts.filter((shift) => shift.urgency === filter);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav user={user!} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
+    <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Open Shifts</h1>
@@ -100,21 +105,21 @@ export default function OpenShiftsPage() {
                 onClick={() => setFilter("all")}
                 size="sm"
               >
-                All ({mockOpenShifts.length})
+                All ({openShifts.length})
               </Button>
               <Button
-                variant={filter === "urgent" ? "default" : "outline"}
-                onClick={() => setFilter("urgent")}
+                variant={filter === "critical" ? "default" : "outline"}
+                onClick={() => setFilter("critical")}
                 size="sm"
               >
-                Urgent ({mockOpenShifts.filter((s) => s.priority === "urgent").length})
+                Critical ({openShifts.filter((s) => s.urgency === "critical").length})
               </Button>
               <Button
                 variant={filter === "high" ? "default" : "outline"}
                 onClick={() => setFilter("high")}
                 size="sm"
               >
-                High Priority ({mockOpenShifts.filter((s) => s.priority === "high").length})
+                High Priority ({openShifts.filter((s) => s.urgency === "high").length})
               </Button>
             </div>
           </div>
@@ -125,13 +130,13 @@ export default function OpenShiftsPage() {
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div>
-                      <CardTitle className="text-lg">{shift.position}</CardTitle>
+                      <CardTitle className="text-lg">{shift.title}</CardTitle>
                       <CardDescription className="flex items-center gap-1 mt-1">
                         <MapPin className="w-3 h-3" />
-                        {shift.facility}
+                        {shift.facilityName}
                       </CardDescription>
                     </div>
-                    <Badge className={getPriorityColor(shift.priority)}>{shift.priority}</Badge>
+                    <Badge className={getPriorityColor(shift.urgency)}>{shift.urgency}</Badge>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -139,24 +144,18 @@ export default function OpenShiftsPage() {
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-gray-500" />
                       <div>
-                        <div className="font-medium">{shift.shiftType}</div>
+                        <div className="font-medium">{shift.specialty}</div>
                         <div className="text-gray-500">
-                          {new Date(shift.startTime).toLocaleDateString()}
+                          {shift.date} • {shift.startTime}-{shift.endTime}
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <DollarSign className="w-4 h-4 text-gray-500" />
                       <div>
-                        <div className="font-medium">${shift.hourlyRate}/hr</div>
+                        <div className="font-medium">${shift.rate}/hr</div>
                         <div className="text-gray-500">
-                          {(
-                            ((new Date(shift.endTime).getTime() -
-                              new Date(shift.startTime).getTime()) /
-                              (1000 * 60 * 60)) *
-                            shift.hourlyRate
-                          ).toFixed(0)}{" "}
-                          total
+                          {shift.premiumMultiplier > 1 && `${(shift.premiumMultiplier * 100).toFixed(0)}% premium`}
                         </div>
                       </div>
                     </div>
@@ -167,14 +166,14 @@ export default function OpenShiftsPage() {
                       <span className="font-medium">Department:</span> {shift.department}
                     </div>
                     <div className="text-sm">
-                      <span className="font-medium">Census:</span> {shift.census} residents
+                      <span className="font-medium">Required Staff:</span> {shift.requiredStaff}
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <div className="text-sm font-medium">Requirements:</div>
                     <div className="flex flex-wrap gap-1">
-                      {shift.requirements.map((req, index) => (
+                      {shift.specialRequirements.map((req, index) => (
                         <Badge key={index} variant="secondary" className="text-xs">
                           {req}
                         </Badge>
