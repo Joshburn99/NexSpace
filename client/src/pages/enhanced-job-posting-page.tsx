@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import { AppLayout } from "@/components/ui/app-layout";
+
 import { useToast } from "@/hooks/use-toast";
 
 const jobTypes = [

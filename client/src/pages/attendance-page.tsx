@@ -158,8 +158,7 @@ export default function AttendancePage() {
   const lateRate = (attendanceStats.lateArrivals / attendanceStats.totalShifts * 100).toFixed(1);
 
   return (
-    <AppLayout title="Attendance Tracking" subtitle="Monitor shift attendance, cancellations, and punctuality">
-      <div className="p-6">
+    <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div className="flex gap-2">
             <Button variant="outline">
@@ -401,6 +400,5 @@ export default function AttendancePage() {
             </CardContent>
           </Card>
         </div>
-    </AppLayout>
   );
 }

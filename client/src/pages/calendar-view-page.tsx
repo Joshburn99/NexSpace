@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import { AppLayout } from "@/components/ui/app-layout";
+
 import { getQueryFn } from "@/lib/queryClient";
 
 type ViewType = 'daily' | 'weekly' | 'monthly';

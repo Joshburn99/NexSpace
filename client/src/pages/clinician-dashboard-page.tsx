@@ -1,5 +1,5 @@
 import { useAuth } from "@/hooks/use-auth";
-import { AppLayout } from "@/components/ui/app-layout";
+
 import { TimeOffSection } from "@/components/TimeOffSection";
 import { WorkHistorySection } from "@/components/WorkHistorySection";
 import { ResourceLibrary } from "@/components/ResourceLibrary";
