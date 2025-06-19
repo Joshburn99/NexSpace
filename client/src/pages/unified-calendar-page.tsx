@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { format, parseISO, addDays, startOfWeek, isSameDay } from 'date-fns';
+import { format, parseISO, addDays, startOfWeek, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from 'date-fns';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,9 +11,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
-import { Calendar, Clock, DollarSign, MapPin, Users, Building, Plus, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar, Clock, DollarSign, MapPin, Users, Building, Plus, Filter, ChevronLeft, ChevronRight, ArrowLeft, CalendarDays } from 'lucide-react';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { Link } from 'wouter';
 
 interface Shift {
   id: number;
@@ -122,6 +125,7 @@ export default function UnifiedCalendarPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [showPostingDialog, setShowPostingDialog] = useState(false);
+  const [viewMode, setViewMode] = useState<'week' | 'month'>('week');
   const [selectedFilters, setSelectedFilters] = useState({
     facility: 'all',
     specialty: 'all',
