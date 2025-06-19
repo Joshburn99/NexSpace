@@ -173,7 +173,7 @@ export default function OvertimeReportPage() {
       totalOvertimeHours: totalStats.totalOvertimeHours,
       totalDoubleTimeHours: totalStats.totalDoubleTimeHours,
       totalCost: totalStats.totalCost,
-      affectedEmployees: totalStats.affectedEmployees,
+      affectedEmployees: filteredRecords.length,
       dateRange: dateRange,
       generatedOn: new Date().toLocaleDateString()
     };

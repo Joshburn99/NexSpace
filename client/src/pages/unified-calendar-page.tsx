@@ -282,26 +282,40 @@ export default function UnifiedCalendarPage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'open': return 'bg-green-100 text-green-800';
-      case 'assigned': return 'bg-blue-100 text-blue-800';
-      case 'requested': return 'bg-yellow-100 text-yellow-800';
-      case 'in_progress': return 'bg-purple-100 text-purple-800';
-      case 'completed': return 'bg-gray-100 text-gray-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'ncns': return 'bg-red-100 text-red-800';
-      case 'facility_cancelled': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'open': return 'bg-gradient-to-r from-emerald-100 to-emerald-200 text-emerald-800 border border-emerald-300 shadow-emerald-100';
+      case 'assigned': return 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 border border-blue-300 shadow-blue-100';
+      case 'requested': return 'bg-gradient-to-r from-amber-100 to-amber-200 text-amber-800 border border-amber-300 shadow-amber-100';
+      case 'in_progress': return 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800 border border-purple-300 shadow-purple-100';
+      case 'completed': return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border border-green-300 shadow-green-100';
+      case 'cancelled': return 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border border-red-300 shadow-red-100';
+      case 'ncns': return 'bg-gradient-to-r from-red-200 to-red-300 text-red-900 border border-red-400 shadow-red-200';
+      case 'facility_cancelled': return 'bg-gradient-to-r from-orange-100 to-orange-200 text-orange-800 border border-orange-300 shadow-orange-100';
+      default: return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border border-gray-300';
     }
   };
 
   const getUrgencyColor = (urgency?: string) => {
     switch (urgency) {
-      case 'critical': return 'border-red-500 bg-red-50';
-      case 'high': return 'border-orange-500 bg-orange-50';
-      case 'medium': return 'border-yellow-500 bg-yellow-50';
-      case 'low': return 'border-green-500 bg-green-50';
-      default: return 'border-gray-200 bg-white';
+      case 'critical': return 'border-red-500 bg-gradient-to-br from-red-50 to-red-100 shadow-lg shadow-red-200/50';
+      case 'high': return 'border-orange-500 bg-gradient-to-br from-orange-50 to-orange-100 shadow-lg shadow-orange-200/50';
+      case 'medium': return 'border-yellow-500 bg-gradient-to-br from-yellow-50 to-yellow-100 shadow-md shadow-yellow-200/50';
+      case 'low': return 'border-green-500 bg-gradient-to-br from-green-50 to-green-100 shadow-md shadow-green-200/50';
+      default: return 'border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 shadow-sm';
     }
+  };
+
+  const getSpecialtyBadgeColor = (specialty: string) => {
+    const colors: { [key: string]: string } = {
+      'Registered Nurse': 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-blue-300',
+      'Licensed Practical Nurse': 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-indigo-300',
+      'Certified Nursing Assistant': 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-purple-300',
+      'Physical Therapist': 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-green-300',
+      'Respiratory Therapist': 'bg-gradient-to-r from-teal-500 to-teal-600 text-white shadow-teal-300',
+      'Medical Doctor': 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-red-300',
+      'Nurse Practitioner': 'bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-pink-300',
+      'Physician Assistant': 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-orange-300'
+    };
+    return colors[specialty] || 'bg-gradient-to-r from-gray-500 to-gray-600 text-white shadow-gray-300';
   };
 
   return (
