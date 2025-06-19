@@ -1,10 +1,10 @@
-import { useState, useCallback } from 'react';
-import { useDropzone } from 'react-dropzone';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Upload, FileText, X, Loader2, AlertCircle } from 'lucide-react';
-import { useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import { useState, useCallback } from "react";
+import { useDropzone } from "react-dropzone";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Upload, FileText, X, Loader2, AlertCircle } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 interface ExtractedInvoiceData {
   vendorName: string;
@@ -28,11 +28,11 @@ export default function PDFDropzone({ onInvoiceExtracted }: PDFDropzoneProps) {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append('pdf', file);
-
-      const response = await fetch('/api/vendor-invoices/extract-pdf', {
-        method: 'POST',
+      
+      const response = await fetch("/api/vendor-invoices/extract-pdf", {
+        method: "POST",
         body: formData,
-        credentials: 'include',
+        credentials: "include"
       });
       return response.json();
     },
@@ -42,18 +42,14 @@ export default function PDFDropzone({ onInvoiceExtracted }: PDFDropzoneProps) {
       setUploadedFiles([]);
     },
     onError: (error: any) => {
-      setExtractionError(
-        error.message || 'Failed to extract invoice data from PDF',
-      );
-    },
+      setExtractionError(error.message || "Failed to extract invoice data from PDF");
+    }
   });
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const pdfFiles = acceptedFiles.filter(
-      file => file.type === 'application/pdf',
-    );
+    const pdfFiles = acceptedFiles.filter(file => file.type === 'application/pdf');
     if (pdfFiles.length === 0) {
-      setExtractionError('Please upload PDF files only');
+      setExtractionError("Please upload PDF files only");
       return;
     }
     setUploadedFiles(pdfFiles);
@@ -63,10 +59,10 @@ export default function PDFDropzone({ onInvoiceExtracted }: PDFDropzoneProps) {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'application/pdf': ['.pdf'],
+      'application/pdf': ['.pdf']
     },
     maxFiles: 1,
-    multiple: false,
+    multiple: false
   });
 
   const removeFile = (fileToRemove: File) => {
@@ -85,8 +81,8 @@ export default function PDFDropzone({ onInvoiceExtracted }: PDFDropzoneProps) {
             {...getRootProps()}
             className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
               isDragActive
-                ? 'border-primary bg-primary/5'
-                : 'border-muted-foreground/25 hover:border-primary/50'
+                ? "border-primary bg-primary/5"
+                : "border-muted-foreground/25 hover:border-primary/50"
             }`}
           >
             <input {...getInputProps()} />
@@ -114,10 +110,7 @@ export default function PDFDropzone({ onInvoiceExtracted }: PDFDropzoneProps) {
             <h3 className="font-medium mb-3">Uploaded Files</h3>
             <div className="space-y-2">
               {uploadedFiles.map((file, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-muted rounded-lg"
-                >
+                <div key={index} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-red-600" />
                     <div>
@@ -139,9 +132,7 @@ export default function PDFDropzone({ onInvoiceExtracted }: PDFDropzoneProps) {
                       ) : (
                         <FileText className="h-4 w-4" />
                       )}
-                      {extractInvoiceDataMutation.isPending
-                        ? 'Processing...'
-                        : 'Extract Data'}
+                      {extractInvoiceDataMutation.isPending ? "Processing..." : "Extract Data"}
                     </Button>
                     <Button
                       size="sm"
@@ -176,10 +167,7 @@ export default function PDFDropzone({ onInvoiceExtracted }: PDFDropzoneProps) {
         <ul className="list-disc list-inside space-y-1">
           <li>PDF files containing invoice information</li>
           <li>Maximum file size: 10MB</li>
-          <li>
-            AI will extract vendor name, invoice number, amount, dates, and
-            description
-          </li>
+          <li>AI will extract vendor name, invoice number, amount, dates, and description</li>
         </ul>
       </div>
     </div>

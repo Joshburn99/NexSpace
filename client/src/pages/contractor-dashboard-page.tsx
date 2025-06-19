@@ -1,10 +1,10 @@
-import { useAuth } from '@/hooks/use-auth';
-import ClinicianDashboardPage from './clinician-dashboard-page';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { FileText, DollarSign, Calendar, Download } from 'lucide-react';
-import { UserRole } from '@shared/schema';
+import { useAuth } from "@/hooks/use-auth";
+import ClinicianDashboardPage from "./clinician-dashboard-page";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { FileText, DollarSign, Calendar, Download } from "lucide-react";
+import { UserRole } from "@shared/schema";
 
 const GigHistoryCTA = () => (
   <Card>
@@ -54,27 +54,21 @@ const ContractorResources = () => (
             <Calendar className="w-4 h-4 text-blue-500" />
             <span className="text-sm font-medium">Tax Planning Guide</span>
           </div>
-          <Button variant="outline" size="sm">
-            View
-          </Button>
+          <Button variant="outline" size="sm">View</Button>
         </div>
         <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
           <div className="flex items-center space-x-2">
             <DollarSign className="w-4 h-4 text-green-500" />
             <span className="text-sm font-medium">Payment Schedule</span>
           </div>
-          <Button variant="outline" size="sm">
-            View
-          </Button>
+          <Button variant="outline" size="sm">View</Button>
         </div>
         <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
           <div className="flex items-center space-x-2">
             <FileText className="w-4 h-4 text-purple-500" />
             <span className="text-sm font-medium">Contractor Agreement</span>
           </div>
-          <Button variant="outline" size="sm">
-            View
-          </Button>
+          <Button variant="outline" size="sm">View</Button>
         </div>
       </div>
     </CardContent>
@@ -96,9 +90,9 @@ export default function ContractorDashboardPage() {
   );
 
   return (
-    <ClinicianDashboardPage
-      hideTimeOff={true}
-      additionalContent={additionalContent}
+    <ClinicianDashboardPage 
+      hideTimeOff={true} 
+      additionalContent={additionalContent} 
     />
   );
 }

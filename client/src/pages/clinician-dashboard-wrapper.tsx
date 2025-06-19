@@ -1,4 +1,4 @@
-import ClinicianDashboardPage from './clinician-dashboard-page';
+import ClinicianDashboardPage from "./clinician-dashboard-page";
 
 export default function ClinicianDashboardWrapper() {
   return <ClinicianDashboardPage />;

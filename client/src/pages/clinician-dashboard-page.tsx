@@ -1,20 +1,20 @@
-import { useAuth } from '@/hooks/use-auth';
+import { useAuth } from "@/hooks/use-auth";
 
-import { TimeOffSection } from '@/components/TimeOffSection';
-import { WorkHistorySection } from '@/components/WorkHistorySection';
-import { ResourceLibrary } from '@/components/ResourceLibrary';
-import { ShiftList } from '@/components/ShiftList';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, Clock, FileText, Users } from 'lucide-react';
+import { TimeOffSection } from "@/components/TimeOffSection";
+import { WorkHistorySection } from "@/components/WorkHistorySection";
+import { ResourceLibrary } from "@/components/ResourceLibrary";
+import { ShiftList } from "@/components/ShiftList";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Calendar, Clock, FileText, Users } from "lucide-react";
 
 interface ClinicianDashboardPageProps {
   hideTimeOff?: boolean;
   additionalContent?: React.ReactNode;
 }
 
-export default function ClinicianDashboardPage({
-  hideTimeOff = false,
-  additionalContent,
+export default function ClinicianDashboardPage({ 
+  hideTimeOff = false, 
+  additionalContent 
 }: ClinicianDashboardPageProps = {}) {
   const { user } = useAuth();
 
@@ -30,15 +30,13 @@ export default function ClinicianDashboardPage({
               <div className="flex items-center space-x-2">
                 <Clock className="w-4 h-4 text-blue-500" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Next Shift
-                  </p>
+                  <p className="text-sm font-medium text-gray-600">Next Shift</p>
                   <p className="text-lg font-semibold">Tomorrow 8:00 AM</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-
+          
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
@@ -50,21 +48,19 @@ export default function ClinicianDashboardPage({
               </div>
             </CardContent>
           </Card>
-
+          
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">
                 <Users className="w-4 h-4 text-purple-500" />
                 <div>
-                  <p className="text-sm font-medium text-gray-600">
-                    Open Shifts
-                  </p>
+                  <p className="text-sm font-medium text-gray-600">Open Shifts</p>
                   <p className="text-lg font-semibold">12 available</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-
+          
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center space-x-2">

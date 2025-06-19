@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
+import { useEffect, useRef, useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
 
 export interface WebSocketMessage {
   type: string;
@@ -39,62 +39,60 @@ class WebSocketManager {
 
   private connect() {
     try {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const wsUrl = `${protocol}//${window.location.host}/ws`;
-
+      
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
-        console.log('WebSocket connected');
+        console.log("WebSocket connected");
         this.isConnected = true;
         this.reconnectAttempts = 0;
-        this.notifyListeners('connection', { status: 'connected' });
+        this.notifyListeners("connection", { status: "connected" });
       };
 
-      this.ws.onmessage = event => {
+      this.ws.onmessage = (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
           this.handleMessage(message);
         } catch (error) {
-          console.error('Failed to parse WebSocket message:', error);
+          console.error("Failed to parse WebSocket message:", error);
         }
       };
 
       this.ws.onclose = () => {
-        console.log('WebSocket disconnected');
+        console.log("WebSocket disconnected");
         this.isConnected = false;
-        this.notifyListeners('connection', { status: 'disconnected' });
+        this.notifyListeners("connection", { status: "disconnected" });
         this.handleReconnect();
       };
 
-      this.ws.onerror = error => {
-        console.error('WebSocket error:', error);
-        this.notifyListeners('error', { error });
+      this.ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        this.notifyListeners("error", { error });
       };
     } catch (error) {
-      console.error('Failed to connect to WebSocket:', error);
+      console.error("Failed to connect to WebSocket:", error);
       this.handleReconnect();
     }
   }
 
   private handleMessage(message: WebSocketMessage) {
-    console.log('Received WebSocket message:', message);
+    console.log("Received WebSocket message:", message);
     this.notifyListeners(message.type, message.data);
   }
 
   private handleReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(
-        `Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`,
-      );
-
+      console.log(`Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+      
       setTimeout(() => {
         this.connect();
       }, this.reconnectDelay * this.reconnectAttempts);
     } else {
-      console.error('Max reconnection attempts reached');
-      this.notifyListeners('connection', { status: 'failed' });
+      console.error("Max reconnection attempts reached");
+      this.notifyListeners("connection", { status: "failed" });
     }
   }
 
@@ -109,7 +107,7 @@ class WebSocketManager {
     if (!this.listeners.has(type)) {
       this.listeners.set(type, new Set());
     }
-
+    
     this.listeners.get(type)!.add(callback);
 
     // Return unsubscribe function
@@ -128,32 +126,27 @@ class WebSocketManager {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
     } else {
-      console.warn('WebSocket is not connected. Message not sent:', message);
+      console.warn("WebSocket is not connected. Message not sent:", message);
     }
   }
 
-  public sendChatMessage(
-    recipientId: number,
-    content: string,
-    conversationId?: string,
-    shiftId?: number,
-  ) {
+  public sendChatMessage(recipientId: number, content: string, conversationId?: string, shiftId?: number) {
     this.send({
-      type: 'chat',
+      type: "chat",
       data: {
         recipientId,
         content,
         conversationId,
         shiftId,
-        messageType: 'text',
-      },
+        messageType: "text"
+      }
     });
   }
 
   public sendShiftUpdate(shift: ShiftUpdate) {
     this.send({
-      type: 'shift_update',
-      data: { shift },
+      type: "shift_update",
+      data: { shift }
     });
   }
 
@@ -179,26 +172,19 @@ const wsManager = new WebSocketManager();
  */
 export function useWebSocket() {
   const { user } = useAuth();
-  const [connectionStatus, setConnectionStatus] = useState<
-    'connecting' | 'connected' | 'disconnected' | 'failed'
-  >('connecting');
+  const [connectionStatus, setConnectionStatus] = useState<"connecting" | "connected" | "disconnected" | "failed">("connecting");
 
   useEffect(() => {
-    const unsubscribe = wsManager.subscribe('connection', ({ status }) => {
+    const unsubscribe = wsManager.subscribe("connection", ({ status }) => {
       setConnectionStatus(status);
     });
 
     return unsubscribe;
   }, []);
 
-  const sendMessage = (
-    recipientId: number,
-    content: string,
-    conversationId?: string,
-    shiftId?: number,
-  ) => {
+  const sendMessage = (recipientId: number, content: string, conversationId?: string, shiftId?: number) => {
     if (!user) {
-      console.warn('Cannot send message: user not authenticated');
+      console.warn("Cannot send message: user not authenticated");
       return;
     }
     wsManager.sendChatMessage(recipientId, content, conversationId, shiftId);
@@ -214,7 +200,7 @@ export function useWebSocket() {
 
   return {
     connectionStatus,
-    isConnected: connectionStatus === 'connected',
+    isConnected: connectionStatus === "connected",
     sendMessage,
     sendShiftUpdate,
     subscribe,
@@ -228,7 +214,7 @@ export function useChatMessages(conversationId?: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   useEffect(() => {
-    const unsubscribe = wsManager.subscribe('chat', (message: ChatMessage) => {
+    const unsubscribe = wsManager.subscribe("chat", (message: ChatMessage) => {
       // Filter messages by conversation if specified
       if (!conversationId || message.conversationId === conversationId) {
         setMessages(prev => [...prev, message]);
@@ -248,12 +234,9 @@ export function useShiftUpdates() {
   const [shiftUpdates, setShiftUpdates] = useState<ShiftUpdate[]>([]);
 
   useEffect(() => {
-    const unsubscribe = wsManager.subscribe(
-      'shift_update',
-      (update: { shift: ShiftUpdate }) => {
-        setShiftUpdates(prev => [...prev, update.shift]);
-      },
-    );
+    const unsubscribe = wsManager.subscribe("shift_update", (update: { shift: ShiftUpdate }) => {
+      setShiftUpdates(prev => [...prev, update.shift]);
+    });
 
     return unsubscribe;
   }, []);

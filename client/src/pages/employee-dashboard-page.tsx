@@ -1,10 +1,10 @@
-import { useAuth } from '@/hooks/use-auth';
-import ClinicianDashboardPage from './clinician-dashboard-page';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Calendar, Clock, Gift, Heart } from 'lucide-react';
-import { UserRole } from '@shared/schema';
+import { useAuth } from "@/hooks/use-auth";
+import ClinicianDashboardPage from "./clinician-dashboard-page";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Clock, Gift, Heart } from "lucide-react";
+import { UserRole } from "@shared/schema";
 
 const PTORequestButton = () => (
   <Card>
@@ -48,27 +48,21 @@ const EmployeeBenefits = () => (
             <Gift className="w-4 h-4 text-blue-500" />
             <span className="text-sm font-medium">Health Insurance</span>
           </div>
-          <Button variant="outline" size="sm">
-            View
-          </Button>
+          <Button variant="outline" size="sm">View</Button>
         </div>
         <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
           <div className="flex items-center space-x-2">
             <Clock className="w-4 h-4 text-green-500" />
             <span className="text-sm font-medium">401(k) Plan</span>
           </div>
-          <Button variant="outline" size="sm">
-            View
-          </Button>
+          <Button variant="outline" size="sm">View</Button>
         </div>
         <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
           <div className="flex items-center space-x-2">
             <Heart className="w-4 h-4 text-purple-500" />
             <span className="text-sm font-medium">Wellness Program</span>
           </div>
-          <Button variant="outline" size="sm">
-            View
-          </Button>
+          <Button variant="outline" size="sm">View</Button>
         </div>
       </div>
     </CardContent>
@@ -90,9 +84,9 @@ export default function EmployeeDashboardPage() {
   );
 
   return (
-    <ClinicianDashboardPage
-      hideTimeOff={false}
-      additionalContent={additionalContent}
+    <ClinicianDashboardPage 
+      hideTimeOff={false} 
+      additionalContent={additionalContent} 
     />
   );
 }

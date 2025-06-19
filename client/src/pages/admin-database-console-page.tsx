@@ -1,44 +1,27 @@
-import { useState } from 'react';
-import { useMutation } from '@tanstack/react-query';
-import { Link } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Database,
-  Play,
-  ArrowLeft,
-  Home,
-  AlertTriangle,
-  CheckCircle,
-  Info,
-} from 'lucide-react';
-import { apiRequest } from '@/lib/queryClient';
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Database, Play, ArrowLeft, Home, AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { apiRequest } from "@/lib/queryClient";
 
 export default function AdminDatabaseConsolePage() {
-  const [sqlQuery, setSqlQuery] = useState('');
+  const [sqlQuery, setSqlQuery] = useState("");
   const [queryResult, setQueryResult] = useState<any>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
 
   const executeQueryMutation = useMutation({
     mutationFn: async (query: string) => {
-      const response = await apiRequest('POST', '/api/admin/database/query', {
-        query,
-      });
+      const response = await apiRequest("POST", "/api/admin/database/query", { query });
       return response.json();
     },
-    onSuccess: data => {
+    onSuccess: (data) => {
       setQueryResult(data);
       setQueryError(null);
     },
@@ -55,39 +38,35 @@ export default function AdminDatabaseConsolePage() {
 
   const commonQueries = [
     {
-      name: 'View all tables',
-      query:
-        "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;",
+      name: "View all tables",
+      query: "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name;"
     },
     {
-      name: 'User count by role',
-      query:
-        'SELECT role, COUNT(*) as count FROM users GROUP BY role ORDER BY count DESC;',
+      name: "User count by role",
+      query: "SELECT role, COUNT(*) as count FROM users GROUP BY role ORDER BY count DESC;"
     },
     {
-      name: 'Active facilities',
-      query:
-        'SELECT name, city, state, facility_type FROM facilities WHERE is_active = true ORDER BY name;',
+      name: "Active facilities",
+      query: "SELECT name, city, state, facility_type FROM facilities WHERE is_active = true ORDER BY name;"
     },
     {
-      name: 'Recent audit logs',
-      query: 'SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 10;',
+      name: "Recent audit logs",
+      query: "SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT 10;"
     },
     {
-      name: 'Database size',
-      query:
-        'SELECT pg_size_pretty(pg_database_size(current_database())) as database_size;',
+      name: "Database size",
+      query: "SELECT pg_size_pretty(pg_database_size(current_database())) as database_size;"
     },
     {
-      name: 'Table sizes',
+      name: "Table sizes",
       query: `SELECT 
         schemaname,
         tablename,
         pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size
       FROM pg_tables 
       WHERE schemaname = 'public'
-      ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;`,
-    },
+      ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC;`
+    }
   ];
 
   const renderQueryResult = () => {
@@ -98,15 +77,13 @@ export default function AdminDatabaseConsolePage() {
         <div className="space-y-4">
           <div className="flex items-center gap-2 text-green-600">
             <CheckCircle className="h-4 w-4" />
-            <span>
-              Query executed successfully. {queryResult.rowCount} rows affected.
-            </span>
+            <span>Query executed successfully. {queryResult.rowCount} rows affected.</span>
           </div>
           {queryResult.rows && queryResult.rows.length > 0 && (
             <Table>
               <TableHeader>
                 <TableRow>
-                  {Object.keys(queryResult.rows[0]).map(column => (
+                  {Object.keys(queryResult.rows[0]).map((column) => (
                     <TableHead key={column}>{column}</TableHead>
                   ))}
                 </TableRow>
@@ -117,13 +94,9 @@ export default function AdminDatabaseConsolePage() {
                     {Object.values(row).map((value: any, cellIndex: number) => (
                       <TableCell key={cellIndex}>
                         {value === null ? (
-                          <span className="text-muted-foreground italic">
-                            NULL
-                          </span>
+                          <span className="text-muted-foreground italic">NULL</span>
                         ) : typeof value === 'object' ? (
-                          <code className="text-xs">
-                            {JSON.stringify(value)}
-                          </code>
+                          <code className="text-xs">{JSON.stringify(value)}</code>
                         ) : (
                           String(value)
                         )}
@@ -175,8 +148,7 @@ export default function AdminDatabaseConsolePage() {
           <span className="font-medium">Warning</span>
         </div>
         <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
-          This console allows direct database access. Use with caution as
-          changes are permanent and can affect system stability.
+          This console allows direct database access. Use with caution as changes are permanent and can affect system stability.
         </p>
       </div>
 
@@ -201,19 +173,17 @@ export default function AdminDatabaseConsolePage() {
                   id="sqlQuery"
                   placeholder="Enter your SQL query here..."
                   value={sqlQuery}
-                  onChange={e => setSqlQuery(e.target.value)}
+                  onChange={(e) => setSqlQuery(e.target.value)}
                   className="font-mono text-sm min-h-32"
                 />
               </div>
-              <Button
+              <Button 
                 onClick={handleExecuteQuery}
                 disabled={executeQueryMutation.isPending || !sqlQuery.trim()}
                 className="gap-2"
               >
                 <Play className="h-4 w-4" />
-                {executeQueryMutation.isPending
-                  ? 'Executing...'
-                  : 'Execute Query'}
+                {executeQueryMutation.isPending ? "Executing..." : "Execute Query"}
               </Button>
             </CardContent>
           </Card>
@@ -229,9 +199,7 @@ export default function AdminDatabaseConsolePage() {
                     <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
                     <div>
                       <div className="font-medium">Query Error</div>
-                      <pre className="text-sm mt-1 whitespace-pre-wrap">
-                        {queryError}
-                      </pre>
+                      <pre className="text-sm mt-1 whitespace-pre-wrap">{queryError}</pre>
                     </div>
                   </div>
                 ) : (
@@ -253,8 +221,8 @@ export default function AdminDatabaseConsolePage() {
                   <pre className="text-sm bg-muted p-3 rounded-lg overflow-x-auto">
                     {item.query}
                   </pre>
-                  <Button
-                    size="sm"
+                  <Button 
+                    size="sm" 
                     onClick={() => {
                       setSqlQuery(item.query);
                       executeQueryMutation.mutate(item.query);

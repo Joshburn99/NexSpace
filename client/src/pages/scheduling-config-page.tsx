@@ -1,82 +1,47 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { apiRequest } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
-import {
-  Settings,
-  Plus,
-  Edit,
-  Trash2,
-  Users,
-  Clock,
-  AlertTriangle,
-  CheckCircle,
-  XCircle,
-} from 'lucide-react';
-import { z } from 'zod';
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { Settings, Plus, Edit, Trash2, Users, Clock, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { z } from "zod";
 
 const templateSchema = z.object({
-  name: z.string().min(1, 'Template name is required'),
-  department: z.string().min(1, 'Department is required'),
-  specialty: z.string().min(1, 'Specialty is required'),
-  minStaff: z.number().min(1, 'Minimum staff must be at least 1'),
-  maxStaff: z.number().min(1, 'Maximum staff must be at least 1'),
-  shiftType: z.enum(['day', 'evening', 'night']),
+  name: z.string().min(1, "Template name is required"),
+  department: z.string().min(1, "Department is required"),
+  specialty: z.string().min(1, "Specialty is required"),
+  minStaff: z.number().min(1, "Minimum staff must be at least 1"),
+  maxStaff: z.number().min(1, "Maximum staff must be at least 1"),
+  shiftType: z.enum(["day", "evening", "night"]),
   startTime: z.string(),
   endTime: z.string(),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean().default(true)
 });
 
 const requirementSchema = z.object({
-  specialty: z.string().min(1, 'Specialty is required'),
-  department: z.string().min(1, 'Department is required'),
-  minRequired: z.number().min(1, 'Minimum required must be at least 1'),
-  maxCapacity: z.number().min(1, 'Maximum capacity must be at least 1'),
+  specialty: z.string().min(1, "Specialty is required"),
+  department: z.string().min(1, "Department is required"),
+  minRequired: z.number().min(1, "Minimum required must be at least 1"),
+  maxCapacity: z.number().min(1, "Maximum capacity must be at least 1"),
   requiresCertification: z.boolean().default(false),
   certificationTypes: z.array(z.string()).optional(),
-  priorityLevel: z.enum(['low', 'medium', 'high', 'critical']),
-  isActive: z.boolean().default(true),
+  priorityLevel: z.enum(["low", "medium", "high", "critical"]),
+  isActive: z.boolean().default(true)
 });
 
 export default function SchedulingConfigPage() {
-  const [activeTab, setActiveTab] = useState('templates');
+  const [activeTab, setActiveTab] = useState("templates");
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [isRequirementDialogOpen, setIsRequirementDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
@@ -87,179 +52,127 @@ export default function SchedulingConfigPage() {
 
   // Fetch templates and requirements
   const { data: templates = [] } = useQuery({
-    queryKey: ['/api/scheduling/templates'],
+    queryKey: ["/api/scheduling/templates"],
   });
 
   const { data: requirements = [] } = useQuery({
-    queryKey: ['/api/scheduling/requirements'],
+    queryKey: ["/api/scheduling/requirements"],
   });
 
   const templateForm = useForm({
     resolver: zodResolver(templateSchema),
     defaultValues: {
-      name: '',
-      department: '',
-      specialty: '',
+      name: "",
+      department: "",
+      specialty: "",
       minStaff: 1,
       maxStaff: 3,
-      shiftType: 'day',
-      startTime: '07:00',
-      endTime: '19:00',
-      isActive: true,
-    },
+      shiftType: "day",
+      startTime: "07:00",
+      endTime: "19:00",
+      isActive: true
+    }
   });
 
   const requirementForm = useForm({
     resolver: zodResolver(requirementSchema),
     defaultValues: {
-      specialty: '',
-      department: '',
+      specialty: "",
+      department: "",
       minRequired: 1,
       maxCapacity: 5,
       requiresCertification: false,
       certificationTypes: [],
-      priorityLevel: 'medium',
-      isActive: true,
-    },
+      priorityLevel: "medium",
+      isActive: true
+    }
   });
 
   const createTemplateMutation = useMutation({
     mutationFn: async (data: z.infer<typeof templateSchema>) => {
-      return apiRequest('/api/scheduling/templates', 'POST', data);
+      return apiRequest("/api/scheduling/templates", "POST", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['/api/scheduling/templates'],
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/scheduling/templates"] });
       setIsTemplateDialogOpen(false);
       templateForm.reset();
-      toast({ title: 'Template created successfully' });
-    },
+      toast({ title: "Template created successfully" });
+    }
   });
 
   const createRequirementMutation = useMutation({
     mutationFn: async (data: z.infer<typeof requirementSchema>) => {
-      return apiRequest('/api/scheduling/requirements', 'POST', data);
+      return apiRequest("/api/scheduling/requirements", "POST", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['/api/scheduling/requirements'],
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/scheduling/requirements"] });
       setIsRequirementDialogOpen(false);
       requirementForm.reset();
-      toast({ title: 'Requirement created successfully' });
-    },
+      toast({ title: "Requirement created successfully" });
+    }
   });
 
   const updateTemplateMutation = useMutation({
-    mutationFn: async ({
-      id,
-      data,
-    }: {
-      id: number;
-      data: z.infer<typeof templateSchema>;
-    }) => {
-      return apiRequest(`/api/scheduling/templates/${id}`, 'PUT', data);
+    mutationFn: async ({ id, data }: { id: number, data: z.infer<typeof templateSchema> }) => {
+      return apiRequest(`/api/scheduling/templates/${id}`, "PUT", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['/api/scheduling/templates'],
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/scheduling/templates"] });
       setIsTemplateDialogOpen(false);
       setEditingTemplate(null);
       templateForm.reset();
-      toast({ title: 'Template updated successfully' });
-    },
+      toast({ title: "Template updated successfully" });
+    }
   });
 
   const deleteTemplateMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/scheduling/templates/${id}`, 'DELETE');
+      return apiRequest(`/api/scheduling/templates/${id}`, "DELETE");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['/api/scheduling/templates'],
-      });
-      toast({ title: 'Template deleted successfully' });
-    },
+      queryClient.invalidateQueries({ queryKey: ["/api/scheduling/templates"] });
+      toast({ title: "Template deleted successfully" });
+    }
   });
 
   const updateRequirementMutation = useMutation({
-    mutationFn: async ({
-      id,
-      data,
-    }: {
-      id: number;
-      data: z.infer<typeof requirementSchema>;
-    }) => {
-      return apiRequest(`/api/scheduling/requirements/${id}`, 'PUT', data);
+    mutationFn: async ({ id, data }: { id: number, data: z.infer<typeof requirementSchema> }) => {
+      return apiRequest(`/api/scheduling/requirements/${id}`, "PUT", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['/api/scheduling/requirements'],
-      });
+      queryClient.invalidateQueries({ queryKey: ["/api/scheduling/requirements"] });
       setIsRequirementDialogOpen(false);
       setEditingRequirement(null);
       requirementForm.reset();
-      toast({ title: 'Requirement updated successfully' });
-    },
+      toast({ title: "Requirement updated successfully" });
+    }
   });
 
   const deleteRequirementMutation = useMutation({
     mutationFn: async (id: number) => {
-      return apiRequest(`/api/scheduling/requirements/${id}`, 'DELETE');
+      return apiRequest(`/api/scheduling/requirements/${id}`, "DELETE");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: ['/api/scheduling/requirements'],
-      });
-      toast({ title: 'Requirement deleted successfully' });
-    },
+      queryClient.invalidateQueries({ queryKey: ["/api/scheduling/requirements"] });
+      toast({ title: "Requirement deleted successfully" });
+    }
   });
 
   const departments = [
-    'ICU',
-    'Emergency',
-    'Medical-Surgical',
-    'Pediatrics',
-    'Operating Room',
-    'Recovery',
-    'Obstetrics',
-    'Oncology',
-    'Cardiology',
-    'Neurology',
-    'Orthopedics',
-    'Rehabilitation',
-    'Radiology',
-    'Laboratory',
+    "ICU", "Emergency", "Medical-Surgical", "Pediatrics", "Operating Room", 
+    "Recovery", "Obstetrics", "Oncology", "Cardiology", "Neurology",
+    "Orthopedics", "Rehabilitation", "Radiology", "Laboratory"
   ];
 
   const specialties = [
-    'Registered Nurse',
-    'Licensed Practical Nurse',
-    'Certified Nursing Assistant',
-    'Physical Therapist',
-    'Respiratory Therapist',
-    'Radiology Technologist',
-    'Laboratory Technologist',
-    'Surgical Technologist',
-    'Pharmacy Technician',
-    'Medical Assistant',
-    'Occupational Therapist',
-    'Speech Therapist',
+    "Registered Nurse", "Licensed Practical Nurse", "Certified Nursing Assistant",
+    "Physical Therapist", "Respiratory Therapist", "Radiology Technologist",
+    "Laboratory Technologist", "Surgical Technologist", "Pharmacy Technician",
+    "Medical Assistant", "Occupational Therapist", "Speech Therapist"
   ];
 
   const certificationTypes = [
-    'BLS',
-    'ACLS',
-    'PALS',
-    'TNCC',
-    'CEN',
-    'CCRN',
-    'OCN',
-    'CNOR',
-    'PACU',
-    'NREMT',
+    "BLS", "ACLS", "PALS", "TNCC", "CEN", "CCRN", "OCN", "CNOR", "PACU", "NREMT"
   ];
 
   const handleEditTemplate = (template: any) => {
@@ -321,10 +234,7 @@ export default function SchedulingConfigPage() {
                     Create reusable shift templates for consistent scheduling
                   </CardDescription>
                 </div>
-                <Dialog
-                  open={isTemplateDialogOpen}
-                  onOpenChange={setIsTemplateDialogOpen}
-                >
+                <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
@@ -333,19 +243,10 @@ export default function SchedulingConfigPage() {
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
-                      <DialogTitle>
-                        {editingTemplate
-                          ? 'Edit Shift Template'
-                          : 'Create Shift Template'}
-                      </DialogTitle>
+                      <DialogTitle>{editingTemplate ? "Edit Shift Template" : "Create Shift Template"}</DialogTitle>
                     </DialogHeader>
                     <Form {...templateForm}>
-                      <form
-                        onSubmit={templateForm.handleSubmit(
-                          handleTemplateSubmit,
-                        )}
-                        className="space-y-4"
-                      >
+                      <form onSubmit={templateForm.handleSubmit(handleTemplateSubmit)} className="space-y-4">
                         <FormField
                           control={templateForm.control}
                           name="name"
@@ -367,17 +268,14 @@ export default function SchedulingConfigPage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Department</FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                >
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select department" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {departments.map(dept => (
+                                    {departments.map((dept) => (
                                       <SelectItem key={dept} value={dept}>
                                         {dept}
                                       </SelectItem>
@@ -395,17 +293,14 @@ export default function SchedulingConfigPage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Specialty</FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                >
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select specialty" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {specialties.map(spec => (
+                                    {specialties.map((spec) => (
                                       <SelectItem key={spec} value={spec}>
                                         {spec}
                                       </SelectItem>
@@ -426,12 +321,10 @@ export default function SchedulingConfigPage() {
                               <FormItem>
                                 <FormLabel>Min Staff</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    type="number"
-                                    {...field}
-                                    onChange={e =>
-                                      field.onChange(parseInt(e.target.value))
-                                    }
+                                  <Input 
+                                    type="number" 
+                                    {...field} 
+                                    onChange={(e) => field.onChange(parseInt(e.target.value))}
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -446,12 +339,10 @@ export default function SchedulingConfigPage() {
                               <FormItem>
                                 <FormLabel>Max Staff</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    type="number"
-                                    {...field}
-                                    onChange={e =>
-                                      field.onChange(parseInt(e.target.value))
-                                    }
+                                  <Input 
+                                    type="number" 
+                                    {...field} 
+                                    onChange={(e) => field.onChange(parseInt(e.target.value))}
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -465,10 +356,7 @@ export default function SchedulingConfigPage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Shift Type</FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                >
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue />
@@ -476,9 +364,7 @@ export default function SchedulingConfigPage() {
                                   </FormControl>
                                   <SelectContent>
                                     <SelectItem value="day">Day</SelectItem>
-                                    <SelectItem value="evening">
-                                      Evening
-                                    </SelectItem>
+                                    <SelectItem value="evening">Evening</SelectItem>
                                     <SelectItem value="night">Night</SelectItem>
                                   </SelectContent>
                                 </Select>
@@ -519,9 +405,9 @@ export default function SchedulingConfigPage() {
                         </div>
 
                         <div className="flex justify-end gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
+                          <Button 
+                            type="button" 
+                            variant="outline" 
                             onClick={() => {
                               setIsTemplateDialogOpen(false);
                               setEditingTemplate(null);
@@ -530,19 +416,9 @@ export default function SchedulingConfigPage() {
                           >
                             Cancel
                           </Button>
-                          <Button
-                            type="submit"
-                            disabled={
-                              createTemplateMutation.isPending ||
-                              updateTemplateMutation.isPending
-                            }
-                          >
-                            {createTemplateMutation.isPending ||
-                            updateTemplateMutation.isPending
-                              ? 'Saving...'
-                              : editingTemplate
-                                ? 'Update Template'
-                                : 'Create Template'}
+                          <Button type="submit" disabled={createTemplateMutation.isPending || updateTemplateMutation.isPending}>
+                            {(createTemplateMutation.isPending || updateTemplateMutation.isPending) ? "Saving..." : 
+                             editingTemplate ? "Update Template" : "Create Template"}
                           </Button>
                         </div>
                       </form>
@@ -555,15 +431,11 @@ export default function SchedulingConfigPage() {
               <div className="grid gap-4">
                 {templates.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    No shift templates configured yet. Create your first
-                    template to get started.
+                    No shift templates configured yet. Create your first template to get started.
                   </div>
                 ) : (
                   templates.map((template: any) => (
-                    <Card
-                      key={template.id}
-                      className="border-l-4 border-l-blue-500"
-                    >
+                    <Card key={template.id} className="border-l-4 border-l-blue-500">
                       <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                           <div>
@@ -580,30 +452,24 @@ export default function SchedulingConfigPage() {
                                 <Clock className="h-3 w-3" />
                                 {template.startTime} - {template.endTime}
                               </span>
-                              <Badge
-                                variant={
-                                  template.isActive ? 'default' : 'secondary'
-                                }
-                              >
-                                {template.isActive ? 'Active' : 'Inactive'}
+                              <Badge variant={template.isActive ? "default" : "secondary"}>
+                                {template.isActive ? "Active" : "Inactive"}
                               </Badge>
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <Button
-                              variant="outline"
+                            <Button 
+                              variant="outline" 
                               size="sm"
                               onClick={() => handleEditTemplate(template)}
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
-                            <Button
-                              variant="outline"
+                            <Button 
+                              variant="outline" 
                               size="sm"
                               className="text-red-600 hover:text-red-700"
-                              onClick={() =>
-                                deleteTemplateMutation.mutate(template.id)
-                              }
+                              onClick={() => deleteTemplateMutation.mutate(template.id)}
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
@@ -625,14 +491,10 @@ export default function SchedulingConfigPage() {
                 <div>
                   <CardTitle>Staffing Requirements</CardTitle>
                   <CardDescription>
-                    Set minimum staffing requirements by specialty and
-                    department
+                    Set minimum staffing requirements by specialty and department
                   </CardDescription>
                 </div>
-                <Dialog
-                  open={isRequirementDialogOpen}
-                  onOpenChange={setIsRequirementDialogOpen}
-                >
+                <Dialog open={isRequirementDialogOpen} onOpenChange={setIsRequirementDialogOpen}>
                   <DialogTrigger asChild>
                     <Button>
                       <Plus className="h-4 w-4 mr-2" />
@@ -641,19 +503,10 @@ export default function SchedulingConfigPage() {
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
-                      <DialogTitle>
-                        {editingRequirement
-                          ? 'Edit Staffing Requirement'
-                          : 'Create Staffing Requirement'}
-                      </DialogTitle>
+                      <DialogTitle>{editingRequirement ? "Edit Staffing Requirement" : "Create Staffing Requirement"}</DialogTitle>
                     </DialogHeader>
                     <Form {...requirementForm}>
-                      <form
-                        onSubmit={requirementForm.handleSubmit(
-                          handleRequirementSubmit,
-                        )}
-                        className="space-y-4"
-                      >
+                      <form onSubmit={requirementForm.handleSubmit(handleRequirementSubmit)} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <FormField
                             control={requirementForm.control}
@@ -661,17 +514,14 @@ export default function SchedulingConfigPage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Department</FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                >
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select department" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {departments.map(dept => (
+                                    {departments.map((dept) => (
                                       <SelectItem key={dept} value={dept}>
                                         {dept}
                                       </SelectItem>
@@ -689,17 +539,14 @@ export default function SchedulingConfigPage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Specialty</FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                >
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue placeholder="Select specialty" />
                                     </SelectTrigger>
                                   </FormControl>
                                   <SelectContent>
-                                    {specialties.map(spec => (
+                                    {specialties.map((spec) => (
                                       <SelectItem key={spec} value={spec}>
                                         {spec}
                                       </SelectItem>
@@ -720,12 +567,10 @@ export default function SchedulingConfigPage() {
                               <FormItem>
                                 <FormLabel>Min Required</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    type="number"
-                                    {...field}
-                                    onChange={e =>
-                                      field.onChange(parseInt(e.target.value))
-                                    }
+                                  <Input 
+                                    type="number" 
+                                    {...field} 
+                                    onChange={(e) => field.onChange(parseInt(e.target.value))}
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -740,12 +585,10 @@ export default function SchedulingConfigPage() {
                               <FormItem>
                                 <FormLabel>Max Capacity</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    type="number"
-                                    {...field}
-                                    onChange={e =>
-                                      field.onChange(parseInt(e.target.value))
-                                    }
+                                  <Input 
+                                    type="number" 
+                                    {...field} 
+                                    onChange={(e) => field.onChange(parseInt(e.target.value))}
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -759,10 +602,7 @@ export default function SchedulingConfigPage() {
                             render={({ field }) => (
                               <FormItem>
                                 <FormLabel>Priority</FormLabel>
-                                <Select
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                >
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
                                   <FormControl>
                                     <SelectTrigger>
                                       <SelectValue />
@@ -770,13 +610,9 @@ export default function SchedulingConfigPage() {
                                   </FormControl>
                                   <SelectContent>
                                     <SelectItem value="low">Low</SelectItem>
-                                    <SelectItem value="medium">
-                                      Medium
-                                    </SelectItem>
+                                    <SelectItem value="medium">Medium</SelectItem>
                                     <SelectItem value="high">High</SelectItem>
-                                    <SelectItem value="critical">
-                                      Critical
-                                    </SelectItem>
+                                    <SelectItem value="critical">Critical</SelectItem>
                                   </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -809,9 +645,9 @@ export default function SchedulingConfigPage() {
                         />
 
                         <div className="flex justify-end gap-2">
-                          <Button
-                            type="button"
-                            variant="outline"
+                          <Button 
+                            type="button" 
+                            variant="outline" 
                             onClick={() => {
                               setIsRequirementDialogOpen(false);
                               setEditingRequirement(null);
@@ -820,19 +656,9 @@ export default function SchedulingConfigPage() {
                           >
                             Cancel
                           </Button>
-                          <Button
-                            type="submit"
-                            disabled={
-                              createRequirementMutation.isPending ||
-                              updateRequirementMutation.isPending
-                            }
-                          >
-                            {createRequirementMutation.isPending ||
-                            updateRequirementMutation.isPending
-                              ? 'Saving...'
-                              : editingRequirement
-                                ? 'Update Requirement'
-                                : 'Create Requirement'}
+                          <Button type="submit" disabled={createRequirementMutation.isPending || updateRequirementMutation.isPending}>
+                            {(createRequirementMutation.isPending || updateRequirementMutation.isPending) ? "Saving..." : 
+                             editingRequirement ? "Update Requirement" : "Create Requirement"}
                           </Button>
                         </div>
                       </form>
@@ -845,67 +671,47 @@ export default function SchedulingConfigPage() {
               <div className="grid gap-4">
                 {requirements.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    No staffing requirements configured yet. Create your first
-                    requirement to get started.
+                    No staffing requirements configured yet. Create your first requirement to get started.
                   </div>
                 ) : (
                   requirements.map((req: any) => (
-                    <Card
-                      key={req.id}
-                      className={`border-l-4 ${
-                        req.priorityLevel === 'critical'
-                          ? 'border-l-red-500'
-                          : req.priorityLevel === 'high'
-                            ? 'border-l-orange-500'
-                            : req.priorityLevel === 'medium'
-                              ? 'border-l-yellow-500'
-                              : 'border-l-green-500'
-                      }`}
-                    >
+                    <Card key={req.id} className={`border-l-4 ${
+                      req.priorityLevel === 'critical' ? 'border-l-red-500' :
+                      req.priorityLevel === 'high' ? 'border-l-orange-500' :
+                      req.priorityLevel === 'medium' ? 'border-l-yellow-500' :
+                      'border-l-green-500'
+                    }`}>
                       <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                           <div>
                             <h3 className="font-semibold">{req.department}</h3>
-                            <p className="text-sm text-muted-foreground">
-                              {req.specialty}
-                            </p>
+                            <p className="text-sm text-muted-foreground">{req.specialty}</p>
                             <div className="flex items-center gap-4 mt-2 text-sm">
                               <span className="flex items-center gap-1">
                                 <Users className="h-3 w-3" />
-                                {req.minRequired}-{req.maxCapacity} staff
-                                required
+                                {req.minRequired}-{req.maxCapacity} staff required
                               </span>
-                              <Badge
-                                variant={
-                                  req.priorityLevel === 'critical'
-                                    ? 'destructive'
-                                    : 'default'
-                                }
-                              >
+                              <Badge variant={req.priorityLevel === 'critical' ? 'destructive' : 'default'}>
                                 {req.priorityLevel}
                               </Badge>
                               {req.requiresCertification && (
-                                <Badge variant="outline">
-                                  Certification Required
-                                </Badge>
+                                <Badge variant="outline">Certification Required</Badge>
                               )}
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <Button
-                              variant="outline"
+                            <Button 
+                              variant="outline" 
                               size="sm"
                               onClick={() => handleEditRequirement(req)}
                             >
                               <Edit className="h-3 w-3" />
                             </Button>
-                            <Button
-                              variant="outline"
+                            <Button 
+                              variant="outline" 
                               size="sm"
                               className="text-red-600 hover:text-red-700"
-                              onClick={() =>
-                                deleteRequirementMutation.mutate(req.id)
-                              }
+                              onClick={() => deleteRequirementMutation.mutate(req.id)}
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>

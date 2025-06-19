@@ -1,18 +1,18 @@
-import { useAuth } from '@/hooks/use-auth';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import {
-  Plus,
-  CalendarPlus,
-  FileUp,
-  BarChart3,
-  Users,
+import { useAuth } from "@/hooks/use-auth";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { 
+  Plus, 
+  CalendarPlus, 
+  FileUp, 
+  BarChart3, 
+  Users, 
   Stethoscope,
   ClipboardCheck,
-  MessageSquare,
-} from 'lucide-react';
-import { UserRole } from '@shared/schema';
-import { Link } from 'wouter';
+  MessageSquare
+} from "lucide-react";
+import { UserRole } from "@shared/schema";
+import { Link } from "wouter";
 
 interface QuickAction {
   label: string;
@@ -30,83 +30,64 @@ export function QuickActions() {
 
   const actions: QuickAction[] = [
     {
-      label: 'Add Staff',
+      label: "Add Staff",
       icon: <Plus className="h-5 w-5" />,
-      color: 'bg-blue-50 hover:bg-blue-100 text-blue-600',
-      href: '/staff/new',
-      roles: [
-        UserRole.FACILITY_MANAGER,
-        UserRole.CLIENT_ADMINISTRATOR,
-        UserRole.SUPER_ADMIN,
-      ],
+      color: "bg-blue-50 hover:bg-blue-100 text-blue-600",
+      href: "/staff/new",
+      roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN]
     },
     {
-      label: 'Create Shift',
+      label: "Create Shift",
       icon: <CalendarPlus className="h-5 w-5" />,
-      color: 'bg-green-50 hover:bg-green-100 text-green-600',
-      href: '/shifts/new',
-      roles: [
-        UserRole.FACILITY_MANAGER,
-        UserRole.CLIENT_ADMINISTRATOR,
-        UserRole.SUPER_ADMIN,
-      ],
+      color: "bg-green-50 hover:bg-green-100 text-green-600",
+      href: "/shifts/new",
+      roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN]
     },
     {
-      label: 'Upload Docs',
+      label: "Upload Docs",
       icon: <FileUp className="h-5 w-5" />,
-      color: 'bg-purple-50 hover:bg-purple-100 text-purple-600',
-      href: '/credentials/upload',
+      color: "bg-purple-50 hover:bg-purple-100 text-purple-600",
+      href: "/credentials/upload"
     },
     {
-      label: 'View Reports',
+      label: "View Reports",
       icon: <BarChart3 className="h-5 w-5" />,
-      color: 'bg-amber-50 hover:bg-amber-100 text-amber-600',
-      href: '/analytics',
-      roles: [
-        UserRole.FACILITY_MANAGER,
-        UserRole.CLIENT_ADMINISTRATOR,
-        UserRole.SUPER_ADMIN,
-      ],
+      color: "bg-amber-50 hover:bg-amber-100 text-amber-600",
+      href: "/analytics",
+      roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN]
     },
     {
-      label: 'Time Clock',
+      label: "Time Clock",
       icon: <ClipboardCheck className="h-5 w-5" />,
-      color: 'bg-indigo-50 hover:bg-indigo-100 text-indigo-600',
-      href: '/time-clock',
-      roles: [UserRole.INTERNAL_EMPLOYEE, UserRole.CONTRACTOR_1099],
+      color: "bg-indigo-50 hover:bg-indigo-100 text-indigo-600",
+      href: "/time-clock",
+      roles: [UserRole.INTERNAL_EMPLOYEE, UserRole.CONTRACTOR_1099]
     },
     {
-      label: 'Messages',
+      label: "Messages",
       icon: <MessageSquare className="h-5 w-5" />,
-      color: 'bg-pink-50 hover:bg-pink-100 text-pink-600',
-      href: '/messages',
+      color: "bg-pink-50 hover:bg-pink-100 text-pink-600",
+      href: "/messages"
     },
     {
-      label: 'Job Board',
+      label: "Job Board",
       icon: <Stethoscope className="h-5 w-5" />,
-      color: 'bg-cyan-50 hover:bg-cyan-100 text-cyan-600',
-      href: '/jobs',
+      color: "bg-cyan-50 hover:bg-cyan-100 text-cyan-600",
+      href: "/jobs"
     },
     {
-      label: 'Staff List',
+      label: "Staff List",
       icon: <Users className="h-5 w-5" />,
-      color: 'bg-rose-50 hover:bg-rose-100 text-rose-600',
-      href: '/staff',
-      roles: [
-        UserRole.FACILITY_MANAGER,
-        UserRole.CLIENT_ADMINISTRATOR,
-        UserRole.SUPER_ADMIN,
-      ],
-    },
+      color: "bg-rose-50 hover:bg-rose-100 text-rose-600",
+      href: "/staff",
+      roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN]
+    }
   ];
 
   // Filter actions based on user role
   const availableActions = actions.filter(action => {
     if (!action.roles) return true; // No role restriction
-    return (
-      action.roles.includes(user.role as UserRole) ||
-      user.role === UserRole.SUPER_ADMIN
-    );
+    return action.roles.includes(user.role as UserRole) || user.role === UserRole.SUPER_ADMIN;
   });
 
   // Take first 4 actions for the grid
@@ -122,9 +103,7 @@ export function QuickActions() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg font-semibold text-gray-900">
-          Quick Actions
-        </CardTitle>
+        <CardTitle className="text-lg font-semibold text-gray-900">Quick Actions</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 gap-3">
