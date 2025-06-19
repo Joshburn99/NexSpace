@@ -489,7 +489,7 @@ export default function FacilitiesPage() {
                 <SelectValue placeholder="Filter by state" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All States</SelectItem>
+                <SelectItem value="all">All States</SelectItem>
                 {US_STATES.map((state) => (
                   <SelectItem key={state} value={state}>
                     {state}
