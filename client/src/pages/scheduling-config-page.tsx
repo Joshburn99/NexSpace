@@ -648,7 +648,11 @@ export default function SchedulingConfigPage() {
                           <Button 
                             type="button" 
                             variant="outline" 
-                            onClick={() => setIsRequirementDialogOpen(false)}
+                            onClick={() => {
+                              setIsRequirementDialogOpen(false);
+                              setEditingRequirement(null);
+                              requirementForm.reset();
+                            }}
                           >
                             Cancel
                           </Button>
