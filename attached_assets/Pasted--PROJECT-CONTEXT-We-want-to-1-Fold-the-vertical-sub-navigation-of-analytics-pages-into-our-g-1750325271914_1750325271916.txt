@@ -1,0 +1,128 @@
+# PROJECT CONTEXT
+We want to:
+1. Fold the vertical sub-navigation of `/analytics/*` pages into our global Sidebar under “Insights.”
+2. Remove any page-level Sidebar/Layout wrappers in analytics pages.
+3. Centralize shift data via a React Context seeded with sample entries.
+
+# TASKS
+
+🧩 **Update Sidebar**  
+- File: `src/components/Sidebar.tsx`  
+- Replace the “Insights” nav item’s `subItems` with:
+  ```ts
+  subItems: [
+    { label: "Analytics",          href: "/analytics" },
+    { label: "Shift Analytics",    href: "/analytics/shifts" },
+    { label: "Float Pool Savings", href: "/analytics/float-pool" },
+    { label: "Overtime Report",    href: "/analytics/overtime" },
+    { label: "Attendance",         href: "/analytics/attendance" },
+    { label: "Agency Usage",       href: "/analytics/agency-usage" },
+    { label: "Compliance",         href: "/analytics/compliance" },
+  ]
+🔧 Remove Page-Level Wrappers
+
+Files:
+
+src/pages/analytics/AnalyticsPage.tsx
+
+src/pages/analytics/ShiftAnalyticsPage.tsx
+
+src/pages/analytics/FloatPoolPage.tsx
+
+src/pages/analytics/OvertimePage.tsx
+
+src/pages/analytics/AttendancePage.tsx
+
+src/pages/analytics/AgencyUsagePage.tsx
+
+src/pages/analytics/CompliancePage.tsx
+
+In each file, remove any import Sidebar or import Layout, and delete any <Sidebar/> or <Layout>…</Layout> wrappers so only the page content remains.
+
+🧠 Create ShiftContext
+
+New file: src/context/ShiftContext.tsx
+
+ts
+Copy
+Edit
+import React, { createContext, useContext } from 'react';
+
+export type Shift = {
+  id: string;
+  facility: string;
+  date: string;
+  start: string;
+  end: string;
+  status: 'open' | 'requested' | 'booked';
+};
+
+const sampleShifts: Shift[] = [
+  { id: '1', facility: 'Main Building', date: '2025-06-20', start: '08:00', end: '16:00', status: 'open' },
+  { id: '2', facility: 'North Wing',    date: '2025-06-21', start: '16:00', end: '00:00', status: 'requested' },
+  { id: '3', facility: 'East Annex',    date: '2025-06-22', start: '00:00', end: '08:00', status: 'booked' },
+  // …add a few more for variety…
+];
+
+type ShiftData = { open: Shift[]; requested: Shift[]; booked: Shift[] };
+const ShiftContext = createContext<ShiftData | null>(null);
+
+export const ShiftProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const open = sampleShifts.filter(s => s.status === 'open');
+  const requested = sampleShifts.filter(s => s.status === 'requested');
+  const booked = sampleShifts.filter(s => s.status === 'booked');
+  return (
+    <ShiftContext.Provider value={{ open, requested, booked }}>
+      {children}
+    </ShiftContext.Provider>
+  );
+};
+
+export const useShifts = () => {
+  const ctx = useContext(ShiftContext);
+  if (!ctx) throw new Error('useShifts must be inside ShiftProvider');
+  return ctx;
+};
+✅ Wrap your app in ShiftProvider
+
+In src/App.tsx, wrap <Layout>:
+
+diff
+Copy
+Edit
+- <Layout>
++ <ShiftProvider>
++   <Layout>
+    <Router>…</Router>
+- </Layout>
++   </Layout>
++ </ShiftProvider>
+🔄 Switch to useShifts()
+
+In any shift-related component (e.g. OpenShiftsPage.tsx, ShiftRequestsShortcut.tsx, UnifiedCalendarPage.tsx), replace your individual useQuery([...]) calls with:
+
+ts
+Copy
+Edit
+const { open, requested, booked } = useShifts();
+FILES TO EDIT
+src/components/Sidebar.tsx
+
+src/pages/analytics/*.tsx
+
+src/context/ShiftContext.tsx (new)
+
+src/App.tsx
+
+All shift-related components
+
+SUCCESS CRITERIA
+Global Sidebar shows Insights sub-nav only once.
+
+No duplicate sidebars anywhere.
+
+ShiftContext sample data appears in all shift UIs.
+
+App builds and runs without errors.
+
+BEGIN!

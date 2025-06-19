@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import { SidebarNav } from "@/components/ui/sidebar-nav";
+import { useShifts } from "@/contexts/ShiftContext";
 
 const mockOpenShifts = [
   {
@@ -63,6 +63,7 @@ const mockOpenShifts = [
 
 export default function OpenShiftsPage() {
   const { user } = useAuth();
+  const { openShifts, isLoading } = useShifts();
   const [filter, setFilter] = useState("all");
 
   const getPriorityColor = (priority: string) => {
