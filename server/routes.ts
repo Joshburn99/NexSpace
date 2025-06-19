@@ -1657,7 +1657,7 @@ export function registerRoutes(app: Express): Server {
         temperature: 0.1
       });
 
-      const extractedData = JSON.parse(response.choices[0].message.content);
+      const extractedData = JSON.parse(response.choices[0].message.content || '{}');
       
       // Validate and clean the extracted data
       const cleanedData = {
