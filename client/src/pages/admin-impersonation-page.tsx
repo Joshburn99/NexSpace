@@ -130,15 +130,11 @@ export default function AdminImpersonationPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav user={selectedUser || user!} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
+    <div className="p-6">
           {selectedUser && (
             <div className="mb-6 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
               <div className="flex items-center justify-between">

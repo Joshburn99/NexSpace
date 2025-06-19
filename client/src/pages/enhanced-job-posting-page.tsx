@@ -113,7 +113,7 @@ export default function EnhancedJobPostingPage() {
   };
 
   return (
-    <AppLayout>
+    <div className="p-6">
       <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>

@@ -250,7 +250,7 @@ export default function CalendarViewPage() {
   };
 
   return (
-    <AppLayout title="Calendar View" subtitle="Schedule overview and management">
+    <div className="p-6">
       <div className="p-6">
         {/* Header Controls */}
         <div className="flex items-center justify-between mb-6">
@@ -357,6 +357,6 @@ export default function CalendarViewPage() {
           ))}
         </div>
       </div>
-    </AppLayout>
+    </div>
   );
 }

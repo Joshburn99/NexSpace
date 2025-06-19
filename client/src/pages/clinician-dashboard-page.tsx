@@ -21,7 +21,7 @@ export default function ClinicianDashboardPage({
   if (!user) return <div>Loading...</div>;
 
   return (
-    <AppLayout title="Dashboard" subtitle="Welcome back! Here's your overview">
+    <div className="p-6">
       <div className="space-y-6">
         {/* Header Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -91,6 +91,6 @@ export default function ClinicianDashboardPage({
           </div>
         </div>
       </div>
-    </AppLayout>
+    </div>
   );
 }

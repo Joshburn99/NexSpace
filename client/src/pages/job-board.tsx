@@ -114,7 +114,7 @@ export default function JobBoard() {
   if (!user) return null;
 
   return (
-    <AppLayout title="Job Board" subtitle="Browse and apply for available positions">
+    <div className="p-6">
       <div className="space-y-6">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
@@ -481,6 +481,6 @@ export default function JobBoard() {
           )}
           </div>
         </div>
-    </AppLayout>
+    </div>
   );
 }

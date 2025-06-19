@@ -237,7 +237,5 @@ export default function CredentialsPage() {
             </CardContent>
           </Card>
         </div>
-      </div>
-    </div>
   );
 }
