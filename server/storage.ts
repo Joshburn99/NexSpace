@@ -41,6 +41,7 @@ export interface IStorage {
   searchFacilities(query: string): Promise<Facility[]>;
   getFacilitiesByState(state: string): Promise<Facility[]>;
   getFacilityByCMSId(cmsId: string): Promise<Facility | undefined>;
+  getFacilitiesWithinRadius(lat: number, lng: number, radiusMiles: number): Promise<Facility[]>;
 
   // Job methods
   getJob(id: number): Promise<Job | undefined>;
@@ -926,6 +927,32 @@ export class DatabaseStorage implements IStorage {
         createdBy: 1 // System user
       });
     }
+  }
+
+  async getFacilitiesWithinRadius(lat: number, lng: number, radiusMiles: number): Promise<Facility[]> {
+    // Use Haversine formula to calculate distance
+    const earthRadiusMiles = 3959;
+    
+    const result = await db.execute(sql`
+      SELECT *,
+        (
+          ${earthRadiusMiles} * acos(
+            cos(radians(${lat})) * 
+            cos(radians(CAST(latitude AS FLOAT))) * 
+            cos(radians(CAST(longitude AS FLOAT)) - radians(${lng})) + 
+            sin(radians(${lat})) * 
+            sin(radians(CAST(latitude AS FLOAT)))
+          )
+        ) AS distance
+      FROM facilities
+      WHERE latitude IS NOT NULL 
+        AND longitude IS NOT NULL
+        AND is_active = true
+      HAVING distance <= ${radiusMiles}
+      ORDER BY distance
+    `);
+    
+    return result.rows as Facility[];
   }
 }
 

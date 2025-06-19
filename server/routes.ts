@@ -12,6 +12,8 @@ import {
   insertPaymentSchema, insertFacilitySchema, UserRole, shifts
 } from "@shared/schema";
 import { db } from "./db";
+import { recommendationEngine } from "./recommendation-engine";
+import type { RecommendationCriteria } from "./recommendation-engine";
 
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
@@ -1295,6 +1297,80 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error refreshing facility data:", error);
       res.status(400).json({ message: error instanceof Error ? error.message : "Failed to refresh facility data" });
+    }
+  });
+
+  // Facility Recommendation API
+  app.post("/api/facilities/recommendations", requireAuth, async (req, res) => {
+    try {
+      const criteria = req.body as RecommendationCriteria;
+      
+      // Validate required fields
+      if (!criteria.location || !criteria.location.lat || !criteria.location.lng) {
+        return res.status(400).json({ message: "Location coordinates are required" });
+      }
+
+      const recommendations = await recommendationEngine.getRecommendations(criteria);
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error generating recommendations:", error);
+      res.status(500).json({ message: "Failed to generate recommendations" });
+    }
+  });
+
+  app.post("/api/facilities/recommendations/emergency", requireAuth, async (req, res) => {
+    try {
+      const { location, facilityType } = req.body;
+      
+      if (!location || !location.lat || !location.lng) {
+        return res.status(400).json({ message: "Location coordinates are required" });
+      }
+
+      const recommendations = await recommendationEngine.getEmergencyRecommendations(location, facilityType);
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error generating emergency recommendations:", error);
+      res.status(500).json({ message: "Failed to generate emergency recommendations" });
+    }
+  });
+
+  app.post("/api/facilities/recommendations/specialized", requireAuth, async (req, res) => {
+    try {
+      const { location, specialty, maxDistance } = req.body;
+      
+      if (!location || !location.lat || !location.lng) {
+        return res.status(400).json({ message: "Location coordinates are required" });
+      }
+
+      if (!specialty) {
+        return res.status(400).json({ message: "Specialty is required" });
+      }
+
+      const recommendations = await recommendationEngine.getSpecializedCareRecommendations(location, specialty, maxDistance);
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error generating specialized care recommendations:", error);
+      res.status(500).json({ message: "Failed to generate specialized care recommendations" });
+    }
+  });
+
+  app.post("/api/facilities/recommendations/insurance", requireAuth, async (req, res) => {
+    try {
+      const { location, insuranceType, facilityType } = req.body;
+      
+      if (!location || !location.lat || !location.lng) {
+        return res.status(400).json({ message: "Location coordinates are required" });
+      }
+
+      if (!insuranceType || !["medicare", "medicaid", "both"].includes(insuranceType)) {
+        return res.status(400).json({ message: "Valid insurance type is required (medicare, medicaid, or both)" });
+      }
+
+      const recommendations = await recommendationEngine.getInsuranceBasedRecommendations(location, insuranceType, facilityType);
+      res.json(recommendations);
+    } catch (error) {
+      console.error("Error generating insurance-based recommendations:", error);
+      res.status(500).json({ message: "Failed to generate insurance-based recommendations" });
     }
   });
 
