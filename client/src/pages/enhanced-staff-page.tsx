@@ -304,11 +304,14 @@ export default function EnhancedStaffPage() {
                         <SelectValue placeholder="Select specialty" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="registered_nurse">Registered Nurse</SelectItem>
-                        <SelectItem value="licensed_practical_nurse">Licensed Practical Nurse</SelectItem>
-                        <SelectItem value="certified_nursing_assistant">Certified Nursing Assistant</SelectItem>
-                        <SelectItem value="physical_therapist">Physical Therapist</SelectItem>
-                        <SelectItem value="respiratory_therapist">Respiratory Therapist</SelectItem>
+                        <SelectItem value="RN">RN (Registered Nurse)</SelectItem>
+                        <SelectItem value="LPN">LPN (Licensed Practical Nurse)</SelectItem>
+                        <SelectItem value="CNA">CNA (Certified Nursing Assistant)</SelectItem>
+                        <SelectItem value="PT">PT (Physical Therapist)</SelectItem>
+                        <SelectItem value="RT">RT (Respiratory Therapist)</SelectItem>
+                        <SelectItem value="MD">MD (Medical Doctor)</SelectItem>
+                        <SelectItem value="NP">NP (Nurse Practitioner)</SelectItem>
+                        <SelectItem value="PA">PA (Physician Assistant)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

@@ -146,8 +146,8 @@ export default function UnifiedCalendarPage() {
   }, [filteredShifts]);
 
   // Get unique values for filters
-  const departments = Array.from(new Set(shifts.map(s => s.department)));
-  const specialties = Array.from(new Set(shifts.map(s => s.specialty)));
+  const departments = Array.from(new Set(shifts.map(s => s.department).filter(Boolean)));
+  const specialties = Array.from(new Set(shifts.map(s => s.specialty).filter(Boolean)));
 
   const createShiftMutation = useMutation({
     mutationFn: async (shiftData: any) => {
