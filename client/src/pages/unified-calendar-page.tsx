@@ -375,6 +375,12 @@ export default function UnifiedCalendarPage() {
             <Filter className="h-4 w-4 mr-2" />
             Filters
           </Button>
+          <Link to="/scheduling-config">
+            <Button variant="outline" size="sm">
+              <CalendarDays className="h-4 w-4 mr-2" />
+              Configuration
+            </Button>
+          </Link>
           <Button onClick={() => setShowPostingDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Post Shift
