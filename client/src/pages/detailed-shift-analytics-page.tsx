@@ -38,7 +38,7 @@ export default function DetailedShiftAnalyticsPage() {
   const [selectedWorkerType, setSelectedWorkerType] = useState("all");
   const [timeRange, setTimeRange] = useState("30");
 
-  const { data: shiftAnalytics = [], isLoading } = useQuery({
+  const { data: shiftAnalytics = [], isLoading } = useQuery<ShiftAnalytics[]>({
     queryKey: ["/api/shift-analytics", { specialty: selectedSpecialty, workerType: selectedWorkerType, timeRange }],
   });
 

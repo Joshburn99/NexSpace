@@ -40,7 +40,7 @@ export default function SystemSettingsPage() {
   const { toast } = useToast();
   const [hasChanges, setHasChanges] = useState(false);
 
-  const { data: settings, isLoading } = useQuery({
+  const { data: settings, isLoading } = useQuery<SystemSettings>({
     queryKey: ["/api/system-settings"],
   });
 
@@ -92,7 +92,8 @@ export default function SystemSettingsPage() {
     updateSettingsMutation.mutate(processedData);
   };
 
-  const defaultSettings = {
+  const defaultSettings: SystemSettings = {
+    id: 1,
     organizationName: "NexSpace Healthcare",
     organizationLogo: "/logo.png",
     timezone: "America/Chicago",
@@ -114,7 +115,7 @@ export default function SystemSettingsPage() {
     maintenanceMode: false,
   };
 
-  const currentSettings = settings || defaultSettings;
+  const currentSettings: SystemSettings = settings || defaultSettings;
 
   if (isLoading) {
     return (
