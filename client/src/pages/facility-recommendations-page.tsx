@@ -76,13 +76,8 @@ export default function FacilityRecommendationsPage() {
         ? { location: searchCriteria.location, insuranceType: "both", facilityType: searchCriteria.facilityType }
         : searchCriteria;
 
-      return await apiRequest(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody)
-      });
+      const response = await apiRequest("POST", endpoint, requestBody);
+      return await response.json();
     },
   });
 
