@@ -1891,83 +1891,61 @@ export function registerRoutes(app: Express): Server {
   // Shifts API
   app.get("/api/shifts", requireAuth, async (req, res) => {
     try {
-      const shifts = [
-        {
-          id: 1,
-          title: "ICU Day Shift",
-          date: "2025-06-20",
-          startTime: "07:00",
-          endTime: "19:00",
-          department: "Intensive Care Unit",
-          specialty: "Registered Nurse",
-          status: "open",
-          facilityId: 1,
-          facilityName: "General Hospital",
-          rate: 42,
-          urgency: "high",
-          description: "12-hour ICU shift, ventilator experience preferred"
-        },
-        {
-          id: 2,
-          title: "Emergency Department Night",
-          date: "2025-06-20",
-          startTime: "19:00",
-          endTime: "07:00",
-          department: "Emergency Department",
-          specialty: "Registered Nurse",
-          status: "open",
-          facilityId: 1,
-          facilityName: "General Hospital",
-          rate: 48,
-          urgency: "critical",
-          description: "Night shift in busy ED, trauma experience required"
-        },
-        {
-          id: 3,
-          title: "Medical/Surgical Day",
-          date: "2025-06-21",
-          startTime: "06:00",
-          endTime: "18:00",
-          department: "Medical/Surgical",
-          specialty: "Licensed Practical Nurse",
-          status: "assigned",
-          facilityId: 2,
-          facilityName: "Metro Medical",
-          rate: 32,
-          urgency: "medium",
-          description: "General med-surg unit, medication administration"
-        },
-        {
-          id: 4,
-          title: "Physical Therapy",
-          date: "2025-06-22",
-          startTime: "08:00",
-          endTime: "17:00",
-          department: "Rehabilitation",
-          specialty: "Physical Therapist",
-          status: "open",
-          facilityId: 3,
-          facilityName: "City Clinic",
-          rate: 58,
-          urgency: "low",
-          description: "Outpatient PT clinic, orthopedic focus"
-        },
-        {
-          id: 5,
-          title: "Respiratory Therapy Weekend",
-          date: "2025-06-23",
-          startTime: "07:00",
-          endTime: "19:00",
-          department: "Intensive Care Unit",
-          specialty: "Respiratory Therapist",
-          status: "requested",
-          facilityId: 1,
-          facilityName: "General Hospital",
-          rate: 38,
-          urgency: "high",
-          description: "Weekend coverage, ECMO experience preferred"
+      // Generate comprehensive 12-month shift data for 100-bed skilled nursing facility
+      const generateShifts = () => {
+        const shifts = [];
+        const startDate = new Date('2024-07-01');
+        const endDate = new Date('2025-06-30');
+        const departments = ['ICU', 'Emergency Department', 'Medical/Surgical', 'Pediatrics', 'Rehabilitation', 'Operating Room'];
+        const specialties = ['Registered Nurse', 'Licensed Practical Nurse', 'Certified Nursing Assistant', 'Physical Therapist', 'Respiratory Therapist'];
+        const statuses = ['open', 'assigned', 'completed', 'requested', 'in_progress'];
+        const urgencies = ['low', 'medium', 'high', 'critical'];
+        const shiftTimes = [
+          { start: '07:00', end: '19:00', type: 'Day' },
+          { start: '19:00', end: '07:00', type: 'Night' },
+          { start: '06:00', end: '18:00', type: 'Day' },
+          { start: '18:00', end: '06:00', type: 'Night' }
+        ];
+
+        let id = 1;
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+          // Generate 15-25 shifts per day for large facility
+          const shiftsPerDay = Math.floor(Math.random() * 11) + 15;
+          
+          for (let i = 0; i < shiftsPerDay; i++) {
+            const department = departments[Math.floor(Math.random() * departments.length)];
+            const specialty = specialties[Math.floor(Math.random() * specialties.length)];
+            const shiftTime = shiftTimes[Math.floor(Math.random() * shiftTimes.length)];
+            const status = statuses[Math.floor(Math.random() * statuses.length)];
+            const urgency = urgencies[Math.floor(Math.random() * urgencies.length)];
+            
+            // Base rates with premium adjustments
+            const baseRates = { 'Registered Nurse': 35, 'Licensed Practical Nurse': 28, 'Certified Nursing Assistant': 18, 'Physical Therapist': 45, 'Respiratory Therapist': 32 };
+            const baseRate = baseRates[specialty] || 30;
+            const premiumMultiplier = 1 + (Math.random() * 0.7); // 100-170% of base rate
+            const rate = Math.round(baseRate * premiumMultiplier);
+
+            shifts.push({
+              id: id++,
+              title: `${department} ${shiftTime.type} Shift`,
+              date: d.toISOString().split('T')[0],
+              startTime: shiftTime.start,
+              endTime: shiftTime.end,
+              department,
+              specialty,
+              status,
+              facilityId: 1,
+              facilityName: "Sunrise Manor Skilled Nursing",
+              rate,
+              urgency,
+              description: `${department} coverage needed, ${specialty} position`
+            });
+          }
         }
-      ];
+        return shifts.slice(0, 5000); // Return recent shifts for performance
+      };
+
+      const shifts = generateShifts();
       res.json(shifts);
     } catch (error) {
       console.error("Error fetching shifts:", error);

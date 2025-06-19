@@ -16,7 +16,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { insertFacilitySchema, type Facility, type InsertFacility } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Search, Building2, MapPin, Phone, Mail, Users, Bed, Star, RefreshCw, Import, ExternalLink } from "lucide-react";
+import { Loader2, Plus, Search, Building2, MapPin, Phone, Mail, Users, Bed, Star, RefreshCw, Import, ExternalLink, TrendingUp, Settings, Clock, DollarSign } from "lucide-react";
 import { z } from "zod";
 
 const createFacilitySchema = insertFacilitySchema.extend({
@@ -848,6 +848,7 @@ export default function FacilityManagementPage() {
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="ratings">Quality Ratings</TabsTrigger>
                 <TabsTrigger value="operations">Operations</TabsTrigger>
+                <TabsTrigger value="shift-settings">Shift Settings</TabsTrigger>
                 <TabsTrigger value="compliance">Compliance</TabsTrigger>
               </TabsList>
 
@@ -1053,6 +1054,232 @@ export default function FacilityManagementPage() {
                     </CardContent>
                   </Card>
                 )}
+              </TabsContent>
+
+              <TabsContent value="shift-settings" className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Preset Times Configuration */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <RefreshCw className="h-5 w-5" />
+                        Preset Shift Times
+                      </CardTitle>
+                      <CardDescription>
+                        Configure standard shift times for quick selection during shift posting
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-3 gap-2 text-sm font-medium text-muted-foreground">
+                          <span>Shift Name</span>
+                          <span>Start Time</span>
+                          <span>End Time</span>
+                        </div>
+                        {[
+                          { name: "Day Shift", start: "07:00", end: "19:00" },
+                          { name: "Night Shift", start: "19:00", end: "07:00" },
+                          { name: "Morning Shift", start: "06:00", end: "18:00" },
+                          { name: "Evening Shift", start: "18:00", end: "06:00" },
+                          { name: "Extended Day", start: "08:00", end: "20:00" },
+                          { name: "Extended Night", start: "20:00", end: "08:00" }
+                        ].map((shift, index) => (
+                          <div key={index} className="grid grid-cols-3 gap-2">
+                            <Input 
+                              value={shift.name}
+                              placeholder="Shift name"
+                              className="text-sm"
+                            />
+                            <Input 
+                              type="time"
+                              value={shift.start}
+                              className="text-sm"
+                            />
+                            <Input 
+                              type="time"
+                              value={shift.end}
+                              className="text-sm"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Add Preset Time
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Base Rates Configuration */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Star className="h-5 w-5" />
+                        Base Hourly Rates
+                      </CardTitle>
+                      <CardDescription>
+                        Set standard hourly rates by specialty (before premium adjustments)
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-3">
+                        {[
+                          { specialty: "Registered Nurse", rate: 35 },
+                          { specialty: "Licensed Practical Nurse", rate: 28 },
+                          { specialty: "Certified Nursing Assistant", rate: 18 },
+                          { specialty: "Physical Therapist", rate: 45 },
+                          { specialty: "Respiratory Therapist", rate: 32 },
+                          { specialty: "Medical Doctor", rate: 85 },
+                          { specialty: "Nurse Practitioner", rate: 55 },
+                          { specialty: "Physician Assistant", rate: 50 }
+                        ].map((item, index) => (
+                          <div key={index} className="flex items-center justify-between">
+                            <span className="text-sm font-medium">{item.specialty}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-muted-foreground">$</span>
+                              <Input 
+                                type="number"
+                                value={item.rate}
+                                className="w-20 text-sm"
+                                min="0"
+                                step="0.50"
+                              />
+                              <span className="text-sm text-muted-foreground">/hr</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Premium Rate Settings */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Star className="h-5 w-5" />
+                        Premium Rate Settings
+                      </CardTitle>
+                      <CardDescription>
+                        Configure allowed premium multipliers for shift rates
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Label>Minimum Premium</Label>
+                          <div className="flex items-center gap-2">
+                            <Input 
+                              type="number"
+                              value="100"
+                              className="w-20 text-sm"
+                              min="100"
+                              max="200"
+                            />
+                            <span className="text-sm text-muted-foreground">%</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label>Maximum Premium</Label>
+                          <div className="flex items-center gap-2">
+                            <Input 
+                              type="number"
+                              value="170"
+                              className="w-20 text-sm"
+                              min="100"
+                              max="200"
+                            />
+                            <span className="text-sm text-muted-foreground">%</span>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Label>Step Size</Label>
+                          <div className="flex items-center gap-2">
+                            <Input 
+                              type="number"
+                              value="5"
+                              className="w-20 text-sm"
+                              min="1"
+                              max="10"
+                            />
+                            <span className="text-sm text-muted-foreground">%</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-3 bg-muted rounded-lg">
+                        <div className="text-sm font-medium mb-2">Premium Examples:</div>
+                        <div className="space-y-1 text-xs text-muted-foreground">
+                          <div>• RN Base $35/hr → 120% = $42/hr</div>
+                          <div>• LPN Base $28/hr → 150% = $42/hr</div>
+                          <div>• CNA Base $18/hr → 170% = $30.60/hr</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Department Configuration */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <Building className="h-5 w-5" />
+                        Departments & Specialties
+                      </CardTitle>
+                      <CardDescription>
+                        Manage available departments and specialty services
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label className="text-sm font-medium">Departments</Label>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {[
+                            "Emergency Department",
+                            "Intensive Care Unit", 
+                            "Medical/Surgical",
+                            "Pediatrics",
+                            "Oncology",
+                            "Cardiology",
+                            "Orthopedics",
+                            "Rehabilitation",
+                            "Operating Room",
+                            "Labor & Delivery"
+                          ].map((dept, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {dept}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label className="text-sm font-medium">Specialty Services</Label>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {[
+                            "RN", "LPN", "CNA", "PT", "RT", "MD", "NP", "PA"
+                          ].map((specialty, index) => (
+                            <Badge key={index} variant="secondary" className="text-xs">
+                              {specialty}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+
+                      <Button variant="outline" size="sm" className="w-full">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Customize Departments
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4 border-t">
+                  <Button variant="outline">
+                    Reset to Defaults
+                  </Button>
+                  <Button>
+                    Save Settings
+                  </Button>
+                </div>
               </TabsContent>
             </Tabs>
           </DialogContent>
