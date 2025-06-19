@@ -79,11 +79,11 @@ const navigationItems: NavItem[] = [
     roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
     children: [
       { label: "Analytics", href: "/analytics", icon: <BarChart3 className="w-4 h-4" /> },
-      { label: "Detailed Shift Analytics", href: "/detailed-shift-analytics", icon: <BarChart3 className="w-4 h-4" /> },
+      { label: "Shift Analytics", href: "/analytics/shifts", icon: <BarChart3 className="w-4 h-4" /> },
       { label: "Float Pool Savings", href: "/analytics/float-pool", icon: <DollarSign className="w-4 h-4" /> },
       { label: "Overtime Report", href: "/analytics/overtime", icon: <FileText className="w-4 h-4" /> },
       { label: "Attendance", href: "/analytics/attendance", icon: <BarChart3 className="w-4 h-4" /> },
-      { label: "Agency Usage", href: "/analytics/agency", icon: <BarChart3 className="w-4 h-4" /> },
+      { label: "Agency Usage", href: "/analytics/agency-usage", icon: <BarChart3 className="w-4 h-4" /> },
       { label: "Compliance", href: "/analytics/compliance", icon: <Shield className="w-4 h-4" /> },
     ],
   },

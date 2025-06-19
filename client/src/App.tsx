@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
 import Layout from "@/components/Layout";
+import { ShiftProvider } from "@/contexts/ShiftContext";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import JobBoard from "@/pages/job-board";
@@ -66,10 +67,11 @@ function Router() {
       <ProtectedRoute path="/referrals" component={EnhancedReferralPage} />
       <ProtectedRoute path="/staff/referrals" component={EnhancedReferralPage} />
       <ProtectedRoute path="/analytics" component={AnalyticsPage} />
+      <ProtectedRoute path="/analytics/shifts" component={DetailedShiftAnalyticsPage} />
       <ProtectedRoute path="/analytics/float-pool" component={FloatPoolAnalyticsPage} />
       <ProtectedRoute path="/analytics/overtime" component={OvertimeReportPage} />
       <ProtectedRoute path="/analytics/attendance" component={AttendancePage} />
-      <ProtectedRoute path="/analytics/agency" component={AgencyUsagePage} />
+      <ProtectedRoute path="/analytics/agency-usage" component={AgencyUsagePage} />
       <ProtectedRoute path="/analytics/compliance" component={CompliancePage} />
       <ProtectedRoute path="/messages" component={MessagingPage} />
       <ProtectedRoute path="/credentials" component={CredentialsPage} />
@@ -99,12 +101,14 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Layout>
-            <Router />
-          </Layout>
-        </TooltipProvider>
+        <ShiftProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Layout>
+              <Router />
+            </Layout>
+          </TooltipProvider>
+        </ShiftProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
