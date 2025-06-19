@@ -116,6 +116,24 @@ export function registerRoutes(app: Express): Server {
     };
   };
 
+  // Users API
+  app.get("/api/users/:id", requireAuth, async (req: any, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const user = await storage.getUser(userId);
+      
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Remove sensitive information
+      const { password, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
   // Dashboard API
   app.get("/api/dashboard/stats", requireAuth, async (req: any, res) => {
     try {
