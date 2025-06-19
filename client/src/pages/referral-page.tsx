@@ -292,6 +292,6 @@ export default function ReferralPage() {
           )}
         </CardContent>
       </Card>
-    </AppLayout>
+    </div>
   );
 }

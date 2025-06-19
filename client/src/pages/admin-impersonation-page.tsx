@@ -129,13 +129,13 @@ export default function AdminImpersonationPage() {
               </p>
             </CardContent>
           </Card>
-        </div>
+      </div>
     );
   }
 
   return (
     <div className="p-6">
-          {selectedUser && (
+      {selectedUser && (
             <div className="mb-6 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -354,9 +354,7 @@ export default function AdminImpersonationPage() {
                 </CardContent>
               </Card>
             </div>
-          )}
-        </div>
-      </div>
+      )}
     </div>
   );
 }

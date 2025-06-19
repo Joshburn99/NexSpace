@@ -545,6 +545,6 @@ export default function WorkflowAutomationPage() {
             </TabsContent>
           </Tabs>
         </div>
-    </AppLayout>
+    </div>
   );
 }

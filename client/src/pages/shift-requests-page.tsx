@@ -552,6 +552,6 @@ export default function ShiftRequestsPage() {
           </Tabs>
         </div>
       </main>
-    </AppLayout>
+    </div>
   );
 }
