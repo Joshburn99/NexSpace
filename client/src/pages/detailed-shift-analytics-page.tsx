@@ -470,7 +470,7 @@ export default function DetailedShiftAnalyticsPage() {
                         <span className="font-medium">{item.urgency}</span>
                       </div>
                       <div className="text-right">
-                        <div className="font-bold">{item.count} shifts</div>
+                        <div className="font-bold">{item.count as number} shifts</div>
                         <div className="text-sm text-muted-foreground">{item.percentage}%</div>
                       </div>
                     </div>
