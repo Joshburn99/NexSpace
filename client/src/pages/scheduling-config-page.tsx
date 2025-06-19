@@ -112,6 +112,52 @@ export default function SchedulingConfigPage() {
     }
   });
 
+  const updateTemplateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: z.infer<typeof templateSchema> }) => {
+      return apiRequest(`/api/scheduling/templates/${id}`, "PUT", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/scheduling/templates"] });
+      setIsTemplateDialogOpen(false);
+      setEditingTemplate(null);
+      templateForm.reset();
+      toast({ title: "Template updated successfully" });
+    }
+  });
+
+  const deleteTemplateMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/scheduling/templates/${id}`, "DELETE");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/scheduling/templates"] });
+      toast({ title: "Template deleted successfully" });
+    }
+  });
+
+  const updateRequirementMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number, data: z.infer<typeof requirementSchema> }) => {
+      return apiRequest(`/api/scheduling/requirements/${id}`, "PUT", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/scheduling/requirements"] });
+      setIsRequirementDialogOpen(false);
+      setEditingRequirement(null);
+      requirementForm.reset();
+      toast({ title: "Requirement updated successfully" });
+    }
+  });
+
+  const deleteRequirementMutation = useMutation({
+    mutationFn: async (id: number) => {
+      return apiRequest(`/api/scheduling/requirements/${id}`, "DELETE");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/scheduling/requirements"] });
+      toast({ title: "Requirement deleted successfully" });
+    }
+  });
+
   const departments = [
     "ICU", "Emergency", "Medical-Surgical", "Pediatrics", "Operating Room", 
     "Recovery", "Obstetrics", "Oncology", "Cardiology", "Neurology",

@@ -1451,9 +1451,7 @@ export function registerRoutes(app: Express): Server {
           staffingRating: 4,
           qualityMeasureRating: 4,
           latitude: 45.5426,
-          longitude: -122.6664,
-          createdAt: new Date("2024-01-01"),
-          updatedAt: new Date("2025-06-19")
+          longitude: -122.6664
         },
         {
           id: 4,
@@ -1474,9 +1472,7 @@ export function registerRoutes(app: Express): Server {
           staffingRating: 4,
           qualityMeasureRating: 4,
           latitude: 45.5274,
-          longitude: -122.6079,
-          createdAt: new Date("2024-01-01"),
-          updatedAt: new Date("2025-06-19")
+          longitude: -122.6079
         },
         {
           id: 5,
@@ -1497,9 +1493,7 @@ export function registerRoutes(app: Express): Server {
           staffingRating: 4,
           qualityMeasureRating: 3,
           latitude: 45.4971,
-          longitude: -122.6309,
-          createdAt: new Date("2024-01-01"),
-          updatedAt: new Date("2025-06-19")
+          longitude: -122.6309
         }
       ];
       
@@ -1571,6 +1565,27 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.put("/api/scheduling/templates/:id", requireAuth, async (req, res) => {
+    try {
+      const template = {
+        id: parseInt(req.params.id),
+        ...req.body,
+        updatedAt: new Date()
+      };
+      res.json(template);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update template" });
+    }
+  });
+
+  app.delete("/api/scheduling/templates/:id", requireAuth, async (req, res) => {
+    try {
+      res.json({ message: "Template deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete template" });
+    }
+  });
+
   app.get("/api/scheduling/requirements", requireAuth, async (req, res) => {
     try {
       const requirements = [
@@ -1636,6 +1651,53 @@ export function registerRoutes(app: Express): Server {
       res.status(201).json(requirement);
     } catch (error) {
       res.status(500).json({ message: "Failed to create requirement" });
+    }
+  });
+
+  app.put("/api/scheduling/requirements/:id", requireAuth, async (req, res) => {
+    try {
+      const requirement = {
+        id: parseInt(req.params.id),
+        ...req.body,
+        updatedAt: new Date()
+      };
+      res.json(requirement);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to update requirement" });
+    }
+  });
+
+  app.delete("/api/scheduling/requirements/:id", requireAuth, async (req, res) => {
+    try {
+      res.json({ message: "Requirement deleted successfully" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to delete requirement" });
+    }
+  });
+
+  // Shift assignment and synchronization
+  app.post("/api/shift-requests/:id/assign", requireAuth, async (req, res) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      const { workerId, workerName } = req.body;
+      
+      // Update shift status to assigned
+      const assignedShift = {
+        id: requestId,
+        status: 'assigned',
+        assignedWorker: {
+          id: workerId,
+          name: workerName
+        },
+        assignedAt: new Date()
+      };
+      
+      res.json({ 
+        message: "Shift assigned successfully",
+        shift: assignedShift
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to assign shift" });
     }
   });
 
