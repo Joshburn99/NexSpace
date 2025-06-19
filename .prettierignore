@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.cache/
+.replit
+*.lock
+package-lock.json
+.env
+.env.*
