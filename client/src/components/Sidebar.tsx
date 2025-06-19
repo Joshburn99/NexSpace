@@ -90,7 +90,8 @@ const navigationItems: NavItem[] = [
     label: "Billing",
     icon: <DollarSign className="w-5 h-5" />,
     children: [
-      { label: "Invoices", href: "/invoices", icon: <FileText className="w-4 h-4" /> },
+      { label: "Professional Invoices", href: "/invoices", icon: <FileText className="w-4 h-4" /> },
+      { label: "Vendor Invoices", href: "/vendor-invoices", icon: <FileText className="w-4 h-4" /> },
       { label: "Workflow Automation", href: "/workflow-automation", icon: <FileText className="w-4 h-4" /> },
     ],
   },

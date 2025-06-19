@@ -37,6 +37,10 @@ import EmployeeDashboardWrapper from "@/pages/employee-dashboard-wrapper";
 import ContractorDashboardWrapper from "@/pages/contractor-dashboard-wrapper";
 import FloatPoolAnalyticsPage from "@/pages/float-pool-analytics-page";
 import FacilityRecommendationsPage from "@/pages/facility-recommendations-page";
+import VendorInvoicesPage from "@/pages/vendor-invoices-page";
+import AdminUserManagementPage from "@/pages/admin-user-management-page";
+import AdminAuditLogsPage from "@/pages/admin-audit-logs-page";
+import AdminDatabaseConsolePage from "@/pages/admin-database-console-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -63,8 +67,12 @@ function Router() {
       <ProtectedRoute path="/messages" component={MessagingPage} />
       <ProtectedRoute path="/credentials" component={CredentialsPage} />
       <ProtectedRoute path="/invoices" component={InvoicesPage} />
+      <ProtectedRoute path="/vendor-invoices" component={VendorInvoicesPage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/admin/impersonation" component={AdminImpersonationPage} />
+      <ProtectedRoute path="/admin/users" component={AdminUserManagementPage} />
+      <ProtectedRoute path="/admin/audit" component={AdminAuditLogsPage} />
+      <ProtectedRoute path="/admin/database" component={AdminDatabaseConsolePage} />
       <ProtectedRoute path="/facility-management" component={FacilitiesPage} />
       <ProtectedRoute path="/job-posting" component={EnhancedJobPostingPage} />
       <ProtectedRoute path="/workflow-automation" component={WorkflowAutomationPage} />

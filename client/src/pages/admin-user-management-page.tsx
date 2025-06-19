@@ -145,8 +145,8 @@ export default function AdminUserManagementPage() {
             <SelectItem value={UserRole.SUPER_ADMIN}>Super Admin</SelectItem>
             <SelectItem value={UserRole.CLIENT_ADMINISTRATOR}>Client Admin</SelectItem>
             <SelectItem value={UserRole.FACILITY_MANAGER}>Facility Manager</SelectItem>
-            <SelectItem value={UserRole.CLINICIAN}>Clinician</SelectItem>
-            <SelectItem value={UserRole.CONTRACTOR}>Contractor</SelectItem>
+            <SelectItem value={UserRole.INTERNAL_EMPLOYEE}>Internal Employee</SelectItem>
+            <SelectItem value={UserRole.CONTRACTOR_1099}>Contractor</SelectItem>
           </SelectContent>
         </Select>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
