@@ -175,6 +175,34 @@ export default function SchedulingConfigPage() {
     "BLS", "ACLS", "PALS", "TNCC", "CEN", "CCRN", "OCN", "CNOR", "PACU", "NREMT"
   ];
 
+  const handleEditTemplate = (template: any) => {
+    setEditingTemplate(template);
+    templateForm.reset(template);
+    setIsTemplateDialogOpen(true);
+  };
+
+  const handleEditRequirement = (requirement: any) => {
+    setEditingRequirement(requirement);
+    requirementForm.reset(requirement);
+    setIsRequirementDialogOpen(true);
+  };
+
+  const handleTemplateSubmit = (data: z.infer<typeof templateSchema>) => {
+    if (editingTemplate && editingTemplate.id) {
+      updateTemplateMutation.mutate({ id: editingTemplate.id, data });
+    } else {
+      createTemplateMutation.mutate(data);
+    }
+  };
+
+  const handleRequirementSubmit = (data: z.infer<typeof requirementSchema>) => {
+    if (editingRequirement && editingRequirement.id) {
+      updateRequirementMutation.mutate({ id: editingRequirement.id, data });
+    } else {
+      createRequirementMutation.mutate(data);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -218,7 +246,7 @@ export default function SchedulingConfigPage() {
                       <DialogTitle>Create Shift Template</DialogTitle>
                     </DialogHeader>
                     <Form {...templateForm}>
-                      <form onSubmit={templateForm.handleSubmit((data) => createTemplateMutation.mutate(data))} className="space-y-4">
+                      <form onSubmit={templateForm.handleSubmit(handleTemplateSubmit)} className="space-y-4">
                         <FormField
                           control={templateForm.control}
                           name="name"
@@ -384,8 +412,9 @@ export default function SchedulingConfigPage() {
                           >
                             Cancel
                           </Button>
-                          <Button type="submit" disabled={createTemplateMutation.isPending}>
-                            Create Template
+                          <Button type="submit" disabled={createTemplateMutation.isPending || updateTemplateMutation.isPending}>
+                            {(createTemplateMutation.isPending || updateTemplateMutation.isPending) ? "Saving..." : 
+                             editingTemplate ? "Update Template" : "Create Template"}
                           </Button>
                         </div>
                       </form>
