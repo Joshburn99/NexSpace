@@ -56,11 +56,11 @@ interface ShiftPostingForm {
   facilityId: number;
   rate: number;
   premiumMultiplier: number;
-  urgency: 'low' | 'medium' | 'high' | 'critical';
+  urgency: string;
   description: string;
   isBlockShift: boolean;
-  blockEndDate?: string;
-  blockQuantity?: number;
+  blockEndDate: string;
+  blockQuantity: number;
 }
 
 const PRESET_TIMES = [
@@ -174,21 +174,18 @@ export default function UnifiedCalendarPage() {
       const endpoint = shiftData.isBlockShift ? '/api/block-shifts' : '/api/shifts';
       return fetch(endpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(shiftData),
       }).then(res => res.json());
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/shifts'] });
       queryClient.invalidateQueries({ queryKey: ['/api/block-shifts'] });
+      setShowPostingDialog(false);
       toast({
         title: 'Success',
         description: 'Shift posted successfully',
       });
-      setShowPostingDialog(false);
       setShiftForm({
         title: '',
         date: format(new Date(), 'yyyy-MM-dd'),
@@ -371,11 +368,13 @@ export default function UnifiedCalendarPage() {
             </TabsList>
           </Tabs>
           <Button
-          variant="outline"
-          onClick={() => setSelectedDate(new Date())}
-        >
-          Today
-        </Button>
+            variant="outline"
+            size="sm"
+            onClick={() => setSelectedDate(new Date())}
+          >
+            Today
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -448,10 +447,10 @@ export default function UnifiedCalendarPage() {
                 setSelectedFilters(prev => ({ ...prev, urgency: value }))
               }>
                 <SelectTrigger>
-                  <SelectValue placeholder="All Urgencies" />
+                  <SelectValue placeholder="All Urgency Levels" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All Urgencies</SelectItem>
+                  <SelectItem value="all">All Urgency Levels</SelectItem>
                   <SelectItem value="low">Low</SelectItem>
                   <SelectItem value="medium">Medium</SelectItem>
                   <SelectItem value="high">High</SelectItem>
@@ -504,16 +503,16 @@ export default function UnifiedCalendarPage() {
                             </Badge>
                             <span className="text-xs font-medium">${shift.rate}/hr</span>
                           </div>
-                        <Badge className={`text-xs ${getStatusColor(shift.status)}`}>
-                          {shift.status.replace('_', ' ')}
-                        </Badge>
-                      </div>
-                    ))}
+                          <Badge className={`text-xs ${getStatusColor(shift.status)}`}>
+                            {shift.status.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
           ) : (
             <div className="grid grid-cols-7 gap-1">
               {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
@@ -692,161 +691,164 @@ export default function UnifiedCalendarPage() {
           
           <ScrollArea className="max-h-[70vh] pr-4">
             <div className="space-y-4">
-            {/* Block Shift Toggle */}
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="block-shift"
-                checked={shiftForm.isBlockShift}
-                onCheckedChange={(checked) => setShiftForm(prev => ({ ...prev, isBlockShift: checked }))}
-              />
-              <Label htmlFor="block-shift">Block Shift (Multiple days/positions)</Label>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Shift Title</Label>
-                <Input
-                  value={shiftForm.title}
-                  onChange={(e) => setShiftForm(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="e.g., ICU Day Shift"
+              {/* Block Shift Toggle */}
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="block-shift"
+                  checked={shiftForm.isBlockShift}
+                  onCheckedChange={(checked) => setShiftForm(prev => ({ ...prev, isBlockShift: checked }))}
                 />
+                <Label htmlFor="block-shift">Block Shift (Multiple positions over time period)</Label>
               </div>
-              <div>
-                <Label>Facility</Label>
-                <Select value={shiftForm.facilityId.toString()} onValueChange={(value) => 
-                  setShiftForm(prev => ({ ...prev, facilityId: parseInt(value) }))
-                }>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {facilities.map((facility: any) => (
-                      <SelectItem key={facility.id} value={facility.id.toString()}>
-                        {facility.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Start Date</Label>
-                <Input
-                  type="date"
-                  value={shiftForm.date}
-                  onChange={(e) => setShiftForm(prev => ({ ...prev, date: e.target.value }))}
-                />
-              </div>
-              {shiftForm.isBlockShift && (
+              {/* Basic Information */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label>End Date</Label>
+                  <Label>Shift Title *</Label>
                   <Input
-                    type="date"
-                    value={shiftForm.blockEndDate}
-                    onChange={(e) => setShiftForm(prev => ({ ...prev, blockEndDate: e.target.value }))}
+                    value={shiftForm.title}
+                    onChange={(e) => setShiftForm(prev => ({ ...prev, title: e.target.value }))}
+                    placeholder="e.g., ICU Night Shift"
                   />
                 </div>
-              )}
-            </div>
-
-            {/* Preset Times */}
-            <div>
-              <Label>Preset Times</Label>
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                {PRESET_TIMES.map((preset, index) => (
-                  <Button
-                    key={index}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handlePresetTimeSelect(preset)}
-                    className={
-                      shiftForm.startTime === preset.start && shiftForm.endTime === preset.end
-                        ? 'bg-primary text-primary-foreground'
-                        : ''
-                    }
-                  >
-                    {preset.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Start Time</Label>
-                <Input
-                  type="time"
-                  value={shiftForm.startTime}
-                  onChange={(e) => setShiftForm(prev => ({ ...prev, startTime: e.target.value }))}
-                />
-              </div>
-              <div>
-                <Label>End Time</Label>
-                <Input
-                  type="time"
-                  value={shiftForm.endTime}
-                  onChange={(e) => setShiftForm(prev => ({ ...prev, endTime: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Specialty</Label>
-                <Select value={shiftForm.specialty} onValueChange={handleSpecialtyChange}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select specialty" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SPECIALTIES.map((specialty) => (
-                      <SelectItem key={specialty} value={specialty}>
-                        {getSpecialtyAbbreviation(specialty)} - {specialty}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Department</Label>
-                <Select value={shiftForm.department} onValueChange={(value) => 
-                  setShiftForm(prev => ({ ...prev, department: value }))
-                }>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DEPARTMENTS.map((dept) => (
-                      <SelectItem key={dept} value={dept}>
-                        {dept}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* Premium Rate Slider */}
-            <div>
-              <Label>Premium Rate: {Math.round(shiftForm.premiumMultiplier * 100)}% (${shiftForm.rate}/hr)</Label>
-              <div className="mt-2">
-                <Slider
-                  value={[shiftForm.premiumMultiplier]}
-                  onValueChange={(value) => handlePremiumMultiplierChange(value[0])}
-                  min={1.0}
-                  max={1.7}
-                  step={0.05}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                  <span>Standard (100%)</span>
-                  <span>Premium (170%)</span>
+                <div>
+                  <Label>Facility *</Label>
+                  <Select value={shiftForm.facilityId.toString()} onValueChange={(value) => 
+                    setShiftForm(prev => ({ ...prev, facilityId: parseInt(value) }))
+                  }>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {facilities.map((facility: any) => (
+                        <SelectItem key={facility.id} value={facility.id.toString()}>
+                          {facility.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-4">
+              {/* Date and Time */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label>{shiftForm.isBlockShift ? 'Start Date *' : 'Date *'}</Label>
+                  <Input
+                    type="date"
+                    value={shiftForm.date}
+                    onChange={(e) => setShiftForm(prev => ({ ...prev, date: e.target.value }))}
+                  />
+                </div>
+                {shiftForm.isBlockShift && (
+                  <div>
+                    <Label>End Date *</Label>
+                    <Input
+                      type="date"
+                      value={shiftForm.blockEndDate}
+                      onChange={(e) => setShiftForm(prev => ({ ...prev, blockEndDate: e.target.value }))}
+                    />
+                  </div>
+                )}
+                <div>
+                  <Label>Start Time *</Label>
+                  <Input
+                    type="time"
+                    value={shiftForm.startTime}
+                    onChange={(e) => setShiftForm(prev => ({ ...prev, startTime: e.target.value }))}
+                  />
+                </div>
+                <div>
+                  <Label>End Time *</Label>
+                  <Input
+                    type="time"
+                    value={shiftForm.endTime}
+                    onChange={(e) => setShiftForm(prev => ({ ...prev, endTime: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              {/* Preset Times */}
+              <div>
+                <Label>Quick Time Presets</Label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mt-2">
+                  {PRESET_TIMES.map((preset, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePresetTimeSelect(preset)}
+                      className="text-xs"
+                    >
+                      {preset.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Specialty and Department */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Specialty *</Label>
+                  <Select value={shiftForm.specialty} onValueChange={handleSpecialtyChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select specialty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SPECIALTIES.map((specialty) => (
+                        <SelectItem key={specialty} value={specialty}>
+                          {specialty}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Department *</Label>
+                  <Select value={shiftForm.department} onValueChange={(value) => 
+                    setShiftForm(prev => ({ ...prev, department: value }))
+                  }>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {DEPARTMENTS.map((dept) => (
+                        <SelectItem key={dept} value={dept}>
+                          {dept}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* Premium Multiplier and Rate */}
+              <div className="space-y-4">
+                <div>
+                  <Label>Premium Multiplier: {shiftForm.premiumMultiplier.toFixed(1)}x</Label>
+                  <Slider
+                    value={[shiftForm.premiumMultiplier]}
+                    onValueChange={(value) => handlePremiumMultiplierChange(value[0])}
+                    max={2.0}
+                    min={1.0}
+                    step={0.1}
+                    className="mt-2"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground mt-1">
+                    <span>1.0x (Standard)</span>
+                    <span>1.5x (Premium)</span>
+                    <span>2.0x (Critical)</span>
+                  </div>
+                </div>
+                <div>
+                  <Label>Hourly Rate</Label>
+                  <div className="text-2xl font-bold text-green-600">
+                    ${shiftForm.rate}/hour
+                  </div>
+                </div>
+              </div>
+
+              {/* Urgency */}
               <div>
                 <Label>Urgency</Label>
                 <Select value={shiftForm.urgency} onValueChange={(value: any) => 
@@ -885,7 +887,6 @@ export default function UnifiedCalendarPage() {
                 rows={3}
               />
             </div>
-          </div>
           </ScrollArea>
 
           <div className="flex justify-end gap-2 pt-4 border-t">
@@ -899,6 +900,5 @@ export default function UnifiedCalendarPage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
   );
 }

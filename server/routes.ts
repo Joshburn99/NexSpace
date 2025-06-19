@@ -9,7 +9,7 @@ import {
   insertInvoiceSchema, insertWorkLogSchema, insertCredentialSchema,
   insertMessageSchema, insertPayrollProviderSchema, insertPayrollConfigurationSchema,
   insertPayrollEmployeeSchema, insertTimesheetSchema, insertTimesheetEntrySchema,
-  insertPaymentSchema, insertFacilitySchema, UserRole, shifts
+  insertPaymentSchema, insertFacilitySchema, UserRole, shifts, facilities
 } from "@shared/schema";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
@@ -909,7 +909,7 @@ export function registerRoutes(app: Express): Server {
         }
       ];
 
-      const createdFacilities = await db.insert(schema.facilities).values(facilityData).returning();
+      const createdFacilities = await db.insert(facilities).values(facilityData).returning();
       res.json({ message: "Example facilities created successfully", facilities: createdFacilities });
     } catch (error) {
       console.error('Error creating example facilities:', error);
