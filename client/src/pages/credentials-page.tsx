@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import { SidebarNav } from "@/components/ui/sidebar-nav";
 
 export default function CredentialsPage() {
   const { user } = useAuth();
@@ -54,10 +53,7 @@ export default function CredentialsPage() {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-      <SidebarNav user={user!} />
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
+    <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Credentials</h1>

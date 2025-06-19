@@ -26,7 +26,6 @@ import {
   Building
 } from "lucide-react";
 import { getQueryFn } from "@/lib/queryClient";
-import Layout from "@/components/Layout";
 
 export default function AnalyticsPage() {
   const { user } = useAuth();
@@ -116,8 +115,7 @@ export default function AnalyticsPage() {
   ];
 
   return (
-    <Layout>
-      <div className="p-6">
+    <div className="p-6">
         {/* Period and Metric Filters */}
         <div className="flex items-center gap-4 mb-6">
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
@@ -655,6 +653,5 @@ export default function AnalyticsPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
   );
 }

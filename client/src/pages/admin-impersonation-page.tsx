@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import { SidebarNav } from "@/components/ui/sidebar-nav";
 import { useToast } from "@/hooks/use-toast";
 import { UserRole } from "@shared/schema";
 
@@ -120,9 +119,7 @@ export default function AdminImpersonationPage() {
 
   if (user?.role !== UserRole.SUPER_ADMIN) {
     return (
-      <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
-        <SidebarNav user={user!} />
-        <div className="flex-1 flex items-center justify-center">
+      <div className="flex-1 flex items-center justify-center">
           <Card className="w-96">
             <CardContent className="pt-6 text-center">
               <Shield className="w-12 h-12 text-red-500 mx-auto mb-4" />

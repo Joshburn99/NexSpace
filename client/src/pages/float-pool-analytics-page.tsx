@@ -21,7 +21,6 @@ import {
   Percent
 } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from "recharts";
-import Layout from "@/components/Layout";
 
 interface FloatPoolMetrics {
   totalSavings: number;
@@ -89,8 +88,7 @@ export default function FloatPoolAnalyticsPage() {
   }));
 
   return (
-    <Layout>
-      <div className="p-6">
+    <div className="p-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900">Float Pool Analytics</h1>
           <p className="text-gray-600">Cost savings and utilization metrics</p>
@@ -370,6 +368,5 @@ export default function FloatPoolAnalyticsPage() {
         </Card>
         </div>
       </div>
-    </Layout>
   );
 }
