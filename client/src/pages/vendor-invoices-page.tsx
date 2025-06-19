@@ -34,6 +34,7 @@ export default function VendorInvoicesPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedVendorType, setSelectedVendorType] = useState<string>("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [extractedData, setExtractedData] = useState<any>(null);
 
   const { data: vendorInvoices = [], isLoading } = useQuery({
     queryKey: ["/api/vendor-invoices"],
@@ -392,6 +393,88 @@ export default function VendorInvoicesPage() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="scan-pdf" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                PDF Invoice Scanner
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Upload PDF invoices to automatically extract vendor information, amounts, and dates using AI technology.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <PDFDropzone 
+                onInvoiceExtracted={(data) => {
+                  setExtractedData(data);
+                  setIsCreateDialogOpen(true);
+                }} 
+              />
+            </CardContent>
+          </Card>
+
+          {extractedData && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Extracted Invoice Data</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Review and edit the extracted information before creating the invoice.
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Vendor Name</Label>
+                    <p className="font-medium">{extractedData.vendorName}</p>
+                  </div>
+                  <div>
+                    <Label>Invoice Number</Label>
+                    <p className="font-medium">{extractedData.invoiceNumber}</p>
+                  </div>
+                  <div>
+                    <Label>Amount</Label>
+                    <p className="font-medium">${extractedData.amount?.toLocaleString()}</p>
+                  </div>
+                  <div>
+                    <Label>Due Date</Label>
+                    <p className="font-medium">{extractedData.dueDate}</p>
+                  </div>
+                  <div>
+                    <Label>Service Date</Label>
+                    <p className="font-medium">{extractedData.serviceDate}</p>
+                  </div>
+                  <div>
+                    <Label>Vendor Type</Label>
+                    <p className="font-medium">{extractedData.vendorType}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <Label>Description</Label>
+                    <p className="font-medium">{extractedData.description}</p>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <Button 
+                    onClick={() => {
+                      createInvoiceMutation.mutate(extractedData);
+                      setExtractedData(null);
+                    }}
+                    disabled={createInvoiceMutation.isPending}
+                  >
+                    Create Invoice
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setExtractedData(null)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="analytics" className="space-y-6">

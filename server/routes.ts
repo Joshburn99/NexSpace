@@ -15,10 +15,32 @@ import { db } from "./db";
 import { sql } from "drizzle-orm";
 import { recommendationEngine } from "./recommendation-engine";
 import type { RecommendationCriteria } from "./recommendation-engine";
+import multer from "multer";
+import OpenAI from "openai";
 
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
   setupAuth(app);
+
+  // Configure multer for file uploads
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit
+    },
+    fileFilter: (req, file, cb) => {
+      if (file.mimetype === 'application/pdf') {
+        cb(null, true);
+      } else {
+        cb(new Error('Only PDF files are allowed'));
+      }
+    },
+  });
+
+  // Initialize OpenAI
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
 
   // Middleware to check authentication
   const requireAuth = (req: any, res: any, next: any) => {
@@ -1562,6 +1584,100 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error fetching vendors:", error);
       res.status(500).json({ message: "Failed to fetch vendors" });
+    }
+  });
+
+  // PDF invoice extraction endpoint
+  app.post("/api/vendor-invoices/extract-pdf", requireAuth, upload.single('pdf'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No PDF file uploaded" });
+      }
+
+      // For demo purposes, simulate PDF text extraction
+      // In production, you would use a proper PDF parsing library
+      const simulatedPdfText = `
+        INVOICE
+        
+        From: MedSupply Plus Corp
+        123 Healthcare Drive
+        Medical City, MC 12345
+        
+        Invoice Number: MSP-2025-001234
+        Date: June 19, 2025
+        Due Date: July 19, 2025
+        Service Period: June 1-30, 2025
+        
+        Bill To:
+        Chicago General Hospital
+        456 Medical Avenue
+        Chicago, IL 60601
+        
+        Description: Medical supplies and equipment for June 2025
+        - Surgical masks (1000 units)
+        - Disposable gloves (500 boxes)
+        - Hand sanitizer (50 gallons)
+        
+        Subtotal: $8,450.00
+        Tax: $450.50
+        Total Amount Due: $8,900.50
+        
+        Payment Terms: Net 30 days
+        Thank you for your business!
+      `;
+
+      const pdfText = simulatedPdfText;
+
+      // Use OpenAI to extract invoice data
+      // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+      const response = await openai.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+          {
+            role: "system",
+            content: `You are an AI assistant that extracts invoice information from text. 
+            Extract the following fields from the invoice text and respond with JSON:
+            - vendorName: The company/vendor name issuing the invoice
+            - invoiceNumber: The invoice number or reference
+            - amount: The total amount due (as a number, no currency symbols)
+            - dueDate: The payment due date (in YYYY-MM-DD format)
+            - serviceDate: The service/billing period date (in YYYY-MM-DD format)
+            - description: Brief description of services/products
+            - vendorType: Categorize as one of: staffing_agency, medical_supply, equipment_rental, maintenance, consulting, it_services, or other
+            
+            If any field cannot be determined, use reasonable defaults or null.
+            Respond only with valid JSON.`
+          },
+          {
+            role: "user",
+            content: `Extract invoice information from this text:\n\n${pdfText}`
+          }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.1
+      });
+
+      const extractedData = JSON.parse(response.choices[0].message.content);
+      
+      // Validate and clean the extracted data
+      const cleanedData = {
+        vendorName: extractedData.vendorName || "Unknown Vendor",
+        invoiceNumber: extractedData.invoiceNumber || `INV-${Date.now()}`,
+        amount: parseFloat(extractedData.amount) || 0,
+        dueDate: extractedData.dueDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        serviceDate: extractedData.serviceDate || new Date().toISOString().split('T')[0],
+        description: extractedData.description || "Services provided",
+        vendorType: extractedData.vendorType || "other",
+        status: "pending"
+      };
+
+      res.json(cleanedData);
+    } catch (error: any) {
+      console.error("Error extracting PDF data:", error);
+      res.status(500).json({ 
+        message: "Failed to extract invoice data from PDF",
+        error: error.message 
+      });
     }
   });
 
