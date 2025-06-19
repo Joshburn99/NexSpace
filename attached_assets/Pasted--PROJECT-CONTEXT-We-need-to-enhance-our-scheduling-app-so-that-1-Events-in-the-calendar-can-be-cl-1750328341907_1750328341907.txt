@@ -1,0 +1,237 @@
+# PROJECT CONTEXT
+We need to enhance our scheduling app so that:
+1. Events in the calendar can be clicked to open a details modal (showing full user profiles and an “Assign Staff” button).
+2. Admins can click a date to create a new open shift via a modal.
+3. All data lives in contexts (UserContext & ShiftContext) and updates flow everywhere.
+
+# TASKS
+
+1. **Wrap App in Providers**  
+- File: `src/App.tsx`  
+- At the top import:
+  ```ts
+  import { UserProvider } from '@/context/UserContext';
+  import { ShiftProvider } from '@/context/ShiftContext';
+Wrap your existing layout/router:
+
+diff
+Copy
+Edit
+- <ShiftProvider>
+    <Layout><Router/></Layout>
+  </ShiftProvider>
++ <UserProvider>
++   <ShiftProvider>
+      <Layout><Router/></Layout>
++   </ShiftProvider>
++ </UserProvider>
+Scaffold UserContext
+
+New file: src/context/UserContext.tsx
+
+Paste:
+
+ts
+Copy
+Edit
+import React, { createContext, useContext } from 'react';
+export type User = { id:string; name:string; phone:string; email:string; certifications:string[] };
+const sampleUsers: User[] = [
+  { id:'u1', name:'Alice Smith',  phone:'555-0101', email:'alice@foo.com', certifications:['RN','CPR'] },
+  { id:'u2', name:'Bob Johnson',  phone:'555-0202', email:'bob@foo.com',   certifications:['LPN'] },
+];
+const UserContext = createContext<User[]|null>(null);
+export const UserProvider:React.FC<{children:React.ReactNode}> = ({children}) =>
+  <UserContext.Provider value={sampleUsers}>{children}</UserContext.Provider>;
+export const useUsers = ()=> {
+  const ctx = useContext(UserContext);
+  if(!ctx) throw new Error('useUsers must be inside UserProvider');
+  return ctx;
+};
+Enhance ShiftContext
+
+Open src/context/ShiftContext.tsx and replace its contents with:
+
+ts
+Copy
+Edit
+import React, { createContext, useContext, useState } from 'react';
+export type Shift = {
+  id:string; facility:string; date:string; start:string; end:string;
+  status:'open'|'requested'|'booked'; requesterId?:string; assignedTo?:string;
+};
+const initialShifts:Shift[] = [
+  /* keep your sample shifts here */
+];
+type ShiftData = {
+  open:Shift[]; requested:Shift[]; booked:Shift[];
+  assignShift:(shiftId:string,userId:string)=>void;
+  addShift:(newShift:Shift)=>void;
+};
+const ShiftContext = createContext<ShiftData|null>(null);
+export const ShiftProvider:React.FC<{children:React.ReactNode}> = ({children})=>{
+  const [shifts,setShifts]=useState<Shift[]>(initialShifts);
+  const open=shifts.filter(s=>s.status==='open');
+  const requested=shifts.filter(s=>s.status==='requested');
+  const booked=shifts.filter(s=>s.status==='booked');
+  const assignShift=(shiftId,userId)=>setShifts(prev=>
+    prev.map(s=>s.id===shiftId?{...s,status:'booked',assignedTo:userId}:s)
+  );
+  const addShift=(newShift)=>setShifts(prev=>[...prev,newShift]);
+  return <ShiftContext.Provider value={{open,requested,booked,assignShift,addShift}}>
+    {children}
+  </ShiftContext.Provider>;
+};
+export const useShifts=()=>{
+  const ctx=useContext(ShiftContext);
+  if(!ctx) throw new Error('useShifts must be inside ShiftProvider');
+  return ctx;
+};
+Create ShiftDetailsModal
+
+New file: src/components/ShiftDetailsModal.tsx
+
+Paste:
+
+tsx
+Copy
+Edit
+import React from 'react';
+import { useShifts } from '@/context/ShiftContext';
+import { useUsers } from '@/context/UserContext';
+import { Modal, Button } from '@/components/ui';
+
+export function ShiftDetailsModal({ shiftId, isOpen, onClose }:{
+  shiftId:string|null; isOpen:boolean; onClose:()=>void;
+}) {
+  const { open, requested, booked, assignShift } = useShifts();
+  const users = useUsers();
+  if(!isOpen||!shiftId) return null;
+  const shift=[...open,...requested,...booked].find(s=>s.id===shiftId);
+  if(!shift) return null;
+  const reqs = requested.filter(s=>s.id===shiftId);
+  return (
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <h2>Shift Details</h2>
+      <p><strong>Facility:</strong> {shift.facility}</p>
+      <p><strong>Date:</strong> {shift.date}</p>
+      <p><strong>Time:</strong> {shift.start}–{shift.end}</p>
+      <h3>Requests</h3>
+      {reqs.length>0?reqs.map(r=>{
+        const u=users.find(u=>u.id===r.requesterId);
+        if(!u) return null;
+        return (
+          <div key={u.id}>
+            <p>{u.name} ({u.phone})</p>
+            <p>Certs: {u.certifications.join(', ')}</p>
+            <Button onClick={()=>assignShift(shiftId,u.id)}>Assign Staff</Button>
+          </div>
+        );
+      }):<p>No pending requests</p>}
+    </Modal>
+  );
+}
+Create CreateShiftModal
+
+New file: src/components/CreateShiftModal.tsx
+
+Paste:
+
+tsx
+Copy
+Edit
+import React, { useState } from 'react';
+import { useShifts, Shift } from '@/context/ShiftContext';
+import { Modal, Input, Button } from '@/components/ui';
+
+export function CreateShiftModal({ date, isOpen, onClose }:{
+  date:string|null; isOpen:boolean; onClose:()=>void;
+}) {
+  const { addShift } = useShifts();
+  const [facility,setFacility]=useState('');
+  const [start,setStart]=useState('08:00');
+  const [end,setEnd]=useState('16:00');
+  if(!isOpen||!date) return null;
+  const submit=()=>{
+    addShift({id:Date.now().toString(),facility,date,start,end,status:'open'});
+    onClose();
+  };
+  return (
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <h2>Create Shift on {date}</h2>
+      <Input label="Facility" value={facility} onChange={e=>setFacility(e.target.value)}/>
+      <Input label="Start Time" type="time" value={start} onChange={e=>setStart(e.target.value)}/>
+      <Input label="End Time"   type="time" value={end}   onChange={e=>setEnd(e.target.value)}/>
+      <Button onClick={submit}>Create Shift</Button>
+    </Modal>
+  );
+}
+Install FullCalendar & Update Calendar Page
+
+In Shell:
+
+nginx
+Copy
+Edit
+npm install @fullcalendar/react @fullcalendar/daygrid @fullcalendar/interaction
+Edit src/pages/UnifiedCalendarPage.tsx to:
+
+tsx
+Copy
+Edit
+import React, { useState } from 'react';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import { useShifts } from '@/context/ShiftContext';
+import { ShiftDetailsModal } from '@/components/ShiftDetailsModal';
+import { CreateShiftModal } from '@/components/CreateShiftModal';
+
+export default function UnifiedCalendarPage() {
+  const { open, requested, booked } = useShifts();
+  const [detailId, setDetailId] = useState<string|null>(null);
+  const [createDate, setCreateDate] = useState<string|null>(null);
+
+  const events = [
+    ...open.map(s=>({id:s.id,title:`Open: ${s.facility}`,date:s.date,color:'gray'})),
+    ...requested.map(s=>({id:s.id,title:`Requested: ${s.facility}`,date:s.date,color:'orange'})),
+    ...booked.map(s=>({id:s.id,title:`Booked: ${s.facility}`,date:s.date,color:'green'})),
+  ];
+
+  return (
+    <>
+      <FullCalendar
+        plugins={[dayGridPlugin, interactionPlugin]}
+        initialView="dayGridMonth"
+        events={events}
+        eventClick={info=>setDetailId(info.event.id)}
+        dateClick={info=>setCreateDate(info.dateStr)}
+      />
+      <ShiftDetailsModal shiftId={detailId} isOpen={!!detailId} onClose={()=>setDetailId(null)} />
+      <CreateShiftModal date={createDate} isOpen={!!createDate} onClose={()=>setCreateDate(null)} />
+    </>
+  );
+}
+FILES TO EDIT
+src/App.tsx
+
+src/context/UserContext.tsx
+
+src/context/ShiftContext.tsx
+
+src/components/ShiftDetailsModal.tsx
+
+src/components/CreateShiftModal.tsx
+
+src/pages/UnifiedCalendarPage.tsx
+
+Shell: install FullCalendar deps
+
+SUCCESS CRITERIA
+Calendar events open a ShiftDetailsModal with full user info and Assign button.
+
+Clicking a date opens CreateShiftModal to add a new open shift.
+
+All shift UIs (shortcuts, open shifts, calendar) update immediately.
+
+BEGIN!

@@ -70,11 +70,13 @@ interface ShiftContextType {
   completedShifts: Shift[];
   isLoading: boolean;
   error: string | null;
+  getShiftById: (id: number) => Shift | undefined;
   refreshShifts: () => Promise<void>;
   updateShiftStatus: (shiftId: number, status: ShiftStatus) => Promise<void>;
-  assignStaffToShift: (shiftId: number, staffIds: number[]) => Promise<void>;
+  assignStaffToShift: (shiftId: number, staffId: number) => Promise<void>;
   requestShift: (shiftId: number) => Promise<void>;
   cancelShift: (shiftId: number) => Promise<void>;
+  addShift: (shift: Omit<Shift, "id" | "createdAt" | "updatedAt">) => Promise<void>;
 }
 
 const ShiftContext = createContext<ShiftContextType | undefined>(undefined);
@@ -347,15 +349,15 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const assignStaffToShift = async (shiftId: number, staffIds: number[]) => {
+  const assignStaffToShift = async (shiftId: number, staffId: number) => {
     try {
       setShifts((prevShifts) =>
         prevShifts.map((shift) =>
           shift.id === shiftId
             ? {
                 ...shift,
-                assignedStaffIds: staffIds,
-                status: staffIds.length > 0 ? "assigned" : "open",
+                assignedStaffIds: [staffId],
+                status: "assigned",
                 updatedAt: new Date().toISOString(),
               }
             : shift
@@ -363,6 +365,24 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
       );
     } catch (err) {
       setError("Failed to assign staff to shift");
+    }
+  };
+
+  const getShiftById = (id: number): Shift | undefined => {
+    return shifts.find(shift => shift.id === id);
+  };
+
+  const addShift = async (shiftData: Omit<Shift, "id" | "createdAt" | "updatedAt">) => {
+    try {
+      const newShift: Shift = {
+        ...shiftData,
+        id: Date.now(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      setShifts(prevShifts => [...prevShifts, newShift]);
+    } catch (err) {
+      setError("Failed to add shift");
     }
   };
 
@@ -391,11 +411,13 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
     completedShifts,
     isLoading,
     error,
+    getShiftById,
     refreshShifts,
     updateShiftStatus,
     assignStaffToShift,
     requestShift,
     cancelShift,
+    addShift,
   };
 
   return <ShiftContext.Provider value={contextValue}>{children}</ShiftContext.Provider>;

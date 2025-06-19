@@ -7,7 +7,8 @@ import { useDashboard } from '@/contexts/DashboardContext';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { AssignStaffModal } from "@/components/AssignStaffModal";
+import { ShiftDetailsModal } from "@/components/ShiftDetailsModal";
+import { CreateShiftModal } from "@/components/CreateShiftModal";
 import {
   Calendar,
   Clock,
@@ -21,7 +22,9 @@ export default function UnifiedCalendarPage() {
   const { openShifts, requestedShifts, bookedShifts } = useShifts();
   const { totalShiftsToday, openCount, requestedCount, bookedCount } = useDashboard();
   const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null);
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [isShiftDetailsOpen, setIsShiftDetailsOpen] = useState(false);
+  const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
 
   // Convert shifts to FullCalendar events
   const events = [
