@@ -61,17 +61,14 @@ export default function UnifiedCalendarPage() {
   ];
 
   const handleEventClick = (info: any) => {
-    const { type, shift } = info.event.extendedProps;
-    
-    if (type === 'requested') {
-      setSelectedShiftId(shift.id);
-      setIsAssignModalOpen(true);
-    }
+    const shiftId = parseInt(info.event.id);
+    setSelectedShiftId(shiftId);
+    setIsShiftDetailsOpen(true);
   };
 
   const handleDateClick = (info: any) => {
-    // Could add new shift creation functionality here
-    console.log('Date clicked:', info.dateStr);
+    setSelectedDate(info.dateStr);
+    setIsCreateShiftOpen(true);
   };
 
   return (
@@ -210,21 +207,32 @@ export default function UnifiedCalendarPage() {
             }}
             eventDidMount={(info) => {
               const type = info.event.extendedProps.type;
+              info.el.title = `Click to view ${info.event.title} details`;
               if (type === 'requested') {
-                info.el.title = 'Click to assign staff to this shift';
+                info.el.style.cursor = 'pointer';
               }
             }}
           />
         </CardContent>
       </Card>
 
-      {/* Assign Staff Modal */}
-      <AssignStaffModal
+      {/* Shift Details Modal */}
+      <ShiftDetailsModal
         shiftId={selectedShiftId}
-        isOpen={isAssignModalOpen}
+        isOpen={isShiftDetailsOpen}
         onClose={() => {
-          setIsAssignModalOpen(false);
+          setIsShiftDetailsOpen(false);
           setSelectedShiftId(null);
+        }}
+      />
+
+      {/* Create Shift Modal */}
+      <CreateShiftModal
+        date={selectedDate}
+        isOpen={isCreateShiftOpen}
+        onClose={() => {
+          setIsCreateShiftOpen(false);
+          setSelectedDate(null);
         }}
       />
     </div>

@@ -29,7 +29,9 @@ interface AssignStaffModalProps {
 
 export function AssignStaffModal({ shiftId, isOpen, onClose }: AssignStaffModalProps) {
   const { compliantStaff } = useStaff();
-  const { assignStaffToShift, getShiftById } = useShifts();
+  const { assignStaffToShift, shifts } = useShifts();
+  
+  const getShiftById = (id: number) => shifts.find(shift => shift.id === id);
   const [selectedStaffId, setSelectedStaffId] = useState<string>("");
   const [isAssigning, setIsAssigning] = useState(false);
 
