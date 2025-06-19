@@ -821,109 +821,55 @@ export function registerRoutes(app: Express): Server {
       // Clear existing shifts
       await db.delete(shifts);
       
-      // Create shifts data directly
+      // Create shifts data with correct schema
       const currentFacility = await storage.getAllFacilities();
       const facilityId = currentFacility[0]?.id || 1;
       
       const shiftsData = [
-        // Today's shifts with various statuses
         {
+          date: '2025-06-18',
+          title: 'ICU Day Shift',
+          specialty: 'RN',
+          startTime: '07:00',
+          endTime: '19:00',
           facilityId,
           department: 'ICU',
-          startTime: new Date('2025-06-18T07:00:00Z'),
-          endTime: new Date('2025-06-18T19:00:00Z'),
-          requiredStaff: 2,
-          shiftType: 'day',
-          status: 'filled',
-          specialRequirements: ['RN', 'BLS', 'Critical Care'],
-          createdById: 1,
-          assignedStaffIds: [3, 4]
-        },
-        {
-          facilityId,
-          department: 'ICU',
-          startTime: new Date('2025-06-18T19:00:00Z'),
-          endTime: new Date('2025-06-19T07:00:00Z'),
-          requiredStaff: 1,
-          shiftType: 'night',
+          rate: 45.00,
+          premiumMultiplier: 1.2,
+          urgency: 'high',
           status: 'open',
-          specialRequirements: ['RN', 'BLS'],
-          createdById: 1,
-          assignedStaffIds: []
+          description: 'Critical care nursing position',
+          createdById: 1
         },
         {
+          date: '2025-06-18',
+          title: 'Emergency Night Shift',
+          specialty: 'RN',
+          startTime: '19:00',
+          endTime: '07:00',
+          facilityId,
+          department: 'Emergency',
+          rate: 50.00,
+          premiumMultiplier: 1.5,
+          urgency: 'critical',
+          status: 'open',
+          description: 'Emergency department coverage',
+          createdById: 1
+        },
+        {
+          date: '2025-06-19',
+          title: 'Med-Surg Day',
+          specialty: 'LPN',
+          startTime: '07:00',
+          endTime: '15:00',
           facilityId,
           department: 'Med-Surg',
-          startTime: new Date('2025-06-18T07:00:00Z'),
-          endTime: new Date('2025-06-18T15:00:00Z'),
-          requiredStaff: 2,
-          shiftType: 'day',
-          status: 'open',
-          specialRequirements: ['LPN', 'Med Administration'],
-          createdById: 1,
-          assignedStaffIds: [6]
-        },
-        {
-          facilityId,
-          department: 'Memory Care',
-          startTime: new Date('2025-06-18T15:00:00Z'),
-          endTime: new Date('2025-06-18T23:00:00Z'),
-          requiredStaff: 3,
-          shiftType: 'evening',
-          status: 'open',
-          specialRequirements: ['CNA', 'Dementia Care'],
-          createdById: 1,
-          assignedStaffIds: []
-        },
-        {
-          facilityId,
-          department: 'Rehabilitation',
-          startTime: new Date('2025-06-18T09:00:00Z'),
-          endTime: new Date('2025-06-18T17:00:00Z'),
-          requiredStaff: 1,
-          shiftType: 'day',
-          status: 'filled',
-          specialRequirements: ['PT', 'State License'],
-          createdById: 1,
-          assignedStaffIds: [10]
-        },
-        // Tomorrow's shifts
-        {
-          facilityId,
-          department: 'ICU',
-          startTime: new Date('2025-06-19T07:00:00Z'),
-          endTime: new Date('2025-06-19T19:00:00Z'),
-          requiredStaff: 2,
-          shiftType: 'day',
-          status: 'open',
-          specialRequirements: ['RN', 'Critical Care'],
-          createdById: 1,
-          assignedStaffIds: [3]
-        },
-        {
-          facilityId,
-          department: 'Med-Surg',
-          startTime: new Date('2025-06-19T15:00:00Z'),
-          endTime: new Date('2025-06-19T23:00:00Z'),
-          requiredStaff: 2,
-          shiftType: 'evening',
-          status: 'filled',
-          specialRequirements: ['LPN'],
-          createdById: 1,
-          assignedStaffIds: [6, 7]
-        },
-        // Weekend shifts
-        {
-          facilityId,
-          department: 'Memory Care',
-          startTime: new Date('2025-06-21T07:00:00Z'),
-          endTime: new Date('2025-06-21T19:00:00Z'),
-          requiredStaff: 4,
-          shiftType: 'weekend',
-          status: 'open',
-          specialRequirements: ['CNA', 'Weekend Rate'],
-          createdById: 1,
-          assignedStaffIds: [8, 9]
+          rate: 32.00,
+          premiumMultiplier: 1.1,
+          urgency: 'medium',
+          status: 'assigned',
+          description: 'Medical surgical unit',
+          createdById: 1
         }
       ];
       
