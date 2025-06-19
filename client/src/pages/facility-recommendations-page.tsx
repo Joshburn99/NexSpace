@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import InteractiveMap from "@/components/InteractiveMap";
-import { MapPin, Clock, Star, Heart, Shield, Navigation, Phone, Mail } from "lucide-react";
+import { MapPin, Clock, Star, Heart, Shield, Navigation, Phone, Mail, ArrowLeft, Home, Filter } from "lucide-react";
+import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 
 interface RecommendationCriteria {
@@ -203,6 +204,20 @@ export default function FacilityRecommendationsPage() {
   return (
     <div className="space-y-6">
       <div>
+        <div className="flex items-center gap-4 mb-4">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="gap-2">
+              <Home className="h-4 w-4" />
+              Dashboard
+            </Button>
+          </Link>
+          <Link href="/facilities">
+            <Button variant="ghost" size="sm" className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Facilities
+            </Button>
+          </Link>
+        </div>
         <h1 className="text-3xl font-bold">Facility Recommendations</h1>
         <p className="text-muted-foreground">
           Find the best healthcare facilities based on your location and preferences
@@ -216,38 +231,48 @@ export default function FacilityRecommendationsPage() {
             <CardHeader>
               <CardTitle>Search Criteria</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label className="text-sm font-medium">Recommendation Type</Label>
-                <Select value={selectedRecommendationType} onValueChange={setSelectedRecommendationType}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="general">General Recommendations</SelectItem>
-                    <SelectItem value="emergency">Emergency Care</SelectItem>
-                    <SelectItem value="specialized">Specialized Care</SelectItem>
-                    <SelectItem value="insurance">Insurance-Based</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <CardContent className="space-y-6">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4" />
+                  <Label className="text-sm font-semibold">Search Filters</Label>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <Label className="text-sm font-medium">Recommendation Type</Label>
+                    <Select value={selectedRecommendationType} onValueChange={setSelectedRecommendationType}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="general">🏥 General Recommendations</SelectItem>
+                        <SelectItem value="emergency">🚑 Emergency Care</SelectItem>
+                        <SelectItem value="specialized">⚕️ Specialized Care</SelectItem>
+                        <SelectItem value="insurance">💳 Insurance-Based</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              <div>
-                <Label className="text-sm font-medium">Facility Type</Label>
-                <Select value={criteria.facilityType || "any"} onValueChange={(value) => 
-                  setCriteria(prev => ({ ...prev, facilityType: value === "any" ? undefined : value }))
-                }>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Any type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="any">Any Type</SelectItem>
-                    <SelectItem value="hospital">Hospital</SelectItem>
-                    <SelectItem value="nursing_home">Nursing Home</SelectItem>
-                    <SelectItem value="clinic">Clinic</SelectItem>
-                    <SelectItem value="urgent_care">Urgent Care</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <div>
+                    <Label className="text-sm font-medium">Facility Type</Label>
+                    <Select value={criteria.facilityType || "all"} onValueChange={(value) => 
+                      setCriteria(prev => ({ ...prev, facilityType: value === "all" ? undefined : value }))
+                    }>
+                      <SelectTrigger>
+                        <SelectValue placeholder="All facility types" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Types</SelectItem>
+                        <SelectItem value="hospital">🏥 Hospital</SelectItem>
+                        <SelectItem value="nursing_home">🏠 Nursing Home</SelectItem>
+                        <SelectItem value="clinic">🩺 Clinic</SelectItem>
+                        <SelectItem value="urgent_care">⚡ Urgent Care</SelectItem>
+                        <SelectItem value="assisted_living">🏡 Assisted Living</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -314,18 +339,26 @@ export default function FacilityRecommendationsPage() {
 
               <Separator />
 
-              <div>
-                <Label className="text-sm font-medium mb-2 block">Search Location</Label>
-                <InteractiveMap
-                  height="200px"
-                  onLocationSelect={handleLocationSelect}
-                  showSearch={true}
-                />
-                {searchLocation && (
-                  <div className="text-xs text-muted-foreground mt-2">
-                    Selected: {searchLocation.lat.toFixed(6)}, {searchLocation.lng.toFixed(6)}
-                  </div>
-                )}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  <Label className="text-sm font-semibold">Search Location</Label>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Click on the map or search for an address to set your location
+                  </p>
+                  <InteractiveMap
+                    height="220px"
+                    onLocationSelect={handleLocationSelect}
+                    showSearch={true}
+                  />
+                  {searchLocation && (
+                    <div className="text-xs text-green-600 bg-green-50 dark:bg-green-900/20 p-2 rounded">
+                      Location set: {searchLocation.lat.toFixed(4)}, {searchLocation.lng.toFixed(4)}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <Button 
