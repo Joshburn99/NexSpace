@@ -477,7 +477,7 @@ export default function FacilityManagementPage() {
                         <FormItem>
                           <FormLabel>City *</FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input {...field} value={field.value || ""} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -489,7 +489,7 @@ export default function FacilityManagementPage() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>State *</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
+                          <Select onValueChange={field.onChange} value={field.value || ""}>
                             <FormControl>
                               <SelectTrigger>
                                 <SelectValue />
@@ -514,7 +514,7 @@ export default function FacilityManagementPage() {
                         <FormItem>
                           <FormLabel>ZIP Code *</FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input {...field} value={field.value || ""} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -530,7 +530,7 @@ export default function FacilityManagementPage() {
                         <FormItem>
                           <FormLabel>Phone</FormLabel>
                           <FormControl>
-                            <Input type="tel" {...field} />
+                            <Input type="tel" {...field} value={field.value || ""} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -543,7 +543,7 @@ export default function FacilityManagementPage() {
                         <FormItem>
                           <FormLabel>Email</FormLabel>
                           <FormControl>
-                            <Input type="email" {...field} />
+                            <Input type="email" {...field} value={field.value || ""} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -618,7 +618,7 @@ export default function FacilityManagementPage() {
                         </div>
                         <FormControl>
                           <Switch 
-                            checked={field.value} 
+                            checked={field.value || false} 
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
