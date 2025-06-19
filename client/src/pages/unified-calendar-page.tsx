@@ -540,28 +540,38 @@ export default function UnifiedCalendarPage() {
                       <br />
                       {format(date, 'MMM d')}
                     </div>
-                    <div className="space-y-1">
-                      {dayShifts.map((shift: Shift) => (
+                    <div className="space-y-1 max-h-[260px] overflow-y-auto">
+                      {dayShifts.length === 0 && (
+                        <div className="text-xs text-gray-400 italic text-center py-2">No shifts scheduled</div>
+                      )}
+                      {dayShifts.slice(0, 3).map((shift: Shift) => (
                         <div
                           key={shift.id}
-                          className={`p-2 rounded text-xs cursor-pointer border-l-4 ${getUrgencyColor(shift.urgency)}`}
+                          className={`p-1.5 rounded text-xs cursor-pointer border-l-2 ${getUrgencyColor(shift.urgency)}`}
                           onClick={() => setSelectedShift(shift)}
                         >
-                          <div className="font-medium truncate">{shift.title}</div>
+                          <div className="font-medium truncate text-xs">{shift.title}</div>
                           <div className="text-xs text-muted-foreground">
                             {shift.startTime} - {shift.endTime}
                           </div>
-                          <div className="flex items-center justify-between">
-                            <Badge className={`text-xs ${getSpecialtyBadgeColor(shift.specialty)} shadow-sm`}>
+                          <div className="flex items-center justify-between mt-1">
+                            <Badge className={`text-xs px-1 py-0 ${getSpecialtyBadgeColor(shift.specialty)}`}>
                               {getSpecialtyAbbreviation(shift.specialty)}
                             </Badge>
-                            <span className="text-xs font-medium text-green-600">${shift.rate}/hr</span>
+                            <Badge className={`text-xs px-1 py-0 ${getStatusColor(shift.status)}`}>
+                              {shift.status === 'open' ? 'OPEN' : shift.assignedStaffName || shift.status.replace('_', ' ')}
+                            </Badge>
                           </div>
-                          <Badge className={`text-xs ${getStatusColor(shift.status)}`}>
-                            {shift.status.replace('_', ' ')}
-                          </Badge>
                         </div>
                       ))}
+                      {dayShifts.length > 3 && (
+                        <div 
+                          className="text-xs text-blue-600 cursor-pointer hover:text-blue-800 text-center py-1 font-medium"
+                          onClick={() => setSelectedShift(dayShifts[0])}
+                        >
+                          +{dayShifts.length - 3} more shifts
+                        </div>
+                      )}
                     </div>
                   </div>
                 );

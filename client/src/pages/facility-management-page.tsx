@@ -185,64 +185,191 @@ export default function FacilityManagementPage() {
     "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
   ];
 
-  return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-4">
-          <Link href="/">
-            <Button variant="outline" size="sm">
-              <Home className="h-4 w-4 mr-2" />
-              Home
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold">Facility Management</h1>
-            <p className="text-muted-foreground">
-              Manage healthcare facilities with comprehensive profiles and external data integration
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-2">
-          <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Import className="h-4 w-4 mr-2" />
-                Import Facility
-              </Button>
-            </DialogTrigger>
-          </Dialog>
+  // Filter facilities based on search and state
+  const filteredFacilities = facilities.filter((facility: Facility) => {
+    const matchesSearch = !searchQuery || 
+      facility.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      facility.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      facility.address?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesState = !selectedState || facility.state === selectedState;
+    
+    return matchesSearch && matchesState;
+  });
 
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Facility
-              </Button>
-            </DialogTrigger>
-          </Dialog>
-        </div>
+  // FacilityDetailView component
+  const FacilityDetailView = ({ facility }: { facility: Facility }) => (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">{facility.name}</h1>
+        <p className="text-muted-foreground">
+          {facility.facilityType?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+        </p>
       </div>
 
-      {/* Search and Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Search & Filter Facilities
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Input
-                placeholder="Search facilities..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+      <Tabs defaultValue="overview" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="details">Details</TabsTrigger>
+          <TabsTrigger value="settings">Settings</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Location
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm">{formatAddress(facility)}</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  Contact
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm">{facility.phone || "No phone"}</p>
+                <p className="text-sm text-muted-foreground">{facility.email || "No email"}</p>
+              </CardContent>
+            </Card>
+
+            {facility.bedCount && (
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <Bed className="h-4 w-4" />
+                    Capacity
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm">{facility.bedCount} beds</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+
+          {facility.overallRating && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Star className="h-5 w-5" />
+                  Quality Ratings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold">{facility.overallRating}</div>
+                    <div className="text-sm text-muted-foreground">Overall</div>
+                  </div>
+                  {facility.staffingRating && (
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{facility.staffingRating}</div>
+                      <div className="text-sm text-muted-foreground">Staffing</div>
+                    </div>
+                  )}
+                  {facility.qualityMeasureRating && (
+                    <div className="text-center">
+                      <div className="text-2xl font-bold">{facility.qualityMeasureRating}</div>
+                      <div className="text-sm text-muted-foreground">Quality</div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="details">
+          <Card>
+            <CardHeader>
+              <CardTitle>Facility Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Name</Label>
+                  <p className="text-sm">{facility.name}</p>
+                </div>
+                <div>
+                  <Label>Type</Label>
+                  <p className="text-sm">{facility.facilityType?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}</p>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Badge variant={facility.isActive ? "default" : "secondary"}>
+                    {facility.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="settings">
+          <Card>
+            <CardHeader>
+              <CardTitle>Facility Settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label>Active Status</Label>
+                    <p className="text-sm text-muted-foreground">Enable or disable this facility</p>
+                  </div>
+                  <Switch checked={facility.isActive} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar */}
+      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center gap-2 mb-4">
+            <Link href="/">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            </Link>
+          </div>
+          <h2 className="text-lg font-semibold">Facility Management</h2>
+          <p className="text-sm text-muted-foreground">
+            Manage healthcare facilities
+          </p>
+        </div>
+
+        {/* Search in Sidebar */}
+        <div className="p-4 border-b border-gray-200">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search facilities..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="mt-3">
             <Select value={selectedState} onValueChange={setSelectedState}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Select State" />
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by state" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All States</SelectItem>
@@ -254,12 +381,98 @@ export default function FacilityManagementPage() {
               </SelectContent>
             </Select>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
+        {/* Facilities List in Sidebar */}
+        <div className="flex-1 overflow-y-auto">
+          {isLoading ? (
+            <div className="p-4">
+              {[...Array(3)].map((_, index) => (
+                <div key={index} className="p-3 border-b border-gray-100 animate-pulse">
+                  <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            filteredFacilities.map((facility: Facility) => (
+              <div
+                key={facility.id}
+                className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 ${
+                  selectedFacility?.id === facility.id ? 'bg-blue-50 border-r-2 border-r-blue-500' : ''
+                }`}
+                onClick={() => setSelectedFacility(facility)}
+              >
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-medium text-sm truncate">{facility.name}</h3>
+                    <p className="text-xs text-muted-foreground truncate mt-1">
+                      {facility.facilityType?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {formatAddress(facility)}
+                    </p>
+                    {facility.bedCount && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {facility.bedCount} beds
+                      </p>
+                    )}
+                  </div>
+                  <Badge 
+                    variant={facility.isActive ? "default" : "secondary"}
+                    className="text-xs ml-2"
+                  >
+                    {facility.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
 
+        {/* Action Buttons in Sidebar */}
+        <div className="p-4 border-t border-gray-200 space-y-2">
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="w-full">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Facility
+              </Button>
+            </DialogTrigger>
+          </Dialog>
+          
+          <Dialog open={isImportDialogOpen} onOpenChange={setIsImportDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="w-full">
+                <Import className="h-4 w-4 mr-2" />
+                Import Facility
+              </Button>
+            </DialogTrigger>
+          </Dialog>
+        </div>
+      </div>
 
-      {/* Facilities Grid */}
+      {/* Main Content Area */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="p-6">
+          {selectedFacility ? (
+            <FacilityDetailView facility={selectedFacility} />
+          ) : (
+            <div className="text-center py-12">
+              <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Select a Facility</h3>
+              <p className="text-gray-500">
+                Choose a facility from the sidebar to view and edit its details
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default FacilityManagementPage;
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoading ? (
           Array.from({ length: 6 }).map((_, i) => (
