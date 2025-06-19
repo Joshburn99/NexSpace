@@ -10,9 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Plus, Eye, DollarSign, Calendar, Building, TrendingUp, ArrowLeft, Home, Check, X } from "lucide-react";
+import { FileText, Plus, Eye, DollarSign, Calendar, Building, TrendingUp, ArrowLeft, Home, Check, X, Upload } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
+import PDFDropzone from "@/components/PDFDropzone";
 
 interface VendorInvoice {
   id: number;
@@ -145,6 +146,7 @@ export default function VendorInvoicesPage() {
       <Tabs defaultValue="invoices" className="space-y-6">
         <TabsList>
           <TabsTrigger value="invoices">Invoice Management</TabsTrigger>
+          <TabsTrigger value="scan-pdf">Scan PDF</TabsTrigger>
           <TabsTrigger value="analytics">Vendor Analytics</TabsTrigger>
         </TabsList>
 
