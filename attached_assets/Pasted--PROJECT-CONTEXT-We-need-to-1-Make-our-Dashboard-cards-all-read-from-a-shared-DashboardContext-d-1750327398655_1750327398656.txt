@@ -1,0 +1,168 @@
+# PROJECT CONTEXT
+We need to:
+1. Make our Dashboard cards all read from a shared DashboardContext (deriving total shifts today, open/requested/booked counts).
+2. Replace our current UnifiedCalendarPage with FullCalendar to show open/requested/booked shifts inline, remove separate shortcuts, and allow in-calendar “Assign Staff” on requests.
+3. Refactor Staff Management to use a shared useStaff() hook that wraps credentials and user data, and filter out non-compliant staff automatically.
+
+# TASKS
+
+🗄️ **1. Scaffold DashboardContext**  
+- Create `src/context/DashboardContext.tsx`:
+  ```ts
+  import React, { createContext, useContext } from 'react';
+  import { useShifts } from '@/context/ShiftContext';
+  import { useTimeClocks } from '@/context/TimeClockContext';
+
+  type DashboardData = {
+    totalShiftsToday: number;
+    openCount: number;
+    requestedCount: number;
+    bookedCount: number;
+    totalHoursToday: number;
+  };
+
+  const DashboardContext = createContext<DashboardData | null>(null);
+
+  export const DashboardProvider: React.FC<{children:React.ReactNode}> = ({children}) => {
+    const { open, requested, booked } = useShifts();
+    const clocks = useTimeClocks();
+    const today = new Date().toISOString().slice(0,10);
+    const todayClocks = clocks.filter(c => c.timestamp.startsWith(today));
+    const totalHoursToday = /* compute from todayClocks pairs */;
+    return (
+      <DashboardContext.Provider value={{
+        totalShiftsToday: open.length + requested.length + booked.length,
+        openCount: open.length,
+        requestedCount: requested.length,
+        bookedCount: booked.length,
+        totalHoursToday
+      }}>
+        {children}
+      </DashboardContext.Provider>
+    );
+  };
+
+  export const useDashboard = ()=> {
+    const ctx = useContext(DashboardContext);
+    if(!ctx) throw new Error('useDashboard must be inside DashboardProvider');
+    return ctx;
+  };
+🔄 Wrap App in DashboardProvider
+
+In src/App.tsx around your other providers:
+
+diff
+Copy
+Edit
++ import { DashboardProvider } from '@/context/DashboardContext';
+…
+- <Layout>
++ <DashboardProvider>
+    <Layout>
+      <Router/>
+    </Layout>
++ </DashboardProvider>
+📆 2. Swap in FullCalendar on UnifiedCalendarPage
+
+npm install @fullcalendar/react @fullcalendar/daygrid @fullcalendar/interaction
+
+In src/pages/UnifiedCalendarPage.tsx:
+
+diff
+Copy
+Edit
+- /* old calendar import */
++ import FullCalendar from '@fullcalendar/react';
++ import dayGridPlugin from '@fullcalendar/daygrid';
++ import interactionPlugin from '@fullcalendar/interaction';
++ import { useShifts } from '@/context/ShiftContext';
++ import { useCredentials } from '@/context/CredentialsContext';
+
+function UnifiedCalendarPage() {
+  const { open, requested, booked } = useShifts();
+  const creds = useCredentials();
+  const events = [
+    ...open.map(s=>({ title:`Open: ${s.facility}`, date:s.date, color:'gray' })),
+    ...requested.map(s=>({ title:`Requested: ${s.facility}`, date:s.date, color:'orange' })),
+    ...booked.map(s=>({ title:`Booked: ${s.facility}`, date:s.date, color:'green' }))
+  ];
+  const handleEventClick = (info) => {
+    if(info.event.title.startsWith('Requested')) {
+      // open AssignStaffModal, passing shiftId=info.event.id
+    }
+  };
+  return (
+    <FullCalendar
+      plugins={[dayGridPlugin, interactionPlugin]}
+      initialView="dayGridMonth"
+      events={events}
+      eventClick={handleEventClick}
+    />
+  );
+}
+🎯 3. Assign-Staff Modal in Calendar
+
+Create src/components/AssignStaffModal.tsx using your UI lib, pulling compliant staff:
+
+ts
+Copy
+Edit
+import { useCredentials } from '@/context/CredentialsContext';
+export function AssignStaffModal({ shiftId, isOpen, onClose }) {
+  const creds = useCredentials().filter(c=>new Date(c.expires)>new Date());
+  return (
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <Select onChange={staffId=>assignShift(shiftId,staffId)}>
+        {creds.map(c=><option key={c.userId} value={c.userId}>{c.userId}</option>)}
+      </Select>
+    </Modal>
+  );
+}
+👥 4. Refactor Staff Management
+
+Create src/context/StaffContext.tsx that merges users + credentials:
+
+ts
+Copy
+Edit
+import React, {createContext,useContext} from 'react';
+import { useCredentials } from '@/context/CredentialsContext';
+import { useQuery } from '@tanstack/react-query';
+export const StaffContext=createContext<any>(null);
+export const StaffProvider:React.FC=({children})=>{
+  const { data: users } = useQuery(['users'], ()=>fetch('/api/users'));
+  const creds = useCredentials();
+  const staff = users.map(u=>({
+    ...u,
+    compliant: creds.find(c=>c.userId===u.id && new Date(c.expires)>new Date())!=null
+  }));
+  return <StaffContext.Provider value={staff}>{children}</StaffContext.Provider>;
+};
+export const useStaff=()=>useContext(StaffContext);
+Wrap around your App (same way as others) and update your Staff Management page to read from useStaff() and filter staff.filter(s=>s.compliant) for assignments.
+
+FILES TO EDIT
+src/context/DashboardContext.tsx, TimeClockContext.tsx, CredentialsContext.tsx, InsightsContext.tsx, InvoiceContext.tsx, StaffContext.tsx
+
+src/App.tsx
+
+src/pages/UnifiedCalendarPage.tsx
+
+src/components/AssignStaffModal.tsx
+
+src/pages/StaffManagementPage.tsx
+
+Remove any remaining one-off useQuery calls in those areas.
+
+SUCCESS CRITERIA
+Dashboard cards all read from useDashboard().
+
+FullCalendar shows open/requested/booked with inline assign.
+
+AssignStaffModal only lists compliant staff.
+
+Staff Management page shows the same staff roster with compliance flag.
+
+No feature still doing its own fetch—everything reads from a context.
+
+BEGIN!

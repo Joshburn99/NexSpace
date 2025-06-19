@@ -11,6 +11,8 @@ import { TimeClockProvider } from "@/contexts/TimeClockContext";
 import { CredentialsProvider } from "@/contexts/CredentialsContext";
 import { InsightsProvider } from "@/contexts/InsightsContext";
 import { InvoiceProvider } from "@/contexts/InvoiceContext";
+import { DashboardProvider } from "@/contexts/DashboardContext";
+import { StaffProvider } from "@/contexts/StaffContext";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import JobBoard from "@/pages/job-board";
@@ -110,12 +112,16 @@ function App() {
             <CredentialsProvider>
               <InsightsProvider>
                 <InvoiceProvider>
-                  <TooltipProvider>
-                    <Toaster />
-                    <Layout>
-                      <Router />
-                    </Layout>
-                  </TooltipProvider>
+                  <StaffProvider>
+                    <DashboardProvider>
+                      <TooltipProvider>
+                        <Toaster />
+                        <Layout>
+                          <Router />
+                        </Layout>
+                      </TooltipProvider>
+                    </DashboardProvider>
+                  </StaffProvider>
                 </InvoiceProvider>
               </InsightsProvider>
             </CredentialsProvider>

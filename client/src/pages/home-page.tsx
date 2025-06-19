@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
+import { useDashboard } from "@/contexts/DashboardContext";
+import { useShifts } from "@/contexts/ShiftContext";
+import { useCredentials } from "@/contexts/CredentialsContext";
+import { useInvoices } from "@/contexts/InvoiceContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
