@@ -1,373 +1,241 @@
 import { useState } from "react";
-import { Users, Eye, ArrowLeft, Shield, UserCheck, Building } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAuth } from "@/hooks/use-auth";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { useAuth } from "@/hooks/use-auth";
-import { useToast } from "@/hooks/use-toast";
-import { UserRole } from "@shared/schema";
-
-const mockUsers = [
-  {
-    id: 1,
-    firstName: "Joshua",
-    lastName: "Burnett",
-    email: "joshua.burnett@nexspace.com",
-    role: UserRole.SUPER_ADMIN,
-    facility: "NexSpace HQ",
-    lastActive: "2025-06-17T20:00:00Z",
-    status: "active",
-  },
-  {
-    id: 2,
-    firstName: "Sarah",
-    lastName: "Johnson",
-    email: "sarah.johnson@sunrisesenior.com",
-    role: UserRole.FACILITY_MANAGER,
-    facility: "Sunrise Senior Living",
-    lastActive: "2025-06-17T18:30:00Z",
-    status: "active",
-  },
-  {
-    id: 3,
-    firstName: "Michael",
-    lastName: "Chen",
-    email: "michael.chen@goldenyears.com",
-    role: UserRole.CLIENT_ADMINISTRATOR,
-    facility: "Golden Years Care Center",
-    lastActive: "2025-06-17T16:45:00Z",
-    status: "active",
-  },
-  {
-    id: 4,
-    firstName: "Emily",
-    lastName: "Rodriguez",
-    email: "emily.rodriguez@nexspace.com",
-    role: UserRole.INTERNAL_EMPLOYEE,
-    facility: "Harmony Health Center",
-    lastActive: "2025-06-17T19:15:00Z",
-    status: "active",
-  },
-  {
-    id: 5,
-    firstName: "David",
-    lastName: "Thompson",
-    email: "david.thompson@contractor.com",
-    role: UserRole.CONTRACTOR_1099,
-    facility: "Multiple Facilities",
-    lastActive: "2025-06-17T17:20:00Z",
-    status: "active",
-  },
-];
+import {
+  Search,
+  User,
+  Shield,
+  LogOut,
+  Users,
+  Eye,
+  AlertTriangle
+} from "lucide-react";
+import { User as SelectUser } from "@shared/schema";
 
 export default function AdminImpersonationPage() {
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const { user, startImpersonation, quitImpersonation, impersonatedUser, originalUser } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("all");
-  const [selectedUser, setSelectedUser] = useState<(typeof mockUsers)[0] | null>(null);
+  const [roleFilter, setRoleFilter] = useState<string>("all");
 
-  const getRoleColor = (role: string) => {
-    switch (role) {
-      case UserRole.SUPER_ADMIN:
-        return "bg-purple-100 text-purple-800";
-      case UserRole.CLIENT_ADMINISTRATOR:
-        return "bg-blue-100 text-blue-800";
-      case UserRole.FACILITY_MANAGER:
-        return "bg-green-100 text-green-800";
-      case UserRole.INTERNAL_EMPLOYEE:
-        return "bg-yellow-100 text-yellow-800";
-      case UserRole.CONTRACTOR_1099:
-        return "bg-orange-100 text-orange-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getRoleDisplay = (role: string) => {
-    switch (role) {
-      case UserRole.SUPER_ADMIN:
-        return "Super Admin";
-      case UserRole.CLIENT_ADMINISTRATOR:
-        return "Client Administrator";
-      case UserRole.FACILITY_MANAGER:
-        return "Facility Manager";
-      case UserRole.INTERNAL_EMPLOYEE:
-        return "Internal Employee";
-      case UserRole.CONTRACTOR_1099:
-        return "1099 Contractor";
-      default:
-        return role;
-    }
-  };
-
-  const filteredUsers = mockUsers.filter((u) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      `${u.firstName} ${u.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.facility.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === "all" || u.role === roleFilter;
-    return matchesSearch && matchesRole;
+  const { data: users = [], isLoading } = useQuery<SelectUser[]>({
+    queryKey: ["/api/admin/users"],
   });
 
-  const handleImpersonate = (targetUser: (typeof mockUsers)[0]) => {
-    setSelectedUser(targetUser);
-    toast({
-      title: "Impersonation Started",
-      description: `Now viewing the platform as ${targetUser.firstName} ${targetUser.lastName} (${getRoleDisplay(targetUser.role)})`,
-    });
+  const filteredUsers = users.filter(u => {
+    const matchesSearch = u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (u.firstName + " " + u.lastName).toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRole = roleFilter === "all" || u.role === roleFilter;
+    
+    // Don't show the current user in the list
+    const isNotCurrentUser = u.id !== (impersonatedUser?.id || user?.id);
+    
+    return matchesSearch && matchesRole && isNotCurrentUser;
+  });
+
+  const handleImpersonate = (targetUser: SelectUser) => {
+    startImpersonation(targetUser);
   };
 
-  const stopImpersonation = () => {
-    setSelectedUser(null);
-    toast({
-      title: "Impersonation Ended",
-      description: "Returned to your Super Admin view",
-    });
+  const handleQuitImpersonation = () => {
+    quitImpersonation();
   };
 
-  if (user?.role !== UserRole.SUPER_ADMIN) {
-    return (
-      <div className="flex-1 flex items-center justify-center">
-        <Card className="w-96">
-          <CardContent className="pt-6 text-center">
-            <Shield className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-lg font-semibold mb-2">Access Denied</h2>
-            <p className="text-gray-600 dark:text-gray-300">
-              This feature is only available to Super Administrators.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const getRoleBadgeColor = (role: string) => {
+    switch (role.toLowerCase()) {
+      case "admin":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
+      case "manager":
+        return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
+      case "clinician":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
+      case "employee":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "contractor":
+        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
+    }
+  };
 
   return (
-    <div className="p-6">
-      {selectedUser && (
-        <div className="mb-6 p-4 bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Eye className="w-5 h-5 text-purple-600" />
-              <div>
-                <p className="font-medium text-purple-900 dark:text-purple-100">
-                  Impersonating: {selectedUser.firstName} {selectedUser.lastName}
-                </p>
-                <p className="text-sm text-purple-700 dark:text-purple-300">
-                  {getRoleDisplay(selectedUser.role)} • {selectedUser.facility}
-                </p>
-              </div>
-            </div>
-            <Button onClick={stopImpersonation} variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Stop Impersonation
-            </Button>
-          </div>
-        </div>
-      )}
-
-      <div className="flex items-center justify-between mb-6">
+    <div className="p-6 max-w-6xl mx-auto space-y-6">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {selectedUser ? "Impersonation View" : "User Impersonation"}
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+            User Impersonation
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            {selectedUser
-              ? "You are viewing the platform as another user. Use the navigation to see their experience."
-              : "Select a user to impersonate and preview their platform experience"}
+          <p className="text-gray-600 dark:text-gray-400 mt-2">
+            Impersonate users to test functionality and provide support
           </p>
         </div>
-        {selectedUser && (
-          <div className="flex gap-2">
-            <Button variant="outline">View Dashboard</Button>
-            <Button>Generate Demo Report</Button>
+        
+        {impersonatedUser && (
+          <div className="flex items-center gap-4">
+            <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-3 py-1">
+              <Eye className="h-4 w-4 mr-2" />
+              Impersonating: {impersonatedUser.username}
+            </Badge>
+            <Button onClick={handleQuitImpersonation} variant="outline" className="bg-red-50 hover:bg-red-100">
+              <LogOut className="h-4 w-4 mr-2" />
+              Quit Impersonation
+            </Button>
           </div>
         )}
       </div>
 
-      {!selectedUser && (
-        <>
-          {/* Filters */}
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="flex flex-wrap gap-4">
-                <div className="flex-1 min-w-64">
-                  <Input
-                    placeholder="Search by name, email, or facility..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <Select value={roleFilter} onValueChange={setRoleFilter}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Filter by role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Roles</SelectItem>
-                    <SelectItem value={UserRole.SUPER_ADMIN}>Super Admin</SelectItem>
-                    <SelectItem value={UserRole.CLIENT_ADMINISTRATOR}>
-                      Client Administrator
-                    </SelectItem>
-                    <SelectItem value={UserRole.FACILITY_MANAGER}>Facility Manager</SelectItem>
-                    <SelectItem value={UserRole.INTERNAL_EMPLOYEE}>Internal Employee</SelectItem>
-                    <SelectItem value={UserRole.CONTRACTOR_1099}>1099 Contractor</SelectItem>
-                  </SelectContent>
-                </Select>
+      {/* Current Status */}
+      {impersonatedUser && originalUser && (
+        <Card className="border-orange-200 bg-orange-50 dark:bg-orange-900/20">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-4">
+              <AlertTriangle className="h-5 w-5 text-orange-600" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
+                  You are currently impersonating <strong>{impersonatedUser.username}</strong>
+                </p>
+                <p className="text-xs text-orange-600 dark:text-orange-300">
+                  Original user: {originalUser.username} ({originalUser.email})
+                </p>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
-          {/* User List */}
-          <div className="grid grid-cols-1 gap-4">
-            {filteredUsers.map((targetUser) => (
-              <Card key={targetUser.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="w-12 h-12">
-                        <AvatarFallback>
-                          {targetUser.firstName[0]}
-                          {targetUser.lastName[0]}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      <div>
-                        <h3 className="font-semibold text-lg">
-                          {targetUser.firstName} {targetUser.lastName}
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-300">{targetUser.email}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Building className="w-3 h-3 text-gray-500" />
-                          <span className="text-sm text-gray-500">{targetUser.facility}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-center">
-                      <Badge className={getRoleColor(targetUser.role)}>
-                        {getRoleDisplay(targetUser.role)}
-                      </Badge>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Last active: {new Date(targetUser.lastActive).toLocaleString()}
-                      </p>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button
-                        onClick={() => handleImpersonate(targetUser)}
-                        disabled={targetUser.id === user?.id}
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        {targetUser.id === user?.id ? "Current User" : "Impersonate"}
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+      {/* Search and Filter */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Available Users
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4 mb-6">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search by username, email, or name..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Filter by role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Roles</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="clinician">Clinician</SelectItem>
+                <SelectItem value="employee">Employee</SelectItem>
+                <SelectItem value="contractor">Contractor</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {filteredUsers.length === 0 && (
-            <div className="text-center py-8">
-              <UserCheck className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                No users found
-              </h3>
-              <p className="text-gray-500">Try adjusting your search criteria or filters</p>
+          {/* Users List */}
+          <div className="space-y-3">
+            {isLoading ? (
+              <div className="text-center py-8 text-gray-500">
+                Loading users...
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No users found matching your criteria
+              </div>
+            ) : (
+              filteredUsers.map((targetUser) => (
+                <div
+                  key={targetUser.id}
+                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-10 w-10">
+                      <AvatarFallback className="bg-blue-600 text-white">
+                        {targetUser.firstName?.[0]}{targetUser.lastName?.[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-gray-900 dark:text-white">
+                          {targetUser.firstName} {targetUser.lastName}
+                        </h3>
+                        <Badge className={getRoleBadgeColor(targetUser.role)}>
+                          {targetUser.role}
+                        </Badge>
+                      </div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400">
+                        @{targetUser.username} • {targetUser.email}
+                      </div>
+                      {targetUser.facilityId && (
+                        <div className="text-xs text-gray-400 dark:text-gray-500">
+                          Facility ID: {targetUser.facilityId}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {!targetUser.isActive && (
+                      <Badge variant="outline" className="text-red-600 border-red-200">
+                        Inactive
+                      </Badge>
+                    )}
+                    
+                    <Button
+                      onClick={() => handleImpersonate(targetUser)}
+                      disabled={!targetUser.isActive}
+                      size="sm"
+                      className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Impersonate
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Security Notice */}
+      <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
+        <CardContent className="p-4">
+          <div className="flex items-start gap-3">
+            <Shield className="h-5 w-5 text-yellow-600 mt-0.5" />
+            <div>
+              <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-1">
+                Security Notice
+              </h4>
+              <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                <li>• Impersonation sessions are logged for security purposes</li>
+                <li>• Only use impersonation for legitimate support and testing purposes</li>
+                <li>• Your original session will be restored when you quit impersonation</li>
+                <li>• Impersonation state persists across browser refreshes</li>
+              </ul>
             </div>
-          )}
-        </>
-      )}
-
-      {selectedUser && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>User Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Full Name</p>
-                  <p className="font-semibold">
-                    {selectedUser.firstName} {selectedUser.lastName}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Email</p>
-                  <p className="font-semibold">{selectedUser.email}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Role</p>
-                  <Badge className={getRoleColor(selectedUser.role)}>
-                    {getRoleDisplay(selectedUser.role)}
-                  </Badge>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Facility</p>
-                  <p className="font-semibold">{selectedUser.facility}</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Available Actions</CardTitle>
-              <CardDescription>Test functionality available to this user role</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">
-                  View Dashboard
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  Access Scheduling
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  Check Permissions
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  Test Workflows
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Demo Scenarios</CardTitle>
-              <CardDescription>Common user scenarios to test</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">
-                  Create New Shift
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  Submit Invoice
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  View Reports
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  Manage Staff
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
