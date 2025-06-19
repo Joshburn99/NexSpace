@@ -852,8 +852,7 @@ export function registerRoutes(app: Express): Server {
           cmsId: "140002",
           overallRating: 4,
           staffingRating: 4,
-          qualityMeasureRating: 4,
-          emergencyContact: "(217) 555-0499"
+          qualityMeasureRating: 4
         },
         {
           name: "Riverside Assisted Living",
@@ -869,8 +868,7 @@ export function registerRoutes(app: Express): Server {
           description: "Luxury assisted living community with memory care services",
           overallRating: 5,
           staffingRating: 5,
-          qualityMeasureRating: 5,
-          emergencyContact: "(217) 555-0799"
+          qualityMeasureRating: 5
         },
         {
           name: "Springfield General Hospital",
@@ -887,8 +885,7 @@ export function registerRoutes(app: Express): Server {
           cmsId: "140003",
           overallRating: 4,
           staffingRating: 4,
-          qualityMeasureRating: 4,
-          emergencyContact: "(217) 555-1299"
+          qualityMeasureRating: 4
         },
         {
           name: "Peaceful Meadows Hospice",
@@ -902,10 +899,9 @@ export function registerRoutes(app: Express): Server {
           isActive: true,
           bedCount: 24,
           description: "Compassionate end-of-life care with family support services",
-          overallRating: 4.9,
-          staffingRating: 4.9,
-          qualityRating: 4.8,
-          safetyRating: 4.9
+          overallRating: 5,
+          staffingRating: 5,
+          qualityMeasureRating: 5
         }
       ];
 
