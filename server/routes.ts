@@ -1514,6 +1514,271 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Scheduling Configuration API
+  app.get("/api/scheduling/templates", requireAuth, async (req, res) => {
+    try {
+      const templates = [
+        {
+          id: 1,
+          name: "ICU Day Shift",
+          department: "ICU",
+          specialty: "Registered Nurse",
+          minStaff: 2,
+          maxStaff: 4,
+          shiftType: "day",
+          startTime: "07:00",
+          endTime: "19:00",
+          isActive: true
+        },
+        {
+          id: 2,
+          name: "Emergency Night",
+          department: "Emergency",
+          specialty: "Registered Nurse",
+          minStaff: 3,
+          maxStaff: 5,
+          shiftType: "night",
+          startTime: "19:00",
+          endTime: "07:00",
+          isActive: true
+        },
+        {
+          id: 3,
+          name: "OR Morning",
+          department: "Operating Room",
+          specialty: "Surgical Technologist",
+          minStaff: 1,
+          maxStaff: 2,
+          shiftType: "day",
+          startTime: "06:00",
+          endTime: "14:00",
+          isActive: true
+        }
+      ];
+      res.json(templates);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch templates" });
+    }
+  });
+
+  app.post("/api/scheduling/templates", requireAuth, async (req, res) => {
+    try {
+      const template = {
+        id: Date.now(),
+        ...req.body,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      res.status(201).json(template);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create template" });
+    }
+  });
+
+  app.get("/api/scheduling/requirements", requireAuth, async (req, res) => {
+    try {
+      const requirements = [
+        {
+          id: 1,
+          department: "ICU",
+          specialty: "Registered Nurse",
+          minRequired: 3,
+          maxCapacity: 6,
+          requiresCertification: true,
+          certificationTypes: ["BLS", "ACLS", "CCRN"],
+          priorityLevel: "critical",
+          isActive: true
+        },
+        {
+          id: 2,
+          department: "Emergency",
+          specialty: "Registered Nurse",
+          minRequired: 4,
+          maxCapacity: 8,
+          requiresCertification: true,
+          certificationTypes: ["BLS", "ACLS", "TNCC"],
+          priorityLevel: "critical",
+          isActive: true
+        },
+        {
+          id: 3,
+          department: "Medical-Surgical",
+          specialty: "Licensed Practical Nurse",
+          minRequired: 2,
+          maxCapacity: 4,
+          requiresCertification: false,
+          certificationTypes: [],
+          priorityLevel: "medium",
+          isActive: true
+        },
+        {
+          id: 4,
+          department: "Operating Room",
+          specialty: "Surgical Technologist",
+          minRequired: 1,
+          maxCapacity: 3,
+          requiresCertification: true,
+          certificationTypes: ["BLS", "CNOR"],
+          priorityLevel: "high",
+          isActive: true
+        }
+      ];
+      res.json(requirements);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch requirements" });
+    }
+  });
+
+  app.post("/api/scheduling/requirements", requireAuth, async (req, res) => {
+    try {
+      const requirement = {
+        id: Date.now(),
+        ...req.body,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      res.status(201).json(requirement);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to create requirement" });
+    }
+  });
+
+  // Shift Requests API with worker details
+  app.get("/api/shift-requests", requireAuth, async (req, res) => {
+    try {
+      const shiftRequests = [
+        {
+          id: 1,
+          shiftId: 3,
+          title: "Physical Therapy",
+          date: "2025-06-20",
+          startTime: "09:00",
+          endTime: "17:00",
+          department: "Rehabilitation",
+          specialty: "Physical Therapist",
+          facilityName: "OHSU Hospital",
+          status: "pending",
+          urgency: "medium",
+          requestedWorkers: [
+            {
+              id: 15,
+              name: "Sarah Martinez",
+              reliabilityScore: 95,
+              totalShiftsWorked: 127,
+              isFavorite: true,
+              specialty: "Physical Therapist",
+              certifications: ["BLS", "PT License"],
+              profileUrl: "/staff/15"
+            },
+            {
+              id: 23,
+              name: "Michael Chen",
+              reliabilityScore: 88,
+              totalShiftsWorked: 89,
+              isFavorite: false,
+              specialty: "Physical Therapist",
+              certifications: ["BLS", "PT License", "Orthopedic Cert"],
+              profileUrl: "/staff/23"
+            },
+            {
+              id: 31,
+              name: "Amanda Rodriguez",
+              reliabilityScore: 92,
+              totalShiftsWorked: 156,
+              isFavorite: true,
+              specialty: "Physical Therapist",
+              certifications: ["BLS", "PT License", "Neuro Cert"],
+              profileUrl: "/staff/31"
+            }
+          ]
+        },
+        {
+          id: 2,
+          shiftId: 9,
+          title: "Pediatric Unit",
+          date: "2025-06-23",
+          startTime: "07:00",
+          endTime: "19:00",
+          department: "Pediatrics",
+          specialty: "Registered Nurse",
+          facilityName: "Providence Portland Medical Center",
+          status: "pending",
+          urgency: "medium",
+          requestedWorkers: [
+            {
+              id: 7,
+              name: "Jessica Thompson",
+              reliabilityScore: 97,
+              totalShiftsWorked: 203,
+              isFavorite: true,
+              specialty: "Registered Nurse",
+              certifications: ["BLS", "PALS", "RN License"],
+              profileUrl: "/staff/7"
+            },
+            {
+              id: 12,
+              name: "David Wilson",
+              reliabilityScore: 91,
+              totalShiftsWorked: 145,
+              isFavorite: false,
+              specialty: "Registered Nurse",
+              certifications: ["BLS", "ACLS", "PALS", "RN License"],
+              profileUrl: "/staff/12"
+            }
+          ]
+        },
+        {
+          id: 3,
+          shiftId: 10,
+          title: "CNA Float Pool",
+          date: "2025-06-24",
+          startTime: "14:00",
+          endTime: "22:00",
+          department: "Float Pool",
+          specialty: "Certified Nursing Assistant",
+          facilityName: "Rose City Nursing Center",
+          status: "pending",
+          urgency: "low",
+          requestedWorkers: [
+            {
+              id: 18,
+              name: "Maria Gonzalez",
+              reliabilityScore: 94,
+              totalShiftsWorked: 178,
+              isFavorite: true,
+              specialty: "Certified Nursing Assistant",
+              certifications: ["BLS", "CNA License"],
+              profileUrl: "/staff/18"
+            },
+            {
+              id: 25,
+              name: "Robert Johnson",
+              reliabilityScore: 86,
+              totalShiftsWorked: 98,
+              isFavorite: false,
+              specialty: "Certified Nursing Assistant",
+              certifications: ["BLS", "CNA License"],
+              profileUrl: "/staff/25"
+            },
+            {
+              id: 33,
+              name: "Linda Davis",
+              reliabilityScore: 89,
+              totalShiftsWorked: 134,
+              isFavorite: false,
+              specialty: "Certified Nursing Assistant",
+              certifications: ["BLS", "CNA License", "Med Tech"],
+              profileUrl: "/staff/33"
+            }
+          ]
+        }
+      ];
+      res.json(shiftRequests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch shift requests" });
+    }
+  });
+
   // Create new facility
   app.post("/api/facilities", requireAuth, async (req, res) => {
     try {

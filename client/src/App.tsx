@@ -40,6 +40,7 @@ import AdminAuditLogsPage from "@/pages/admin-audit-logs-page";
 import AdminDatabaseConsolePage from "@/pages/admin-database-console-page";
 import SystemSettingsPage from "@/pages/system-settings-page";
 import DetailedShiftAnalyticsPage from "@/pages/detailed-shift-analytics-page";
+import SchedulingConfigPage from "@/pages/scheduling-config-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -52,6 +53,7 @@ function Router() {
       <ProtectedRoute path="/calendar-view" component={UnifiedCalendarPage} />
       <ProtectedRoute path="/scheduling" component={UnifiedCalendarPage} />
       <ProtectedRoute path="/advanced-scheduling" component={UnifiedCalendarPage} />
+      <ProtectedRoute path="/scheduling-config" component={SchedulingConfigPage} />
       <ProtectedRoute path="/shifts-open" component={OpenShiftsPage} />
       <ProtectedRoute path="/shift-requests" component={ShiftRequestsPage} />
       <ProtectedRoute path="/time-clock" component={TimeClockPage} />
