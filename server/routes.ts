@@ -1409,9 +1409,7 @@ export function registerRoutes(app: Express): Server {
           staffingRating: 4,
           qualityMeasureRating: 4,
           latitude: 45.4992,
-          longitude: -122.6853,
-          createdAt: new Date("2024-01-01"),
-          updatedAt: new Date("2025-06-19")
+          longitude: -122.6853
         },
         {
           id: 2,
@@ -1432,9 +1430,7 @@ export function registerRoutes(app: Express): Server {
           staffingRating: 5,
           qualityMeasureRating: 5,
           latitude: 45.4992,
-          longitude: -122.6853,
-          createdAt: new Date("2024-01-01"),
-          updatedAt: new Date("2025-06-19")
+          longitude: -122.6853
         },
         {
           id: 3,
