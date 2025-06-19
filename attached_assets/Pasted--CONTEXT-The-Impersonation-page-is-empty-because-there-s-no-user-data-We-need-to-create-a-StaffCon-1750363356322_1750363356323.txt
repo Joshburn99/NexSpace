@@ -1,0 +1,133 @@
+# CONTEXT
+The Impersonation page is empty because there’s no user data. We need to create a StaffContext seeded with both employees and contractors tied to specific facilities, wrap our App in it, and then hook the Impersonation UI to this context.
+
+# TASKS
+
+1. **Scaffold StaffContext**  
+- New file: `src/context/StaffContext.tsx`
+- Paste:
+  ```ts
+  import React, { createContext, useContext, ReactNode } from 'react';
+
+  export type StaffMember = {
+    id: string;
+    name: string;
+    role: 'employee' | 'contractor';
+    facilityId: string;
+    email: string;
+    phone: string;
+  };
+
+  const sampleStaff: StaffMember[] = [
+    { id: 's1', name: 'Alice Smith',  role: 'employee',   facilityId: 'f1', email: 'alice@nx.com', phone: '555-0101' },
+    { id: 's2', name: 'Bob Johnson',  role: 'contractor', facilityId: 'f2', email: 'bob@nx.com',   phone: '555-0202' },
+    { id: 's3', name: 'Carol Lee',    role: 'employee',   facilityId: 'f1', email: 'carol@nx.com', phone: '555-0303' },
+    // …add more as needed…
+  ];
+
+  const StaffContext = createContext<StaffMember[]|null>(null);
+
+  export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) => (
+    <StaffContext.Provider value={sampleStaff}>
+      {children}
+    </StaffContext.Provider>
+  );
+
+  export const useStaff = () => {
+    const ctx = useContext(StaffContext);
+    if (!ctx) throw new Error('useStaff must be used within StaffProvider');
+    return ctx;
+  };
+Wrap App in StaffProvider
+
+File: src/App.tsx
+
+At the top add:
+
+ts
+Copy
+Edit
+import { StaffProvider } from '@/context/StaffContext';
+Wrap around your existing providers/layout:
+
+diff
+Copy
+Edit
+- <UserProvider>
+-   <ShiftProvider>
+-     <Layout>…</Layout>
+-   </ShiftProvider>
+- </UserProvider>
++ <UserProvider>
++   <ShiftProvider>
++     <StaffProvider>
++       <Layout>…</Layout>
++     </StaffProvider>
++   </ShiftProvider>
++ </UserProvider>
+Populate Admin Impersonation Page
+
+File: src/pages/admin-impersonation-page.tsx
+
+Replace your “Available Users” section with:
+
+tsx
+Copy
+Edit
+import { useStaff } from '@/context/StaffContext';
+import { useAuth } from '@/hooks/use-auth';
+import { useFacilities } from '@/context/FacilitiesContext'; // if you have one
+
+export default function AdminImpersonationPage() {
+  const staff = useStaff();
+  const { startImpersonation } = useAuth();
+  // Optional: filter by facility dropdown
+  // const facilities = useFacilities();
+  // const [facilityFilter, setFacilityFilter] = useState<string>('all');
+  // const displayed = facilityFilter === 'all'
+  //    ? staff
+  //    : staff.filter(s => s.facilityId === facilityFilter);
+
+  return (
+    <>
+      <h2>Available Users</h2>
+      {/* optional facility filter UI */}
+      <div className="space-y-2">
+        {staff.map(u => (
+          <div key={u.id} className="flex justify-between items-center p-2 border rounded">
+            <div>
+              <p className="font-medium">{u.name} <span className="text-sm">({u.role})</span></p>
+              <p className="text-sm">{u.email} • {u.phone}</p>
+              <p className="text-xs text-gray-500">Facility: {u.facilityId}</p>
+            </div>
+            <button
+              className="bg-blue-600 text-white px-3 py-1 rounded"
+              onClick={() => {
+                startImpersonation(u);
+                navigate('/clinician-dashboard');
+              }}
+            >
+              Impersonate
+            </button>
+          </div>
+        ))}
+        {staff.length === 0 && <p>No users found matching your criteria</p>}
+      </div>
+    </>
+  );
+}
+FILES TO EDIT
+src/context/StaffContext.tsx
+
+src/App.tsx
+
+src/pages/admin-impersonation-page.tsx
+
+SUCCESS CRITERIA
+Admin → Impersonation now lists real staff (employees and contractors).
+
+Clicking “Impersonate” switches you into that user’s view.
+
+You can now quit your session with the header button you added earlier.
+
+BEGIN!

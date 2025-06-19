@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useStaff } from "@/contexts/StaffContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,17 +23,32 @@ import {
   AlertTriangle
 } from "lucide-react";
 import { User as SelectUser } from "@shared/schema";
+import { useLocation } from "wouter";
 
 export default function AdminImpersonationPage() {
   const { user, startImpersonation, quitImpersonation, impersonatedUser, originalUser } = useAuth();
+  const { staff, isLoading } = useStaff();
+  const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
-  const { data: users = [], isLoading } = useQuery<SelectUser[]>({
-    queryKey: ["/api/admin/users"],
-  });
+  // Convert staff members to User type for impersonation
+  const staffAsUsers: SelectUser[] = staff.map(s => ({
+    id: s.id,
+    username: `${s.firstName.toLowerCase()}${s.lastName.toLowerCase()}`,
+    email: s.email,
+    password: '', // Not needed for impersonation
+    firstName: s.firstName,
+    lastName: s.lastName,
+    role: s.role,
+    avatar: s.avatar || null,
+    isActive: s.compliant,
+    facilityId: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  }));
 
-  const filteredUsers = users.filter(u => {
+  const filteredUsers = staffAsUsers.filter(u => {
     const matchesSearch = u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (u.firstName + " " + u.lastName).toLowerCase().includes(searchTerm.toLowerCase());
@@ -48,6 +63,23 @@ export default function AdminImpersonationPage() {
 
   const handleImpersonate = (targetUser: SelectUser) => {
     startImpersonation(targetUser);
+    // Navigate to appropriate dashboard based on role
+    switch (targetUser.role) {
+      case 'clinician':
+        navigate('/clinician-dashboard');
+        break;
+      case 'employee':
+        navigate('/employee-dashboard');
+        break;
+      case 'contractor':
+        navigate('/contractor-dashboard');
+        break;
+      case 'manager':
+        navigate('/dashboard');
+        break;
+      default:
+        navigate('/dashboard');
+    }
   };
 
   const handleQuitImpersonation = () => {
