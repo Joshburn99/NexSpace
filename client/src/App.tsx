@@ -36,6 +36,7 @@ import ClinicianDashboardWrapper from "@/pages/clinician-dashboard-wrapper";
 import EmployeeDashboardWrapper from "@/pages/employee-dashboard-wrapper";
 import ContractorDashboardWrapper from "@/pages/contractor-dashboard-wrapper";
 import FloatPoolAnalyticsPage from "@/pages/float-pool-analytics-page";
+import FacilityRecommendationsPage from "@/pages/facility-recommendations-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -71,6 +72,7 @@ function Router() {
       <ProtectedRoute path="/clinician-dashboard" component={ClinicianDashboardWrapper} />
       <ProtectedRoute path="/employee-dashboard" component={EmployeeDashboardWrapper} />
       <ProtectedRoute path="/contractor-dashboard" component={ContractorDashboardWrapper} />
+      <ProtectedRoute path="/facility-recommendations" component={FacilityRecommendationsPage} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
