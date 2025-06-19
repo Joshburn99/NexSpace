@@ -40,10 +40,13 @@ export default function FacilityManagementPage() {
   // Fetch facilities
   const { data: facilities = [], isLoading } = useQuery({
     queryKey: ["/api/facilities", { search: searchQuery, state: selectedState }],
-    queryFn: () => apiRequest("/api/facilities", { 
-      method: "GET",
-      params: { search: searchQuery || undefined, state: selectedState || undefined }
-    }),
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (searchQuery) params.append('search', searchQuery);
+      if (selectedState) params.append('state', selectedState);
+      const queryString = params.toString();
+      return apiRequest(`/api/facilities${queryString ? `?${queryString}` : ''}`);
+    },
   });
 
   // Create facility form
@@ -74,8 +77,15 @@ export default function FacilityManagementPage() {
 
   // Create facility mutation
   const createFacilityMutation = useMutation({
-    mutationFn: (data: z.infer<typeof createFacilitySchema>) =>
-      apiRequest("/api/facilities", { method: "POST", body: data }),
+    mutationFn: async (data: z.infer<typeof createFacilitySchema>) => {
+      const response = await fetch("/api/facilities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("Failed to create facility");
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
       setIsCreateDialogOpen(false);
@@ -96,8 +106,15 @@ export default function FacilityManagementPage() {
 
   // Import facility mutation
   const importFacilityMutation = useMutation({
-    mutationFn: (cmsId: string) =>
-      apiRequest("/api/facilities/import/cms", { method: "POST", body: { cmsId } }),
+    mutationFn: async (cmsId: string) => {
+      const response = await fetch("/api/facilities/import/cms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cmsId }),
+      });
+      if (!response.ok) throw new Error("Failed to import facility");
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
       setIsImportDialogOpen(false);
@@ -118,8 +135,15 @@ export default function FacilityManagementPage() {
 
   // External search mutation
   const searchExternalMutation = useMutation({
-    mutationFn: (data: { name: string; state?: string; city?: string }) =>
-      apiRequest("/api/facilities/search/external", { method: "POST", body: data }),
+    mutationFn: async (data: { name: string; state?: string; city?: string }) => {
+      const response = await fetch("/api/facilities/search/external", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("Failed to search external databases");
+      return response.json();
+    },
     onSuccess: (results) => {
       setExternalSearchResults(results);
       setIsSearchingExternal(false);
@@ -136,8 +160,14 @@ export default function FacilityManagementPage() {
 
   // Refresh facility data mutation
   const refreshFacilityMutation = useMutation({
-    mutationFn: (facilityId: number) =>
-      apiRequest(`/api/facilities/${facilityId}/refresh`, { method: "POST" }),
+    mutationFn: async (facilityId: number) => {
+      const response = await fetch(`/api/facilities/${facilityId}/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) throw new Error("Failed to refresh facility data");
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
       toast({
