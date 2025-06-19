@@ -10,7 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/use-auth";
-import { AppLayout } from "@/components/ui/app-layout";
+
 import { useToast } from "@/hooks/use-toast";
 
 const workflowTemplates = [
@@ -173,7 +173,7 @@ export default function WorkflowAutomationPage() {
   };
 
   return (
-    <AppLayout>
+    <div className="p-6">
       <div className="p-6">
           <div className="flex items-center justify-between mb-6">
             <div>

@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Logo } from "@/components/ui/logo";
+import NexspaceFullLogo from "@assets/nexspace-full-logo.svg";
 import { 
   ChevronDown, 
   BarChart3, 
@@ -240,14 +240,10 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         {expanded ? (
           <div className="flex items-center">
-            <Logo className="h-8 w-8 mr-2" />
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">NexSpace</h1>
-              <p className="text-xs text-gray-500">Healthcare Staffing</p>
-            </div>
+            <img src={NexspaceFullLogo} alt="NexSpace" className="h-8" />
           </div>
         ) : (
-          <Logo className="h-8 w-8" />
+          <img src={NexspaceFullLogo} alt="NexSpace" className="h-8 w-8" />
         )}
         {onToggle && (
           <Button

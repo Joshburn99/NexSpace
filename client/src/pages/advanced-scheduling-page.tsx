@@ -613,6 +613,6 @@ export default function AdvancedSchedulingPage() {
             </div>
           )}
         </div>
-    </AppLayout>
+    </div>
   );
 }

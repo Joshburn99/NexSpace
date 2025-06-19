@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
-import { AppLayout } from "@/components/ui/app-layout";
+
 import { useToast } from "@/hooks/use-toast";
 
 const mockReferrals = [
@@ -80,7 +80,7 @@ export default function ReferralPage() {
     .reduce((sum, r) => sum + r.bonusAmount, 0);
 
   return (
-    <AppLayout title="Referral System" subtitle="Refer qualified healthcare professionals and earn rewards">
+    <div className="p-6">
       <div className="flex items-center justify-end mb-6">
         <Button>
           <Share className="w-4 h-4 mr-2" />
