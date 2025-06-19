@@ -376,14 +376,8 @@ export default function UnifiedCalendarPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="calendar" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="calendar">7-Day Calendar</TabsTrigger>
-          <TabsTrigger value="block-shifts">Block Shifts</TabsTrigger>
-          <TabsTrigger value="filters">Advanced Filters</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="calendar" className="space-y-6">
+        {/* Calendar View */}
+        <div className="space-y-6">
           {/* Filters */}
           <Card>
             <CardHeader>
@@ -564,9 +558,8 @@ export default function UnifiedCalendarPage() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="block-shifts" className="space-y-6">
+          
+          {/* Block Shifts Section */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -606,45 +599,7 @@ export default function UnifiedCalendarPage() {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="filters" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Advanced Filters & Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Switch 
-                  id="show-block-shifts"
-                  checked={showBlockShifts}
-                  onCheckedChange={setShowBlockShifts}
-                />
-                <Label htmlFor="show-block-shifts">Show block shifts in calendar</Label>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Filter by Facility</Label>
-                  <Select value={selectedFilters.facility} onValueChange={(value) => 
-                    setSelectedFilters(prev => ({ ...prev, facility: value }))
-                  }>
-                    <SelectTrigger>
-                      <SelectValue placeholder="All Facilities" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Facilities</SelectItem>
-                      <SelectItem value="1">General Hospital</SelectItem>
-                      <SelectItem value="2">Metro Medical</SelectItem>
-                      <SelectItem value="3">City Clinic</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+        </div>
 
       {/* Shift Details Dialog */}
       {selectedShift && (

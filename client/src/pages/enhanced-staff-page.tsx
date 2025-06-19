@@ -449,7 +449,7 @@ export default function EnhancedStaffPage() {
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={staff.profileImage} />
                       <AvatarFallback>
-                        {staff.firstName[0]}{staff.lastName[0]}
+                        {staff.firstName?.[0] || ''}{staff.lastName?.[0] || ''}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
@@ -516,7 +516,7 @@ export default function EnhancedStaffPage() {
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={post.authorImage} />
                         <AvatarFallback>
-                          {post.authorName.split(' ').map(n => n[0]).join('')}
+                          {post.authorName?.split(' ').map(n => n?.[0] || '').join('') || ''}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
@@ -586,7 +586,7 @@ export default function EnhancedStaffPage() {
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={staff.profileImage} />
                           <AvatarFallback className="text-xs">
-                            {staff.firstName[0]}{staff.lastName[0]}
+                            {staff.firstName?.[0] || ''}{staff.lastName?.[0] || ''}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
@@ -692,7 +692,7 @@ export default function EnhancedStaffPage() {
                     <Avatar className="h-16 w-16">
                       <AvatarImage src={selectedStaff.profileImage} />
                       <AvatarFallback>
-                        {selectedStaff.firstName[0]}{selectedStaff.lastName[0]}
+                        {selectedStaff.firstName?.[0] || ''}{selectedStaff.lastName?.[0] || ''}
                       </AvatarFallback>
                     </Avatar>
                     <Button
