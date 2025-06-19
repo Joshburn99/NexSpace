@@ -33,10 +33,33 @@ interface ShiftAnalytics {
   duration: number;
 }
 
+// Medical specialty abbreviations mapping
+const specialtyAbbreviations: Record<string, string> = {
+  'Registered Nurse': 'RN',
+  'Licensed Practical Nurse': 'LPN', 
+  'Certified Nursing Assistant': 'CNA',
+  'Physical Therapist': 'PT',
+  'Respiratory Therapist': 'RT',
+  'Medical Doctor': 'MD',
+  'Nurse Practitioner': 'NP',
+  'Physician Assistant': 'PA',
+  'Occupational Therapist': 'OT',
+  'Speech Language Pathologist': 'SLP',
+  'Medical Assistant': 'MA',
+  'Pharmacy Technician': 'PharmTech',
+  'Radiology Technician': 'RadTech',
+  'Laboratory Technician': 'LabTech'
+};
+
 export default function DetailedShiftAnalyticsPage() {
   const [selectedSpecialty, setSelectedSpecialty] = useState("all");
   const [selectedWorkerType, setSelectedWorkerType] = useState("all");
   const [timeRange, setTimeRange] = useState("30");
+
+  // Helper function to get abbreviated specialty
+  const getSpecialtyAbbreviation = (specialty: string) => {
+    return specialtyAbbreviations[specialty] || specialty;
+  };
 
   const { data: allShiftAnalytics = [], isLoading } = useQuery<ShiftAnalytics[]>({
     queryKey: ["/api/shift-analytics"],
@@ -195,12 +218,14 @@ export default function DetailedShiftAnalyticsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Specialties</SelectItem>
-                  <SelectItem value="registered_nurse">Registered Nurse</SelectItem>
-                  <SelectItem value="licensed_practical_nurse">Licensed Practical Nurse</SelectItem>
-                  <SelectItem value="certified_nursing_assistant">Certified Nursing Assistant</SelectItem>
-                  <SelectItem value="physical_therapist">Physical Therapist</SelectItem>
-                  <SelectItem value="respiratory_therapist">Respiratory Therapist</SelectItem>
-                  <SelectItem value="medical_technologist">Medical Technologist</SelectItem>
+                  <SelectItem value="registered_nurse">RN (Registered Nurse)</SelectItem>
+                  <SelectItem value="licensed_practical_nurse">LPN (Licensed Practical Nurse)</SelectItem>
+                  <SelectItem value="certified_nursing_assistant">CNA (Certified Nursing Assistant)</SelectItem>
+                  <SelectItem value="physical_therapist">PT (Physical Therapist)</SelectItem>
+                  <SelectItem value="respiratory_therapist">RT (Respiratory Therapist)</SelectItem>
+                  <SelectItem value="medical_technologist">MD (Medical Doctor)</SelectItem>
+                  <SelectItem value="nurse_practitioner">NP (Nurse Practitioner)</SelectItem>
+                  <SelectItem value="physician_assistant">PA (Physician Assistant)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -391,7 +416,7 @@ export default function DetailedShiftAnalyticsPage() {
                   {Object.entries(specialtyStats).map(([specialty, stats]: [string, any]) => (
                     <TableRow key={specialty}>
                       <TableCell className="font-medium">
-                        {specialty.replace('_', ' ').toUpperCase()}
+                        {getSpecialtyAbbreviation(specialty.replace('_', ' '))}
                       </TableCell>
                       <TableCell>{stats.totalShifts}</TableCell>
                       <TableCell>{stats.avgApplicationsPerShift.toFixed(1)}</TableCell>
@@ -562,7 +587,7 @@ export default function DetailedShiftAnalyticsPage() {
                   {shiftAnalytics.slice(0, 20).map((shift: ShiftAnalytics) => (
                     <TableRow key={shift.id}>
                       <TableCell className="font-medium">{shift.title}</TableCell>
-                      <TableCell>{shift.specialty.replace('_', ' ').toUpperCase()}</TableCell>
+                      <TableCell>{getSpecialtyAbbreviation(shift.specialty.replace('_', ' '))}</TableCell>
                       <TableCell>{shift.workerType.replace('_', ' ').toUpperCase()}</TableCell>
                       <TableCell>{shift.facilityName}</TableCell>
                       <TableCell>{shift.totalApplications}</TableCell>

@@ -153,9 +153,16 @@ export default function UnifiedCalendarPage() {
   const shiftsByDate = useMemo(() => {
     const grouped: Record<string, Shift[]> = {};
     filteredShifts.forEach(shift => {
-      const date = format(parseISO(shift.date), 'yyyy-MM-dd');
-      if (!grouped[date]) grouped[date] = [];
-      grouped[date].push(shift);
+      if (shift.date) {
+        try {
+          const date = format(parseISO(shift.date), 'yyyy-MM-dd');
+          if (!grouped[date]) grouped[date] = [];
+          grouped[date].push(shift);
+        } catch (error) {
+          // Skip shifts with invalid dates
+          console.warn('Invalid date format for shift:', shift.id, shift.date);
+        }
+      }
     });
     return grouped;
   }, [filteredShifts]);
