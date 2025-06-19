@@ -909,7 +909,7 @@ export function registerRoutes(app: Express): Server {
         }
       ];
 
-      const createdFacilities = await db.insert(facilities).values(facilityData).returning();
+      const createdFacilities = await db.insert(schema.facilities).values(facilityData).returning();
       res.json({ message: "Example facilities created successfully", facilities: createdFacilities });
     } catch (error) {
       console.error('Error creating example facilities:', error);

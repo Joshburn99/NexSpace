@@ -219,6 +219,11 @@ export default function UnifiedCalendarPage() {
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
   const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
+  // Generate month view dates
+  const monthStart = startOfMonth(selectedDate);
+  const monthEnd = endOfMonth(selectedDate);
+  const monthDates = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
   // Filter shifts based on selected filters
   const filteredShifts = shifts.filter((shift: Shift) => {
     if (selectedFilters.facility !== 'all' && shift.facilityId.toString() !== selectedFilters.facility) return false;
@@ -306,11 +311,19 @@ export default function UnifiedCalendarPage() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Unified Calendar</h1>
-          <p className="text-muted-foreground">
-            Comprehensive scheduling and shift management
-          </p>
+        <div className="flex items-center gap-4">
+          <Link href="/scheduling">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Scheduling
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-3xl font-bold">Unified Calendar</h1>
+            <p className="text-muted-foreground">
+              Comprehensive scheduling and shift management
+            </p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm">
@@ -330,24 +343,34 @@ export default function UnifiedCalendarPage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setSelectedDate(addDays(selectedDate, -7))}
+            onClick={() => setSelectedDate(viewMode === 'week' ? addDays(selectedDate, -7) : addDays(selectedDate, -30))}
           >
             <ChevronLeft className="h-4 w-4" />
-            Previous Week
+            Previous {viewMode === 'week' ? 'Week' : 'Month'}
           </Button>
           <h2 className="text-xl font-semibold">
-            {format(weekStart, 'MMM d')} - {format(addDays(weekStart, 6), 'MMM d, yyyy')}
+            {viewMode === 'week' 
+              ? `${format(weekStart, 'MMM d')} - ${format(addDays(weekStart, 6), 'MMM d, yyyy')}`
+              : format(selectedDate, 'MMMM yyyy')
+            }
           </h2>
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setSelectedDate(addDays(selectedDate, 7))}
+            onClick={() => setSelectedDate(viewMode === 'week' ? addDays(selectedDate, 7) : addDays(selectedDate, 30))}
           >
-            Next Week
+            Next {viewMode === 'week' ? 'Week' : 'Month'}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
-        <Button
+        <div className="flex items-center gap-2">
+          <Tabs value={viewMode} onValueChange={(value) => setViewMode(value as 'week' | 'month')}>
+            <TabsList>
+              <TabsTrigger value="week">Week View</TabsTrigger>
+              <TabsTrigger value="month">Month View</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Button
           variant="outline"
           onClick={() => setSelectedDate(new Date())}
         >
@@ -443,43 +466,44 @@ export default function UnifiedCalendarPage() {
       {/* Calendar Grid */}
       <Card>
         <CardHeader>
-          <CardTitle>7-Day Calendar View</CardTitle>
+          <CardTitle>{viewMode === 'week' ? '7-Day Calendar View' : 'Monthly Calendar View'}</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-7 gap-2">
-            {weekDates.map((date, index) => {
-              const dayShifts = getShiftsForDate(date);
-              const isToday = isSameDay(date, new Date());
-              
-              return (
-                <div
-                  key={index}
-                  className={`min-h-[200px] p-2 border rounded-lg ${
-                    isToday ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'
-                  }`}
-                >
-                  <div className="font-semibold text-sm mb-2">
-                    {format(date, 'EEE')}
-                    <br />
-                    {format(date, 'MMM d')}
-                  </div>
-                  <div className="space-y-1">
-                    {dayShifts.map((shift: Shift) => (
-                      <div
-                        key={shift.id}
-                        className={`p-2 rounded text-xs cursor-pointer border-l-4 ${getUrgencyColor(shift.urgency)}`}
-                        onClick={() => setSelectedShift(shift)}
-                      >
-                        <div className="font-medium truncate">{shift.title}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {shift.startTime} - {shift.endTime}
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Badge variant="outline" className="text-xs">
-                            {getSpecialtyAbbreviation(shift.specialty)}
-                          </Badge>
-                          <span className="text-xs font-medium">${shift.rate}/hr</span>
-                        </div>
+          {viewMode === 'week' ? (
+            <div className="grid grid-cols-7 gap-2">
+              {weekDates.map((date, index) => {
+                const dayShifts = getShiftsForDate(date);
+                const isToday = isSameDay(date, new Date());
+                
+                return (
+                  <div
+                    key={index}
+                    className={`min-h-[200px] p-2 border rounded-lg ${
+                      isToday ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'
+                    }`}
+                  >
+                    <div className="font-semibold text-sm mb-2">
+                      {format(date, 'EEE')}
+                      <br />
+                      {format(date, 'MMM d')}
+                    </div>
+                    <div className="space-y-1">
+                      {dayShifts.map((shift: Shift) => (
+                        <div
+                          key={shift.id}
+                          className={`p-2 rounded text-xs cursor-pointer border-l-4 ${getUrgencyColor(shift.urgency)}`}
+                          onClick={() => setSelectedShift(shift)}
+                        >
+                          <div className="font-medium truncate">{shift.title}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {shift.startTime} - {shift.endTime}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Badge variant="outline" className="text-xs">
+                              {getSpecialtyAbbreviation(shift.specialty)}
+                            </Badge>
+                            <span className="text-xs font-medium">${shift.rate}/hr</span>
+                          </div>
                         <Badge className={`text-xs ${getStatusColor(shift.status)}`}>
                           {shift.status.replace('_', ' ')}
                         </Badge>
@@ -490,6 +514,53 @@ export default function UnifiedCalendarPage() {
               );
             })}
           </div>
+          ) : (
+            <div className="grid grid-cols-7 gap-1">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                <div key={day} className="p-2 text-center font-semibold text-sm border-b">
+                  {day}
+                </div>
+              ))}
+              {monthDates.map((date, index) => {
+                const dayShifts = getShiftsForDate(date);
+                const isToday = isSameDay(date, new Date());
+                const isCurrentMonth = isSameMonth(date, selectedDate);
+                
+                return (
+                  <div
+                    key={index}
+                    className={`min-h-[100px] p-1 border rounded-sm ${
+                      isToday ? 'bg-blue-50 border-blue-200' : 
+                      isCurrentMonth ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100'
+                    }`}
+                  >
+                    <div className={`text-xs font-medium mb-1 ${
+                      isCurrentMonth ? 'text-gray-900' : 'text-gray-400'
+                    }`}>
+                      {format(date, 'd')}
+                    </div>
+                    <div className="space-y-1">
+                      {dayShifts.slice(0, 3).map((shift: Shift) => (
+                        <div
+                          key={shift.id}
+                          className={`p-1 rounded text-xs cursor-pointer truncate ${getUrgencyColor(shift.urgency)}`}
+                          onClick={() => setSelectedShift(shift)}
+                          title={`${shift.title} - ${shift.startTime}-${shift.endTime}`}
+                        >
+                          <div className="font-medium truncate">{getSpecialtyAbbreviation(shift.specialty)}</div>
+                        </div>
+                      ))}
+                      {dayShifts.length > 3 && (
+                        <div className="text-xs text-muted-foreground">
+                          +{dayShifts.length - 3} more
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -611,7 +682,7 @@ export default function UnifiedCalendarPage() {
 
       {/* Shift Posting Dialog */}
       <Dialog open={showPostingDialog} onOpenChange={setShowPostingDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Post New Shift</DialogTitle>
             <DialogDescription>
@@ -619,7 +690,8 @@ export default function UnifiedCalendarPage() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <ScrollArea className="max-h-[70vh] pr-4">
+            <div className="space-y-4">
             {/* Block Shift Toggle */}
             <div className="flex items-center space-x-2">
               <Switch
@@ -814,8 +886,9 @@ export default function UnifiedCalendarPage() {
               />
             </div>
           </div>
+          </ScrollArea>
 
-          <div className="flex justify-end gap-2">
+          <div className="flex justify-end gap-2 pt-4 border-t">
             <Button variant="outline" onClick={() => setShowPostingDialog(false)}>
               Cancel
             </Button>
@@ -826,5 +899,6 @@ export default function UnifiedCalendarPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
   );
 }
