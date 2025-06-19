@@ -35,6 +35,10 @@ interface Shift {
   isUnderStaffed?: boolean;
   currentStaff?: number;
   requiredStaff?: number;
+  assignedStaffId?: number;
+  assignedStaffName?: string;
+  invoiceId?: number;
+  invoiceStatus?: 'pending' | 'approved' | 'paid' | 'rejected';
 }
 
 interface ShiftRequest {
