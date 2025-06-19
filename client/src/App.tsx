@@ -10,28 +10,25 @@ import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import JobBoard from "@/pages/job-board";
 import EnhancedJobBoard from "@/pages/enhanced-job-board";
-import SchedulingPage from "@/pages/scheduling-page";
-import EnhancedSchedulingPage from "@/pages/enhanced-scheduling-page";
-import CalendarViewPage from "@/pages/calendar-view-page";
+import UnifiedCalendarPage from "@/pages/unified-calendar-page";
 import MessagingPage from "@/pages/messaging-page";
 import AnalyticsPage from "@/pages/analytics-page";
 import CredentialsPage from "@/pages/credentials-page";
 import OpenShiftsPage from "@/pages/shifts-open-page";
 import ShiftRequestsPage from "@/pages/shift-requests-page";
-import StaffPage from "@/pages/staff-page";
+import EnhancedStaffPage from "@/pages/enhanced-staff-page";
 import TimeClockPage from "@/pages/time-clock-page";
 import InvoicesPage from "@/pages/invoices-page";
-import ReferralPage from "@/pages/referral-page";
+import EnhancedReferralPage from "@/pages/enhanced-referral-page";
 import OvertimeReportPage from "@/pages/overtime-report-page";
 import AttendancePage from "@/pages/attendance-page";
 import AgencyUsagePage from "@/pages/agency-usage-page";
 import CompliancePage from "@/pages/compliance-page";
 import SettingsPage from "@/pages/settings-page";
 import AdminImpersonationPage from "@/pages/admin-impersonation-page";
-import FacilitiesPage from "@/pages/facilities-page";
+import FacilityManagementPage from "@/pages/facility-management-page";
 import EnhancedJobPostingPage from "@/pages/enhanced-job-posting-page";
 import WorkflowAutomationPage from "@/pages/workflow-automation-page";
-import AdvancedSchedulingPage from "@/pages/advanced-scheduling-page";
 import ClinicianDashboardWrapper from "@/pages/clinician-dashboard-wrapper";
 import EmployeeDashboardWrapper from "@/pages/employee-dashboard-wrapper";
 import ContractorDashboardWrapper from "@/pages/contractor-dashboard-wrapper";
@@ -51,15 +48,16 @@ function Router() {
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/jobs" component={EnhancedJobBoard} />
       <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />
-      <ProtectedRoute path="/scheduling" component={SchedulingPage} />
-      <ProtectedRoute path="/calendar-view" component={CalendarViewPage} />
-      <ProtectedRoute path="/calendar" component={EnhancedSchedulingPage} />
+      <ProtectedRoute path="/calendar" component={UnifiedCalendarPage} />
+      <ProtectedRoute path="/calendar-view" component={UnifiedCalendarPage} />
+      <ProtectedRoute path="/scheduling" component={UnifiedCalendarPage} />
+      <ProtectedRoute path="/advanced-scheduling" component={UnifiedCalendarPage} />
       <ProtectedRoute path="/shifts-open" component={OpenShiftsPage} />
       <ProtectedRoute path="/shift-requests" component={ShiftRequestsPage} />
       <ProtectedRoute path="/time-clock" component={TimeClockPage} />
-      <ProtectedRoute path="/staff" component={StaffPage} />
-      <ProtectedRoute path="/staff/contractors" component={StaffPage} />
-      <ProtectedRoute path="/staff/referrals" component={ReferralPage} />
+      <ProtectedRoute path="/staff" component={EnhancedStaffPage} />
+      <ProtectedRoute path="/staff/contractors" component={EnhancedStaffPage} />
+      <ProtectedRoute path="/referrals" component={EnhancedReferralPage} />
       <ProtectedRoute path="/analytics" component={AnalyticsPage} />
       <ProtectedRoute path="/analytics/float-pool" component={FloatPoolAnalyticsPage} />
       <ProtectedRoute path="/analytics/overtime" component={OvertimeReportPage} />
@@ -76,10 +74,9 @@ function Router() {
       <ProtectedRoute path="/admin/users" component={AdminUserManagementPage} />
       <ProtectedRoute path="/admin/audit" component={AdminAuditLogsPage} />
       <ProtectedRoute path="/admin/database" component={AdminDatabaseConsolePage} />
-      <ProtectedRoute path="/facility-management" component={FacilitiesPage} />
+      <ProtectedRoute path="/facility-management" component={FacilityManagementPage} />
       <ProtectedRoute path="/job-posting" component={EnhancedJobPostingPage} />
       <ProtectedRoute path="/workflow-automation" component={WorkflowAutomationPage} />
-      <ProtectedRoute path="/advanced-scheduling" component={AdvancedSchedulingPage} />
       <ProtectedRoute path="/clinician-dashboard" component={ClinicianDashboardWrapper} />
       <ProtectedRoute path="/employee-dashboard" component={EmployeeDashboardWrapper} />
       <ProtectedRoute path="/contractor-dashboard" component={ContractorDashboardWrapper} />
