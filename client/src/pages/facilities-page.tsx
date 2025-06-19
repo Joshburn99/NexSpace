@@ -12,13 +12,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertFacilitySchema, type Facility } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Search, Building2, MapPin, Phone, Mail, Users, Bed, RefreshCw, Import } from "lucide-react";
+import { Loader2, Plus, Search, Building2, MapPin, Phone, Mail, Users, Bed, RefreshCw, Import, Map } from "lucide-react";
+import InteractiveMap from "@/components/InteractiveMap";
 import { z } from "zod";
 
 const createFacilitySchema = insertFacilitySchema.extend({
   bedCount: z.number().optional(),
   privateRooms: z.number().optional(),
   semiPrivateRooms: z.number().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 export default function FacilitiesPage() {
@@ -27,6 +30,7 @@ export default function FacilitiesPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
   const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
+  const [mapLocation, setMapLocation] = useState<{lat: number; lng: number} | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -123,7 +127,46 @@ export default function FacilitiesPage() {
   });
 
   const onCreateSubmit = (data: z.infer<typeof createFacilitySchema>) => {
-    createFacilityMutation.mutate(data);
+    const facilityData = {
+      ...data,
+      latitude: mapLocation?.lat,
+      longitude: mapLocation?.lng,
+    };
+    createFacilityMutation.mutate(facilityData);
+  };
+
+  const handleLocationSelect = (location: {lat: number; lng: number; address?: string}) => {
+    setMapLocation(location);
+    if (location.address) {
+      // Parse address components and update form
+      const addressParts = location.address.split(', ');
+      const formData = createForm.getValues();
+      
+      // Try to extract city, state, zip from formatted address
+      if (addressParts.length >= 3) {
+        const lastPart = addressParts[addressParts.length - 1]; // Country
+        const secondLast = addressParts[addressParts.length - 2]; // State ZIP
+        const thirdLast = addressParts[addressParts.length - 3]; // City
+        
+        if (secondLast) {
+          const stateZipMatch = secondLast.match(/([A-Z]{2})\s+(\d{5})/);
+          if (stateZipMatch) {
+            createForm.setValue('state', stateZipMatch[1]);
+            createForm.setValue('zipCode', stateZipMatch[2]);
+          }
+        }
+        
+        if (thirdLast) {
+          createForm.setValue('city', thirdLast);
+        }
+        
+        // Set the full address minus city, state, zip
+        const streetAddress = addressParts.slice(0, -3).join(', ');
+        if (streetAddress) {
+          createForm.setValue('address', streetAddress);
+        }
+      }
+    }
   };
 
   const onImportSubmit = (data: any) => {
