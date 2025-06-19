@@ -531,7 +531,7 @@ export default function UnifiedCalendarPage() {
                 return (
                   <div
                     key={index}
-                    className={`min-h-[200px] p-2 border rounded-lg ${
+                    className={`min-h-[320px] p-3 border rounded-lg ${
                       isToday ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'
                     }`}
                   >
