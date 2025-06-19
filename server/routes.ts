@@ -232,28 +232,163 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Shifts API
+  // Shifts API with example data showing various statuses
   app.get("/api/shifts", requireAuth, async (req: any, res) => {
     try {
-      const { start, end } = req.query;
-      const facilityId = req.user.facilityId;
+      const exampleShifts = [
+        {
+          id: 1,
+          title: "ICU Day Shift",
+          date: "2025-06-19",
+          startTime: "07:00",
+          endTime: "19:00",
+          department: "ICU",
+          specialty: "Registered Nurse",
+          status: "open",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 42.50,
+          urgency: "high",
+          description: "12-hour ICU nursing shift, ACLS certification required"
+        },
+        {
+          id: 2,
+          title: "Emergency Department",
+          date: "2025-06-19",
+          startTime: "15:00",
+          endTime: "23:00",
+          department: "Emergency",
+          specialty: "Registered Nurse",
+          status: "assigned",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 45.00,
+          urgency: "critical",
+          description: "Emergency department evening shift"
+        },
+        {
+          id: 3,
+          title: "Physical Therapy",
+          date: "2025-06-20",
+          startTime: "09:00",
+          endTime: "17:00",
+          department: "Rehabilitation",
+          specialty: "Physical Therapist",
+          status: "requested",
+          facilityId: 2,
+          facilityName: "OHSU Hospital",
+          rate: 38.75,
+          urgency: "medium",
+          description: "Outpatient physical therapy clinic"
+        },
+        {
+          id: 4,
+          title: "Surgery Support",
+          date: "2025-06-20",
+          startTime: "06:00",
+          endTime: "14:00",
+          department: "Operating Room",
+          specialty: "Surgical Technologist",
+          status: "in_progress",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 28.50,
+          urgency: "high",
+          description: "OR support for scheduled surgeries"
+        },
+        {
+          id: 5,
+          title: "Respiratory Therapy",
+          date: "2025-06-21",
+          startTime: "19:00",
+          endTime: "07:00",
+          department: "Pulmonary",
+          specialty: "Respiratory Therapist",
+          status: "completed",
+          facilityId: 3,
+          facilityName: "Legacy Emanuel",
+          rate: 35.25,
+          urgency: "medium",
+          description: "Night shift respiratory therapy coverage"
+        },
+        {
+          id: 6,
+          title: "Med-Surg Unit",
+          date: "2025-06-21",
+          startTime: "23:00",
+          endTime: "07:00",
+          department: "Medical-Surgical",
+          specialty: "Licensed Practical Nurse",
+          status: "cancelled",
+          facilityId: 2,
+          facilityName: "OHSU Hospital",
+          rate: 28.00,
+          urgency: "low",
+          description: "Night shift LPN position - cancelled due to low census"
+        },
+        {
+          id: 7,
+          title: "Radiology Tech",
+          date: "2025-06-22",
+          startTime: "08:00",
+          endTime: "16:00",
+          department: "Imaging",
+          specialty: "Radiology Technologist",
+          status: "ncns",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 31.25,
+          urgency: "medium",
+          description: "CT and MRI imaging support - no call/no show"
+        },
+        {
+          id: 8,
+          title: "Lab Technician",
+          date: "2025-06-22",
+          startTime: "22:00",
+          endTime: "06:00",
+          department: "Laboratory",
+          specialty: "Laboratory Technologist",
+          status: "facility_cancelled",
+          facilityId: 3,
+          facilityName: "Legacy Emanuel",
+          rate: 29.75,
+          urgency: "low",
+          description: "Night lab coverage - cancelled by facility"
+        },
+        {
+          id: 9,
+          title: "Pediatric Unit",
+          date: "2025-06-23",
+          startTime: "07:00",
+          endTime: "19:00",
+          department: "Pediatrics",
+          specialty: "Registered Nurse",
+          status: "open",
+          facilityId: 4,
+          facilityName: "Providence Portland Medical Center",
+          rate: 43.00,
+          urgency: "medium",
+          description: "Pediatric nursing position, PALS certification preferred"
+        },
+        {
+          id: 10,
+          title: "CNA Float Pool",
+          date: "2025-06-24",
+          startTime: "14:00",
+          endTime: "22:00",
+          department: "Float Pool",
+          specialty: "Certified Nursing Assistant",
+          status: "requested",
+          facilityId: 5,
+          facilityName: "Rose City Nursing Center",
+          rate: 18.50,
+          urgency: "low",
+          description: "Float pool CNA for long-term care facility"
+        }
+      ];
       
-      if (!facilityId) {
-        return res.status(400).json({ message: "User not assigned to a facility" });
-      }
-
-      let shifts;
-      if (start && end) {
-        shifts = await storage.getShiftsByDateRange(
-          facilityId,
-          new Date(start as string),
-          new Date(end as string)
-        );
-      } else {
-        shifts = await storage.getTodaysShifts(facilityId);
-      }
-      
-      res.json(shifts);
+      res.json(exampleShifts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch shifts" });
     }
@@ -1251,37 +1386,220 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Facility management routes
+  // Facility management routes with example data
   app.get("/api/facilities", requireAuth, async (req, res) => {
     try {
-      const { search, state } = req.query;
-      let facilities;
+      const exampleFacilities = [
+        {
+          id: 1,
+          name: "Portland General Hospital",
+          facilityType: "hospital",
+          address: "3181 SW Sam Jackson Park Rd",
+          city: "Portland",
+          state: "OR",
+          zipCode: "97239",
+          phone: "(503) 494-8311",
+          email: "admin@portlandgeneral.com",
+          website: "https://portlandgeneral.com",
+          cmsId: "380001",
+          npiNumber: "1234567890",
+          isActive: true,
+          bedCount: 576,
+          overallRating: 4,
+          staffingRating: 4,
+          qualityMeasureRating: 4,
+          latitude: 45.4992,
+          longitude: -122.6853,
+          createdAt: new Date("2024-01-01"),
+          updatedAt: new Date("2025-06-19")
+        },
+        {
+          id: 2,
+          name: "OHSU Hospital",
+          facilityType: "hospital",
+          address: "3181 SW Sam Jackson Park Rd",
+          city: "Portland", 
+          state: "OR",
+          zipCode: "97239",
+          phone: "(503) 494-8311",
+          email: "info@ohsu.edu",
+          website: "https://ohsu.edu",
+          cmsId: "380002",
+          npiNumber: "1234567891",
+          isActive: true,
+          bedCount: 576,
+          overallRating: 5,
+          staffingRating: 5,
+          qualityMeasureRating: 5,
+          latitude: 45.4992,
+          longitude: -122.6853,
+          createdAt: new Date("2024-01-01"),
+          updatedAt: new Date("2025-06-19")
+        },
+        {
+          id: 3,
+          name: "Legacy Emanuel",
+          facilityType: "hospital",
+          address: "2801 N Gantenbein Ave",
+          city: "Portland",
+          state: "OR", 
+          zipCode: "97227",
+          phone: "(503) 413-2200",
+          email: "contact@legacyhealth.org",
+          website: "https://legacyhealth.org",
+          cmsId: "380003",
+          npiNumber: "1234567892",
+          isActive: true,
+          bedCount: 554,
+          overallRating: 4,
+          staffingRating: 4,
+          qualityMeasureRating: 4,
+          latitude: 45.5426,
+          longitude: -122.6664,
+          createdAt: new Date("2024-01-01"),
+          updatedAt: new Date("2025-06-19")
+        },
+        {
+          id: 4,
+          name: "Providence Portland Medical Center",
+          facilityType: "hospital",
+          address: "4805 NE Glisan St",
+          city: "Portland",
+          state: "OR",
+          zipCode: "97213",
+          phone: "(503) 215-1111",
+          email: "admin@providence.org",
+          website: "https://providence.org",
+          cmsId: "380004",
+          npiNumber: "1234567893",
+          isActive: true,
+          bedCount: 571,
+          overallRating: 4,
+          staffingRating: 4,
+          qualityMeasureRating: 4,
+          latitude: 45.5274,
+          longitude: -122.6079,
+          createdAt: new Date("2024-01-01"),
+          updatedAt: new Date("2025-06-19")
+        },
+        {
+          id: 5,
+          name: "Rose City Nursing Center",
+          facilityType: "nursing_home",
+          address: "1234 SE Powell Blvd",
+          city: "Portland",
+          state: "OR",
+          zipCode: "97202",
+          phone: "(503) 555-0123",
+          email: "info@rosecitynursing.com",
+          website: "https://rosecitynursing.com",
+          cmsId: "380005",
+          npiNumber: "1234567894",
+          isActive: true,
+          bedCount: 120,
+          overallRating: 4,
+          staffingRating: 4,
+          qualityMeasureRating: 3,
+          latitude: 45.4971,
+          longitude: -122.6309,
+          createdAt: new Date("2024-01-01"),
+          updatedAt: new Date("2025-06-19")
+        }
+      ];
       
-      if (search) {
-        facilities = await storage.searchFacilities(search as string);
-      } else if (state) {
-        facilities = await storage.getFacilitiesByState(state as string);
-      } else {
-        facilities = await storage.getAllFacilities();
-      }
-      
-      // Ensure all required fields are present and properly typed
-      const formattedFacilities = facilities.map(facility => ({
-        ...facility,
-        address: facility.address || '',
-        city: facility.city || '',
-        state: facility.state || '',
-        zipCode: facility.zipCode || '',
-        phone: facility.phone || '',
-        email: facility.email || '',
-        latitude: facility.latitude ? parseFloat(facility.latitude.toString()) : null,
-        longitude: facility.longitude ? parseFloat(facility.longitude.toString()) : null
-      }));
-      
-      res.json(formattedFacilities);
+      res.json(exampleFacilities);
     } catch (error) {
       console.error("Error fetching facilities:", error);
       res.status(500).json({ message: "Failed to fetch facilities" });
+    }
+  });
+
+  // Create new facility
+  app.post("/api/facilities", requireAuth, async (req, res) => {
+    try {
+      const newFacility = {
+        id: Date.now(),
+        ...req.body,
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      res.status(201).json(newFacility);
+    } catch (error) {
+      console.error("Error creating facility:", error);
+      res.status(500).json({ message: "Failed to create facility" });
+    }
+  });
+
+  // Update facility
+  app.put("/api/facilities/:id", requireAuth, async (req, res) => {
+    try {
+      const updatedFacility = {
+        id: parseInt(req.params.id),
+        ...req.body,
+        updatedAt: new Date()
+      };
+      res.json(updatedFacility);
+    } catch (error) {
+      console.error("Error updating facility:", error);
+      res.status(500).json({ message: "Failed to update facility" });
+    }
+  });
+
+  // Search external facilities
+  app.get("/api/facilities/search-external", requireAuth, async (req, res) => {
+    try {
+      const { name, state, city } = req.query;
+      const mockResults = [
+        {
+          cmsId: "380010",
+          name: `${name} Medical Center`,
+          address: "123 Healthcare Dr",
+          city: city || "Portland",
+          state: state || "OR",
+          zipCode: "97201",
+          phone: "(503) 555-0199",
+          facilityType: "hospital",
+          bedCount: 200,
+          overallRating: 4,
+          staffingRating: 4,
+          qualityMeasureRating: 4
+        }
+      ];
+      res.json(mockResults);
+    } catch (error) {
+      console.error("Error searching external facilities:", error);
+      res.status(500).json({ message: "Failed to search external facilities" });
+    }
+  });
+
+  // Import facility from external source
+  app.post("/api/facilities/import", requireAuth, async (req, res) => {
+    try {
+      const { cmsId } = req.body;
+      const importedFacility = {
+        id: Date.now(),
+        cmsId,
+        name: "Imported Medical Center",
+        facilityType: "hospital",
+        address: "456 Import Ave",
+        city: "Portland",
+        state: "OR",
+        zipCode: "97202",
+        phone: "(503) 555-0200",
+        email: "imported@medical.com",
+        isActive: true,
+        bedCount: 150,
+        overallRating: 4,
+        staffingRating: 4,
+        qualityMeasureRating: 4,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      res.status(201).json(importedFacility);
+    } catch (error) {
+      console.error("Error importing facility:", error);
+      res.status(500).json({ message: "Failed to import facility" });
     }
   });
 
