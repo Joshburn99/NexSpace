@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import InteractiveMap from "@/components/InteractiveMap";
-import { MapPin, Clock, Star, Heart, Shield, Navigation, Phone, Mail, ArrowLeft, Home, Filter } from "lucide-react";
+import { MapPin, Clock, Star, Heart, Shield, Navigation, Phone, Mail, ArrowLeft, Home, Filter, Search } from "lucide-react";
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 
@@ -49,6 +49,7 @@ interface FacilityRecommendation {
 
 export default function FacilityRecommendationsPage() {
   const [searchLocation, setSearchLocation] = useState<{lat: number; lng: number} | null>(null);
+  const [addressSearch, setAddressSearch] = useState<string>("");
   const [criteria, setCriteria] = useState<RecommendationCriteria>({
     location: { lat: 39.7817, lng: -89.6501 }, // Springfield, IL default
     maxDistance: 25,
@@ -88,6 +89,55 @@ export default function FacilityRecommendationsPage() {
       ...prev,
       location
     }));
+  };
+
+  const handleAddressSearch = async () => {
+    if (!addressSearch.trim()) return;
+    
+    try {
+      // Simple geocoding using a free service
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressSearch)}&limit=1`);
+      const data = await response.json();
+      
+      if (data && data.length > 0) {
+        const location = {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon),
+          address: data[0].display_name
+        };
+        handleLocationSelect(location);
+        setAddressSearch("");
+      } else {
+        // Fallback to common city coordinates
+        const commonCities: {[key: string]: {lat: number, lng: number}} = {
+          "chicago": {lat: 41.8781, lng: -87.6298},
+          "new york": {lat: 40.7128, lng: -74.0060},
+          "los angeles": {lat: 34.0522, lng: -118.2437},
+          "houston": {lat: 29.7604, lng: -95.3698},
+          "phoenix": {lat: 33.4484, lng: -112.0740},
+          "philadelphia": {lat: 39.9526, lng: -75.1652},
+          "san antonio": {lat: 29.4241, lng: -98.4936},
+          "san diego": {lat: 32.7157, lng: -117.1611},
+          "dallas": {lat: 32.7767, lng: -96.7970},
+          "springfield": {lat: 39.7817, lng: -89.6501}
+        };
+        
+        const searchKey = addressSearch.toLowerCase();
+        const foundCity = Object.keys(commonCities).find(city => 
+          city.includes(searchKey) || searchKey.includes(city)
+        );
+        
+        if (foundCity) {
+          handleLocationSelect({
+            ...commonCities[foundCity],
+            address: foundCity
+          });
+          setAddressSearch("");
+        }
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+    }
   };
 
   const handleGetRecommendations = () => {
@@ -344,18 +394,72 @@ export default function FacilityRecommendationsPage() {
                   <MapPin className="h-4 w-4" />
                   <Label className="text-sm font-semibold">Search Location</Label>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground">
-                    Click on the map or search for an address to set your location
-                  </p>
-                  <InteractiveMap
-                    height="220px"
-                    onLocationSelect={handleLocationSelect}
-                    showSearch={true}
-                  />
+                <div className="space-y-3">
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-xs">Quick City Selection</Label>
+                      <Select onValueChange={(value) => {
+                        const cities: {[key: string]: {lat: number, lng: number}} = {
+                          "chicago": {lat: 41.8781, lng: -87.6298},
+                          "new-york": {lat: 40.7128, lng: -74.0060},
+                          "los-angeles": {lat: 34.0522, lng: -118.2437},
+                          "houston": {lat: 29.7604, lng: -95.3698},
+                          "phoenix": {lat: 33.4484, lng: -112.0740},
+                          "philadelphia": {lat: 39.9526, lng: -75.1652},
+                          "dallas": {lat: 32.7767, lng: -96.7970},
+                          "springfield": {lat: 39.7817, lng: -89.6501}
+                        };
+                        if (cities[value]) {
+                          handleLocationSelect({...cities[value], address: value.replace('-', ' ')});
+                        }
+                      }}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a major city..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="chicago">🏙️ Chicago, IL</SelectItem>
+                          <SelectItem value="new-york">🗽 New York, NY</SelectItem>
+                          <SelectItem value="los-angeles">🌴 Los Angeles, CA</SelectItem>
+                          <SelectItem value="houston">🛢️ Houston, TX</SelectItem>
+                          <SelectItem value="phoenix">🌵 Phoenix, AZ</SelectItem>
+                          <SelectItem value="philadelphia">🔔 Philadelphia, PA</SelectItem>
+                          <SelectItem value="dallas">🤠 Dallas, TX</SelectItem>
+                          <SelectItem value="springfield">🏛️ Springfield, IL</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-xs">Custom Address Search</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Enter address, city, or ZIP code..."
+                          value={addressSearch}
+                          onChange={(e) => setAddressSearch(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleAddressSearch()}
+                        />
+                        <Button size="sm" onClick={handleAddressSearch} disabled={!addressSearch.trim()}>
+                          <Search className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Interactive map for precise location selection
+                    </p>
+                    <InteractiveMap
+                      height="200px"
+                      onLocationSelect={handleLocationSelect}
+                      showSearch={true}
+                    />
+                  </div>
+                  
                   {searchLocation && (
-                    <div className="text-xs text-green-600 bg-green-50 dark:bg-green-900/20 p-2 rounded">
-                      Location set: {searchLocation.lat.toFixed(4)}, {searchLocation.lng.toFixed(4)}
+                    <div className="text-xs text-green-600 bg-green-50 dark:bg-green-900/20 p-2 rounded flex items-center gap-2">
+                      <MapPin className="h-3 w-3" />
+                      Location: {searchLocation.lat.toFixed(4)}, {searchLocation.lng.toFixed(4)}
                     </div>
                   )}
                 </div>
