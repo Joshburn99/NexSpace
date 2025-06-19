@@ -13,6 +13,20 @@ import { Settings, Save, ArrowLeft, Home, Bell, Shield, Database, Mail, Globe } 
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
+interface NotificationEvent {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+  pushEnabled: boolean;
+  inAppEnabled: boolean;
+  recipients: string[];
+  template: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+}
+
 interface SystemSettings {
   id: number;
   organizationName: string;
@@ -34,6 +48,7 @@ interface SystemSettings {
   requireTwoFactor: boolean;
   allowRemoteWork: boolean;
   maintenanceMode: boolean;
+  notificationEvents: NotificationEvent[];
 }
 
 export default function SystemSettingsPage() {
@@ -92,6 +107,139 @@ export default function SystemSettingsPage() {
     updateSettingsMutation.mutate(processedData);
   };
 
+  const defaultNotificationEvents: NotificationEvent[] = [
+    {
+      id: 'shift-posted',
+      name: 'New Shift Posted',
+      description: 'When a new shift is posted to the job board',
+      category: 'Shifts',
+      emailEnabled: true,
+      smsEnabled: false,
+      pushEnabled: true,
+      inAppEnabled: true,
+      recipients: ['all_staff'],
+      template: 'shift_posted',
+      priority: 'medium'
+    },
+    {
+      id: 'shift-assigned',
+      name: 'Shift Assigned',
+      description: 'When a shift is assigned to a staff member',
+      category: 'Shifts',
+      emailEnabled: true,
+      smsEnabled: true,
+      pushEnabled: true,
+      inAppEnabled: true,
+      recipients: ['assigned_staff', 'facility_manager'],
+      template: 'shift_assigned',
+      priority: 'high'
+    },
+    {
+      id: 'shift-cancelled',
+      name: 'Shift Cancelled',
+      description: 'When a shift is cancelled by staff or facility',
+      category: 'Shifts',
+      emailEnabled: true,
+      smsEnabled: true,
+      pushEnabled: true,
+      inAppEnabled: true,
+      recipients: ['assigned_staff', 'facility_manager', 'schedulers'],
+      template: 'shift_cancelled',
+      priority: 'critical'
+    },
+    {
+      id: 'ncns-reported',
+      name: 'No Call No Show (NCNS)',
+      description: 'When staff member fails to show up without notice',
+      category: 'Attendance',
+      emailEnabled: true,
+      smsEnabled: true,
+      pushEnabled: true,
+      inAppEnabled: true,
+      recipients: ['facility_manager', 'schedulers', 'administrators'],
+      template: 'ncns_reported',
+      priority: 'critical'
+    },
+    {
+      id: 'timesheet-submitted',
+      name: 'Timesheet Submitted',
+      description: 'When a staff member submits their timesheet',
+      category: 'Payroll',
+      emailEnabled: false,
+      smsEnabled: false,
+      pushEnabled: false,
+      inAppEnabled: true,
+      recipients: ['payroll_admin'],
+      template: 'timesheet_submitted',
+      priority: 'low'
+    },
+    {
+      id: 'credential-expiring',
+      name: 'Credential Expiring',
+      description: 'When staff credentials are expiring within 30 days',
+      category: 'Compliance',
+      emailEnabled: true,
+      smsEnabled: false,
+      pushEnabled: true,
+      inAppEnabled: true,
+      recipients: ['credential_owner', 'compliance_manager'],
+      template: 'credential_expiring',
+      priority: 'high'
+    },
+    {
+      id: 'overtime-threshold',
+      name: 'Overtime Threshold Reached',
+      description: 'When staff member approaches overtime threshold',
+      category: 'Payroll',
+      emailEnabled: true,
+      smsEnabled: false,
+      pushEnabled: false,
+      inAppEnabled: true,
+      recipients: ['staff_member', 'facility_manager', 'payroll_admin'],
+      template: 'overtime_threshold',
+      priority: 'medium'
+    },
+    {
+      id: 'facility-onboarded',
+      name: 'New Facility Onboarded',
+      description: 'When a new facility is added to the system',
+      category: 'Business',
+      emailEnabled: true,
+      smsEnabled: false,
+      pushEnabled: false,
+      inAppEnabled: true,
+      recipients: ['administrators', 'account_managers'],
+      template: 'facility_onboarded',
+      priority: 'medium'
+    },
+    {
+      id: 'block-shift-posted',
+      name: 'Block Shift Posted',
+      description: 'When a 3-14 week contract shift is posted',
+      category: 'Contracts',
+      emailEnabled: true,
+      smsEnabled: true,
+      pushEnabled: true,
+      inAppEnabled: true,
+      recipients: ['qualified_contractors'],
+      template: 'block_shift_posted',
+      priority: 'high'
+    },
+    {
+      id: 'invoice-generated',
+      name: 'Invoice Generated',
+      description: 'When facility invoice is automatically generated',
+      category: 'Finance',
+      emailEnabled: true,
+      smsEnabled: false,
+      pushEnabled: false,
+      inAppEnabled: true,
+      recipients: ['facility_billing_contact', 'finance_team'],
+      template: 'invoice_generated',
+      priority: 'medium'
+    }
+  ];
+
   const defaultSettings: SystemSettings = {
     id: 1,
     organizationName: "NexSpace Healthcare",
@@ -113,6 +261,7 @@ export default function SystemSettingsPage() {
     requireTwoFactor: false,
     allowRemoteWork: true,
     maintenanceMode: false,
+    notificationEvents: defaultNotificationEvents,
   };
 
   const currentSettings: SystemSettings = settings || defaultSettings;

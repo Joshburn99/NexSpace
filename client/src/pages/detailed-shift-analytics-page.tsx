@@ -38,8 +38,23 @@ export default function DetailedShiftAnalyticsPage() {
   const [selectedWorkerType, setSelectedWorkerType] = useState("all");
   const [timeRange, setTimeRange] = useState("30");
 
-  const { data: shiftAnalytics = [], isLoading } = useQuery<ShiftAnalytics[]>({
-    queryKey: ["/api/shift-analytics", { specialty: selectedSpecialty, workerType: selectedWorkerType, timeRange }],
+  const { data: allShiftAnalytics = [], isLoading } = useQuery<ShiftAnalytics[]>({
+    queryKey: ["/api/shift-analytics"],
+  });
+
+  // Filter data based on selected filters
+  const shiftAnalytics = allShiftAnalytics.filter((shift: ShiftAnalytics) => {
+    const specialtyMatch = selectedSpecialty === "all" || shift.specialty === selectedSpecialty;
+    const workerTypeMatch = selectedWorkerType === "all" || shift.workerType === selectedWorkerType;
+    
+    // Time range filter (days ago)
+    const daysAgo = parseInt(timeRange);
+    const shiftDate = new Date(shift.shiftDate);
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - daysAgo);
+    const timeRangeMatch = shiftDate >= cutoffDate;
+    
+    return specialtyMatch && workerTypeMatch && timeRangeMatch;
   });
 
   // Calculate aggregated metrics
@@ -126,7 +141,10 @@ export default function DetailedShiftAnalyticsPage() {
     percentage: Math.round((count as number / totalShifts) * 100)
   }));
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16'];
+  
+  // Improved chart styling
+  const chartMargin = { top: 20, right: 30, left: 40, bottom: 60 };
 
   if (isLoading) {
     return (
@@ -284,13 +302,33 @@ export default function DetailedShiftAnalyticsPage() {
                 <CardTitle>Applications per Opening by Specialty</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={specialtyChartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="specialty" angle={-45} textAnchor="end" height={80} />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="avgApplications" fill="#0088FE" />
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={specialtyChartData} margin={chartMargin}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis 
+                      dataKey="specialty" 
+                      angle={-45} 
+                      textAnchor="end" 
+                      height={80}
+                      fontSize={12}
+                      tick={{ fill: 'currentColor' }}
+                    />
+                    <YAxis 
+                      fontSize={12}
+                      tick={{ fill: 'currentColor' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px'
+                      }}
+                    />
+                    <Bar 
+                      dataKey="avgApplications" 
+                      fill={COLORS[0]} 
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -301,13 +339,33 @@ export default function DetailedShiftAnalyticsPage() {
                 <CardTitle>Average Days Posted by Specialty</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={specialtyChartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="specialty" angle={-45} textAnchor="end" height={80} />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="avgDays" fill="#00C49F" />
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={specialtyChartData} margin={chartMargin}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis 
+                      dataKey="specialty" 
+                      angle={-45} 
+                      textAnchor="end" 
+                      height={80}
+                      fontSize={12}
+                      tick={{ fill: 'currentColor' }}
+                    />
+                    <YAxis 
+                      fontSize={12}
+                      tick={{ fill: 'currentColor' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '6px'
+                      }}
+                    />
+                    <Bar 
+                      dataKey="avgDays" 
+                      fill={COLORS[1]} 
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
