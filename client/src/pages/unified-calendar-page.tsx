@@ -523,7 +523,7 @@ export default function UnifiedCalendarPage() {
         </CardHeader>
         <CardContent>
           {viewMode === 'week' ? (
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-3">
               {weekDates.map((date, index) => {
                 const dayShifts = getShiftsForDate(date);
                 const isToday = isSameDay(date, new Date());

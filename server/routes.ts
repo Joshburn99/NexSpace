@@ -1656,8 +1656,8 @@ export function registerRoutes(app: Express): Server {
       const template = {
         id: Date.now(),
         ...req.body,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: "2025-06-19T00:00:00Z",
+        updatedAt: "2025-06-19T00:00:00Z"
       };
       res.status(201).json(template);
     } catch (error) {
@@ -1745,8 +1745,8 @@ export function registerRoutes(app: Express): Server {
       const requirement = {
         id: Date.now(),
         ...req.body,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: "2025-06-19T00:00:00Z",
+        updatedAt: "2025-06-19T00:00:00Z"
       };
       res.status(201).json(requirement);
     } catch (error) {
@@ -2016,8 +2016,8 @@ export function registerRoutes(app: Express): Server {
         overallRating: 4,
         staffingRating: 4,
         qualityMeasureRating: 4,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: "2025-06-19T00:00:00Z",
+        updatedAt: "2025-06-19T00:00:00Z"
       };
       res.status(201).json(importedFacility);
     } catch (error) {
