@@ -13,16 +13,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
-import { useQuery } from "@tanstack/react-query";
+import { useCredentials } from "@/contexts/CredentialsContext";
 
 export default function CredentialsPage() {
   const { user } = useAuth();
+  const { credentials, alerts, getActiveCredentials, getExpiringCredentials, getExpiredCredentials, getComplianceRate, addCredential, updateCredential, isLoading } = useCredentials();
   const [showAddCredential, setShowAddCredential] = useState(false);
-
-  const { data: credentials = [] } = useQuery({
-    queryKey: ["/api/credentials"],
-    enabled: !!user,
-  });
 
   const getStatusIcon = (status: string) => {
     switch (status) {

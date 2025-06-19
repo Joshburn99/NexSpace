@@ -6,40 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { useTimeClock } from "@/contexts/TimeClockContext";
-  {
-    id: 1,
-    employeeName: "Sarah Johnson",
-    position: "Registered Nurse",
-    facility: "Sunrise Senior Living",
-    clockIn: "2025-06-17T06:00:00Z",
-    clockOut: "2025-06-17T18:15:00Z",
-    totalHours: 12.25,
-    status: "completed",
-    notes: "Extra 15 minutes for patient handoff",
-  },
-  {
-    id: 2,
-    employeeName: "Michael Chen",
-    position: "Licensed Practical Nurse",
-    facility: "Golden Years Care Center",
-    clockIn: "2025-06-17T18:00:00Z",
-    clockOut: null,
-    totalHours: 0,
-    status: "clocked_in",
-    notes: null,
-  },
-  {
-    id: 3,
-    employeeName: "Emily Rodriguez",
-    position: "Certified Nursing Assistant",
-    facility: "Harmony Health Center",
-    clockIn: "2025-06-17T14:00:00Z",
-    clockOut: "2025-06-17T22:30:00Z",
-    totalHours: 8.5,
-    status: "completed",
-    notes: "Stayed late to assist with incident report",
-  },
-];
 
 export default function TimeClockPage() {
   const { user } = useAuth();
@@ -60,129 +26,242 @@ export default function TimeClockPage() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "clocked_in":
-        return "bg-green-100 text-green-800";
-      case "completed":
-        return "bg-blue-100 text-blue-800";
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
+      case "on_break":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
+      case "clocked_out":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
       case "missed":
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
     }
   };
 
-  const formatDuration = (hours: number) => {
-    const h = Math.floor(hours);
-    const m = Math.round((hours - h) * 60);
-    return `${h}h ${m}m`;
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
   };
 
-  const getCurrentShiftHours = () => {
-    if (currentUserEntry) {
-      const start = new Date(currentUserEntry.clockIn);
-      const now = new Date();
-      const hours = (now.getTime() - start.getTime()) / (1000 * 60 * 60);
-      return hours;
-    }
-    return 0;
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   };
+
+  const handleClockIn = () => {
+    if (user) {
+      clockIn(user.id, user.firstName + " " + user.lastName, user.role);
+    }
+  };
+
+  const handleClockOut = () => {
+    if (user && currentUserEntry) {
+      clockOut(currentUserEntry.id);
+    }
+  };
+
+  const handleStartBreak = () => {
+    if (user && currentUserEntry) {
+      startBreak(currentUserEntry.id);
+    }
+  };
+
+  const handleEndBreak = () => {
+    if (user && currentUserEntry) {
+      endBreak(currentUserEntry.id);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto space-y-6">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-end mb-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Time Clock</h1>
         <div className="text-right">
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
-            {currentTime.toLocaleTimeString()}
+          <div className="text-3xl font-mono font-bold text-blue-600 dark:text-blue-400">
+            {formatTime(currentTime)}
           </div>
-          <div className="text-sm text-gray-600 dark:text-gray-300">
-            {currentTime.toLocaleDateString()}
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            {currentTime.toLocaleDateString("en-US", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </div>
         </div>
       </div>
 
-      {/* Clock In/Out Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Clock className="w-5 h-5" />
-              Quick Clock In/Out
-            </CardTitle>
-            <CardDescription>Manage your work time for today</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {currentUserEntry ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-gray-600 dark:text-gray-300">
-                    Currently clocked in
-                  </span>
-                </div>
-                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg">
-                  <div className="text-sm text-gray-600 dark:text-gray-300 mb-1">Started at</div>
-                  <div className="font-semibold">
-                    {new Date(currentUserEntry.clockIn).toLocaleTimeString()}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300 mt-2">
-                    Current session: {formatDuration(getCurrentShiftHours())}
-                  </div>
-                </div>
-                <Button className="w-full" variant="destructive">
-                  <Square className="w-4 h-4 mr-2" />
-                  Clock Out
-                </Button>
+      {/* Current User Status */}
+      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+            <User className="h-5 w-5" />
+            Your Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Avatar className="h-12 w-12">
+                <AvatarFallback className="bg-blue-600 text-white">
+                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-semibold text-gray-900 dark:text-white">
+                  {user?.firstName} {user?.lastName}
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{user?.role}</p>
+                {currentUserEntry && (
+                  <Badge className={getStatusColor(currentUserEntry.status)}>
+                    {currentUserEntry.status.replace("_", " ").toUpperCase()}
+                  </Badge>
+                )}
               </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="text-center py-4">
-                  <Clock className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600 dark:text-gray-300">Ready to start your shift</p>
-                </div>
-                <Button className="w-full">
-                  <Play className="w-4 h-4 mr-2" />
+            </div>
+            <div className="flex gap-2">
+              {!currentUserEntry || currentUserEntry.status === "clocked_out" ? (
+                <Button onClick={handleClockIn} className="bg-green-600 hover:bg-green-700">
+                  <Play className="h-4 w-4 mr-2" />
                   Clock In
                 </Button>
+              ) : (
+                <>
+                  {currentUserEntry.status === "clocked_in" ? (
+                    <>
+                      <Button onClick={handleStartBreak} variant="outline">
+                        Start Break
+                      </Button>
+                      <Button onClick={handleClockOut} className="bg-red-600 hover:bg-red-700">
+                        <Square className="h-4 w-4 mr-2" />
+                        Clock Out
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button onClick={handleEndBreak} className="bg-blue-600 hover:bg-blue-700">
+                        End Break
+                      </Button>
+                      <Button onClick={handleClockOut} className="bg-red-600 hover:bg-red-700">
+                        <Square className="h-4 w-4 mr-2" />
+                        Clock Out
+                      </Button>
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+          {currentUserEntry && (
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">Clock In:</span>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {currentUserEntry.clockInTime ? new Date(currentUserEntry.clockInTime).toLocaleTimeString() : "N/A"}
+                </p>
               </div>
-            )}
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">Total Hours:</span>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {currentUserEntry.totalHours.toFixed(2)}
+                </p>
+              </div>
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">Break Time:</span>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {currentUserEntry.breakDuration.toFixed(2)}h
+                </p>
+              </div>
+              <div>
+                <span className="text-gray-500 dark:text-gray-400">Facility:</span>
+                <p className="font-semibold text-gray-900 dark:text-white">
+                  {currentUserEntry.facilityName}
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Daily Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2">
+              <Clock className="h-5 w-5 text-blue-600" />
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Now</span>
+            </div>
+            <div className="mt-2">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                {activeUsers.length}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">staff members</p>
+            </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Today's Summary</CardTitle>
-            <CardDescription>
-              Your time tracking for {currentTime.toLocaleDateString()}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">
-                    {currentUserEntry ? formatDuration(getCurrentShiftHours()) : "0h 0m"}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">Hours Worked</div>
-                </div>
-                <div className="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">
-                    ${currentUserEntry ? (getCurrentShiftHours() * 45).toFixed(0) : "0"}
-                  </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-300">Earnings</div>
-                </div>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-green-600" />
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Today's Hours</span>
+            </div>
+            <div className="mt-2">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                {summaries.totalHoursToday.toFixed(1)}
               </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">total hours</p>
+            </div>
+          </CardContent>
+        </Card>
 
-              {currentUserEntry && (
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Facility:</span>
-                    <span className="font-medium">{currentUserEntry.facility}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span>Position:</span>
-                    <span className="font-medium">{currentUserEntry.position}</span>
-                  </div>
-                </div>
-              )}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2">
+              <User className="h-5 w-5 text-purple-600" />
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Week's Hours</span>
+            </div>
+            <div className="mt-2">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                {summaries.totalHoursWeek.toFixed(1)}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">this week</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-orange-600" />
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Overtime</span>
+            </div>
+            <div className="mt-2">
+              <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                {summaries.overtimeHours.toFixed(1)}
+              </div>
+              <p className="text-xs text-gray-500 dark:text-gray-400">overtime hours</p>
             </div>
           </CardContent>
         </Card>
@@ -192,57 +271,38 @@ export default function TimeClockPage() {
       <Card>
         <CardHeader>
           <CardTitle>Recent Time Entries</CardTitle>
-          <CardDescription>View and manage your recent work sessions</CardDescription>
+          <CardDescription>Latest clock-in/out activities</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {mockTimeEntries.map((entry) => (
-              <div
-                key={entry.id}
-                className="flex items-center justify-between p-4 border rounded-lg"
-              >
-                <div className="flex items-center space-x-4">
-                  <Avatar className="w-10 h-10">
-                    <AvatarFallback>
-                      {entry.employeeName
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
+            {timeClocks.slice(0, 10).map((entry) => (
+              <div key={entry.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarFallback className="bg-blue-600 text-white text-sm">
+                      {entry.userName.split(" ").map(n => n[0]).join("")}
                     </AvatarFallback>
                   </Avatar>
-
-                  <div className="space-y-1">
-                    <div className="font-medium">{entry.employeeName}</div>
-                    <div className="text-sm text-gray-600 dark:text-gray-300">{entry.position}</div>
-                    <div className="flex items-center text-sm text-gray-500">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      {entry.facility}
-                    </div>
+                  <div>
+                    <p className="font-medium text-gray-900 dark:text-white">{entry.userName}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">{entry.userRole}</p>
                   </div>
                 </div>
-
                 <div className="text-center">
-                  <div className="text-sm text-gray-600 dark:text-gray-300">
-                    {new Date(entry.clockIn).toLocaleDateString()}
-                  </div>
-                  <div className="font-medium">
-                    {new Date(entry.clockIn).toLocaleTimeString()} -
-                    {entry.clockOut ? new Date(entry.clockOut).toLocaleTimeString() : " Active"}
-                  </div>
-                  {entry.totalHours > 0 && (
-                    <div className="text-sm text-gray-600 dark:text-gray-300">
-                      {formatDuration(entry.totalHours)}
-                    </div>
-                  )}
-                </div>
-
-                <div className="text-right space-y-2">
                   <Badge className={getStatusColor(entry.status)}>
-                    {entry.status === "clocked_in" ? "Active" : "Completed"}
+                    {entry.status.replace("_", " ").toUpperCase()}
                   </Badge>
-                  {entry.notes && (
-                    <div className="text-xs text-gray-500 max-w-32">{entry.notes}</div>
-                  )}
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    {entry.facilityName}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-medium text-gray-900 dark:text-white">
+                    {entry.totalHours.toFixed(2)}h
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    {entry.clockInTime ? formatDate(entry.clockInTime) : "N/A"}
+                  </p>
                 </div>
               </div>
             ))}
