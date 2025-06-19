@@ -409,6 +409,20 @@ export default function FacilitiesPage() {
                     />
                   </div>
 
+                  <div className="space-y-3">
+                    <label className="text-sm font-medium">Location Settings</label>
+                    <InteractiveMap
+                      height="300px"
+                      onLocationSelect={handleLocationSelect}
+                      showSearch={true}
+                    />
+                    {mapLocation && (
+                      <div className="text-xs text-muted-foreground">
+                        Coordinates: {mapLocation.lat.toFixed(6)}, {mapLocation.lng.toFixed(6)}
+                      </div>
+                    )}
+                  </div>
+
                   <FormField
                     control={createForm.control}
                     name="isActive"
