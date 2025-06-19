@@ -832,10 +832,10 @@ export function registerRoutes(app: Express): Server {
           bedCount: 150,
           description: "Full-service medical center with emergency, surgical, and rehabilitation services",
           cmsId: "140001",
-          overallRating: 4.2,
-          staffingRating: 4.0,
-          qualityRating: 4.3,
-          safetyRating: 4.1
+          overallRating: 4,
+          staffingRating: 4,
+          qualityMeasureRating: 4,
+          emergencyContact: "(217) 555-0199"
         },
         {
           name: "Golden Years Nursing Home",
@@ -850,10 +850,10 @@ export function registerRoutes(app: Express): Server {
           bedCount: 120,
           description: "Skilled nursing facility specializing in long-term care and rehabilitation",
           cmsId: "140002",
-          overallRating: 4.5,
-          staffingRating: 4.6,
-          qualityRating: 4.4,
-          safetyRating: 4.5
+          overallRating: 4,
+          staffingRating: 4,
+          qualityMeasureRating: 4,
+          emergencyContact: "(217) 555-0499"
         },
         {
           name: "Riverside Assisted Living",
@@ -867,10 +867,10 @@ export function registerRoutes(app: Express): Server {
           isActive: true,
           bedCount: 80,
           description: "Luxury assisted living community with memory care services",
-          overallRating: 4.7,
-          staffingRating: 4.8,
-          qualityRating: 4.6,
-          safetyRating: 4.7
+          overallRating: 5,
+          staffingRating: 5,
+          qualityMeasureRating: 5,
+          emergencyContact: "(217) 555-0799"
         },
         {
           name: "Springfield General Hospital",
@@ -885,10 +885,10 @@ export function registerRoutes(app: Express): Server {
           bedCount: 200,
           description: "Major teaching hospital with trauma center and specialty services",
           cmsId: "140003",
-          overallRating: 4.0,
-          staffingRating: 3.9,
-          qualityRating: 4.1,
-          safetyRating: 4.0
+          overallRating: 4,
+          staffingRating: 4,
+          qualityMeasureRating: 4,
+          emergencyContact: "(217) 555-1299"
         },
         {
           name: "Peaceful Meadows Hospice",
