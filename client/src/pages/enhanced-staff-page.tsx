@@ -141,7 +141,7 @@ export default function EnhancedStaffPage() {
   });
 
   // Get unique values for filters
-  const specialties = [...new Set(staffMembers.map(s => s.specialty))];
+  const specialties = Array.from(new Set(staffMembers.map(s => s.specialty)));
 
   const createStaffMutation = useMutation({
     mutationFn: async (staffData: any) => {
@@ -358,7 +358,7 @@ export default function EnhancedStaffPage() {
 
       <Tabs defaultValue="directory" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="directory">Staff Directory</TabsTrigger>
+          <TabsTrigger value="directory">All Staff</TabsTrigger>
           <TabsTrigger value="feed">Social Feed</TabsTrigger>
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>

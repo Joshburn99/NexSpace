@@ -58,6 +58,7 @@ function Router() {
       <ProtectedRoute path="/staff" component={EnhancedStaffPage} />
       <ProtectedRoute path="/staff/contractors" component={EnhancedStaffPage} />
       <ProtectedRoute path="/referrals" component={EnhancedReferralPage} />
+      <ProtectedRoute path="/staff/referrals" component={EnhancedReferralPage} />
       <ProtectedRoute path="/analytics" component={AnalyticsPage} />
       <ProtectedRoute path="/analytics/float-pool" component={FloatPoolAnalyticsPage} />
       <ProtectedRoute path="/analytics/overtime" component={OvertimeReportPage} />

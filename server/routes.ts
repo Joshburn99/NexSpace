@@ -1587,6 +1587,367 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Staff Management API
+  app.get("/api/staff", requireAuth, async (req, res) => {
+    try {
+      const staff = [
+        {
+          id: 1,
+          name: "Sarah Johnson",
+          email: "sarah.johnson@example.com",
+          phone: "(555) 123-4567",
+          specialty: "RN",
+          department: "ICU",
+          workerType: "internal_employee",
+          status: "active",
+          avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
+          location: "Chicago, IL",
+          yearsExperience: 8,
+          certifications: ["ACLS", "BLS", "CCRN"],
+          rating: 4.9,
+          shiftsCompleted: 156,
+          availability: "full_time",
+          hourlyRate: 45,
+          joinDate: "2022-03-15",
+          skills: ["Critical Care", "Patient Assessment", "IV Therapy"],
+          bio: "Experienced ICU nurse with expertise in critical care and patient management."
+        },
+        {
+          id: 2,
+          name: "Michael Chen",
+          email: "michael.chen@example.com",
+          phone: "(555) 234-5678",
+          specialty: "LPN",
+          department: "Med-Surg",
+          workerType: "contractor_1099",
+          status: "active",
+          avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
+          location: "Los Angeles, CA",
+          yearsExperience: 5,
+          certifications: ["BLS", "Medication Administration"],
+          rating: 4.7,
+          shiftsCompleted: 89,
+          availability: "part_time",
+          hourlyRate: 28,
+          joinDate: "2023-01-20",
+          skills: ["Wound Care", "Patient Education", "Medication Management"],
+          bio: "Dedicated LPN with strong patient care skills and medication expertise."
+        },
+        {
+          id: 3,
+          name: "Dr. Emma Rodriguez",
+          email: "emma.rodriguez@example.com",
+          phone: "(555) 345-6789",
+          specialty: "MD",
+          department: "Emergency",
+          workerType: "internal_employee",
+          status: "active",
+          avatar: "https://images.unsplash.com/photo-1594824022574-1a9b45c1e2b5?w=150&h=150&fit=crop&crop=face",
+          location: "Miami, FL",
+          yearsExperience: 12,
+          certifications: ["ACLS", "ATLS", "PALS", "Board Certified Emergency Medicine"],
+          rating: 4.95,
+          shiftsCompleted: 234,
+          availability: "full_time",
+          hourlyRate: 120,
+          joinDate: "2021-08-10",
+          skills: ["Emergency Medicine", "Trauma Care", "Procedures"],
+          bio: "Board-certified emergency physician with extensive trauma experience."
+        },
+        {
+          id: 4,
+          name: "Jessica Park",
+          email: "jessica.park@example.com",
+          phone: "(555) 456-7890",
+          specialty: "CNA",
+          department: "Long Term Care",
+          workerType: "contractor_1099",
+          status: "active",
+          avatar: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=150&h=150&fit=crop&crop=face",
+          location: "Denver, CO",
+          yearsExperience: 3,
+          certifications: ["CNA", "CPR", "First Aid"],
+          rating: 4.6,
+          shiftsCompleted: 67,
+          availability: "per_diem",
+          hourlyRate: 18,
+          joinDate: "2023-06-12",
+          skills: ["Patient Care", "ADL Assistance", "Vital Signs"],
+          bio: "Compassionate CNA with experience in long-term care and patient support."
+        },
+        {
+          id: 5,
+          name: "Robert Thompson",
+          email: "robert.thompson@example.com",
+          phone: "(555) 567-8901",
+          specialty: "RT",
+          department: "Respiratory",
+          workerType: "internal_employee",
+          status: "active",
+          avatar: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
+          location: "Houston, TX",
+          yearsExperience: 10,
+          certifications: ["RRT", "CRT", "ACLS", "NRP"],
+          rating: 4.8,
+          shiftsCompleted: 198,
+          availability: "full_time",
+          hourlyRate: 38,
+          joinDate: "2020-11-03",
+          skills: ["Mechanical Ventilation", "Pulmonary Function", "ECMO"],
+          bio: "Experienced respiratory therapist specializing in critical care ventilation."
+        },
+        {
+          id: 6,
+          name: "Amanda Davis",
+          email: "amanda.davis@example.com",
+          phone: "(555) 678-9012",
+          specialty: "NP",
+          department: "Family Practice",
+          workerType: "contractor_1099",
+          status: "active",
+          avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
+          location: "Seattle, WA",
+          yearsExperience: 7,
+          certifications: ["FNP-BC", "ACLS", "BLS"],
+          rating: 4.9,
+          shiftsCompleted: 145,
+          availability: "part_time",
+          hourlyRate: 65,
+          joinDate: "2022-09-18",
+          skills: ["Primary Care", "Diagnosis", "Treatment Planning"],
+          bio: "Board-certified family nurse practitioner with comprehensive primary care experience."
+        },
+        {
+          id: 7,
+          name: "David Kim",
+          email: "david.kim@example.com",
+          phone: "(555) 789-0123",
+          specialty: "PT",
+          department: "Rehabilitation",
+          workerType: "internal_employee",
+          status: "active",
+          avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
+          location: "Phoenix, AZ",
+          yearsExperience: 6,
+          certifications: ["DPT", "Orthopedic Specialist", "Manual Therapy"],
+          rating: 4.7,
+          shiftsCompleted: 112,
+          availability: "full_time",
+          hourlyRate: 42,
+          joinDate: "2023-02-28",
+          skills: ["Orthopedic Rehab", "Manual Therapy", "Exercise Prescription"],
+          bio: "Licensed physical therapist with orthopedic specialization and manual therapy expertise."
+        },
+        {
+          id: 8,
+          name: "Lisa Martinez",
+          email: "lisa.martinez@example.com",
+          phone: "(555) 890-1234",
+          specialty: "PA",
+          department: "Surgery",
+          workerType: "contractor_1099",
+          status: "active",
+          avatar: "https://images.unsplash.com/photo-1594824022574-1a9b45c1e2b5?w=150&h=150&fit=crop&crop=face",
+          location: "Boston, MA",
+          yearsExperience: 9,
+          certifications: ["PA-C", "ACLS", "ATLS"],
+          rating: 4.85,
+          shiftsCompleted: 187,
+          availability: "full_time",
+          hourlyRate: 58,
+          joinDate: "2021-12-05",
+          skills: ["Surgical Assistance", "Pre-op Assessment", "Post-op Care"],
+          bio: "Certified physician assistant with extensive surgical experience and patient care."
+        }
+      ];
+      res.json(staff);
+    } catch (error) {
+      console.error("Error fetching staff:", error);
+      res.status(500).json({ message: "Failed to fetch staff" });
+    }
+  });
+
+  app.get("/api/staff/posts", requireAuth, async (req, res) => {
+    try {
+      const posts = [
+        {
+          id: 1,
+          authorId: 1,
+          authorName: "Sarah Johnson",
+          authorAvatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
+          content: "Just completed a challenging 12-hour shift in the ICU. Every day brings new learning opportunities and the chance to make a real difference in patients' lives. Grateful for our amazing team! 💪",
+          timestamp: "2025-06-19T10:30:00Z",
+          likes: 24,
+          comments: 8,
+          type: "update"
+        },
+        {
+          id: 2,
+          authorId: 3,
+          authorName: "Dr. Emma Rodriguez",
+          authorAvatar: "https://images.unsplash.com/photo-1594824022574-1a9b45c1e2b5?w=150&h=150&fit=crop&crop=face",
+          content: "Attended an excellent trauma workshop today. New protocols for managing complex cases will definitely improve our patient outcomes. Knowledge sharing is so important in our field!",
+          timestamp: "2025-06-18T16:45:00Z",
+          likes: 31,
+          comments: 12,
+          type: "educational"
+        },
+        {
+          id: 3,
+          authorId: 5,
+          authorName: "Robert Thompson",
+          authorAvatar: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
+          content: "Successfully completed ECMO certification! Excited to bring these advanced skills to our respiratory therapy team. Always learning, always growing! 🎓",
+          timestamp: "2025-06-17T14:20:00Z",
+          likes: 18,
+          comments: 6,
+          type: "achievement"
+        }
+      ];
+      res.json(posts);
+    } catch (error) {
+      console.error("Error fetching staff posts:", error);
+      res.status(500).json({ message: "Failed to fetch staff posts" });
+    }
+  });
+
+  app.post("/api/staff/posts", requireAuth, async (req, res) => {
+    try {
+      const newPost = {
+        id: Date.now(),
+        authorId: req.user.id,
+        authorName: req.user.username,
+        authorAvatar: req.user.avatar || "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
+        content: req.body.content,
+        timestamp: new Date().toISOString(),
+        likes: 0,
+        comments: 0,
+        type: req.body.type || "update"
+      };
+      res.json(newPost);
+    } catch (error) {
+      console.error("Error creating staff post:", error);
+      res.status(500).json({ message: "Failed to create staff post" });
+    }
+  });
+
+  // Referral System API
+  app.get("/api/referral-settings", requireAuth, async (req, res) => {
+    try {
+      const settings = {
+        id: 1,
+        staffReferralBonus: 500,
+        facilityReferralBonus: {
+          small: 1000,
+          medium: 2500,
+          large: 5000,
+          enterprise: 10000
+        },
+        qualificationPeriod: 90,
+        payoutSchedule: "monthly",
+        requireBackground: true,
+        minimumShifts: 5,
+        qrCodeEnabled: true
+      };
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch referral settings" });
+    }
+  });
+
+  app.get("/api/referrals/staff", requireAuth, async (req, res) => {
+    try {
+      const referrals = [
+        {
+          id: 1,
+          referrerId: 1,
+          referrerName: "Sarah Johnson",
+          refereeEmail: "jane.doe@example.com",
+          refereeName: "Jane Doe",
+          status: "qualified",
+          dateReferred: "2025-05-15T00:00:00Z",
+          dateQualified: "2025-06-10T00:00:00Z",
+          bonusAmount: 500,
+          notes: "Experienced RN from previous facility"
+        },
+        {
+          id: 2,
+          referrerId: 3,
+          referrerName: "Dr. Emma Rodriguez",
+          refereeEmail: "mark.williams@example.com",
+          refereeName: "Mark Williams",
+          status: "pending",
+          dateReferred: "2025-06-01T00:00:00Z",
+          bonusAmount: 500,
+          notes: "Recent graduate with strong clinical skills"
+        }
+      ];
+      res.json(referrals);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch staff referrals" });
+    }
+  });
+
+  app.get("/api/referrals/facilities", requireAuth, async (req, res) => {
+    try {
+      const referrals = [
+        {
+          id: 1,
+          referrerId: 1,
+          referrerName: "Sarah Johnson",
+          facilityName: "Riverside Medical Center",
+          facilityType: "hospital",
+          facilitySize: "medium",
+          contactName: "Jennifer Adams",
+          contactEmail: "jadams@riverside.com",
+          contactPhone: "(555) 999-1234",
+          estimatedBeds: 120,
+          location: "Portland, OR",
+          status: "contract_sent",
+          dateReferred: "2025-05-20T00:00:00Z",
+          dateContacted: "2025-05-25T00:00:00Z",
+          bonusAmount: 2500,
+          notes: "Looking for staffing partnership for summer months"
+        }
+      ];
+      res.json(referrals);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch facility referrals" });
+    }
+  });
+
+  app.get("/api/referral-codes", requireAuth, async (req, res) => {
+    try {
+      const codes = [
+        {
+          id: 1,
+          userId: 1,
+          userName: "Sarah Johnson",
+          code: "SJ2025REF",
+          qrCodeUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+          type: "both",
+          uses: 3,
+          maxUses: 50,
+          isActive: true
+        },
+        {
+          id: 2,
+          userId: 3,
+          userName: "Dr. Emma Rodriguez",
+          code: "ER2025REF",
+          qrCodeUrl: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+          type: "staff",
+          uses: 1,
+          maxUses: 25,
+          isActive: true
+        }
+      ];
+      res.json(codes);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch referral codes" });
+    }
+  });
+
   // PDF invoice extraction endpoint
   app.post("/api/vendor-invoices/extract-pdf", requireAuth, upload.single('pdf'), async (req, res) => {
     try {
