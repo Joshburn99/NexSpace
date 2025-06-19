@@ -1221,7 +1221,7 @@ export default function FacilityManagementPage() {
                   <Card>
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
-                        <Building className="h-5 w-5" />
+                        <Building2 className="h-5 w-5" />
                         Departments & Specialties
                       </CardTitle>
                       <CardDescription>
@@ -1265,7 +1265,7 @@ export default function FacilityManagementPage() {
                       </div>
 
                       <Button variant="outline" size="sm" className="w-full">
-                        <Settings className="h-4 w-4 mr-2" />
+                        <RefreshCw className="h-4 w-4 mr-2" />
                         Customize Departments
                       </Button>
                     </CardContent>
