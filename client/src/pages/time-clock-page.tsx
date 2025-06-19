@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
-
-const mockTimeEntries = [
+import { useTimeClock } from "@/contexts/TimeClockContext";
   {
     id: 1,
     employeeName: "Sarah Johnson",
@@ -44,6 +43,7 @@ const mockTimeEntries = [
 
 export default function TimeClockPage() {
   const { user } = useAuth();
+  const { timeClocks, summaries, getActiveUsers, clockIn, clockOut, startBreak, endBreak, isLoading } = useTimeClock();
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Update clock every second
@@ -52,8 +52,9 @@ export default function TimeClockPage() {
     return () => clearInterval(timer);
   }, []);
 
-  const currentUserEntry = mockTimeEntries.find(
-    (entry) => entry.employeeName.includes(user?.firstName || "") && entry.status === "clocked_in"
+  const activeUsers = getActiveUsers();
+  const currentUserEntry = activeUsers.find(
+    (entry) => entry.userName.includes(user?.firstName || "")
   );
 
   const getStatusColor = (status: string) => {

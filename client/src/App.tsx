@@ -7,6 +7,10 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "./lib/protected-route";
 import Layout from "@/components/Layout";
 import { ShiftProvider } from "@/contexts/ShiftContext";
+import { TimeClockProvider } from "@/contexts/TimeClockContext";
+import { CredentialsProvider } from "@/contexts/CredentialsContext";
+import { InsightsProvider } from "@/contexts/InsightsContext";
+import { InvoiceProvider } from "@/contexts/InvoiceContext";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import JobBoard from "@/pages/job-board";
@@ -102,12 +106,20 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <ShiftProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Layout>
-              <Router />
-            </Layout>
-          </TooltipProvider>
+          <TimeClockProvider>
+            <CredentialsProvider>
+              <InsightsProvider>
+                <InvoiceProvider>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Layout>
+                      <Router />
+                    </Layout>
+                  </TooltipProvider>
+                </InvoiceProvider>
+              </InsightsProvider>
+            </CredentialsProvider>
+          </TimeClockProvider>
         </ShiftProvider>
       </AuthProvider>
     </QueryClientProvider>
