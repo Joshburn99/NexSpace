@@ -243,7 +243,7 @@ export default function SchedulingConfigPage() {
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
-                      <DialogTitle>Create Shift Template</DialogTitle>
+                      <DialogTitle>{editingTemplate ? "Edit Shift Template" : "Create Shift Template"}</DialogTitle>
                     </DialogHeader>
                     <Form {...templateForm}>
                       <form onSubmit={templateForm.handleSubmit(handleTemplateSubmit)} className="space-y-4">
@@ -408,7 +408,11 @@ export default function SchedulingConfigPage() {
                           <Button 
                             type="button" 
                             variant="outline" 
-                            onClick={() => setIsTemplateDialogOpen(false)}
+                            onClick={() => {
+                              setIsTemplateDialogOpen(false);
+                              setEditingTemplate(null);
+                              templateForm.reset();
+                            }}
                           >
                             Cancel
                           </Button>
@@ -454,10 +458,19 @@ export default function SchedulingConfigPage() {
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleEditTemplate(template)}
+                            >
                               <Edit className="h-3 w-3" />
                             </Button>
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => deleteTemplateMutation.mutate(template.id)}
+                            >
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
@@ -490,10 +503,10 @@ export default function SchedulingConfigPage() {
                   </DialogTrigger>
                   <DialogContent className="max-w-md">
                     <DialogHeader>
-                      <DialogTitle>Create Staffing Requirement</DialogTitle>
+                      <DialogTitle>{editingRequirement ? "Edit Staffing Requirement" : "Create Staffing Requirement"}</DialogTitle>
                     </DialogHeader>
                     <Form {...requirementForm}>
-                      <form onSubmit={requirementForm.handleSubmit((data) => createRequirementMutation.mutate(data))} className="space-y-4">
+                      <form onSubmit={requirementForm.handleSubmit(handleRequirementSubmit)} className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
                           <FormField
                             control={requirementForm.control}
@@ -639,8 +652,9 @@ export default function SchedulingConfigPage() {
                           >
                             Cancel
                           </Button>
-                          <Button type="submit" disabled={createRequirementMutation.isPending}>
-                            Create Requirement
+                          <Button type="submit" disabled={createRequirementMutation.isPending || updateRequirementMutation.isPending}>
+                            {(createRequirementMutation.isPending || updateRequirementMutation.isPending) ? "Saving..." : 
+                             editingRequirement ? "Update Requirement" : "Create Requirement"}
                           </Button>
                         </div>
                       </form>
@@ -682,10 +696,19 @@ export default function SchedulingConfigPage() {
                             </div>
                           </div>
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => handleEditRequirement(req)}
+                            >
                               <Edit className="h-3 w-3" />
                             </Button>
-                            <Button variant="outline" size="sm">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="text-red-600 hover:text-red-700"
+                              onClick={() => deleteRequirementMutation.mutate(req.id)}
+                            >
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
