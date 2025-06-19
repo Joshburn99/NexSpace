@@ -1,0 +1,70 @@
+# PROJECT CONTEXT
+We have a React + TypeScript app using Wouter and Layout/Sidebar components in Replit.  
+Right now:
+- `<App.tsx>` renders `<Router />` directly (no Layout), so the Sidebar never shows.
+- `src/components/Sidebar.tsx`’s `navigationItems` array is empty, so no menu items render.
+- Some existing `<Link href>` values don’t exactly match the `<ProtectedRoute path>` values in `App.tsx`, causing 404s.
+
+# TASKS
+1. **Wrap all routes in Layout**  
+   - In `src/App.tsx`, find where you render `<Router>` (and `<Switch>`/`<ProtectedRoute>`).  
+   - Replace:
+     ```diff
+     - <Toaster />
+     - <Router>
+     + <Toaster />
+     + <Layout>
+     +   <Router>
+           <Switch>
+             {/* your ProtectedRoute entries */}
+           </Switch>
+     +   </Router>
+     + </Layout>
+     ```
+   - Ensure you keep the existing imports (QueryClientProvider, AuthProvider, TooltipProvider, Toaster, Layout, Router, Switch, ProtectedRoute).
+
+2. **Populate Sidebar items**  
+   - In `src/components/Sidebar.tsx`, locate `const navigationItems = []` and replace it with:
+     ```ts
+     const navigationItems = [
+       { label: "Dashboard",  href: "/dashboard",           icon: DashboardIcon },
+       { label: "Scheduling", href: "/calendar",            icon: CalendarIcon, subItems: [
+           { label: "Unified View", href: "/calendar" }
+         ]
+       },
+       { label: "Workforce",  href: "/workforce",           icon: PeopleIcon },
+       { label: "Hiring",     href: "/jobs",                icon: BriefcaseIcon, subItems: [
+           { label: "Job Board",   href: "/jobs" },
+           { label: "Job Posting", href: "/jobs/post" }
+         ]
+       },
+       { label: "Insights",   href: "/analytics",           icon: ChartIcon },
+       { label: "Billing",    href: "/billing",             icon: DollarIcon },
+       { label: "Messages",   href: "/messages",            icon: ChatIcon }
+     ];
+     ```
+   - Make sure all of those icon imports (e.g. `DashboardIcon`, `CalendarIcon`, etc.) are present at top of the file.
+
+3. **Sync hrefs to route paths**  
+   - In `src/App.tsx`, confirm you have matching `<ProtectedRoute>` entries for each of the above `href` values:  
+     ```
+     /dashboard, /calendar, /workforce, /jobs, /jobs/post, /analytics, /billing, /messages
+     ```
+   - If any `href` does not exactly match a `path="…"` string, update it so they are identical (including leading slash and spelling).
+
+# FILES TO EDIT
+- `src/App.tsx`
+- `src/components/Sidebar.tsx`
+
+# CONSTRAINTS
+- Do **not** modify any backend or business logic code.
+- Only apply the diffs or replacements described above.
+- Maintain all existing imports and providers.
+
+# SUCCESS CRITERIA
+- The `<Sidebar>` appears on every page (wrapped by `<Layout>`).
+- All menu items render and display their labels/icons.
+- Clicking **any** sidebar link navigates without 404 errors.
+- `npm run dev` and all existing tests pass without change.
+
+BEGIN!

@@ -47,7 +47,11 @@ function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
+      <ProtectedRoute path="/dashboard" component={HomePage} />
+      <ProtectedRoute path="/workforce" component={EnhancedStaffPage} />
+      <ProtectedRoute path="/billing" component={InvoicesPage} />
       <ProtectedRoute path="/jobs" component={EnhancedJobBoard} />
+      <ProtectedRoute path="/jobs/post" component={EnhancedJobPostingPage} />
       <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />
       <ProtectedRoute path="/calendar" component={UnifiedCalendarPage} />
       <ProtectedRoute path="/calendar-view" component={UnifiedCalendarPage} />
@@ -97,7 +101,9 @@ function App() {
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <Layout>
+            <Router />
+          </Layout>
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
