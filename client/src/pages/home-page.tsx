@@ -8,7 +8,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Layout from "@/components/Layout";
 import { getQueryFn } from "@/lib/queryClient";
 import { 
   AlertTriangle, 
@@ -273,8 +272,7 @@ export default function HomePage() {
   };
 
   return (
-    <Layout>
-      <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full">
         {/* Header */}
         <div className="bg-white border-b px-6 py-4">
           <div className="flex items-center justify-between">
@@ -535,6 +533,5 @@ export default function HomePage() {
           </Tabs>
         </div>
       </div>
-    </Layout>
   );
 }

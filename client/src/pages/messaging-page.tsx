@@ -14,7 +14,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
-import Layout from "@/components/Layout";
 
 interface Message {
   id: string;
@@ -254,8 +253,7 @@ export default function MessagingPage() {
   };
 
   return (
-    <Layout>
-      <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full">
         {/* Header */}
         <div className="bg-white border-b px-6 py-4">
           <div className="flex items-center justify-between">
@@ -769,6 +767,5 @@ export default function MessagingPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </Layout>
   );
 }

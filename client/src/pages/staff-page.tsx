@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
-import Layout from "@/components/Layout";
 
 const mockStaff = [
   {
@@ -331,6 +330,5 @@ export default function StaffPage() {
             </div>
           )}
         </div>
-    </Layout>
   );
 }
