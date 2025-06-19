@@ -1409,7 +1409,9 @@ export function registerRoutes(app: Express): Server {
           staffingRating: 4,
           qualityMeasureRating: 4,
           latitude: 45.4992,
-          longitude: -122.6853
+          longitude: -122.6853,
+          createdAt: "2025-01-15T00:00:00Z",
+          updatedAt: "2025-06-19T00:00:00Z"
         },
         {
           id: 2,
@@ -1430,7 +1432,9 @@ export function registerRoutes(app: Express): Server {
           staffingRating: 5,
           qualityMeasureRating: 5,
           latitude: 45.4992,
-          longitude: -122.6853
+          longitude: -122.6853,
+          createdAt: "2025-01-10T00:00:00Z",
+          updatedAt: "2025-06-19T00:00:00Z"
         },
         {
           id: 3,
@@ -1451,7 +1455,9 @@ export function registerRoutes(app: Express): Server {
           staffingRating: 4,
           qualityMeasureRating: 4,
           latitude: 45.5426,
-          longitude: -122.6664
+          longitude: -122.6664,
+          createdAt: "2025-02-01T00:00:00Z",
+          updatedAt: "2025-06-19T00:00:00Z"
         },
         {
           id: 4,
@@ -1472,7 +1478,9 @@ export function registerRoutes(app: Express): Server {
           staffingRating: 4,
           qualityMeasureRating: 4,
           latitude: 45.5274,
-          longitude: -122.6079
+          longitude: -122.6079,
+          createdAt: "2025-02-05T00:00:00Z",
+          updatedAt: "2025-06-19T00:00:00Z"
         },
         {
           id: 5,
@@ -1493,7 +1501,9 @@ export function registerRoutes(app: Express): Server {
           staffingRating: 4,
           qualityMeasureRating: 3,
           latitude: 45.4971,
-          longitude: -122.6309
+          longitude: -122.6309,
+          createdAt: "2025-03-01T00:00:00Z",
+          updatedAt: "2025-06-19T00:00:00Z"
         }
       ];
       
