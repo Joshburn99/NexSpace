@@ -18,6 +18,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Search, Building2, MapPin, Phone, Mail, Users, Bed, Star, RefreshCw, Import, ExternalLink, TrendingUp, Settings, Clock, DollarSign, Home, ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
+import GoogleMapsIntegration from "@/components/GoogleMapsIntegration";
 import { z } from "zod";
 
 const createFacilitySchema = insertFacilitySchema.extend({
@@ -262,6 +263,13 @@ export default function FacilityManagementPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Google Maps Integration */}
+      <GoogleMapsIntegration 
+        facilities={facilities} 
+        selectedFacility={selectedFacility}
+        onFacilitySelect={setSelectedFacility}
+      />
 
       {/* Facilities Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

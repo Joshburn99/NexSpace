@@ -518,10 +518,10 @@ export default function UnifiedCalendarPage() {
                             {shift.startTime} - {shift.endTime}
                           </div>
                           <div className="flex items-center justify-between">
-                            <Badge variant="outline" className="text-xs">
+                            <Badge className={`text-xs ${getSpecialtyBadgeColor(shift.specialty)} shadow-sm`}>
                               {getSpecialtyAbbreviation(shift.specialty)}
                             </Badge>
-                            <span className="text-xs font-medium">${shift.rate}/hr</span>
+                            <span className="text-xs font-medium text-green-600">${shift.rate}/hr</span>
                           </div>
                           <Badge className={`text-xs ${getStatusColor(shift.status)}`}>
                             {shift.status.replace('_', ' ')}
