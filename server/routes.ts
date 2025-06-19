@@ -385,6 +385,96 @@ export function registerRoutes(app: Express): Server {
           rate: 18.50,
           urgency: "low",
           description: "Float pool CNA for long-term care facility"
+        },
+        {
+          id: 11,
+          title: "ICU Night Shift",
+          date: "2025-06-17",
+          startTime: "19:00",
+          endTime: "07:00",
+          department: "ICU",
+          specialty: "Registered Nurse",
+          status: "completed",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 48.00,
+          urgency: "high",
+          description: "Completed ICU night coverage"
+        },
+        {
+          id: 12,
+          title: "Respiratory Therapy",
+          date: "2025-06-18",
+          startTime: "08:00",
+          endTime: "16:00",
+          department: "Respiratory",
+          specialty: "Respiratory Therapist",
+          status: "completed",
+          facilityId: 2,
+          facilityName: "OHSU Hospital",
+          rate: 42.00,
+          urgency: "medium",
+          description: "Completed respiratory therapy shift"
+        },
+        {
+          id: 13,
+          title: "Float Pool Day",
+          date: "2025-06-16",
+          startTime: "07:00",
+          endTime: "15:00",
+          department: "Float Pool",
+          specialty: "Licensed Practical Nurse",
+          status: "completed",
+          facilityId: 4,
+          facilityName: "Providence Portland Medical Center",
+          rate: 34.50,
+          urgency: "low",
+          description: "Completed float pool coverage"
+        },
+        {
+          id: 14,
+          title: "OR Afternoon",
+          date: "2025-06-15",
+          startTime: "12:00",
+          endTime: "20:00",
+          department: "Operating Room",
+          specialty: "Surgical Technologist",
+          status: "completed",
+          facilityId: 3,
+          facilityName: "Legacy Emanuel",
+          rate: 40.75,
+          urgency: "medium",
+          description: "Completed OR afternoon shift"
+        },
+        {
+          id: 15,
+          title: "Emergency Weekend",
+          date: "2025-06-21",
+          startTime: "10:00",
+          endTime: "22:00",
+          department: "Emergency",
+          specialty: "Registered Nurse",
+          status: "open",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 52.00,
+          urgency: "critical",
+          description: "Weekend emergency department coverage needed"
+        },
+        {
+          id: 16,
+          title: "Pharmacy Tech",
+          date: "2025-06-22",
+          startTime: "09:00",
+          endTime: "17:00",
+          department: "Pharmacy",
+          specialty: "Pharmacy Technician",
+          status: "open",
+          facilityId: 2,
+          facilityName: "OHSU Hospital",
+          rate: 26.50,
+          urgency: "low",
+          description: "Pharmacy technician coverage needed"
         }
       ];
       
@@ -1854,8 +1944,8 @@ export function registerRoutes(app: Express): Server {
         id: Date.now(),
         ...req.body,
         isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date()
+        createdAt: "2025-06-19T00:00:00Z",
+        updatedAt: "2025-06-19T00:00:00Z"
       };
       res.status(201).json(newFacility);
     } catch (error) {
@@ -1870,7 +1960,7 @@ export function registerRoutes(app: Express): Server {
       const updatedFacility = {
         id: parseInt(req.params.id),
         ...req.body,
-        updatedAt: new Date()
+        updatedAt: "2025-06-19T00:00:00Z"
       };
       res.json(updatedFacility);
     } catch (error) {
