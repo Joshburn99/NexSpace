@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
-import Layout from "@/components/Layout";
 import { getQueryFn } from "@/lib/queryClient";
 
 export default function SchedulingPage() {
@@ -30,8 +29,7 @@ export default function SchedulingPage() {
   });
 
   return (
-    <Layout>
-      <div className="p-6">
+    <div className="p-6">
         <div className="flex items-center justify-end mb-6">
           <Button>
             <Calendar className="w-4 h-4 mr-2" />
@@ -161,6 +159,5 @@ export default function SchedulingPage() {
             </CardContent>
           </Card>
         </div>
-    </Layout>
   );
 }

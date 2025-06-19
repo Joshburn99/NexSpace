@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -321,8 +320,7 @@ export default function EnhancedJobBoard() {
   const departments = Array.from(new Set(jobPostings.map(job => job.department)));
 
   return (
-    <Layout>
-      <main className="flex-1 overflow-x-hidden overflow-y-auto">
+    <main className="flex-1 overflow-x-hidden overflow-y-auto">
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -643,6 +641,5 @@ export default function EnhancedJobBoard() {
           </div>
         </div>
       </main>
-    </Layout>
   );
 }

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import Layout from "@/components/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -123,8 +122,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <Layout>
-      <div className="p-6">
+    <div className="p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 flex items-center space-x-2">
@@ -551,6 +549,5 @@ export default function SettingsPage() {
           </Card>
         </div>
       </div>
-    </Layout>
   );
 }

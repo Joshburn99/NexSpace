@@ -135,8 +135,7 @@ export default function StaffPage() {
   const uniqueRoles = Array.from(new Set(mockStaff.map(staff => staff.role)));
 
   return (
-    <Layout>
-      <div className="p-6">
+    <div className="p-6">
         <div className="flex items-center justify-end mb-6">
           <Button>Add New Staff</Button>
         </div>
