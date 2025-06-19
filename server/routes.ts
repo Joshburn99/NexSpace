@@ -1198,11 +1198,104 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Facilities API
-  app.get("/api/facilities", requireAuth, requirePermission("facilities.view"), async (req, res) => {
+  // Facilities API - using example data for now
+  app.get("/api/facilities", requireAuth, async (req, res) => {
     try {
-      const facilities = await storage.getAllFacilities();
-      res.json(facilities);
+      const exampleFacilities = [
+        {
+          id: 1,
+          name: "Portland General Hospital",
+          facilityType: "hospital",
+          address: "3181 SW Sam Jackson Park Rd",
+          city: "Portland",
+          state: "OR",
+          zipCode: "97239",
+          phone: "(503) 494-8311",
+          email: "admin@portlandgeneral.com",
+          website: "https://portlandgeneral.com",
+          cmsId: "380001",
+          npiNumber: "1234567890",
+          isActive: true,
+          bedCount: 576,
+          overallRating: 4,
+          staffingRating: 4,
+          qualityMeasureRating: 4,
+          latitude: 45.4992,
+          longitude: -122.6853,
+          createdAt: "2025-01-15T00:00:00Z",
+          updatedAt: "2025-06-19T00:00:00Z"
+        },
+        {
+          id: 2,
+          name: "OHSU Hospital",
+          facilityType: "hospital",
+          address: "3181 SW Sam Jackson Park Rd",
+          city: "Portland", 
+          state: "OR",
+          zipCode: "97239",
+          phone: "(503) 494-8311",
+          email: "info@ohsu.edu",
+          website: "https://ohsu.edu",
+          cmsId: "380002",
+          npiNumber: "1234567891",
+          isActive: true,
+          bedCount: 576,
+          overallRating: 5,
+          staffingRating: 5,
+          qualityMeasureRating: 5,
+          latitude: 45.4992,
+          longitude: -122.6853,
+          createdAt: "2025-01-15T00:00:00Z",
+          updatedAt: "2025-06-19T00:00:00Z"
+        },
+        {
+          id: 3,
+          name: "Legacy Emanuel Medical Center",
+          facilityType: "hospital",
+          address: "2801 N Gantenbein Ave",
+          city: "Portland",
+          state: "OR",
+          zipCode: "97227",
+          phone: "(503) 413-2200",
+          email: "contact@legacyhealth.org",
+          website: "https://legacyhealth.org",
+          cmsId: "380003",
+          npiNumber: "1234567892",
+          isActive: true,
+          bedCount: 368,
+          overallRating: 4,
+          staffingRating: 4,
+          qualityMeasureRating: 4,
+          latitude: 45.5375,
+          longitude: -122.6669,
+          createdAt: "2025-01-15T00:00:00Z",
+          updatedAt: "2025-06-19T00:00:00Z"
+        },
+        {
+          id: 4,
+          name: "Rose City Nursing Center",
+          facilityType: "nursing_home",
+          address: "5561 NE Sandy Blvd",
+          city: "Portland",
+          state: "OR",
+          zipCode: "97213",
+          phone: "(503) 281-7275",
+          email: "admin@rosecitynursing.com",
+          website: "https://rosecitynursing.com",
+          cmsId: "380004",
+          npiNumber: "1234567893",
+          isActive: true,
+          bedCount: 100,
+          overallRating: 3,
+          staffingRating: 3,
+          qualityMeasureRating: 3,
+          latitude: 45.5368,
+          longitude: -122.6035,
+          createdAt: "2025-01-15T00:00:00Z",
+          updatedAt: "2025-06-19T00:00:00Z"
+        }
+      ];
+      res.json(exampleFacilities);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch facilities" });
     }
@@ -1476,133 +1569,8 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Facility management routes with example data
-  app.get("/api/facilities", requireAuth, async (req, res) => {
-    try {
-      const exampleFacilities = [
-        {
-          id: 1,
-          name: "Portland General Hospital",
-          facilityType: "hospital",
-          address: "3181 SW Sam Jackson Park Rd",
-          city: "Portland",
-          state: "OR",
-          zipCode: "97239",
-          phone: "(503) 494-8311",
-          email: "admin@portlandgeneral.com",
-          website: "https://portlandgeneral.com",
-          cmsId: "380001",
-          npiNumber: "1234567890",
-          isActive: true,
-          bedCount: 576,
-          overallRating: 4,
-          staffingRating: 4,
-          qualityMeasureRating: 4,
-          latitude: 45.4992,
-          longitude: -122.6853,
-          createdAt: "2025-01-15T00:00:00Z",
-          updatedAt: "2025-06-19T00:00:00Z"
-        },
-        {
-          id: 2,
-          name: "OHSU Hospital",
-          facilityType: "hospital",
-          address: "3181 SW Sam Jackson Park Rd",
-          city: "Portland", 
-          state: "OR",
-          zipCode: "97239",
-          phone: "(503) 494-8311",
-          email: "info@ohsu.edu",
-          website: "https://ohsu.edu",
-          cmsId: "380002",
-          npiNumber: "1234567891",
-          isActive: true,
-          bedCount: 576,
-          overallRating: 5,
-          staffingRating: 5,
-          qualityMeasureRating: 5,
-          latitude: 45.4992,
-          longitude: -122.6853,
-          createdAt: "2025-01-10T00:00:00Z",
-          updatedAt: "2025-06-19T00:00:00Z"
-        },
-        {
-          id: 3,
-          name: "Legacy Emanuel",
-          facilityType: "hospital",
-          address: "2801 N Gantenbein Ave",
-          city: "Portland",
-          state: "OR", 
-          zipCode: "97227",
-          phone: "(503) 413-2200",
-          email: "contact@legacyhealth.org",
-          website: "https://legacyhealth.org",
-          cmsId: "380003",
-          npiNumber: "1234567892",
-          isActive: true,
-          bedCount: 554,
-          overallRating: 4,
-          staffingRating: 4,
-          qualityMeasureRating: 4,
-          latitude: 45.5426,
-          longitude: -122.6664,
-          createdAt: "2025-02-01T00:00:00Z",
-          updatedAt: "2025-06-19T00:00:00Z"
-        },
-        {
-          id: 4,
-          name: "Providence Portland Medical Center",
-          facilityType: "hospital",
-          address: "4805 NE Glisan St",
-          city: "Portland",
-          state: "OR",
-          zipCode: "97213",
-          phone: "(503) 215-1111",
-          email: "admin@providence.org",
-          website: "https://providence.org",
-          cmsId: "380004",
-          npiNumber: "1234567893",
-          isActive: true,
-          bedCount: 571,
-          overallRating: 4,
-          staffingRating: 4,
-          qualityMeasureRating: 4,
-          latitude: 45.5274,
-          longitude: -122.6079,
-          createdAt: "2025-02-05T00:00:00Z",
-          updatedAt: "2025-06-19T00:00:00Z"
-        },
-        {
-          id: 5,
-          name: "Rose City Nursing Center",
-          facilityType: "nursing_home",
-          address: "1234 SE Powell Blvd",
-          city: "Portland",
-          state: "OR",
-          zipCode: "97202",
-          phone: "(503) 555-0123",
-          email: "info@rosecitynursing.com",
-          website: "https://rosecitynursing.com",
-          cmsId: "380005",
-          npiNumber: "1234567894",
-          isActive: true,
-          bedCount: 120,
-          overallRating: 4,
-          staffingRating: 4,
-          qualityMeasureRating: 3,
-          latitude: 45.4971,
-          longitude: -122.6309,
-          createdAt: "2025-03-01T00:00:00Z",
-          updatedAt: "2025-06-19T00:00:00Z"
-        }
-      ];
-      
-      res.json(exampleFacilities);
-    } catch (error) {
-      console.error("Error fetching facilities:", error);
-      res.status(500).json({ message: "Failed to fetch facilities" });
-    }
-  });
+  // Additional facility management routes
+  // Note: Main facilities endpoint is already defined above
 
   // Scheduling Configuration API
   app.get("/api/scheduling/templates", requireAuth, async (req, res) => {

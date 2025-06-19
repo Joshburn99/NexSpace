@@ -149,7 +149,7 @@ export default function FacilityManagementPage() {
       facility.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       facility.address?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesState = !selectedState || facility.state === selectedState;
+    const matchesState = !selectedState || selectedState === 'all' || facility.state === selectedState;
     
     return matchesSearch && matchesState;
   });
@@ -329,7 +329,7 @@ export default function FacilityManagementPage() {
                 <SelectValue placeholder="Filter by state" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All States</SelectItem>
+                <SelectItem value="all">All States</SelectItem>
                 {US_STATES.map((state) => (
                   <SelectItem key={state} value={state}>
                     {state}
