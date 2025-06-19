@@ -32,6 +32,35 @@ interface Shift {
   rate: number;
   urgency?: 'low' | 'medium' | 'high' | 'critical';
   description?: string;
+  isUnderStaffed?: boolean;
+  currentStaff?: number;
+  requiredStaff?: number;
+}
+
+interface ShiftRequest {
+  id: number;
+  shiftId: number;
+  title: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  department: string;
+  specialty: string;
+  facilityName: string;
+  status: string;
+  urgency: string;
+  requestedWorkers: RequestedWorker[];
+}
+
+interface RequestedWorker {
+  id: number;
+  name: string;
+  reliabilityScore: number;
+  totalShiftsWorked: number;
+  isFavorite: boolean;
+  specialty: string;
+  certifications: string[];
+  profileUrl: string;
 }
 
 interface BlockShift {
@@ -166,6 +195,11 @@ export default function UnifiedCalendarPage() {
   // Fetch facilities for form
   const { data: facilities = [] } = useQuery({
     queryKey: ['/api/facilities'],
+  });
+
+  // Fetch shift requests data
+  const { data: shiftRequests = [] } = useQuery({
+    queryKey: ['/api/shift-requests'],
   });
 
   // Post shift mutation
@@ -611,6 +645,82 @@ export default function UnifiedCalendarPage() {
                       {blockShift.description}
                     </div>
                   )}
+                </div>
+              </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Shift Requests Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Shift Requests with Worker Selection
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {shiftRequests.map((request: ShiftRequest) => (
+              <Card key={request.id} className="p-4 border-l-4 border-l-orange-500">
+                <div className="space-y-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h4 className="font-semibold">{request.title}</h4>
+                      <div className="text-sm text-muted-foreground">
+                        {format(parseISO(request.date), 'MMM d, yyyy')} • {request.startTime} - {request.endTime}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Badge variant="outline">{getSpecialtyAbbreviation(request.specialty)}</Badge>
+                        <Badge variant="outline">{request.department}</Badge>
+                        <Badge variant="secondary">{request.facilityName}</Badge>
+                      </div>
+                    </div>
+                    <Badge variant={request.urgency === 'high' ? 'destructive' : request.urgency === 'medium' ? 'default' : 'secondary'}>
+                      {request.urgency} priority
+                    </Badge>
+                  </div>
+                  
+                  <div>
+                    <h5 className="font-medium mb-2">Available Workers ({request.requestedWorkers.length})</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {request.requestedWorkers.map((worker: RequestedWorker) => (
+                        <div key={worker.id} className="border rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="font-medium">{worker.name}</div>
+                            {worker.isFavorite && (
+                              <Badge variant="secondary" className="text-xs">★ Favorite</Badge>
+                            )}
+                          </div>
+                          <div className="space-y-1 text-sm">
+                            <div className="flex items-center justify-between">
+                              <span className="text-muted-foreground">Reliability</span>
+                              <span className={`font-medium ${worker.reliabilityScore >= 95 ? 'text-green-600' : worker.reliabilityScore >= 85 ? 'text-blue-600' : 'text-orange-600'}`}>
+                                {worker.reliabilityScore}%
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-muted-foreground">Shifts Worked</span>
+                              <span className="font-medium">{worker.totalShiftsWorked}</span>
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {worker.certifications.slice(0, 2).join(', ')}
+                              {worker.certifications.length > 2 && ` +${worker.certifications.length - 2} more`}
+                            </div>
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <Button size="sm" variant="outline" className="flex-1">
+                              Select
+                            </Button>
+                            <Link to={worker.profileUrl}>
+                              <Button size="sm" variant="ghost">View Profile</Button>
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </Card>
             ))}
