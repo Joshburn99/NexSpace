@@ -1888,6 +1888,246 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Shifts API
+  app.get("/api/shifts", requireAuth, async (req, res) => {
+    try {
+      const shifts = [
+        {
+          id: 1,
+          title: "ICU Day Shift",
+          date: "2025-06-20",
+          startTime: "07:00",
+          endTime: "19:00",
+          department: "Intensive Care Unit",
+          specialty: "Registered Nurse",
+          status: "open",
+          facilityId: 1,
+          facilityName: "General Hospital",
+          rate: 42,
+          urgency: "high",
+          description: "12-hour ICU shift, ventilator experience preferred"
+        },
+        {
+          id: 2,
+          title: "Emergency Department Night",
+          date: "2025-06-20",
+          startTime: "19:00",
+          endTime: "07:00",
+          department: "Emergency Department",
+          specialty: "Registered Nurse",
+          status: "open",
+          facilityId: 1,
+          facilityName: "General Hospital",
+          rate: 48,
+          urgency: "critical",
+          description: "Night shift in busy ED, trauma experience required"
+        },
+        {
+          id: 3,
+          title: "Medical/Surgical Day",
+          date: "2025-06-21",
+          startTime: "06:00",
+          endTime: "18:00",
+          department: "Medical/Surgical",
+          specialty: "Licensed Practical Nurse",
+          status: "assigned",
+          facilityId: 2,
+          facilityName: "Metro Medical",
+          rate: 32,
+          urgency: "medium",
+          description: "General med-surg unit, medication administration"
+        },
+        {
+          id: 4,
+          title: "Physical Therapy",
+          date: "2025-06-22",
+          startTime: "08:00",
+          endTime: "17:00",
+          department: "Rehabilitation",
+          specialty: "Physical Therapist",
+          status: "open",
+          facilityId: 3,
+          facilityName: "City Clinic",
+          rate: 58,
+          urgency: "low",
+          description: "Outpatient PT clinic, orthopedic focus"
+        },
+        {
+          id: 5,
+          title: "Respiratory Therapy Weekend",
+          date: "2025-06-23",
+          startTime: "07:00",
+          endTime: "19:00",
+          department: "Intensive Care Unit",
+          specialty: "Respiratory Therapist",
+          status: "requested",
+          facilityId: 1,
+          facilityName: "General Hospital",
+          rate: 38,
+          urgency: "high",
+          description: "Weekend coverage, ECMO experience preferred"
+        }
+      ];
+      res.json(shifts);
+    } catch (error) {
+      console.error("Error fetching shifts:", error);
+      res.status(500).json({ message: "Failed to fetch shifts" });
+    }
+  });
+
+  app.post("/api/shifts", requireAuth, async (req, res) => {
+    try {
+      const shiftData = req.body;
+      const newShift = {
+        id: Date.now(),
+        ...shiftData,
+        status: "open",
+        createdById: req.user?.id,
+        createdAt: new Date().toISOString()
+      };
+      res.json(newShift);
+    } catch (error) {
+      console.error("Error creating shift:", error);
+      res.status(500).json({ message: "Failed to create shift" });
+    }
+  });
+
+  // Block Shifts API
+  app.get("/api/block-shifts", requireAuth, async (req, res) => {
+    try {
+      const blockShifts = [
+        {
+          id: 1,
+          title: "ICU Coverage Block",
+          startDate: "2025-06-25",
+          endDate: "2025-07-01",
+          department: "Intensive Care Unit",
+          specialty: "Registered Nurse",
+          quantity: 3,
+          rate: 45,
+          description: "Week-long ICU coverage needed, multiple positions available"
+        },
+        {
+          id: 2,
+          title: "Weekend ED Block",
+          startDate: "2025-06-28",
+          endDate: "2025-06-29",
+          department: "Emergency Department",
+          specialty: "Registered Nurse",
+          quantity: 2,
+          rate: 52,
+          description: "Weekend emergency department coverage"
+        },
+        {
+          id: 3,
+          title: "Rehabilitation Week",
+          startDate: "2025-07-07",
+          endDate: "2025-07-11",
+          department: "Rehabilitation",
+          specialty: "Physical Therapist",
+          quantity: 1,
+          rate: 62,
+          description: "Full week rehabilitation services coverage"
+        }
+      ];
+      res.json(blockShifts);
+    } catch (error) {
+      console.error("Error fetching block shifts:", error);
+      res.status(500).json({ message: "Failed to fetch block shifts" });
+    }
+  });
+
+  app.post("/api/block-shifts", requireAuth, async (req, res) => {
+    try {
+      const blockShiftData = req.body;
+      const newBlockShift = {
+        id: Date.now(),
+        ...blockShiftData,
+        status: "open",
+        createdById: req.user?.id,
+        createdAt: new Date().toISOString()
+      };
+      res.json(newBlockShift);
+    } catch (error) {
+      console.error("Error creating block shift:", error);
+      res.status(500).json({ message: "Failed to create block shift" });
+    }
+  });
+
+  // Facility Settings API
+  app.get("/api/facility-settings/:facilityId", requireAuth, async (req, res) => {
+    try {
+      const settings = {
+        id: 1,
+        facilityId: parseInt(req.params.facilityId),
+        baseRates: {
+          "Registered Nurse": 35,
+          "Licensed Practical Nurse": 28,
+          "Certified Nursing Assistant": 18,
+          "Physical Therapist": 45,
+          "Respiratory Therapist": 32,
+          "Medical Doctor": 85,
+          "Nurse Practitioner": 55,
+          "Physician Assistant": 50
+        },
+        presetTimes: [
+          { label: "7:00 AM - 7:00 PM", start: "07:00", end: "19:00" },
+          { label: "7:00 PM - 7:00 AM", start: "19:00", end: "07:00" },
+          { label: "6:00 AM - 6:00 PM", start: "06:00", end: "18:00" },
+          { label: "6:00 PM - 6:00 AM", start: "18:00", end: "06:00" },
+          { label: "8:00 AM - 8:00 PM", start: "08:00", end: "20:00" },
+          { label: "8:00 PM - 8:00 AM", start: "20:00", end: "08:00" }
+        ],
+        allowedPremiums: {
+          min: 1.0,
+          max: 1.7,
+          step: 0.05
+        },
+        departments: [
+          "Emergency Department",
+          "Intensive Care Unit",
+          "Medical/Surgical",
+          "Pediatrics",
+          "Oncology",
+          "Cardiology",
+          "Orthopedics",
+          "Rehabilitation",
+          "Operating Room",
+          "Labor & Delivery"
+        ],
+        specialtyServices: [
+          "Registered Nurse",
+          "Licensed Practical Nurse",
+          "Certified Nursing Assistant",
+          "Physical Therapist",
+          "Respiratory Therapist",
+          "Medical Doctor",
+          "Nurse Practitioner",
+          "Physician Assistant"
+        ]
+      };
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching facility settings:", error);
+      res.status(500).json({ message: "Failed to fetch facility settings" });
+    }
+  });
+
+  app.put("/api/facility-settings/:facilityId", requireAuth, async (req, res) => {
+    try {
+      const updatedSettings = {
+        id: 1,
+        facilityId: parseInt(req.params.facilityId),
+        ...req.body,
+        updatedAt: new Date().toISOString()
+      };
+      res.json(updatedSettings);
+    } catch (error) {
+      console.error("Error updating facility settings:", error);
+      res.status(500).json({ message: "Failed to update facility settings" });
+    }
+  });
+
   app.get("/api/referrals/facilities", requireAuth, async (req, res) => {
     try {
       const referrals = [

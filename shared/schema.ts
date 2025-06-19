@@ -124,17 +124,64 @@ export const jobApplications = pgTable("job_applications", {
 // Shifts table
 export const shifts = pgTable("shifts", {
   id: serial("id").primaryKey(),
+  title: text("title").notNull(),
   facilityId: integer("facility_id").notNull(),
+  facilityName: text("facility_name"),
   department: text("department").notNull(),
-  startTime: timestamp("start_time").notNull(),
-  endTime: timestamp("end_time").notNull(),
+  specialty: text("specialty").notNull(),
+  date: text("date").notNull(), // YYYY-MM-DD format
+  startTime: text("start_time").notNull(), // HH:MM format
+  endTime: text("end_time").notNull(), // HH:MM format
+  rate: decimal("rate", { precision: 6, scale: 2 }).notNull(),
+  premiumMultiplier: decimal("premium_multiplier", { precision: 3, scale: 2 }).default('1.00'),
+  status: text("status").notNull().default('open'), // open, assigned, requested, in_progress, completed, cancelled, ncns, facility_cancelled
+  urgency: text("urgency").default('medium'), // low, medium, high, critical
+  description: text("description"),
   requiredStaff: integer("required_staff").default(1),
   assignedStaffIds: integer("assigned_staff_ids").array(),
-  status: text("status").notNull().default('open'), // open, filled, cancelled
-  shiftType: text("shift_type").notNull(), // day, night, weekend
   specialRequirements: text("special_requirements").array(),
   createdById: integer("created_by_id").notNull(),
-  createdAt: timestamp("created_at").defaultNow()
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Block shifts table
+export const blockShifts = pgTable("block_shifts", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  facilityId: integer("facility_id").notNull(),
+  facilityName: text("facility_name"),
+  department: text("department").notNull(),
+  specialty: text("specialty").notNull(),
+  startDate: text("start_date").notNull(), // YYYY-MM-DD format
+  endDate: text("end_date").notNull(), // YYYY-MM-DD format
+  startTime: text("start_time").notNull(), // HH:MM format
+  endTime: text("end_time").notNull(), // HH:MM format
+  quantity: integer("quantity").notNull().default(1), // number of positions
+  rate: decimal("rate", { precision: 6, scale: 2 }).notNull(),
+  premiumMultiplier: decimal("premium_multiplier", { precision: 3, scale: 2 }).default('1.00'),
+  status: text("status").notNull().default('open'), // open, partially_filled, filled, cancelled
+  urgency: text("urgency").default('medium'), // low, medium, high, critical
+  description: text("description"),
+  specialRequirements: text("special_requirements").array(),
+  createdById: integer("created_by_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
+});
+
+// Facility settings table for configurable rates and times
+export const facilitySettings = pgTable("facility_settings", {
+  id: serial("id").primaryKey(),
+  facilityId: integer("facility_id").notNull().unique(),
+  baseRates: jsonb("base_rates"), // { "Registered Nurse": 35, "LPN": 28, ... }
+  presetTimes: jsonb("preset_times"), // [{ label: "7AM-7PM", start: "07:00", end: "19:00" }, ...]
+  allowedPremiums: jsonb("allowed_premiums"), // { min: 1.0, max: 1.7, step: 0.05 }
+  departments: text("departments").array(),
+  specialtyServices: text("specialty_services").array(),
+  autoApprovalRules: jsonb("auto_approval_rules"),
+  notificationSettings: jsonb("notification_settings"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow()
 });
 
 // Time clock entries
