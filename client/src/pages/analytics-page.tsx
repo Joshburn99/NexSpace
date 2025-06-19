@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
+import { useShifts } from "@/contexts/ShiftContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,11 +33,15 @@ export default function AnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("7d");
   const [selectedMetric, setSelectedMetric] = useState("overview");
 
-  // Fetch real data
-  const { data: shifts = [] } = useQuery({
-    queryKey: ["/api/shifts/1"],
-    queryFn: getQueryFn({ on401: "throw" })
-  });
+  // Use shift context data
+  const { 
+    shifts, 
+    openShifts, 
+    requestedShifts, 
+    bookedShifts, 
+    completedShifts,
+    isLoading 
+  } = useShifts();
 
   const { data: users = [] } = useQuery({
     queryKey: ["/api/users"],
@@ -53,27 +58,29 @@ export default function AnalyticsPage() {
     queryFn: getQueryFn({ on401: "throw" })
   });
 
-  // Calculate comprehensive metrics
+  // Calculate comprehensive metrics using shift context data
   const analytics = {
     staffing: {
-      totalStaff: users.filter(u => u.role === 'INTERNAL_EMPLOYEE').length,
-      activeStaff: users.filter(u => u.role === 'INTERNAL_EMPLOYEE' && u.isActive).length,
-      contractors: users.filter(u => u.role === 'CONTRACTOR_1099').length,
-      openPositions: jobs.filter(j => j.isActive).length,
+      totalStaff: Array.isArray(users) ? users.filter((u: any) => u.role === 'INTERNAL_EMPLOYEE').length : 0,
+      activeStaff: Array.isArray(users) ? users.filter((u: any) => u.role === 'INTERNAL_EMPLOYEE' && u.isActive).length : 0,
+      contractors: Array.isArray(users) ? users.filter((u: any) => u.role === 'CONTRACTOR_1099').length : 0,
+      openPositions: Array.isArray(jobs) ? jobs.filter((j: any) => j.isActive).length : 0,
       staffUtilization: 87.5,
       avgReliabilityScore: 94.2
     },
     scheduling: {
       totalShifts: shifts.length,
-      openShifts: shifts.filter(s => !s.assignedStaffIds || s.assignedStaffIds.length === 0).length,
-      filledShifts: shifts.filter(s => s.assignedStaffIds && s.assignedStaffIds.length > 0).length,
-      fillRate: shifts.length > 0 ? ((shifts.filter(s => s.assignedStaffIds && s.assignedStaffIds.length > 0).length / shifts.length) * 100).toFixed(1) : '0',
+      openShifts: openShifts.length,
+      filledShifts: bookedShifts.length,
+      completedShifts: completedShifts.length,
+      requestedShifts: requestedShifts.length,
+      fillRate: shifts.length > 0 ? ((bookedShifts.length / shifts.length) * 100).toFixed(1) : '0',
       avgShiftLength: 8.5,
       emergencyCoverage: 96.3
     },
     compliance: {
-      credentialCompliance: credentials.length > 0 ? ((credentials.filter(c => c.status === 'verified').length / credentials.length) * 100).toFixed(1) : '0',
-      expiringCredentials: credentials.filter(c => c.status === 'pending').length,
+      credentialCompliance: Array.isArray(credentials) && credentials.length > 0 ? ((credentials.filter((c: any) => c.status === 'verified').length / credentials.length) * 100).toFixed(1) : '0',
+      expiringCredentials: Array.isArray(credentials) ? credentials.filter((c: any) => c.status === 'pending').length : 0,
       trainingCompliance: 91.8,
       auditScore: 94.5,
       lastAuditDate: '2025-05-15',
