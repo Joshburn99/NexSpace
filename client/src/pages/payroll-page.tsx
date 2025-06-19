@@ -33,7 +33,7 @@ import {
 } from "lucide-react";
 import { apiRequest, getQueryFn, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { AppLayout } from "@/components/ui/app-layout";
+
 
 interface Timesheet {
   id: number;
@@ -222,8 +222,7 @@ export default function PayrollPage() {
   const totalPendingAmount = pendingPayments.reduce((sum, p) => sum + parseFloat(p.netAmount), 0);
 
   return (
-    <AppLayout title="Payroll Management" subtitle="Automated payment processing and timesheet management">
-      <div className="p-6">
+    <div className="p-6">
 
         {/* Facility Filter */}
         <div className="mb-6">
@@ -663,6 +662,5 @@ export default function PayrollPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </AppLayout>
   );
 }

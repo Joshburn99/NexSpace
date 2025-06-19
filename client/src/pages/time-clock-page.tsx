@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/use-auth";
-import { AppLayout } from "@/components/ui/app-layout";
+
 
 const mockTimeEntries = [
   {
@@ -83,8 +83,7 @@ export default function TimeClockPage() {
   };
 
   return (
-    <AppLayout title="Time Clock" subtitle="Track work hours and manage time entries">
-      <div className="p-6">
+    <div className="p-6">
         <div className="flex items-center justify-end mb-6">
           <div className="text-right">
             <div className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -249,6 +248,5 @@ export default function TimeClockPage() {
             </CardContent>
           </Card>
         </div>
-    </AppLayout>
   );
 }

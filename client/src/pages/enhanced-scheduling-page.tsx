@@ -36,7 +36,7 @@ import {
 import { apiRequest, getQueryFn, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format, addDays, startOfWeek, parseISO, isToday, isSameDay } from "date-fns";
-import { AppLayout } from "@/components/ui/app-layout";
+
 
 interface Shift {
   id: number;
@@ -243,8 +243,7 @@ export default function EnhancedSchedulingPage() {
   const weekDates = getWeekDates(selectedDate);
 
   return (
-    <AppLayout title="Advanced Scheduling" subtitle="Manage shifts and staff assignments">
-      <div className="p-6">
+    <div className="p-6">
         {/* Quick Actions and Filters */}
         <div className="flex flex-wrap gap-4 mb-6">
           <div className="flex items-center gap-2">
@@ -667,6 +666,5 @@ export default function EnhancedSchedulingPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </AppLayout>
   );
 }

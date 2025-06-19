@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import { AppLayout } from "@/components/ui/app-layout";
+
 import { useToast } from "@/hooks/use-toast";
 
 const mockAgencyData = [
