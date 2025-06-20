@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
+import { useShifts } from "@/contexts/ShiftContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,7 +66,18 @@ interface FloatPoolMetrics {
 
 export default function FloatPoolAnalyticsPage() {
   const { user } = useAuth();
+  const { open, requested, booked, history } = useShifts();
   const [timeRange, setTimeRange] = useState("6months");
+
+  // Guard against unauthorized access
+  if (user?.role === 'employee' || user?.role === 'contractor') {
+    return null; // Hide facility data from employees and contractors
+  }
+
+  // Derive metrics from shift history
+  const totalShifts = history.length;
+  const openCount = open.length;
+  const bookedCount = booked.length;
 
   const { data: metrics, isLoading } = useQuery<FloatPoolMetrics>({
     queryKey: [`/api/analytics/float-pool?range=${timeRange}`],

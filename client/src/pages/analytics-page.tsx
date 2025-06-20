@@ -40,9 +40,14 @@ export default function AnalyticsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState("7d");
   const [selectedMetric, setSelectedMetric] = useState("overview");
 
-  // Use shift context data
-  const { shifts, openShifts, requestedShifts, bookedShifts, completedShifts, isLoading } =
-    useShifts();
+  // Use shift context data - centralized source of truth
+  const { open, requested, booked, history } = useShifts();
+  
+  // Derive metrics from shift data
+  const totalShifts = history.length;
+  const openCount = open.length;
+  const requestedCount = requested.length;
+  const bookedCount = booked.length;
 
   const { data: users = [] } = useQuery({
     queryKey: ["/api/users"],
@@ -76,12 +81,12 @@ export default function AnalyticsPage() {
       avgReliabilityScore: 94.2,
     },
     scheduling: {
-      totalShifts: shifts.length,
-      openShifts: openShifts.length,
-      filledShifts: bookedShifts.length,
-      completedShifts: completedShifts.length,
-      requestedShifts: requestedShifts.length,
-      fillRate: shifts.length > 0 ? ((bookedShifts.length / shifts.length) * 100).toFixed(1) : "0",
+      totalShifts: totalShifts,
+      openShifts: openCount,
+      filledShifts: bookedCount,
+      completedShifts: history.length,
+      requestedShifts: requestedCount,
+      fillRate: totalShifts > 0 ? ((bookedCount / totalShifts) * 100).toFixed(1) : "0",
       avgShiftLength: 8.5,
       emergencyCoverage: 96.3,
     },

@@ -21,10 +21,26 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-
+import { useShifts } from "@/contexts/ShiftContext";
 import { useToast } from "@/hooks/use-toast";
 
-const mockAgencyData = [
+export default function AgencyUsagePage() {
+  const { user } = useAuth();
+  const { open, requested, booked, history } = useShifts();
+  const { toast } = useToast();
+  
+  // Guard against unauthorized access
+  const currentUser = user;
+  if (currentUser?.role === 'employee' || currentUser?.role === 'contractor') {
+    return null; // Hide facility data from employees and contractors
+  }
+  
+  // Derive metrics from shift history
+  const totalShifts = history.length;
+  const openCount = open.length;
+  const bookedCount = booked.length;
+  
+  const mockAgencyData = [
   {
     id: 1,
     agencyName: "Premium Healthcare Staffing",
@@ -106,9 +122,6 @@ const floatPoolData = [
   },
 ];
 
-export default function AgencyUsagePage() {
-  const { user } = useAuth();
-  const { toast } = useToast();
   const [timeframe, setTimeframe] = useState("last_90_days");
   const [specialty, setSpecialty] = useState("all");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
