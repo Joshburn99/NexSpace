@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useShifts } from '@/contexts/ShiftContext';
-import { useTimeClock } from '@/contexts/TimeClockContext';
+import { useTimeClocks } from '@/contexts/TimeClockContext';
 
 export interface DashboardData {
   totalShiftsToday: number;
@@ -17,7 +17,7 @@ const DashboardContext = createContext<DashboardData | null>(null);
 
 export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { openShifts, requestedShifts, bookedShifts, completedShifts } = useShifts();
-  const { timeClocks, summaries } = useTimeClock();
+  const { currentIn, logs } = useTimeClocks();
   
   const today = new Date().toISOString().slice(0, 10);
   
@@ -27,12 +27,15 @@ export const DashboardProvider: React.FC<{ children: ReactNode }> = ({ children 
   const todayBookedShifts = bookedShifts.filter(shift => shift.date && shift.date.startsWith(today));
   const todayCompletedShifts = completedShifts.filter(shift => shift.date && shift.date.startsWith(today));
   
-  // Calculate total hours from time clock data
-  const todayTimeClocks = timeClocks.filter(tc => tc.createdAt && tc.createdAt.startsWith(today));
-  const totalHoursToday = todayTimeClocks.reduce((sum, tc) => sum + (tc.regularHours || 0) + (tc.overtimeHours || 0), 0);
+  // Calculate total hours from work logs for today
+  const todayLogs = logs.filter(log => log.clockIn.startsWith(today));
+  const totalHoursToday = todayLogs.reduce((sum: number, log) => {
+    const hours = (new Date(log.clockOut).getTime() - new Date(log.clockIn).getTime()) / 3600000;
+    return sum + hours;
+  }, 0);
   
   // Count active staff (currently clocked in)
-  const activeStaff = timeClocks.filter(tc => tc.clockOutTime === null).length;
+  const activeStaff = currentIn ? 1 : 0;
   
   const dashboardData: DashboardData = {
     totalShiftsToday: todayOpenShifts.length + todayRequestedShifts.length + todayBookedShifts.length,
