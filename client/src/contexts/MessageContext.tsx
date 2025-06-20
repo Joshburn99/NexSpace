@@ -35,9 +35,16 @@ export interface Thread {
 
 // Helper function to get display name for messages
 export function getDisplayName(userId: number, currentUser: any, staff: any[]) {
-  if (currentUser.role === 'superuser' && userId === currentUser.id) {
+  // Check if the user is a superuser (user ID 3 or role super_admin/facility_manager)
+  if ((userId === 3 || currentUser?.role === 'super_admin' || currentUser?.role === 'facility_manager') && userId === currentUser?.id) {
     return 'NexSpace Team';
   }
+  
+  // For messages from superuser to others, check if the sender is user 3 (superuser)
+  if (userId === 3) {
+    return 'NexSpace Team';
+  }
+  
   const user = staff.find(s => s.id === userId);
   return user ? `${user.firstName} ${user.lastName}` : 'Unknown';
 }

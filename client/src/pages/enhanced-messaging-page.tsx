@@ -147,7 +147,7 @@ export default function EnhancedMessagingPage() {
       selectedRecipients.forEach(recipient => {
         sendMessage({
           senderId: user.id,
-          senderName: (user.role === 'super_admin' || user.role === 'facility_manager') ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
+          senderName: (user.id === 3 || user.role === 'super_admin' || user.role === 'facility_manager') ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
           recipientId: recipient.id,
           recipientName: `${recipient.firstName} ${recipient.lastName}`,
           subject: subject.trim(),
@@ -159,7 +159,7 @@ export default function EnhancedMessagingPage() {
     } else if (selectedRecipient) {
       sendMessage({
         senderId: user.id,
-        senderName: (user.role === 'super_admin' || user.role === 'facility_manager') ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
+        senderName: (user.id === 3 || user.role === 'super_admin' || user.role === 'facility_manager') ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
         recipientId: selectedRecipient.id,
         recipientName: `${selectedRecipient.firstName} ${selectedRecipient.lastName}`,
         subject: subject.trim(),
@@ -244,10 +244,13 @@ export default function EnhancedMessagingPage() {
   };
 
   const handleMessageClick = (message: any) => {
-    setSelectedMessage(message);
-    if (!message.isRead && message.recipientId === (user?.id || 0)) {
-      markAsRead(message.id);
-    }
+    setSelectedMessage(prevSelected => {
+      // Always update to the clicked message, even if it's the same one
+      if (!message.isRead && (message.recipientId === user?.id || (message.recipientId === 999 && user?.id === 3))) {
+        markAsRead(message.id);
+      }
+      return message;
+    });
   };
 
   const getPriorityBadge = (priority: string) => {
