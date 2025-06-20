@@ -61,6 +61,7 @@ import NotificationsPage from "@/pages/notifications-page";
 import PTOPage from "@/pages/pto-page";
 import EnhancedProfilePage from "@/pages/enhanced-profile-page";
 import EnhancedMessagingPage from "@/pages/enhanced-messaging-page";
+import MySchedulePage from "@/pages/MySchedulePage";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {

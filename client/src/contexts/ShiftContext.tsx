@@ -85,8 +85,10 @@ interface ShiftContextType {
   updateShiftStatus: (shiftId: number, status: ShiftStatus) => Promise<void>;
   assignStaffToShift: (shiftId: number, staffId: number) => Promise<void>;
   requestShift: (shiftId: number) => Promise<void>;
+  assignShift: (shiftId: number, userId: number) => Promise<void>;
   cancelShift: (shiftId: number) => Promise<void>;
   addShift: (shift: Omit<Shift, "id" | "createdAt" | "updatedAt">) => Promise<void>;
+  fetchShiftHistory: (userId: number) => Promise<void>;
 }
 
 const ShiftContext = createContext<ShiftContextType | undefined>(undefined);
@@ -339,10 +341,20 @@ const sampleBlockShifts: BlockShift[] = [
 ];
 
 export function ShiftProvider({ children }: { children: ReactNode }) {
-  const [shifts, setShifts] = useState<Shift[]>(sampleShifts);
-  const [blockShifts, setBlockShifts] = useState<BlockShift[]>(sampleBlockShifts);
+  const { user } = useAuth();
+  const [shifts, setShifts] = useState<Shift[]>([]);
+  const [blockShifts, setBlockShifts] = useState<BlockShift[]>([]);
+  const [shiftHistory, setShiftHistory] = useState<Shift[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Load shifts and history on mount and when user changes
+  useEffect(() => {
+    if (user) {
+      refreshShifts();
+      fetchShiftHistory(user.id);
+    }
+  }, [user]);
 
   // Computed properties for different shift categories
   const openShifts = shifts.filter((shift) => shift.status === "open");
@@ -350,26 +362,53 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
   const bookedShifts = shifts.filter(
     (shift) => shift.status === "assigned" || shift.status === "in_progress"
   );
-  const completedShifts = shifts.filter((shift) => shift.status === "completed");
+  const completedShifts = shiftHistory.filter((shift) => shift.status === "completed");
   
   // Aliased properties for the standardized API
   const open = openShifts;
   const requested = requestedShifts;
   const booked = bookedShifts;
-  const history = [...completedShifts, ...shifts.filter(s => s.status === "cancelled" || s.status === "ncns")];
+  const history = shiftHistory;
 
   const refreshShifts = async () => {
+    if (!user) return;
+    
     setIsLoading(true);
     setError(null);
     try {
-      // In a real app, this would fetch from API
-      // For now, we'll simulate API call with existing sample data
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      // setShifts(fetchedShifts);
+      const response = await fetch('/api/shifts', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setShifts(data);
+      } else {
+        setShifts(sampleShifts);
+      }
     } catch (err) {
       setError("Failed to refresh shifts");
+      setShifts(sampleShifts);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchShiftHistory = async (userId: number) => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`/api/shifts/history/${userId}`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setShiftHistory(data);
+      } else {
+        setShiftHistory(sampleShifts.filter(s => s.status === "completed"));
+      }
+    } catch (err) {
+      console.error("Failed to fetch shift history:", err);
+      setShiftHistory(sampleShifts.filter(s => s.status === "completed"));
     }
   };
 
@@ -423,10 +462,64 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
   };
 
   const requestShift = async (shiftId: number) => {
+    if (!user) return;
+    
     try {
-      await updateShiftStatus(shiftId, "requested");
+      const response = await fetch('/api/shifts/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ shiftId, userId: user.id })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Update local state based on API response
+        if (data.autoAssigned) {
+          setShifts(prev => prev.map(s => 
+            s.id === shiftId ? { ...s, status: 'assigned' as ShiftStatus } : s
+          ));
+        } else {
+          setShifts(prev => prev.map(s => 
+            s.id === shiftId ? { ...s, status: 'requested' as ShiftStatus } : s
+          ));
+        }
+        
+        // Refresh shift history to include the new request
+        await fetchShiftHistory(user.id);
+      } else {
+        throw new Error('Failed to request shift');
+      }
     } catch (err) {
       setError("Failed to request shift");
+    }
+  };
+
+  const assignShift = async (shiftId: number, userId: number) => {
+    try {
+      const response = await fetch('/api/shifts/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ shiftId, userId })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        
+        // Update local state
+        setShifts(prev => prev.map(s => 
+          s.id === shiftId ? { ...s, status: 'assigned' as ShiftStatus, assignedStaffIds: [userId] } : s
+        ));
+        
+        // Add to history
+        setShiftHistory(prev => [...prev, data.historyEntry]);
+      } else {
+        throw new Error('Failed to assign shift');
+      }
+    } catch (err) {
+      setError("Failed to assign shift");
     }
   };
 
@@ -456,8 +549,10 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
     updateShiftStatus,
     assignStaffToShift,
     requestShift,
+    assignShift,
     cancelShift,
     addShift,
+    fetchShiftHistory,
   };
 
   return <ShiftContext.Provider value={contextValue}>{children}</ShiftContext.Provider>;
