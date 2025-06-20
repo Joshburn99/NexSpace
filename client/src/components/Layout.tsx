@@ -34,7 +34,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </>
       ) : showAdminLayout ? (
         <>
-          <ImpersonationIndicator />
           <div className="flex flex-1">
             <Sidebar expanded={sidebarExpanded} onToggle={() => setSidebarExpanded(!sidebarExpanded)} />
             <main className="flex-1 overflow-auto">{children}</main>
