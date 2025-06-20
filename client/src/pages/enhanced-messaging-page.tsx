@@ -78,7 +78,7 @@ export default function EnhancedMessagingPage() {
       selectedRecipients.forEach(recipient => {
         sendMessage({
           senderId: user.id,
-          senderName: user.role === 'superuser' ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
+          senderName: (user.role === 'super_admin' || user.role === 'facility_manager') ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
           recipientId: recipient.id,
           recipientName: `${recipient.firstName} ${recipient.lastName}`,
           subject: subject.trim(),
@@ -90,7 +90,7 @@ export default function EnhancedMessagingPage() {
     } else if (selectedRecipient) {
       sendMessage({
         senderId: user.id,
-        senderName: user.role === 'superuser' ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
+        senderName: (user.role === 'super_admin' || user.role === 'facility_manager') ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
         recipientId: selectedRecipient.id,
         recipientName: `${selectedRecipient.firstName} ${selectedRecipient.lastName}`,
         subject: subject.trim(),
@@ -210,7 +210,7 @@ export default function EnhancedMessagingPage() {
             <Plus className="w-4 h-4 mr-2" />
             New Message
           </Button>
-          {user?.role === 'superuser' && (
+          {(user?.role === 'super_admin' || user?.role === 'facility_manager') && (
             <Button onClick={handleMassMessage} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">
               <Mail className="w-4 h-4 mr-2" />
               Mass Message
@@ -232,7 +232,9 @@ export default function EnhancedMessagingPage() {
               <DialogDescription>
                 {isNexSpaceMessage 
                   ? "Send a message to the NexSpace support team"
-                  : "Send a message to facility staff members"
+                  : isMassMessage 
+                    ? "Send a message to multiple facility staff members"
+                    : "Send a message to facility staff members"
                 }
               </DialogDescription>
             </DialogHeader>
@@ -352,7 +354,7 @@ export default function EnhancedMessagingPage() {
                 <Button 
                   onClick={handleSendMessage} 
                   className="flex-1"
-                  disabled={!subject.trim() || !content.trim() || (!isNexSpaceMessage && !selectedRecipient && (!isMassMessage || selectedRecipients.length === 0))}
+                  disabled={!subject.trim() || !content.trim() || (!isNexSpaceMessage && !isMassMessage && !selectedRecipient) || (isMassMessage && selectedRecipients.length === 0)}
                 >
                   <Send className="w-4 h-4 mr-2" />
                   Send Message
