@@ -14,6 +14,19 @@ export interface StaffMember {
   activeCredentials: number;
   expiringCredentials: number;
   avatar?: string;
+  bio?: string;
+  location?: string;
+  hourlyRate?: number;
+  experience?: string;
+  skills?: string[];
+  certifications?: string[];
+  resumeUrl?: string;
+  coverLetterUrl?: string;
+  linkedIn?: string;
+  portfolio?: string;
+  yearsExperience?: number;
+  rating?: number;
+  totalShifts?: number;
 }
 
 interface StaffContextType {

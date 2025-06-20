@@ -9,6 +9,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   User, 
   Mail, 
@@ -20,7 +23,12 @@ import {
   AlertTriangle,
   Edit,
   Save,
-  X
+  X,
+  Upload,
+  FileText,
+  Download,
+  Plus,
+  Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,8 +42,75 @@ export default function EnhancedProfilePage() {
     email: '',
     phone: '',
     firstName: '',
-    lastName: ''
+    lastName: '',
+    bio: '',
+    location: '',
+    hourlyRate: '',
+    experience: '',
+    skills: [] as string[],
+    certifications: [] as string[],
+    resume: null as File | null,
+    coverLetter: null as File | null,
+    resumeUrl: '',
+    coverLetterUrl: '',
+    linkedIn: '',
+    portfolio: ''
   });
+
+  // Preset skill options for healthcare workers
+  const availableSkills = [
+    'Critical Care',
+    'Patient Assessment',
+    'IV Therapy',
+    'Medication Administration',
+    'Wound Care',
+    'Emergency Response',
+    'Patient Education',
+    'Documentation',
+    'Infection Control',
+    'Pediatric Care',
+    'Geriatric Care',
+    'Mental Health',
+    'Rehabilitation',
+    'Surgical Assistance',
+    'Cardiac Care',
+    'Respiratory Care',
+    'Dialysis',
+    'Oncology',
+    'Labor & Delivery',
+    'Anesthesia',
+    'Radiology',
+    'Laboratory',
+    'Pharmacy',
+    'Physical Therapy',
+    'Occupational Therapy',
+    'Speech Therapy',
+    'Case Management',
+    'Quality Assurance',
+    'Leadership',
+    'Training & Education'
+  ];
+
+  const availableCertifications = [
+    'RN (Registered Nurse)',
+    'LPN (Licensed Practical Nurse)',
+    'CNA (Certified Nursing Assistant)',
+    'ACLS (Advanced Cardiac Life Support)',
+    'BLS (Basic Life Support)',
+    'CCRN (Critical Care Registered Nurse)',
+    'CEN (Certified Emergency Nurse)',
+    'PALS (Pediatric Advanced Life Support)',
+    'NRP (Neonatal Resuscitation Program)',
+    'TNCC (Trauma Nurse Core Course)',
+    'OCN (Oncology Certified Nurse)',
+    'CMSRN (Certified Medical-Surgical Registered Nurse)',
+    'CNE (Certified Nurse Educator)',
+    'CNOR (Certified Perioperative Nurse)',
+    'CPN (Certified Pediatric Nurse)',
+    'PMHN (Psychiatric-Mental Health Nurse)',
+    'CPAN (Certified Post Anesthesia Nurse)',
+    'CAPA (Certified Ambulatory Perianesthesia Nurse)'
+  ];
 
   const staffMember = user ? getStaffById(user.id) : null;
   const verifiedCredentials = user ? getVerifiedCredentials(user.id) : [];
@@ -46,10 +121,56 @@ export default function EnhancedProfilePage() {
         email: staffMember.email,
         phone: staffMember.phone || '',
         firstName: staffMember.firstName,
-        lastName: staffMember.lastName
+        lastName: staffMember.lastName,
+        bio: staffMember.bio || '',
+        location: staffMember.location || '',
+        hourlyRate: staffMember.hourlyRate?.toString() || '',
+        experience: staffMember.experience || '',
+        skills: staffMember.skills || [],
+        certifications: staffMember.certifications || [],
+        resume: null,
+        coverLetter: null,
+        resumeUrl: staffMember.resumeUrl || '',
+        coverLetterUrl: staffMember.coverLetterUrl || '',
+        linkedIn: staffMember.linkedIn || '',
+        portfolio: staffMember.portfolio || ''
       });
     }
   }, [staffMember]);
+
+  const handleSkillToggle = (skill: string) => {
+    setEditedProfile(prev => ({
+      ...prev,
+      skills: prev.skills.includes(skill)
+        ? prev.skills.filter(s => s !== skill)
+        : [...prev.skills, skill]
+    }));
+  };
+
+  const handleCertificationToggle = (cert: string) => {
+    setEditedProfile(prev => ({
+      ...prev,
+      certifications: prev.certifications.includes(cert)
+        ? prev.certifications.filter(c => c !== cert)
+        : [...prev.certifications, cert]
+    }));
+  };
+
+  const handleFileUpload = (file: File, type: 'resume' | 'coverLetter') => {
+    if (type === 'resume') {
+      setEditedProfile(prev => ({
+        ...prev,
+        resume: file,
+        resumeUrl: URL.createObjectURL(file)
+      }));
+    } else {
+      setEditedProfile(prev => ({
+        ...prev,
+        coverLetter: file,
+        coverLetterUrl: URL.createObjectURL(file)
+      }));
+    }
+  };
 
   const handleSaveProfile = async () => {
     if (!staffMember || !user) return;
@@ -80,7 +201,19 @@ export default function EnhancedProfilePage() {
         email: staffMember.email,
         phone: staffMember.phone || '',
         firstName: staffMember.firstName,
-        lastName: staffMember.lastName
+        lastName: staffMember.lastName,
+        bio: staffMember.bio || '',
+        location: staffMember.location || '',
+        hourlyRate: staffMember.hourlyRate?.toString() || '',
+        experience: staffMember.experience || '',
+        skills: staffMember.skills || [],
+        certifications: staffMember.certifications || [],
+        resume: null,
+        coverLetter: null,
+        resumeUrl: staffMember.resumeUrl || '',
+        coverLetterUrl: staffMember.coverLetterUrl || '',
+        linkedIn: staffMember.linkedIn || '',
+        portfolio: staffMember.portfolio || ''
       });
     }
     setIsEditing(false);
