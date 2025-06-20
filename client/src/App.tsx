@@ -19,6 +19,9 @@ import { TeamProvider } from "@/contexts/TeamContext";
 import { ProfileProvider } from "@/contexts/ProfileContext";
 import { JobProvider } from "@/contexts/JobContext";
 import { EnhancedCredentialProvider } from "@/contexts/EnhancedCredentialContext";
+import { CredentialVerificationProvider } from "@/contexts/CredentialVerificationContext";
+import { PTOProvider } from "@/contexts/PTOContext";
+import { MessagingProvider } from "@/contexts/MessagingContext";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import JobBoard from "@/pages/job-board";
@@ -55,6 +58,9 @@ import SystemSettingsPage from "@/pages/system-settings-page";
 import DetailedShiftAnalyticsPage from "@/pages/detailed-shift-analytics-page";
 import SchedulingConfigPage from "@/pages/scheduling-config-page";
 import NotificationsPage from "@/pages/notifications-page";
+import PTOPage from "@/pages/pto-page";
+import EnhancedProfilePage from "@/pages/enhanced-profile-page";
+import EnhancedMessagingPage from "@/pages/enhanced-messaging-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -86,15 +92,15 @@ function Router() {
       <ProtectedRoute path="/analytics/attendance" component={AttendancePage} />
       <ProtectedRoute path="/analytics/agency-usage" component={AgencyUsagePage} />
       <ProtectedRoute path="/analytics/compliance" component={CompliancePage} />
-      <ProtectedRoute path="/messages" component={MessagingPage} />
-      <ProtectedRoute path="/messaging" component={MessagingPage} />
+      <ProtectedRoute path="/messages" component={EnhancedMessagingPage} />
+      <ProtectedRoute path="/messaging" component={EnhancedMessagingPage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
       <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />
       <ProtectedRoute path="/profile" component={SettingsPage} />
       <ProtectedRoute path="/teams" component={EnhancedStaffPage} />
       <ProtectedRoute path="/my-requests" component={ShiftRequestsPage} />
       <ProtectedRoute path="/resources" component={CredentialsPage} />
-      <ProtectedRoute path="/my-pto" component={TimeClockPage} />
+      <ProtectedRoute path="/my-pto" component={PTOPage} />
       <ProtectedRoute path="/credentials" component={CredentialsPage} />
       <ProtectedRoute path="/invoices" component={InvoicesPage} />
       <ProtectedRoute path="/vendor-invoices" component={VendorInvoicesPage} />
