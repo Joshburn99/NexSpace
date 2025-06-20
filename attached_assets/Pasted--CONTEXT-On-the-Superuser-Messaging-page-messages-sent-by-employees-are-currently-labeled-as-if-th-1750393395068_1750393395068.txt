@@ -1,0 +1,106 @@
+# CONTEXT
+On the Superuser Messaging page, messages sent by employees are currently labeled as if the superuser sent them. We need to correct sender/recipient labels, add profile links in message details, and enable superusers to send individual or mass messages.
+
+# TASKS
+
+1. **Enhance MessageContext**  
+- File: `src/context/MessageContext.tsx`  
+- Add a helper to resolve display name:
+  ```ts
+  export function getDisplayName(userId: string, currentUser: User, users: User[]) {
+    if (currentUser.role === 'superuser' && (message.senderId === currentUser.id)) {
+      return 'NexSpace Team';
+    }
+    const u = users.find(u=>u.id===userId);
+    return u ? u.name : 'Unknown';
+  }
+Expose allUsers in context so UI can look up profiles.
+
+Fix Message List Rendering
+
+File: src/components/MessageList.tsx
+
+Import useAuth, useUsers, and the helper above.
+
+For each message:
+
+diff
+Copy
+Edit
+- const isOutgoing = msg.senderId === currentUser.id;
+- const label = isOutgoing ? 'You' : 'You';
++ const { currentUser } = useAuth();
++ const users = useUsers();
++ const isOutgoing = msg.senderId === currentUser.id;
++ const label = isOutgoing
++   ? (currentUser.role==='superuser' ? 'NexSpace Team' : 'You')
++   : getDisplayName(msg.senderId, currentUser, users);
+Render:
+
+tsx
+Copy
+Edit
+<Link to={`/profile/${msg.senderId}`} className="font-semibold">{label}</Link>
+Update MessageDetail Modal
+
+File: src/components/MessageDetailModal.tsx
+
+Show both From and To with profile links:
+
+tsx
+Copy
+Edit
+<p><strong>From:</strong> 
+  <Link to={`/profile/${msg.senderId}`}>{getDisplayName(msg.senderId,currentUser,users)}</Link>
+</p>
+<p><strong>To:</strong> 
+  <Link to={`/profile/${msg.recipientId}`}>{getDisplayName(msg.recipientId,currentUser,users)}</Link>
+</p>
+ComposeModal: Enable Mass Messaging
+
+File: src/components/ComposeMessageModal.tsx
+
+Replace single-select with a multi-select (e.g. react-select):
+
+tsx
+Copy
+Edit
+import Select from 'react-select';
+const options = users.map(u=>({ label:u.name, value:u.id }));
+// in JSX:
+<Select
+  isMulti
+  options={options}
+  onChange={selected => setRecipientIds(selected.map(s=>s.value))}
+/>
+On submit, if recipientIds.length > 1, call sendMessage({ ... , recipientIds }).
+
+Superuser Messaging Page
+
+File: src/pages/SuperuserMessagingPage.tsx
+
+Ensure it uses MessageList and ComposeMessageModal.
+
+Filter messages where senderId === currentUser.id OR recipientIds.includes(currentUser.id).
+
+FILES TO EDIT
+src/context/MessageContext.tsx
+
+src/components/MessageList.tsx
+
+src/components/MessageDetailModal.tsx
+
+src/components/ComposeMessageModal.tsx
+
+src/pages/SuperuserMessagingPage.tsx
+
+SUCCESS CRITERIA
+Employee-sent messages appear in superuser inbox with the employee’s name linked to their profile.
+
+Superuser-sent messages display “NexSpace Team” as the sender.
+
+Message detail shows “From” and “To” with clickable profile links.
+
+Superusers can pick one or many recipients to send messages (mass messaging).
+
+BEGIN!

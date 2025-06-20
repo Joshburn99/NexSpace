@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { useAuth } from '@/hooks/use-auth';
+import { useStaff } from '@/contexts/StaffContext';
 
 export interface Message {
   id: string;
@@ -30,6 +31,15 @@ export interface Thread {
   createdAt: string;
   updatedAt: string;
   avatar?: string;
+}
+
+// Helper function to get display name for messages
+export function getDisplayName(userId: number, currentUser: any, staff: any[]) {
+  if (currentUser.role === 'superuser' && userId === currentUser.id) {
+    return 'NexSpace Team';
+  }
+  const user = staff.find(s => s.id === userId);
+  return user ? `${user.firstName} ${user.lastName}` : 'Unknown';
 }
 
 const sampleThreads: Thread[] = [
@@ -113,8 +123,10 @@ interface MessageContextType {
   threads: Thread[];
   messages: Message[];
   activeThreadId: string | null;
+  allUsers: any[];
   setActiveThread: (threadId: string | null) => void;
   sendMessage: (threadId: string, content: string, attachments?: File[]) => void;
+  sendMassMessage: (recipientIds: number[], content: string, subject?: string) => void;
   createThread: (type: Thread['type'], name: string, participants: number[]) => string;
   getThreadMessages: (threadId: string) => Message[];
   getTotalUnreadCount: () => number;
@@ -126,6 +138,7 @@ const MessageContext = createContext<MessageContextType | null>(null);
 
 export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
+  const { staff } = useStaff();
   const [threads, setThreads] = useState<Thread[]>(sampleThreads);
   const [messages, setMessages] = useState<Message[]>(sampleMessages);
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
@@ -167,6 +180,26 @@ export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children })
     ));
   };
 
+  const sendMassMessage = (recipientIds: number[], content: string, subject?: string) => {
+    if (!user) return;
+
+    recipientIds.forEach(recipientId => {
+      // Create individual threads for each recipient
+      const threadId = createThread('direct', getDisplayName(recipientId, user, staff), [user.id, recipientId]);
+      
+      const newMessage: Message = {
+        id: `msg-${Date.now()}-${recipientId}`,
+        threadId,
+        senderId: user.id,
+        senderName: user.role === 'superuser' ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
+        content: subject ? `Subject: ${subject}\n\n${content}` : content,
+        timestamp: new Date().toISOString(),
+      };
+
+      setMessages(prev => [...prev, newMessage]);
+    });
+  };
+
   const createThread = (type: Thread['type'], name: string, participants: number[]): string => {
     const newThreadId = `thread-${Date.now()}`;
     const newThread: Thread = {
@@ -204,8 +237,10 @@ export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children })
     threads,
     messages,
     activeThreadId,
+    allUsers: staff,
     setActiveThread,
     sendMessage,
+    sendMassMessage,
     createThread,
     getThreadMessages,
     getTotalUnreadCount,
