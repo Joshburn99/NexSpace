@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMessaging } from "@/contexts/MessagingContext";
+import { getDisplayName } from "@/contexts/MessageContext";
 import { useStaff } from "@/contexts/StaffContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,6 +53,8 @@ export default function EnhancedMessagingPage() {
   const [priority, setPriority] = useState<string>("normal");
   const [category, setCategory] = useState<string>("general");
   const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
+  const [selectedRecipients, setSelectedRecipients] = useState<any[]>([]);
+  const [isMassMessage, setIsMassMessage] = useState(false);
 
   const userMessages = user ? getMessagesForUser(user.id) : [];
   const unreadCount = user ? getUnreadCount(user.id) : 0;
@@ -70,10 +73,24 @@ export default function EnhancedMessagingPage() {
         priority: priority as any,
         category: category as any
       });
+    } else if (isMassMessage && selectedRecipients.length > 0) {
+      // Send mass message to multiple recipients
+      selectedRecipients.forEach(recipient => {
+        sendMessage({
+          senderId: user.id,
+          senderName: user.role === 'superuser' ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
+          recipientId: recipient.id,
+          recipientName: `${recipient.firstName} ${recipient.lastName}`,
+          subject: subject.trim(),
+          content: content.trim(),
+          priority: priority as any,
+          category: category as any
+        });
+      });
     } else if (selectedRecipient) {
       sendMessage({
         senderId: user.id,
-        senderName: `${user.firstName} ${user.lastName}`,
+        senderName: user.role === 'superuser' ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
         recipientId: selectedRecipient.id,
         recipientName: `${selectedRecipient.firstName} ${selectedRecipient.lastName}`,
         subject: subject.trim(),
@@ -89,7 +106,9 @@ export default function EnhancedMessagingPage() {
     setPriority("normal");
     setCategory("general");
     setSelectedRecipient(null);
+    setSelectedRecipients([]);
     setIsNexSpaceMessage(false);
+    setIsMassMessage(false);
     setIsComposeOpen(false);
   };
 
@@ -102,7 +121,28 @@ export default function EnhancedMessagingPage() {
   const handleNewMessage = () => {
     setIsNexSpaceMessage(false);
     setSelectedRecipient(null);
+    setIsMassMessage(false);
+    setSelectedRecipients([]);
     setIsComposeOpen(true);
+  };
+
+  const handleMassMessage = () => {
+    setIsNexSpaceMessage(false);
+    setSelectedRecipient(null);
+    setIsMassMessage(true);
+    setSelectedRecipients([]);
+    setIsComposeOpen(true);
+  };
+
+  const toggleRecipientSelection = (staffMember: any) => {
+    setSelectedRecipients(prev => {
+      const isSelected = prev.some(r => r.id === staffMember.id);
+      if (isSelected) {
+        return prev.filter(r => r.id !== staffMember.id);
+      } else {
+        return [...prev, staffMember];
+      }
+    });
   };
 
   const handleMessageClick = (message: any) => {
@@ -170,6 +210,12 @@ export default function EnhancedMessagingPage() {
             <Plus className="w-4 h-4 mr-2" />
             New Message
           </Button>
+          {user?.role === 'superuser' && (
+            <Button onClick={handleMassMessage} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">
+              <Mail className="w-4 h-4 mr-2" />
+              Mass Message
+            </Button>
+          )}
           <Button onClick={handleNexSpaceMessage} variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
             <MessageSquare className="w-4 h-4 mr-2" />
             Message NexSpace
@@ -200,6 +246,35 @@ export default function EnhancedMessagingPage() {
                     disabled
                     className="bg-gray-50"
                   />
+                ) : isMassMessage ? (
+                  <div className="space-y-2">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                      Select recipients ({selectedRecipients.length} selected)
+                    </div>
+                    <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
+                      {facilityStaff.map((staff) => (
+                        <div
+                          key={staff.id}
+                          className={cn(
+                            "flex items-center p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800",
+                            selectedRecipients.some(r => r.id === staff.id) ? "bg-blue-50 dark:bg-blue-900" : ""
+                          )}
+                          onClick={() => toggleRecipientSelection(staff)}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedRecipients.some(r => r.id === staff.id)}
+                            onChange={() => toggleRecipientSelection(staff)}
+                            className="mr-3"
+                          />
+                          <div className="flex-1">
+                            <div className="font-medium">{staff.firstName} {staff.lastName}</div>
+                            <div className="text-sm text-gray-500">{staff.role} - {staff.department}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 ) : (
                   <Select value={selectedRecipient?.id || ""} onValueChange={(value) => {
                     const recipient = facilityStaff.find(staff => staff.id.toString() === value);
@@ -324,7 +399,9 @@ export default function EnhancedMessagingPage() {
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium text-sm">{message.senderName}</span>
+                          <span className="font-medium text-sm">
+                            {getDisplayName(message.senderId, user, staff)}
+                          </span>
                           {!message.isRead && (
                             <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                           )}
