@@ -327,7 +327,7 @@ export default function TimeClockPage() {
                     {getTotalHours(entry).toFixed(2)}h
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {getClockInTime(entry) ? formatDate(getClockInTime(entry)!) : "N/A"}
+                    {getClockInTime(entry) ? getClockInTime(entry)!.toLocaleDateString() : "N/A"}
                   </p>
                 </div>
               </div>
