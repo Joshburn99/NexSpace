@@ -20,14 +20,19 @@ export default function TimeClockPage() {
 
   const activeUsers = getActiveUsers();
   const currentUserEntry = activeUsers.find(
-    (entry) => entry.userName.includes(user?.firstName || "")
+    (entry) => entry.userId === user?.id
   );
   
   // Helper functions for missing properties
   const getClockStatus = (entry: any) => {
-    if (!entry) return "clocked_out";
-    if (entry.action === "in" || entry.action === "break_end") return "clocked_in";
-    if (entry.action === "break_start") return "on_break";
+    if (!entry || !user) return "clocked_out";
+    // Check the most recent action for the current user
+    const userEntries = timeClocks.filter((e: any) => e.userId === user.id);
+    const mostRecent = userEntries[userEntries.length - 1];
+    if (!mostRecent) return "clocked_out";
+    
+    if (mostRecent.action === "in" || mostRecent.action === "break_end") return "clocked_in";
+    if (mostRecent.action === "break_start") return "on_break";
     return "clocked_out";
   };
 
@@ -87,20 +92,20 @@ export default function TimeClockPage() {
   };
 
   const handleClockOut = () => {
-    if (user && currentUserEntry) {
-      clockOut(currentUserEntry.id);
+    if (user) {
+      clockOut(user.id);
     }
   };
 
   const handleStartBreak = () => {
-    if (user && currentUserEntry) {
-      startBreak(currentUserEntry.id);
+    if (user) {
+      startBreak(user.id);
     }
   };
 
   const handleEndBreak = () => {
-    if (user && currentUserEntry) {
-      endBreak(currentUserEntry.id);
+    if (user) {
+      endBreak(user.id);
     }
   };
 
