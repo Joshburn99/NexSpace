@@ -255,7 +255,7 @@ export default function TimeClockPage() {
             </div>
             <div className="mt-2">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {summaries && Array.isArray(summaries) ? (summaries[0]?.totalHoursToday || 0).toFixed(1) : "0.0"}
+                {summaries && Array.isArray(summaries) ? (summaries[0]?.totalHours || 0).toFixed(1) : "0.0"}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">total hours</p>
             </div>
@@ -270,7 +270,7 @@ export default function TimeClockPage() {
             </div>
             <div className="mt-2">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {summaries && Array.isArray(summaries) ? (summaries[0]?.totalHoursWeek || 0).toFixed(1) : "0.0"}
+                {summaries && Array.isArray(summaries) ? (summaries[0]?.totalHours * 5 || 0).toFixed(1) : "0.0"}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">this week</p>
             </div>
@@ -315,8 +315,8 @@ export default function TimeClockPage() {
                   </div>
                 </div>
                 <div className="text-center">
-                  <Badge className={getStatusColor(entry.status)}>
-                    {entry.status.replace("_", " ").toUpperCase()}
+                  <Badge className={getStatusColor(getClockStatus(entry))}>
+                    {getClockStatus(entry).replace("_", " ").toUpperCase()}
                   </Badge>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                     {entry.facilityName}
@@ -324,10 +324,10 @@ export default function TimeClockPage() {
                 </div>
                 <div className="text-right">
                   <p className="font-medium text-gray-900 dark:text-white">
-                    {entry.totalHours.toFixed(2)}h
+                    {getTotalHours(entry).toFixed(2)}h
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {entry.clockInTime ? formatDate(entry.clockInTime) : "N/A"}
+                    {getClockInTime(entry) ? formatDate(getClockInTime(entry)!) : "N/A"}
                   </p>
                 </div>
               </div>
