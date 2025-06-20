@@ -1,0 +1,260 @@
+# CONTEXT
+We need to add a suite of new features to our NexSpace app:
+1. **Notifications**: automatic events (shift requests, assignment changes, messages, credential updates, favorite facility shifts, social posts) + user‐managed email/SMS/push preferences + a clean notification center UI.
+2. **Role-based Navigation**: Employees vs. Contractors see different sidebar menus & labels (PTO vs. no-PTO, Work Logs vs. Invoices, etc.), no admin/facility menus.
+3. **Widgets & Links**: Dashboard cards link to scaffolded pages—Open Shifts → Calendar view, My Requests → list view, Next Shift → detail modal + Google Maps link, Resources → Library page.
+4. **Messaging**: 1:1 chats, group threads, “social feed” posts with file attachments, timestamps, real-time updates. Persisted in a new `/api/messages` endpoint and shown only to participants.
+5. **Credentials Uploader w/ AI**: drag-and-drop file upload, call OpenAI to classify document type, store metadata (name, expiration, authority, type). “AI unsure” flags sent back to worker, “rejected” stays in UI for superuser review.
+6. **Teams & Invitations**: scaffold `TeamContext`, allow superusers to create teams spanning multiple facilities, invite teammates via email link to onboard & set permissions.
+7. **Job Board & Profile**: worker view of job openings (fetched from facility job postings), apply with resume; “My Profile” page to edit resume, availability, notification prefs, skills.
+8. **Global Layout**: wrap `App` in all new contexts, inject a UKG-inspired top bar + dynamic sidebars, ensure data sync everywhere.
+
+# TASKS
+
+## 1. Wrap App in Contexts
+- **File:** `src/App.tsx`  
+- **Wrap** your `<Layout>` in:
+  ```tsx
+  <UserProvider>
+    <AuthProvider>
+      <ShiftProvider>
+        <StaffProvider>
+          <NotificationProvider>
+            <TeamProvider>
+              <MessageProvider>
+                <CredentialProvider>
+                  <JobProvider>
+                    <ProfileProvider>
+                      <Layout>
+                        <Router/>
+                      </Layout>
+                    </ProfileProvider>
+                  </JobProvider>
+                </CredentialProvider>
+              </MessageProvider>
+            </TeamProvider>
+          </NotificationProvider>
+        </StaffProvider>
+      </ShiftProvider>
+    </AuthProvider>
+  </UserProvider>
+2. NotificationContext & Center
+File: src/context/NotificationContext.tsx
+
+ts
+Copy
+Edit
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+
+export type NotificationType = 
+  | 'shift_request' | 'assignment_change' | 'message' 
+  | 'credential_update' | 'favorite_shift' | 'social_post';
+
+export type Notification = {
+  id: string;
+  type: NotificationType;
+  message: string;
+  timestamp: string;
+  read: boolean;
+  meta?: any;
+};
+
+export type Preferences = Record<NotificationType, {
+  email: boolean;
+  sms: boolean;
+  push: boolean;
+}>;
+
+const samplePrefs: Preferences = {
+  shift_request:   { email:true, sms:false, push:true },
+  assignment_change:{email:true, sms:false, push:true},
+  message:         {email:true, sms:false, push:true},
+  credential_update:{email:true,sms:false,push:true},
+  favorite_shift:  {email:true, sms:false, push:true},
+  social_post:     {email:true, sms:false, push:true},
+};
+
+const NotificationContext = createContext<{
+  notifications: Notification[];
+  prefs: Preferences;
+  add: (n:Notification)=>void;
+  markRead: (id:string)=>void;
+  updatePref: (type:NotificationType, c:Partial<Preferences[NotificationType]>)=>void;
+}|null>(null);
+
+export const NotificationProvider: React.FC<{children:ReactNode}> = ({children})=>{
+  const [notifications,setNotifications]=useState<Notification[]>([]);
+  const [prefs,setPrefs]=useState<Preferences>(samplePrefs);
+  const add = (n:Notification)=> setNotifications(prev=>[n,...prev]);
+  const markRead = (id:string)=> setNotifications(prev=>prev.map(n=>n.id===id?{...n,read:true}:n));
+  const updatePref = (type, c)=> 
+    setPrefs(prev=>({...prev,[type]:{...prev[type],...c}}));
+  return (
+    <NotificationContext.Provider value={{notifications,prefs,add,markRead,updatePref}}>
+      {children}
+    </NotificationContext.Provider>
+  );
+};
+
+export const useNotifications = ()=> {
+  const ctx = useContext(NotificationContext);
+  if(!ctx) throw new Error('useNotifications must be inside NotificationProvider');
+  return ctx;
+};
+File: src/pages/NotificationsPage.tsx
+
+tsx
+Copy
+Edit
+import React from 'react';
+import { useNotifications, NotificationType } from '@/context/NotificationContext';
+import { Toggle } from '@/components/ui';
+
+export default function NotificationsPage() {
+  const { notifications, prefs, markRead, updatePref } = useNotifications();
+  return (
+    <div className="p-6 space-y-6">
+      <h2 className="text-2xl font-semibold">Notification Center</h2>
+      <section className="space-y-4">
+        <h3 className="font-medium">Preferences</h3>
+        {Object.entries(prefs).map(([type, conf])=>(
+          <div key={type} className="flex items-center space-x-4">
+            <span className="capitalize">{type.replace('_',' ')}</span>
+            <Toggle checked={conf.email} onChange={v=>updatePref(type as NotificationType,{email:v})}>Email</Toggle>
+            <Toggle checked={conf.sms}   onChange={v=>updatePref(type as NotificationType,{sms:v})}>SMS</Toggle>
+            <Toggle checked={conf.push}  onChange={v=>updatePref(type as NotificationType,{push:v})}>Push</Toggle>
+          </div>
+        ))}
+      </section>
+      <section>
+        <h3 className="font-medium mb-2">Recent Notifications</h3>
+        <ul className="space-y-2">
+          {notifications.map(n=>(
+            <li key={n.id} className="p-3 border rounded bg-gray-50 flex justify-between">
+              <div>
+                <p>{n.message}</p>
+                <small className="text-xs text-gray-500">{new Date(n.timestamp).toLocaleString()}</small>
+              </div>
+              {!n.read && (
+                <button
+                  className="text-blue-600"
+                  onClick={()=>markRead(n.id)}
+                >
+                  Mark Read
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      </section>
+    </div>
+  );
+}
+3. Role‐Based Sidebar & Layout
+File: src/components/SidebarNav.tsx
+
+tsx
+Copy
+Edit
+import React from 'react';
+import { useAuth } from '@/hooks/use-auth';
+import { NavLink } from 'wouter';
+
+export function SidebarNav() {
+  const { currentUser } = useAuth();
+  const isEmployee = currentUser?.role==='employee';
+  return (
+    <nav className="p-4 space-y-2">
+      <NavLink href="/dashboard">Dashboard</NavLink>
+      <NavLink href="/calendar">Open Shifts</NavLink>
+      <NavLink href="/my-requests">My Requests</NavLink>
+      {isEmployee && <NavLink href="/my-pto">PTO</NavLink>}
+      {!isEmployee && <NavLink href="/invoices">Invoices</NavLink>}
+      <NavLink href="/resources">Resources</NavLink>
+      <NavLink href="/messaging">Messaging</NavLink>
+      <NavLink href="/job-board">Job Board</NavLink>
+      <NavLink href="/profile">My Profile</NavLink>
+      <NavLink href="/credentials">Credentials</NavLink>
+      <NavLink href="/notifications">Notifications</NavLink>
+    </nav>
+  );
+}
+File: src/components/Layout.tsx
+
+tsx
+Copy
+Edit
+import React from 'react';
+import { TopBar } from '@/components/TopBar';
+import { SidebarNav } from '@/components/SidebarNav';
+
+export function Layout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="h-screen flex flex-col">
+      <TopBar />
+      <div className="flex flex-1 overflow-hidden">
+        <aside className="w-60 bg-white border-r overflow-auto">
+          <SidebarNav />
+        </aside>
+        <main className="flex-1 overflow-auto bg-gray-50">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}
+4. Scaffold Pages & Links
+Calendar Page: src/pages/CalendarPage.tsx (use FullCalendar, filtering open + requested by user)
+
+MyRequestsPage.tsx: list of shifts where status==='requested' && requesterId===currentUser.id
+
+ResourcesPage.tsx: static links to FAQs, facility docs, employment docs
+
+Messaging:
+
+Server: new routes.ts entry:
+
+ts
+Copy
+Edit
+router.post('/api/messages', createMessage);
+router.get('/api/messages/:threadId', listMessages);
+Client: src/context/MessageContext.tsx + src/pages/MessagingPage.tsx with thread list, chat view, file attachments.
+
+Credential Uploader:
+
+Client: src/context/CredentialContext.tsx + src/pages/CredentialsPage.tsx with dropzone, call OpenAI via openai.classify() to validate.
+
+Team Management: src/context/TeamContext.tsx + src/pages/TeamsPage.tsx + InviteModal.tsx.
+
+Job Board: src/context/JobContext.tsx + src/pages/JobBoardPage.tsx + ApplyModal.tsx.
+
+Profile: src/context/ProfileContext.tsx + src/pages/ProfilePage.tsx.
+
+(You may scaffold minimal versions—Replit AI will fill in CRUD hooks with react-query and basic forms.)
+
+FILES TO CREATE/EDIT
+src/context/*.tsx for each feature above
+
+src/pages/*.tsx for Notifications, Calendar, MyRequests, Resources, Messaging, Credentials, Teams, JobBoard, Profile
+
+src/components/TopBar.tsx, SidebarNav.tsx, UI atoms (Toggle, Modal, Input)
+
+SUCCESS CRITERIA
+Notifications fire on all specified events, user can manage prefs, and see them in the center.
+
+Sidebars change per role; employees see PTO, contractors see Invoices.
+
+Widgets link to correct scaffolded pages.
+
+Messaging supports 1:1, group, feed, attachments, real-time updates.
+
+Credentials can be uploaded, AI-validated, and status tracked by worker & superuser.
+
+Teams can be created, spanning facilities, with invite links.
+
+Job Board shows postings & apply flow; Profile page editable by worker.
+
+All data flows from context into every relevant page without manual one-off fetches.
+
+BEGIN!
