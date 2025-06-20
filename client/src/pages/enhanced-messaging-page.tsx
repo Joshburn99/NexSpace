@@ -352,7 +352,7 @@ export default function EnhancedMessagingPage() {
                 <Button 
                   onClick={handleSendMessage} 
                   className="flex-1"
-                  disabled={!subject.trim() || !content.trim() || (!isNexSpaceMessage && !selectedRecipient)}
+                  disabled={!subject.trim() || !content.trim() || (!isNexSpaceMessage && !selectedRecipient && (!isMassMessage || selectedRecipients.length === 0))}
                 >
                   <Send className="w-4 h-4 mr-2" />
                   Send Message
@@ -431,7 +431,9 @@ export default function EnhancedMessagingPage() {
                         <CardTitle className="text-lg">{selectedMessage.subject}</CardTitle>
                         <CardDescription className="flex items-center gap-2 mt-1">
                           <User className="w-4 h-4" />
-                          From: {selectedMessage.senderName}
+                          From: {getDisplayName(selectedMessage.senderId, user, staff)}
+                          <span className="mx-2">→</span>
+                          To: {getDisplayName(selectedMessage.recipientId, user, staff)}
                         </CardDescription>
                       </div>
                       <div className="flex items-center gap-2">
