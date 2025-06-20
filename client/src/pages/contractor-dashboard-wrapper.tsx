@@ -1,5 +1,10 @@
 import ContractorDashboardPage from "./contractor-dashboard-page";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function ContractorDashboardWrapper() {
-  return <ContractorDashboardPage />;
+  return (
+    <ErrorBoundary>
+      <ContractorDashboardPage />
+    </ErrorBoundary>
+  );
 }

@@ -32,11 +32,6 @@ export default function AdminImpersonationPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
 
-  // Debug logging
-  console.log('AdminImpersonationPage - staff:', staff);
-  console.log('AdminImpersonationPage - staff.length:', staff.length);
-  console.log('AdminImpersonationPage - isLoading:', isLoading);
-
   // Convert staff members to User type for impersonation
   const staffAsUsers: SelectUser[] = staff.map(s => ({
     id: s.id,
@@ -53,10 +48,6 @@ export default function AdminImpersonationPage() {
     updatedAt: new Date(),
   }));
 
-  console.log('AdminImpersonationPage - staffAsUsers:', staffAsUsers);
-  console.log('AdminImpersonationPage - current user:', user);
-  console.log('AdminImpersonationPage - impersonated user:', impersonatedUser);
-
   const filteredUsers = staffAsUsers.filter(u => {
     const matchesSearch = u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -67,12 +58,8 @@ export default function AdminImpersonationPage() {
     // Don't show the current user in the list
     const isNotCurrentUser = u.id !== (impersonatedUser?.id || user?.id);
     
-    console.log(`User ${u.firstName} ${u.lastName}: matchesSearch=${matchesSearch}, matchesRole=${matchesRole}, isNotCurrentUser=${isNotCurrentUser}`);
-    
     return matchesSearch && matchesRole && isNotCurrentUser;
   });
-
-  console.log('AdminImpersonationPage - filteredUsers:', filteredUsers);
 
   const handleImpersonate = (targetUser: SelectUser) => {
     startImpersonation(targetUser);
