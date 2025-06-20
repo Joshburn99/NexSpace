@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 export interface Message {
   id: number;
@@ -69,8 +69,34 @@ const sampleMessages: Message[] = [
 ];
 
 export const MessagingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [messages, setMessages] = useState<Message[]>(sampleMessages);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading] = useState(false);
+
+  // Load messages from localStorage on component mount
+  useEffect(() => {
+    const savedMessages = localStorage.getItem('nexspace-messages');
+    if (savedMessages) {
+      try {
+        const parsedMessages = JSON.parse(savedMessages);
+        setMessages([...sampleMessages, ...parsedMessages]);
+      } catch (error) {
+        console.error('Error parsing saved messages:', error);
+        setMessages(sampleMessages);
+      }
+    } else {
+      setMessages(sampleMessages);
+    }
+  }, []);
+
+  // Save messages to localStorage whenever messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      const userMessages = messages.filter(msg => !sampleMessages.find(sample => sample.id === msg.id));
+      if (userMessages.length > 0) {
+        localStorage.setItem('nexspace-messages', JSON.stringify(userMessages));
+      }
+    }
+  }, [messages]);
 
   const getMessagesForUser = (userId: number): Message[] => {
     return messages.filter(msg => {

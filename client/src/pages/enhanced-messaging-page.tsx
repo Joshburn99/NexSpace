@@ -557,7 +557,112 @@ export default function EnhancedMessagingPage() {
         </div>
 
         <TabsContent value="inbox" className="space-y-4">
-          {inboxMessages.length === 0 ? (
+          {chatView && chatParticipant ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>Chat with {chatParticipant.name}</CardTitle>
+                <CardDescription>Conversation history</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4 max-h-96 overflow-y-auto">
+                  {getConversationHistory(chatParticipant.id).map((message: any) => (
+                    <div key={message.id} className={cn(
+                      "p-3 rounded-lg max-w-sm",
+                      message.senderId === user?.id 
+                        ? "bg-blue-100 dark:bg-blue-900 ml-auto text-right" 
+                        : "bg-gray-100 dark:bg-gray-800"
+                    )}>
+                      <p className="text-sm font-medium mb-1">
+                        {message.senderId === user?.id ? "You" : getDisplayName(message.senderId, user, staff)}
+                      </p>
+                      <p className="text-sm">{message.content}</p>
+                      <p className="text-xs text-gray-500 mt-1">{formatDate(message.timestamp)}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ) : showAllHistory ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-2">
+                {getAllMessageHistory().map((message: any) => (
+                  <Card 
+                    key={message.id} 
+                    className={cn(
+                      "cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800",
+                      !message.isRead && "border-blue-500 bg-blue-50 dark:bg-blue-950",
+                      selectedMessage?.id === message.id && "ring-2 ring-blue-500"
+                    )}
+                    onClick={() => handleMessageClick(message)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-gray-400" />
+                          <span className="font-medium text-sm">
+                            {message.senderId === user?.id ? `To: ${message.recipientName}` : `From: ${getDisplayName(message.senderId, user, staff)}`}
+                          </span>
+                          {!message.isRead && message.recipientId === user?.id && (
+                            <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {getCategoryIcon(message.category)}
+                          {getPriorityBadge(message.priority)}
+                        </div>
+                      </div>
+                      <h3 className="font-semibold text-sm mb-1">{message.subject}</h3>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                        {message.content}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">
+                        {formatDate(message.timestamp)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              {selectedMessage && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-lg">{selectedMessage.subject}</CardTitle>
+                        <CardDescription className="flex items-center gap-2 mt-1">
+                          <User className="w-4 h-4" />
+                          From: {getDisplayName(selectedMessage.senderId, user, staff)}
+                          <span className="mx-2">→</span>
+                          To: {getDisplayName(selectedMessage.recipientId, user, staff)}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getCategoryIcon(selectedMessage.category)}
+                        {getPriorityBadge(selectedMessage.priority)}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      {formatDate(selectedMessage.timestamp)}
+                    </p>
+                    <div className="prose prose-sm max-w-none">
+                      <p className="whitespace-pre-wrap">{selectedMessage.content}</p>
+                    </div>
+                    <div className="flex gap-2 mt-4 pt-4 border-t">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleChatClick(selectedMessage)}
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Chat
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          ) : inboxMessages.length === 0 ? (
             <Card>
               <CardContent className="p-6 text-center">
                 <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -649,7 +754,81 @@ export default function EnhancedMessagingPage() {
         </TabsContent>
 
         <TabsContent value="sent" className="space-y-4">
-          {sentMessages.length === 0 ? (
+          {showAllHistory ? (
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-2">
+                {getAllMessageHistory().filter((msg: any) => msg.senderId === user?.id).map((message: any) => (
+                  <Card 
+                    key={message.id} 
+                    className={cn(
+                      "cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800",
+                      selectedMessage?.id === message.id && "ring-2 ring-blue-500"
+                    )}
+                    onClick={() => handleMessageClick(message)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          <Mail className="w-4 h-4 text-gray-400" />
+                          <span className="font-medium text-sm">To: {message.recipientName}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {getCategoryIcon(message.category)}
+                          {getPriorityBadge(message.priority)}
+                        </div>
+                      </div>
+                      <h3 className="font-semibold text-sm mb-1">{message.subject}</h3>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                        {message.content}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Sent: {formatDate(message.timestamp)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              {selectedMessage && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-lg">{selectedMessage.subject}</CardTitle>
+                        <CardDescription className="flex items-center gap-2 mt-1">
+                          <User className="w-4 h-4" />
+                          From: {getDisplayName(selectedMessage.senderId, user, staff)}
+                          <span className="mx-2">→</span>
+                          To: {getDisplayName(selectedMessage.recipientId, user, staff)}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getCategoryIcon(selectedMessage.category)}
+                        {getPriorityBadge(selectedMessage.priority)}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      {formatDate(selectedMessage.timestamp)}
+                    </p>
+                    <div className="prose prose-sm max-w-none">
+                      <p className="whitespace-pre-wrap">{selectedMessage.content}</p>
+                    </div>
+                    <div className="flex gap-2 mt-4 pt-4 border-t">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleChatClick(selectedMessage)}
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Chat
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          ) : sentMessages.length === 0 ? (
             <Card>
               <CardContent className="p-6 text-center">
                 <Send className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -657,29 +836,79 @@ export default function EnhancedMessagingPage() {
               </CardContent>
             </Card>
           ) : (
-            sentMessages.map((message) => (
-              <Card key={message.id}>
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-2">
-                      <Mail className="w-4 h-4 text-gray-400" />
-                      <span className="font-medium text-sm">To: {message.recipientName}</span>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-2">
+                {sentMessages.map((message) => (
+                  <Card 
+                    key={message.id}
+                    className={cn(
+                      "cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800",
+                      selectedMessage?.id === message.id && "ring-2 ring-blue-500"
+                    )}
+                    onClick={() => handleMessageClick(message)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex items-center gap-2">
+                          <Mail className="w-4 h-4 text-gray-400" />
+                          <span className="font-medium text-sm">To: {message.recipientName}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {getCategoryIcon(message.category)}
+                          {getPriorityBadge(message.priority)}
+                        </div>
+                      </div>
+                      <h3 className="font-semibold text-sm mb-1">{message.subject}</h3>
+                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                        {message.content}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Sent: {formatDate(message.timestamp)}
+                      </p>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+              {selectedMessage && (
+                <Card>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-lg">{selectedMessage.subject}</CardTitle>
+                        <CardDescription className="flex items-center gap-2 mt-1">
+                          <User className="w-4 h-4" />
+                          From: {getDisplayName(selectedMessage.senderId, user, staff)}
+                          <span className="mx-2">→</span>
+                          To: {getDisplayName(selectedMessage.recipientId, user, staff)}
+                        </CardDescription>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {getCategoryIcon(selectedMessage.category)}
+                        {getPriorityBadge(selectedMessage.priority)}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {getCategoryIcon(message.category)}
-                      {getPriorityBadge(message.priority)}
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      {formatDate(selectedMessage.timestamp)}
+                    </p>
+                    <div className="prose prose-sm max-w-none">
+                      <p className="whitespace-pre-wrap">{selectedMessage.content}</p>
                     </div>
-                  </div>
-                  <h3 className="font-semibold text-sm mb-1">{message.subject}</h3>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
-                    {message.content}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Sent: {formatDate(message.timestamp)}
-                  </p>
-                </CardContent>
-              </Card>
-            ))
+                    <div className="flex gap-2 mt-4 pt-4 border-t">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleChatClick(selectedMessage)}
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Chat
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           )}
         </TabsContent>
       </Tabs>
