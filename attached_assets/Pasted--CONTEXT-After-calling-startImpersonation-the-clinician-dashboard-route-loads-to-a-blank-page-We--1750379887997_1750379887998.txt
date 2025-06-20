@@ -1,0 +1,151 @@
+# CONTEXT
+After calling startImpersonation, the clinician dashboard route loads to a blank page. We need to catch any rendering errors, ensure the impersonation state is loaded before routing, and add a new TopBar UI for employees and contractors inspired by UKG.
+
+# TASKS
+
+1. **Create an ErrorBoundary**  
+- File: `src/components/ErrorBoundary.tsx`  
+- Paste:
+  ```tsx
+  import React from 'react';
+
+  export class ErrorBoundary extends React.Component<
+    { children: React.ReactNode },
+    { hasError: boolean; error?: Error }
+  > {
+    state = { hasError: false };
+    static getDerivedStateFromError(error: Error) {
+      return { hasError: true, error };
+    }
+    componentDidCatch(error: Error, info: any) {
+      console.error('ErrorBoundary caught:', error, info);
+    }
+    render() {
+      if (this.state.hasError) {
+        return (
+          <div className="p-4 bg-red-100 text-red-800">
+            <h2>Something went wrong.</h2>
+            <pre className="whitespace-pre-wrap text-sm">{this.state.error?.message}</pre>
+          </div>
+        );
+      }
+      return this.props.children;
+    }
+  }
+Wrap your impersonated route
+
+File: e.g. src/pages/clinician-dashboard-page.tsx (or wherever you render the impersonated view)
+
+At the top, import and wrap:
+
+tsx
+Copy
+Edit
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+// …
+export default function ClinicianDashboardPage() {
+  return (
+    <ErrorBoundary>
+      {/* existing dashboard JSX */}
+    </ErrorBoundary>
+  );
+}
+Ensure Auth rehydrates before render
+
+File: src/hooks/use-auth.tsx
+
+In your AuthProvider, move your localStorage rehydration above any early returns or render logic:
+
+ts
+Copy
+Edit
+useEffect(() => {
+  const origId = localStorage.getItem('originalUserId');
+  const impId  = localStorage.getItem('impersonateUserId');
+  if (origId && impId) {
+    const orig = fetchUser(origId);
+    const imp  = fetchUser(impId);
+    setOriginalUser(orig);
+    setCurrentUser(imp);
+    setImpersonatedUser(imp);
+  }
+}, []);
+// Ensure your provider doesn’t render children until this effect runs:
+if (loadingAuthState) return <div>Loading…</div>;
+Scaffold TopBar component
+
+File: src/components/TopBar.tsx
+
+Paste:
+
+tsx
+Copy
+Edit
+import React from 'react';
+import { useAuth } from '@/hooks/use-auth';
+
+export function TopBar() {
+  const { currentUser, impersonatedUser, quitImpersonation } = useAuth();
+  const isContractor = currentUser?.role === 'contractor';
+
+  return (
+    <div className="flex items-center justify-between bg-white px-6 py-4 shadow">
+      <div className="flex items-center space-x-4">
+        <img src="/logo192.png" alt="Logo" className="h-8 w-8"/>
+        <h1 className="text-xl font-semibold">
+          {isContractor ? 'Contractor Dashboard' : 'Employee Dashboard'}
+        </h1>
+      </div>
+      <div className="flex items-center space-x-4">
+        {impersonatedUser && (
+          <button
+            className="bg-red-600 text-white px-3 py-1 rounded"
+            onClick={quitImpersonation}
+          >
+            Quit Session
+          </button>
+        )}
+        <div className="space-x-2 text-right">
+          <p className="font-medium">{currentUser?.name}</p>
+          <p className="text-sm text-gray-500">{currentUser?.role}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+Include TopBar in Layout
+
+File: src/components/Layout.tsx
+
+At the top of your layout JSX, import & render:
+
+tsx
+Copy
+Edit
+import { TopBar } from '@/components/TopBar';
+// …
+return (
+  <>
+    <TopBar />
+    <div className="flex">
+      {/* existing sidebar + content */}
+    </div>
+  </>
+);
+FILES TO EDIT
+src/components/ErrorBoundary.tsx
+
+src/pages/*-dashboard-page.tsx (wrap in ErrorBoundary)
+
+src/hooks/use-auth.tsx (rehydrate before render)
+
+src/components/TopBar.tsx
+
+src/components/Layout.tsx
+
+SUCCESS CRITERIA
+Impersonation no longer yields a blank screen; any error is caught by the ErrorBoundary.
+
+The TopBar displays “Quit Session” (when impersonating), user name/role, and toggles between “Employee” and “Contractor” dashboards.
+
+BEGIN!

@@ -1,5 +1,10 @@
 import EmployeeDashboardPage from "./employee-dashboard-page";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function EmployeeDashboardWrapper() {
-  return <EmployeeDashboardPage />;
+  return (
+    <ErrorBoundary>
+      <EmployeeDashboardPage />
+    </ErrorBoundary>
+  );
 }
