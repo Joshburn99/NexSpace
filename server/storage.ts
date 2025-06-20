@@ -63,8 +63,10 @@ import session from "express-session";
 import { Store } from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
+import MemoryStore from "memorystore";
 
 const PostgresSessionStore = connectPg(session);
+const MemorySessionStore = MemoryStore(session);
 
 export interface IStorage {
   sessionStore: Store;
@@ -246,10 +248,17 @@ export class DatabaseStorage implements IStorage {
   sessionStore: Store;
 
   constructor() {
-    this.sessionStore = new PostgresSessionStore({
-      pool,
-      createTableIfMissing: true,
-    });
+    try {
+      this.sessionStore = new PostgresSessionStore({
+        pool,
+        createTableIfMissing: true,
+      });
+    } catch (error) {
+      console.warn('PostgreSQL session store failed, falling back to memory store:', error);
+      this.sessionStore = new MemorySessionStore({
+        checkPeriod: 86400000, // prune expired entries every 24h
+      });
+    }
   }
 
   // User methods
