@@ -2,6 +2,7 @@ import { useState } from "react";
 import Sidebar from "./Sidebar";
 import { ImpersonationIndicator } from "./ImpersonationIndicator";
 import { TopBar } from "./TopBar";
+import { TopLine } from "./TopLine";
 import { useAuth } from "@/hooks/use-auth";
 
 interface LayoutProps {
@@ -20,7 +21,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="flex flex-col h-screen bg-gray-50">
       {showTopBar ? (
         <>
-          <TopBar />
+          <TopLine />
           <div className="flex flex-1">
             <main className="flex-1 overflow-auto">{children}</main>
           </div>

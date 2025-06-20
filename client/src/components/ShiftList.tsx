@@ -108,16 +108,16 @@ export function ShiftList({ status }: ShiftListProps) {
               <div className="grid grid-cols-2 gap-4 mb-3">
                 <div className="flex items-center space-x-2 text-sm">
                   <Clock className="w-4 h-4 text-gray-400" />
-                  <span>{shift.startTime ? format(new Date(shift.startTime), "MMM d") : "TBD"}</span>
+                  <span>{shift.startTime && !isNaN(new Date(shift.startTime).getTime()) ? format(new Date(shift.startTime), "MMM d") : "TBD"}</span>
                   <span>{shift.duration || "8 hours"}</span>
                 </div>
                 <div className="text-sm font-medium text-right">${shift.rate}/hour</div>
               </div>
 
               <div className="flex items-center space-x-2 text-xs text-gray-600 mb-3">
-                <span>{shift.startTime ? format(new Date(shift.startTime), "h:mm a") : "TBD"}</span>
+                <span>{shift.startTime && !isNaN(new Date(shift.startTime).getTime()) ? format(new Date(shift.startTime), "h:mm a") : "TBD"}</span>
                 <span>—</span>
-                <span>{shift.endTime ? format(new Date(shift.endTime), "h:mm a") : "TBD"}</span>
+                <span>{shift.endTime && !isNaN(new Date(shift.endTime).getTime()) ? format(new Date(shift.endTime), "h:mm a") : "TBD"}</span>
               </div>
 
               {shift.requirements && shift.requirements.length > 0 && (

@@ -1,0 +1,94 @@
+# CONTEXT
+Our dev server fails with EADDRINUSE on port 5000. We want to automatically kill that port, bind to the Replit port, and then add a TopLine bar for employees/contractors.
+
+# TASKS
+
+1. **Install kill-port**  
+   - In Shell: `npm install --save-dev kill-port`
+
+2. **Update package.json**  
+   - Add `"predev": "npx kill-port 5000 || true"` under **scripts**.  
+   - Change `"dev"` to `"predev && NODE_ENV=development tsx server/index.ts"`.
+
+3. **Modify server binding**  
+   - File: `server/index.ts`  
+   - Replace your fixed port with:
+     ```ts
+     const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
+     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+     ```
+
+4. **Scaffold TopLine component**  
+   - File: `src/components/TopLine.tsx`
+   - Paste:
+     ```tsx
+     import React from 'react';
+     import { useAuth } from '@/hooks/use-auth';
+
+     export function TopLine() {
+       const { currentUser, impersonatedUser, quitImpersonation } = useAuth();
+       const isContractor = currentUser?.role === 'contractor';
+
+       return (
+         <div className="flex items-center justify-between bg-white px-6 py-4 shadow">
+           <div className="flex items-center space-x-4">
+             <img src="/logo192.png" alt="Logo" className="h-8 w-8"/>
+             <h1 className="text-xl font-semibold">
+               {isContractor ? 'Contractor Dashboard' : 'Employee Dashboard'}
+             </h1>
+           </div>
+           <div className="flex items-center space-x-4">
+             <select className="border rounded px-2 py-1">
+               <option>All Facilities</option>
+               {/* map facility list here */}
+             </select>
+             <div>{new Date().toLocaleDateString()}</div>
+             <button className="relative">
+               🔔
+               <span className="absolute top-0 right-0 bg-red-600 text-white text-xs px-1 rounded-full">3</span>
+             </button>
+             {impersonatedUser && (
+               <button
+                 className="bg-red-600 text-white px-3 py-1 rounded"
+                 onClick={quitImpersonation}
+               >
+                 Quit Session
+               </button>
+             )}
+             <div className="text-right">
+               <p className="font-medium">{currentUser?.name}</p>
+               <p className="text-sm text-gray-500">{currentUser?.role}</p>
+             </div>
+           </div>
+         </div>
+       );
+     }
+     ```
+
+5. **Include TopLine in Layout**  
+   - File: `src/components/Layout.tsx`
+   - Import and render it above your sidebar/content:
+     ```tsx
+     import { TopLine } from '@/components/TopLine';
+     // …
+     return (
+       <>
+         <TopLine/>
+         <div className="flex">
+           {/* Sidebar + Main Content */}
+         </div>
+       </>
+     );
+     ```
+
+# FILES TO EDIT
+- `package.json`
+- `server/index.ts`
+- `src/components/TopLine.tsx`
+- `src/components/Layout.tsx`
+
+# SUCCESS CRITERIA
+- `npm run dev` now automatically frees port 5000 and starts without errors.  
+- A new TopLine bar appears on every page with logo, facility selector, current date, notifications badge, Quit Session (when impersonating), and user info.
+
+BEGIN!
