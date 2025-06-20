@@ -1,5 +1,6 @@
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
 
 export interface StaffMember {
   id: number;
@@ -43,9 +44,34 @@ interface StaffContextType {
 const StaffContext = createContext<StaffContextType | null>(null);
 
 export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [staffData, setStaffData] = useState<StaffMember[]>([]);
+  const queryClient = useQueryClient();
 
-  // Sample staff data for impersonation system with specialties
+  // Fetch staff data from backend API
+  const { data: staffData = [], isLoading } = useQuery({
+    queryKey: ['/api/staff'],
+    queryFn: () => fetch('/api/staff').then(res => res.json()),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Mutation for updating staff profiles
+  const updateStaffMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: number; updates: Partial<StaffMember> }) => {
+      const response = await apiRequest(`/api/staff/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return response;
+    },
+    onSuccess: () => {
+      // Invalidate and refetch staff data
+      queryClient.invalidateQueries({ queryKey: ['/api/staff'] });
+    },
+  });
+
+  // Keep sample staff data as fallback
   const sampleStaff: StaffMember[] = [
     {
       id: 1,
@@ -148,42 +174,42 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     },
   ];
 
-  const compliantStaff = staffData.filter((s: StaffMember) => s.compliant);
-  const nonCompliantStaff = staffData.filter((s: StaffMember) => !s.compliant);
+  // Use actual API data or fallback to sample data
+  const currentStaffData = staffData.length > 0 ? staffData : sampleStaff;
+
+  const compliantStaff = currentStaffData.filter((s: StaffMember) => s.compliant);
+  const nonCompliantStaff = currentStaffData.filter((s: StaffMember) => !s.compliant);
 
   const getStaffById = (id: number): StaffMember | undefined => {
-    return staffData.find((s: StaffMember) => s.id === id);
+    return currentStaffData.find((s: StaffMember) => s.id === id);
   };
 
   const getStaffByRole = (role: string): StaffMember[] => {
-    return staffData.filter((s: StaffMember) => s.role === role);
+    return currentStaffData.filter((s: StaffMember) => s.role === role);
   };
 
   const updateStaff = (updated: StaffMember) => {
-    setStaffData(prev => prev.map(s => s.id === updated.id ? updated : s));
+    // Use the mutation to persist changes to backend
+    updateStaffMutation.mutate({ 
+      id: updated.id, 
+      updates: updated 
+    });
   };
 
   const updateStaffMember = async (id: number, updates: Partial<StaffMember>): Promise<void> => {
-    setStaffData((prevStaff: StaffMember[]) => 
-      prevStaff.map((member: StaffMember) => 
-        member.id === id ? { ...member, ...updates } : member
-      )
-    );
+    // Use the mutation to persist changes to backend
+    updateStaffMutation.mutate({ id, updates });
   };
 
-  useEffect(() => {
-    setStaffData(sampleStaff);
-  }, []);
-
   const value: StaffContextType = {
-    staff: staffData,
+    staff: currentStaffData,
     compliantStaff,
     nonCompliantStaff,
     getStaffById,
     getStaffByRole,
     updateStaff,
     updateStaffMember,
-    isLoading: false,
+    isLoading,
   };
 
   return (

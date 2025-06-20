@@ -881,6 +881,150 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Staff profile endpoints
+  app.get("/api/staff", requireAuth, async (req: any, res) => {
+    try {
+      // Return sample staff data for now
+      const staffData = [
+        {
+          id: 1,
+          firstName: "Sarah",
+          lastName: "Johnson",
+          email: "sarah.johnson@nexspace.com",
+          role: "employee",
+          phone: "(555) 123-4567",
+          department: "ICU",
+          specialty: "Critical Care",
+          compliant: true,
+          activeCredentials: 8,
+          expiringCredentials: 0,
+          avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150",
+          bio: "Experienced ICU nurse with expertise in critical care and patient management.",
+          location: "Portland, OR",
+          hourlyRate: 48,
+          experience: "8 years",
+          skills: ["Critical Care", "Patient Assessment", "IV Therapy"],
+          certifications: ["RN", "ACLS", "BLS", "CCRN"],
+          resumeUrl: "",
+          coverLetterUrl: "",
+          linkedIn: "",
+          portfolio: "",
+          yearsExperience: 8,
+          rating: 4.9,
+          totalShifts: 156
+        },
+        {
+          id: 2,
+          firstName: "Michael",
+          lastName: "Chen",
+          email: "michael.chen@nexspace.com",
+          role: "contractor",
+          phone: "(555) 234-5678",
+          department: "Emergency",
+          specialty: "Emergency Medicine",
+          compliant: true,
+          activeCredentials: 6,
+          expiringCredentials: 1,
+          avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
+          bio: "Emergency medicine specialist with extensive trauma experience.",
+          location: "Seattle, WA",
+          hourlyRate: 55,
+          experience: "12 years",
+          skills: ["Emergency Response", "Trauma Care", "Advanced Life Support"],
+          certifications: ["RN", "CEN", "ACLS", "PALS"],
+          resumeUrl: "",
+          coverLetterUrl: "",
+          linkedIn: "",
+          portfolio: "",
+          yearsExperience: 12,
+          rating: 4.8,
+          totalShifts: 89
+        },
+        {
+          id: 3,
+          firstName: "Alice",
+          lastName: "Smith",
+          email: "alice@nexspace.com",
+          role: "employee",
+          phone: "(555) 345-6789",
+          department: "Medical/Surgical",
+          specialty: "Medical Surgical",
+          compliant: true,
+          activeCredentials: 5,
+          expiringCredentials: 0,
+          avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
+          bio: "Dedicated medical-surgical nurse committed to providing excellent patient care.",
+          location: "Portland, OR",
+          hourlyRate: 42,
+          experience: "5 years",
+          skills: ["Patient Care", "Medication Administration", "Wound Care"],
+          certifications: ["RN", "BLS", "CMSRN"],
+          resumeUrl: "",
+          coverLetterUrl: "",
+          linkedIn: "",
+          portfolio: "",
+          yearsExperience: 5,
+          rating: 4.7,
+          totalShifts: 98
+        }
+      ];
+      
+      res.json(staffData);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch staff data" });
+    }
+  });
+
+  app.patch("/api/staff/:id", requireAuth, async (req: any, res) => {
+    try {
+      const staffId = parseInt(req.params.id);
+      
+      // Only allow users to update their own profile
+      if (req.user.id !== staffId) {
+        return res.status(403).json({ message: "You can only update your own profile" });
+      }
+
+      const {
+        email,
+        phone,
+        firstName,
+        lastName,
+        bio,
+        location,
+        hourlyRate,
+        experience,
+        skills,
+        certifications,
+        linkedIn,
+        portfolio
+      } = req.body;
+
+      // For now, just return success since we're using in-memory data
+      // In a real implementation, this would update the database
+      const updatedProfile = {
+        id: staffId,
+        email,
+        phone,
+        firstName,
+        lastName,
+        bio,
+        location,
+        hourlyRate: parseFloat(hourlyRate) || 0,
+        experience,
+        skills: skills || [],
+        certifications: certifications || [],
+        linkedIn,
+        portfolio,
+        updatedAt: new Date().toISOString()
+      };
+
+      res.json(updatedProfile);
+    } catch (error) {
+      console.error("Profile update error:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
   // Dashboard API endpoints with role-based access
   app.get("/api/timeoff/balance", requireAuth, enforceDataAccess, async (req: any, res) => {
     try {

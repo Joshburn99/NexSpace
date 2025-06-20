@@ -87,7 +87,7 @@ const navItems: NavItem[] = [
     roles: ['employee', 'contractor', 'clinician']
   },
   {
-    href: '/profile',
+    href: '/my-profile',
     label: 'My Profile',
     icon: User,
     roles: ['employee', 'contractor', 'clinician']
