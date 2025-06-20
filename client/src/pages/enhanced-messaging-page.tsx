@@ -174,6 +174,13 @@ export default function EnhancedMessagingPage() {
   const handleNexSpaceMessage = () => {
     setIsNexSpaceMessage(true);
     setSelectedRecipient(null);
+    setIsMassMessage(false);
+    setSelectedRecipients([]);
+    setSelectedPresetGroup("");
+    setSubject("");
+    setContent("");
+    setPriority("normal");
+    setCategory("general");
     setIsComposeOpen(true);
   };
 
@@ -279,12 +286,12 @@ export default function EnhancedMessagingPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Messages</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Communicate with facility team and NexSpace support
+          <div className="text-gray-600 dark:text-gray-400 mt-1 flex items-center">
+            <span>Communicate with facility team and NexSpace support</span>
             {unreadCount > 0 && (
               <Badge className="ml-2 bg-blue-600">{unreadCount} unread</Badge>
             )}
-          </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button onClick={handleNewMessage} className="bg-blue-600 hover:bg-blue-700">
