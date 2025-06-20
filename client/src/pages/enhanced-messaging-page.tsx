@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useMessaging } from "@/contexts/MessagingContext";
+import { useStaff } from "@/contexts/StaffContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,13 +39,19 @@ import { cn } from "@/lib/utils";
 export default function EnhancedMessagingPage() {
   const { user } = useAuth();
   const { getMessagesForUser, getUnreadCount, sendMessage, markAsRead } = useMessaging();
+  const { getStaffMembers } = useStaff();
+  const facilityStaff = getStaffMembers().filter(staff => 
+    staff.id !== user?.id && staff.status === 'active'
+  );
   
   const [isComposeOpen, setIsComposeOpen] = useState(false);
+  const [isNexSpaceMessage, setIsNexSpaceMessage] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
   const [priority, setPriority] = useState<string>("normal");
   const [category, setCategory] = useState<string>("general");
+  const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
 
   const userMessages = user ? getMessagesForUser(user.id) : [];
   const unreadCount = user ? getUnreadCount(user.id) : 0;
@@ -52,23 +59,50 @@ export default function EnhancedMessagingPage() {
   const handleSendMessage = () => {
     if (!user || !subject.trim() || !content.trim()) return;
 
-    sendMessage({
-      senderId: user.id,
-      senderName: `${user.firstName} ${user.lastName}`,
-      recipientId: 999, // NexSpace Team superuser
-      recipientName: "NexSpace Team",
-      subject: subject.trim(),
-      content: content.trim(),
-      priority: priority as any,
-      category: category as any
-    });
+    if (isNexSpaceMessage) {
+      sendMessage({
+        senderId: user.id,
+        senderName: `${user.firstName} ${user.lastName}`,
+        recipientId: 999, // NexSpace Team superuser
+        recipientName: "NexSpace Team",
+        subject: subject.trim(),
+        content: content.trim(),
+        priority: priority as any,
+        category: category as any
+      });
+    } else if (selectedRecipient) {
+      sendMessage({
+        senderId: user.id,
+        senderName: `${user.firstName} ${user.lastName}`,
+        recipientId: selectedRecipient.id,
+        recipientName: `${selectedRecipient.firstName} ${selectedRecipient.lastName}`,
+        subject: subject.trim(),
+        content: content.trim(),
+        priority: priority as any,
+        category: category as any
+      });
+    }
 
     // Reset form
     setSubject("");
     setContent("");
     setPriority("normal");
     setCategory("general");
+    setSelectedRecipient(null);
+    setIsNexSpaceMessage(false);
     setIsComposeOpen(false);
+  };
+
+  const handleNexSpaceMessage = () => {
+    setIsNexSpaceMessage(true);
+    setSelectedRecipient(null);
+    setIsComposeOpen(true);
+  };
+
+  const handleNewMessage = () => {
+    setIsNexSpaceMessage(false);
+    setSelectedRecipient(null);
+    setIsComposeOpen(true);
   };
 
   const handleMessageClick = (message: any) => {

@@ -56,7 +56,7 @@ export default function TimeClockPage() {
 
   const handleClockIn = () => {
     if (user) {
-      clockIn(parseInt(user.id), user.firstName + " " + user.lastName, user.role);
+      clockIn(user.id.toString(), user.firstName + " " + user.lastName, user.role);
     }
   };
 
