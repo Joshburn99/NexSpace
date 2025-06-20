@@ -465,17 +465,20 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getShiftsByDateRange(facilityId: number, startDate: Date, endDate: Date): Promise<Shift[]> {
+    const startDateStr = startDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+    const endDateStr = endDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+    
     return await db
       .select()
       .from(shifts)
       .where(
         and(
           eq(shifts.facilityId, facilityId),
-          gte(shifts.startTime, startDate),
-          lte(shifts.endTime, endDate)
+          gte(shifts.date, startDateStr),
+          lte(shifts.date, endDateStr)
         )
       )
-      .orderBy(asc(shifts.startTime));
+      .orderBy(asc(shifts.date), asc(shifts.startTime));
   }
 
   async getTodaysShifts(facilityId: number): Promise<Shift[]> {
@@ -1221,7 +1224,7 @@ export class DatabaseStorage implements IStorage {
         recordsProcessed: 0,
         recordsSucceeded: 0,
         recordsFailed: 1,
-        errorDetails: { error: error.toString() },
+        errorDetails: { error: (error as Error).toString() },
         startedAt: startTime,
         completedAt: new Date(),
         createdBy: 1, // System user

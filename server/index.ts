@@ -46,7 +46,8 @@ function killPort5000() {
       } else {
         log("Killed process on port 5000");
       }
-      resolve();
+      // Add delay to ensure port is fully released
+      setTimeout(resolve, 1000);
     });
   });
 }
