@@ -280,6 +280,31 @@ export const auditLogs = pgTable("audit_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Shift requests table
+export const shiftRequests = pgTable("shift_requests", {
+  id: serial("id").primaryKey(),
+  shiftId: integer("shift_id").notNull(),
+  userId: integer("user_id").notNull(),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected, auto_assigned
+  requestedAt: timestamp("requested_at").defaultNow(),
+  processedAt: timestamp("processed_at"),
+  processedById: integer("processed_by_id"),
+  notes: text("notes"),
+});
+
+// Shift history table
+export const shiftHistory = pgTable("shift_history", {
+  id: serial("id").primaryKey(),
+  shiftId: integer("shift_id").notNull(),
+  userId: integer("user_id").notNull(),
+  action: text("action").notNull(), // requested, assigned, completed, cancelled, no_call_no_show
+  timestamp: timestamp("timestamp").defaultNow(),
+  performedById: integer("performed_by_id"),
+  notes: text("notes"),
+  previousStatus: text("previous_status"),
+  newStatus: text("new_status"),
+});
+
 // Staff table for enhanced profiles
 export const staff = pgTable("staff", {
   id: serial("id").primaryKey(),
@@ -521,6 +546,17 @@ export const insertStaffSchema = createInsertSchema(staff).omit({
   updatedAt: true,
 });
 
+export const insertShiftRequestSchema = createInsertSchema(shiftRequests).omit({
+  id: true,
+  requestedAt: true,
+  processedAt: true,
+});
+
+export const insertShiftHistorySchema = createInsertSchema(shiftHistory).omit({
+  id: true,
+  timestamp: true,
+});
+
 // Payroll insert schemas
 export const insertPayrollProviderSchema = createInsertSchema(payrollProviders).omit({
   id: true,
@@ -582,6 +618,10 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertStaff = z.infer<typeof insertStaffSchema>;
 export type Staff = typeof staff.$inferSelect;
+export type InsertShiftRequest = z.infer<typeof insertShiftRequestSchema>;
+export type ShiftRequest = typeof shiftRequests.$inferSelect;
+export type InsertShiftHistory = z.infer<typeof insertShiftHistorySchema>;
+export type ShiftHistory = typeof shiftHistory.$inferSelect;
 export type AuditLog = typeof auditLogs.$inferSelect;
 
 // Payroll types

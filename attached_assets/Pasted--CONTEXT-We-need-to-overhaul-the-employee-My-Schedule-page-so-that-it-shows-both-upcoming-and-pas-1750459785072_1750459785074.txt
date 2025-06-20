@@ -1,0 +1,139 @@
+# CONTEXT
+We need to overhaul the employee “My Schedule” page so that it shows both upcoming and past shifts (history) pulled from ShiftContext. Requested shifts must remain on the calendar with a “requested” badge until approved or auto-assigned. We also need to persist every shift event (request, assignment, completion) to the server and log them in history. Finally, our messaging system needs true persistence in `/api/messages` to fix bugs.
+
+# TASKS
+
+## 1. Extend server-side APIs
+- **File:** `server/routes.ts`
+  ```ts
+  // Shifts
+  router.post('/api/shifts/request', async (req, res) => {
+    // add shift_request record, leave shift in open
+    // if autoAssignCriteria met, call assign logic
+  });
+  router.post('/api/shifts/assign', async (req, res) => {
+    // assign shift, record in shift_history
+  });
+  router.get('/api/shifts/history/:userId', async (req, res) => {
+    // return all shift_history entries for user
+  });
+
+  // Messaging (persist)
+  router.post('/api/messages', async (req, res) => {
+    // save msg in DB
+  });
+  router.get('/api/messages/:threadId', async (req, res) => {
+    // load messages
+  });
+2. Enhance ShiftContext
+File: src/context/ShiftContext.tsx
+
+diff
+Copy
+Edit
+// add new state
+const [history, setHistory] = useState<Shift[]>([]);
+// fetch history on load
+useEffect(()=> {
+  api.get(`/api/shifts/history/${currentUser.id}`).then(r=>setHistory(r.data));
+},[currentUser.id]);
+
+// requestShift: leave in open, record request, call API
+const requestShift = async (shiftId:string) => {
+  const userId = currentUser.id;
+  // call server
+  const { data } = await api.post('/api/shifts/request', { shiftId, userId });
+  // move in context
+  setRequested(prev=>[...prev, data.requestedShift]);
+  // if data.autoAssigned then also setBooked
+  if (data.autoAssigned) {
+    setBooked(b=>[...b, data.assignedShift]);
+    setRequested(r=>r.filter(s=>s.id!==shiftId));
+  }
+};
+
+// assignShift: record in history, call API
+const assignShift = async (shiftId:string, userId:string) => {
+  const { data } = await api.post('/api/shifts/assign', { shiftId, userId });
+  setBooked(prev=>[...prev, data.assignedShift]);
+  setRequested(r=>r.filter(s=>s.id!==shiftId));
+  setHistory(h=>[...h, data.historyEntry]);
+};
+3. Update “My Schedule” Page
+File: src/pages/MySchedulePage.tsx
+
+tsx
+Copy
+Edit
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import { useShifts } from '@/context/ShiftContext';
+
+export default function MySchedulePage() {
+  const { open, requested, booked, history, requestShift } = useShifts();
+  const events = [
+    ...open.map(s=>({ id:s.id, title:`Open`, date:s.date, color:'gray' })),
+    ...requested.map(s=>({ id:s.id, title:`Requested`, date:s.date, color:'orange' })),
+    ...booked.map(s=>({ id:s.id, title:`Booked`, date:s.date, color:'green' })),
+    ...history.map(s=>({ id:s.id, title:`Past: ${s.facility}`, date:s.date, color:'blue' }))
+  ];
+  return (
+    <div className="p-6">
+      <h2>My Schedule</h2>
+      <FullCalendar
+        plugins={[dayGridPlugin]}
+        initialView="dayGridMonth"
+        events={events}
+        eventClick={info => {
+          if (info.event.title==='Requested') requestShift(info.event.id);
+        }}
+      />
+    </div>
+  );
+}
+4. Persist Shift History to DB
+File: server/models/shiftHistory.ts (or equivalent)
+
+ts
+Copy
+Edit
+// define DB schema: ShiftHistory(id, shiftId, userId, action, timestamp)
+On each API call in routes, insert into ShiftHistory.
+
+5. Fix Messaging Persistence
+File: src/context/MessageContext.tsx
+
+diff
+Copy
+Edit
+// replace in-memory with API calls
+const sendMessage = async (msg) => {
+  await api.post('/api/messages', msg);
+};
+const fetchThread = async (threadId) => {
+  const { data } = await api.get(`/api/messages/${threadId}`);
+  setThread(data);
+};
+FILES TO EDIT
+server/routes.ts
+
+server/models/shiftHistory.ts
+
+src/context/ShiftContext.tsx
+
+src/pages/MySchedulePage.tsx
+
+src/context/MessageContext.tsx
+
+SUCCESS CRITERIA
+Employees see upcoming and past shifts on My Schedule.
+
+Requested shifts stay on calendar with status.
+
+Shifts auto-assign when criteria met.
+
+All shift actions are persisted and visible in history.
+
+Messaging logs are saved/retrieved from the API.
+
+BEGIN!

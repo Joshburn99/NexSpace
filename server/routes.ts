@@ -19,9 +19,13 @@ import {
   insertTimesheetEntrySchema,
   insertPaymentSchema,
   insertFacilitySchema,
+  insertShiftRequestSchema,
+  insertShiftHistorySchema,
   UserRole,
   shifts,
   facilities,
+  shiftRequests,
+  shiftHistory,
 } from "@shared/schema";
 import { db } from "./db";
 import { sql } from "drizzle-orm";
@@ -570,6 +574,282 @@ export function registerRoutes(app: Express): Server {
       }
     }
   );
+
+  // Enhanced Shift Management APIs
+  app.post("/api/shifts/request", requireAuth, async (req: any, res) => {
+    try {
+      const { shiftId, userId = req.user.id } = req.body;
+      
+      // Check if shift exists and is open
+      const shift = await storage.getShiftById(shiftId);
+      if (!shift || shift.status !== 'open') {
+        return res.status(400).json({ message: "Shift not available for request" });
+      }
+
+      // Check if user already requested this shift
+      const existingRequest = await db.select()
+        .from(shiftRequests)
+        .where(sql`shift_id = ${shiftId} AND user_id = ${userId}`)
+        .limit(1);
+
+      if (existingRequest.length > 0) {
+        return res.status(400).json({ message: "Shift already requested" });
+      }
+
+      // Create shift request
+      const [shiftRequest] = await db.insert(shiftRequests).values({
+        shiftId,
+        userId,
+        status: 'pending'
+      }).returning();
+
+      // Log history
+      await db.insert(shiftHistory).values({
+        shiftId,
+        userId,
+        action: 'requested',
+        performedById: userId,
+        previousStatus: 'open',
+        newStatus: 'requested'
+      });
+
+      // Check auto-assignment criteria
+      const autoAssignCriteria = await checkAutoAssignmentCriteria(shiftId, userId);
+      let autoAssigned = false;
+      let assignedShift = null;
+
+      if (autoAssignCriteria.shouldAutoAssign) {
+        // Auto-assign the shift
+        await db.update(shifts)
+          .set({ 
+            status: 'assigned',
+            assignedStaffIds: [userId],
+            updatedAt: new Date()
+          })
+          .where(sql`id = ${shiftId}`);
+
+        // Update request status
+        await db.update(shiftRequests)
+          .set({ 
+            status: 'auto_assigned',
+            processedAt: new Date(),
+            processedById: userId
+          })
+          .where(sql`id = ${shiftRequest.id}`);
+
+        // Log assignment history
+        await db.insert(shiftHistory).values({
+          shiftId,
+          userId,
+          action: 'assigned',
+          performedById: userId,
+          previousStatus: 'requested',
+          newStatus: 'assigned',
+          notes: 'Auto-assigned based on criteria'
+        });
+
+        assignedShift = await storage.getShiftById(shiftId);
+        autoAssigned = true;
+      }
+
+      const requestedShift = { ...shift, status: 'requested' };
+
+      res.json({
+        requestedShift,
+        autoAssigned,
+        assignedShift,
+        shiftRequest
+      });
+    } catch (error) {
+      console.error('Shift request error:', error);
+      res.status(500).json({ message: "Failed to request shift" });
+    }
+  });
+
+  app.post("/api/shifts/assign", requireAuth, requirePermission("shifts.assign"), async (req: any, res) => {
+    try {
+      const { shiftId, userId } = req.body;
+      
+      // Get shift and validate
+      const shift = await storage.getShiftById(shiftId);
+      if (!shift) {
+        return res.status(404).json({ message: "Shift not found" });
+      }
+
+      // Update shift status
+      await db.update(shifts)
+        .set({ 
+          status: 'assigned',
+          assignedStaffIds: [userId],
+          updatedAt: new Date()
+        })
+        .where(sql`id = ${shiftId}`);
+
+      // Update any pending requests
+      await db.update(shiftRequests)
+        .set({ 
+          status: 'approved',
+          processedAt: new Date(),
+          processedById: req.user.id
+        })
+        .where(sql`shift_id = ${shiftId} AND user_id = ${userId}`);
+
+      // Log history
+      const [historyEntry] = await db.insert(shiftHistory).values({
+        shiftId,
+        userId,
+        action: 'assigned',
+        performedById: req.user.id,
+        previousStatus: shift.status,
+        newStatus: 'assigned'
+      }).returning();
+
+      const assignedShift = await storage.getShiftById(shiftId);
+
+      res.json({
+        assignedShift,
+        historyEntry
+      });
+    } catch (error) {
+      console.error('Shift assignment error:', error);
+      res.status(500).json({ message: "Failed to assign shift" });
+    }
+  });
+
+  app.get("/api/shifts/history/:userId", requireAuth, async (req: any, res) => {
+    try {
+      const userId = parseInt(req.params.userId);
+      
+      // Check if user can access this history
+      if (req.user.id !== userId && req.user.role !== UserRole.SUPER_ADMIN && req.user.role !== UserRole.FACILITY_MANAGER) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const history = await db.select({
+        id: shiftHistory.id,
+        shiftId: shiftHistory.shiftId,
+        action: shiftHistory.action,
+        timestamp: shiftHistory.timestamp,
+        notes: shiftHistory.notes,
+        previousStatus: shiftHistory.previousStatus,
+        newStatus: shiftHistory.newStatus,
+        title: shifts.title,
+        date: shifts.date,
+        startTime: shifts.startTime,
+        endTime: shifts.endTime,
+        facilityName: shifts.facilityName,
+        department: shifts.department,
+        specialty: shifts.specialty,
+        rate: shifts.rate
+      })
+      .from(shiftHistory)
+      .leftJoin(shifts, sql`${shiftHistory.shiftId} = ${shifts.id}`)
+      .where(sql`${shiftHistory.userId} = ${userId}`)
+      .orderBy(sql`${shiftHistory.timestamp} DESC`);
+
+      res.json(history);
+    } catch (error) {
+      console.error('Shift history error:', error);
+      res.status(500).json({ message: "Failed to fetch shift history" });
+    }
+  });
+
+  // Enhanced Messaging APIs with persistence
+  app.post("/api/messages", requireAuth, async (req: any, res) => {
+    try {
+      const messageData = insertMessageSchema.parse({
+        ...req.body,
+        senderId: req.user.id
+      });
+
+      const [message] = await db.insert(messages).values(messageData).returning();
+
+      // Broadcast to WebSocket clients if available
+      const messageWithSender = {
+        ...message,
+        senderName: `${req.user.firstName} ${req.user.lastName}`
+      };
+
+      // Notify connected WebSocket clients
+      wss.clients.forEach((client: WebSocket) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'new_message',
+            data: messageWithSender
+          }));
+        }
+      });
+
+      res.status(201).json(messageWithSender);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ message: "Invalid message data", errors: error.errors });
+      } else {
+        console.error('Message creation error:', error);
+        res.status(500).json({ message: "Failed to send message" });
+      }
+    }
+  });
+
+  app.get("/api/messages/:threadId", requireAuth, async (req: any, res) => {
+    try {
+      const threadId = req.params.threadId;
+      
+      const threadMessages = await db.select({
+        id: messages.id,
+        senderId: messages.senderId,
+        recipientId: messages.recipientId,
+        conversationId: messages.conversationId,
+        content: messages.content,
+        messageType: messages.messageType,
+        isRead: messages.isRead,
+        shiftId: messages.shiftId,
+        createdAt: messages.createdAt
+      })
+      .from(messages)
+      .where(sql`${messages.conversationId} = ${threadId}`)
+      .orderBy(sql`${messages.createdAt} ASC`);
+
+      res.json(threadMessages);
+    } catch (error) {
+      console.error('Messages fetch error:', error);
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  // Auto-assignment criteria helper function
+  async function checkAutoAssignmentCriteria(shiftId: number, userId: number): Promise<{ shouldAutoAssign: boolean; reason?: string }> {
+    try {
+      // Get user and shift details
+      const user = await storage.getUserById(userId);
+      const shift = await storage.getShiftById(shiftId);
+      
+      if (!user || !shift) {
+        return { shouldAutoAssign: false, reason: "User or shift not found" };
+      }
+
+      // Basic auto-assignment criteria
+      const criteria = {
+        userHasRequiredSpecialty: user.specialty === shift.specialty,
+        shiftIsUrgent: shift.urgency === 'critical' || shift.urgency === 'high',
+        userIsAvailable: user.availabilityStatus === 'available',
+        facilityMatch: !shift.facilityId || user.facilityId === shift.facilityId
+      };
+
+      const shouldAutoAssign = criteria.userHasRequiredSpecialty && 
+                              criteria.shiftIsUrgent && 
+                              criteria.userIsAvailable && 
+                              criteria.facilityMatch;
+
+      return { 
+        shouldAutoAssign,
+        reason: shouldAutoAssign ? "Meets auto-assignment criteria" : "Does not meet all criteria"
+      };
+    } catch (error) {
+      console.error('Auto-assignment criteria check error:', error);
+      return { shouldAutoAssign: false, reason: "Error checking criteria" };
+    }
+  }
 
   // Invoices API
   app.get("/api/invoices", requireAuth, async (req: any, res) => {
