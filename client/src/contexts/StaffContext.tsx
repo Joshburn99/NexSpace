@@ -1,5 +1,4 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useCredentials } from '@/contexts/CredentialsContext';
 import { useQuery } from '@tanstack/react-query';
 
 export interface StaffMember {
@@ -28,12 +27,6 @@ interface StaffContextType {
 const StaffContext = createContext<StaffContextType | null>(null);
 
 export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { data: users = [] } = useQuery({
-    queryKey: ['/api/users'],
-    enabled: true,
-  });
-
-  const { credentials, getActiveCredentials, getExpiringCredentials } = useCredentials();
 
   // Sample staff data for impersonation system
   const sampleStaff: StaffMember[] = [
@@ -135,31 +128,8 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     },
   ];
 
-  // Combine API users with sample staff for impersonation
-  const apiStaff: StaffMember[] = Array.isArray(users) ? users.map((user: any) => {
-    const userCredentials = credentials.filter(cred => cred.userId === user.id);
-    const activeUserCredentials = getActiveCredentials().filter(cred => cred.userId === user.id);
-    const expiringUserCredentials = getExpiringCredentials().filter(cred => cred.userId === user.id);
-    
-    const compliant = activeUserCredentials.length > 0 && expiringUserCredentials.length === 0;
-
-    return {
-      id: user.id,
-      firstName: user.firstName || user.name?.split(' ')[0] || '',
-      lastName: user.lastName || user.name?.split(' ')[1] || '',
-      email: user.email,
-      role: user.role,
-      phone: user.phone,
-      department: user.department,
-      compliant,
-      activeCredentials: activeUserCredentials.length,
-      expiringCredentials: expiringUserCredentials.length,
-      avatar: user.avatar,
-    };
-  }) : [];
-
-  // Use sample staff data if no API users, otherwise combine both
-  const staff: StaffMember[] = apiStaff.length > 0 ? [...apiStaff, ...sampleStaff] : sampleStaff;
+  // Use sample staff data
+  const staff: StaffMember[] = sampleStaff;
 
   const compliantStaff = staff.filter(s => s.compliant);
   const nonCompliantStaff = staff.filter(s => !s.compliant);
