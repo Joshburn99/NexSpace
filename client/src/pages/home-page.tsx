@@ -240,7 +240,25 @@ const recentActivity = [
 ];
 
 export default function HomePage() {
-  const { user } = useAuth();
+  const { user, impersonatedUser } = useAuth();
+  
+  const currentUser = impersonatedUser || user;
+  
+  // Redirect based on user role
+  if (currentUser?.role === 'employee') {
+    window.location.href = '/employee-dashboard';
+    return null;
+  }
+  
+  if (currentUser?.role === 'contractor') {
+    window.location.href = '/contractor-dashboard';
+    return null;
+  }
+  
+  if (currentUser?.role === 'clinician') {
+    window.location.href = '/clinician-dashboard';
+    return null;
+  }
   const [selectedTab, setSelectedTab] = useState("overview");
   const [selectedBuilding, setSelectedBuilding] = useState("main");
 

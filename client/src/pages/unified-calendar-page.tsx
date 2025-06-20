@@ -1,6 +1,7 @@
 import { useState } from "react";
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useShifts } from '@/contexts/ShiftContext';
 import { useDashboard } from '@/contexts/DashboardContext';
@@ -8,6 +9,10 @@ import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { ShiftDetailsModal } from "@/components/ShiftDetailsModal";
 import { CreateShiftModal } from "@/components/CreateShiftModal";
 import {
@@ -17,6 +22,9 @@ import {
   Building,
   Filter,
   Plus,
+  DollarSign,
+  MapPin,
+  CheckCircle,
 } from "lucide-react";
 
 export default function UnifiedCalendarPage() {
@@ -24,51 +32,89 @@ export default function UnifiedCalendarPage() {
   const { totalShiftsToday, openCount, requestedCount, bookedCount } = useDashboard();
   const { user, impersonatedUser } = useAuth();
   const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null);
+  const [selectedShift, setSelectedShift] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isShiftDetailsOpen, setIsShiftDetailsOpen] = useState(false);
+  const [isShiftRequestOpen, setIsShiftRequestOpen] = useState(false);
   const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
 
   const currentUser = impersonatedUser || user;
   const canPostShifts = currentUser?.role === 'manager' || currentUser?.role === 'admin';
 
-  // Convert shifts to FullCalendar events
+  // Convert shifts to FullCalendar events with better visuals
   const events = [
     ...openShifts.map(shift => ({
       id: `open-${shift.id}`,
-      title: `Open: ${shift.title}`,
-      date: shift.date,
-      color: '#6B7280', // gray
+      title: `🟦 ${shift.title}`,
+      start: `${shift.date}T${shift.startTime || '07:00'}`,
+      end: `${shift.date}T${shift.endTime || '19:00'}`,
+      backgroundColor: '#3B82F6',
+      borderColor: '#1D4ED8',
+      textColor: '#FFFFFF',
+      classNames: ['shift-open'],
       extendedProps: {
         type: 'open',
-        shift,
+        shift: {
+          ...shift,
+          hourlyRate: shift.hourlyRate || 35,
+          department: shift.department || 'General',
+          requirements: shift.requirements || []
+        },
       }
     })),
     ...requestedShifts.map(shift => ({
       id: `requested-${shift.id}`,
-      title: `Requested: ${shift.title}`,
-      date: shift.date,
-      color: '#F59E0B', // orange
+      title: `🟨 ${shift.title}`,
+      start: `${shift.date}T${shift.startTime || '07:00'}`,
+      end: `${shift.date}T${shift.endTime || '19:00'}`,
+      backgroundColor: '#F59E0B',
+      borderColor: '#D97706',
+      textColor: '#FFFFFF',
+      classNames: ['shift-requested'],
       extendedProps: {
         type: 'requested',
-        shift,
+        shift: {
+          ...shift,
+          hourlyRate: shift.hourlyRate || 35,
+          department: shift.department || 'General',
+          requirements: shift.requirements || []
+        },
       }
     })),
     ...bookedShifts.map(shift => ({
       id: `booked-${shift.id}`,
-      title: `Booked: ${shift.title}`,
-      date: shift.date,
-      color: '#10B981', // green
+      title: `🟩 ${shift.title}`,
+      start: `${shift.date}T${shift.startTime || '07:00'}`,
+      end: `${shift.date}T${shift.endTime || '19:00'}`,
+      backgroundColor: '#10B981',
+      borderColor: '#059669',
+      textColor: '#FFFFFF',
+      classNames: ['shift-booked'],
       extendedProps: {
         type: 'booked',
-        shift,
+        shift: {
+          ...shift,
+          hourlyRate: shift.hourlyRate || 35,
+          department: shift.department || 'General',
+          requirements: shift.requirements || []
+        },
       }
     }))
   ];
 
   const handleEventClick = (info: any) => {
-    const shiftId = parseInt(info.event.id);
-    setSelectedShiftId(shiftId);
-    setIsShiftDetailsOpen(true);
+    const shift = info.event.extendedProps.shift;
+    const shiftType = info.event.extendedProps.type;
+    
+    setSelectedShift(shift);
+    
+    // Workers can only request open shifts
+    if (!canPostShifts && shiftType === 'open') {
+      setIsShiftRequestOpen(true);
+    } else {
+      setSelectedShiftId(shift.id);
+      setIsShiftDetailsOpen(true);
+    }
   };
 
   const handleDateClick = (info: any) => {
