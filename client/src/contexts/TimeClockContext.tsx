@@ -37,7 +37,7 @@ interface TimeClockContextType {
   timeClocks: TimeClock[];
   summaries: TimeClockSummary[];
   isLoading: boolean;
-  clockIn: (userId: number, shiftId?: number, notes?: string) => void;
+  clockIn: (userId: string, userName: string, userRole: string, shiftId?: number, notes?: string) => void;
   clockOut: (userId: number, notes?: string) => void;
   startBreak: (userId: number, notes?: string) => void;
   endBreak: (userId: number, notes?: string) => void;
@@ -285,12 +285,12 @@ export const TimeClockProvider: React.FC<{ children: ReactNode }> = ({ children 
     setSummaries(generateSummaries(timeClocks));
   }, [timeClocks]);
 
-  const clockIn = (userId: number, shiftId?: number, notes?: string) => {
+  const clockIn = (userId: string, userName: string, userRole: string, shiftId?: number, notes?: string) => {
     const newClock: TimeClock = {
       id: timeClocks.length + 1,
-      userId,
-      userName: `User ${userId}`,
-      userRole: "Staff",
+      userId: parseInt(userId),
+      userName,
+      userRole,
       facilityId: 1,
       facilityName: "Sunrise Senior Living",
       timestamp: new Date().toISOString(),

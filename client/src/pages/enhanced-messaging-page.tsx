@@ -39,9 +39,9 @@ import { cn } from "@/lib/utils";
 export default function EnhancedMessagingPage() {
   const { user } = useAuth();
   const { getMessagesForUser, getUnreadCount, sendMessage, markAsRead } = useMessaging();
-  const { getStaffMembers } = useStaff();
-  const facilityStaff = getStaffMembers().filter(staff => 
-    staff.id !== user?.id && staff.status === 'active'
+  const { staff } = useStaff();
+  const facilityStaff = staff.filter(staffMember => 
+    staffMember.id !== user?.id && staffMember.compliant
   );
   
   const [isComposeOpen, setIsComposeOpen] = useState(false);
@@ -159,35 +159,64 @@ export default function EnhancedMessagingPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Messages</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Communicate with the NexSpace team
+            Communicate with facility team and NexSpace support
             {unreadCount > 0 && (
               <Badge className="ml-2 bg-blue-600">{unreadCount} unread</Badge>
             )}
           </p>
         </div>
+        <div className="flex gap-2">
+          <Button onClick={handleNewMessage} className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="w-4 h-4 mr-2" />
+            New Message
+          </Button>
+          <Button onClick={handleNexSpaceMessage} variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Message NexSpace
+          </Button>
+        </div>
+
         <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="w-4 h-4 mr-2" />
-              New Message
-            </Button>
+            <div style={{ display: 'none' }} />
           </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Compose Message</DialogTitle>
               <DialogDescription>
-                Send a message to the NexSpace team
+                {isNexSpaceMessage 
+                  ? "Send a message to the NexSpace support team"
+                  : "Send a message to facility staff members"
+                }
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="to">To</Label>
-                <Input
-                  id="to"
-                  value="NexSpace Team"
-                  disabled
-                  className="bg-gray-50"
-                />
+                {isNexSpaceMessage ? (
+                  <Input
+                    id="to"
+                    value="NexSpace Team"
+                    disabled
+                    className="bg-gray-50"
+                  />
+                ) : (
+                  <Select value={selectedRecipient?.id || ""} onValueChange={(value) => {
+                    const recipient = facilityStaff.find(staff => staff.id.toString() === value);
+                    setSelectedRecipient(recipient);
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select recipient..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {facilityStaff.map((staff) => (
+                        <SelectItem key={staff.id} value={staff.id.toString()}>
+                          {staff.firstName} {staff.lastName} ({staff.role})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               <div>
@@ -248,7 +277,7 @@ export default function EnhancedMessagingPage() {
                 <Button 
                   onClick={handleSendMessage} 
                   className="flex-1"
-                  disabled={!subject.trim() || !content.trim()}
+                  disabled={!subject.trim() || !content.trim() || (!isNexSpaceMessage && !selectedRecipient)}
                 >
                   <Send className="w-4 h-4 mr-2" />
                   Send Message
