@@ -24,13 +24,17 @@ export interface Shift {
   startTime: string; // HH:MM format
   endTime: string; // HH:MM format
   rate: number;
+  hourlyRate: number; // Additional property for compatibility
   premiumMultiplier: number;
   status: ShiftStatus;
   urgency: ShiftUrgency;
   description?: string;
   requiredStaff: number;
   assignedStaffIds: number[];
+  assignedTo?: number; // For individual assignments
+  requestedBy?: number; // For shift requests
   specialRequirements: string[];
+  requirements: string[]; // Additional property for compatibility
   createdById: number;
   createdAt: string;
   updatedAt: string;
@@ -94,6 +98,7 @@ const sampleShifts: Shift[] = [
     startTime: "19:00",
     endTime: "07:00",
     rate: 45.0,
+    hourlyRate: 45.0,
     premiumMultiplier: 1.25,
     status: "open",
     urgency: "high",
@@ -101,6 +106,7 @@ const sampleShifts: Shift[] = [
     requiredStaff: 2,
     assignedStaffIds: [],
     specialRequirements: ["BLS", "ACLS", "Critical Care Experience"],
+    requirements: ["Registered Nurse"],
     createdById: 1,
     createdAt: "2025-06-19T10:00:00Z",
     updatedAt: "2025-06-19T10:00:00Z",
@@ -116,13 +122,16 @@ const sampleShifts: Shift[] = [
     startTime: "07:00",
     endTime: "19:00",
     rate: 42.0,
+    hourlyRate: 42.0,
     premiumMultiplier: 1.15,
     status: "requested",
     urgency: "critical",
     description: "Emergency department day shift",
     requiredStaff: 1,
     assignedStaffIds: [5],
+    requestedBy: 5,
     specialRequirements: ["BLS", "ACLS", "TNCC"],
+    requirements: ["Registered Nurse"],
     createdById: 2,
     createdAt: "2025-06-19T08:30:00Z",
     updatedAt: "2025-06-19T14:20:00Z",
@@ -138,13 +147,16 @@ const sampleShifts: Shift[] = [
     startTime: "15:00",
     endTime: "23:00",
     rate: 28.0,
+    hourlyRate: 28.0,
     premiumMultiplier: 1.1,
     status: "assigned",
     urgency: "medium",
     description: "Med/Surg evening shift coverage",
     requiredStaff: 1,
     assignedStaffIds: [12],
+    assignedTo: 12,
     specialRequirements: ["BLS", "Med/Surg Experience"],
+    requirements: ["Licensed Practical Nurse"],
     createdById: 3,
     createdAt: "2025-06-19T09:15:00Z",
     updatedAt: "2025-06-19T16:45:00Z",
@@ -160,6 +172,7 @@ const sampleShifts: Shift[] = [
     startTime: "19:00",
     endTime: "07:00",
     rate: 40.0,
+    hourlyRate: 40.0,
     premiumMultiplier: 1.3,
     status: "open",
     urgency: "high",
@@ -167,6 +180,7 @@ const sampleShifts: Shift[] = [
     requiredStaff: 1,
     assignedStaffIds: [],
     specialRequirements: ["BLS", "ACLS", "Telemetry Certification"],
+    requirements: ["Registered Nurse"],
     createdById: 1,
     createdAt: "2025-06-19T11:30:00Z",
     updatedAt: "2025-06-19T11:30:00Z",
@@ -182,13 +196,16 @@ const sampleShifts: Shift[] = [
     startTime: "06:00",
     endTime: "14:00",
     rate: 48.0,
+    hourlyRate: 48.0,
     premiumMultiplier: 1.2,
     status: "completed",
     urgency: "medium",
     description: "OR day shift - general surgery cases",
     requiredStaff: 1,
     assignedStaffIds: [8],
+    assignedTo: 8,
     specialRequirements: ["BLS", "ACLS", "OR Experience", "CNOR Preferred"],
+    requirements: ["Registered Nurse"],
     createdById: 4,
     createdAt: "2025-06-18T14:00:00Z",
     updatedAt: "2025-06-19T18:00:00Z",
@@ -204,6 +221,7 @@ const sampleShifts: Shift[] = [
     startTime: "07:00",
     endTime: "19:00",
     rate: 44.0,
+    hourlyRate: 44.0,
     premiumMultiplier: 1.15,
     status: "open",
     urgency: "medium",
@@ -211,6 +229,7 @@ const sampleShifts: Shift[] = [
     requiredStaff: 2,
     assignedStaffIds: [],
     specialRequirements: ["BLS", "PALS", "Pediatric Experience"],
+    requirements: ["Registered Nurse"],
     createdById: 3,
     createdAt: "2025-06-19T12:00:00Z",
     updatedAt: "2025-06-19T12:00:00Z",
