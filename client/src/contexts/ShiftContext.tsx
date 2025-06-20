@@ -68,6 +68,10 @@ export interface BlockShift {
 interface ShiftContextType {
   shifts: Shift[];
   blockShifts: BlockShift[];
+  open: Shift[];
+  requested: Shift[];
+  booked: Shift[];
+  history: Shift[];
   openShifts: Shift[];
   requestedShifts: Shift[];
   bookedShifts: Shift[];
@@ -345,6 +349,12 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
     (shift) => shift.status === "assigned" || shift.status === "in_progress"
   );
   const completedShifts = shifts.filter((shift) => shift.status === "completed");
+  
+  // Aliased properties for the standardized API
+  const open = openShifts;
+  const requested = requestedShifts;
+  const booked = bookedShifts;
+  const history = [...completedShifts, ...shifts.filter(s => s.status === "cancelled" || s.status === "ncns")];
 
   const refreshShifts = async () => {
     setIsLoading(true);
@@ -429,6 +439,10 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
   const contextValue: ShiftContextType = {
     shifts,
     blockShifts,
+    open,
+    requested,
+    booked,
+    history,
     openShifts,
     requestedShifts,
     bookedShifts,

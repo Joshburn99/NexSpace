@@ -1,0 +1,95 @@
+# CONTEXT
+We need to ensure that:
+- The TopBar is always visible (including during impersonation).
+- All shift-related data (open, requested, booked, history) comes from a single ShiftContext.
+- Role-based visibility hides/shows only the correct UI for employees, contractors, and superusers.
+- Every insights/dashboard/calendar page pulls metrics from shift history, not local mocks.
+
+# TASKS
+
+1. FORCE TopBar into Layout  
+- File: `src/components/Layout.tsx`  
+  • Import and render `<TopBar />` **above** your sidebar/content unconditionally.  
+  • Make sure impersonated routes are wrapped by this Layout.  
+
+2. VERIFY TopBar conditional logic  
+- File: `src/components/TopBar.tsx`  
+  • Use `const { currentUser, impersonatedUser } = useAuth()`  
+  • Always show the bar; only the “Quit Session” button should be conditional on `impersonatedUser`.
+
+3. CENTRALIZE Shift data  
+- File: `src/context/ShiftContext.tsx`  
+  • Ensure `useShifts()` returns `{ open, requested, booked, history }` via `useState`/`useReducer`.  
+  • Remove any sample arrays in pages; everything reads from `useShifts()`.
+
+4. REFRESH Insights to use useShifts()  
+- Files:  
+  - `src/pages/analytics-page.tsx`  
+  - `src/pages/agency-usage-page.tsx`  
+  - `src/pages/float-pool-analytics-page.tsx`  
+  - (any other insights pages)  
+  • Replace manual data imports with:
+    ```ts
+    const { open, requested, booked, history } = useShifts();
+    // derive your metrics:
+    const totalShifts = history.length;
+    const openCount    = open.length;
+    // etc.
+    ```
+  • Update charts/cards to read from those variables.
+
+5. ENFORCE Role-Based Sidebar  
+- File: `src/components/SidebarNav.tsx`  
+  • Use `const { currentUser } = useAuth();`  
+  • Build your nav list from an array filtered by `currentUser.role`:
+    ```ts
+    const base = ['Dashboard','Calendar','My Requests','Resources','Messaging','Notifications'];
+    const employee = [...base,'PTO','Work Logs'];
+    const contractor = [...base,'Invoices'];
+    const superuser = ['Staff Mgmt','Facilities','Admin','Teams', ...base];
+    const items = currentUser.role === 'employee'
+      ? employee
+      : currentUser.role === 'contractor'
+        ? contractor
+        : superuser;
+    ```
+  • Render `NavLink` for each `items` element.
+
+6. HIDE Unauthorized Content in Pages  
+- In any page/component that shows sensitive data, guard with:
+  ```tsx
+  const { currentUser } = useAuth();
+  if (currentUser.role === 'employee' && isFacilityData) return null;
+Or conditionally show sections.
+
+FILES TO EDIT
+src/components/Layout.tsx
+
+src/components/TopBar.tsx
+
+src/components/SidebarNav.tsx
+
+src/context/ShiftContext.tsx
+
+src/pages/analytics-page.tsx
+
+src/pages/agency-usage-page.tsx
+
+src/pages/float-pool-analytics-page.tsx
+
+(and any other shift- or insights-related pages)
+
+SUCCESS CRITERIA
+TopBar is always present, even when impersonating.
+
+useShifts() is the single source of truth for every shift page.
+
+Sidebars and pages show/hide correctly based on currentUser.role.
+
+Insights metrics update live as shift history changes.
+
+BEGIN!
+
+yaml
+Copy
+Edit

@@ -31,105 +31,68 @@ interface NavItem {
   roles: string[];
 }
 
-const navItems: NavItem[] = [
-  {
-    href: '/dashboard',
-    label: 'Dashboard',
-    icon: Home,
-    roles: ['employee', 'contractor', 'clinician', 'manager', 'admin']
-  },
-  {
-    href: '/calendar',
-    label: 'Open Shifts',
-    icon: Calendar,
-    roles: ['employee', 'contractor', 'clinician']
-  },
-  {
-    href: '/my-requests',
-    label: 'My Requests',
-    icon: FileText,
-    roles: ['employee', 'contractor', 'clinician']
-  },
-  {
-    href: '/time-clock',
-    label: 'Time Clock',
-    icon: Clock,
-    roles: ['employee', 'contractor', 'clinician']
-  },
-  {
-    href: '/my-pto',
-    label: 'PTO',
-    icon: Calendar,
-    roles: ['employee', 'clinician'] // Only employees get PTO
-  },
-  {
-    href: '/invoices',
-    label: 'Invoices',
-    icon: CreditCard,
-    roles: ['contractor'] // Only contractors see invoices
-  },
-  {
-    href: '/resources',
-    label: 'Resources',
-    icon: BookOpen,
-    roles: ['employee', 'contractor', 'clinician']
-  },
-  {
-    href: '/messaging',
-    label: 'Messaging',
-    icon: MessageSquare,
-    roles: ['employee', 'contractor', 'clinician', 'manager', 'admin']
-  },
-  {
-    href: '/job-board',
-    label: 'Job Board',
-    icon: Briefcase,
-    roles: ['employee', 'contractor', 'clinician']
-  },
-  {
-    href: '/my-profile',
-    label: 'My Profile',
-    icon: User,
-    roles: ['employee', 'contractor', 'clinician']
-  },
-  {
-    href: '/credentials',
-    label: 'Credentials',
-    icon: Shield,
-    roles: ['employee', 'contractor', 'clinician']
-  },
-  {
-    href: '/teams',
-    label: 'Teams',
-    icon: Users,
-    roles: ['manager', 'admin']
-  },
-  {
-    href: '/notifications',
-    label: 'Notifications',
-    icon: Bell,
-    roles: ['employee', 'contractor', 'clinician', 'manager', 'admin']
-  },
-  // Manager/Admin only sections
-  {
-    href: '/workforce',
-    label: 'Staff Management',
-    icon: Users,
-    roles: ['manager', 'admin']
-  },
-  {
-    href: '/analytics',
-    label: 'Analytics',
-    icon: BarChart3,
-    roles: ['manager', 'admin']
-  },
-  {
-    href: '/settings',
-    label: 'Settings',
-    icon: Settings,
-    roles: ['manager', 'admin']
-  }
-];
+export function RoleBasedSidebar() {
+  const { user, impersonatedUser } = useAuth();
+  const { unreadCount } = useNotifications();
+  const { getTotalUnreadCount } = useMessages();
+  const [location] = useLocation();
+  
+  const currentUser = impersonatedUser || user;
+  const userRole = currentUser?.role || 'employee';
+  
+  const messageUnreadCount = getTotalUnreadCount();
+  
+  // Define nav items based on role
+  const base = ['Dashboard', 'Calendar', 'My Requests', 'Resources', 'Messaging', 'Notifications'];
+  const employee = [...base, 'PTO', 'Work Logs'];
+  const contractor = [...base, 'Invoices'];
+  const superuser = ['Staff Mgmt', 'Facilities', 'Admin', 'Teams', ...base];
+  
+  const getNavItems = (): NavItem[] => {
+    const roleItems = userRole === 'employee' 
+      ? employee
+      : userRole === 'contractor'
+        ? contractor
+        : userRole === 'super_admin' || userRole === 'admin'
+          ? superuser
+          : base;
+
+    return roleItems.map(item => {
+      switch(item) {
+        case 'Dashboard':
+          return { href: '/dashboard', label: 'Dashboard', icon: Home, roles: [userRole] };
+        case 'Calendar':
+          return { href: '/calendar', label: 'Open Shifts', icon: Calendar, roles: [userRole] };
+        case 'My Requests':
+          return { href: '/my-requests', label: 'My Requests', icon: FileText, roles: [userRole] };
+        case 'Resources':
+          return { href: '/resources', label: 'Resources', icon: BookOpen, roles: [userRole] };
+        case 'Messaging':
+          return { href: '/messaging', label: 'Messaging', icon: MessageSquare, roles: [userRole] };
+        case 'Notifications':
+          return { href: '/notifications', label: 'Notifications', icon: Bell, roles: [userRole] };
+        case 'PTO':
+          return { href: '/my-pto', label: 'PTO', icon: Calendar, roles: [userRole] };
+        case 'Work Logs':
+          return { href: '/time-clock', label: 'Time Clock', icon: Clock, roles: [userRole] };
+        case 'Invoices':
+          return { href: '/invoices', label: 'Invoices', icon: CreditCard, roles: [userRole] };
+        case 'Staff Mgmt':
+          return { href: '/workforce', label: 'Staff Management', icon: Users, roles: [userRole] };
+        case 'Facilities':
+          return { href: '/facility-management', label: 'Facilities', icon: Settings, roles: [userRole] };
+        case 'Admin':
+          return { href: '/analytics', label: 'Analytics', icon: BarChart3, roles: [userRole] };
+        case 'Teams':
+          return { href: '/teams', label: 'Teams', icon: Users, roles: [userRole] };
+        default:
+          return { href: '/dashboard', label: 'Dashboard', icon: Home, roles: [userRole] };
+      }
+    });
+  };
+
+  const navItems = getNavItems();
+  const filteredNavItems = navItems;
 
 export function RoleBasedSidebar() {
   const { user, impersonatedUser } = useAuth();
