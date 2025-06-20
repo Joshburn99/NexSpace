@@ -43,6 +43,9 @@ import {
   Activity,
 } from "lucide-react";
 import { Link } from "wouter";
+import EmployeeDashboardWrapper from "@/pages/employee-dashboard-wrapper";
+import ContractorDashboardWrapper from "@/pages/contractor-dashboard-wrapper";
+import ClinicianDashboardWrapper from "@/pages/clinician-dashboard-wrapper";
 
 // Priority task interfaces
 interface PriorityTask {
@@ -244,20 +247,17 @@ export default function HomePage() {
   
   const currentUser = impersonatedUser || user;
   
-  // Redirect based on user role
+  // Use proper routing instead of window.location to preserve state
   if (currentUser?.role === 'employee') {
-    window.location.href = '/employee-dashboard';
-    return null;
+    return <EmployeeDashboardWrapper />;
   }
   
   if (currentUser?.role === 'contractor') {
-    window.location.href = '/contractor-dashboard';
-    return null;
+    return <ContractorDashboardWrapper />;
   }
   
   if (currentUser?.role === 'clinician') {
-    window.location.href = '/clinician-dashboard';
-    return null;
+    return <ClinicianDashboardWrapper />;
   }
   const [selectedTab, setSelectedTab] = useState("overview");
   const [selectedBuilding, setSelectedBuilding] = useState("main");

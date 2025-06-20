@@ -102,7 +102,7 @@ const navItems: NavItem[] = [
     href: '/teams',
     label: 'Teams',
     icon: Users,
-    roles: ['employee', 'contractor', 'clinician', 'manager', 'admin']
+    roles: ['manager', 'admin']
   },
   {
     href: '/notifications',

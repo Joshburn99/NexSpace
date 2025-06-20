@@ -6,6 +6,7 @@ import interactionPlugin from '@fullcalendar/interaction';
 import { useShifts } from '@/contexts/ShiftContext';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useAuth } from '@/hooks/use-auth';
+import { useStaff } from '@/contexts/StaffContext';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,22 +29,41 @@ import {
 } from "lucide-react";
 
 export default function UnifiedCalendarPage() {
-  const { openShifts, requestedShifts, bookedShifts } = useShifts();
+  const { openShifts, requestedShifts, bookedShifts, requestShift } = useShifts();
   const { totalShiftsToday, openCount, requestedCount, bookedCount } = useDashboard();
   const { user, impersonatedUser } = useAuth();
+  const { getStaffById } = useStaff();
   const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null);
   const [selectedShift, setSelectedShift] = useState<any>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isShiftDetailsOpen, setIsShiftDetailsOpen] = useState(false);
   const [isShiftRequestOpen, setIsShiftRequestOpen] = useState(false);
   const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
+  const [requestNote, setRequestNote] = useState('');
 
   const currentUser = impersonatedUser || user;
   const canPostShifts = currentUser?.role === 'manager' || currentUser?.role === 'admin';
+  
+  // Get current user's specialty from staff data
+  const staffMember = currentUser ? getStaffById(currentUser.id) : null;
+  const userSpecialty = staffMember?.specialty;
+
+  // Filter shifts based on user specialty (for employees/contractors)
+  const filteredOpenShifts = canPostShifts ? openShifts : 
+    openShifts.filter(shift => {
+      const shiftRequirements = shift.requirements || ['General'];
+      return !userSpecialty || shiftRequirements.includes(userSpecialty) || shiftRequirements.includes('General');
+    });
+
+  const filteredRequestedShifts = canPostShifts ? requestedShifts :
+    requestedShifts.filter(shift => shift.requestedBy === currentUser?.id);
+
+  const filteredBookedShifts = canPostShifts ? bookedShifts :
+    bookedShifts.filter(shift => shift.assignedTo === currentUser?.id);
 
   // Convert shifts to FullCalendar events with better visuals
   const events = [
-    ...openShifts.map(shift => ({
+    ...filteredOpenShifts.map(shift => ({
       id: `open-${shift.id}`,
       title: `🟦 ${shift.title}`,
       start: `${shift.date}T${shift.startTime || '07:00'}`,

@@ -9,6 +9,7 @@ export interface StaffMember {
   role: string;
   phone?: string;
   department?: string;
+  specialty?: string;
   compliant: boolean;
   activeCredentials: number;
   expiringCredentials: number;
@@ -28,7 +29,7 @@ const StaffContext = createContext<StaffContextType | null>(null);
 
 export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
-  // Sample staff data for impersonation system
+  // Sample staff data for impersonation system with specialties
   const sampleStaff: StaffMember[] = [
     {
       id: 1,
@@ -38,6 +39,7 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       role: 'employee',
       phone: '555-0101',
       department: 'ICU',
+      specialty: 'RN',
       compliant: true,
       activeCredentials: 5,
       expiringCredentials: 0,
@@ -50,6 +52,7 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       role: 'contractor',
       phone: '555-0202',
       department: 'Emergency',
+      specialty: 'LPN',
       compliant: true,
       activeCredentials: 4,
       expiringCredentials: 1,
@@ -62,6 +65,7 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       role: 'clinician',
       phone: '555-0303',
       department: 'Med/Surg',
+      specialty: 'CNA',
       compliant: true,
       activeCredentials: 6,
       expiringCredentials: 0,
