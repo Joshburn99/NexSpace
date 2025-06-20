@@ -74,15 +74,14 @@ export const MessagingProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   const getMessagesForUser = (userId: number): Message[] => {
     return messages.filter(msg => {
-      // Include messages sent by user or addressed to user
-      if (msg.senderId === userId || msg.recipientId === userId) return true;
+      // Include messages sent by user
+      if (msg.senderId === userId) return true;
       
-      // For messages to NexSpace Team (recipientId 999), show in all superuser inboxes
-      if (msg.recipientId === 999) {
-        // Check if current user is a superuser by checking common superuser IDs
-        // In a real app, this would check the user's role
-        return userId === 3 || userId === 999; // Assuming user 3 is a superuser
-      }
+      // Include messages addressed to user
+      if (msg.recipientId === userId) return true;
+      
+      // For messages to NexSpace Team (recipientId 999), show in superuser inboxes (user 3)
+      if (msg.recipientId === 999 && userId === 3) return true;
       
       return false;
     }).sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
@@ -94,8 +93,8 @@ export const MessagingProvider: React.FC<{ children: ReactNode }> = ({ children 
         // Count messages directly addressed to user
         if (msg.recipientId === userId) return true;
         
-        // Count NexSpace Team messages for superusers
-        if (msg.recipientId === 999 && (userId === 3 || userId === 999)) return true;
+        // Count NexSpace Team messages for superuser (user 3)
+        if (msg.recipientId === 999 && userId === 3) return true;
       }
       return false;
     }).length;

@@ -117,6 +117,16 @@ export default function EnhancedMessagingPage() {
 
   const userMessages = user ? getMessagesForUser(user.id) : [];
   const unreadCount = user ? getUnreadCount(user.id) : 0;
+  
+  // Separate inbox and sent messages
+  const inboxMessages = userMessages.filter(msg => {
+    // Inbox contains messages where user is recipient or NexSpace Team messages for superusers
+    if (msg.recipientId === user?.id) return true;
+    if (msg.recipientId === 999 && user?.id === 3) return true;
+    return false;
+  });
+  
+  const sentMessages = userMessages.filter(msg => msg.senderId === user?.id);
 
   const handleSendMessage = () => {
     if (!user || !subject.trim() || !content.trim()) return;
@@ -223,7 +233,7 @@ export default function EnhancedMessagingPage() {
 
   const handlePresetGroupSelection = (groupId: string) => {
     setSelectedPresetGroup(groupId);
-    if (groupId) {
+    if (groupId && groupId !== "custom") {
       const group = presetGroups.find(g => g.id === groupId);
       if (group) {
         setSelectedRecipients(group.getRecipients());
@@ -278,8 +288,7 @@ export default function EnhancedMessagingPage() {
     });
   };
 
-  const inbox = userMessages.filter(msg => msg.recipientId === user?.id);
-  const sent = userMessages.filter(msg => msg.senderId === user?.id);
+
 
   return (
     <div className="p-6 space-y-6">
@@ -322,7 +331,7 @@ export default function EnhancedMessagingPage() {
                   ? "Send a message to the NexSpace support team"
                   : isMassMessage 
                     ? "Send a message to multiple facility staff members"
-                    : "Send a message to facility staff members"
+                    : "Send a message"
                 }
               </DialogDescription>
             </DialogHeader>
@@ -345,7 +354,7 @@ export default function EnhancedMessagingPage() {
                           <SelectValue placeholder="Choose a preset group or select manually..." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Custom Selection</SelectItem>
+                          <SelectItem value="custom">Custom Selection</SelectItem>
                           {presetGroups.map((group) => (
                             <SelectItem key={group.id} value={group.id}>
                               {group.label} - {group.description}
