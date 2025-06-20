@@ -461,13 +461,13 @@ export default function TimeClockPage() {
               <Button 
                 onClick={handleSubmitClockOut}
                 className="flex-1 bg-green-600 hover:bg-green-700"
-                disabled={!clockOutData.clockInTime || !clockOutData.clockOutTime}
+                disabled={!timeValidation.valid}
               >
                 Submit Timesheet
               </Button>
               <Button 
                 variant="outline" 
-                onClick={() => setShowClockOutDialog(false)}
+                onClick={handleCancelClockOut}
                 className="flex-1"
               >
                 Cancel
