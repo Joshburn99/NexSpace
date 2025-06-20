@@ -217,18 +217,16 @@ export default function UnifiedCalendarPage() {
         <CardContent className="p-4">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gray-500 rounded"></div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Open Shifts</span>
+              <div className="w-3 h-3 bg-blue-500 rounded"></div>
+              <span className="text-sm text-gray-600 dark:text-gray-400">🟦 Open Shifts (Click to request)</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-orange-500 rounded"></div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                Requested (Click to assign)
-              </span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">🟨 My Requests</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-green-500 rounded"></div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">Booked</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">🟩 Confirmed Shifts</span>
             </div>
           </div>
         </CardContent>
@@ -244,8 +242,8 @@ export default function UnifiedCalendarPage() {
         </CardHeader>
         <CardContent>
           <FullCalendar
-            plugins={[dayGridPlugin, interactionPlugin]}
-            initialView="dayGridMonth"
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
             events={events}
             eventClick={handleEventClick}
             dateClick={handleDateClick}
@@ -253,8 +251,13 @@ export default function UnifiedCalendarPage() {
             headerToolbar={{
               left: 'prev,next today',
               center: 'title',
-              right: 'dayGridMonth,dayGridWeek'
+              right: 'timeGridWeek,dayGridMonth'
             }}
+            slotMinTime="06:00:00"
+            slotMaxTime="22:00:00"
+            allDaySlot={false}
+            eventDisplay="block"
+            eventMinHeight={50}
             eventClassNames={(arg) => {
               const type = arg.event.extendedProps.type;
               return [
@@ -293,6 +296,89 @@ export default function UnifiedCalendarPage() {
           setSelectedDate(null);
         }}
       />
+
+      {/* Shift Request Modal for Workers */}
+      <Dialog open={isShiftRequestOpen} onOpenChange={setIsShiftRequestOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-blue-600" />
+              Request Shift
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedShift && (
+            <div className="space-y-4">
+              <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <h3 className="font-semibold text-blue-900 mb-2">{selectedShift.title}</h3>
+                
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-blue-600" />
+                    <span>{selectedShift.date}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-blue-600" />
+                    <span>{selectedShift.startTime || '7:00 AM'} - {selectedShift.endTime || '7:00 PM'}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4 text-blue-600" />
+                    <span>{selectedShift.department}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4 text-green-600" />
+                    <span className="font-semibold text-green-700">${selectedShift.hourlyRate || 35}/hr</span>
+                  </div>
+                </div>
+
+                {selectedShift.requirements && selectedShift.requirements.length > 0 && (
+                  <div className="mt-3">
+                    <p className="text-xs text-gray-600 mb-1">Requirements:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedShift.requirements.map((req: string, index: number) => (
+                        <Badge key={index} variant="secondary" className="text-xs">
+                          {req}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <Label htmlFor="request-note">Note (Optional)</Label>
+                  <Textarea
+                    id="request-note"
+                    placeholder="Add any relevant information about your availability or qualifications..."
+                    className="resize-none"
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <Button
+                  onClick={() => {
+                    // Handle shift request submission
+                    setIsShiftRequestOpen(false);
+                  }}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700"
+                >
+                  Request This Shift
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsShiftRequestOpen(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
