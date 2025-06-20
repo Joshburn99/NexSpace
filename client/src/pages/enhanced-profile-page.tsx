@@ -52,10 +52,26 @@ export default function EnhancedProfilePage() {
   }, [staffMember]);
 
   const handleSaveProfile = async () => {
-    if (!staffMember) return;
+    if (!staffMember || !user) return;
 
     try {
-      await updateStaffMember(staffMember.id, editedProfile);
+      // Create updated staff member object
+      const updatedStaffMember = {
+        ...staffMember,
+        ...editedProfile
+      };
+      
+      // Update StaffContext (single source of truth)
+      updateStaff(updatedStaffMember);
+      
+      // Update user authentication state to match
+      const updatedUser = {
+        ...user,
+        firstName: editedProfile.firstName,
+        lastName: editedProfile.lastName,
+        email: editedProfile.email
+      };
+      
       setIsEditing(false);
     } catch (error) {
       console.error('Failed to update profile:', error);

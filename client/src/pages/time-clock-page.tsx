@@ -22,6 +22,51 @@ export default function TimeClockPage() {
   const currentUserEntry = activeUsers.find(
     (entry) => entry.userName.includes(user?.firstName || "")
   );
+  
+  // Helper functions for missing properties
+  const getClockStatus = (entry: any) => {
+    if (!entry) return "clocked_out";
+    if (entry.action === "in" || entry.action === "break_end") return "clocked_in";
+    if (entry.action === "break_start") return "on_break";
+    return "clocked_out";
+  };
+
+  const getClockInTime = (entry: any) => {
+    if (!entry) return null;
+    const entries = timeClockData.filter(e => e.userName === entry.userName);
+    const lastClockIn = entries.find(e => e.action === "in");
+    return lastClockIn ? new Date(lastClockIn.date + " " + lastClockIn.time) : null;
+  };
+
+  const getTotalHours = (entry: any) => {
+    if (!entry) return 0;
+    // Calculate hours based on time entries
+    const entries = timeClockData.filter(e => e.userName === entry.userName);
+    let totalMinutes = 0;
+    for (let i = 0; i < entries.length - 1; i += 2) {
+      if (entries[i].action === "in" && entries[i + 1]?.action === "out") {
+        const start = new Date(entries[i].date + " " + entries[i].time);
+        const end = new Date(entries[i + 1].date + " " + entries[i + 1].time);
+        totalMinutes += (end.getTime() - start.getTime()) / (1000 * 60);
+      }
+    }
+    return Math.round((totalMinutes / 60) * 100) / 100;
+  };
+
+  const getBreakDuration = (entry: any) => {
+    if (!entry) return 0;
+    // Calculate break duration
+    const entries = timeClockData.filter(e => e.userName === entry.userName);
+    let breakMinutes = 0;
+    for (let i = 0; i < entries.length - 1; i++) {
+      if (entries[i].action === "break_start" && entries[i + 1]?.action === "break_end") {
+        const start = new Date(entries[i].date + " " + entries[i].time);
+        const end = new Date(entries[i + 1].date + " " + entries[i + 1].time);
+        breakMinutes += (end.getTime() - start.getTime()) / (1000 * 60);
+      }
+    }
+    return Math.round(breakMinutes);
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -134,21 +179,21 @@ export default function TimeClockPage() {
                 </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{user?.role}</p>
                 {currentUserEntry && (
-                  <Badge className={getStatusColor(currentUserEntry.status)}>
-                    {currentUserEntry.status.replace("_", " ").toUpperCase()}
+                  <Badge className={getStatusColor(getClockStatus(currentUserEntry))}>
+                    {getClockStatus(currentUserEntry).replace("_", " ").toUpperCase()}
                   </Badge>
                 )}
               </div>
             </div>
             <div className="flex gap-2">
-              {!currentUserEntry || currentUserEntry.status === "clocked_out" ? (
+              {!currentUserEntry || getClockStatus(currentUserEntry) === "clocked_out" ? (
                 <Button onClick={handleClockIn} className="bg-green-600 hover:bg-green-700">
                   <Play className="h-4 w-4 mr-2" />
                   Clock In
                 </Button>
               ) : (
                 <>
-                  {currentUserEntry.status === "clocked_in" ? (
+                  {getClockStatus(currentUserEntry) === "clocked_in" ? (
                     <>
                       <Button onClick={handleStartBreak} variant="outline">
                         Start Break
