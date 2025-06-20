@@ -43,8 +43,8 @@ export default function PTOPage() {
   const [reason, setReason] = useState("");
   const [isEmergency, setIsEmergency] = useState(false);
 
-  const userBalance = user ? getEmployeeBalance(parseInt(user.id)) : null;
-  const userRequests = user ? getEmployeeRequests(parseInt(user.id)) : [];
+  const userBalance = user ? getEmployeeBalance(user.id.toString()) : null;
+  const userRequests = user ? getEmployeeRequests(user.id.toString()) : [];
   const pendingRequests = getPendingRequests();
   const isManager = user?.role === 'manager' || user?.role === 'admin';
 
@@ -62,7 +62,7 @@ export default function PTOPage() {
     const totalDays = calculateDays(startDate, endDate);
     
     submitPTORequest({
-      employeeId: parseInt(user.id),
+      employeeId: user.id.toString(),
       employeeName: `${user.firstName} ${user.lastName}`,
       requestType: requestType as any,
       startDate,

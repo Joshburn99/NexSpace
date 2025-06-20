@@ -97,6 +97,7 @@ function Router() {
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
       <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />
       <ProtectedRoute path="/profile" component={SettingsPage} />
+      <ProtectedRoute path="/my-profile" component={EnhancedProfilePage} />
       <ProtectedRoute path="/teams" component={EnhancedStaffPage} />
       <ProtectedRoute path="/my-requests" component={ShiftRequestsPage} />
       <ProtectedRoute path="/resources" component={CredentialsPage} />
@@ -134,26 +135,32 @@ function App() {
               <StaffProvider>
                 <TeamProvider>
                   <MessageProvider>
-                    <EnhancedCredentialProvider>
-                      <JobProvider>
-                        <ProfileProvider>
-                          <CredentialsProvider>
-                            <InsightsProvider>
-                              <InvoiceProvider>
-                                <DashboardProvider>
-                                  <TooltipProvider>
-                                    <Toaster />
-                                    <Layout>
-                                      <Router />
-                                    </Layout>
-                                  </TooltipProvider>
-                                </DashboardProvider>
-                              </InvoiceProvider>
-                            </InsightsProvider>
-                          </CredentialsProvider>
-                        </ProfileProvider>
-                      </JobProvider>
-                    </EnhancedCredentialProvider>
+                    <MessagingProvider>
+                      <EnhancedCredentialProvider>
+                        <CredentialVerificationProvider>
+                          <PTOProvider>
+                            <JobProvider>
+                              <ProfileProvider>
+                                <CredentialsProvider>
+                                  <InsightsProvider>
+                                    <InvoiceProvider>
+                                            <DashboardProvider>
+                                        <TooltipProvider>
+                                          <Toaster />
+                                          <Layout>
+                                            <Router />
+                                          </Layout>
+                                        </TooltipProvider>
+                                      </DashboardProvider>
+                                    </InvoiceProvider>
+                                  </InsightsProvider>
+                                </CredentialsProvider>
+                              </ProfileProvider>
+                            </JobProvider>
+                          </PTOProvider>
+                        </CredentialVerificationProvider>
+                      </EnhancedCredentialProvider>
+                    </MessagingProvider>
                   </MessageProvider>
                 </TeamProvider>
               </StaffProvider>

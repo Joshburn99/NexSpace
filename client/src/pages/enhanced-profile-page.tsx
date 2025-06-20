@@ -37,8 +37,8 @@ export default function EnhancedProfilePage() {
     lastName: ''
   });
 
-  const staffMember = user ? getStaffById(parseInt(user.id)) : null;
-  const verifiedCredentials = user ? getVerifiedCredentials(parseInt(user.id)) : [];
+  const staffMember = user ? getStaffById(user.id.toString()) : null;
+  const verifiedCredentials = user ? getVerifiedCredentials(user.id.toString()) : [];
 
   useEffect(() => {
     if (staffMember) {
