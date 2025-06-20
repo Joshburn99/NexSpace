@@ -46,14 +46,14 @@ export default function EnhancedMessagingPage() {
   const [priority, setPriority] = useState<string>("normal");
   const [category, setCategory] = useState<string>("general");
 
-  const userMessages = user ? getMessagesForUser(parseInt(user.id)) : [];
-  const unreadCount = user ? getUnreadCount(parseInt(user.id)) : 0;
+  const userMessages = user ? getMessagesForUser(user.id) : [];
+  const unreadCount = user ? getUnreadCount(user.id) : 0;
 
   const handleSendMessage = () => {
     if (!user || !subject.trim() || !content.trim()) return;
 
     sendMessage({
-      senderId: parseInt(user.id),
+      senderId: user.id,
       senderName: `${user.firstName} ${user.lastName}`,
       recipientId: 999, // NexSpace Team superuser
       recipientName: "NexSpace Team",
@@ -73,7 +73,7 @@ export default function EnhancedMessagingPage() {
 
   const handleMessageClick = (message: any) => {
     setSelectedMessage(message);
-    if (!message.isRead && message.recipientId === parseInt(user?.id || "0")) {
+    if (!message.isRead && message.recipientId === (user?.id || 0)) {
       markAsRead(message.id);
     }
   };
@@ -116,8 +116,8 @@ export default function EnhancedMessagingPage() {
     });
   };
 
-  const inbox = userMessages.filter(msg => msg.recipientId === parseInt(user?.id || "0"));
-  const sent = userMessages.filter(msg => msg.senderId === parseInt(user?.id || "0"));
+  const inbox = userMessages.filter(msg => msg.recipientId === user?.id);
+  const sent = userMessages.filter(msg => msg.senderId === user?.id);
 
   return (
     <div className="p-6 space-y-6">
