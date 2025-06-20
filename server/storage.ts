@@ -1224,7 +1224,7 @@ export class DatabaseStorage implements IStorage {
         recordsProcessed: 0,
         recordsSucceeded: 0,
         recordsFailed: 1,
-        errorDetails: { error: (error as Error).toString() },
+        errorDetails: { error: error instanceof Error ? error.message : String(error) },
         startedAt: startTime,
         completedAt: new Date(),
         createdBy: 1, // System user
