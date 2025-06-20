@@ -342,55 +342,88 @@ const sampleBlockShifts: BlockShift[] = [
 
 export function ShiftProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const [shifts, setShifts] = useState<Shift[]>([]);
+  const [open, setOpen] = useState<Shift[]>([]);
+  const [requested, setRequested] = useState<Shift[]>([]);
+  const [booked, setBooked] = useState<Shift[]>([]);
+  const [history, setHistory] = useState<Shift[]>([]);
   const [blockShifts, setBlockShifts] = useState<BlockShift[]>([]);
-  const [shiftHistory, setShiftHistory] = useState<Shift[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load shifts and history on mount and when user changes
+  // Load all shift categories when user changes
   useEffect(() => {
     if (user) {
-      refreshShifts();
-      fetchShiftHistory(user.id);
+      loadAllShifts();
     }
   }, [user]);
 
-  // Computed properties for different shift categories
-  const openShifts = shifts.filter((shift) => shift.status === "open");
-  const requestedShifts = shifts.filter((shift) => shift.status === "requested");
-  const bookedShifts = shifts.filter(
-    (shift) => shift.status === "assigned" || shift.status === "in_progress"
-  );
-  const completedShifts = shiftHistory.filter((shift) => shift.status === "completed");
-  
-  // Aliased properties for the standardized API
-  const open = openShifts;
-  const requested = requestedShifts;
-  const booked = bookedShifts;
-  const history = shiftHistory;
-
-  const refreshShifts = async () => {
+  const loadAllShifts = async () => {
     if (!user) return;
     
     setIsLoading(true);
     setError(null);
+    
     try {
-      const response = await fetch('/api/shifts', {
-        credentials: 'include'
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setShifts(data);
+      // Fetch all shift categories in parallel
+      const [openResponse, requestedResponse, bookedResponse, historyResponse] = await Promise.all([
+        fetch('/api/shifts?status=open', { credentials: 'include' }),
+        fetch('/api/shifts?status=requested', { credentials: 'include' }),
+        fetch('/api/shifts?status=assigned,in_progress', { credentials: 'include' }),
+        fetch(`/api/shifts/history/${user.id}`, { credentials: 'include' })
+      ]);
+
+      if (openResponse.ok) {
+        const openData = await openResponse.json();
+        setOpen(openData);
       } else {
-        setShifts(sampleShifts);
+        // Fallback to sample data for development
+        setOpen(sampleShifts.filter(s => s.status === 'open'));
       }
-    } catch (err) {
-      setError("Failed to refresh shifts");
-      setShifts(sampleShifts);
+
+      if (requestedResponse.ok) {
+        const requestedData = await requestedResponse.json();
+        setRequested(requestedData);
+      } else {
+        setRequested(sampleShifts.filter(s => s.status === 'requested'));
+      }
+
+      if (bookedResponse.ok) {
+        const bookedData = await bookedResponse.json();
+        setBooked(bookedData);
+      } else {
+        setBooked(sampleShifts.filter(s => s.status === 'assigned' || s.status === 'in_progress'));
+      }
+
+      if (historyResponse.ok) {
+        const historyData = await historyResponse.json();
+        setHistory(historyData);
+      } else {
+        setHistory(sampleShifts.filter(s => s.status === 'completed'));
+      }
+
+    } catch (error) {
+      console.error('Failed to load shifts:', error);
+      setError('Failed to load shifts');
+      
+      // Fallback to sample data
+      setOpen(sampleShifts.filter(s => s.status === 'open'));
+      setRequested(sampleShifts.filter(s => s.status === 'requested'));
+      setBooked(sampleShifts.filter(s => s.status === 'assigned' || s.status === 'in_progress'));
+      setHistory(sampleShifts.filter(s => s.status === 'completed'));
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Legacy computed properties for backward compatibility
+  const shifts = [...open, ...requested, ...booked, ...history];
+  const openShifts = open;
+  const requestedShifts = requested;
+  const bookedShifts = booked;
+  const completedShifts = history.filter((shift) => shift.status === "completed");
+
+  const refreshShifts = async () => {
+    await loadAllShifts();
   };
 
   const fetchShiftHistory = async (userId: number) => {
@@ -402,13 +435,13 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
       });
       if (response.ok) {
         const data = await response.json();
-        setShiftHistory(data);
+        setHistory(data);
       } else {
-        setShiftHistory(sampleShifts.filter(s => s.status === "completed"));
+        setHistory(sampleShifts.filter(s => s.status === "completed"));
       }
     } catch (err) {
       console.error("Failed to fetch shift history:", err);
-      setShiftHistory(sampleShifts.filter(s => s.status === "completed"));
+      setHistory(sampleShifts.filter(s => s.status === "completed"));
     }
   };
 
@@ -475,19 +508,22 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const data = await response.json();
         
-        // Update local state based on API response
-        if (data.autoAssigned) {
-          setShifts(prev => prev.map(s => 
-            s.id === shiftId ? { ...s, status: 'assigned' as ShiftStatus } : s
-          ));
-        } else {
-          setShifts(prev => prev.map(s => 
-            s.id === shiftId ? { ...s, status: 'requested' as ShiftStatus } : s
-          ));
+        // Move shift from open to requested
+        const shiftToMove = open.find(s => s.id === shiftId);
+        if (shiftToMove) {
+          setOpen(prev => prev.filter(s => s.id !== shiftId));
+          
+          if (data.autoAssigned) {
+            // Auto-assigned, move to booked
+            setBooked(prev => [...prev, data.assignedShift]);
+          } else {
+            // Move to requested
+            setRequested(prev => [...prev, data.requestedShift]);
+          }
+          
+          // Add to history
+          setHistory(prev => [...prev, data.historyEntry]);
         }
-        
-        // Refresh shift history to include the new request
-        await fetchShiftHistory(user.id);
       } else {
         throw new Error('Failed to request shift');
       }
@@ -508,13 +544,13 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const data = await response.json();
         
-        // Update local state
-        setShifts(prev => prev.map(s => 
-          s.id === shiftId ? { ...s, status: 'assigned' as ShiftStatus, assignedStaffIds: [userId] } : s
-        ));
-        
-        // Add to history
-        setShiftHistory(prev => [...prev, data.historyEntry]);
+        // Move shift from requested to booked
+        const shiftToMove = requested.find(s => s.id === shiftId);
+        if (shiftToMove) {
+          setRequested(prev => prev.filter(s => s.id !== shiftId));
+          setBooked(prev => [...prev, data.assignedShift]);
+          setHistory(prev => [...prev, data.historyEntry]);
+        }
       } else {
         throw new Error('Failed to assign shift');
       }

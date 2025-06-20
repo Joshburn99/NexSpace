@@ -1,0 +1,162 @@
+# CONTEXT
+We need to overhaul the employee “My Schedule” and messaging so that:
+1. **Schedule** shows upcoming AND past shifts (history) from ShiftContext.
+2. **Requested** shifts stay on the calendar with a “Requested” badge until approved or auto-assigned.
+3. **Auto-assign** criteria are applied immediately on request.
+4. Every shift action (request, assign, complete) is **persisted** to a shift_history endpoint.
+5. **Messaging** is fully persisted via `/api/messages` (no in-memory bugs).
+
+# TASKS
+
+## 1. Server: Shift & History APIs
+- **File:** `server/routes.ts`
+- Add these routes:
+  ```ts
+  // Request a shift
+  router.post('/api/shifts/request', async (req, res) => {
+    const { shiftId, userId } = req.body;
+    // 1) Insert into ShiftRequests table
+    // 2) Check auto-assign criteria; if met, assign immediately
+    // 3) Insert into ShiftHistory table (action: 'requested' or 'assigned')
+    // 4) Return { requestedShift, autoAssigned, assignedShift?, historyEntry }
+  });
+
+  // Assign a shift (superuser or auto)
+  router.post('/api/shifts/assign', async (req, res) => {
+    const { shiftId, userId } = req.body;
+    // 1) Update Shifts table
+    // 2) Insert into ShiftHistory (action: 'assigned')
+    // 3) Return { assignedShift, historyEntry }
+  });
+
+  // Fetch a user’s shift history
+  router.get('/api/shifts/history/:userId', async (req, res) => {
+    const { userId } = req.params;
+    // SELECT * from ShiftHistory where userId = ...
+    res.json(historyRows);
+  });
+2. ShiftContext: Central Source of Truth
+File: src/context/ShiftContext.tsx
+
+Modify to:
+
+ts
+Copy
+Edit
+import { useAuth } from '@/hooks/use-auth';
+import api from '@/lib/api';
+
+export const useShifts = () => {
+  const { currentUser } = useAuth();
+  const [open, setOpen] = useState<Shift[]>([]);
+  const [requested, setRequested] = useState<Shift[]>([]);
+  const [booked, setBooked] = useState<Shift[]>([]);
+  const [history, setHistory] = useState<Shift[]>([]);
+
+  useEffect(() => {
+    // fetch all three sets
+    api.get('/api/shifts?facilityIds=...').then(r=>setOpen(r.data.open));
+    api.get('/api/shifts?status=requested').then(r=>setRequested(r.data));
+    api.get('/api/shifts?status=booked').then(r=>setBooked(r.data));
+    api.get(`/api/shifts/history/${currentUser.id}`).then(r=>setHistory(r.data));
+  }, [currentUser.id]);
+
+  const requestShift = async (shiftId:string) => {
+    const { data } = await api.post('/api/shifts/request', {
+      shiftId, userId: currentUser.id
+    });
+    setRequested(r=>[...r, data.requestedShift]);
+    if (data.autoAssigned) {
+      setBooked(b=>[...b, data.assignedShift]);
+      setRequested(r=>r.filter(s=>s.id!==shiftId));
+    }
+    setHistory(h=>[...h, data.historyEntry]);
+  };
+
+  const assignShift = async (shiftId:string, userId:string) => {
+    const { data } = await api.post('/api/shifts/assign', { shiftId, userId });
+    setBooked(b=>[...b, data.assignedShift]);
+    setRequested(r=>r.filter(s=>s.id!==shiftId));
+    setHistory(h=>[...h, data.historyEntry]);
+  };
+
+  return { open, requested, booked, history, requestShift, assignShift };
+};
+3. My Schedule Page
+File: src/pages/MySchedulePage.tsx
+
+Paste:
+
+tsx
+Copy
+Edit
+import React from 'react';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import { useShifts } from '@/context/ShiftContext';
+
+export default function MySchedulePage() {
+  const { open, requested, booked, history, requestShift } = useShifts();
+
+  const events = [
+    ...open.map(s=>({ id:s.id, title:`Open: ${s.facility}`, date:s.date, color:'gray' })),
+    ...requested.map(s=>({ id:s.id, title:`Requested`, date:s.date, color:'orange' })),
+    ...booked.map(s=>({ id:s.id, title:`Booked`, date:s.date, color:'green' })),
+    ...history.map(s=>({
+      id:s.id,
+      title:`Past: ${s.facility}`,
+      date:s.date,
+      color:'blue'
+    }))
+  ];
+
+  return (
+    <div className="p-6">
+      <h2 className="text-2xl font-semibold mb-4">My Schedule</h2>
+      <FullCalendar
+        plugins={[dayGridPlugin]}
+        initialView="dayGridMonth"
+        events={events}
+        eventClick={info => {
+          if (info.event.title === 'Requested') {
+            requestShift(info.event.id);
+          }
+        }}
+      />
+    </div>
+  );
+}
+4. Messaging Persistence Fix
+File: src/context/MessageContext.tsx
+
+Ensure you replace any in-memory logic with:
+
+ts
+Copy
+Edit
+const sendMessage = async (msg) => {
+  await api.post('/api/messages', msg);
+};
+const fetchThread = async (threadId) => {
+  const { data } = await api.get(`/api/messages/${threadId}`);
+  setMessages(data);
+};
+FILES TO EDIT
+server/routes.ts
+
+src/context/ShiftContext.tsx
+
+src/pages/MySchedulePage.tsx
+
+src/context/MessageContext.tsx
+
+SUCCESS CRITERIA
+My Schedule shows upcoming + past shifts with correct colors.
+
+Requested shifts stay visible until processed, and auto-assign fires when criteria met.
+
+Shift history is fetched from the server and logged each time.
+
+Messaging bugs gone—every message persists to the API and retrieves correctly.
+
+BEGIN!

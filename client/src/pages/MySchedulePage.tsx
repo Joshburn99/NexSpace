@@ -1,13 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar, Clock, MapPin, DollarSign, User, AlertCircle } from "lucide-react";
 import { useShifts, type Shift } from "@/contexts/ShiftContext";
 import { useAuth } from "@/hooks/use-auth";
@@ -18,78 +15,38 @@ export default function MySchedulePage() {
   const { open, requested, booked, history, requestShift, isLoading } = useShifts();
   const { toast } = useToast();
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
-  const [activeView, setActiveView] = useState('dayGridMonth');
 
   // Create calendar events from all shift categories
-  const calendarEvents = useMemo(() => {
-    const events = [
-      // Open shifts - available to request
-      ...open.map(shift => ({
-        id: `open-${shift.id}`,
-        title: `Available: ${shift.title}`,
-        date: shift.date,
-        start: `${shift.date}T${shift.startTime}`,
-        end: `${shift.date}T${shift.endTime}`,
-        backgroundColor: '#6b7280',
-        borderColor: '#6b7280',
-        textColor: '#ffffff',
-        extendedProps: {
-          shift,
-          status: 'open',
-          canRequest: true
-        }
-      })),
-      // Requested shifts - pending approval
-      ...requested.map(shift => ({
-        id: `requested-${shift.id}`,
-        title: `Requested: ${shift.title}`,
-        date: shift.date,
-        start: `${shift.date}T${shift.startTime}`,
-        end: `${shift.date}T${shift.endTime}`,
-        backgroundColor: '#f59e0b',
-        borderColor: '#f59e0b',
-        textColor: '#ffffff',
-        extendedProps: {
-          shift,
-          status: 'requested',
-          canRequest: false
-        }
-      })),
-      // Booked shifts - assigned/confirmed
-      ...booked.map(shift => ({
-        id: `booked-${shift.id}`,
-        title: `Scheduled: ${shift.title}`,
-        date: shift.date,
-        start: `${shift.date}T${shift.startTime}`,
-        end: `${shift.date}T${shift.endTime}`,
-        backgroundColor: '#10b981',
-        borderColor: '#10b981',
-        textColor: '#ffffff',
-        extendedProps: {
-          shift,
-          status: 'booked',
-          canRequest: false
-        }
-      })),
-      // Historical shifts - completed/past
-      ...history.map(shift => ({
-        id: `history-${shift.id}`,
-        title: `Past: ${shift.title}`,
-        date: shift.date,
-        start: `${shift.date}T${shift.startTime}`,
-        end: `${shift.date}T${shift.endTime}`,
-        backgroundColor: '#3b82f6',
-        borderColor: '#3b82f6',
-        textColor: '#ffffff',
-        extendedProps: {
-          shift,
-          status: 'history',
-          canRequest: false
-        }
-      }))
-    ];
-    return events;
-  }, [open, requested, booked, history]);
+  const events = [
+    ...open.map(s => ({ 
+      id: s.id, 
+      title: `Open: ${s.facilityName}`, 
+      date: s.date, 
+      color: 'gray',
+      extendedProps: { shift: s, status: 'open' }
+    })),
+    ...requested.map(s => ({ 
+      id: s.id, 
+      title: `Requested`, 
+      date: s.date, 
+      color: 'orange',
+      extendedProps: { shift: s, status: 'requested' }
+    })),
+    ...booked.map(s => ({ 
+      id: s.id, 
+      title: `Booked`, 
+      date: s.date, 
+      color: 'green',
+      extendedProps: { shift: s, status: 'booked' }
+    })),
+    ...history.map(s => ({
+      id: s.id,
+      title: `Past: ${s.facilityName}`,
+      date: s.date,
+      color: 'blue',
+      extendedProps: { shift: s, status: 'history' }
+    }))
+  ];
 
   const handleEventClick = (info: any) => {
     setSelectedShift(info.event.extendedProps.shift);
