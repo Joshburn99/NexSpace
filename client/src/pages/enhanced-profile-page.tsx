@@ -11,7 +11,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   User, 
   Mail, 
@@ -27,14 +26,13 @@ import {
   Upload,
   FileText,
   Download,
-  Plus,
   Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function EnhancedProfilePage() {
   const { user } = useAuth();
-  const { getStaffById, updateStaff, updateStaffMember } = useStaff();
+  const { getStaffById, updateStaff } = useStaff();
   const { getVerifiedCredentials } = useCredentialVerification();
   
   const [isEditing, setIsEditing] = useState(false);
@@ -176,19 +174,13 @@ export default function EnhancedProfilePage() {
     if (!staffMember || !user) return;
 
     try {
-      // Create updated staff member object
       const updatedStaffMember = {
         ...staffMember,
-        ...editedProfile
+        ...editedProfile,
+        hourlyRate: parseFloat(editedProfile.hourlyRate) || staffMember.hourlyRate
       };
       
-      // Update StaffContext (single source of truth)
       updateStaff(updatedStaffMember);
-      
-      // Force re-authentication to sync changes across contexts
-      // This ensures the changes persist everywhere in the app
-      window.location.reload();
-      
       setIsEditing(false);
     } catch (error) {
       console.error('Failed to update profile:', error);
@@ -232,20 +224,18 @@ export default function EnhancedProfilePage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
-
-  if (!user || !staffMember) {
+  if (!staffMember) {
     return (
-      <div className="p-6">
-        <Card>
-          <CardContent className="p-6 text-center">
-            <p className="text-gray-500 dark:text-gray-400">Unable to load profile information</p>
+      <div className="flex items-center justify-center min-h-screen">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <User className="w-12 h-12 text-gray-400 mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+              Profile Not Found
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 text-center">
+              Unable to load your profile information. Please try refreshing the page.
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -257,7 +247,7 @@ export default function EnhancedProfilePage() {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Profile</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your personal information and credentials</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your professional information and job application details</p>
         </div>
         {!isEditing ? (
           <Button onClick={() => setIsEditing(true)} variant="outline">
@@ -321,12 +311,6 @@ export default function EnhancedProfilePage() {
                     <span>${staffMember.hourlyRate || 45}/hour</span>
                   </div>
                 </div>
-                {!isEditing && (
-                  <Button onClick={() => setIsEditing(true)} variant="outline" size="sm">
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </Button>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -444,31 +428,14 @@ export default function EnhancedProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Certifications */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Certifications</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap gap-2">
-                {['ACLS', 'BLS', 'CCRN'].map((cert) => (
-                  <Badge key={cert} variant="outline" className="flex items-center gap-1">
-                    <Award className="w-3 h-3" />
-                    {cert}
-                  </Badge>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Skills */}
+          {/* Skills Preview */}
           <Card>
             <CardHeader>
               <CardTitle>Skills</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {['Critical Care', 'Patient Assessment', 'IV Therapy'].map((skill) => (
+                {(editedProfile.skills.length > 0 ? editedProfile.skills : ['Critical Care', 'Patient Assessment', 'IV Therapy']).map((skill) => (
                   <Badge key={skill} variant="secondary">
                     {skill}
                   </Badge>
@@ -641,7 +608,7 @@ export default function EnhancedProfilePage() {
                     <FileText className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="font-medium">Resume.pdf</p>
-                      <p className="text-sm text-gray-500">Uploaded 2 days ago</p>
+                      <p className="text-sm text-gray-500">Ready for job applications</p>
                     </div>
                   </div>
                   <Button variant="outline" size="sm">
@@ -694,7 +661,7 @@ export default function EnhancedProfilePage() {
                     <FileText className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="font-medium">Cover_Letter.pdf</p>
-                      <p className="text-sm text-gray-500">Uploaded 2 days ago</p>
+                      <p className="text-sm text-gray-500">Ready for job applications</p>
                     </div>
                   </div>
                   <Button variant="outline" size="sm">
