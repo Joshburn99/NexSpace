@@ -44,6 +44,64 @@ export default function EnhancedMessagingPage() {
   const facilityStaff = staff.filter(staffMember => 
     staffMember.id !== user?.id && staffMember.compliant
   );
+
+  // Define preset groups for mass messaging
+  const presetGroups = [
+    { 
+      id: "all_users", 
+      label: "All Users", 
+      description: "Everyone in the system",
+      getRecipients: () => staff.filter(s => s.id !== user?.id)
+    },
+    { 
+      id: "all_employees", 
+      label: "All Employees", 
+      description: "All internal employees",
+      getRecipients: () => staff.filter(s => s.id !== user?.id && (s.role === 'nurse' || s.role === 'cna' || s.role === 'lpn'))
+    },
+    { 
+      id: "all_facility_users", 
+      label: "All Facility Users", 
+      description: "All facility staff members",
+      getRecipients: () => staff.filter(s => s.id !== user?.id && s.compliant)
+    },
+    { 
+      id: "all_contractors", 
+      label: "All Contractors", 
+      description: "All 1099 contractors",
+      getRecipients: () => staff.filter(s => s.id !== user?.id && s.role === 'contractor')
+    },
+    { 
+      id: "all_rns", 
+      label: "All RNs", 
+      description: "All Registered Nurses",
+      getRecipients: () => staff.filter(s => s.id !== user?.id && s.role === 'nurse' && s.specialty?.includes('RN'))
+    },
+    { 
+      id: "all_lpns", 
+      label: "All LPNs", 
+      description: "All Licensed Practical Nurses",
+      getRecipients: () => staff.filter(s => s.id !== user?.id && s.role === 'lpn')
+    },
+    { 
+      id: "all_cnas", 
+      label: "All CNAs", 
+      description: "All Certified Nursing Assistants",
+      getRecipients: () => staff.filter(s => s.id !== user?.id && s.role === 'cna')
+    },
+    { 
+      id: "day_shift", 
+      label: "Day Shift Staff", 
+      description: "Staff working day shifts",
+      getRecipients: () => staff.filter(s => s.id !== user?.id && s.department?.includes('Day'))
+    },
+    { 
+      id: "night_shift", 
+      label: "Night Shift Staff", 
+      description: "Staff working night shifts",
+      getRecipients: () => staff.filter(s => s.id !== user?.id && s.department?.includes('Night'))
+    }
+  ];
   
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [isNexSpaceMessage, setIsNexSpaceMessage] = useState(false);
@@ -55,6 +113,7 @@ export default function EnhancedMessagingPage() {
   const [selectedRecipient, setSelectedRecipient] = useState<any>(null);
   const [selectedRecipients, setSelectedRecipients] = useState<any[]>([]);
   const [isMassMessage, setIsMassMessage] = useState(false);
+  const [selectedPresetGroup, setSelectedPresetGroup] = useState<string>("");
 
   const userMessages = user ? getMessagesForUser(user.id) : [];
   const unreadCount = user ? getUnreadCount(user.id) : 0;
@@ -123,6 +182,11 @@ export default function EnhancedMessagingPage() {
     setSelectedRecipient(null);
     setIsMassMessage(false);
     setSelectedRecipients([]);
+    setSelectedPresetGroup("");
+    setSubject("");
+    setContent("");
+    setPriority("normal");
+    setCategory("general");
     setIsComposeOpen(true);
   };
 
@@ -131,6 +195,11 @@ export default function EnhancedMessagingPage() {
     setSelectedRecipient(null);
     setIsMassMessage(true);
     setSelectedRecipients([]);
+    setSelectedPresetGroup("");
+    setSubject("");
+    setContent("");
+    setPriority("normal");
+    setCategory("general");
     setIsComposeOpen(true);
   };
 
@@ -143,6 +212,18 @@ export default function EnhancedMessagingPage() {
         return [...prev, staffMember];
       }
     });
+  };
+
+  const handlePresetGroupSelection = (groupId: string) => {
+    setSelectedPresetGroup(groupId);
+    if (groupId) {
+      const group = presetGroups.find(g => g.id === groupId);
+      if (group) {
+        setSelectedRecipients(group.getRecipients());
+      }
+    } else {
+      setSelectedRecipients([]);
+    }
   };
 
   const handleMessageClick = (message: any) => {
@@ -249,32 +330,65 @@ export default function EnhancedMessagingPage() {
                     className="bg-gray-50"
                   />
                 ) : isMassMessage ? (
-                  <div className="space-y-2">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      Select recipients ({selectedRecipients.length} selected)
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="presetGroup">Preset Groups</Label>
+                      <Select value={selectedPresetGroup} onValueChange={handlePresetGroupSelection}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose a preset group or select manually..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Custom Selection</SelectItem>
+                          {presetGroups.map((group) => (
+                            <SelectItem key={group.id} value={group.id}>
+                              {group.label} - {group.description}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
-                      {facilityStaff.map((staff) => (
-                        <div
-                          key={staff.id}
-                          className={cn(
-                            "flex items-center p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800",
-                            selectedRecipients.some(r => r.id === staff.id) ? "bg-blue-50 dark:bg-blue-900" : ""
-                          )}
-                          onClick={() => toggleRecipientSelection(staff)}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedRecipients.some(r => r.id === staff.id)}
-                            onChange={() => toggleRecipientSelection(staff)}
-                            className="mr-3"
-                          />
-                          <div className="flex-1">
-                            <div className="font-medium">{staff.firstName} {staff.lastName}</div>
-                            <div className="text-sm text-gray-500">{staff.role} - {staff.department}</div>
-                          </div>
+                    
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                          Recipients ({selectedRecipients.length} selected)
                         </div>
-                      ))}
+                        {selectedPresetGroup && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedPresetGroup("");
+                              setSelectedRecipients([]);
+                            }}
+                          >
+                            Clear Selection
+                          </Button>
+                        )}
+                      </div>
+                      <div className="max-h-40 overflow-y-auto border rounded-md p-2 space-y-1">
+                        {facilityStaff.map((staff) => (
+                          <div
+                            key={staff.id}
+                            className={cn(
+                              "flex items-center p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800",
+                              selectedRecipients.some(r => r.id === staff.id) ? "bg-blue-50 dark:bg-blue-900" : ""
+                            )}
+                            onClick={() => toggleRecipientSelection(staff)}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedRecipients.some(r => r.id === staff.id)}
+                              onChange={() => toggleRecipientSelection(staff)}
+                              className="mr-3"
+                            />
+                            <div className="flex-1">
+                              <div className="font-medium">{staff.firstName} {staff.lastName}</div>
+                              <div className="text-sm text-gray-500">{staff.role} - {staff.department}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ) : (
