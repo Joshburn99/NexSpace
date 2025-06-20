@@ -174,13 +174,22 @@ export default function EnhancedProfilePage() {
     if (!staffMember || !user) return;
 
     try {
-      const updatedStaffMember = {
-        ...staffMember,
-        ...editedProfile,
-        hourlyRate: parseFloat(editedProfile.hourlyRate) || staffMember.hourlyRate
+      const updates = {
+        email: editedProfile.email,
+        phone: editedProfile.phone,
+        firstName: editedProfile.firstName,
+        lastName: editedProfile.lastName,
+        bio: editedProfile.bio,
+        location: editedProfile.location,
+        hourlyRate: parseFloat(editedProfile.hourlyRate) || staffMember.hourlyRate || 0,
+        experience: editedProfile.experience,
+        skills: editedProfile.skills,
+        certifications: editedProfile.certifications,
+        linkedIn: editedProfile.linkedIn,
+        portfolio: editedProfile.portfolio
       };
       
-      updateStaff(updatedStaffMember);
+      await updateStaffMember(user.id, updates);
       setIsEditing(false);
     } catch (error) {
       console.error('Failed to update profile:', error);

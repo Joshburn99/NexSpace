@@ -56,14 +56,19 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Mutation for updating staff profiles
   const updateStaffMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: Partial<StaffMember> }) => {
-      const response = await apiRequest(`/api/staff/${id}`, {
+      const response = await fetch(`/api/staff/${id}`, {
         method: 'PATCH',
-        body: JSON.stringify(updates),
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify(updates),
       });
-      return response;
+      
+      if (!response.ok) {
+        throw new Error('Failed to update profile');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       // Invalidate and refetch staff data
