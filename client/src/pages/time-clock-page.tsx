@@ -123,15 +123,9 @@ export default function TimeClockPage() {
       return { valid: false, message: "Clock out time must be after clock in time" };
     }
     
-    // Check if times are within 8 hours of original clock-in time
-    if (currentIn) {
-      const originalStart = new Date(currentIn).getTime();
-      const clockInDiff = Math.abs(adjustedStart - originalStart) / (1000 * 60 * 60);
-      const clockOutDiff = Math.abs(adjustedEnd - originalStart) / (1000 * 60 * 60);
-      
-      if (clockInDiff > 8 || clockOutDiff > 8) {
-        return { valid: false, message: "Time adjustments cannot be more than 8 hours from original clock-in time" };
-      }
+    // Check if the total work session (adjusted times) is within reasonable limits
+    if (totalHours > 12) {
+      return { valid: false, message: "Work sessions cannot exceed 12 hours" };
     }
     
     return { valid: true, message: "" };
@@ -317,25 +311,22 @@ export default function TimeClockPage() {
 
       {/* Clock Out Review Dialog */}
       <Dialog open={showClockOutDialog} onOpenChange={setShowClockOutDialog}>
-        <DialogContent className="sm:max-w-2xl">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Clock className="w-5 h-5" />
               Review & Submit Timesheet
             </DialogTitle>
             <DialogDescription>
-              Review your work session details before submitting. You can adjust times and add notes.
+              Review your work session details before submitting.
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-6">
+          <div className="space-y-4">
             {/* Time Adjustments */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="clockInTime" className="flex items-center gap-2">
-                  <Edit className="w-4 h-4" />
-                  Clock In Time
-                </Label>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="clockInTime" className="text-sm">Clock In Time</Label>
                 <Input
                   id="clockInTime"
                   type="datetime-local"
@@ -344,14 +335,12 @@ export default function TimeClockPage() {
                     ...prev,
                     clockInTime: e.target.value
                   }))}
+                  className="text-sm"
                 />
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="clockOutTime" className="flex items-center gap-2">
-                  <Edit className="w-4 h-4" />
-                  Clock Out Time
-                </Label>
+              <div className="space-y-1">
+                <Label htmlFor="clockOutTime" className="text-sm">Clock Out Time</Label>
                 <Input
                   id="clockOutTime"
                   type="datetime-local"
@@ -360,13 +349,14 @@ export default function TimeClockPage() {
                     ...prev,
                     clockOutTime: e.target.value
                   }))}
+                  className="text-sm"
                 />
               </div>
             </div>
 
             {/* Break Duration */}
-            <div className="space-y-2">
-              <Label htmlFor="breakDuration">Break Duration (minutes)</Label>
+            <div className="space-y-1">
+              <Label htmlFor="breakDuration" className="text-sm">Break Duration (minutes)</Label>
               <Input
                 id="breakDuration"
                 type="number"
@@ -377,7 +367,8 @@ export default function TimeClockPage() {
                   ...prev,
                   breakDuration: parseInt(e.target.value) || 0
                 }))}
-                placeholder="Enter break time in minutes"
+                placeholder="Enter break time"
+                className="text-sm"
               />
             </div>
 
@@ -408,8 +399,8 @@ export default function TimeClockPage() {
             </Card>
 
             {/* Notes Section */}
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes (Optional)</Label>
+            <div className="space-y-1">
+              <Label htmlFor="notes" className="text-sm">Notes (Optional)</Label>
               <Textarea
                 id="notes"
                 value={clockOutData.notes}
@@ -417,65 +408,50 @@ export default function TimeClockPage() {
                   ...prev,
                   notes: e.target.value
                 }))}
-                placeholder="Add any notes about your shift, tasks completed, or issues encountered..."
-                rows={3}
+                placeholder="Add any notes about your shift..."
+                rows={2}
+                className="text-sm"
               />
             </div>
 
-            <Separator />
-
             {/* Supervisor Signature Section */}
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <FileSignature className="w-5 h-5" />
-                <Label className="text-base font-medium">Supervisor Approval (Optional)</Label>
-              </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Supervisor Approval (Optional)</Label>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="supervisorName">Supervisor Name</Label>
-                  <Input
-                    id="supervisorName"
-                    value={clockOutData.supervisorName}
-                    onChange={(e) => setClockOutData(prev => ({
-                      ...prev,
-                      supervisorName: e.target.value
-                    }))}
-                    placeholder="Enter supervisor's full name"
-                  />
-                </div>
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  value={clockOutData.supervisorName}
+                  onChange={(e) => setClockOutData(prev => ({
+                    ...prev,
+                    supervisorName: e.target.value
+                  }))}
+                  placeholder="Supervisor name"
+                  className="text-sm"
+                />
                 
-                <div className="space-y-2">
-                  <Label htmlFor="supervisorSignature">Digital Signature</Label>
-                  <Input
-                    id="supervisorSignature"
-                    value={clockOutData.supervisorSignature}
-                    onChange={(e) => setClockOutData(prev => ({
-                      ...prev,
-                      supervisorSignature: e.target.value
-                    }))}
-                    placeholder="Supervisor types their name to sign"
-                  />
-                </div>
+                <Input
+                  value={clockOutData.supervisorSignature}
+                  onChange={(e) => setClockOutData(prev => ({
+                    ...prev,
+                    supervisorSignature: e.target.value
+                  }))}
+                  placeholder="Digital signature"
+                  className="text-sm"
+                />
               </div>
               
               {clockOutData.supervisorName && clockOutData.supervisorSignature && (
-                <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    ✓ Approved by: {clockOutData.supervisorName}
-                  </p>
-                  <p className="text-xs text-blue-600 dark:text-blue-400">
-                    Signature: {clockOutData.supervisorSignature}
-                  </p>
+                <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded text-xs text-blue-700 dark:text-blue-300">
+                  ✓ Approved by: {clockOutData.supervisorName}
                 </div>
               )}
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-2 pt-2">
               <Button 
                 onClick={handleSubmitClockOut}
-                className="flex-1 bg-green-600 hover:bg-green-700"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-sm"
                 disabled={!timeValidation.valid}
               >
                 Submit Timesheet
@@ -483,7 +459,7 @@ export default function TimeClockPage() {
               <Button 
                 variant="outline" 
                 onClick={handleCancelClockOut}
-                className="flex-1"
+                className="flex-1 text-sm"
               >
                 Cancel
               </Button>
