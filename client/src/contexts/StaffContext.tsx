@@ -1,4 +1,4 @@
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 export interface StaffMember {
@@ -29,6 +29,7 @@ interface StaffContextType {
 const StaffContext = createContext<StaffContextType | null>(null);
 
 export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [staffData, setStaffData] = useState<StaffMember[]>([]);
 
   // Sample staff data for impersonation system with specialties
   const sampleStaff: StaffMember[] = [
@@ -133,26 +134,36 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     },
   ];
 
-  // Use sample staff data
-  const staff: StaffMember[] = sampleStaff;
-
-  const compliantStaff = staff.filter(s => s.compliant);
-  const nonCompliantStaff = staff.filter(s => !s.compliant);
+  const compliantStaff = staffData.filter((s: StaffMember) => s.compliant);
+  const nonCompliantStaff = staffData.filter((s: StaffMember) => !s.compliant);
 
   const getStaffById = (id: number): StaffMember | undefined => {
-    return staff.find(s => s.id === id);
+    return staffData.find((s: StaffMember) => s.id === id);
   };
 
   const getStaffByRole = (role: string): StaffMember[] => {
-    return staff.filter(s => s.role === role);
+    return staffData.filter((s: StaffMember) => s.role === role);
   };
 
+  const updateStaffMember = async (id: number, updates: Partial<StaffMember>): Promise<void> => {
+    setStaffData((prevStaff: StaffMember[]) => 
+      prevStaff.map((member: StaffMember) => 
+        member.id === id ? { ...member, ...updates } : member
+      )
+    );
+  };
+
+  useEffect(() => {
+    setStaffData(sampleStaff);
+  }, []);
+
   const value: StaffContextType = {
-    staff,
+    staff: staffData,
     compliantStaff,
     nonCompliantStaff,
     getStaffById,
     getStaffByRole,
+    updateStaffMember,
     isLoading: false,
   };
 
