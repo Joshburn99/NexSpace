@@ -22,6 +22,7 @@ interface StaffContextType {
   nonCompliantStaff: StaffMember[];
   getStaffById: (id: number) => StaffMember | undefined;
   getStaffByRole: (role: string) => StaffMember[];
+  updateStaffMember: (id: number, updates: Partial<StaffMember>) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -41,8 +42,8 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       department: 'ICU',
       specialty: 'Registered Nurse',
       compliant: true,
-      activeCredentials: 5,
-      expiringCredentials: 0,
+      activeCredentials: 8,
+      expiringCredentials: 1,
     },
     {
       id: 2,
