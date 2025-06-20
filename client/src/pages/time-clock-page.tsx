@@ -28,6 +28,7 @@ export default function TimeClockPage() {
   const { currentIn, logs, clockIn, clockOut } = useTimeClocks();
   const { user: currentUser } = useAuth();
   const [elapsed, setElapsed] = useState(0);
+  const [isClockingOut, setIsClockingOut] = useState(false);
   const [showClockOutDialog, setShowClockOutDialog] = useState(false);
   const [clockOutData, setClockOutData] = useState({
     clockInTime: '',
@@ -40,17 +41,20 @@ export default function TimeClockPage() {
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
-    if (currentIn) {
+    if (currentIn && !isClockingOut) {
       const start = new Date(currentIn).getTime();
       timer = setInterval(() => setElapsed(Date.now() - start), 1000);
-    } else {
+    } else if (!currentIn) {
       setElapsed(0);
     }
     return () => clearInterval(timer);
-  }, [currentIn]);
+  }, [currentIn, isClockingOut]);
 
   const handleClockOut = () => {
     if (!currentIn) return;
+    
+    // Stop the elapsed time counter immediately
+    setIsClockingOut(true);
     
     // Initialize clock out dialog with current times
     const now = new Date();
@@ -71,6 +75,9 @@ export default function TimeClockPage() {
   const handleSubmitClockOut = () => {
     if (!clockOutData.clockInTime || !clockOutData.clockOutTime) return;
     
+    const validation = validateTimeAdjustments();
+    if (!validation.valid) return;
+    
     // Submit the work log with all the enhanced data
     clockOut({
       clockInTime: clockOutData.clockInTime,
@@ -82,6 +89,12 @@ export default function TimeClockPage() {
     });
     
     setShowClockOutDialog(false);
+    setIsClockingOut(false);
+  };
+
+  const handleCancelClockOut = () => {
+    setShowClockOutDialog(false);
+    setIsClockingOut(false);
   };
 
   const formatTimeForInput = (dateString: string) => {
@@ -98,6 +111,26 @@ export default function TimeClockPage() {
     
     return workHours * currentRate;
   };
+
+  const validateTimeAdjustments = () => {
+    if (!clockOutData.clockInTime || !clockOutData.clockOutTime) return { valid: false, message: "Please set both clock in and clock out times" };
+    
+    const start = new Date(clockOutData.clockInTime).getTime();
+    const end = new Date(clockOutData.clockOutTime).getTime();
+    const totalHours = (end - start) / (1000 * 60 * 60);
+    
+    if (totalHours > 8) {
+      return { valid: false, message: "Work sessions cannot exceed 8 hours for security purposes" };
+    }
+    
+    if (totalHours < 0) {
+      return { valid: false, message: "Clock out time must be after clock in time" };
+    }
+    
+    return { valid: true, message: "" };
+  };
+
+  const timeValidation = validateTimeAdjustments();
 
   const currentRate = (currentUser as any)?.rate ?? 25;
   const currentEarnings = (elapsed / 3600000) * currentRate;
@@ -191,7 +224,7 @@ export default function TimeClockPage() {
               <p>No work logs yet. Clock in to start tracking your time!</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="max-h-96 overflow-y-auto space-y-4">
               {logs
                 .filter(l => l.userId === currentUser?.id.toString())
                 .map(log => (
@@ -333,15 +366,29 @@ export default function TimeClockPage() {
               />
             </div>
 
+            {/* Validation Error Display */}
+            {!timeValidation.valid && (
+              <div className="p-3 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-sm text-red-700 dark:text-red-300 font-medium">
+                  ⚠️ {timeValidation.message}
+                </p>
+              </div>
+            )}
+
             {/* Earnings Preview */}
-            <Card className="bg-green-50 dark:bg-green-950">
+            <Card className={timeValidation.valid ? "bg-green-50 dark:bg-green-950" : "bg-gray-50 dark:bg-gray-950"}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Adjusted Earnings:</span>
-                  <span className="text-lg font-bold text-green-600">
-                    ${calculateAdjustedEarnings().toFixed(2)}
+                  <span className={`text-lg font-bold ${timeValidation.valid ? 'text-green-600' : 'text-gray-500'}`}>
+                    ${timeValidation.valid ? calculateAdjustedEarnings().toFixed(2) : '0.00'}
                   </span>
                 </div>
+                {timeValidation.valid && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Total hours: {((new Date(clockOutData.clockOutTime).getTime() - new Date(clockOutData.clockInTime).getTime()) / (1000 * 60 * 60) - (clockOutData.breakDuration / 60)).toFixed(2)}
+                  </p>
+                )}
               </CardContent>
             </Card>
 
