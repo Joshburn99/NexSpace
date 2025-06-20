@@ -8,8 +8,11 @@ import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 
 export default function SchedulingPage() {
-  const { user } = useAuth();
+  const { user, impersonatedUser } = useAuth();
   const [selectedDate, setSelectedDate] = useState(new Date());
+
+  const currentUser = impersonatedUser || user;
+  const canPostShifts = currentUser?.role === 'manager' || currentUser?.role === 'admin';
 
   const { data: shifts = [] } = useQuery({
     queryKey: ["/api/shifts"],
@@ -30,12 +33,14 @@ export default function SchedulingPage() {
 
   return (
     <div className="p-6">
-      <div className="flex items-center justify-end mb-6">
-        <Button>
-          <Calendar className="w-4 h-4 mr-2" />
-          Create Shift
-        </Button>
-      </div>
+      {canPostShifts && (
+        <div className="flex items-center justify-end mb-6">
+          <Button>
+            <Calendar className="w-4 h-4 mr-2" />
+            Create Shift
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Calendar View */}

@@ -72,20 +72,27 @@ export default function UnifiedCalendarPage() {
   };
 
   const handleDateClick = (info: any) => {
-    setSelectedDate(info.dateStr);
-    setIsCreateShiftOpen(true);
+    if (canPostShifts) {
+      setSelectedDate(info.dateStr);
+      setIsCreateShiftOpen(true);
+    }
   };
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Unified Calendar
+          {canPostShifts ? 'Schedule Management' : 'My Schedule'}
         </h1>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="h-4 w-4 mr-2" />
-          New Shift
-        </Button>
+        {canPostShifts && (
+          <Button 
+            className="bg-blue-600 hover:bg-blue-700"
+            onClick={() => setIsCreateShiftOpen(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Shift
+          </Button>
+        )}
       </div>
 
       {/* Dashboard Summary Cards */}

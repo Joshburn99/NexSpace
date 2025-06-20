@@ -229,7 +229,7 @@ export default function TimeClockPage() {
             </div>
             <div className="mt-2">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {(summaries.totalHoursToday || 0).toFixed(1)}
+                {summaries && Array.isArray(summaries) ? (summaries[0]?.totalHoursToday || 0).toFixed(1) : "0.0"}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">total hours</p>
             </div>
@@ -244,7 +244,7 @@ export default function TimeClockPage() {
             </div>
             <div className="mt-2">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {(summaries.totalHoursWeek || 0).toFixed(1)}
+                {summaries && Array.isArray(summaries) ? (summaries[0]?.totalHoursWeek || 0).toFixed(1) : "0.0"}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">this week</p>
             </div>

@@ -18,10 +18,13 @@ import { getQueryFn } from "@/lib/queryClient";
 type ViewType = "daily" | "weekly" | "monthly";
 
 export default function CalendarViewPage() {
-  const { user } = useAuth();
+  const { user, impersonatedUser } = useAuth();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewType, setViewType] = useState<ViewType>("weekly");
   const [selectedUnit, setSelectedUnit] = useState("all");
+
+  const currentUser = impersonatedUser || user;
+  const canPostShifts = currentUser?.role === 'manager' || currentUser?.role === 'admin';
 
   const { data: shifts = [] } = useQuery({
     queryKey: ["/api/shifts"],
@@ -316,10 +319,12 @@ export default function CalendarViewPage() {
             </Select>
           </div>
 
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Create Shift
-          </Button>
+          {canPostShifts && (
+            <Button>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Shift
+            </Button>
+          )}
         </div>
 
         {/* Specialty Color Legend */}
