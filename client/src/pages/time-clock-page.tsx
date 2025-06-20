@@ -231,8 +231,34 @@ export default function TimeClockPage() {
                           <p className="text-xs text-gray-500">
                             Rate: ${log.rate}/hr
                           </p>
+                          {log.adjustedTimes && (
+                            <Badge variant="outline" className="mt-1 text-xs">
+                              Time Adjusted
+                            </Badge>
+                          )}
                         </div>
                       </div>
+                      
+                      {/* Additional Information */}
+                      {(log.notes || log.supervisorName) && (
+                        <div className="mt-4 pt-4 border-t space-y-2">
+                          {log.notes && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Notes:</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">{log.notes}</p>
+                            </div>
+                          )}
+                          
+                          {log.supervisorName && log.supervisorSignature && (
+                            <div className="flex items-center gap-2">
+                              <FileSignature className="w-3 h-3 text-blue-600" />
+                              <p className="text-xs text-blue-600">
+                                Approved by: {log.supervisorName}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 ))}
