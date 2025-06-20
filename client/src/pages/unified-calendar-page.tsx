@@ -4,6 +4,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import { useShifts } from '@/contexts/ShiftContext';
 import { useDashboard } from '@/contexts/DashboardContext';
+import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,10 +22,14 @@ import {
 export default function UnifiedCalendarPage() {
   const { openShifts, requestedShifts, bookedShifts } = useShifts();
   const { totalShiftsToday, openCount, requestedCount, bookedCount } = useDashboard();
+  const { user, impersonatedUser } = useAuth();
   const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [isShiftDetailsOpen, setIsShiftDetailsOpen] = useState(false);
   const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
+
+  const currentUser = impersonatedUser || user;
+  const canPostShifts = currentUser?.role === 'manager' || currentUser?.role === 'admin';
 
   // Convert shifts to FullCalendar events
   const events = [

@@ -56,7 +56,7 @@ export default function TimeClockPage() {
 
   const handleClockIn = () => {
     if (user) {
-      clockIn(user.id, user.firstName + " " + user.lastName, user.role);
+      clockIn(Number(user.id), user.firstName + " " + user.lastName, user.role);
     }
   };
 
@@ -184,13 +184,13 @@ export default function TimeClockPage() {
               <div>
                 <span className="text-gray-500 dark:text-gray-400">Total Hours:</span>
                 <p className="font-semibold text-gray-900 dark:text-white">
-                  {currentUserEntry.totalHours.toFixed(2)}
+                  {(currentUserEntry.totalHours || 0).toFixed(2)}
                 </p>
               </div>
               <div>
                 <span className="text-gray-500 dark:text-gray-400">Break Time:</span>
                 <p className="font-semibold text-gray-900 dark:text-white">
-                  {currentUserEntry.breakDuration.toFixed(2)}h
+                  {(currentUserEntry.breakDuration || 0).toFixed(2)}h
                 </p>
               </div>
               <div>

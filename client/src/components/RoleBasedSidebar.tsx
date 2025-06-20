@@ -195,7 +195,7 @@ export function RoleBasedSidebar() {
           })}
         </nav>
 
-        {/* Quick Actions for specific roles */}
+        {/* Quick Actions for workers */}
         {(userRole === 'employee' || userRole === 'contractor' || userRole === 'clinician') && (
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
@@ -204,8 +204,8 @@ export function RoleBasedSidebar() {
             <div className="space-y-1">
               <Link href="/calendar">
                 <div className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
-                  <PlusCircle className="h-4 w-4" />
-                  <span>Request Shift</span>
+                  <Calendar className="h-4 w-4" />
+                  <span>View Schedule</span>
                 </div>
               </Link>
               <Link href="/time-clock">
@@ -218,6 +218,35 @@ export function RoleBasedSidebar() {
                 <div className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
                   <MessageSquare className="h-4 w-4" />
                   <span>Send Message</span>
+                </div>
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Actions for managers/admins */}
+        {(userRole === 'manager' || userRole === 'admin') && (
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              Quick Actions
+            </h3>
+            <div className="space-y-1">
+              <Link href="/calendar">
+                <div className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+                  <PlusCircle className="h-4 w-4" />
+                  <span>Post Shift</span>
+                </div>
+              </Link>
+              <Link href="/workforce">
+                <div className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+                  <Users className="h-4 w-4" />
+                  <span>Manage Staff</span>
+                </div>
+              </Link>
+              <Link href="/analytics">
+                <div className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">
+                  <BarChart3 className="h-4 w-4" />
+                  <span>View Reports</span>
                 </div>
               </Link>
             </div>
