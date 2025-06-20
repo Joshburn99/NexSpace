@@ -114,6 +114,9 @@ export default function EnhancedMessagingPage() {
   const [selectedRecipients, setSelectedRecipients] = useState<any[]>([]);
   const [isMassMessage, setIsMassMessage] = useState(false);
   const [selectedPresetGroup, setSelectedPresetGroup] = useState<string>("");
+  const [showAllHistory, setShowAllHistory] = useState(false);
+  const [chatView, setChatView] = useState(false);
+  const [chatParticipant, setChatParticipant] = useState<any>(null);
 
   const userMessages = user ? getMessagesForUser(user.id) : [];
   const unreadCount = user ? getUnreadCount(user.id) : 0;
@@ -244,13 +247,40 @@ export default function EnhancedMessagingPage() {
   };
 
   const handleMessageClick = (message: any) => {
-    setSelectedMessage(prevSelected => {
-      // Always update to the clicked message, even if it's the same one
-      if (!message.isRead && (message.recipientId === user?.id || (message.recipientId === 999 && user?.id === 3))) {
-        markAsRead(message.id);
-      }
-      return message;
-    });
+    setSelectedMessage(message);
+    // Mark as read if unread and user is recipient
+    if (!message.isRead && (message.recipientId === user?.id || (message.recipientId === 999 && user?.id === 3))) {
+      markAsRead(message.id);
+    }
+  };
+
+  const handleChatClick = (message: any) => {
+    // Determine chat participant based on current user
+    const participant = message.senderId === user?.id 
+      ? { id: message.recipientId, name: message.recipientName }
+      : { id: message.senderId, name: message.senderName };
+    
+    setChatParticipant(participant);
+    setChatView(true);
+  };
+
+  const getConversationHistory = (participantId: number) => {
+    if (!user) return [];
+    
+    const allMessages = getMessagesForUser(user.id);
+    return allMessages.filter((msg: any) => 
+      (msg.senderId === user.id && msg.recipientId === participantId) ||
+      (msg.senderId === participantId && msg.recipientId === user.id)
+    ).sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  };
+
+  const getAllMessageHistory = () => {
+    if (!user) return [];
+    
+    const allMessages = getMessagesForUser(user.id);
+    return allMessages.filter((msg: any) => 
+      msg.senderId === user.id || msg.recipientId === user.id
+    ).sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   };
 
   const getPriorityBadge = (priority: string) => {
@@ -502,12 +532,29 @@ export default function EnhancedMessagingPage() {
       </div>
 
       <Tabs defaultValue="inbox" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="inbox">
-            Inbox {unreadCount > 0 && <Badge className="ml-2 bg-blue-600 text-xs">{unreadCount}</Badge>}
-          </TabsTrigger>
-          <TabsTrigger value="sent">Sent</TabsTrigger>
-        </TabsList>
+        <div className="flex justify-between items-center">
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsTrigger value="inbox">
+              Inbox {unreadCount > 0 && <Badge className="ml-2 bg-blue-600 text-xs">{unreadCount}</Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="sent">Sent</TabsTrigger>
+          </TabsList>
+          
+          <div className="flex gap-2">
+            <Button 
+              variant={showAllHistory ? "default" : "outline"} 
+              size="sm"
+              onClick={() => setShowAllHistory(!showAllHistory)}
+            >
+              {showAllHistory ? "Current Messages" : "All History"}
+            </Button>
+            {chatView && (
+              <Button variant="outline" size="sm" onClick={() => setChatView(false)}>
+                Back to Messages
+              </Button>
+            )}
+          </div>
+        </div>
 
         <TabsContent value="inbox" className="space-y-4">
           {inboxMessages.length === 0 ? (
@@ -583,6 +630,16 @@ export default function EnhancedMessagingPage() {
                     </p>
                     <div className="prose prose-sm max-w-none">
                       <p className="whitespace-pre-wrap">{selectedMessage.content}</p>
+                    </div>
+                    <div className="flex gap-2 mt-4 pt-4 border-t">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handleChatClick(selectedMessage)}
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Chat
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
