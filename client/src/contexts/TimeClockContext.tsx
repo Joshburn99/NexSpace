@@ -9,13 +9,24 @@ export type WorkLog = {
   breakDuration: number; // in minutes
   rate: number;           // per hour
   earnings: number;
+  notes?: string;
+  supervisorName?: string;
+  supervisorSignature?: string;
+  adjustedTimes?: boolean; // flag to indicate if times were manually adjusted
 };
 
 type TimeClockContextType = {
   currentIn: string | null;
   logs: WorkLog[];
   clockIn: () => void;
-  clockOut: (breakMin: number) => void;
+  clockOut: (workLogData: {
+    clockInTime: string;
+    clockOutTime: string;
+    breakDuration: number;
+    notes?: string;
+    supervisorName?: string;
+    supervisorSignature?: string;
+  }) => void;
 };
 
 const TimeClockContext = createContext<TimeClockContextType | null>(null);
@@ -60,24 +71,40 @@ export const TimeClockProvider: React.FC<{ children: ReactNode }> = ({ children 
     setCurrentIn(new Date().toISOString());
   };
 
-  const clockOut = (breakDuration: number) => {
+  const clockOut = (workLogData: {
+    clockInTime: string;
+    clockOutTime: string;
+    breakDuration: number;
+    notes?: string;
+    supervisorName?: string;
+    supervisorSignature?: string;
+  }) => {
     if (!currentIn || !currentUser) return;
     
-    const out = new Date().toISOString();
-    const start = new Date(currentIn).getTime();
-    const end = new Date(out).getTime();
-    const hours = (end - start) / 3600000 - (breakDuration / 60);
-    const rate = (currentUser as any).rate ?? 25; // Default rate if not set
-    const earnings = parseFloat((hours * rate).toFixed(2));
+    const start = new Date(workLogData.clockInTime).getTime();
+    const end = new Date(workLogData.clockOutTime).getTime();
+    const totalHours = (end - start) / 3600000;
+    const workHours = totalHours - (workLogData.breakDuration / 60);
+    const rate = (currentUser as any).rate ?? 25;
+    const earnings = parseFloat((workHours * rate).toFixed(2));
+    
+    // Check if times were adjusted from original
+    const originalClockIn = new Date(currentIn);
+    const adjustedClockIn = new Date(workLogData.clockInTime);
+    const adjustedTimes = Math.abs(originalClockIn.getTime() - adjustedClockIn.getTime()) > 60000; // 1 minute tolerance
     
     const newLog: WorkLog = {
       id: Date.now().toString(),
       userId: currentUser.id.toString(),
-      clockIn: currentIn,
-      clockOut: out,
-      breakDuration,
+      clockIn: workLogData.clockInTime,
+      clockOut: workLogData.clockOutTime,
+      breakDuration: workLogData.breakDuration,
       rate,
-      earnings
+      earnings,
+      notes: workLogData.notes,
+      supervisorName: workLogData.supervisorName,
+      supervisorSignature: workLogData.supervisorSignature,
+      adjustedTimes
     };
     
     setLogs(prev => [newLog, ...prev]);

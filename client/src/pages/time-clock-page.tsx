@@ -4,7 +4,18 @@ import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Clock, DollarSign, Calendar } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Clock, DollarSign, Calendar, Edit, FileSignature } from "lucide-react";
 
 function formatDuration(ms: number) {
   const h = Math.floor(ms / 3600000);
@@ -17,6 +28,15 @@ export default function TimeClockPage() {
   const { currentIn, logs, clockIn, clockOut } = useTimeClocks();
   const { user: currentUser } = useAuth();
   const [elapsed, setElapsed] = useState(0);
+  const [showClockOutDialog, setShowClockOutDialog] = useState(false);
+  const [clockOutData, setClockOutData] = useState({
+    clockInTime: '',
+    clockOutTime: '',
+    breakDuration: 0,
+    notes: '',
+    supervisorSignature: '',
+    supervisorName: ''
+  });
 
   useEffect(() => {
     let timer: NodeJS.Timeout;
@@ -30,7 +50,53 @@ export default function TimeClockPage() {
   }, [currentIn]);
 
   const handleClockOut = () => {
-    clockOut(0); // no break
+    if (!currentIn) return;
+    
+    // Initialize clock out dialog with current times
+    const now = new Date();
+    const clockInDate = new Date(currentIn);
+    
+    setClockOutData({
+      clockInTime: clockInDate.toISOString().slice(0, 16), // Format for datetime-local input
+      clockOutTime: now.toISOString().slice(0, 16),
+      breakDuration: 0,
+      notes: '',
+      supervisorSignature: '',
+      supervisorName: ''
+    });
+    
+    setShowClockOutDialog(true);
+  };
+
+  const handleSubmitClockOut = () => {
+    if (!clockOutData.clockInTime || !clockOutData.clockOutTime) return;
+    
+    // Submit the work log with all the enhanced data
+    clockOut({
+      clockInTime: clockOutData.clockInTime,
+      clockOutTime: clockOutData.clockOutTime,
+      breakDuration: clockOutData.breakDuration,
+      notes: clockOutData.notes,
+      supervisorName: clockOutData.supervisorName,
+      supervisorSignature: clockOutData.supervisorSignature
+    });
+    
+    setShowClockOutDialog(false);
+  };
+
+  const formatTimeForInput = (dateString: string) => {
+    return new Date(dateString).toISOString().slice(0, 16);
+  };
+
+  const calculateAdjustedEarnings = () => {
+    if (!clockOutData.clockInTime || !clockOutData.clockOutTime) return 0;
+    
+    const start = new Date(clockOutData.clockInTime).getTime();
+    const end = new Date(clockOutData.clockOutTime).getTime();
+    const totalHours = (end - start) / (1000 * 60 * 60);
+    const workHours = totalHours - (clockOutData.breakDuration / 60);
+    
+    return workHours * currentRate;
   };
 
   const currentRate = (currentUser as any)?.rate ?? 25;
@@ -174,6 +240,169 @@ export default function TimeClockPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Clock Out Review Dialog */}
+      <Dialog open={showClockOutDialog} onOpenChange={setShowClockOutDialog}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Review & Submit Timesheet
+            </DialogTitle>
+            <DialogDescription>
+              Review your work session details before submitting. You can adjust times and add notes.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Time Adjustments */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="clockInTime" className="flex items-center gap-2">
+                  <Edit className="w-4 h-4" />
+                  Clock In Time
+                </Label>
+                <Input
+                  id="clockInTime"
+                  type="datetime-local"
+                  value={clockOutData.clockInTime}
+                  onChange={(e) => setClockOutData(prev => ({
+                    ...prev,
+                    clockInTime: e.target.value
+                  }))}
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="clockOutTime" className="flex items-center gap-2">
+                  <Edit className="w-4 h-4" />
+                  Clock Out Time
+                </Label>
+                <Input
+                  id="clockOutTime"
+                  type="datetime-local"
+                  value={clockOutData.clockOutTime}
+                  onChange={(e) => setClockOutData(prev => ({
+                    ...prev,
+                    clockOutTime: e.target.value
+                  }))}
+                />
+              </div>
+            </div>
+
+            {/* Break Duration */}
+            <div className="space-y-2">
+              <Label htmlFor="breakDuration">Break Duration (minutes)</Label>
+              <Input
+                id="breakDuration"
+                type="number"
+                min="0"
+                max="480"
+                value={clockOutData.breakDuration}
+                onChange={(e) => setClockOutData(prev => ({
+                  ...prev,
+                  breakDuration: parseInt(e.target.value) || 0
+                }))}
+                placeholder="Enter break time in minutes"
+              />
+            </div>
+
+            {/* Earnings Preview */}
+            <Card className="bg-green-50 dark:bg-green-950">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Adjusted Earnings:</span>
+                  <span className="text-lg font-bold text-green-600">
+                    ${calculateAdjustedEarnings().toFixed(2)}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Notes Section */}
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes (Optional)</Label>
+              <Textarea
+                id="notes"
+                value={clockOutData.notes}
+                onChange={(e) => setClockOutData(prev => ({
+                  ...prev,
+                  notes: e.target.value
+                }))}
+                placeholder="Add any notes about your shift, tasks completed, or issues encountered..."
+                rows={3}
+              />
+            </div>
+
+            <Separator />
+
+            {/* Supervisor Signature Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <FileSignature className="w-5 h-5" />
+                <Label className="text-base font-medium">Supervisor Approval (Optional)</Label>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="supervisorName">Supervisor Name</Label>
+                  <Input
+                    id="supervisorName"
+                    value={clockOutData.supervisorName}
+                    onChange={(e) => setClockOutData(prev => ({
+                      ...prev,
+                      supervisorName: e.target.value
+                    }))}
+                    placeholder="Enter supervisor's full name"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="supervisorSignature">Digital Signature</Label>
+                  <Input
+                    id="supervisorSignature"
+                    value={clockOutData.supervisorSignature}
+                    onChange={(e) => setClockOutData(prev => ({
+                      ...prev,
+                      supervisorSignature: e.target.value
+                    }))}
+                    placeholder="Supervisor types their name to sign"
+                  />
+                </div>
+              </div>
+              
+              {clockOutData.supervisorName && clockOutData.supervisorSignature && (
+                <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    ✓ Approved by: {clockOutData.supervisorName}
+                  </p>
+                  <p className="text-xs text-blue-600 dark:text-blue-400">
+                    Signature: {clockOutData.supervisorSignature}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-3 pt-4">
+              <Button 
+                onClick={handleSubmitClockOut}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+                disabled={!clockOutData.clockInTime || !clockOutData.clockOutTime}
+              >
+                Submit Timesheet
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={() => setShowClockOutDialog(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
