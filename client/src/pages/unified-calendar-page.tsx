@@ -390,7 +390,7 @@ export default function UnifiedCalendarPage() {
                   onClick={() => {
                     if (selectedShift && currentUser) {
                       // Submit shift request
-                      requestShift?.(selectedShift.id, currentUser.id, requestNote);
+                      requestShift?.(selectedShift.id);
                       setIsShiftRequestOpen(false);
                       setRequestNote('');
                     }
