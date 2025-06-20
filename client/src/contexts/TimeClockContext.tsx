@@ -51,6 +51,69 @@ export const TimeClockProvider: React.FC<{ children: ReactNode }> = ({ children 
       } catch (error) {
         console.error('Error parsing saved work logs:', error);
       }
+    } else {
+      // Add some sample logs for testing scrolling functionality
+      const sampleLogs: WorkLog[] = [
+        {
+          id: '1',
+          userId: '3',
+          clockIn: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+          clockOut: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
+          breakDuration: 30,
+          rate: 25,
+          earnings: 162.50,
+          notes: 'Completed patient rounds and medication administration',
+          supervisorName: 'Dr. Sarah Johnson',
+          supervisorSignature: 'Dr. Sarah Johnson',
+          adjustedTimes: false
+        },
+        {
+          id: '2',
+          userId: '3',
+          clockIn: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+          clockOut: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
+          breakDuration: 45,
+          rate: 25,
+          earnings: 181.25,
+          notes: 'Emergency shift - handled multiple critical patients',
+          adjustedTimes: true
+        },
+        {
+          id: '3',
+          userId: '3',
+          clockIn: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
+          clockOut: new Date(Date.now() - 40 * 60 * 60 * 1000).toISOString(),
+          breakDuration: 0,
+          rate: 25,
+          earnings: 200.00,
+          supervisorName: 'Nurse Manager Lisa',
+          supervisorSignature: 'Lisa Rodriguez'
+        },
+        {
+          id: '4',
+          userId: '3',
+          clockIn: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
+          clockOut: new Date(Date.now() - 66 * 60 * 60 * 1000).toISOString(),
+          breakDuration: 15,
+          rate: 25,
+          earnings: 143.75,
+          notes: 'Training session with new equipment'
+        },
+        {
+          id: '5',
+          userId: '3',
+          clockIn: new Date(Date.now() - 96 * 60 * 60 * 1000).toISOString(),
+          clockOut: new Date(Date.now() - 88 * 60 * 60 * 1000).toISOString(),
+          breakDuration: 30,
+          rate: 25,
+          earnings: 175.00,
+          notes: 'Weekend shift with overtime approval',
+          supervisorName: 'Head Nurse Patricia',
+          supervisorSignature: 'Patricia Williams',
+          adjustedTimes: true
+        }
+      ];
+      setLogs(sampleLogs);
     }
   }, []);
 

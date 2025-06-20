@@ -115,22 +115,34 @@ export default function TimeClockPage() {
   const validateTimeAdjustments = () => {
     if (!clockOutData.clockInTime || !clockOutData.clockOutTime) return { valid: false, message: "Please set both clock in and clock out times" };
     
-    const start = new Date(clockOutData.clockInTime).getTime();
-    const end = new Date(clockOutData.clockOutTime).getTime();
-    const totalHours = (end - start) / (1000 * 60 * 60);
-    
-    if (totalHours > 8) {
-      return { valid: false, message: "Work sessions cannot exceed 8 hours for security purposes" };
-    }
+    const adjustedStart = new Date(clockOutData.clockInTime).getTime();
+    const adjustedEnd = new Date(clockOutData.clockOutTime).getTime();
+    const totalHours = (adjustedEnd - adjustedStart) / (1000 * 60 * 60);
     
     if (totalHours < 0) {
       return { valid: false, message: "Clock out time must be after clock in time" };
     }
     
+    // Check if times are within 8 hours of original clock-in time
+    if (currentIn) {
+      const originalStart = new Date(currentIn).getTime();
+      const clockInDiff = Math.abs(adjustedStart - originalStart) / (1000 * 60 * 60);
+      const clockOutDiff = Math.abs(adjustedEnd - originalStart) / (1000 * 60 * 60);
+      
+      if (clockInDiff > 8 || clockOutDiff > 8) {
+        return { valid: false, message: "Time adjustments cannot be more than 8 hours from original clock-in time" };
+      }
+    }
+    
     return { valid: true, message: "" };
   };
 
-  const timeValidation = validateTimeAdjustments();
+  // Make validation reactive to state changes
+  const timeValidation = React.useMemo(() => validateTimeAdjustments(), [
+    clockOutData.clockInTime,
+    clockOutData.clockOutTime,
+    currentIn
+  ]);
 
   const currentRate = (currentUser as any)?.rate ?? 25;
   const currentEarnings = (elapsed / 3600000) * currentRate;
@@ -224,7 +236,10 @@ export default function TimeClockPage() {
               <p>No work logs yet. Clock in to start tracking your time!</p>
             </div>
           ) : (
-            <div className="max-h-96 overflow-y-auto space-y-4">
+            <div 
+              className="h-96 overflow-y-auto overflow-x-hidden space-y-4 pr-2 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+              style={{ scrollBehavior: 'smooth' }}
+            >
               {logs
                 .filter(l => l.userId === currentUser?.id.toString())
                 .map(log => (
