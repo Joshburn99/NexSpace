@@ -13,6 +13,12 @@ import { InsightsProvider } from "@/contexts/InsightsContext";
 import { InvoiceProvider } from "@/contexts/InvoiceContext";
 import { DashboardProvider } from "@/contexts/DashboardContext";
 import { StaffProvider } from "@/contexts/StaffContext";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import { MessageProvider } from "@/contexts/MessageContext";
+import { TeamProvider } from "@/contexts/TeamContext";
+import { ProfileProvider } from "@/contexts/ProfileContext";
+import { JobProvider } from "@/contexts/JobContext";
+import { EnhancedCredentialProvider } from "@/contexts/EnhancedCredentialContext";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import JobBoard from "@/pages/job-board";
@@ -48,6 +54,7 @@ import AdminDatabaseConsolePage from "@/pages/admin-database-console-page";
 import SystemSettingsPage from "@/pages/system-settings-page";
 import DetailedShiftAnalyticsPage from "@/pages/detailed-shift-analytics-page";
 import SchedulingConfigPage from "@/pages/scheduling-config-page";
+import NotificationsPage from "@/pages/notifications-page";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -80,6 +87,14 @@ function Router() {
       <ProtectedRoute path="/analytics/agency-usage" component={AgencyUsagePage} />
       <ProtectedRoute path="/analytics/compliance" component={CompliancePage} />
       <ProtectedRoute path="/messages" component={MessagingPage} />
+      <ProtectedRoute path="/messaging" component={MessagingPage} />
+      <ProtectedRoute path="/notifications" component={NotificationsPage} />
+      <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />
+      <ProtectedRoute path="/profile" component={SettingsPage} />
+      <ProtectedRoute path="/teams" component={EnhancedStaffPage} />
+      <ProtectedRoute path="/my-requests" component={ShiftRequestsPage} />
+      <ProtectedRoute path="/resources" component={CredentialsPage} />
+      <ProtectedRoute path="/my-pto" component={TimeClockPage} />
       <ProtectedRoute path="/credentials" component={CredentialsPage} />
       <ProtectedRoute path="/invoices" component={InvoicesPage} />
       <ProtectedRoute path="/vendor-invoices" component={VendorInvoicesPage} />
@@ -107,26 +122,38 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <ShiftProvider>
-          <TimeClockProvider>
-            <CredentialsProvider>
-              <InsightsProvider>
-                <InvoiceProvider>
-                  <StaffProvider>
-                    <DashboardProvider>
-                      <TooltipProvider>
-                        <Toaster />
-                        <Layout>
-                          <Router />
-                        </Layout>
-                      </TooltipProvider>
-                    </DashboardProvider>
-                  </StaffProvider>
-                </InvoiceProvider>
-              </InsightsProvider>
-            </CredentialsProvider>
-          </TimeClockProvider>
-        </ShiftProvider>
+        <NotificationProvider>
+          <ShiftProvider>
+            <TimeClockProvider>
+              <StaffProvider>
+                <TeamProvider>
+                  <MessageProvider>
+                    <EnhancedCredentialProvider>
+                      <JobProvider>
+                        <ProfileProvider>
+                          <CredentialsProvider>
+                            <InsightsProvider>
+                              <InvoiceProvider>
+                                <DashboardProvider>
+                                  <TooltipProvider>
+                                    <Toaster />
+                                    <Layout>
+                                      <Router />
+                                    </Layout>
+                                  </TooltipProvider>
+                                </DashboardProvider>
+                              </InvoiceProvider>
+                            </InsightsProvider>
+                          </CredentialsProvider>
+                        </ProfileProvider>
+                      </JobProvider>
+                    </EnhancedCredentialProvider>
+                  </MessageProvider>
+                </TeamProvider>
+              </StaffProvider>
+            </TimeClockProvider>
+          </ShiftProvider>
+        </NotificationProvider>
       </AuthProvider>
     </QueryClientProvider>
   );
