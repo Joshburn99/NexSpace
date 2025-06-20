@@ -22,6 +22,7 @@ interface StaffContextType {
   nonCompliantStaff: StaffMember[];
   getStaffById: (id: number) => StaffMember | undefined;
   getStaffByRole: (role: string) => StaffMember[];
+  updateStaff: (member: StaffMember) => void;
   updateStaffMember: (id: number, updates: Partial<StaffMember>) => Promise<void>;
   isLoading: boolean;
 }
@@ -145,6 +146,10 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     return staffData.filter((s: StaffMember) => s.role === role);
   };
 
+  const updateStaff = (updated: StaffMember) => {
+    setStaffData(prev => prev.map(s => s.id === updated.id ? updated : s));
+  };
+
   const updateStaffMember = async (id: number, updates: Partial<StaffMember>): Promise<void> => {
     setStaffData((prevStaff: StaffMember[]) => 
       prevStaff.map((member: StaffMember) => 
@@ -163,6 +168,7 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     nonCompliantStaff,
     getStaffById,
     getStaffByRole,
+    updateStaff,
     updateStaffMember,
     isLoading: false,
   };

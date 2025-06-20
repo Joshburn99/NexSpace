@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 
 export default function EnhancedProfilePage() {
   const { user } = useAuth();
-  const { getStaffById, updateStaffMember } = useStaff();
+  const { getStaffById, updateStaff, updateStaffMember } = useStaff();
   const { getVerifiedCredentials } = useCredentialVerification();
   
   const [isEditing, setIsEditing] = useState(false);
@@ -37,8 +37,8 @@ export default function EnhancedProfilePage() {
     lastName: ''
   });
 
-  const staffMember = user ? getStaffById(user.id.toString()) : null;
-  const verifiedCredentials = user ? getVerifiedCredentials(user.id.toString()) : [];
+  const staffMember = user ? getStaffById(user.id) : null;
+  const verifiedCredentials = user ? getVerifiedCredentials(user.id) : [];
 
   useEffect(() => {
     if (staffMember) {

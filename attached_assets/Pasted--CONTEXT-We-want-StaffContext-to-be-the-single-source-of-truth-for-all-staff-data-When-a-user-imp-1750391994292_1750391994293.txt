@@ -1,0 +1,93 @@
+# CONTEXT
+We want StaffContext to be the single source of truth for all staff data. When a user (impersonated or not) edits their profile, the change must update StaffContext’s state so it’s immediately visible in the Admin Staff Management page and everywhere else.
+
+# TASKS
+
+1. **Enhance `StaffContext`**  
+- File: `src/context/StaffContext.tsx`  
+- Change from a static array to a stateful context with an `updateStaff` method:
+
+```diff
+- const sampleStaff: StaffMember[] = [ /* ... */ ];
+- const StaffContext = createContext<StaffMember[]|null>(null);
++ const initialStaff: StaffMember[] = [ /* keep your sampleStaff here */ ];
++ type StaffCtx = {
++   staff: StaffMember[];
++   updateStaff: (member: StaffMember) => void;
++ };
++ const StaffContext = createContext<StaffCtx | null>(null);
+
+-export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) => (
+-  <StaffContext.Provider value={sampleStaff}>
+-    {children}
+-  </StaffContext.Provider>
+-);
++export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
++  const [staff, setStaff] = useState<StaffMember[]>(initialStaff);
++  const updateStaff = (updated: StaffMember) => {
++    setStaff(prev => prev.map(s => s.id === updated.id ? updated : s));
++  };
++  return (
++    <StaffContext.Provider value={{ staff, updateStaff }}>
++      {children}
++    </StaffContext.Provider>
++  );
++};
+Update the “My Profile” Page
+
+File: src/pages/ProfilePage.tsx (or wherever users edit their own profile)
+
+Import useStaff and your Auth hook:
+
+diff
+Copy
+Edit
+-import { useStaff } from '@/context/StaffContext'; // if it existed
++import { useStaff } from '@/context/StaffContext';
++import { useAuth }   from '@/hooks/use-auth';
+In the submit handler for “Save Profile”:
+
+diff
+Copy
+Edit
+- // old save logic...
++ const { staff, updateStaff } = useStaff();
++ const { currentUser, /* login/logout */ setCurrentUser } = useAuth();
++
++ const handleSave = (changes) => {
++   const updated = { ...currentUser, ...changes };
++   updateStaff(updated);             // update global staff list
++   setCurrentUser(updated);          // update auth user immediately
++   // any API call or toast...
++ };
+Ensure Staff Management Reads from the Same Context
+
+File: src/pages/StaffManagementPage.tsx
+
+Replace any manual fetch or prop-drilling with:
+
+ts
+Copy
+Edit
+import { useStaff } from '@/context/StaffContext';
+export default function StaffManagementPage() {
+  const { staff } = useStaff(); // now this array always matches edits
+  return (
+    <Table data={staff} /* ... */ />
+  );
+}
+FILES TO EDIT
+src/context/StaffContext.tsx
+
+src/pages/ProfilePage.tsx
+
+src/pages/StaffManagementPage.tsx
+
+SUCCESS CRITERIA
+Editing a profile under impersonation calls updateStaff + setCurrentUser.
+
+After quitting impersonation and navigating to Staff Management, you see your updated profile.
+
+No stale data anywhere—StaffContext is now the universal source of truth.
+
+BEGIN!
