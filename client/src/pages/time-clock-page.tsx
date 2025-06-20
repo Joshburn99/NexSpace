@@ -172,7 +172,7 @@ export default function TimeClockPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              {!currentUserEntry || getClockStatus(currentUserEntry) === "clocked_out" ? (
+              {getClockStatus(currentUserEntry) === "clocked_out" ? (
                 <Button onClick={handleClockIn} className="bg-green-600 hover:bg-green-700">
                   <Play className="h-4 w-4 mr-2" />
                   Clock In
