@@ -43,7 +43,7 @@ export function RoleBasedSidebar() {
   const messageUnreadCount = getTotalUnreadCount();
   
   // Define nav items based on role using the specified pattern
-  const base = ['Dashboard', 'Calendar', 'My Requests', 'Resources', 'Messaging', 'Notifications'];
+  const base = ['Dashboard', 'Calendar', 'My Requests', 'My Schedule', 'Resources', 'Messaging', 'Notifications'];
   const employee = [...base, 'PTO', 'Work Logs'];
   const contractor = [...base, 'Invoices'];
   const superuser = ['Staff Mgmt', 'Facilities', 'Admin', 'Teams', ...base];
@@ -65,6 +65,8 @@ export function RoleBasedSidebar() {
         return { href: '/calendar', label: 'Open Shifts', icon: Calendar, roles: [userRole] };
       case 'My Requests':
         return { href: '/my-requests', label: 'My Requests', icon: FileText, roles: [userRole] };
+      case 'My Schedule':
+        return { href: '/my-schedule', label: 'My Schedule', icon: Calendar, roles: [userRole] };
       case 'Resources':
         return { href: '/resources', label: 'Resources', icon: BookOpen, roles: [userRole] };
       case 'Messaging':

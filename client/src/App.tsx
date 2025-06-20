@@ -104,6 +104,7 @@ function AppContent() {
       <ProtectedRoute path="/my-profile" component={EnhancedProfilePage} />
       <ProtectedRoute path="/teams" component={EnhancedStaffPage} />
       <ProtectedRoute path="/my-requests" component={ShiftRequestsPage} />
+      <ProtectedRoute path="/my-schedule" component={MySchedulePage} />
       <ProtectedRoute path="/resources" component={CredentialsPage} />
       <ProtectedRoute path="/my-pto" component={PTOPage} />
       <ProtectedRoute path="/credentials" component={CredentialsPage} />

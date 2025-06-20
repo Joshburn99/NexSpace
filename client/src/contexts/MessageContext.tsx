@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useStaff } from '@/contexts/StaffContext';
 
@@ -158,33 +158,76 @@ export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
-  const sendMessage = (threadId: string, content: string, attachments?: File[]) => {
+  const sendMessage = async (threadId: string, content: string, attachments?: File[]) => {
     if (!user) return;
 
-    const newMessage: Message = {
-      id: `msg-${Date.now()}`,
-      threadId,
-      senderId: user.id,
-      senderName: `${user.firstName} ${user.lastName}`,
-      content,
-      timestamp: new Date().toISOString(),
-      attachments: attachments?.map(file => ({
-        id: `att-${Date.now()}-${file.name}`,
-        name: file.name,
-        url: URL.createObjectURL(file),
-        type: file.type,
-        size: file.size
-      }))
-    };
+    try {
+      const response = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          conversationId: threadId,
+          content,
+          messageType: 'text'
+        })
+      });
 
-    setMessages(prev => [...prev, newMessage]);
-    
-    // Update thread's last message and timestamp
-    setThreads(prev => prev.map(thread => 
-      thread.id === threadId 
-        ? { ...thread, lastMessage: newMessage, updatedAt: newMessage.timestamp }
-        : thread
-    ));
+      if (response.ok) {
+        const savedMessage = await response.json();
+        
+        const newMessage: Message = {
+          id: savedMessage.id.toString(),
+          threadId,
+          senderId: user.id,
+          senderName: `${user.firstName} ${user.lastName}`,
+          content,
+          timestamp: savedMessage.createdAt,
+          attachments: attachments?.map(file => ({
+            id: `att-${Date.now()}-${file.name}`,
+            name: file.name,
+            url: URL.createObjectURL(file),
+            type: file.type,
+            size: file.size
+          }))
+        };
+
+        setMessages(prev => [...prev, newMessage]);
+        
+        // Update thread's last message and timestamp
+        setThreads(prev => prev.map(thread => 
+          thread.id === threadId 
+            ? { ...thread, lastMessage: newMessage, updatedAt: newMessage.timestamp }
+            : thread
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      // Fallback to local storage for development
+      const newMessage: Message = {
+        id: `msg-${Date.now()}`,
+        threadId,
+        senderId: user.id,
+        senderName: `${user.firstName} ${user.lastName}`,
+        content,
+        timestamp: new Date().toISOString(),
+        attachments: attachments?.map(file => ({
+          id: `att-${Date.now()}-${file.name}`,
+          name: file.name,
+          url: URL.createObjectURL(file),
+          type: file.type,
+          size: file.size
+        }))
+      };
+
+      setMessages(prev => [...prev, newMessage]);
+      
+      setThreads(prev => prev.map(thread => 
+        thread.id === threadId 
+          ? { ...thread, lastMessage: newMessage, updatedAt: newMessage.timestamp }
+          : thread
+      ));
+    }
   };
 
   const sendMassMessage = (recipientIds: number[], content: string, subject?: string) => {
