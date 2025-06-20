@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { exec } from "child_process";
 
 const app = express();
 app.use(express.json());
@@ -36,7 +37,24 @@ app.use((req, res, next) => {
   next();
 });
 
+// Function to kill port 5000 before starting
+function killPort5000() {
+  return new Promise<void>((resolve) => {
+    exec("npx kill-port 5000", (error) => {
+      if (error) {
+        log("No process on port 5000 to kill");
+      } else {
+        log("Killed process on port 5000");
+      }
+      resolve();
+    });
+  });
+}
+
 (async () => {
+  // Kill any existing process on port 5000
+  await killPort5000();
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -66,6 +84,7 @@ app.use((req, res, next) => {
       reusePort: true,
     },
     () => {
+      console.log(`Server running on port ${PORT}`);
       log(`serving on port ${PORT}`);
     }
   );
