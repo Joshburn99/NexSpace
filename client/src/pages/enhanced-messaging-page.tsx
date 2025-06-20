@@ -408,9 +408,9 @@ export default function EnhancedMessagingPage() {
                     </div>
                   </div>
                 ) : (
-                  <Select value={selectedRecipient?.id || ""} onValueChange={(value) => {
+                  <Select value={selectedRecipient?.id.toString() || ""} onValueChange={(value) => {
                     const recipient = facilityStaff.find(staff => staff.id.toString() === value);
-                    setSelectedRecipient(recipient);
+                    setSelectedRecipient(recipient || null);
                   }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select recipient..." />
@@ -507,7 +507,7 @@ export default function EnhancedMessagingPage() {
         </TabsList>
 
         <TabsContent value="inbox" className="space-y-4">
-          {inbox.length === 0 ? (
+          {inboxMessages.length === 0 ? (
             <Card>
               <CardContent className="p-6 text-center">
                 <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -517,7 +517,7 @@ export default function EnhancedMessagingPage() {
           ) : (
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="space-y-2">
-                {inbox.map((message) => (
+                {inboxMessages.map((message) => (
                   <Card 
                     key={message.id} 
                     className={cn(
@@ -589,7 +589,7 @@ export default function EnhancedMessagingPage() {
         </TabsContent>
 
         <TabsContent value="sent" className="space-y-4">
-          {sent.length === 0 ? (
+          {sentMessages.length === 0 ? (
             <Card>
               <CardContent className="p-6 text-center">
                 <Send className="w-12 h-12 text-gray-400 mx-auto mb-4" />
@@ -597,7 +597,7 @@ export default function EnhancedMessagingPage() {
               </CardContent>
             </Card>
           ) : (
-            sent.map((message) => (
+            sentMessages.map((message) => (
               <Card key={message.id}>
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-2">
