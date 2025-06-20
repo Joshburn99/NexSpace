@@ -82,7 +82,7 @@ export default function UnifiedCalendarPage() {
         },
       }
     })),
-    ...requestedShifts.map(shift => ({
+    ...filteredRequestedShifts.map(shift => ({
       id: `requested-${shift.id}`,
       title: `🟨 ${shift.title}`,
       start: `${shift.date}T${shift.startTime || '07:00'}`,
@@ -101,7 +101,7 @@ export default function UnifiedCalendarPage() {
         },
       }
     })),
-    ...bookedShifts.map(shift => ({
+    ...filteredBookedShifts.map(shift => ({
       id: `booked-${shift.id}`,
       title: `🟩 ${shift.title}`,
       start: `${shift.date}T${shift.startTime || '07:00'}`,
@@ -190,9 +190,11 @@ export default function UnifiedCalendarPage() {
             </div>
             <div className="mt-2">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {openCount}
+                {filteredOpenShifts.length}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">need coverage</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {canPostShifts ? 'need coverage' : 'available for you'}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -207,9 +209,11 @@ export default function UnifiedCalendarPage() {
             </div>
             <div className="mt-2">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {requestedCount}
+                {filteredRequestedShifts.length}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">pending assignment</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {canPostShifts ? 'pending assignment' : 'my requests'}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -224,9 +228,11 @@ export default function UnifiedCalendarPage() {
             </div>
             <div className="mt-2">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {bookedCount}
+                {filteredBookedShifts.length}
               </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">fully staffed</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {canPostShifts ? 'fully staffed' : 'my shifts'}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -370,6 +376,8 @@ export default function UnifiedCalendarPage() {
                   <Label htmlFor="request-note">Note (Optional)</Label>
                   <Textarea
                     id="request-note"
+                    value={requestNote}
+                    onChange={(e) => setRequestNote(e.target.value)}
                     placeholder="Add any relevant information about your availability or qualifications..."
                     className="resize-none"
                     rows={3}
@@ -380,8 +388,12 @@ export default function UnifiedCalendarPage() {
               <div className="flex gap-3 pt-4">
                 <Button
                   onClick={() => {
-                    // Handle shift request submission
-                    setIsShiftRequestOpen(false);
+                    if (selectedShift && currentUser) {
+                      // Submit shift request
+                      requestShift?.(selectedShift.id, currentUser.id, requestNote);
+                      setIsShiftRequestOpen(false);
+                      setRequestNote('');
+                    }
                   }}
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
                 >
@@ -389,7 +401,10 @@ export default function UnifiedCalendarPage() {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setIsShiftRequestOpen(false)}
+                  onClick={() => {
+                    setIsShiftRequestOpen(false);
+                    setRequestNote('');
+                  }}
                   className="flex-1"
                 >
                   Cancel
