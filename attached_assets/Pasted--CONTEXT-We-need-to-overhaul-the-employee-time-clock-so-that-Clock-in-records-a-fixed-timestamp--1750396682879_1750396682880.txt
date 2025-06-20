@@ -1,0 +1,227 @@
+# CONTEXT
+We need to overhaul the employee time-clock so that:
+- Clock-in records a fixed timestamp.
+- There is no “start break” button.
+- Elapsed hours start at 0 and a running earnings counter updates in real-time (based on the user’s shift rate).
+- Clock-out records out time, allows submitting break duration = 0, then logs a WorkLog with in/out/break/earnings.
+- Recent work logs show only the current user’s logs.
+- Contractors see professional invoices in the same list.
+- “My Profile” edits update StaffContext & AuthContext so changes persist everywhere.
+
+# TASKS
+
+## 1. Enhance TimeClockContext
+
+**File:** `src/context/TimeClockContext.tsx`  
+- Update to use state and expose clockIn/clockOut/logs:
+
+```diff
+-import React, { createContext, useContext } from 'react';
++import React, { createContext, useContext, useState } from 'react';
+ import { useAuth } from '@/hooks/use-auth';
+
+-export type TimeClock = { /* old type */ };
++export type WorkLog = {
++  id: string;
++  userId: string;
++  clockIn: string;
++  clockOut: string;
++  breakDuration: number; // in minutes
++  rate: number;           // per hour
++  earnings: number;
++};
+
+- const Ctx = createContext<TimeClock[]|null>(null);
++type TC = {
++  currentIn: string|null;
++  logs: WorkLog[];
++  clockIn: () => void;
++  clockOut: (breakMin: number) => void;
++};
++const Ctx = createContext<TC|null>(null);
+
+-export const TimeClockProvider = ({ children }) => (
+-  <Ctx.Provider value={/* old */}>{children}</Ctx.Provider>
+-);
++export const TimeClockProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
++  const { currentUser } = useAuth();
++  const [currentIn, setCurrentIn] = useState<string|null>(null);
++  const [logs, setLogs] = useState<WorkLog[]>([]);
++
++  const clockIn = () => {
++    setCurrentIn(new Date().toISOString());
++  };
++
++  const clockOut = (breakDuration: number) => {
++    if (!currentIn) return;
++    const out = new Date().toISOString();
++    const start = new Date(currentIn).getTime();
++    const end   = new Date(out).getTime();
++    const hours = (end - start) / 3600000 - (breakDuration/60);
++    const rate  = currentUser.rate ?? 0;
++    const earnings = parseFloat((hours * rate).toFixed(2));
++    setLogs(prev => [
++      ...prev,
++      {
++        id: Date.now().toString(),
++        userId: currentUser.id,
++        clockIn: currentIn,
++        clockOut: out,
++        breakDuration,
++        rate,
++        earnings
++      }
++    ]);
++    setCurrentIn(null);
++  };
++
++  return (
++    <Ctx.Provider value={{ currentIn, logs, clockIn, clockOut }}>
++      {children}
++    </Ctx.Provider>
++  );
++};
+
+ export const useTimeClocks = () => {
+-  const ctx = useContext(Ctx);
++  const ctx = useContext(Ctx);
+   if (!ctx) throw new Error('Must be inside TimeClockProvider');
+   return ctx;
+ };
+2. Scaffold TimeClockPage UI
+File: src/pages/TimeClockPage.tsx
+
+tsx
+Copy
+Edit
+import React, { useState, useEffect } from 'react';
+import { useTimeClocks } from '@/context/TimeClockContext';
+import { useAuth } from '@/hooks/use-auth';
+
+function formatDuration(ms: number) {
+  const h = Math.floor(ms/3600000);
+  const m = Math.floor((ms%3600000)/60000);
+  const s = Math.floor((ms%60000)/1000);
+  return `${h}h ${m}m ${s}s`;
+}
+
+export default function TimeClockPage() {
+  const { currentIn, logs, clockIn, clockOut } = useTimeClocks();
+  const { currentUser } = useAuth();
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (currentIn) {
+      const start = new Date(currentIn).getTime();
+      timer = setInterval(() => setElapsed(Date.now() - start), 1000);
+    } else {
+      setElapsed(0);
+    }
+    return () => clearInterval(timer);
+  }, [currentIn]);
+
+  const handleClockOut = () => {
+    clockOut(0); // no break
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      {!currentIn ? (
+        <button className="btn-primary" onClick={clockIn}>
+          Clock In
+        </button>
+      ) : (
+        <div className="space-y-2">
+          <p>Clocked In At: {new Date(currentIn).toLocaleTimeString()}</p>
+          <p>Elapsed: {formatDuration(elapsed)}</p>
+          <p>
+            Earnings: $
+            {((elapsed/3600000) * (currentUser.rate||0)).toFixed(2)}
+          </p>
+          <button className="btn-secondary" onClick={handleClockOut}>
+            Clock Out
+          </button>
+        </div>
+      )}
+
+      <section>
+        <h3 className="text-xl font-semibold">Recent {currentUser.role==='contractor'?'Invoices':'Work Logs'}</h3>
+        <ul className="mt-2 space-y-2">
+          {logs
+            .filter(l => l.userId === currentUser.id)
+            .map(l => (
+              <li key={l.id} className="p-3 border rounded bg-white">
+                <p>
+                  <strong>In:</strong> {new Date(l.clockIn).toLocaleString()}
+                </p>
+                <p>
+                  <strong>Out:</strong> {new Date(l.clockOut).toLocaleString()}
+                </p>
+                <p>
+                  <strong>Duration:</strong>{' '}
+                  {formatDuration(
+                    new Date(l.clockOut).getTime() - new Date(l.clockIn).getTime()
+                  )}
+                </p>
+                <p>
+                  <strong>Earnings:</strong> ${l.earnings}
+                </p>
+              </li>
+            ))}
+        </ul>
+      </section>
+    </div>
+  );
+}
+3. Update “My Profile” to Sync Everywhere
+File: src/pages/ProfilePage.tsx
+
+diff
+Copy
+Edit
+-import { useStaff } from '@/context/StaffContext';
++import { useStaff } from '@/context/StaffContext';
+ import { useAuth } from '@/hooks/use-auth';
+
+ export default function ProfilePage() {
+   const { currentUser, setCurrentUser } = useAuth();
+   const { staff, updateStaff } = useStaff();
+
+   const [form, setForm] = React.useState({ ...currentUser });
+
+   const handleSave = () => {
+-    // old save logic
++    const updated = { ...currentUser, ...form };
++    updateStaff(updated);
++    setCurrentUser(updated);
+   };
+
+   return (
+     <div className="p-6 space-y-4">
+       {/* your existing form fields, bound to form */}
+       <button className="btn-primary" onClick={handleSave}>
+         Save Profile
+       </button>
+     </div>
+   );
+ }
+FILES TO EDIT
+src/context/TimeClockContext.tsx
+
+src/pages/TimeClockPage.tsx
+
+src/pages/ProfilePage.tsx
+
+SUCCESS CRITERIA
+Clock In records a fixed timestamp; Clock Out logs a WorkLog with earnings.
+
+Elapsed time and earnings update live during the shift.
+
+No “Start Break” button appears.
+
+Recent logs/invoices list is filtered to the current user.
+
+Profile edits update StaffContext & AuthContext so new data shows up immediately in Staff Management.
+
+BEGIN!

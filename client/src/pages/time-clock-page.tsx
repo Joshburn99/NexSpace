@@ -1,343 +1,177 @@
-import { useState, useEffect } from "react";
-import { Clock, Play, Square, Calendar, MapPin, User } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { useTimeClocks } from '@/contexts/TimeClockContext';
+import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { useAuth } from "@/hooks/use-auth";
-import { useTimeClock } from "@/contexts/TimeClockContext";
+import { Clock, DollarSign, Calendar } from "lucide-react";
+
+function formatDuration(ms: number) {
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  const s = Math.floor((ms % 60000) / 1000);
+  return `${h}h ${m}m ${s}s`;
+}
 
 export default function TimeClockPage() {
-  const { user } = useAuth();
-  const { timeClocks, summaries, getActiveUsers, clockIn, clockOut, startBreak, endBreak, isLoading } = useTimeClock();
-  const [currentTime, setCurrentTime] = useState(new Date());
+  const { currentIn, logs, clockIn, clockOut } = useTimeClocks();
+  const { user: currentUser } = useAuth();
+  const [elapsed, setElapsed] = useState(0);
 
-  // Update clock every second
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    let timer: NodeJS.Timeout;
+    if (currentIn) {
+      const start = new Date(currentIn).getTime();
+      timer = setInterval(() => setElapsed(Date.now() - start), 1000);
+    } else {
+      setElapsed(0);
+    }
     return () => clearInterval(timer);
-  }, []);
-
-  const activeUsers = getActiveUsers();
-  const currentUserEntry = activeUsers.find(
-    (entry) => entry.userId === user?.id
-  );
-  
-  // Helper functions for missing properties
-  const getClockStatus = (entry: any) => {
-    if (!entry || !user) return "clocked_out";
-    // Check the most recent action for the current user
-    const userEntries = timeClocks.filter((e: any) => e.userId === user.id);
-    const mostRecent = userEntries[userEntries.length - 1];
-    if (!mostRecent) return "clocked_out";
-    
-    if (mostRecent.action === "in" || mostRecent.action === "break_end") return "clocked_in";
-    if (mostRecent.action === "break_start") return "on_break";
-    return "clocked_out";
-  };
-
-  const getClockInTime = (entry: any) => {
-    if (!entry) return null;
-    // Use simplified clock in time calculation
-    return new Date();
-  };
-
-  const getTotalHours = (entry: any) => {
-    if (!entry) return 0;
-    // Return simplified total hours
-    return 7.5;
-  };
-
-  const getBreakDuration = (entry: any) => {
-    if (!entry) return 0;
-    // Return simplified break duration
-    return 30;
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "clocked_in":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200";
-      case "on_break":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200";
-      case "clocked_out":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200";
-      case "missed":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200";
-    }
-  };
-
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  const handleClockIn = () => {
-    if (user) {
-      clockIn(user.id.toString(), user.firstName + " " + user.lastName, user.role);
-    }
-  };
+  }, [currentIn]);
 
   const handleClockOut = () => {
-    if (user) {
-      clockOut(user.id);
-    }
+    clockOut(0); // no break
   };
 
-  const handleStartBreak = () => {
-    if (user) {
-      startBreak(user.id);
-    }
-  };
-
-  const handleEndBreak = () => {
-    if (user) {
-      endBreak(user.id);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="h-48 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const currentRate = (currentUser as any)?.rate ?? 25;
+  const currentEarnings = (elapsed / 3600000) * currentRate;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-6 space-y-6">
+      <div>
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Time Clock</h1>
-        <div className="text-right">
-          <div className="text-3xl font-mono font-bold text-blue-600 dark:text-blue-400">
-            {formatTime(currentTime)}
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {currentTime.toLocaleDateString("en-US", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </div>
-        </div>
+        <p className="text-gray-600 dark:text-gray-400 mt-1">
+          Track your work hours and earnings
+        </p>
       </div>
 
-      {/* Current User Status */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
+      {/* Clock In/Out Section */}
+      <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
-            <User className="h-5 w-5" />
-            Your Status
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="w-6 h-6" />
+            {currentIn ? 'Currently Working' : 'Ready to Clock In'}
           </CardTitle>
+          <CardDescription>
+            {currentIn ? `Started at ${new Date(currentIn).toLocaleTimeString()}` : 'Click to start your shift'}
+          </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Avatar className="h-12 w-12">
-                <AvatarFallback className="bg-blue-600 text-white">
-                  {user?.firstName?.[0]}{user?.lastName?.[0]}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">
-                  {user?.firstName} {user?.lastName}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{user?.role}</p>
-                {currentUserEntry && (
-                  <Badge className={getStatusColor(getClockStatus(currentUserEntry))}>
-                    {getClockStatus(currentUserEntry).replace("_", " ").toUpperCase()}
-                  </Badge>
-                )}
+        <CardContent className="space-y-4">
+          {!currentIn ? (
+            <Button 
+              onClick={clockIn} 
+              size="lg" 
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              <Clock className="w-5 h-5 mr-2" />
+              Clock In
+            </Button>
+          ) : (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                      <span className="font-medium text-sm">Time Elapsed</span>
+                    </div>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {formatDuration(elapsed)}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <DollarSign className="w-4 h-4 text-green-600" />
+                      <span className="font-medium text-sm">Current Earnings</span>
+                    </div>
+                    <p className="text-2xl font-bold text-green-600">
+                      ${currentEarnings.toFixed(2)}
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
-            </div>
-            <div className="flex gap-2">
-              {getClockStatus(currentUserEntry) === "clocked_out" ? (
-                <Button onClick={handleClockIn} className="bg-green-600 hover:bg-green-700">
-                  <Play className="h-4 w-4 mr-2" />
-                  Clock In
-                </Button>
-              ) : (
-                <>
-                  {getClockStatus(currentUserEntry) === "clocked_in" ? (
-                    <>
-                      <Button onClick={handleStartBreak} variant="outline">
-                        Start Break
-                      </Button>
-                      <Button onClick={handleClockOut} className="bg-red-600 hover:bg-red-700">
-                        <Square className="h-4 w-4 mr-2" />
-                        Clock Out
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <Button onClick={handleEndBreak} className="bg-blue-600 hover:bg-blue-700">
-                        End Break
-                      </Button>
-                      <Button onClick={handleClockOut} className="bg-red-600 hover:bg-red-700">
-                        <Square className="h-4 w-4 mr-2" />
-                        Clock Out
-                      </Button>
-                    </>
-                  )}
-                </>
-              )}
-            </div>
-          </div>
-          {currentUserEntry && (
-            <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">Clock In:</span>
-                <p className="font-semibold text-gray-900 dark:text-white">
-                  {getClockInTime(currentUserEntry) ? getClockInTime(currentUserEntry)!.toLocaleTimeString() : "N/A"}
-                </p>
-              </div>
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">Total Hours:</span>
-                <p className="font-semibold text-gray-900 dark:text-white">
-                  {getTotalHours(currentUserEntry).toFixed(2)}
-                </p>
-              </div>
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">Break Time:</span>
-                <p className="font-semibold text-gray-900 dark:text-white">
-                  {getBreakDuration(currentUserEntry)} min
-                </p>
-              </div>
-              <div>
-                <span className="text-gray-500 dark:text-gray-400">Facility:</span>
-                <p className="font-semibold text-gray-900 dark:text-white">
-                  {currentUserEntry.facilityName}
-                </p>
-              </div>
+
+              <Button 
+                onClick={handleClockOut} 
+                size="lg" 
+                variant="destructive" 
+                className="w-full"
+              >
+                Clock Out
+              </Button>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Daily Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-blue-600" />
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Active Now</span>
-            </div>
-            <div className="mt-2">
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {activeUsers.length}
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">staff members</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-green-600" />
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Today's Hours</span>
-            </div>
-            <div className="mt-2">
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {summaries && Array.isArray(summaries) ? (summaries[0]?.totalHours || 0).toFixed(1) : "0.0"}
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">total hours</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <User className="h-5 w-5 text-purple-600" />
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Week's Hours</span>
-            </div>
-            <div className="mt-2">
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {summaries && Array.isArray(summaries) ? (summaries[0]?.totalHours * 5 || 0).toFixed(1) : "0.0"}
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">this week</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-orange-600" />
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Overtime</span>
-            </div>
-            <div className="mt-2">
-              <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                {summaries && Array.isArray(summaries) ? (summaries[0]?.overtimeHours || 0).toFixed(1) : "0.0"}
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">overtime hours</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Recent Time Entries */}
+      {/* Work History Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Time Entries</CardTitle>
-          <CardDescription>Latest clock-in/out activities</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="w-5 h-5" />
+            Recent {(currentUser as any)?.role === 'contractor' ? 'Invoices' : 'Work Logs'}
+          </CardTitle>
+          <CardDescription>
+            Your recent work history and earnings
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {timeClocks.slice(0, 10).map((entry) => (
-              <div key={entry.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10">
-                    <AvatarFallback className="bg-blue-600 text-white text-sm">
-                      {entry.userName.split(" ").map(n => n[0]).join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="font-medium text-gray-900 dark:text-white">{entry.userName}</p>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">{entry.userRole}</p>
-                  </div>
-                </div>
-                <div className="text-center">
-                  <Badge className={getStatusColor(getClockStatus(entry))}>
-                    {getClockStatus(entry).replace("_", " ").toUpperCase()}
-                  </Badge>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    {entry.facilityName}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-medium text-gray-900 dark:text-white">
-                    {getTotalHours(entry).toFixed(2)}h
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {getClockInTime(entry) ? getClockInTime(entry)!.toLocaleDateString() : "N/A"}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+          {logs.filter(l => l.userId === currentUser?.id.toString()).length === 0 ? (
+            <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+              <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No work logs yet. Clock in to start tracking your time!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {logs
+                .filter(l => l.userId === currentUser?.id.toString())
+                .map(log => (
+                  <Card key={log.id} className="border-l-4 border-l-blue-500">
+                    <CardContent className="p-4">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">Clock In</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {new Date(log.clockIn).toLocaleString()}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">Clock Out</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {new Date(log.clockOut).toLocaleString()}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">Duration</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            {formatDuration(
+                              new Date(log.clockOut).getTime() - new Date(log.clockIn).getTime()
+                            )}
+                          </p>
+                          {log.breakDuration > 0 && (
+                            <p className="text-xs text-gray-500">
+                              Break: {log.breakDuration} min
+                            </p>
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">Earnings</p>
+                          <p className="text-lg font-bold text-green-600">
+                            ${log.earnings.toFixed(2)}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Rate: ${log.rate}/hr
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

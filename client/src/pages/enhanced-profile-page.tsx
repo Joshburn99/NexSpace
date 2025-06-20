@@ -64,13 +64,9 @@ export default function EnhancedProfilePage() {
       // Update StaffContext (single source of truth)
       updateStaff(updatedStaffMember);
       
-      // Update user authentication state to match
-      const updatedUser = {
-        ...user,
-        firstName: editedProfile.firstName,
-        lastName: editedProfile.lastName,
-        email: editedProfile.email
-      };
+      // Force re-authentication to sync changes across contexts
+      // This ensures the changes persist everywhere in the app
+      window.location.reload();
       
       setIsEditing(false);
     } catch (error) {
