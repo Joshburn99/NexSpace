@@ -1215,6 +1215,7 @@ export function registerRoutes(app: Express): Server {
           activeCredentials: 8,
           expiringCredentials: 0,
           avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150",
+          profileImage: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150",
           bio: "Experienced ICU nurse with expertise in critical care and patient management.",
           location: "Portland, OR",
           hourlyRate: 48,
@@ -1224,10 +1225,45 @@ export function registerRoutes(app: Express): Server {
           resumeUrl: "",
           coverLetterUrl: "",
           linkedIn: "",
+          linkedinUrl: "",
           portfolio: "",
+          portfolioUrl: "",
           yearsExperience: 8,
           rating: 4.9,
-          totalShifts: 156
+          totalShifts: 156,
+          workerType: "internal_employee",
+          status: "active",
+          availability: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+          emergencyContact: {
+            name: "John Johnson",
+            phone: "(555) 123-9999",
+            relationship: "Spouse"
+          },
+          workHistory: [{
+            facility: "Portland General Hospital",
+            position: "ICU Nurse",
+            startDate: "2017-01-15",
+            description: "Providing critical care nursing in intensive care unit"
+          }],
+          education: [{
+            institution: "Oregon Health & Science University",
+            degree: "Bachelor of Science in Nursing",
+            graduationYear: 2016,
+            gpa: 3.8
+          }],
+          documents: [{
+            type: "License",
+            name: "RN License",
+            uploadDate: "2024-01-15",
+            expirationDate: "2026-01-15",
+            verified: true
+          }],
+          socialStats: {
+            profileViews: 245,
+            shiftsCompleted: 156,
+            ratings: 89,
+            endorsements: 23
+          }
         },
         {
           id: 2,
@@ -1242,6 +1278,7 @@ export function registerRoutes(app: Express): Server {
           activeCredentials: 6,
           expiringCredentials: 1,
           avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
+          profileImage: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
           bio: "Emergency medicine specialist with extensive trauma experience.",
           location: "Seattle, WA",
           hourlyRate: 55,
@@ -1251,10 +1288,45 @@ export function registerRoutes(app: Express): Server {
           resumeUrl: "",
           coverLetterUrl: "",
           linkedIn: "",
+          linkedinUrl: "",
           portfolio: "",
+          portfolioUrl: "",
           yearsExperience: 12,
           rating: 4.8,
-          totalShifts: 89
+          totalShifts: 89,
+          workerType: "contractor_1099",
+          status: "active",
+          availability: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          emergencyContact: {
+            name: "Lisa Chen",
+            phone: "(555) 234-9999",
+            relationship: "Wife"
+          },
+          workHistory: [{
+            facility: "Seattle Emergency Center",
+            position: "Emergency Nurse",
+            startDate: "2012-03-01",
+            description: "Emergency medicine and trauma care specialist"
+          }],
+          education: [{
+            institution: "University of Washington",
+            degree: "Bachelor of Science in Nursing",
+            graduationYear: 2011,
+            gpa: 3.9
+          }],
+          documents: [{
+            type: "License",
+            name: "RN License",
+            uploadDate: "2024-02-01",
+            expirationDate: "2026-02-01",
+            verified: true
+          }],
+          socialStats: {
+            profileViews: 189,
+            shiftsCompleted: 89,
+            ratings: 67,
+            endorsements: 18
+          }
         },
         {
           id: 3,
@@ -1269,6 +1341,7 @@ export function registerRoutes(app: Express): Server {
           activeCredentials: 5,
           expiringCredentials: 0,
           avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
+          profileImage: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150",
           bio: "Dedicated medical-surgical nurse committed to providing excellent patient care.",
           location: "Portland, OR",
           hourlyRate: 42,
@@ -1278,10 +1351,45 @@ export function registerRoutes(app: Express): Server {
           resumeUrl: "",
           coverLetterUrl: "",
           linkedIn: "",
+          linkedinUrl: "",
           portfolio: "",
+          portfolioUrl: "",
           yearsExperience: 5,
           rating: 4.7,
-          totalShifts: 98
+          totalShifts: 98,
+          workerType: "internal_employee",
+          status: "active",
+          availability: ["Mon", "Wed", "Fri"],
+          emergencyContact: {
+            name: "Bob Smith",
+            phone: "(555) 345-9999",
+            relationship: "Husband"
+          },
+          workHistory: [{
+            facility: "Portland Medical Center",
+            position: "Med/Surg Nurse",
+            startDate: "2019-06-01",
+            description: "Medical surgical nursing and patient care"
+          }],
+          education: [{
+            institution: "Portland State University",
+            degree: "Bachelor of Science in Nursing",
+            graduationYear: 2019,
+            gpa: 3.7
+          }],
+          documents: [{
+            type: "License",
+            name: "RN License",
+            uploadDate: "2024-03-01",
+            expirationDate: "2026-03-01",
+            verified: true
+          }],
+          socialStats: {
+            profileViews: 156,
+            shiftsCompleted: 98,
+            ratings: 45,
+            endorsements: 12
+          }
         },
         {
           id: 42,
@@ -1296,6 +1404,7 @@ export function registerRoutes(app: Express): Server {
           activeCredentials: 7,
           expiringCredentials: 0,
           avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150",
+          profileImage: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150",
           bio: "Skilled surgical technologist with expertise in operating room procedures and sterile technique.",
           location: "Portland, OR",
           hourlyRate: 28.5,
@@ -1305,10 +1414,45 @@ export function registerRoutes(app: Express): Server {
           resumeUrl: "",
           coverLetterUrl: "",
           linkedIn: "",
+          linkedinUrl: "",
           portfolio: "",
+          portfolioUrl: "",
           yearsExperience: 6,
           rating: 4.7,
-          totalShifts: 143
+          totalShifts: 143,
+          workerType: "internal_employee",
+          status: "active",
+          availability: ["Tue", "Wed", "Thu", "Fri"],
+          emergencyContact: {
+            name: "David Kim",
+            phone: "(503) 555-9999",
+            relationship: "Brother"
+          },
+          workHistory: [{
+            facility: "Portland General Hospital",
+            position: "Surgical Technologist",
+            startDate: "2018-09-15",
+            description: "Operating room procedures and sterile technique specialist"
+          }],
+          education: [{
+            institution: "Portland Community College",
+            degree: "Associate Degree in Surgical Technology",
+            graduationYear: 2018,
+            gpa: 3.9
+          }],
+          documents: [{
+            type: "Certification",
+            name: "CST Certification",
+            uploadDate: "2024-04-01",
+            expirationDate: "2026-04-01",
+            verified: true
+          }],
+          socialStats: {
+            profileViews: 87,
+            shiftsCompleted: 143,
+            ratings: 52,
+            endorsements: 8
+          }
         }
       ];
       

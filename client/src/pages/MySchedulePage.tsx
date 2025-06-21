@@ -19,30 +19,30 @@ export default function MySchedulePage() {
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [activeView, setActiveView] = useState('dayGridMonth');
 
-  // Create calendar events from all shift categories
+  // Create calendar events from all shift categories with null checks
   const calendarEvents = [
-    ...open.map(s => ({ 
+    ...(open || []).map(s => ({ 
       id: s.id.toString(), 
       title: `Open: ${s.facilityName}`, 
       date: s.date, 
       color: 'gray',
       extendedProps: { shift: s, status: 'open' }
     })),
-    ...requested.map(s => ({ 
+    ...(requested || []).map(s => ({ 
       id: s.id.toString(), 
       title: `Requested`, 
       date: s.date, 
       color: 'orange',
       extendedProps: { shift: s, status: 'requested' }
     })),
-    ...booked.map(s => ({ 
+    ...(booked || []).map(s => ({ 
       id: s.id.toString(), 
       title: `Booked`, 
       date: s.date, 
       color: 'green',
       extendedProps: { shift: s, status: 'booked' }
     })),
-    ...history.map(s => ({
+    ...(history || []).map(s => ({
       id: s.id.toString(),
       title: `Past: ${s.facilityName}`,
       date: s.date,
