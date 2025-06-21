@@ -1032,7 +1032,7 @@ export default function EnhancedCalendarPage() {
 
           {/* Templates Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {templates.map((template: any) => (
+            {(templates as any[]).map((template: any) => (
               <Card key={template.id} className="cursor-pointer hover:shadow-md transition-shadow">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -1090,7 +1090,7 @@ export default function EnhancedCalendarPage() {
               </Card>
             ))}
             
-            {templates.length === 0 && (
+            {(templates as any[]).length === 0 && (
               <div className="col-span-full text-center py-12">
                 <Calendar className="w-12 h-12 mx-auto text-gray-400 mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No templates yet</h3>
