@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,9 +17,10 @@ export default function MySchedulePage() {
   const { open, requested, booked, history, requestShift, isLoading } = useShifts();
   const { toast } = useToast();
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
+  const [activeView, setActiveView] = useState('dayGridMonth');
 
   // Create calendar events from all shift categories
-  const events = [
+  const calendarEvents = [
     ...open.map(s => ({ 
       id: s.id, 
       title: `Open: ${s.facilityName}`, 

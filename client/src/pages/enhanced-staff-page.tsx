@@ -165,7 +165,7 @@ export default function EnhancedStaffPage() {
   });
 
   // Filter staff members
-  const filteredStaff = staffMembers.filter((staff) => {
+  const filteredStaff = (staffMembers || []).filter((staff) => {
     const matchesSearch =
       searchTerm === "" ||
       `${staff.firstName} ${staff.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||

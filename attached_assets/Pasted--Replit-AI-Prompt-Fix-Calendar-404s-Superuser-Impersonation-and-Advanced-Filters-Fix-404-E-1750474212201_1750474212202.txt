@@ -1,0 +1,62 @@
+🚀 Replit AI Prompt: Fix Calendar 404s, Superuser Impersonation, and Advanced Filters
+
+🛠️ Fix 404 Errors for Calendar/Scheduling Tabs
+Make sure all sidebar links for Enhanced Calendar, Scheduling, and Advanced Scheduling route to existing, implemented pages.
+
+If a page doesn’t exist, scaffold a new React page with a placeholder and basic layout, then link the sidebar button to that new page.
+
+Remove or hide any sidebar items that are truly obsolete.
+
+Every sidebar calendar/scheduling view should be reachable, not result in a 404.
+
+🦸‍♂️ Superuser Impersonation
+Allow the superuser to impersonate any user account on the platform, regardless of their type (facility user, employee, contractor, admin, etc).
+
+In the impersonation modal/list, ensure all users appear with role, facility/team association, and a search filter.
+
+When impersonating, all platform permissions and UI should reflect the impersonated user’s role.
+
+Show a prominent "Quit" button at the top of every page while impersonating.
+
+On "Quit", restore the original superuser session.
+
+🔍 Calendar View Filters
+For every calendar or scheduling view, add filters for:
+
+Facility Name (multi-select dropdown)
+
+Facility Team (multi-select or search)
+
+Worker Name (searchable dropdown)
+
+Specialty (dropdown)
+
+Status (dropdown: open, requested, confirmed, cancelled, filled, etc.)
+
+Filters must be fully functional. For example, when a facility is selected, show only the shifts at that facility; selecting a worker shows only their shifts.
+
+All filtered data should update in real time, using the centralized shift data store.
+
+Filters should stack (ex: filter by both facility and specialty at once).
+
+🏥 Universal Data Source & Permissions
+All calendar, scheduling, and shift views should draw from a single, centralized shift source of truth.
+
+When data changes (like filtering, editing, assigning, etc.), the change should be instantly reflected everywhere relevant.
+
+Each user role only sees the data and actions they’re permitted to, whether in normal or impersonation mode.
+
+Reference:
+
+See screenshots for your current UI and for inspiration.
+
+Please:
+
+Fix all 404 errors for sidebar calendar/scheduling tabs.
+
+Implement advanced, real-time filters on all scheduling views.
+
+Ensure superuser can impersonate any user with correct permissions and easy “Quit” button.
+
+Sync all data to a universal source of truth for accuracy across the platform.
+
