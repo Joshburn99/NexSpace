@@ -519,26 +519,32 @@ export default function EnhancedCalendarPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 flex gap-4 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-red-500 rounded"></div>
-              <span>Open</span>
+          {/* Calendar Legend */}
+          <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-sm font-medium mb-2">Specialty Colors</h4>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {Object.entries(specialtyColors).filter(([key]) => key !== 'default').slice(0, 6).map(([specialty, color]) => (
+                  <div key={specialty} className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded" style={{ backgroundColor: color }} />
+                    <span className="truncate">{specialty}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-yellow-500 rounded"></div>
-              <span>Requested</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-green-500 rounded"></div>
-              <span>Confirmed</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded"></div>
-              <span>Filled</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-gray-500 rounded"></div>
-              <span>Cancelled</span>
+            <div>
+              <h4 className="text-sm font-medium mb-2">Status Icons</h4>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {Object.entries(statusConfig).slice(0, 6).map(([status, config]) => {
+                  const IconComponent = config.icon;
+                  return (
+                    <div key={status} className="flex items-center gap-2">
+                      <IconComponent className="w-3 h-3" style={{ color: config.color }} />
+                      <span className="truncate">{config.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
 
@@ -626,7 +632,7 @@ export default function EnhancedCalendarPage() {
                   <div className="flex items-center gap-2 mt-1">
                     <div 
                       className="w-4 h-4 rounded" 
-                      style={{ backgroundColor: specialtyColors[selectedShift.specialty] || specialtyColors.default }}
+                      style={{ backgroundColor: (specialtyColors as any)[selectedShift.specialty] || specialtyColors.default }}
                     />
                     <span>{selectedShift.specialty}</span>
                   </div>
