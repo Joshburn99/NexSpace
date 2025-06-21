@@ -181,7 +181,7 @@ export default function EnhancedStaffPage() {
   });
 
   // Get unique values for filters
-  const specialties = Array.from(new Set(staffMembers.map((s) => s.specialty)));
+  const specialties = Array.from(new Set((staffMembers || []).map((s) => s.specialty)));
 
   const createStaffMutation = useMutation({
     mutationFn: async (staffData: any) => {

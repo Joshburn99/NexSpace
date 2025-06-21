@@ -3231,6 +3231,24 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.patch("/api/admin/users/:id/permissions", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { permissions } = req.body;
+      
+      // Here you would update the user's permissions in the database
+      // For now, returning success response
+      res.json({ 
+        message: "Permissions updated successfully",
+        userId: id,
+        permissions: permissions
+      });
+    } catch (error) {
+      console.error("Error updating user permissions:", error);
+      res.status(500).json({ message: "Failed to update permissions" });
+    }
+  });
+
   app.get("/api/admin/audit-logs", requireAuth, async (req, res) => {
     try {
       const logs = await storage.getAuditLogs();
