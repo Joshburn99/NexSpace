@@ -26,6 +26,7 @@ import {
   ClipboardList,
   Clock,
   Building,
+  AlertTriangle,
   DollarSign,
   FileText,
   UserCheck,
@@ -348,6 +349,38 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                 <h1 className="text-xl font-bold text-gray-900">{title || "Dashboard"}</h1>
                 {subtitle && <p className="text-gray-600">{subtitle}</p>}
               </div>
+              
+              {/* Impersonation Banner */}
+              {isImpersonating && (
+                <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded-md flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span className="text-sm font-medium">
+                    Impersonating {user?.firstName} {user?.lastName}
+                  </span>
+                  <Button
+                    onClick={() => stopImpersonationMutation.mutate()}
+                    size="sm"
+                    variant="outline"
+                    className="ml-2 bg-white hover:bg-gray-50"
+                  >
+                    Quit Session
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center space-x-4">
+              {/* Superuser Impersonation Button */}
+              {user?.role === "super_admin" && !isImpersonating && (
+                <Button
+                  onClick={() => setShowImpersonationModal(true)}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Impersonate User
+                </Button>
+              )}
 
               {/* Building Filter */}
               <Select value={selectedBuilding} onValueChange={setSelectedBuilding}>

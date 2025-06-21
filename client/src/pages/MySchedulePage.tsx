@@ -22,28 +22,28 @@ export default function MySchedulePage() {
   // Create calendar events from all shift categories
   const calendarEvents = [
     ...open.map(s => ({ 
-      id: s.id, 
+      id: s.id.toString(), 
       title: `Open: ${s.facilityName}`, 
       date: s.date, 
       color: 'gray',
       extendedProps: { shift: s, status: 'open' }
     })),
     ...requested.map(s => ({ 
-      id: s.id, 
+      id: s.id.toString(), 
       title: `Requested`, 
       date: s.date, 
       color: 'orange',
       extendedProps: { shift: s, status: 'requested' }
     })),
     ...booked.map(s => ({ 
-      id: s.id, 
+      id: s.id.toString(), 
       title: `Booked`, 
       date: s.date, 
       color: 'green',
       extendedProps: { shift: s, status: 'booked' }
     })),
     ...history.map(s => ({
-      id: s.id,
+      id: s.id.toString(),
       title: `Past: ${s.facilityName}`,
       date: s.date,
       color: 'blue',

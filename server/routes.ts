@@ -3879,8 +3879,8 @@ export function registerRoutes(app: Express): Server {
       const { targetUserId } = req.body;
       
       // Store original user in session
-      req.session.originalUser = req.user;
-      req.session.isImpersonating = true;
+      (req.session as any).originalUser = req.user;
+      (req.session as any).isImpersonating = true;
 
       // Get target user data
       const targetUser = {
@@ -3895,12 +3895,12 @@ export function registerRoutes(app: Express): Server {
       };
 
       // Set impersonated user as current user
-      req.session.user = targetUser;
+      (req.session as any).user = targetUser;
 
       res.json({
         message: "Impersonation started successfully",
         impersonatedUser: targetUser,
-        originalUser: req.session.originalUser
+        originalUser: (req.session as any).originalUser
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to start impersonation" });
@@ -3909,16 +3909,16 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/impersonate/stop", requireAuth, async (req, res) => {
     try {
-      if (!req.session.isImpersonating || !req.session.originalUser) {
+      if (!(req.session as any).isImpersonating || !(req.session as any).originalUser) {
         return res.status(400).json({ message: "No active impersonation session" });
       }
 
-      const originalUser = req.session.originalUser;
+      const originalUser = (req.session as any).originalUser;
       
       // Restore original user
-      req.session.user = originalUser;
-      delete req.session.originalUser;
-      delete req.session.isImpersonating;
+      (req.session as any).user = originalUser;
+      delete (req.session as any).originalUser;
+      delete (req.session as any).isImpersonating;
 
       res.json({
         message: "Impersonation ended successfully",
