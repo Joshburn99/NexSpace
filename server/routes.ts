@@ -5744,9 +5744,9 @@ export function registerRoutes(app: Express): Server {
                       template.specialty === "Surgical Technologist" ? "CST" : template.specialty,
             facilityId: template.facilityId,
             facilityName: template.facilityName,
-            buildingId: template.buildingId || "main-building",
-            buildingName: template.buildingName || "Main Building",
-            location: `${template.facilityName} - ${template.buildingName || "Main Building"}`,
+            buildingId: (template as any).buildingId || "main-building",
+            buildingName: (template as any).buildingName || "Main Building",
+            location: `${template.facilityName} - ${(template as any).buildingName || "Main Building"}`,
             minStaff: template.minStaff,
             maxStaff: template.maxStaff,
             status: 'open' as const,
@@ -5754,12 +5754,12 @@ export function registerRoutes(app: Express): Server {
             description: template.notes || `${template.department} shift`,
             urgency: 'medium' as const,
             priority: 'standard' as const,
-            priorityTiers: template.priorityTiers || {
+            priorityTiers: (template as any).priorityTiers || {
               employees: true,
               contractors: true,
               outsideAgencies: false
             },
-            staffingPriorityOrder: template.staffingPriorityOrder || ["employees", "contractors"],
+            staffingPriorityOrder: (template as any).staffingPriorityOrder || ["employees", "contractors"],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             assignedStaffIds: [],
