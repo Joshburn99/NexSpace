@@ -8,7 +8,7 @@ import { useShifts } from "@/contexts/ShiftContext";
 
 export default function OpenShiftsPage() {
   const { user } = useAuth();
-  const { openShifts, isLoading } = useShifts();
+  const { open: openShifts = [], isLoading, error } = useShifts();
   const [filter, setFilter] = useState("all");
 
   const getPriorityColor = (priority: string) => {
@@ -24,13 +24,35 @@ export default function OpenShiftsPage() {
     }
   };
 
-  const filteredShifts =
-    filter === "all" ? openShifts : openShifts.filter((shift) => shift.urgency === filter);
+  // Ensure openShifts is always an array before filtering
+  const safeOpenShifts = Array.isArray(openShifts) ? openShifts : [];
+  const filteredShifts = filter === "all" 
+    ? safeOpenShifts 
+    : safeOpenShifts.filter((shift) => shift.urgency === filter);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <span className="ml-2 text-gray-600">Loading open shifts...</span>
+      </div>
+    );
+  }
+
+  // Handle error state with user-friendly message
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64 text-center">
+        <AlertTriangle className="w-12 h-12 text-red-400 mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+          Unable to Load Shifts
+        </h3>
+        <p className="text-gray-500 mb-4">
+          There was an error loading the open shifts. Please try refreshing the page.
+        </p>
+        <Button onClick={() => window.location.reload()} variant="outline">
+          Refresh Page
+        </Button>
       </div>
     );
   }
@@ -50,21 +72,21 @@ export default function OpenShiftsPage() {
             onClick={() => setFilter("all")}
             size="sm"
           >
-            All ({openShifts.length})
+            All ({safeOpenShifts.length})
           </Button>
           <Button
             variant={filter === "critical" ? "default" : "outline"}
             onClick={() => setFilter("critical")}
             size="sm"
           >
-            Critical ({openShifts.filter((s) => s.urgency === "critical").length})
+            Critical ({safeOpenShifts.filter((s) => s.urgency === "critical").length})
           </Button>
           <Button
             variant={filter === "high" ? "default" : "outline"}
             onClick={() => setFilter("high")}
             size="sm"
           >
-            High Priority ({openShifts.filter((s) => s.urgency === "high").length})
+            High Priority ({safeOpenShifts.filter((s) => s.urgency === "high").length})
           </Button>
         </div>
       </div>
