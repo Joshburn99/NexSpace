@@ -3794,6 +3794,141 @@ export function registerRoutes(app: Express): Server {
     return shifts;
   }
 
+  // Superuser Impersonation API
+  app.get("/api/users/all", requireAuth, async (req, res) => {
+    try {
+      if (req.user?.role !== "super_admin") {
+        return res.status(403).json({ message: "Superuser access required" });
+      }
+
+      const users = [
+        {
+          id: 1,
+          username: "joshburn",
+          email: "joshburn@nexspace.com",
+          firstName: "Josh",
+          lastName: "Burn",
+          role: "super_admin",
+          facilityId: null,
+          facilityName: null,
+          department: "Administration",
+          isActive: true
+        },
+        {
+          id: 2,
+          username: "sarah.johnson",
+          email: "sarah.johnson@portlandgeneral.com",
+          firstName: "Sarah",
+          lastName: "Johnson",
+          role: "facility_manager",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          department: "ICU",
+          isActive: true
+        },
+        {
+          id: 3,
+          username: "JoshBurn",
+          email: "joshburn@gmail.com",
+          firstName: "Josh",
+          lastName: "Burn",
+          role: "employee",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          department: "Emergency",
+          isActive: true
+        },
+        {
+          id: 4,
+          username: "mike.davis",
+          email: "mike.davis@contractor.com",
+          firstName: "Mike",
+          lastName: "Davis",
+          role: "contractor",
+          facilityId: null,
+          facilityName: null,
+          department: "Float Pool",
+          isActive: true
+        },
+        {
+          id: 5,
+          username: "lisa.chen",
+          email: "lisa.chen@maplegove.com",
+          firstName: "Lisa",
+          lastName: "Chen",
+          role: "admin",
+          facilityId: 2,
+          facilityName: "Maple Grove Memory Care",
+          department: "Administration",
+          isActive: true
+        }
+      ];
+
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/impersonate/start", requireAuth, async (req, res) => {
+    try {
+      if (req.user?.role !== "super_admin") {
+        return res.status(403).json({ message: "Superuser access required" });
+      }
+
+      const { targetUserId } = req.body;
+      
+      // Store original user in session
+      req.session.originalUser = req.user;
+      req.session.isImpersonating = true;
+
+      // Get target user data
+      const targetUser = {
+        id: targetUserId,
+        username: targetUserId === 2 ? "sarah.johnson" : targetUserId === 3 ? "JoshBurn" : "mike.davis",
+        email: targetUserId === 2 ? "sarah.johnson@portlandgeneral.com" : targetUserId === 3 ? "joshburn@gmail.com" : "mike.davis@contractor.com",
+        firstName: targetUserId === 2 ? "Sarah" : targetUserId === 3 ? "Josh" : "Mike",
+        lastName: targetUserId === 2 ? "Johnson" : targetUserId === 3 ? "Burn" : "Davis",
+        role: targetUserId === 2 ? "facility_manager" : targetUserId === 3 ? "employee" : "contractor",
+        facilityId: targetUserId === 2 ? 1 : targetUserId === 3 ? 1 : null,
+        isActive: true
+      };
+
+      // Set impersonated user as current user
+      req.session.user = targetUser;
+
+      res.json({
+        message: "Impersonation started successfully",
+        impersonatedUser: targetUser,
+        originalUser: req.session.originalUser
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to start impersonation" });
+    }
+  });
+
+  app.post("/api/impersonate/stop", requireAuth, async (req, res) => {
+    try {
+      if (!req.session.isImpersonating || !req.session.originalUser) {
+        return res.status(400).json({ message: "No active impersonation session" });
+      }
+
+      const originalUser = req.session.originalUser;
+      
+      // Restore original user
+      req.session.user = originalUser;
+      delete req.session.originalUser;
+      delete req.session.isImpersonating;
+
+      res.json({
+        message: "Impersonation ended successfully",
+        originalUser: originalUser
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to stop impersonation" });
+    }
+  });
+
   // Block Shifts API
   app.get("/api/block-shifts", requireAuth, async (req, res) => {
     try {

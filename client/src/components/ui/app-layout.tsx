@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -9,9 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+
 import nexspaceLogo from "@assets/ChatGPT Image Jun 17, 2025, 01_56_58 PM_1750200821645.png";
 import {
   Activity,
@@ -62,8 +65,52 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
   const { user } = useAuth();
   const [location] = useLocation();
   const [selectedBuilding, setSelectedBuilding] = useState("1");
+  const [isImpersonating, setIsImpersonating] = useState(false);
+  const [originalUser, setOriginalUser] = useState<any>(null);
+  const [showImpersonationModal, setShowImpersonationModal] = useState(false);
+  const [impersonationSearch, setImpersonationSearch] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Fetch all users for impersonation
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ["/api/users/all"],
+    enabled: user?.role === "super_admin",
+  });
+
+  // Impersonation mutations
+  const startImpersonationMutation = useMutation({
+    mutationFn: async (targetUserId: number) => {
+      const res = await apiRequest("POST", "/api/impersonate/start", { targetUserId });
+      return await res.json();
+    },
+    onSuccess: (response) => {
+      setOriginalUser(user);
+      setIsImpersonating(true);
+      queryClient.setQueryData(["/api/user"], response.impersonatedUser);
+      setShowImpersonationModal(false);
+      toast({
+        title: "Impersonation Started",
+        description: `Now viewing as ${response.impersonatedUser.firstName} ${response.impersonatedUser.lastName}`,
+      });
+    },
+  });
+
+  const stopImpersonationMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/impersonate/stop");
+      return await res.json();
+    },
+    onSuccess: (response) => {
+      queryClient.setQueryData(["/api/user"], response.originalUser);
+      setIsImpersonating(false);
+      setOriginalUser(null);
+      toast({
+        title: "Impersonation Ended",
+        description: "Returned to your original account",
+      });
+    },
+  });
 
   // Role switching mutation
   const switchRoleMutation = useMutation({
