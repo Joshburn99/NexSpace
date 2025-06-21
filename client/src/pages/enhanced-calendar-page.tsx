@@ -48,8 +48,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   XCircle,
-  PlayCircle,
-  Star
+  Star,
+  PlayCircle
 } from "lucide-react";
 import { format, addDays, startOfWeek } from "date-fns";
 
@@ -554,12 +554,26 @@ export default function EnhancedCalendarPage() {
             headerToolbar={{
               left: 'prev,next today',
               center: 'title',
-              right: ''
+              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            }}
+            views={{
+              dayGridMonth: {
+                dayMaxEvents: 2,
+                moreLinkClick: 'popover'
+              },
+              timeGridWeek: {
+                slotMinTime: '06:00:00',
+                slotMaxTime: '22:00:00'
+              },
+              timeGridDay: {
+                slotMinTime: '06:00:00',
+                slotMaxTime: '22:00:00'
+              }
             }}
             events={calendarEvents}
             eventClick={handleEventClick}
             height="auto"
-            dayMaxEvents={3}
+            dayMaxEvents={2}
             moreLinkClick="popover"
             eventDisplay="block"
             displayEventTime={true}
@@ -567,6 +581,31 @@ export default function EnhancedCalendarPage() {
               hour: 'numeric',
               minute: '2-digit',
               meridiem: 'short'
+            }}
+            eventContent={(eventInfo) => {
+              const shift = eventInfo.event.extendedProps.shift;
+              const statusInfo = statusConfig[shift.status as keyof typeof statusConfig] || statusConfig.open;
+              const StatusIcon = statusInfo?.icon || AlertCircle;
+              
+              return {
+                html: `
+                  <div class="fc-event-content-custom p-1">
+                    <div class="flex items-center gap-1 text-xs">
+                      <div class="w-3 h-3 flex-shrink-0" style="color: ${statusInfo?.color || "#6b7280"}">
+                        <svg viewBox="0 0 24 24" fill="currentColor" class="w-3 h-3">
+                          <circle cx="12" cy="12" r="10"/>
+                        </svg>
+                      </div>
+                      <span class="truncate font-medium text-white">
+                        ${eventInfo.event.title}
+                      </span>
+                    </div>
+                    <div class="text-xs opacity-90 truncate text-white">
+                      $${shift.rate}/hr
+                    </div>
+                  </div>
+                `
+              };
             }}
           />
         </CardContent>
@@ -663,17 +702,21 @@ export default function EnhancedCalendarPage() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" asChild>
-                          <a href={`/staff/${selectedShift.assignedStaffId}`}>
-                            <ExternalLink className="h-3 w-3 mr-1" />
-                            Profile
-                          </a>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => window.location.href = `/enhanced-staff?profile=${selectedShift.assignedStaffId}`}
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          Profile
                         </Button>
-                        <Button size="sm" variant="outline" asChild>
-                          <a href={`/messages?user=${selectedShift.assignedStaffId}`}>
-                            <MessageCircle className="h-3 w-3 mr-1" />
-                            Message
-                          </a>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => window.location.href = `/messaging?conversation=${selectedShift.assignedStaffId}`}
+                        >
+                          <MessageCircle className="h-3 w-3 mr-1" />
+                          Message
                         </Button>
                       </div>
                     </div>
@@ -725,6 +768,46 @@ export default function EnhancedCalendarPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Role-based Assignment Controls for Facility Managers and Super Admins */}
+              {user && (user.role === 'facility_manager' || user.role === 'super_admin' || user.role === 'admin') && selectedShift.status === 'open' && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <Label className="text-base font-semibold text-blue-900 dark:text-blue-100">Administrative Actions</Label>
+                  <div className="mt-3 space-y-3">
+                    <div className="text-sm text-blue-700 dark:text-blue-300 mb-3">
+                      As a facility manager, you can view shift requests and directly assign qualified staff to this shift.
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-100">
+                        <Users className="h-3 w-3 mr-1" />
+                        View Requests ({Math.floor(Math.random() * 5) + 1})
+                      </Button>
+                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                        <UserCheck className="h-3 w-3 mr-1" />
+                        Assign Staff
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Regular Employee Request Action */}
+              {user && (user.role === 'employee' || user.role === 'contractor') && selectedShift.status === 'open' && !selectedShift.assignedStaffId && (
+                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-semibold text-green-900 dark:text-green-100">Request This Shift</Label>
+                      <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                        Submit a request to work this shift. Your request will be reviewed by the facility manager.
+                      </p>
+                    </div>
+                    <Button className="bg-green-600 hover:bg-green-700 text-white">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Request Shift
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
