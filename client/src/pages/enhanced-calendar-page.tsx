@@ -625,20 +625,17 @@ export default function EnhancedCalendarPage() {
             eventContent={(eventInfo) => {
               const shift = eventInfo.event.extendedProps.shift;
               const statusInfo = statusConfig[shift.status as keyof typeof statusConfig] || statusConfig.open;
-              const specialty = eventInfo.event.extendedProps.specialty || 'RN';
+              const StatusIcon = statusInfo?.icon || AlertCircle;
               
               return {
                 html: `
                   <div class="fc-event-content-custom relative w-full h-full p-1" style="background-color: ${eventInfo.event.backgroundColor}">
-                    <div class="absolute top-1 left-1 px-1 py-0.5 rounded text-xs font-bold" style="background-color: rgba(255,255,255,0.9); color: ${eventInfo.event.backgroundColor};">
-                      ${specialty}
-                    </div>
                     <div class="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center" style="background-color: ${statusInfo?.color || "#6b7280"}">
                       <svg viewBox="0 0 24 24" fill="white" class="w-2 h-2">
                         <circle cx="12" cy="12" r="10"/>
                       </svg>
                     </div>
-                    <div class="text-xs font-medium text-white mt-5 truncate">
+                    <div class="text-xs font-medium text-white truncate pr-6">
                       ${shift.title}
                     </div>
                     <div class="text-xs text-white opacity-90 truncate">
