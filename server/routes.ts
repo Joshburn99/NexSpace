@@ -2978,6 +2978,128 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Session management endpoints
+  app.post("/api/impersonate", requireAuth, async (req, res) => {
+    try {
+      const { userId } = req.body;
+      const currentUser = req.user;
+      
+      if (!currentUser || currentUser.role !== 'super_admin') {
+        return res.status(403).json({ message: "Only super admins can impersonate users" });
+      }
+
+      // Store original user info and set impersonation
+      req.session.originalUser = currentUser;
+      req.session.impersonatedUserId = userId;
+      
+      // Get the user to impersonate
+      const targetUser = await storage.getUser(userId);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      res.json({ 
+        success: true, 
+        impersonatedUser: targetUser,
+        originalUser: currentUser
+      });
+    } catch (error) {
+      console.error("Error starting impersonation:", error);
+      res.status(500).json({ message: "Failed to start impersonation" });
+    }
+  });
+
+  app.post("/api/stop-impersonation", requireAuth, async (req, res) => {
+    try {
+      if (!req.session.originalUser) {
+        return res.status(400).json({ message: "No active impersonation session" });
+      }
+
+      const originalUser = req.session.originalUser;
+      delete req.session.originalUser;
+      delete req.session.impersonatedUserId;
+
+      res.json({ 
+        success: true, 
+        restoredUser: originalUser 
+      });
+    } catch (error) {
+      console.error("Error stopping impersonation:", error);
+      res.status(500).json({ message: "Failed to stop impersonation" });
+    }
+  });
+
+  app.get("/api/session-status", requireAuth, async (req, res) => {
+    try {
+      const currentUser = req.user;
+      const isImpersonating = !!req.session.originalUser;
+      
+      res.json({
+        user: currentUser,
+        isImpersonating,
+        originalUser: req.session.originalUser || null,
+        impersonatedUserId: req.session.impersonatedUserId || null
+      });
+    } catch (error) {
+      console.error("Error getting session status:", error);
+      res.status(500).json({ message: "Failed to get session status" });
+    }
+  });
+
+  app.post("/api/restore-session", async (req, res) => {
+    try {
+      const { username, password, impersonatedUserId } = req.body;
+      
+      // Quick re-authentication for development
+      if (username === "joshburn" && password === "admin123") {
+        const superUser = {
+          id: 1,
+          username: "joshburn",
+          email: "joshburn@nexspace.com",
+          role: "super_admin" as const,
+          firstName: "Josh",
+          lastName: "Burn",
+          avatar: null,
+          isActive: true,
+          facilityId: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          password: ""
+        };
+
+        // Restore session
+        req.session.passport = { user: superUser.id };
+        
+        // Restore impersonation if provided
+        if (impersonatedUserId) {
+          const targetUser = await storage.getUser(impersonatedUserId);
+          if (targetUser) {
+            req.session.originalUser = superUser;
+            req.session.impersonatedUserId = impersonatedUserId;
+            
+            return res.json({
+              success: true,
+              user: targetUser,
+              isImpersonating: true,
+              originalUser: superUser
+            });
+          }
+        }
+
+        res.json({
+          success: true,
+          user: superUser,
+          isImpersonating: false
+        });
+      } else {
+        res.status(401).json({ message: "Invalid credentials" });
+      }
+    } catch (error) {
+      console.error("Error restoring session:", error);
+      res.status(500).json({ message: "Failed to restore session" });
+    }
+  });
+
   // Admin API endpoints
   app.get("/api/admin/users", requireAuth, async (req, res) => {
     try {

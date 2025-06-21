@@ -64,9 +64,11 @@ import { Store } from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
 import MemoryStore from "memorystore";
+import FileStore from "session-file-store";
 
 const PostgresSessionStore = connectPg(session);
 const MemorySessionStore = MemoryStore(session);
+const FileSessionStore = FileStore(session);
 
 export interface IStorage {
   sessionStore: Store;
@@ -248,11 +250,23 @@ export class DatabaseStorage implements IStorage {
   sessionStore: Store;
 
   constructor() {
-    // Use memory store by default to avoid PostgreSQL control plane issues
-    console.log('Using memory session store to avoid database connection issues');
-    this.sessionStore = new MemorySessionStore({
-      checkPeriod: 86400000, // prune expired entries every 24h
-    });
+    // Use file-based session store for persistence during development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Using file-based session store for development persistence');
+      this.sessionStore = new FileSessionStore({
+        path: './sessions',
+        secret: process.env.SESSION_SECRET || 'nexspace-dev-secret',
+        ttl: 86400 * 7, // 7 days for dev
+        retries: 0,
+        logFn: () => {}, // Suppress file store logs
+      });
+    } else {
+      // Use memory store for production to avoid file system issues
+      console.log('Using memory session store for production');
+      this.sessionStore = new MemorySessionStore({
+        checkPeriod: 86400000, // prune expired entries every 24h
+      });
+    }
   }
 
   // User methods
