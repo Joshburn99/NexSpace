@@ -278,13 +278,11 @@ export default function AdminUserManagementPage() {
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={UserRole.CLINICIAN}>Clinician</SelectItem>
-                    <SelectItem value={UserRole.CONTRACTOR}>Contractor</SelectItem>
-                    <SelectItem value={UserRole.FACILITY_MANAGER}>Facility Manager</SelectItem>
-                    <SelectItem value={UserRole.CLIENT_ADMINISTRATOR}>
-                      Client Administrator
-                    </SelectItem>
-                    <SelectItem value={UserRole.SUPER_ADMIN}>Super Admin</SelectItem>
+                    <SelectItem value="employee">Employee</SelectItem>
+                    <SelectItem value="contractor">Contractor</SelectItem>
+                    <SelectItem value="facility_manager">Facility Manager</SelectItem>
+                    <SelectItem value="admin">Administrator</SelectItem>
+                    <SelectItem value="super_admin">Super Admin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -441,13 +439,11 @@ export default function AdminUserManagementPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={UserRole.CLINICIAN}>Clinician</SelectItem>
-                    <SelectItem value={UserRole.CONTRACTOR}>Contractor</SelectItem>
-                    <SelectItem value={UserRole.FACILITY_MANAGER}>Facility Manager</SelectItem>
-                    <SelectItem value={UserRole.CLIENT_ADMINISTRATOR}>
-                      Client Administrator
-                    </SelectItem>
-                    <SelectItem value={UserRole.SUPER_ADMIN}>Super Admin</SelectItem>
+                    <SelectItem value="employee">Employee</SelectItem>
+                    <SelectItem value="contractor">Contractor</SelectItem>
+                    <SelectItem value="facility_manager">Facility Manager</SelectItem>
+                    <SelectItem value="admin">Administrator</SelectItem>
+                    <SelectItem value="super_admin">Super Admin</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
