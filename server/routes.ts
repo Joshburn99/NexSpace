@@ -5744,7 +5744,9 @@ export function registerRoutes(app: Express): Server {
                       template.specialty === "Surgical Technologist" ? "CST" : template.specialty,
             facilityId: template.facilityId,
             facilityName: template.facilityName,
-            location: template.facilityName,
+            buildingId: template.buildingId || "main-building",
+            buildingName: template.buildingName || "Main Building",
+            location: `${template.facilityName} - ${template.buildingName || "Main Building"}`,
             minStaff: template.minStaff,
             maxStaff: template.maxStaff,
             status: 'open' as const,
@@ -5752,13 +5754,21 @@ export function registerRoutes(app: Express): Server {
             description: template.notes || `${template.department} shift`,
             urgency: 'medium' as const,
             priority: 'standard' as const,
+            priorityTiers: template.priorityTiers || {
+              employees: true,
+              contractors: true,
+              outsideAgencies: false
+            },
+            staffingPriorityOrder: template.staffingPriorityOrder || ["employees", "contractors"],
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
             assignedStaffIds: [],
             applicantIds: [],
             requiredCertifications: [],
             totalHours: 12,
-            shiftType: template.shiftType
+            shiftType: template.shiftType,
+            templateId: template.id,
+            templateName: template.name
           };
           
           generatedShifts.push(newShift);

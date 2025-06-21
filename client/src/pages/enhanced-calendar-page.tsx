@@ -1052,7 +1052,7 @@ export default function EnhancedCalendarPage() {
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <Building className="w-4 h-4" />
-                      <span>{template.department}</span>
+                      <span>{template.department} - {template.facilityName}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                       <Clock className="w-4 h-4" />
@@ -1062,8 +1062,18 @@ export default function EnhancedCalendarPage() {
                       <DollarSign className="w-4 h-4" />
                       <span>${template.hourlyRate}/hr</span>
                     </div>
-                    {template.description && (
-                      <p className="text-sm text-gray-500 mt-2">{template.description}</p>
+                    <div className="flex gap-1 mt-2">
+                      <Badge variant="outline" className="text-xs">
+                        <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
+                        Employees
+                      </Badge>
+                      <Badge variant="outline" className="text-xs">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-1"></div>
+                        Float Pool
+                      </Badge>
+                    </div>
+                    {template.notes && (
+                      <p className="text-sm text-gray-500 mt-2">{template.notes}</p>
                     )}
                   </div>
                   <div className="flex gap-2 mt-4">
@@ -1137,6 +1147,25 @@ export default function EnhancedCalendarPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium">Building/Unit</Label>
+              <Select defaultValue={selectedTemplate?.buildingId || ""}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select building or unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="main-building">Main Building</SelectItem>
+                  <SelectItem value="north-wing">North Wing</SelectItem>
+                  <SelectItem value="south-wing">South Wing</SelectItem>
+                  <SelectItem value="west-tower">West Tower</SelectItem>
+                  <SelectItem value="emergency-dept">Emergency Department</SelectItem>
+                  <SelectItem value="icu-unit">ICU Unit</SelectItem>
+                  <SelectItem value="or-suite">OR Suite</SelectItem>
+                  <SelectItem value="maternity-ward">Maternity Ward</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             <div className="grid grid-cols-2 gap-4">
@@ -1225,6 +1254,47 @@ export default function EnhancedCalendarPage() {
                   placeholder="3"
                   defaultValue={selectedTemplate?.maxStaff || "3"}
                 />
+              </div>
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium">Staffing Priority Tiers</Label>
+              <div className="space-y-3 mt-2">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-green-100 text-green-800 rounded-full flex items-center justify-center text-sm font-medium">1</div>
+                    <div>
+                      <div className="font-medium">Employees</div>
+                      <div className="text-xs text-gray-500">Internal staff members - highest priority</div>
+                    </div>
+                  </div>
+                  <input type="checkbox" defaultChecked className="rounded" />
+                </div>
+                
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">2</div>
+                    <div>
+                      <div className="font-medium">Contractors (Float Pool)</div>
+                      <div className="text-xs text-gray-500">Contract workers - medium priority</div>
+                    </div>
+                  </div>
+                  <input type="checkbox" defaultChecked className="rounded" />
+                </div>
+                
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-orange-100 text-orange-800 rounded-full flex items-center justify-center text-sm font-medium">3</div>
+                    <div>
+                      <div className="font-medium">Outside Agencies</div>
+                      <div className="text-xs text-gray-500">External staffing agencies - lowest priority</div>
+                    </div>
+                  </div>
+                  <input type="checkbox" className="rounded" />
+                </div>
+              </div>
+              <div className="text-xs text-gray-500 mt-2">
+                Shifts will be offered to staff groups in priority order. Higher priority groups get first access to available shifts.
               </div>
             </div>
             
@@ -1379,8 +1449,8 @@ export default function EnhancedCalendarPage() {
                   });
                   setShowUseTemplateModal(false);
                   setSelectedTemplate(null);
-                  // Refresh shifts data
-                  window.location.reload();
+                  // Refresh shifts data without page reload
+                  queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
                 } else {
                   throw new Error('Failed to create shifts');
                 }
