@@ -641,7 +641,7 @@ export function registerRoutes(app: Express): Server {
         // Auto-assign the shift
         const updatedShift = {
           ...shift,
-          status: 'assigned' as const,
+          status: 'filled' as const,
           assignedStaffIds: [userId],
           updatedAt: new Date().toISOString()
         };
@@ -651,11 +651,11 @@ export function registerRoutes(app: Express): Server {
           id: Date.now() + 2,
           shiftId,
           userId,
-          action: 'assigned',
+          action: 'filled',
           timestamp: new Date().toISOString(),
           performedById: userId,
           previousStatus: 'requested',
-          newStatus: 'assigned',
+          newStatus: 'filled',
           notes: 'Auto-assigned based on criteria'
         };
 
@@ -692,7 +692,7 @@ export function registerRoutes(app: Express): Server {
       // Create assigned shift
       const assignedShift = {
         ...shift,
-        status: 'assigned' as const,
+        status: 'filled' as const,
         assignedStaffIds: [userId],
         updatedAt: new Date().toISOString()
       };
@@ -702,11 +702,11 @@ export function registerRoutes(app: Express): Server {
         id: Date.now(),
         shiftId,
         userId,
-        action: 'assigned',
+        action: 'filled',
         timestamp: new Date().toISOString(),
         performedById: req.user.id,
         previousStatus: shift.status,
-        newStatus: 'assigned'
+        newStatus: 'filled'
       };
 
       res.json({
@@ -1728,7 +1728,7 @@ export function registerRoutes(app: Express): Server {
           rate: "32.00",
           premiumMultiplier: "1.10",
           urgency: "medium",
-          status: "assigned",
+          status: "filled",
           description: "Medical surgical unit",
           createdById: 1,
         },
@@ -2407,10 +2407,10 @@ export function registerRoutes(app: Express): Server {
       const requestId = parseInt(req.params.id);
       const { workerId, workerName } = req.body;
 
-      // Update shift status to assigned
+      // Update shift status to filled
       const assignedShift = {
         id: requestId,
-        status: "assigned",
+        status: "filled",
         assignedWorker: {
           id: workerId,
           name: workerName,
@@ -3773,7 +3773,7 @@ export function registerRoutes(app: Express): Server {
           "Physical Therapist",
           "Respiratory Therapist",
         ];
-        const statuses = ["open", "assigned", "completed", "requested", "in_progress"];
+        const statuses = ["open", "filled", "completed", "requested", "in_progress"];
         const urgencies = ["low", "medium", "high", "critical"];
         const shiftTimes = [
           { start: "07:00", end: "19:00", type: "Day" },

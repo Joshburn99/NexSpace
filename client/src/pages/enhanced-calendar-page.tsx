@@ -198,7 +198,7 @@ export default function EnhancedCalendarPage() {
   // Convert to calendar events with specialty-based colors
   const calendarEvents = processedShifts.map(shift => {
     const specialtyColor = (specialtyColors as any)[shift.specialty] || specialtyColors.default;
-    const statusInfo = statusConfig[shift.status];
+    const statusInfo = statusConfig[shift.status as keyof typeof statusConfig] || statusConfig.open;
     
     return {
       id: shift.id.toString(),
@@ -213,9 +213,9 @@ export default function EnhancedCalendarPage() {
         facility: shift.facilityName,
         rate: shift.rate,
         urgency: shift.urgency,
-        statusIcon: statusInfo.icon,
-        statusColor: statusInfo.color,
-        statusLabel: statusInfo.label
+        statusIcon: statusInfo?.icon || AlertCircle,
+        statusColor: statusInfo?.color || "#6b7280",
+        statusLabel: statusInfo?.label || shift.status
       }
     };
   });
@@ -536,11 +536,11 @@ export default function EnhancedCalendarPage() {
               <h4 className="text-sm font-medium mb-2">Status Icons</h4>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 {Object.entries(statusConfig).slice(0, 6).map(([status, config]) => {
-                  const IconComponent = config.icon;
+                  const IconComponent = config?.icon || AlertCircle;
                   return (
                     <div key={status} className="flex items-center gap-2">
-                      <IconComponent className="w-3 h-3" style={{ color: config.color }} />
-                      <span className="truncate">{config.label}</span>
+                      <IconComponent className="w-3 h-3" style={{ color: config?.color || "#6b7280" }} />
+                      <span className="truncate">{config?.label || status}</span>
                     </div>
                   );
                 })}
@@ -619,11 +619,12 @@ export default function EnhancedCalendarPage() {
                   <Label>Status</Label>
                   <div className="flex items-center gap-2 mt-1">
                     {(() => {
-                      const StatusIcon = statusConfig[selectedShift.status]?.icon || AlertCircle;
-                      return <StatusIcon className="h-4 w-4" style={{ color: statusConfig[selectedShift.status]?.color }} />;
+                      const statusInfo = statusConfig[selectedShift.status as keyof typeof statusConfig] || statusConfig.open;
+                      const StatusIcon = statusInfo?.icon || AlertCircle;
+                      return <StatusIcon className="h-4 w-4" style={{ color: statusInfo?.color || "#6b7280" }} />;
                     })()}
-                    <Badge style={{ backgroundColor: statusConfig[selectedShift.status]?.color }}>
-                      {statusConfig[selectedShift.status]?.label || selectedShift.status}
+                    <Badge style={{ backgroundColor: (statusConfig[selectedShift.status as keyof typeof statusConfig] || statusConfig.open)?.color || "#6b7280" }}>
+                      {(statusConfig[selectedShift.status as keyof typeof statusConfig] || statusConfig.open)?.label || selectedShift.status}
                     </Badge>
                   </div>
                 </div>
