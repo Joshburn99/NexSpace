@@ -1210,7 +1210,7 @@ export function registerRoutes(app: Express): Server {
           role: "employee",
           phone: "(555) 123-4567",
           department: "ICU",
-          specialty: "Critical Care",
+          specialty: "RN",
           compliant: true,
           activeCredentials: 8,
           expiringCredentials: 0,

@@ -87,21 +87,21 @@ interface CalendarFilter {
   };
 }
 
-// Specialty color mapping
+// Specialty color mapping by certification
 const specialtyColors = {
-  "ICU": "#ef4444", // red
-  "Emergency": "#dc2626", // dark red
-  "Operating Room": "#7c3aed", // purple
-  "Pediatrics": "#f59e0b", // amber
-  "Rehabilitation": "#10b981", // emerald
-  "Pharmacy": "#3b82f6", // blue
-  "Laboratory": "#6b7280", // gray
-  "Respiratory": "#8b5cf6", // violet
-  "Radiology": "#06b6d4", // cyan
-  "Medical-Surgical": "#84cc16", // lime
-  "Float Pool": "#f97316", // orange
-  "Pulmonary": "#14b8a6", // teal
-  "Imaging": "#64748b", // slate
+  "RN": "#ef4444", // red - Registered Nurse
+  "LPN": "#10b981", // emerald - Licensed Practical Nurse
+  "CNA": "#3b82f6", // blue - Certified Nursing Assistant
+  "RT": "#8b5cf6", // violet - Respiratory Therapist
+  "PT": "#f59e0b", // amber - Physical Therapist
+  "OT": "#84cc16", // lime - Occupational Therapist
+  "CST": "#7c3aed", // purple - Certified Surgical Technologist
+  "PCT": "#06b6d4", // cyan - Patient Care Technician
+  "MA": "#f97316", // orange - Medical Assistant
+  "EMT": "#dc2626", // dark red - Emergency Medical Technician
+  "CRNA": "#be123c", // rose - Certified Registered Nurse Anesthetist
+  "NP": "#9333ea", // purple - Nurse Practitioner
+  "PA": "#14b8a6", // teal - Physician Assistant
   "default": "#6b7280"
 };
 
@@ -114,7 +114,13 @@ const statusConfig = {
   cancelled: { icon: XCircle, color: "#6b7280", label: "Cancelled" },
   expired: { icon: AlertTriangle, color: "#dc2626", label: "Expired" },
   in_progress: { icon: PlayCircle, color: "#8b5cf6", label: "In Progress" },
-  completed: { icon: CheckCircle, color: "#059669", label: "Completed" }
+  completed: { icon: CheckCircle, color: "#059669", label: "Completed" },
+  ncns: { icon: AlertTriangle, color: "#ef4444", label: "NCNS" },
+  pending_timesheet: { icon: Timer, color: "#f59e0b", label: "Pending Timesheet" },
+  paid: { icon: CheckCircle, color: "#10b981", label: "Paid" },
+  no_show: { icon: X, color: "#dc2626", label: "No Show" },
+  late: { icon: Clock, color: "#f97316", label: "Late" },
+  early_departure: { icon: AlertCircle, color: "#ea580c", label: "Early Departure" }
 };
 
 export default function EnhancedCalendarPage() {
@@ -127,6 +133,7 @@ export default function EnhancedCalendarPage() {
   const [selectedShift, setSelectedShift] = useState<EnhancedShift | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showAddShiftDialog, setShowAddShiftDialog] = useState(false);
   
   // Advanced filters state
   const [filters, setFilters] = useState<CalendarFilter>({
@@ -273,6 +280,16 @@ export default function EnhancedCalendarPage() {
             <Filter className="h-4 w-4 mr-2" />
             Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
           </Button>
+          {user && (user.role === 'facility_manager' || user.role === 'super_admin' || user.role === 'admin') && (
+            <Button
+              onClick={() => setShowAddShiftDialog(true)}
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Add Shift
+            </Button>
+          )}
           <div className="flex gap-1">
             <Button
               variant={viewMode === "dayGridMonth" ? "default" : "outline"}
@@ -585,23 +602,25 @@ export default function EnhancedCalendarPage() {
             eventContent={(eventInfo) => {
               const shift = eventInfo.event.extendedProps.shift;
               const statusInfo = statusConfig[shift.status as keyof typeof statusConfig] || statusConfig.open;
-              const StatusIcon = statusInfo?.icon || AlertCircle;
               
               return {
                 html: `
-                  <div class="fc-event-content-custom p-1">
-                    <div class="flex items-center gap-1 text-xs">
-                      <div class="w-3 h-3 flex-shrink-0" style="color: ${statusInfo?.color || "#6b7280"}">
+                  <div class="fc-event-content-custom relative w-full h-full p-1" style="background-color: ${eventInfo.event.backgroundColor}">
+                    <div class="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center" style="background-color: rgba(255,255,255,0.9)">
+                      <div class="w-3 h-3" style="color: ${statusInfo?.color || "#6b7280"}">
                         <svg viewBox="0 0 24 24" fill="currentColor" class="w-3 h-3">
                           <circle cx="12" cy="12" r="10"/>
                         </svg>
                       </div>
-                      <span class="truncate font-medium text-white">
-                        ${eventInfo.event.title}
-                      </span>
                     </div>
-                    <div class="text-xs opacity-90 truncate text-white">
-                      $${shift.rate}/hr
+                    <div class="text-xs font-medium text-white pr-6">
+                      ${shift.specialty || 'RN'}
+                    </div>
+                    <div class="text-xs text-white opacity-90 truncate">
+                      ${shift.facilityName}
+                    </div>
+                    <div class="text-xs text-white opacity-80 truncate">
+                      ${shift.startTime} - ${shift.endTime}
                     </div>
                   </div>
                 `
