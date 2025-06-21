@@ -580,9 +580,8 @@ export function registerRoutes(app: Express): Server {
     try {
       const { shiftId, userId = req.user.id } = req.body;
       
-      // Get shift data from existing shift list
-      const allShifts = await storage.getShifts();
-      const shift = allShifts.find(s => s.id === shiftId);
+      // Get shift data using correct storage method
+      const shift = await storage.getShift(shiftId);
       
       if (!shift || shift.status !== 'open') {
         return res.status(400).json({ message: "Shift not available for request" });
@@ -660,8 +659,7 @@ export function registerRoutes(app: Express): Server {
       const { shiftId, userId } = req.body;
       
       // Get shift and validate
-      const allShifts = await storage.getShifts();
-      const shift = allShifts.find(s => s.id === shiftId);
+      const shift = await storage.getShift(shiftId);
       
       if (!shift) {
         return res.status(404).json({ message: "Shift not found" });
@@ -835,8 +833,8 @@ export function registerRoutes(app: Express): Server {
   async function checkAutoAssignmentCriteria(shiftId: number, userId: number): Promise<{ shouldAutoAssign: boolean; reason?: string }> {
     try {
       // Get user and shift details
-      const user = await storage.getUserById(userId);
-      const shift = await storage.getShiftById(shiftId);
+      const user = await storage.getUser(userId);
+      const shift = await storage.getShift(shiftId);
       
       if (!user || !shift) {
         return { shouldAutoAssign: false, reason: "User or shift not found" };

@@ -5,11 +5,39 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
 import { useShifts } from "@/contexts/ShiftContext";
+import { useToast } from "@/hooks/use-toast";
 
 export default function OpenShiftsPage() {
   const { user } = useAuth();
-  const { open: openShifts = [], isLoading, error } = useShifts();
+  const { open: openShifts = [], requestShift, isLoading, error } = useShifts();
+  const { toast } = useToast();
   const [filter, setFilter] = useState("all");
+
+  // Handle shift request with proper error handling
+  const handleShiftRequest = async (shiftId: number) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to request shifts.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await requestShift(shiftId);
+      toast({
+        title: "Shift Requested",
+        description: "Your shift request has been submitted successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Request Failed",
+        description: "Failed to request shift. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -140,7 +168,7 @@ export default function OpenShiftsPage() {
               <div className="space-y-2">
                 <div className="text-sm font-medium">Requirements:</div>
                 <div className="flex flex-wrap gap-1">
-                  {shift.specialRequirements.map((req, index) => (
+                  {Array.isArray(shift.specialRequirements) && shift.specialRequirements.map((req, index) => (
                     <Badge key={index} variant="secondary" className="text-xs">
                       {req}
                     </Badge>
@@ -149,8 +177,13 @@ export default function OpenShiftsPage() {
               </div>
 
               <div className="flex gap-2 pt-2">
-                <Button className="flex-1" size="sm">
-                  Apply Now
+                <Button 
+                  className="flex-1" 
+                  size="sm"
+                  onClick={() => handleShiftRequest(shift.id)}
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Requesting...' : 'Apply Now'}
                 </Button>
                 <Button variant="outline" size="sm">
                   Details
