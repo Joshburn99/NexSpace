@@ -28,15 +28,19 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Plus, Edit, Trash2, Search, ArrowLeft, Home, UserCheck, UserX } from "lucide-react";
+import { Users, Plus, Edit, Trash2, Search, ArrowLeft, Home, UserCheck, UserX, Settings, Shield } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { UserRole } from "@shared/schema";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Separator } from "@/components/ui/separator";
 
 export default function AdminUserManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState<string>("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [isPermissionsDialogOpen, setIsPermissionsDialogOpen] = useState(false);
+  const [editingPermissions, setEditingPermissions] = useState<any>(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["/api/admin/users"],
@@ -74,27 +78,91 @@ export default function AdminUserManagementPage() {
     },
   });
 
-  const filteredUsers = users.filter((user: any) => {
+  // Permission sets for different roles
+  const permissionSets = {
+    dashboard: { name: "Dashboard Access", description: "View main dashboard and analytics" },
+    scheduling: { name: "Scheduling", description: "View and manage schedules" },
+    staff: { name: "Staff Management", description: "Manage staff members" },
+    facilities: { name: "Facility Management", description: "Manage facilities" },
+    billing: { name: "Billing & Invoices", description: "Access billing information" },
+    messaging: { name: "Messaging", description: "Send and receive messages" },
+    reports: { name: "Reports & Analytics", description: "Generate and view reports" },
+    admin: { name: "Admin Functions", description: "Administrative privileges" },
+    impersonation: { name: "User Impersonation", description: "Impersonate other users" }
+  };
+
+  const rolePermissions = {
+    super_admin: Object.keys(permissionSets),
+    admin: ["dashboard", "scheduling", "staff", "facilities", "billing", "messaging", "reports"],
+    facility_manager: ["dashboard", "scheduling", "staff", "messaging", "reports"],
+    employee: ["dashboard", "scheduling", "messaging"],
+    contractor: ["dashboard", "scheduling", "messaging"]
+  };
+
+  const filteredUsers = (users as any[]).filter((user: any) => {
     const matchesSearch =
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.lastName?.toLowerCase().includes(searchTerm.toLowerCase());
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = selectedRole === "all" || user.role === selectedRole;
     return matchesSearch && matchesRole;
   });
 
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
-      case UserRole.SUPER_ADMIN:
+      case "super_admin":
         return "destructive";
-      case UserRole.CLIENT_ADMINISTRATOR:
+      case "admin":
         return "default";
-      case UserRole.FACILITY_MANAGER:
+      case "facility_manager":
         return "secondary";
+      case "employee":
+        return "outline";
+      case "contractor":
+        return "outline";
       default:
         return "outline";
     }
+  };
+
+  const updateUserPermissions = useMutation({
+    mutationFn: async ({ userId, permissions }: { userId: number; permissions: string[] }) => {
+      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/permissions`, { permissions });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      setIsPermissionsDialogOpen(false);
+      setEditingPermissions(null);
+    },
+  });
+
+  const handleEditPermissions = (user: any) => {
+    setEditingPermissions({
+      ...user,
+      permissions: (rolePermissions as any)[user.role] || []
+    });
+    setIsPermissionsDialogOpen(true);
+  };
+
+  const handleSavePermissions = () => {
+    if (editingPermissions) {
+      updateUserPermissions.mutate({
+        userId: editingPermissions.id,
+        permissions: editingPermissions.permissions
+      });
+    }
+  };
+
+  const togglePermission = (permission: string) => {
+    if (!editingPermissions) return;
+    
+    setEditingPermissions({
+      ...editingPermissions,
+      permissions: editingPermissions.permissions.includes(permission)
+        ? editingPermissions.permissions.filter((p: string) => p !== permission)
+        : [...editingPermissions.permissions, permission]
+    });
   };
 
   const handleCreateUser = (e: React.FormEvent) => {
@@ -251,6 +319,7 @@ export default function AdminUserManagementPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Permissions</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -258,7 +327,7 @@ export default function AdminUserManagementPage() {
                 {filteredUsers.map((user: any) => (
                   <TableRow key={user.id}>
                     <TableCell>
-                      {user.firstName} {user.lastName}
+                      {user.name || `${user.firstName} ${user.lastName}`}
                     </TableCell>
                     <TableCell>{user.username}</TableCell>
                     <TableCell>{user.email}</TableCell>
@@ -279,9 +348,26 @@ export default function AdminUserManagementPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {((rolePermissions as any)[user.role] || []).slice(0, 3).map((permission: string) => (
+                          <Badge key={permission} variant="outline" className="text-xs">
+                            {(permissionSets as any)[permission]?.name || permission}
+                          </Badge>
+                        ))}
+                        {((rolePermissions as any)[user.role] || []).length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{((rolePermissions as any)[user.role] || []).length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <div className="flex gap-2">
                         <Button size="sm" variant="outline" onClick={() => setSelectedUser(user)}>
                           <Edit className="h-3 w-3" />
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => handleEditPermissions(user)}>
+                          <Shield className="h-3 w-3" />
                         </Button>
                         {user.isActive && (
                           <Button
@@ -369,6 +455,77 @@ export default function AdminUserManagementPage() {
                 {updateUserMutation.isPending ? "Updating..." : "Update User"}
               </Button>
             </form>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Permissions Editing Dialog */}
+      {editingPermissions && (
+        <Dialog open={isPermissionsDialogOpen} onOpenChange={() => setIsPermissionsDialogOpen(false)}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Edit Permissions - {editingPermissions.name || `${editingPermissions.firstName} ${editingPermissions.lastName}`}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                <Badge variant={getRoleBadgeVariant(editingPermissions.role)}>
+                  {editingPermissions.role}
+                </Badge>
+                <span className="text-sm text-muted-foreground">
+                  Current role-based permissions can be customized below
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-3">
+                  <h4 className="font-medium">Permission Categories</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {Object.entries(permissionSets).map(([key, permission]) => (
+                      <div key={key} className="flex items-start space-x-3 p-3 border rounded-lg">
+                        <Checkbox
+                          id={key}
+                          checked={editingPermissions.permissions.includes(key)}
+                          onCheckedChange={() => togglePermission(key)}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <Label htmlFor={key} className="text-sm font-medium cursor-pointer">
+                            {permission.name}
+                          </Label>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {permission.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
+              <div className="flex justify-between">
+                <div className="text-sm text-muted-foreground">
+                  {editingPermissions.permissions.length} of {Object.keys(permissionSets).length} permissions selected
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsPermissionsDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleSavePermissions}
+                    disabled={updateUserPermissions.isPending}
+                  >
+                    {updateUserPermissions.isPending ? "Saving..." : "Save Permissions"}
+                  </Button>
+                </div>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       )}
