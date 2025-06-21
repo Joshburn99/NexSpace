@@ -436,6 +436,62 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
         {/* Page Content */}
         <div className="flex-1 overflow-auto">{children}</div>
       </div>
+
+      {/* Impersonation Modal */}
+      {showImpersonationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-h-96 overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Impersonate User</h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowImpersonationModal(false)}
+              >
+                ×
+              </Button>
+            </div>
+            
+            <div className="mb-4">
+              <Input
+                placeholder="Search users..."
+                value={impersonationSearch}
+                onChange={(e) => setImpersonationSearch(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              {(allUsers as any[])
+                .filter((u: any) => 
+                  u.firstName.toLowerCase().includes(impersonationSearch.toLowerCase()) ||
+                  u.lastName.toLowerCase().includes(impersonationSearch.toLowerCase()) ||
+                  u.email.toLowerCase().includes(impersonationSearch.toLowerCase())
+                )
+                .map((impUser: any) => (
+                  <div
+                    key={impUser.id}
+                    className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50"
+                  >
+                    <div>
+                      <div className="font-medium">
+                        {impUser.firstName} {impUser.lastName}
+                      </div>
+                      <div className="text-sm text-gray-500">{impUser.email}</div>
+                      <div className="text-xs text-gray-400">{impUser.role}</div>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => startImpersonationMutation.mutate(impUser.id)}
+                      disabled={startImpersonationMutation.isPending}
+                    >
+                      Impersonate
+                    </Button>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
