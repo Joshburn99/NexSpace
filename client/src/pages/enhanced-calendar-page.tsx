@@ -1303,7 +1303,7 @@ export default function EnhancedCalendarPage() {
           <DialogHeader>
             <DialogTitle>Schedule Shifts from Template</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <form data-use-template className="space-y-4">
             <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
               <h4 className="font-medium text-sm mb-2">Template: {selectedTemplate?.name}</h4>
               <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
@@ -1316,6 +1316,7 @@ export default function EnhancedCalendarPage() {
             <div>
               <Label className="text-sm font-medium">Start Date</Label>
               <Input 
+                name="startDate"
                 type="date"
                 defaultValue={new Date().toISOString().split('T')[0]}
               />
@@ -1324,6 +1325,7 @@ export default function EnhancedCalendarPage() {
             <div>
               <Label className="text-sm font-medium">End Date</Label>
               <Input 
+                name="endDate"
                 type="date"
                 defaultValue={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
               />
@@ -1331,25 +1333,20 @@ export default function EnhancedCalendarPage() {
             
             <div>
               <Label className="text-sm font-medium">Days in Advance to Post</Label>
-              <Select defaultValue="7">
-                <SelectTrigger>
-                  <SelectValue placeholder="Select days" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">1 day</SelectItem>
-                  <SelectItem value="3">3 days</SelectItem>
-                  <SelectItem value="7">7 days</SelectItem>
-                  <SelectItem value="14">14 days</SelectItem>
-                  <SelectItem value="21">21 days</SelectItem>
-                  <SelectItem value="30">30 days</SelectItem>
-                </SelectContent>
-              </Select>
+              <select name="daysInAdvance" className="w-full mt-1 p-2 border rounded-md" defaultValue="7">
+                <option value="1">1 day</option>
+                <option value="3">3 days</option>
+                <option value="7">7 days</option>
+                <option value="14">14 days</option>
+                <option value="21">21 days</option>
+                <option value="30">30 days</option>
+              </select>
             </div>
             
             <div className="text-xs text-gray-500">
               Shifts will be created based on the template's selected days of the week within the date range.
             </div>
-          </div>
+          </form>
           
           <div className="flex justify-end gap-2 mt-6">
             <Button variant="outline" onClick={() => {
