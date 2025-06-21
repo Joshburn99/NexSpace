@@ -65,6 +65,7 @@ import MySchedulePage from "@/pages/MySchedulePage";
 import EnhancedCalendarPage from "@/pages/enhanced-calendar-page";
 import SchedulingTemplatesPage from "@/pages/scheduling-templates-page";
 import AdvancedSchedulingPage from "@/pages/advanced-scheduling-page";
+import FacilitySchedulePage from "@/pages/facility-schedule-page";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -81,10 +82,8 @@ function AppContent() {
       <ProtectedRoute path="/jobs/post" component={EnhancedJobPostingPage} />
       <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />
       <ProtectedRoute path="/calendar" component={UnifiedCalendarPage} />
-      <ProtectedRoute path="/calendar-view" component={UnifiedCalendarPage} />
-      <ProtectedRoute path="/enhanced-calendar" component={EnhancedCalendarPage} />
-      <ProtectedRoute path="/scheduling" component={SchedulingTemplatesPage} />
-      <ProtectedRoute path="/advanced-scheduling" component={AdvancedSchedulingPage} />
+      <ProtectedRoute path="/shift-templates" component={SchedulingTemplatesPage} />
+      <ProtectedRoute path="/facility-schedule" component={FacilitySchedulePage} />
       <ProtectedRoute path="/scheduling-config" component={SchedulingConfigPage} />
       <ProtectedRoute path="/shifts-open" component={OpenShiftsPage} />
       <ProtectedRoute path="/shift-requests" component={ShiftRequestsPage} />

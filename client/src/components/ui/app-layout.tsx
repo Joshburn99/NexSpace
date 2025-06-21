@@ -101,15 +101,13 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
     },
     {
       key: "scheduling",
-      label: "Scheduling",
+      label: "Shift Templates",
       icon: Calendar,
       items: [
-        { path: "/calendar-view", icon: Calendar, label: "Calendar View" },
-        { path: "/enhanced-calendar", icon: Calendar, label: "Enhanced Calendar" },
+        { path: "/shift-templates", icon: Calendar, label: "Shift Templates" },
+        { path: "/facility-schedule", icon: Calendar, label: "Facility Schedule" },
         { path: "/shifts-open", icon: ClipboardList, label: "Open Shifts" },
         { path: "/shift-requests", icon: Clock, label: "Shift Requests" },
-        { path: "/scheduling", icon: Calendar, label: "Shift Templates" },
-        { path: "/advanced-scheduling", icon: Calendar, label: "Advanced Scheduling" },
         { path: "/time-clock", icon: Clock, label: "Time Clock" },
       ],
     },

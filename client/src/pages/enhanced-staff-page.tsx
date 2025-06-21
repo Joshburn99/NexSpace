@@ -523,10 +523,10 @@ export default function EnhancedStaffPage() {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <Badge className={`${statusColors[staff.status]} text-white`}>
-                      {staff.status.charAt(0).toUpperCase() + staff.status.slice(1)}
+                    <Badge className={`${statusColors[staff.status || 'active']} text-white`}>
+                      {(staff.status || 'active').charAt(0).toUpperCase() + (staff.status || 'active').slice(1)}
                     </Badge>
-                    <Badge variant="outline">{workerTypeLabels[staff.workerType]}</Badge>
+                    <Badge variant="outline">{workerTypeLabels[staff.workerType] || 'Staff'}</Badge>
                   </div>
 
                   <div className="flex items-center text-sm text-muted-foreground">
