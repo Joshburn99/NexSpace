@@ -211,7 +211,7 @@ export default function EnhancedCalendarPage() {
     
     return {
       id: shift.id.toString(),
-      title: `${shift.specialty} - ${shift.title}`,
+      title: `${shift.title}`,
       start: `${shift.date}T${shift.startTime}`,
       end: `${shift.date}T${shift.endTime}`,
       backgroundColor: specialtyColor,
@@ -220,11 +220,13 @@ export default function EnhancedCalendarPage() {
       extendedProps: {
         shift: { ...shift, status: shift.status },
         facility: shift.facilityName,
+        specialty: shift.specialty,
         rate: shift.rate,
         urgency: shift.urgency,
         statusIcon: statusInfo?.icon || AlertCircle,
         statusColor: statusInfo?.color || "#6b7280",
-        statusLabel: statusInfo?.label || shift.status
+        statusLabel: statusInfo?.label || shift.status,
+        specialtyColor: specialtyColor
       }
     };
   });
@@ -623,19 +625,21 @@ export default function EnhancedCalendarPage() {
             eventContent={(eventInfo) => {
               const shift = eventInfo.event.extendedProps.shift;
               const statusInfo = statusConfig[shift.status as keyof typeof statusConfig] || statusConfig.open;
+              const specialty = eventInfo.event.extendedProps.specialty || 'RN';
               
               return {
                 html: `
                   <div class="fc-event-content-custom relative w-full h-full p-1" style="background-color: ${eventInfo.event.backgroundColor}">
-                    <div class="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center" style="background-color: rgba(255,255,255,0.9)">
-                      <div class="w-3 h-3" style="color: ${statusInfo?.color || "#6b7280"}">
-                        <svg viewBox="0 0 24 24" fill="currentColor" class="w-3 h-3">
-                          <circle cx="12" cy="12" r="10"/>
-                        </svg>
-                      </div>
+                    <div class="absolute top-1 left-1 px-1 py-0.5 rounded text-xs font-bold" style="background-color: rgba(255,255,255,0.9); color: ${eventInfo.event.backgroundColor};">
+                      ${specialty}
                     </div>
-                    <div class="text-xs font-medium text-white pr-6">
-                      ${shift.specialty || 'RN'}
+                    <div class="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center" style="background-color: ${statusInfo?.color || "#6b7280"}">
+                      <svg viewBox="0 0 24 24" fill="white" class="w-2 h-2">
+                        <circle cx="12" cy="12" r="10"/>
+                      </svg>
+                    </div>
+                    <div class="text-xs font-medium text-white mt-5 truncate">
+                      ${shift.title}
                     </div>
                     <div class="text-xs text-white opacity-90 truncate">
                       ${shift.facilityName}
