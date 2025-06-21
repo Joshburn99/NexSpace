@@ -376,7 +376,7 @@ export default function EnhancedCalendarPage() {
             {activeFilterCount > 0 && (
               <div className="mt-4 flex flex-wrap gap-2">
                 {filters.facilities.map(facilityId => {
-                  const facility = facilities.find((f: any) => f.id.toString() === facilityId);
+                  const facility = (facilities as any[]).find((f: any) => f.id.toString() === facilityId);
                   return facility ? (
                     <Badge key={facilityId} variant="secondary">
                       <Building className="h-3 w-3 mr-1" />

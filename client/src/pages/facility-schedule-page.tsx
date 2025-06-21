@@ -34,7 +34,7 @@ export default function FacilitySchedulePage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {requirements.map((req, index) => (
+        {(requirements as any[]).map((req: any, index: number) => (
           <Card key={index}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">

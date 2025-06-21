@@ -2836,6 +2836,148 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Facilities API endpoint
+  app.get("/api/facilities", async (req, res) => {
+    try {
+      const facilities = [
+        {
+          id: 1,
+          name: "Portland General Hospital",
+          address: "3181 SW Sam Jackson Park Rd, Portland, OR 97239",
+          type: "Hospital",
+          status: "active",
+          phone: "(503) 494-8311",
+          capacity: 450,
+          currentStaff: 340
+        },
+        {
+          id: 2,
+          name: "Maple Grove Memory Care",
+          address: "12450 SW 69th Ave, Portland, OR 97223",
+          type: "Memory Care",
+          status: "active",
+          phone: "(503) 639-3500",
+          capacity: 85,
+          currentStaff: 62
+        },
+        {
+          id: 3,
+          name: "Sunset Senior Living",
+          address: "8505 SW Canyon Rd, Portland, OR 97225",
+          type: "Assisted Living",
+          status: "active",
+          phone: "(503) 297-8866",
+          capacity: 120,
+          currentStaff: 89
+        },
+        {
+          id: 4,
+          name: "Cedar Hills Rehabilitation Center",
+          address: "10300 SW Eastridge St, Portland, OR 97225",
+          type: "Rehabilitation",
+          status: "active",
+          phone: "(503) 292-5600",
+          capacity: 95,
+          currentStaff: 71
+        }
+      ];
+      res.json(facilities);
+    } catch (error) {
+      console.error("Error fetching facilities:", error);
+      res.status(500).json({ message: "Failed to fetch facilities" });
+    }
+  });
+
+  // Staff API endpoint
+  app.get("/api/staff", async (req, res) => {
+    try {
+      const staff = [
+        {
+          id: 1,
+          firstName: "Sarah",
+          lastName: "Johnson",
+          email: "sarah.johnson@portlandgeneral.com",
+          role: "Registered Nurse",
+          specialty: "Emergency Medicine",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          status: "active",
+          shiftPreference: "day",
+          availabilityStatus: "available"
+        },
+        {
+          id: 2,
+          firstName: "Emily",
+          lastName: "Rodriguez",
+          email: "emily.rodriguez@portlandgeneral.com",
+          role: "Licensed Practical Nurse",
+          specialty: "Intensive Care",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          status: "active",
+          shiftPreference: "night",
+          availabilityStatus: "available"
+        },
+        {
+          id: 3,
+          firstName: "Mike",
+          lastName: "Davis",
+          email: "mike.davis@contractor.com",
+          role: "Physical Therapist",
+          specialty: "Orthopedic Rehabilitation",
+          facilityId: null,
+          facilityName: null,
+          status: "active",
+          shiftPreference: "day",
+          availabilityStatus: "available"
+        },
+        {
+          id: 4,
+          firstName: "Lisa",
+          lastName: "Chen",
+          email: "lisa.chen@maplegove.com",
+          role: "Certified Nursing Assistant",
+          specialty: "Memory Care",
+          facilityId: 2,
+          facilityName: "Maple Grove Memory Care",
+          status: "active",
+          shiftPreference: "evening",
+          availabilityStatus: "busy"
+        },
+        {
+          id: 5,
+          firstName: "David",
+          lastName: "Kim",
+          email: "david.kim@freelance.com",
+          role: "Respiratory Therapist",
+          specialty: "Pulmonary Care",
+          facilityId: null,
+          facilityName: null,
+          status: "active",
+          shiftPreference: "night",
+          availabilityStatus: "available"
+        },
+        {
+          id: 6,
+          firstName: "Jennifer",
+          lastName: "Walsh",
+          email: "jennifer.walsh@maplegove.com",
+          role: "Occupational Therapist",
+          specialty: "Geriatric Care",
+          facilityId: 2,
+          facilityName: "Maple Grove Memory Care",
+          status: "active",
+          shiftPreference: "day",
+          availabilityStatus: "available"
+        }
+      ];
+      res.json(staff);
+    } catch (error) {
+      console.error("Error fetching staff:", error);
+      res.status(500).json({ message: "Failed to fetch staff" });
+    }
+  });
+
   // Admin API endpoints
   app.get("/api/admin/users", requireAuth, async (req, res) => {
     try {
