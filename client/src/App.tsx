@@ -165,21 +165,21 @@ function App() {
                                   <CredentialsProvider>
                                     <InsightsProvider>
                                       <InvoiceProvider>
-                                              <DashboardProvider>
+                                        <DashboardProvider>
                                           <TooltipProvider>
                                             <Toaster />
                                             <AppContent />
-                                        </TooltipProvider>
-                                      </DashboardProvider>
-                                    </InvoiceProvider>
-                                  </InsightsProvider>
-                                </CredentialsProvider>
-                              </ProfileProvider>
-                            </JobProvider>
-                          </PTOProvider>
-                        </CredentialVerificationProvider>
-                      </EnhancedCredentialProvider>
-                    </MessagingProvider>
+                                          </TooltipProvider>
+                                        </DashboardProvider>
+                                      </InvoiceProvider>
+                                    </InsightsProvider>
+                                  </CredentialsProvider>
+                                </ProfileProvider>
+                              </JobProvider>
+                            </PTOProvider>
+                          </CredentialVerificationProvider>
+                        </EnhancedCredentialProvider>
+                      </MessagingProvider>
                   </MessageProvider>
                 </TeamProvider>
               </StaffProvider>

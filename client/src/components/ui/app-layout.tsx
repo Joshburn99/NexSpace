@@ -371,6 +371,9 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
             </div>
 
             <div className="flex items-center space-x-4">
+              {/* Session Management */}
+              <SessionRestoreButton />
+              
               {/* Superuser Impersonation Button */}
               {user?.role === "super_admin" && !isImpersonating && (
                 <Button

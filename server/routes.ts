@@ -2989,8 +2989,8 @@ export function registerRoutes(app: Express): Server {
       }
 
       // Store original user info and set impersonation
-      req.session.originalUser = currentUser;
-      req.session.impersonatedUserId = userId;
+      (req.session as any).originalUser = currentUser;
+      (req.session as any).impersonatedUserId = userId;
       
       // Get the user to impersonate
       const targetUser = await storage.getUser(userId);
@@ -3011,13 +3011,13 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/stop-impersonation", requireAuth, async (req, res) => {
     try {
-      if (!req.session.originalUser) {
+      if (!(req.session as any).originalUser) {
         return res.status(400).json({ message: "No active impersonation session" });
       }
 
-      const originalUser = req.session.originalUser;
-      delete req.session.originalUser;
-      delete req.session.impersonatedUserId;
+      const originalUser = (req.session as any).originalUser;
+      delete (req.session as any).originalUser;
+      delete (req.session as any).impersonatedUserId;
 
       res.json({ 
         success: true, 
@@ -3032,13 +3032,13 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/session-status", requireAuth, async (req, res) => {
     try {
       const currentUser = req.user;
-      const isImpersonating = !!req.session.originalUser;
+      const isImpersonating = !!(req.session as any).originalUser;
       
       res.json({
         user: currentUser,
         isImpersonating,
-        originalUser: req.session.originalUser || null,
-        impersonatedUserId: req.session.impersonatedUserId || null
+        originalUser: (req.session as any).originalUser || null,
+        impersonatedUserId: (req.session as any).impersonatedUserId || null
       });
     } catch (error) {
       console.error("Error getting session status:", error);
@@ -3068,14 +3068,14 @@ export function registerRoutes(app: Express): Server {
         };
 
         // Restore session
-        req.session.passport = { user: superUser.id };
+        (req.session as any).passport = { user: superUser.id };
         
         // Restore impersonation if provided
         if (impersonatedUserId) {
           const targetUser = await storage.getUser(impersonatedUserId);
           if (targetUser) {
-            req.session.originalUser = superUser;
-            req.session.impersonatedUserId = impersonatedUserId;
+            (req.session as any).originalUser = superUser;
+            (req.session as any).impersonatedUserId = impersonatedUserId;
             
             return res.json({
               success: true,
