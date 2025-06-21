@@ -40,7 +40,16 @@ import {
   User,
   AlertCircle,
   CheckCircle,
-  X
+  X,
+  MessageCircle,
+  ExternalLink,
+  Timer,
+  UserCheck,
+  AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  PlayCircle,
+  Star
 } from "lucide-react";
 import { format, addDays, startOfWeek } from "date-fns";
 
@@ -54,12 +63,16 @@ interface EnhancedShift {
   specialty: string;
   facilityId: number;
   facilityName: string;
-  status: "open" | "requested" | "confirmed" | "cancelled" | "filled";
+  status: "open" | "requested" | "confirmed" | "cancelled" | "filled" | "expired" | "in_progress" | "completed";
   rate: number;
   urgency: "low" | "medium" | "high" | "critical";
   description: string;
   assignedStaffId?: number;
   assignedStaffName?: string;
+  assignedStaffEmail?: string;
+  assignedStaffPhone?: string;
+  assignedStaffSpecialty?: string;
+  assignedStaffRating?: number;
 }
 
 interface CalendarFilter {
@@ -73,6 +86,36 @@ interface CalendarFilter {
     end: string;
   };
 }
+
+// Specialty color mapping
+const specialtyColors = {
+  "ICU": "#ef4444", // red
+  "Emergency": "#dc2626", // dark red
+  "Operating Room": "#7c3aed", // purple
+  "Pediatrics": "#f59e0b", // amber
+  "Rehabilitation": "#10b981", // emerald
+  "Pharmacy": "#3b82f6", // blue
+  "Laboratory": "#6b7280", // gray
+  "Respiratory": "#8b5cf6", // violet
+  "Radiology": "#06b6d4", // cyan
+  "Medical-Surgical": "#84cc16", // lime
+  "Float Pool": "#f97316", // orange
+  "Pulmonary": "#14b8a6", // teal
+  "Imaging": "#64748b", // slate
+  "default": "#6b7280"
+};
+
+// Status icons and colors
+const statusConfig = {
+  open: { icon: AlertCircle, color: "#ef4444", label: "Open" },
+  requested: { icon: Clock, color: "#f59e0b", label: "Requested" },
+  confirmed: { icon: CheckCircle2, color: "#10b981", label: "Confirmed" },
+  filled: { icon: UserCheck, color: "#3b82f6", label: "Filled" },
+  cancelled: { icon: XCircle, color: "#6b7280", label: "Cancelled" },
+  expired: { icon: AlertTriangle, color: "#dc2626", label: "Expired" },
+  in_progress: { icon: PlayCircle, color: "#8b5cf6", label: "In Progress" },
+  completed: { icon: CheckCircle, color: "#059669", label: "Completed" }
+};
 
 export default function EnhancedCalendarPage() {
   const { user } = useAuth();
@@ -141,33 +184,41 @@ export default function EnhancedCalendarPage() {
     return matchesSearch && matchesFacility && matchesSpecialty && matchesStatus && matchesWorker;
   });
 
-  // Convert to calendar events
-  const calendarEvents = filteredShifts.map(shift => ({
-    id: shift.id.toString(),
-    title: `${shift.department} - ${shift.specialty}`,
-    start: `${shift.date}T${shift.startTime}`,
-    end: `${shift.date}T${shift.endTime}`,
-    backgroundColor: getStatusColor(shift.status),
-    borderColor: getStatusColor(shift.status),
-    textColor: '#fff',
-    extendedProps: {
-      shift,
-      facility: shift.facilityName,
-      rate: shift.rate,
-      urgency: shift.urgency
+  // Process shifts to check for expired status
+  const processedShifts = filteredShifts.map(shift => {
+    const shiftDateTime = new Date(`${shift.date}T${shift.endTime}`);
+    const now = new Date();
+    
+    if (shift.status === "open" && shiftDateTime < now) {
+      return { ...shift, status: "expired" as const };
     }
-  }));
+    return shift;
+  });
 
-  function getStatusColor(status: string) {
-    switch (status) {
-      case "open": return "#ef4444";
-      case "requested": return "#f59e0b";
-      case "confirmed": return "#10b981";
-      case "filled": return "#3b82f6";
-      case "cancelled": return "#6b7280";
-      default: return "#6b7280";
-    }
-  }
+  // Convert to calendar events with specialty-based colors
+  const calendarEvents = processedShifts.map(shift => {
+    const specialtyColor = (specialtyColors as any)[shift.specialty] || specialtyColors.default;
+    const statusInfo = statusConfig[shift.status];
+    
+    return {
+      id: shift.id.toString(),
+      title: `${shift.specialty} - ${shift.title}`,
+      start: `${shift.date}T${shift.startTime}`,
+      end: `${shift.date}T${shift.endTime}`,
+      backgroundColor: specialtyColor,
+      borderColor: specialtyColor,
+      textColor: '#fff',
+      extendedProps: {
+        shift: { ...shift, status: shift.status },
+        facility: shift.facilityName,
+        rate: shift.rate,
+        urgency: shift.urgency,
+        statusIcon: statusInfo.icon,
+        statusColor: statusInfo.color,
+        statusLabel: statusInfo.label
+      }
+    };
+  });
 
   const handleEventClick = (info: any) => {
     setSelectedShift(info.event.extendedProps.shift);
@@ -557,21 +608,80 @@ export default function EnhancedCalendarPage() {
                 </div>
               </div>
 
-              <div>
-                <Label>Status</Label>
-                <div className="mt-1">
-                  <Badge style={{ backgroundColor: getStatusColor(selectedShift.status) }}>
-                    {selectedShift.status.charAt(0).toUpperCase() + selectedShift.status.slice(1)}
-                  </Badge>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Status</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    {(() => {
+                      const StatusIcon = statusConfig[selectedShift.status]?.icon || AlertCircle;
+                      return <StatusIcon className="h-4 w-4" style={{ color: statusConfig[selectedShift.status]?.color }} />;
+                    })()}
+                    <Badge style={{ backgroundColor: statusConfig[selectedShift.status]?.color }}>
+                      {statusConfig[selectedShift.status]?.label || selectedShift.status}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label>Specialty</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div 
+                      className="w-4 h-4 rounded" 
+                      style={{ backgroundColor: specialtyColors[selectedShift.specialty] || specialtyColors.default }}
+                    />
+                    <span>{selectedShift.specialty}</span>
+                  </div>
                 </div>
               </div>
 
               {selectedShift.assignedStaffName && (
-                <div>
-                  <Label>Assigned Staff</Label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <User className="h-4 w-4 text-muted-foreground" />
-                    <span>{selectedShift.assignedStaffName}</span>
+                <div className="bg-muted/50 p-4 rounded-lg">
+                  <Label className="text-base font-semibold">Assigned Worker</Label>
+                  <div className="mt-2 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                          <User className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{selectedShift.assignedStaffName}</p>
+                          {selectedShift.assignedStaffSpecialty && (
+                            <p className="text-sm text-muted-foreground">{selectedShift.assignedStaffSpecialty}</p>
+                          )}
+                          {selectedShift.assignedStaffRating && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                              <span className="text-sm text-muted-foreground">{selectedShift.assignedStaffRating}/5</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" asChild>
+                          <a href={`/staff/${selectedShift.assignedStaffId}`}>
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            Profile
+                          </a>
+                        </Button>
+                        <Button size="sm" variant="outline" asChild>
+                          <a href={`/messages?user=${selectedShift.assignedStaffId}`}>
+                            <MessageCircle className="h-3 w-3 mr-1" />
+                            Message
+                          </a>
+                        </Button>
+                      </div>
+                    </div>
+                    {selectedShift.assignedStaffEmail && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>Email:</span>
+                        <span>{selectedShift.assignedStaffEmail}</span>
+                      </div>
+                    )}
+                    {selectedShift.assignedStaffPhone && (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>Phone:</span>
+                        <span>{selectedShift.assignedStaffPhone}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -579,6 +689,34 @@ export default function EnhancedCalendarPage() {
               <div>
                 <Label>Description</Label>
                 <p className="mt-1 text-sm text-muted-foreground">{selectedShift.description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Urgency Level</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className={`w-2 h-2 rounded-full ${
+                      selectedShift.urgency === 'critical' ? 'bg-red-500' :
+                      selectedShift.urgency === 'high' ? 'bg-orange-500' :
+                      selectedShift.urgency === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                    }`} />
+                    <span className="capitalize">{selectedShift.urgency}</span>
+                  </div>
+                </div>
+                <div>
+                  <Label>Shift Duration</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Timer className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {(() => {
+                        const start = new Date(`2000-01-01T${selectedShift.startTime}`);
+                        const end = new Date(`2000-01-01T${selectedShift.endTime}`);
+                        const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                        return `${hours} hours`;
+                      })()}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
