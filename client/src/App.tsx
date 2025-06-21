@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
+import { SessionProvider } from "@/contexts/SessionContext";
 import { ProtectedRoute } from "./lib/protected-route";
 import Layout from "@/components/Layout";
 import { ShiftProvider } from "@/contexts/ShiftContext";
@@ -148,25 +149,26 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <NotificationProvider>
-          <ShiftProvider>
-            <TimeClockProvider>
-              <StaffProvider>
-                <TeamProvider>
-                  <MessageProvider>
-                    <MessagingProvider>
-                      <EnhancedCredentialProvider>
-                        <CredentialVerificationProvider>
-                          <PTOProvider>
-                            <JobProvider>
-                              <ProfileProvider>
-                                <CredentialsProvider>
-                                  <InsightsProvider>
-                                    <InvoiceProvider>
-                                            <DashboardProvider>
-                                        <TooltipProvider>
-                                          <Toaster />
-                                          <AppContent />
+        <SessionProvider>
+          <NotificationProvider>
+            <ShiftProvider>
+              <TimeClockProvider>
+                <StaffProvider>
+                  <TeamProvider>
+                    <MessageProvider>
+                      <MessagingProvider>
+                        <EnhancedCredentialProvider>
+                          <CredentialVerificationProvider>
+                            <PTOProvider>
+                              <JobProvider>
+                                <ProfileProvider>
+                                  <CredentialsProvider>
+                                    <InsightsProvider>
+                                      <InvoiceProvider>
+                                              <DashboardProvider>
+                                          <TooltipProvider>
+                                            <Toaster />
+                                            <AppContent />
                                         </TooltipProvider>
                                       </DashboardProvider>
                                     </InvoiceProvider>
@@ -184,6 +186,7 @@ function App() {
             </TimeClockProvider>
           </ShiftProvider>
         </NotificationProvider>
+        </SessionProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

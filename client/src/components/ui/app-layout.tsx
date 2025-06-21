@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { SessionRestoreButton } from "@/components/SessionRestoreButton";
 import {
   Select,
   SelectContent,
