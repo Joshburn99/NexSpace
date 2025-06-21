@@ -293,7 +293,7 @@ export default function EnhancedCalendarPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Facilities</SelectItem>
-                    {facilities.map((facility: any) => (
+                    {(facilities as any[]).map((facility: any) => (
                       <SelectItem key={facility.id} value={facility.id.toString()}>
                         {facility.name}
                       </SelectItem>
@@ -362,7 +362,7 @@ export default function EnhancedCalendarPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Workers</SelectItem>
-                    {staff.map((worker: any) => (
+                    {(staff as any[]).map((worker: any) => (
                       <SelectItem key={worker.id} value={worker.id.toString()}>
                         {worker.firstName} {worker.lastName}
                       </SelectItem>

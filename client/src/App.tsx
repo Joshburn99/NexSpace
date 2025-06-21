@@ -82,8 +82,8 @@ function AppContent() {
       <ProtectedRoute path="/jobs" component={EnhancedJobBoard} />
       <ProtectedRoute path="/jobs/post" component={EnhancedJobPostingPage} />
       <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />
-      <ProtectedRoute path="/calendar" component={UnifiedCalendarPage} />
-      <ProtectedRoute path="/calendar-view" component={UnifiedCalendarPage} />
+      <ProtectedRoute path="/calendar" component={EnhancedCalendarPage} />
+      <ProtectedRoute path="/calendar-view" component={EnhancedCalendarPage} />
       <ProtectedRoute path="/enhanced-calendar" component={EnhancedCalendarPage} />
       <ProtectedRoute path="/shift-templates" component={ShiftTemplatesPage} />
       <ProtectedRoute path="/facility-schedule" component={FacilitySchedulePage} />
