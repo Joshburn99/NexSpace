@@ -542,10 +542,30 @@ export default function EnhancedCalendarPage() {
       {/* Calendar */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Shift Calendar
-            {isLoading && <Badge variant="secondary">Loading...</Badge>}
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Shift Calendar
+              {isLoading && <Badge variant="secondary">Loading...</Badge>}
+            </div>
+            {/* Status Icons Legend */}
+            <div className="flex items-center gap-4">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status:</span>
+              {Object.entries(statusConfig).map(([key, config]) => {
+                const Icon = config.icon;
+                return (
+                  <div key={key} className="flex items-center gap-1">
+                    <div 
+                      className="w-3 h-3 rounded-full flex items-center justify-center" 
+                      style={{ backgroundColor: config.color }}
+                    >
+                      <Icon className="w-1.5 h-1.5 text-white" />
+                    </div>
+                    <span className="text-xs text-gray-600 dark:text-gray-400">{config.label}</span>
+                  </div>
+                );
+              })}
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -747,7 +767,11 @@ export default function EnhancedCalendarPage() {
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => window.location.href = `/enhanced-staff?profile=${selectedShift.assignedStaffId}`}
+                          onClick={() => {
+                            if (selectedShift.assignedStaffId) {
+                              window.location.href = `/enhanced-staff?profile=${selectedShift.assignedStaffId}`;
+                            }
+                          }}
                         >
                           <ExternalLink className="h-3 w-3 mr-1" />
                           Profile
@@ -755,7 +779,11 @@ export default function EnhancedCalendarPage() {
                         <Button 
                           size="sm" 
                           variant="outline"
-                          onClick={() => window.location.href = `/messaging?conversation=${selectedShift.assignedStaffId}`}
+                          onClick={() => {
+                            if (selectedShift.assignedStaffId) {
+                              window.location.href = `/messaging?conversation=${selectedShift.assignedStaffId}`;
+                            }
+                          }}
                         >
                           <MessageCircle className="h-3 w-3 mr-1" />
                           Message
