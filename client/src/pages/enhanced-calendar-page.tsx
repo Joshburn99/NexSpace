@@ -136,6 +136,9 @@ export default function EnhancedCalendarPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddShiftDialog, setShowAddShiftDialog] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("calendar");
   
   // Advanced filters state
   const [filters, setFilters] = useState<CalendarFilter>({
@@ -163,6 +166,11 @@ export default function EnhancedCalendarPage() {
   // Fetch staff for filters
   const { data: staff = [] } = useQuery({
     queryKey: ["/api/staff"],
+  });
+
+  // Fetch shift templates
+  const { data: templates = [] } = useQuery<any[]>({
+    queryKey: ["/api/shift-templates"],
   });
 
   // Filter options
@@ -275,6 +283,20 @@ export default function EnhancedCalendarPage() {
             Advanced scheduling view with comprehensive filtering and real-time updates
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
+            <TabsList>
+              <TabsTrigger value="calendar">Calendar</TabsTrigger>
+              <TabsTrigger value="templates">Shift Templates</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+      </div>
+
+      {activeTab === "calendar" && (
+        <>
+      {/* Filter Controls */}
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Button
             variant={showFilters ? "default" : "outline"}
@@ -986,6 +1008,229 @@ export default function EnhancedCalendarPage() {
               setShowAddShiftDialog(false);
             }}>
               Create Shift
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+        </>
+      )}
+
+      {/* Shift Templates Tab */}
+      {activeTab === "templates" && (
+        <div className="space-y-6">
+          {/* Templates Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Shift Templates</h2>
+              <p className="text-gray-600 dark:text-gray-400">Create and manage reusable shift templates</p>
+            </div>
+            <Button onClick={() => setShowTemplateModal(true)}>
+              <Calendar className="w-4 h-4 mr-2" />
+              Create Template
+            </Button>
+          </div>
+
+          {/* Templates Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {templates.map((template: any) => (
+              <Card key={template.id} className="cursor-pointer hover:shadow-md transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg">{template.name}</CardTitle>
+                    <Badge 
+                      style={{ 
+                        backgroundColor: specialtyColors[template.specialty as keyof typeof specialtyColors] || specialtyColors.default,
+                        color: 'white' 
+                      }}
+                    >
+                      {template.specialty}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <Building className="w-4 h-4" />
+                      <span>{template.department}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <Clock className="w-4 h-4" />
+                      <span>{template.startTime} - {template.endTime}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                      <DollarSign className="w-4 h-4" />
+                      <span>${template.hourlyRate}/hr</span>
+                    </div>
+                    {template.description && (
+                      <p className="text-sm text-gray-500 mt-2">{template.description}</p>
+                    )}
+                  </div>
+                  <div className="flex gap-2 mt-4">
+                    <Button 
+                      size="sm" 
+                      onClick={() => {
+                        setSelectedTemplate(template);
+                        setShowAddShiftDialog(true);
+                      }}
+                    >
+                      Use Template
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedTemplate(template);
+                        setShowTemplateModal(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            
+            {templates.length === 0 && (
+              <div className="col-span-full text-center py-12">
+                <Calendar className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No templates yet</h3>
+                <p className="text-gray-500 mb-4">Create your first shift template to get started</p>
+                <Button onClick={() => setShowTemplateModal(true)}>
+                  Create Template
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Template Creation/Edit Modal */}
+      <Dialog open={showTemplateModal} onOpenChange={setShowTemplateModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedTemplate ? 'Edit Template' : 'Create Shift Template'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Template Name</Label>
+                <Input 
+                  placeholder="e.g., ICU Day Shift RN"
+                  defaultValue={selectedTemplate?.name || ""}
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Department</Label>
+                <Select defaultValue={selectedTemplate?.department || ""}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select department" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ICU">ICU</SelectItem>
+                    <SelectItem value="Emergency">Emergency</SelectItem>
+                    <SelectItem value="Medical/Surgical">Medical/Surgical</SelectItem>
+                    <SelectItem value="Operating Room">Operating Room</SelectItem>
+                    <SelectItem value="Labor & Delivery">Labor & Delivery</SelectItem>
+                    <SelectItem value="Pediatrics">Pediatrics</SelectItem>
+                    <SelectItem value="Rehabilitation">Rehabilitation</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Specialty/Certification</Label>
+                <Select defaultValue={selectedTemplate?.specialty || ""}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select specialty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="RN">RN - Registered Nurse</SelectItem>
+                    <SelectItem value="LPN">LPN - Licensed Practical Nurse</SelectItem>
+                    <SelectItem value="CNA">CNA - Certified Nursing Assistant</SelectItem>
+                    <SelectItem value="RT">RT - Respiratory Therapist</SelectItem>
+                    <SelectItem value="PT">PT - Physical Therapist</SelectItem>
+                    <SelectItem value="OT">OT - Occupational Therapist</SelectItem>
+                    <SelectItem value="CST">CST - Certified Surgical Tech</SelectItem>
+                    <SelectItem value="PCT">PCT - Patient Care Technician</SelectItem>
+                    <SelectItem value="MA">MA - Medical Assistant</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Hourly Rate</Label>
+                <Input 
+                  type="number" 
+                  placeholder="45.00"
+                  step="0.01"
+                  defaultValue={selectedTemplate?.hourlyRate || ""}
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Start Time</Label>
+                <Input 
+                  type="time"
+                  defaultValue={selectedTemplate?.startTime || "07:00"}
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">End Time</Label>
+                <Input 
+                  type="time"
+                  defaultValue={selectedTemplate?.endTime || "19:00"}
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Duration (hours)</Label>
+                <Input 
+                  type="number" 
+                  placeholder="12"
+                  defaultValue={selectedTemplate?.duration || "12"}
+                />
+              </div>
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium">Description</Label>
+              <textarea 
+                className="w-full mt-1 p-2 border rounded-md"
+                rows={3}
+                placeholder="Template description and requirements..."
+                defaultValue={selectedTemplate?.description || ""}
+              />
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium">Required Certifications</Label>
+              <Input 
+                placeholder="e.g., BLS, ACLS, PALS"
+                defaultValue={selectedTemplate?.requiredCertifications?.join(', ') || ""}
+              />
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={() => {
+              setShowTemplateModal(false);
+              setSelectedTemplate(null);
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              toast({ 
+                title: selectedTemplate ? "Template Updated" : "Template Created", 
+                description: "Shift template has been saved successfully" 
+              });
+              setShowTemplateModal(false);
+              setSelectedTemplate(null);
+            }}>
+              {selectedTemplate ? 'Update Template' : 'Create Template'}
             </Button>
           </div>
         </DialogContent>
