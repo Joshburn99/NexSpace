@@ -1282,6 +1282,33 @@ export function registerRoutes(app: Express): Server {
           yearsExperience: 5,
           rating: 4.7,
           totalShifts: 98
+        },
+        {
+          id: 42,
+          firstName: "Jennifer",
+          lastName: "Kim",
+          email: "jennifer.kim@hospital.com",
+          role: "employee",
+          phone: "(503) 555-0987",
+          department: "Operating Room",
+          specialty: "Surgical Technologist",
+          compliant: true,
+          activeCredentials: 7,
+          expiringCredentials: 0,
+          avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150",
+          bio: "Skilled surgical technologist with expertise in operating room procedures and sterile technique.",
+          location: "Portland, OR",
+          hourlyRate: 28.5,
+          experience: "6 years",
+          skills: ["Sterile Technique", "Surgical Instruments", "OR Procedures"],
+          certifications: ["CST", "BLS", "ACLS"],
+          resumeUrl: "",
+          coverLetterUrl: "",
+          linkedIn: "",
+          portfolio: "",
+          yearsExperience: 6,
+          rating: 4.7,
+          totalShifts: 143
         }
       ];
       
@@ -3224,6 +3251,18 @@ export function registerRoutes(app: Express): Server {
           facilityName: "Maple Grove Memory Care",
           createdAt: "2025-01-20T00:00:00Z",
           lastLogin: "2025-05-15T08:30:00Z"
+        },
+        {
+          id: 42,
+          name: "Jennifer Kim",
+          username: "jennifer.kim",
+          email: "jennifer.kim@hospital.com",
+          role: "employee",
+          status: "active",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          createdAt: "2025-04-15T00:00:00Z",
+          lastLogin: "2025-06-20T15:30:00Z"
         }
       ];
       
@@ -4288,16 +4327,55 @@ export function registerRoutes(app: Express): Server {
       (req.session as any).isImpersonating = true;
 
       // Get target user data
-      const targetUser = {
-        id: targetUserId,
-        username: targetUserId === 2 ? "sarah.johnson" : targetUserId === 3 ? "JoshBurn" : "mike.davis",
-        email: targetUserId === 2 ? "sarah.johnson@portlandgeneral.com" : targetUserId === 3 ? "joshburn@gmail.com" : "mike.davis@contractor.com",
-        firstName: targetUserId === 2 ? "Sarah" : targetUserId === 3 ? "Josh" : "Mike",
-        lastName: targetUserId === 2 ? "Johnson" : targetUserId === 3 ? "Burn" : "Davis",
-        role: targetUserId === 2 ? "facility_manager" : targetUserId === 3 ? "employee" : "contractor",
-        facilityId: targetUserId === 2 ? 1 : targetUserId === 3 ? 1 : null,
-        isActive: true
-      };
+      let targetUser;
+      
+      if (targetUserId === 2) {
+        targetUser = {
+          id: 2,
+          username: "sarah.johnson",
+          email: "sarah.johnson@portlandgeneral.com",
+          firstName: "Sarah",
+          lastName: "Johnson",
+          role: "facility_manager",
+          facilityId: 1,
+          isActive: true
+        };
+      } else if (targetUserId === 3) {
+        targetUser = {
+          id: 3,
+          username: "JoshBurn",
+          email: "joshburn@gmail.com",
+          firstName: "Josh",
+          lastName: "Burn",
+          role: "employee",
+          facilityId: 1,
+          isActive: true
+        };
+      } else if (targetUserId === 4) {
+        targetUser = {
+          id: 4,
+          username: "mike.davis",
+          email: "mike.davis@contractor.com",
+          firstName: "Mike",
+          lastName: "Davis",
+          role: "contractor",
+          facilityId: null,
+          isActive: true
+        };
+      } else if (targetUserId === 42) {
+        targetUser = {
+          id: 42,
+          username: "jennifer.kim",
+          email: "jennifer.kim@hospital.com",
+          firstName: "Jennifer",
+          lastName: "Kim",
+          role: "employee",
+          facilityId: 1,
+          isActive: true
+        };
+      } else {
+        return res.status(404).json({ message: "User not found" });
+      }
 
       // Set impersonated user as current user
       (req.session as any).user = targetUser;
