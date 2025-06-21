@@ -664,10 +664,11 @@ export default function EnhancedCalendarPage() {
                   </div>
                 </div>
                 <div>
-                  <Label>Rate</Label>
+                  <Label>Urgency</Label>
                   <div className="flex items-center gap-2 mt-1">
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                    <span>${selectedShift.rate}/hour</span>
+                    <Badge variant={selectedShift.urgency === 'critical' ? 'destructive' : selectedShift.urgency === 'high' ? 'default' : 'secondary'}>
+                      {selectedShift.urgency}
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -829,6 +830,114 @@ export default function EnhancedCalendarPage() {
               )}
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Shift Dialog */}
+      <Dialog open={showAddShiftDialog} onOpenChange={setShowAddShiftDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add New Shift</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Title</Label>
+                <input 
+                  type="text" 
+                  className="w-full mt-1 p-2 border rounded-md"
+                  placeholder="ICU Day Shift"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Specialty</Label>
+                <select className="w-full mt-1 p-2 border rounded-md">
+                  <option value="RN">RN - Registered Nurse</option>
+                  <option value="LPN">LPN - Licensed Practical Nurse</option>
+                  <option value="CNA">CNA - Certified Nursing Assistant</option>
+                  <option value="RT">RT - Respiratory Therapist</option>
+                  <option value="PT">PT - Physical Therapist</option>
+                  <option value="CST">CST - Certified Surgical Tech</option>
+                  <option value="PCT">PCT - Patient Care Technician</option>
+                  <option value="MA">MA - Medical Assistant</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Date</Label>
+                <input 
+                  type="date" 
+                  className="w-full mt-1 p-2 border rounded-md"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Facility</Label>
+                <select className="w-full mt-1 p-2 border rounded-md">
+                  <option value="1">Portland General Hospital</option>
+                  <option value="2">Oregon Health & Science University</option>
+                  <option value="3">Providence Portland Medical Center</option>
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Start Time</Label>
+                <input 
+                  type="time" 
+                  className="w-full mt-1 p-2 border rounded-md"
+                  defaultValue="07:00"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">End Time</Label>
+                <input 
+                  type="time" 
+                  className="w-full mt-1 p-2 border rounded-md"
+                  defaultValue="19:00"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Hourly Rate</Label>
+                <input 
+                  type="number" 
+                  className="w-full mt-1 p-2 border rounded-md"
+                  placeholder="45.00"
+                  step="0.01"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Urgency</Label>
+                <select className="w-full mt-1 p-2 border rounded-md">
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="critical">Critical</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <Label className="text-sm font-medium">Description</Label>
+              <textarea 
+                className="w-full mt-1 p-2 border rounded-md"
+                rows={3}
+                placeholder="Additional shift details and requirements..."
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={() => setShowAddShiftDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => {
+              toast({ title: "Shift Created", description: "New shift has been added successfully" });
+              setShowAddShiftDialog(false);
+            }}>
+              Create Shift
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
