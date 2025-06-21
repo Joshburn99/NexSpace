@@ -636,7 +636,7 @@ export default function EnhancedCalendarPage() {
                       </svg>
                     </div>
                     <div class="text-xs font-medium text-white truncate pr-6">
-                      ${shift.title}
+                      ${shift.assignedStaffName || 'Unassigned'}
                     </div>
                     <div class="text-xs text-white opacity-90 truncate">
                       ${shift.facilityName}
