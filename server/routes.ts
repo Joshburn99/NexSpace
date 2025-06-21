@@ -384,6 +384,12 @@ export function registerRoutes(app: Express): Server {
           rate: 35.25,
           urgency: "medium",
           description: "Night shift respiratory therapy coverage",
+          assignedStaffId: 31,
+          assignedStaffName: "Amanda Rodriguez",
+          assignedStaffEmail: "amanda.rodriguez@legacy.org",
+          assignedStaffPhone: "(503) 555-0789",
+          assignedStaffSpecialty: "Respiratory Therapist",
+          assignedStaffRating: 4.6,
         },
         {
           id: 6,
