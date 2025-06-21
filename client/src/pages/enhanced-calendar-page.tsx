@@ -26,6 +26,7 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
+import { useRef } from 'react';
 import {
   Calendar,
   Clock,
@@ -128,6 +129,7 @@ export default function EnhancedCalendarPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
+  const calendarRef = useRef<FullCalendar>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"dayGridMonth" | "timeGridWeek" | "timeGridDay">("dayGridMonth");
   const [selectedShift, setSelectedShift] = useState<EnhancedShift | null>(null);
@@ -293,21 +295,30 @@ export default function EnhancedCalendarPage() {
           <div className="flex gap-1">
             <Button
               variant={viewMode === "dayGridMonth" ? "default" : "outline"}
-              onClick={() => setViewMode("dayGridMonth")}
+              onClick={() => {
+                setViewMode("dayGridMonth");
+                calendarRef.current?.getApi().changeView("dayGridMonth");
+              }}
               size="sm"
             >
               Month
             </Button>
             <Button
               variant={viewMode === "timeGridWeek" ? "default" : "outline"}
-              onClick={() => setViewMode("timeGridWeek")}
+              onClick={() => {
+                setViewMode("timeGridWeek");
+                calendarRef.current?.getApi().changeView("timeGridWeek");
+              }}
               size="sm"
             >
               Week
             </Button>
             <Button
               variant={viewMode === "timeGridDay" ? "default" : "outline"}
-              onClick={() => setViewMode("timeGridDay")}
+              onClick={() => {
+                setViewMode("timeGridDay");
+                calendarRef.current?.getApi().changeView("timeGridDay");
+              }}
               size="sm"
             >
               Day
@@ -566,28 +577,38 @@ export default function EnhancedCalendarPage() {
           </div>
 
           <FullCalendar
+            ref={calendarRef}
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
             initialView={viewMode}
             headerToolbar={{
               left: 'prev,next today',
               center: 'title',
-              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+              right: ''
             }}
             views={{
               dayGridMonth: {
-                dayMaxEvents: 2,
+                dayMaxEvents: 3,
                 moreLinkClick: 'popover'
               },
               timeGridWeek: {
-                slotMinTime: '06:00:00',
-                slotMaxTime: '22:00:00'
+                slotMinTime: '05:00:00',
+                slotMaxTime: '23:00:00',
+                slotDuration: '01:00:00',
+                slotLabelInterval: '02:00:00',
+                allDaySlot: false
               },
               timeGridDay: {
-                slotMinTime: '06:00:00',
-                slotMaxTime: '22:00:00'
+                slotMinTime: '05:00:00',
+                slotMaxTime: '23:00:00',
+                slotDuration: '01:00:00',
+                slotLabelInterval: '01:00:00',
+                allDaySlot: false
               }
             }}
             events={calendarEvents}
+            viewDidMount={(info) => {
+              setViewMode(info.view.type as "dayGridMonth" | "timeGridWeek" | "timeGridDay");
+            }}
             eventClick={handleEventClick}
             height="auto"
             dayMaxEvents={2}
