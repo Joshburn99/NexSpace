@@ -138,6 +138,7 @@ export default function EnhancedCalendarPage() {
   const [showAddShiftDialog, setShowAddShiftDialog] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [showUseTemplateModal, setShowUseTemplateModal] = useState(false);
   const [activeTab, setActiveTab] = useState("calendar");
   
   // Advanced filters state
@@ -1070,7 +1071,7 @@ export default function EnhancedCalendarPage() {
                       size="sm" 
                       onClick={() => {
                         setSelectedTemplate(template);
-                        setShowAddShiftDialog(true);
+                        setShowUseTemplateModal(true);
                       }}
                     >
                       Use Template
@@ -1122,6 +1123,24 @@ export default function EnhancedCalendarPage() {
                 />
               </div>
               <div>
+                <Label className="text-sm font-medium">Facility</Label>
+                <Select defaultValue={selectedTemplate?.facilityId || ""}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select facility" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(facilities as any[]).map((facility: any) => (
+                      <SelectItem key={facility.id} value={facility.id.toString()}>
+                        {facility.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
                 <Label className="text-sm font-medium">Department</Label>
                 <Select defaultValue={selectedTemplate?.department || ""}>
                   <SelectTrigger>
@@ -1138,11 +1157,8 @@ export default function EnhancedCalendarPage() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm font-medium">Specialty/Certification</Label>
+                <Label className="text-sm font-medium">Specialty</Label>
                 <Select defaultValue={selectedTemplate?.specialty || ""}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select specialty" />
@@ -1160,18 +1176,23 @@ export default function EnhancedCalendarPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label className="text-sm font-medium">Hourly Rate</Label>
-                <Input 
-                  type="number" 
-                  placeholder="45.00"
-                  step="0.01"
-                  defaultValue={selectedTemplate?.hourlyRate || ""}
-                />
-              </div>
             </div>
             
             <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Shift Type</Label>
+                <Select defaultValue={selectedTemplate?.shiftType || "Day Shift"}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select shift type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Day Shift">Day Shift</SelectItem>
+                    <SelectItem value="Night Shift">Night Shift</SelectItem>
+                    <SelectItem value="Evening Shift">Evening Shift</SelectItem>
+                    <SelectItem value="Weekend Shift">Weekend Shift</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
                 <Label className="text-sm font-medium">Start Time</Label>
                 <Input 
@@ -1186,31 +1207,71 @@ export default function EnhancedCalendarPage() {
                   defaultValue={selectedTemplate?.endTime || "19:00"}
                 />
               </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm font-medium">Duration (hours)</Label>
+                <Label className="text-sm font-medium">Min Staff Required</Label>
                 <Input 
                   type="number" 
-                  placeholder="12"
-                  defaultValue={selectedTemplate?.duration || "12"}
+                  placeholder="1"
+                  defaultValue={selectedTemplate?.minStaff || "1"}
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Max Staff Capacity</Label>
+                <Input 
+                  type="number" 
+                  placeholder="3"
+                  defaultValue={selectedTemplate?.maxStaff || "3"}
                 />
               </div>
             </div>
             
             <div>
-              <Label className="text-sm font-medium">Description</Label>
-              <textarea 
-                className="w-full mt-1 p-2 border rounded-md"
-                rows={3}
-                placeholder="Template description and requirements..."
-                defaultValue={selectedTemplate?.description || ""}
-              />
+              <Label className="text-sm font-medium">Days of Week</Label>
+              <div className="flex gap-4 mt-2">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                  <label key={day} className="flex items-center gap-2">
+                    <input 
+                      type="checkbox" 
+                      defaultChecked={selectedTemplate?.daysOfWeek?.includes(day) || day !== 'Sun' && day !== 'Sat'}
+                      className="rounded"
+                    />
+                    <span className="text-sm">{day}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-sm font-medium">Hourly Rate (Optional)</Label>
+                <Input 
+                  type="number" 
+                  placeholder="0"
+                  step="0.01"
+                  defaultValue={selectedTemplate?.hourlyRate || "0"}
+                />
+              </div>
+              <div className="flex items-center gap-2 mt-6">
+                <input 
+                  type="checkbox" 
+                  id="activeTemplate"
+                  defaultChecked={selectedTemplate?.active !== false}
+                  className="rounded"
+                />
+                <Label htmlFor="activeTemplate" className="text-sm font-medium">Active Template</Label>
+              </div>
             </div>
             
             <div>
-              <Label className="text-sm font-medium">Required Certifications</Label>
-              <Input 
-                placeholder="e.g., BLS, ACLS, PALS"
-                defaultValue={selectedTemplate?.requiredCertifications?.join(', ') || ""}
+              <Label className="text-sm font-medium">Notes (Optional)</Label>
+              <textarea 
+                className="w-full mt-1 p-2 border rounded-md"
+                rows={3}
+                placeholder="Additional template details..."
+                defaultValue={selectedTemplate?.notes || ""}
               />
             </div>
           </div>
@@ -1231,6 +1292,109 @@ export default function EnhancedCalendarPage() {
               setSelectedTemplate(null);
             }}>
               {selectedTemplate ? 'Update Template' : 'Create Template'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Use Template Modal */}
+      <Dialog open={showUseTemplateModal} onOpenChange={setShowUseTemplateModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Schedule Shifts from Template</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <h4 className="font-medium text-sm mb-2">Template: {selectedTemplate?.name}</h4>
+              <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                <div>Department: {selectedTemplate?.department}</div>
+                <div>Specialty: {selectedTemplate?.specialty}</div>
+                <div>Time: {selectedTemplate?.startTime} - {selectedTemplate?.endTime}</div>
+              </div>
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium">Start Date</Label>
+              <Input 
+                type="date"
+                defaultValue={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium">End Date</Label>
+              <Input 
+                type="date"
+                defaultValue={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
+              />
+            </div>
+            
+            <div>
+              <Label className="text-sm font-medium">Days in Advance to Post</Label>
+              <Select defaultValue="7">
+                <SelectTrigger>
+                  <SelectValue placeholder="Select days" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 day</SelectItem>
+                  <SelectItem value="3">3 days</SelectItem>
+                  <SelectItem value="7">7 days</SelectItem>
+                  <SelectItem value="14">14 days</SelectItem>
+                  <SelectItem value="21">21 days</SelectItem>
+                  <SelectItem value="30">30 days</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="text-xs text-gray-500">
+              Shifts will be created based on the template's selected days of the week within the date range.
+            </div>
+          </div>
+          
+          <div className="flex justify-end gap-2 mt-6">
+            <Button variant="outline" onClick={() => {
+              setShowUseTemplateModal(false);
+              setSelectedTemplate(null);
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={async () => {
+              try {
+                const form = document.querySelector('form[data-use-template]') as HTMLFormElement;
+                const formData = new FormData(form);
+                
+                const response = await fetch('/api/shifts/from-template', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    templateId: selectedTemplate.id,
+                    startDate: formData.get('startDate') || new Date().toISOString().split('T')[0],
+                    endDate: formData.get('endDate') || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    daysInAdvance: parseInt(formData.get('daysInAdvance') as string) || 7
+                  })
+                });
+                
+                if (response.ok) {
+                  const result = await response.json();
+                  toast({ 
+                    title: "Shifts Created", 
+                    description: `${result.generatedShifts} shifts have been scheduled from the template` 
+                  });
+                  setShowUseTemplateModal(false);
+                  setSelectedTemplate(null);
+                  // Refresh shifts data
+                  window.location.reload();
+                } else {
+                  throw new Error('Failed to create shifts');
+                }
+              } catch (error) {
+                toast({ 
+                  title: "Error", 
+                  description: "Failed to create shifts from template" 
+                });
+              }
+            }}>
+              Create Shifts
             </Button>
           </div>
         </DialogContent>

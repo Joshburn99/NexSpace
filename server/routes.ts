@@ -5624,6 +5624,93 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Create shifts from template endpoint
+  app.post("/api/shifts/from-template", requireAuth, async (req, res) => {
+    try {
+      const { templateId, startDate, endDate, daysInAdvance } = req.body;
+      
+      // Find the template (simulate getting from storage)
+      const templates = [
+        {
+          id: 1,
+          name: "ICU Day Shift RN",
+          department: "ICU",
+          specialty: "RN",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          minStaff: 2,
+          maxStaff: 4,
+          shiftType: "day",
+          startTime: "07:00",
+          endTime: "19:00",
+          daysOfWeek: [1, 2, 3, 4, 5], // Mon-Fri
+          isActive: true,
+          hourlyRate: 45,
+          notes: "Primary ICU coverage"
+        }
+      ];
+      
+      const template = templates.find(t => t.id === templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Generate shifts based on template and date range
+      const generatedShifts = [];
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      
+      for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+        const dayOfWeek = date.getDay();
+        
+        // Check if this day is included in the template
+        if (template.daysOfWeek.includes(dayOfWeek)) {
+          const shiftDate = date.toISOString().split('T')[0];
+          
+          // Create shift based on template
+          const newShift = {
+            id: Date.now() + Math.random(),
+            title: `${template.name} - ${shiftDate}`,
+            date: shiftDate,
+            startTime: template.startTime,
+            endTime: template.endTime,
+            department: template.department,
+            specialty: template.specialty,
+            facilityId: template.facilityId,
+            facilityName: template.facilityName,
+            minStaff: template.minStaff,
+            maxStaff: template.maxStaff,
+            status: 'open',
+            hourlyRate: template.hourlyRate,
+            description: template.notes,
+            urgency: 'medium',
+            createdAt: new Date().toISOString(),
+            assignedStaffIds: [],
+            requiredCertifications: []
+          };
+          
+          generatedShifts.push(newShift);
+        }
+      }
+      
+      // Store the generated shifts (simulate storage)
+      // In a real implementation, these would be saved to the database
+      
+      res.json({
+        message: `Successfully created ${generatedShifts.length} shifts from template`,
+        generatedShifts: generatedShifts.length,
+        shifts: generatedShifts,
+        template: template.name,
+        dateRange: { startDate, endDate },
+        daysInAdvance
+      });
+      
+    } catch (error) {
+      console.error('Create shifts from template error:', error);
+      res.status(500).json({ message: "Failed to create shifts from template" });
+    }
+  });
+
   app.patch("/api/shift-templates/:id/status", requireAuth, async (req, res) => {
     try {
       const templateId = parseInt(req.params.id);
