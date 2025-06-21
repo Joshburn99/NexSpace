@@ -291,6 +291,9 @@ export function registerRoutes(app: Express): Server {
   // Shifts API with example data showing various statuses
   app.get("/api/shifts", requireAuth, async (req: any, res) => {
     try {
+      // Get template-generated shifts if they exist
+      const templateShifts = (global as any).templateGeneratedShifts || [];
+      
       const exampleShifts = [
         {
           id: 1,
@@ -558,7 +561,10 @@ export function registerRoutes(app: Express): Server {
         },
       ];
 
-      res.json(exampleShifts);
+      // Combine example shifts with template-generated shifts
+      const allShifts = [...exampleShifts, ...templateShifts];
+      
+      res.json(allShifts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch shifts" });
     }
@@ -5775,8 +5781,24 @@ export function registerRoutes(app: Express): Server {
         }
       }
       
-      // Store the generated shifts (simulate storage)
-      // In a real implementation, these would be saved to the database
+      // Store the generated shifts in a global array that persists during session
+      if (!(global as any).templateGeneratedShifts) {
+        (global as any).templateGeneratedShifts = [];
+      }
+      
+      // Add generated shifts to persistent storage
+      generatedShifts.forEach(shift => {
+        // Check if shift already exists to avoid duplicates
+        const exists = (global as any).templateGeneratedShifts.find((s: any) => 
+          s.date === shift.date && 
+          s.startTime === shift.startTime && 
+          s.department === shift.department
+        );
+        
+        if (!exists) {
+          (global as any).templateGeneratedShifts.push(shift);
+        }
+      });
       
       res.json({
         message: `Successfully created ${generatedShifts.length} shifts from template`,
