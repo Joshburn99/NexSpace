@@ -1402,6 +1402,7 @@ export function registerRoutes(app: Express): Server {
           experience: "8 years",
           skills: ["Critical Care", "Patient Assessment", "IV Therapy"],
           certifications: ["RN", "ACLS", "BLS", "CCRN"],
+          associatedFacilities: [1, 2],
           resumeUrl: "",
           coverLetterUrl: "",
           linkedIn: "",
