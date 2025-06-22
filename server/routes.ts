@@ -685,27 +685,25 @@ export function registerRoutes(app: Express): Server {
       // Combine worker shifts with template-generated shifts
       const allWorkerShifts = [...workerShifts, ...templateShifts];
       
-      // Filter shifts for workers based on their specialty and associated facilities
-      let filteredShifts = allWorkerShifts.filter(shift => shift.status === "open");
-      
-      // If user has specialty, filter by specialty
-      if (user.specialty) {
-        filteredShifts = filteredShifts.filter(shift => 
-          shift.specialty === user.specialty
-        );
-      }
-      
-      // If user has associated facilities, filter by those facilities
-      if (user.associatedFacilities && Array.isArray(user.associatedFacilities)) {
-        filteredShifts = filteredShifts.filter(shift => 
-          user.associatedFacilities.includes(shift.facilityId)
-        );
-      } else if (user.facilityId) {
-        // Fallback to single facility if associatedFacilities not set
-        filteredShifts = filteredShifts.filter(shift => 
-          shift.facilityId === user.facilityId
-        );
-      }
+      // Filter shifts for workers based on multiple criteria
+      let filteredShifts = allWorkerShifts.filter(shift => {
+        // Only show open shifts that are not assigned and not requested
+        if (shift.status !== "open") return false;
+        
+        // Do not allow past shifts to be requested or posted
+        const shiftDate = new Date(shift.date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (shiftDate < today) return false;
+        
+        // Filter by worker specialty - match the user's specialty
+        if (userSpecialty && shift.specialty !== userSpecialty) return false;
+        
+        // Filter by facility associations - only show shifts at facilities worker is associated with
+        if (userFacilities.length > 0 && !userFacilities.includes(shift.facilityId)) return false;
+        
+        return true;
+      });
       
       res.json(filteredShifts);
     } catch (error) {
