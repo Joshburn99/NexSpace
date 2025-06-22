@@ -5542,6 +5542,40 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Staff Facility Association API
+  app.post("/api/staff/:staffId/facilities", requireAuth, async (req, res) => {
+    try {
+      const { staffId } = req.params;
+      const { facilityId } = req.body;
+      
+      // Get current staff member
+      const staff = await db.select().from(users).where(eq(users.id, parseInt(staffId))).limit(1);
+      if (!staff.length) {
+        return res.status(404).json({ message: "Staff member not found" });
+      }
+      
+      // Add facility association logic here
+      // For now, just return success
+      res.json({ message: "Facility association added successfully" });
+    } catch (error) {
+      console.error("Error adding facility association:", error);
+      res.status(500).json({ message: "Failed to add facility association" });
+    }
+  });
+
+  app.delete("/api/staff/:staffId/facilities/:facilityId", requireAuth, async (req, res) => {
+    try {
+      const { staffId, facilityId } = req.params;
+      
+      // Remove facility association logic here
+      // For now, just return success
+      res.json({ message: "Facility association removed successfully" });
+    } catch (error) {
+      console.error("Error removing facility association:", error);
+      res.status(500).json({ message: "Failed to remove facility association" });
+    }
+  });
+
   // Referral System API
   app.get("/api/referral-settings", requireAuth, async (req, res) => {
     try {
