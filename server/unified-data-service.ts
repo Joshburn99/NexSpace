@@ -188,13 +188,11 @@ export class UnifiedDataService {
    */
   async getFacilities(activeOnly: boolean = true) {
     try {
-      let query = db.select().from(facilities);
-      
       if (activeOnly) {
-        query = query.where(eq(facilities.isActive, true));
+        return await db.select().from(facilities).where(eq(facilities.isActive, true));
+      } else {
+        return await db.select().from(facilities);
       }
-
-      return await query;
     } catch (error) {
       console.error("Error fetching facilities:", error);
       throw new Error("Failed to fetch facilities");

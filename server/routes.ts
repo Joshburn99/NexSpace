@@ -4,11 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 
-// In-memory storage for facility associations
-const staffFacilityAssociations: Record<number, number[]> = {
-  1: [1, 2], // Sarah Johnson
-  2: [2, 3], // Michael Chen - initialize with some associations
-};
+// Remove in-memory storage - using database as single source of truth
 import { z } from "zod";
 import {
   insertJobSchema,
@@ -1391,7 +1387,10 @@ export function registerRoutes(app: Express): Server {
   // Staff profile endpoints
   app.get("/api/staff", requireAuth, async (req: any, res) => {
     try {
-      // Return sample staff data for now
+      // Get staff data from unified service (single source of truth)
+      const dbStaffData = await unifiedDataService.getStaffWithAssociations();
+      
+      // Merge with extended profile information
       const staffData = [
         {
           id: 1,
@@ -1413,7 +1412,7 @@ export function registerRoutes(app: Express): Server {
           experience: "8 years",
           skills: ["Critical Care", "Patient Assessment", "IV Therapy"],
           certifications: ["RN", "ACLS", "BLS", "CCRN"],
-          associatedFacilities: staffFacilityAssociations[1] || [],
+          associatedFacilities: [], // Will be populated from database
           resumeUrl: "",
           coverLetterUrl: "",
           linkedIn: "",
@@ -1519,7 +1518,7 @@ export function registerRoutes(app: Express): Server {
             ratings: 67,
             endorsements: 18
           },
-          associatedFacilities: staffFacilityAssociations[2] || []
+          associatedFacilities: [] // Will be populated from database
         },
         {
           id: 3,
@@ -5558,7 +5557,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Staff Facility Association API
+  // Staff Facility Association API - Using Unified Data Service
   app.post("/api/staff/:staffId/facilities", requireAuth, async (req, res) => {
     try {
       const { staffId } = req.params;
@@ -5569,23 +5568,32 @@ export function registerRoutes(app: Express): Server {
       
       console.log(`Adding facility ${facilityIdNum} to staff ${staffIdNum}`);
       
-      // Initialize staff associations if they don't exist
-      if (!staffFacilityAssociations[staffIdNum]) {
-        staffFacilityAssociations[staffIdNum] = [];
+      // Get current staff data from database
+      const staffData = await unifiedDataService.getStaffWithAssociations();
+      const staff = staffData.find(s => s.id === staffIdNum);
+      
+      if (!staff) {
+        return res.status(404).json({ message: "Staff member not found" });
       }
       
       // Add facility if not already associated
-      if (!staffFacilityAssociations[staffIdNum].includes(facilityIdNum)) {
-        staffFacilityAssociations[staffIdNum].push(facilityIdNum);
+      const currentAssociations = staff.associatedFacilities || [];
+      let updatedAssociations = [...currentAssociations];
+      
+      if (!updatedAssociations.includes(facilityIdNum)) {
+        updatedAssociations.push(facilityIdNum);
       }
       
-      console.log(`Updated associations for staff ${staffIdNum}:`, staffFacilityAssociations[staffIdNum]);
+      // Update in database using unified service
+      const updatedStaff = await unifiedDataService.updateStaffFacilities(staffIdNum, updatedAssociations);
+      
+      console.log(`Updated associations for staff ${staffIdNum}:`, updatedAssociations);
       
       res.json({ 
         message: "Facility association added successfully",
         staffId: staffIdNum,
         facilityId: facilityIdNum,
-        associations: staffFacilityAssociations[staffIdNum]
+        associations: updatedAssociations
       });
     } catch (error) {
       console.error("Error adding facility association:", error);
@@ -5602,20 +5610,28 @@ export function registerRoutes(app: Express): Server {
       
       console.log(`Removing facility ${facilityIdNum} from staff ${staffIdNum}`);
       
-      // Remove facility from associations
-      if (staffFacilityAssociations[staffIdNum]) {
-        staffFacilityAssociations[staffIdNum] = staffFacilityAssociations[staffIdNum].filter(
-          id => id !== facilityIdNum
-        );
+      // Get current staff data from database
+      const staffData = await unifiedDataService.getStaffWithAssociations();
+      const staff = staffData.find(s => s.id === staffIdNum);
+      
+      if (!staff) {
+        return res.status(404).json({ message: "Staff member not found" });
       }
       
-      console.log(`Updated associations for staff ${staffIdNum}:`, staffFacilityAssociations[staffIdNum]);
+      // Remove facility from associations
+      const currentAssociations = staff.associatedFacilities || [];
+      const updatedAssociations = currentAssociations.filter(id => id !== facilityIdNum);
+      
+      // Update in database using unified service
+      await unifiedDataService.updateStaffFacilities(staffIdNum, updatedAssociations);
+      
+      console.log(`Updated associations for staff ${staffIdNum}:`, updatedAssociations);
       
       res.json({ 
         message: "Facility association removed successfully",
         staffId: staffIdNum,
         facilityId: facilityIdNum,
-        associations: staffFacilityAssociations[staffIdNum] || []
+        associations: updatedAssociations
       });
     } catch (error) {
       console.error("Error removing facility association:", error);
