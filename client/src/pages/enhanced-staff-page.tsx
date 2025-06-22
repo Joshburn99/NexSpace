@@ -396,6 +396,23 @@ export default function EnhancedStaffPage() {
                   <Label htmlFor="certifications">Certifications (comma-separated)</Label>
                   <Input name="certifications" placeholder="BLS, ACLS, RN License" />
                 </div>
+                
+                {/* Facility Associations - Only visible to superusers */}
+                {user?.role === "super_admin" && (
+                  <div>
+                    <Label htmlFor="associatedFacilities">Associated Facilities (for workers)</Label>
+                    <Select name="associatedFacilities">
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select facilities" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="1">Portland General Hospital</SelectItem>
+                        <SelectItem value="2">OHSU Hospital</SelectItem>
+                        <SelectItem value="1,2">Both Facilities</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="flex justify-end gap-2">
                   <Button
                     type="button"

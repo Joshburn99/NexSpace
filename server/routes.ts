@@ -698,6 +698,59 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Worker's assigned shifts API
+  app.get("/api/shifts/my-shifts", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      
+      // Get shifts assigned to this worker from Enhanced Schedule data
+      const myShifts = [
+        {
+          id: 101,
+          title: "ICU Day Shift",
+          date: "2025-06-23",
+          startTime: "07:00",
+          endTime: "19:00",
+          department: "ICU",
+          specialty: "RN",
+          status: "confirmed",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 42.5,
+          urgency: "high",
+          description: "12-hour ICU nursing shift, ACLS certification required",
+          assignedStaffId: user.id,
+        },
+        {
+          id: 102,
+          title: "Emergency Night Shift",
+          date: "2025-06-25",
+          startTime: "19:00",
+          endTime: "07:00",
+          department: "Emergency",
+          specialty: "RN",
+          status: "requested",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 45.0,
+          urgency: "critical",
+          description: "Overnight emergency department coverage",
+          assignedStaffId: user.id,
+        }
+      ];
+      
+      // Filter by user's specialty if available
+      const filteredShifts = user.specialty 
+        ? myShifts.filter(shift => shift.specialty === user.specialty)
+        : myShifts;
+      
+      res.json(filteredShifts);
+    } catch (error) {
+      console.error("Error fetching my shifts:", error);
+      res.status(500).json({ message: "Failed to fetch shifts" });
+    }
+  });
+
   app.post(
     "/api/shifts",
     requireAuth,

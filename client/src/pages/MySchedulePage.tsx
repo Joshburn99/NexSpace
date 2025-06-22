@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -7,47 +9,113 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Calendar, Clock, MapPin, DollarSign, User, AlertCircle } from "lucide-react";
-import { useShifts, type Shift } from "@/contexts/ShiftContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Calendar, Clock, MapPin, DollarSign, User, AlertCircle, Star, Building } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { format, parseISO } from "date-fns";
+
+interface WorkerShift {
+  id: number;
+  title: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  department: string;
+  specialty: string;
+  facilityId: number;
+  facilityName: string;
+  status: "open" | "requested" | "confirmed" | "completed" | "cancelled";
+  rate: number;
+  urgency: "low" | "medium" | "high" | "critical";
+  description: string;
+  assignedStaffId?: number;
+}
 
 export default function MySchedulePage() {
   const { user } = useAuth();
-  const { open, requested, booked, history, requestShift, isLoading } = useShifts();
   const { toast } = useToast();
-  const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
+  const queryClient = useQueryClient();
+  const [selectedShift, setSelectedShift] = useState<WorkerShift | null>(null);
   const [activeView, setActiveView] = useState('dayGridMonth');
+  const [activeTab, setActiveTab] = useState('calendar');
 
-  // Create calendar events from all shift categories with null checks
+  // Fetch worker's assigned shifts from Enhanced Schedule data
+  const { data: myShifts = [], isLoading } = useQuery({
+    queryKey: ["/api/shifts/my-shifts"],
+    queryFn: async () => {
+      const response = await apiRequest("GET", "/api/shifts/my-shifts");
+      return await response.json();
+    }
+  });
+
+  // Fetch shift history for worker
+  const { data: shiftHistory = [] } = useQuery({
+    queryKey: ["/api/shifts/history", user?.id],
+    queryFn: async () => {
+      const response = await apiRequest("GET", `/api/shifts/history/${user?.id}`);
+      return await response.json();
+    },
+    enabled: !!user?.id
+  });
+
+  // Request shift mutation
+  const requestShiftMutation = useMutation({
+    mutationFn: async (shiftId: number) => {
+      const response = await apiRequest("POST", "/api/shifts/request", { shiftId });
+      return await response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/shifts/my-shifts"] });
+      toast({
+        title: "Shift Requested",
+        description: "Your shift request has been submitted successfully."
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Request Failed",
+        description: "Failed to request shift. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Separate shifts by status
+  const upcomingShifts = myShifts.filter((shift: WorkerShift) => 
+    shift.status === "confirmed" && new Date(shift.date) >= new Date()
+  );
+  
+  const requestedShifts = myShifts.filter((shift: WorkerShift) => 
+    shift.status === "requested"
+  );
+  
+  const completedShifts = [...shiftHistory, ...myShifts.filter((shift: WorkerShift) => 
+    shift.status === "completed" || new Date(shift.date) < new Date()
+  )];
+
+  // Create calendar events from worker's shifts
   const calendarEvents = [
-    ...(open || []).map(s => ({ 
+    ...upcomingShifts.map(s => ({ 
       id: s.id.toString(), 
-      title: `Open: ${s.facilityName}`, 
+      title: `${s.title} - ${s.facilityName}`, 
       date: s.date, 
-      color: 'gray',
-      extendedProps: { shift: s, status: 'open' }
+      color: 'green',
+      extendedProps: { shift: s, status: 'confirmed' }
     })),
-    ...(requested || []).map(s => ({ 
+    ...requestedShifts.map(s => ({ 
       id: s.id.toString(), 
-      title: `Requested`, 
+      title: `Pending: ${s.title}`, 
       date: s.date, 
       color: 'orange',
       extendedProps: { shift: s, status: 'requested' }
     })),
-    ...(booked || []).map(s => ({ 
-      id: s.id.toString(), 
-      title: `Booked`, 
-      date: s.date, 
-      color: 'green',
-      extendedProps: { shift: s, status: 'booked' }
-    })),
-    ...(history || []).map(s => ({
+    ...completedShifts.map(s => ({
       id: s.id.toString(),
-      title: `Past: ${s.facilityName}`,
+      title: `Completed: ${s.title}`,
       date: s.date,
       color: 'blue',
-      extendedProps: { shift: s, status: 'history' }
+      extendedProps: { shift: s, status: 'completed' }
     }))
   ];
 
@@ -55,22 +123,22 @@ export default function MySchedulePage() {
     setSelectedShift(info.event.extendedProps.shift);
   };
 
-  const handleShiftRequest = async (shiftId: number) => {
-    if (!user) return;
-    
+  const formatTime = (time: string) => {
     try {
-      await requestShift(shiftId);
-      toast({
-        title: "Shift Requested",
-        description: "Your shift request has been submitted successfully."
-      });
-      setSelectedShift(null);
-    } catch (error) {
-      toast({
-        title: "Request Failed",
-        description: "Failed to request shift. Please try again.",
-        variant: "destructive"
-      });
+      const [hours, minutes] = time.split(':');
+      const date = new Date();
+      date.setHours(parseInt(hours), parseInt(minutes));
+      return format(date, 'h:mm a');
+    } catch {
+      return time;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    try {
+      return format(parseISO(dateString), 'MMM d, yyyy');
+    } catch {
+      return dateString;
     }
   };
 
