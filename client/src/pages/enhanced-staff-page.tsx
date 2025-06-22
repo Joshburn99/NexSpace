@@ -245,13 +245,12 @@ function EnhancedStaffPageContent() {
     if (!staff) return false;
     
     try {
-      // Exclude superusers - only show employees and contractors
-      const isEligibleWorkerType = staff.workerType === "internal_employee" || 
-                                   staff.workerType === "contractor_1099" || 
-                                   staff.workerType === "agency_staff" || 
-                                   staff.workerType === "float_pool";
-      
-      if (!isEligibleWorkerType) return false;
+      // Exclude superusers by email (server already filters most, but double-check)
+      const superuserEmails = ['joshburn@nexspace.com', 'brian.nangle@nexspace.com'];
+      if (superuserEmails.includes(staff.email)) return false;
+
+      // Exclude by role if present 
+      if (staff.role === "super_admin" || staff.role === "facility_manager") return false;
 
       const matchesSearch =
         searchTerm === "" ||
