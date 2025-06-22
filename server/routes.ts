@@ -3,6 +3,12 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
+
+// In-memory storage for facility associations
+const staffFacilityAssociations: Record<number, number[]> = {
+  1: [1, 2], // Sarah Johnson
+  2: [2, 3], // Michael Chen - initialize with some associations
+};
 import { z } from "zod";
 import {
   insertJobSchema,
@@ -1402,7 +1408,7 @@ export function registerRoutes(app: Express): Server {
           experience: "8 years",
           skills: ["Critical Care", "Patient Assessment", "IV Therapy"],
           certifications: ["RN", "ACLS", "BLS", "CCRN"],
-          associatedFacilities: [1, 2],
+          associatedFacilities: staffFacilityAssociations[1] || [],
           resumeUrl: "",
           coverLetterUrl: "",
           linkedIn: "",
@@ -1507,7 +1513,8 @@ export function registerRoutes(app: Express): Server {
             shiftsCompleted: 89,
             ratings: 67,
             endorsements: 18
-          }
+          },
+          associatedFacilities: staffFacilityAssociations[2] || []
         },
         {
           id: 3,
@@ -5552,14 +5559,28 @@ export function registerRoutes(app: Express): Server {
       const { staffId } = req.params;
       const { facilityId } = req.body;
       
-      console.log(`Adding facility ${facilityId} to staff ${staffId}`);
+      const staffIdNum = parseInt(staffId);
+      const facilityIdNum = parseInt(facilityId);
       
-      // For now, store in memory and return success
-      // In production, this would update the database
+      console.log(`Adding facility ${facilityIdNum} to staff ${staffIdNum}`);
+      
+      // Initialize staff associations if they don't exist
+      if (!staffFacilityAssociations[staffIdNum]) {
+        staffFacilityAssociations[staffIdNum] = [];
+      }
+      
+      // Add facility if not already associated
+      if (!staffFacilityAssociations[staffIdNum].includes(facilityIdNum)) {
+        staffFacilityAssociations[staffIdNum].push(facilityIdNum);
+      }
+      
+      console.log(`Updated associations for staff ${staffIdNum}:`, staffFacilityAssociations[staffIdNum]);
+      
       res.json({ 
         message: "Facility association added successfully",
-        staffId: parseInt(staffId),
-        facilityId: parseInt(facilityId)
+        staffId: staffIdNum,
+        facilityId: facilityIdNum,
+        associations: staffFacilityAssociations[staffIdNum]
       });
     } catch (error) {
       console.error("Error adding facility association:", error);
@@ -5571,14 +5592,25 @@ export function registerRoutes(app: Express): Server {
     try {
       const { staffId, facilityId } = req.params;
       
-      console.log(`Removing facility ${facilityId} from staff ${staffId}`);
+      const staffIdNum = parseInt(staffId);
+      const facilityIdNum = parseInt(facilityId);
       
-      // For now, return success
-      // In production, this would update the database
+      console.log(`Removing facility ${facilityIdNum} from staff ${staffIdNum}`);
+      
+      // Remove facility from associations
+      if (staffFacilityAssociations[staffIdNum]) {
+        staffFacilityAssociations[staffIdNum] = staffFacilityAssociations[staffIdNum].filter(
+          id => id !== facilityIdNum
+        );
+      }
+      
+      console.log(`Updated associations for staff ${staffIdNum}:`, staffFacilityAssociations[staffIdNum]);
+      
       res.json({ 
         message: "Facility association removed successfully",
-        staffId: parseInt(staffId),
-        facilityId: parseInt(facilityId)
+        staffId: staffIdNum,
+        facilityId: facilityIdNum,
+        associations: staffFacilityAssociations[staffIdNum] || []
       });
     } catch (error) {
       console.error("Error removing facility association:", error);
