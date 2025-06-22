@@ -682,11 +682,11 @@ export function registerRoutes(app: Express): Server {
         }
       ];
 
-      // Combine example shifts with template-generated shifts
-      const allShifts = [...exampleShifts, ...templateShifts];
+      // Combine worker shifts with template-generated shifts
+      const allWorkerShifts = [...workerShifts, ...templateShifts];
       
       // Filter shifts for workers based on their specialty and associated facilities
-      let filteredShifts = allShifts.filter(shift => shift.status === "open");
+      let filteredShifts = allWorkerShifts.filter(shift => shift.status === "open");
       
       // If user has specialty, filter by specialty
       if (user.specialty) {
@@ -2957,7 +2957,7 @@ export function registerRoutes(app: Express): Server {
         }
       ];
       
-      res.json(staffData);
+      res.json(samplePosts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch staff data" });
     }
