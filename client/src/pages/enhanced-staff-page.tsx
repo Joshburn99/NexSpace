@@ -55,6 +55,8 @@ import {
   Home,
   UserPlus,
   Settings,
+  Building2,
+  X,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -156,6 +158,8 @@ export default function EnhancedStaffPage() {
   const [showAddStaffDialog, setShowAddStaffDialog] = useState(false);
   const [profileEditMode, setProfileEditMode] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
+  const [showFacilitySearch, setShowFacilitySearch] = useState(false);
+  const [facilitySearchTerm, setFacilitySearchTerm] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: staffMembers = [], isLoading } = useQuery<StaffMember[]>({
@@ -164,6 +168,11 @@ export default function EnhancedStaffPage() {
 
   const { data: staffPosts = [] } = useQuery<StaffPost[]>({
     queryKey: ["/api/staff/posts"],
+  });
+
+  // Fetch facilities for associations
+  const { data: facilitiesData = [] } = useQuery({
+    queryKey: ["/api/facilities"],
   });
 
   // Filter staff members
@@ -1135,7 +1144,7 @@ export default function EnhancedStaffPage() {
               </TabsContent>
 
               <TabsContent value="settings" className="space-y-6">
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
                     <Label>Account Status</Label>
                     <Select defaultValue={selectedStaff.status}>
@@ -1150,6 +1159,65 @@ export default function EnhancedStaffPage() {
                       </SelectContent>
                     </Select>
                   </div>
+
+                  {/* Facility Associations - Only for workers */}
+                  {(selectedStaff.role === "internal_employee" || selectedStaff.role === "contractor_1099") && 
+                   sessionState?.user?.role === "super_admin" && (
+                    <div className="space-y-4 border-t pt-6">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <Label className="text-base font-semibold">Facility Associations</Label>
+                          <p className="text-sm text-muted-foreground">
+                            Manage which facilities this worker can accept shifts from
+                          </p>
+                        </div>
+                        <Button 
+                          onClick={() => setShowFacilitySearch(true)} 
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Add Facility
+                        </Button>
+                      </div>
+
+                      {/* Current Facility Associations */}
+                      <div className="space-y-2">
+                        {selectedStaff.associatedFacilities?.length > 0 ? (
+                          selectedStaff.associatedFacilities.map((facilityId: number) => {
+                            const facility = facilitiesData?.find(f => f.id === facilityId);
+                            return (
+                              <div key={facilityId} className="flex items-center justify-between p-3 border rounded-lg">
+                                <div className="flex items-center gap-3">
+                                  <Building2 className="h-4 w-4 text-blue-600" />
+                                  <div>
+                                    <div className="font-medium">{facility?.name || `Facility ${facilityId}`}</div>
+                                    <div className="text-sm text-muted-foreground">
+                                      {facility?.address || "No address available"}
+                                    </div>
+                                  </div>
+                                </div>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeFacilityAssociation(selectedStaff.id, facilityId)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                            <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                            <p>No facility associations</p>
+                            <p className="text-sm">Add facilities to allow this worker to see their shifts</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </TabsContent>
             </Tabs>
