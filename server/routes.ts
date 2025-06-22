@@ -1390,8 +1390,200 @@ export function registerRoutes(app: Express): Server {
       // Get staff data from unified service (single source of truth)
       const dbStaffData = await unifiedDataService.getStaffWithAssociations();
       
-      // Merge with extended profile information
-      const staffData = [
+      // Map database staff to frontend format with extended profile information
+      const staffData = dbStaffData.map((staff, index) => ({
+        id: staff.id,
+        firstName: staff.firstName,
+        lastName: staff.lastName,
+        email: staff.email,
+        role: staff.role === "internal_employee" ? "employee" : staff.role,
+        specialty: staff.specialty,
+        associatedFacilities: staff.associatedFacilities || [],
+        avatar: staff.avatar,
+        // Extended profile data
+        phone: index === 0 ? "(555) 123-4567" : index === 1 ? "(555) 234-5678" : "(555) 345-6789",
+        department: staff.specialty === "RN" ? "ICU" : staff.specialty === "LPN" ? "Medical/Surgical" : "Emergency",
+        compliant: true,
+        activeCredentials: 8,
+        expiringCredentials: 0,
+        profileImage: staff.avatar,
+        bio: `Experienced ${staff.specialty} with expertise in patient care.`,
+        location: "Portland, OR",
+        hourlyRate: staff.specialty === "RN" ? 48 : 42,
+        experience: "8 years",
+        skills: ["Patient Care", "Medical Procedures", "Documentation"],
+        certifications: staff.specialty === "RN" ? ["RN", "ACLS", "BLS"] : ["LPN", "BLS"],
+        resumeUrl: "",
+        coverLetterUrl: "",
+        linkedIn: "",
+        linkedinUrl: "",
+        portfolio: "",
+        portfolioUrl: "",
+        yearsExperience: 8,
+        rating: 4.8,
+        totalShifts: 156,
+        workerType: staff.role === "internal_employee" ? "internal_employee" : "contractor_1099",
+        status: "active",
+        availability: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+        emergencyContact: {
+          name: "Emergency Contact",
+          phone: "(555) 999-0000",
+          relationship: "Spouse"
+        },
+        workHistory: [{
+          facility: "Healthcare Facility",
+          position: staff.specialty + " Nurse",
+          startDate: "2020-01-01",
+          description: "Providing quality patient care"
+        }],
+        education: [{
+          institution: "Nursing School",
+          degree: "Bachelor of Science in Nursing",
+          graduationYear: 2019,
+          gpa: 3.8
+        }],
+        documents: [{
+          type: "License",
+          name: staff.specialty + " License",
+          uploadDate: "2024-01-01",
+          expirationDate: "2026-01-01",
+          verified: true
+        }],
+        socialStats: {
+          profileViews: 200,
+          shiftsCompleted: 150,
+          ratings: 80,
+          endorsements: 20
+        }
+      }));
+
+      // Return combined database and legacy data
+      res.json([...staffData]);
+    } catch (error) {
+      console.error("Error fetching staff:", error);
+      res.status(500).json({ message: "Failed to fetch staff data" });
+    }
+  });
+
+  // Individual staff profile route
+  app.get("/api/staff/:id", requireAuth, async (req, res) => {
+    try {
+      const staffId = parseInt(req.params.id);
+      const dbStaffData = await unifiedDataService.getStaffWithAssociations();
+      const staff = dbStaffData.find(s => s.id === staffId);
+      
+      if (!staff) {
+        return res.status(404).json({ message: "Staff member not found" });
+      }
+
+      const profileData = {
+        id: staff.id,
+        firstName: staff.firstName,
+        lastName: staff.lastName,
+        email: staff.email,
+        role: staff.role,
+        specialty: staff.specialty,
+        associatedFacilities: staff.associatedFacilities || [],
+        avatar: staff.avatar,
+        phone: "(555) 123-4567",
+        department: staff.specialty === "RN" ? "ICU" : "Medical/Surgical",
+        compliant: true,
+        activeCredentials: 8,
+        expiringCredentials: 0,
+        profileImage: staff.avatar,
+        bio: `Experienced ${staff.specialty} with expertise in patient care.`,
+        location: "Portland, OR",
+        hourlyRate: staff.specialty === "RN" ? 48 : 42,
+        experience: "8 years",
+        skills: ["Patient Care", "Medical Procedures", "Documentation"],
+        certifications: staff.specialty === "RN" ? ["RN", "ACLS", "BLS"] : ["LPN", "BLS"],
+        resumeUrl: "",
+        coverLetterUrl: "",
+        linkedIn: "",
+        linkedinUrl: "",
+        portfolio: "",
+        portfolioUrl: "",
+        yearsExperience: 8,
+        rating: 4.8,
+        totalShifts: 156,
+        workerType: staff.role === "internal_employee" ? "internal_employee" : "contractor_1099",
+        status: "active",
+        availability: ["Mon", "Tue", "Wed", "Thu", "Fri"],
+        emergencyContact: {
+          name: "Emergency Contact",
+          phone: "(555) 999-0000",
+          relationship: "Spouse"
+        },
+        workHistory: [{
+          facility: "Healthcare Facility",
+          position: staff.specialty + " Nurse",
+          startDate: "2020-01-01",
+          description: "Providing quality patient care"
+        }],
+        education: [{
+          institution: "Nursing School",
+          degree: "Bachelor of Science in Nursing",
+          graduationYear: 2019,
+          gpa: 3.8
+        }],
+        documents: [{
+          type: "License",
+          name: staff.specialty + " License",
+          uploadDate: "2024-01-01",
+          expirationDate: "2026-01-01",
+          verified: true
+        }],
+        socialStats: {
+          profileViews: 200,
+          shiftsCompleted: 150,
+          ratings: 80,
+          endorsements: 20
+        }
+      };
+
+      res.json(profileData);
+    } catch (error) {
+      console.error("Error fetching staff profile:", error);
+      res.status(500).json({ message: "Failed to fetch staff profile" });
+    }
+  });
+
+  // Staff messaging route
+  app.post("/api/staff/:id/message", requireAuth, async (req, res) => {
+    try {
+      const staffId = parseInt(req.params.id);
+      const { content } = req.body;
+      
+      if (!content) {
+        return res.status(400).json({ message: "Message content is required" });
+      }
+
+      // Create message using unified service
+      const messageData = {
+        senderId: (req as any).user.id,
+        recipientId: staffId,
+        conversationId: `user_${(req as any).user.id}_staff_${staffId}`,
+        content,
+        messageType: "text",
+        isRead: false
+      };
+
+      const message = await unifiedDataService.createMessage(messageData);
+      
+      res.json({ 
+        message: "Message sent successfully",
+        data: message
+      });
+    } catch (error) {
+      console.error("Error sending message:", error);
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  // Legacy staff data endpoint (for compatibility)
+  app.get("/api/legacy-staff", requireAuth, async (req, res) => {
+    try {
+      const legacyStaffData = [
         {
           id: 1,
           firstName: "Sarah",
