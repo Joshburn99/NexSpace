@@ -68,6 +68,7 @@ import SchedulingTemplatesPage from "@/pages/scheduling-templates-page";
 import ShiftTemplatesPage from "@/pages/shift-templates-page";
 import AdvancedSchedulingPage from "@/pages/advanced-scheduling-page";
 import FacilitySchedulePage from "@/pages/facility-schedule-page";
+import WorkerOpenShiftsPage from "@/pages/worker-open-shifts-page";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -92,6 +93,7 @@ function AppContent() {
       <ProtectedRoute path="/advanced-scheduling" component={AdvancedSchedulingPage} />
       <ProtectedRoute path="/scheduling-config" component={SchedulingConfigPage} />
       <ProtectedRoute path="/shifts-open" component={OpenShiftsPage} />
+      <ProtectedRoute path="/worker-open-shifts" component={WorkerOpenShiftsPage} />
       <ProtectedRoute path="/shift-requests" component={ShiftRequestsPage} />
       <ProtectedRoute path="/time-clock" component={TimeClockPage} />
       <ProtectedRoute path="/staff" component={EnhancedStaffPage} />

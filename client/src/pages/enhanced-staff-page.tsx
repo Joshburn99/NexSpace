@@ -558,6 +558,22 @@ export default function EnhancedStaffPage() {
                       </Badge>
                     )}
                   </div>
+                  
+                  {/* Impersonation Button */}
+                  <div className="pt-2 border-t">
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startImpersonation(staff.id);
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="w-full text-xs"
+                    >
+                      <Users className="h-3 w-3 mr-1" />
+                      Impersonate User
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ))}

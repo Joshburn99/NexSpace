@@ -144,69 +144,99 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
     billing: true,
   });
 
-  const navigationGroups: NavigationGroup[] = [
-    {
-      items: [{ path: "/", icon: Activity, label: "Dashboard", exact: true }],
-    },
-    {
-      key: "scheduling",
-      label: "Shift Templates",
-      icon: Calendar,
-      items: [
-        { path: "/shift-templates", icon: Calendar, label: "Shift Templates" },
-        { path: "/facility-schedule", icon: Calendar, label: "Facility Schedule" },
-        { path: "/shifts-open", icon: ClipboardList, label: "Open Shifts" },
-        { path: "/shift-requests", icon: Clock, label: "Shift Requests" },
-        { path: "/time-clock", icon: Clock, label: "Time Clock" },
-      ],
-    },
-    {
-      key: "workforce",
-      label: "Workforce",
-      icon: Users,
-      items: [
-        { path: "/staff", icon: Users, label: "Staff" },
-        { path: "/attendance", icon: UserCheck, label: "Attendance" },
-        { path: "/time-clock", icon: Clock, label: "Time Clock" },
-        { path: "/credentials", icon: UserCheck, label: "Credentials" },
-      ],
-    },
-    {
-      key: "hiring",
-      label: "Hiring",
-      icon: Building,
-      items: [
-        { path: "/job-board", icon: ClipboardList, label: "Job Board" },
-        { path: "/enhanced-job-board", icon: ClipboardList, label: "Enhanced Job Board" },
-        { path: "/enhanced-job-posting", icon: FileText, label: "Job Posting" },
-        { path: "/referral", icon: Users, label: "Referrals" },
-      ],
-    },
-    {
-      key: "insights",
-      label: "Insights",
-      icon: BarChart3,
-      items: [
-        { path: "/analytics", icon: BarChart3, label: "Analytics" },
-        { path: "/overtime-report", icon: FileText, label: "Overtime Reports" },
-      ],
-    },
-    {
-      key: "billing",
-      label: "Billing",
-      icon: DollarSign,
-      items: [
-        { path: "/payroll", icon: DollarSign, label: "Payroll" },
-        { path: "/invoices", icon: FileText, label: "Invoices" },
-      ],
-    },
-    {
-      items: [
-        { path: "/messaging", icon: MessageSquare, label: "Messages", badge: 3 },
-        { path: "/settings", icon: Settings, label: "Settings" },
-      ],
-    },
-  ];
+  // Role-based navigation
+  const getNavigationGroups = (): NavigationGroup[] => {
+    const isWorker = user?.role === "internal_employee" || user?.role === "contractor_1099";
+    
+    if (isWorker) {
+      // Worker navigation - restricted to essential features only
+      return [
+        {
+          items: [{ path: "/", icon: Activity, label: "Dashboard", exact: true }],
+        },
+        {
+          items: [
+            { path: "/my-schedule", icon: Calendar, label: "My Schedule" },
+            { path: "/worker-open-shifts", icon: ClipboardList, label: "Open Shifts" },
+            { path: "/time-clock", icon: Clock, label: "Time Clock" },
+          ],
+        },
+        {
+          items: [
+            { path: "/messaging", icon: MessageSquare, label: "Messages", badge: 3 },
+            { path: "/settings", icon: Settings, label: "Settings" },
+          ],
+        },
+      ];
+    }
+    
+    // Admin/Manager navigation - full access
+    return [
+      {
+        items: [{ path: "/", icon: Activity, label: "Dashboard", exact: true }],
+      },
+      {
+        key: "scheduling",
+        label: "Shift Templates",
+        icon: Calendar,
+        items: [
+          { path: "/shift-templates", icon: Calendar, label: "Shift Templates" },
+          { path: "/facility-schedule", icon: Calendar, label: "Facility Schedule" },
+          { path: "/shifts-open", icon: ClipboardList, label: "Open Shifts" },
+          { path: "/shift-requests", icon: Clock, label: "Shift Requests" },
+          { path: "/time-clock", icon: Clock, label: "Time Clock" },
+        ],
+      },
+      {
+        key: "workforce",
+        label: "Workforce",
+        icon: Users,
+        items: [
+          { path: "/staff", icon: Users, label: "Staff" },
+          { path: "/attendance", icon: UserCheck, label: "Attendance" },
+          { path: "/time-clock", icon: Clock, label: "Time Clock" },
+          { path: "/credentials", icon: UserCheck, label: "Credentials" },
+        ],
+      },
+      {
+        key: "hiring",
+        label: "Hiring",
+        icon: Building,
+        items: [
+          { path: "/job-board", icon: ClipboardList, label: "Job Board" },
+          { path: "/enhanced-job-board", icon: ClipboardList, label: "Enhanced Job Board" },
+          { path: "/enhanced-job-posting", icon: FileText, label: "Job Posting" },
+          { path: "/referral", icon: Users, label: "Referrals" },
+        ],
+      },
+      {
+        key: "insights",
+        label: "Insights",
+        icon: BarChart3,
+        items: [
+          { path: "/analytics", icon: BarChart3, label: "Analytics" },
+          { path: "/overtime-report", icon: FileText, label: "Overtime Reports" },
+        ],
+      },
+      {
+        key: "billing",
+        label: "Billing",
+        icon: DollarSign,
+        items: [
+          { path: "/payroll", icon: DollarSign, label: "Payroll" },
+          { path: "/invoices", icon: FileText, label: "Invoices" },
+        ],
+      },
+      {
+        items: [
+          { path: "/messaging", icon: MessageSquare, label: "Messages", badge: 3 },
+          { path: "/settings", icon: Settings, label: "Settings" },
+        ],
+      },
+    ];
+  };
+
+  const navigationGroups = getNavigationGroups();
 
   const toggleGroup = (groupKey: string) => {
     setExpandedGroups((prev) => ({
