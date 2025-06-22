@@ -75,6 +75,7 @@ interface StaffMember {
   hourlyRate: number;
   location: string;
   workerType: "internal_employee" | "contractor_1099" | "agency_staff" | "float_pool";
+  role?: string;
   status: "active" | "inactive" | "pending" | "suspended";
   rating: number;
   totalShifts: number;
@@ -250,7 +251,7 @@ function EnhancedStaffPageContent() {
       if (superuserEmails.includes(staff.email)) return false;
 
       // Exclude by role if present 
-      if (staff.role === "super_admin" || staff.role === "facility_manager") return false;
+      if (staff?.role === "super_admin" || staff?.role === "facility_manager") return false;
 
       const matchesSearch =
         searchTerm === "" ||

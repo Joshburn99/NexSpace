@@ -222,31 +222,84 @@ export default function EnhancedCalendarPage() {
     return shift;
   });
 
-  // Convert to calendar events with specialty-based colors
-  const calendarEvents = processedShifts.map(shift => {
-    const specialtyColor = (specialtyColors as any)[shift.specialty] || specialtyColors.default;
-    const statusInfo = statusConfig[shift.status as keyof typeof statusConfig] || statusConfig.open;
+  // Group shifts by date, specialty, and time for monthly view
+  const groupShiftsByDay = (shifts: any[]) => {
+    const groupedByDate: { [date: string]: any[] } = {};
     
-    return {
-      id: shift.id.toString(),
-      title: `${shift.title}`,
-      start: `${shift.date}T${shift.startTime}`,
-      end: `${shift.date}T${shift.endTime}`,
-      backgroundColor: specialtyColor,
-      borderColor: specialtyColor,
-      textColor: '#fff',
-      extendedProps: {
-        shift: { ...shift, status: shift.status },
-        facility: shift.facilityName,
-        specialty: shift.specialty,
-        rate: shift.rate,
-        urgency: shift.urgency,
-        statusIcon: statusInfo?.icon || AlertCircle,
-        statusColor: statusInfo?.color || "#6b7280",
-        statusLabel: statusInfo?.label || shift.status,
-        specialtyColor: specialtyColor
+    shifts.forEach(shift => {
+      if (!groupedByDate[shift.date]) {
+        groupedByDate[shift.date] = [];
       }
-    };
+      groupedByDate[shift.date].push(shift);
+    });
+
+    // Group shifts within each day by specialty and time
+    Object.keys(groupedByDate).forEach(date => {
+      const dayShifts = groupedByDate[date];
+      const grouped: { [key: string]: any[] } = {};
+      
+      dayShifts.forEach(shift => {
+        const groupKey = `${shift.specialty}-${shift.startTime}-${shift.endTime}`;
+        if (!grouped[groupKey]) {
+          grouped[groupKey] = [];
+        }
+        grouped[groupKey].push(shift);
+      });
+      
+      groupedByDate[date] = Object.values(grouped);
+    });
+    
+    return groupedByDate;
+  };
+
+  const groupedShifts = groupShiftsByDay(processedShifts);
+
+  // Convert to calendar events with enhanced grouping
+  const calendarEvents = Object.entries(groupedShifts).flatMap(([date, dayGroups]) => {
+    return dayGroups.map((group: any[], groupIndex: number) => {
+      const firstShift = group[0];
+      const specialty = firstShift.specialty;
+      const specialtyColor = (specialtyColors as any)[specialty] || specialtyColors.default;
+      const statusInfo = statusConfig[firstShift.status as keyof typeof statusConfig] || statusConfig.open;
+      
+      // Calculate filled/total for multi-worker shifts
+      const totalWorkers = group.length;
+      const filledWorkers = group.filter(s => s.assignedStaffName).length;
+      
+      let title = '';
+      if (totalWorkers === 1) {
+        // Single worker shift: "Worker Name – Start–End Time"
+        title = `${firstShift.assignedStaffName || 'Unassigned'} – ${firstShift.startTime}–${firstShift.endTime}`;
+      } else {
+        // Multi-worker shift: "Specialty – Filled/Total – Start–End Time"
+        title = `${specialty} – ${filledWorkers}/${totalWorkers} – ${firstShift.startTime}–${firstShift.endTime}`;
+      }
+      
+      return {
+        id: `${date}-${groupIndex}`,
+        title,
+        start: `${date}T${firstShift.startTime}`,
+        end: `${date}T${firstShift.endTime}`,
+        backgroundColor: specialtyColor,
+        borderColor: specialtyColor,
+        textColor: '#fff',
+        extendedProps: {
+          shifts: group,
+          shift: firstShift,
+          facility: firstShift.facilityName,
+          specialty,
+          rate: firstShift.rate,
+          urgency: firstShift.urgency,
+          statusIcon: statusInfo?.icon || AlertCircle,
+          statusColor: statusInfo?.color || "#6b7280",
+          statusLabel: statusInfo?.label || firstShift.status,
+          specialtyColor: specialtyColor,
+          totalWorkers,
+          filledWorkers,
+          isGrouped: totalWorkers > 1
+        }
+      };
+    });
   });
 
   const handleEventClick = (info: any) => {
@@ -641,8 +694,12 @@ export default function EnhancedCalendarPage() {
             }}
             views={{
               dayGridMonth: {
-                dayMaxEvents: 3,
-                moreLinkClick: 'popover'
+                dayMaxEvents: 6,
+                moreLinkClick: 'popover',
+                moreLinkContent: (args) => {
+                  const hiddenEventCount = args.num;
+                  return `Show ${hiddenEventCount} more`;
+                }
               },
               timeGridWeek: {
                 slotMinTime: '05:00:00',
@@ -665,7 +722,7 @@ export default function EnhancedCalendarPage() {
             }}
             eventClick={handleEventClick}
             height="auto"
-            dayMaxEvents={2}
+            dayMaxEvents={6}
             moreLinkClick="popover"
             eventDisplay="block"
             displayEventTime={true}
@@ -675,26 +732,39 @@ export default function EnhancedCalendarPage() {
               meridiem: 'short'
             }}
             eventContent={(eventInfo) => {
-              const shift = eventInfo.event.extendedProps.shift;
+              const extendedProps = eventInfo.event.extendedProps;
+              const shift = extendedProps.shift;
               const statusInfo = statusConfig[shift.status as keyof typeof statusConfig] || statusConfig.open;
-              const StatusIcon = statusInfo?.icon || AlertCircle;
+              const isGrouped = extendedProps.isGrouped;
+              const specialty = extendedProps.specialty;
+              const statusIcons = {
+                open: '○',
+                requested: '◐',
+                confirmed: '●',
+                filled: '✓',
+                cancelled: '✕',
+                completed: '✓'
+              };
+              const statusIcon = statusIcons[shift.status as keyof typeof statusIcons] || '○';
+              
+              let displayText = '';
+              if (isGrouped) {
+                // Multi-worker shift: "Specialty – Filled/Total – Start–End Time"
+                displayText = `${specialty} – ${extendedProps.filledWorkers}/${extendedProps.totalWorkers} – ${shift.startTime}–${shift.endTime}`;
+              } else {
+                // Single worker shift: "Worker Name – Start–End Time"
+                const workerName = shift.assignedStaffName || 'Unassigned';
+                displayText = `${workerName} – ${shift.startTime}–${shift.endTime}`;
+              }
               
               return {
                 html: `
-                  <div class="fc-event-content-custom relative w-full h-full p-1" style="background-color: ${eventInfo.event.backgroundColor}">
-                    <div class="absolute top-1 right-1 w-4 h-4 rounded-full flex items-center justify-center" style="background-color: ${statusInfo?.color || "#6b7280"}">
-                      <svg viewBox="0 0 24 24" fill="white" class="w-2 h-2">
-                        <circle cx="12" cy="12" r="10"/>
-                      </svg>
+                  <div class="fc-event-content-custom relative w-full h-full p-1 rounded border" style="background-color: ${eventInfo.event.backgroundColor}; min-height: 18px; border-color: ${eventInfo.event.borderColor};">
+                    <div class="absolute top-0 right-0 w-3 h-3 flex items-center justify-center text-white text-xs font-bold z-10">
+                      ${statusIcon}
                     </div>
-                    <div class="text-xs font-medium text-white truncate pr-6">
-                      ${shift.assignedStaffName || 'Unassigned'}
-                    </div>
-                    <div class="text-xs text-white opacity-90 truncate">
-                      ${shift.facilityName}
-                    </div>
-                    <div class="text-xs text-white opacity-80 truncate">
-                      ${shift.startTime} - ${shift.endTime}
+                    <div class="text-xs font-medium text-white truncate pr-3" style="max-width: calc(100% - 12px); line-height: 1.1;">
+                      ${displayText}
                     </div>
                   </div>
                 `
