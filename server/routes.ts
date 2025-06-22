@@ -3376,7 +3376,10 @@ export function registerRoutes(app: Express): Server {
       
       // Update time clock entry with clock-out information
       const completedEntry = {
-        ...mockActiveEntry,
+        id: mockActiveEntry.id,
+        userId: mockActiveEntry.userId,
+        shiftId: mockActiveEntry.shiftId,
+        clockInTime: mockActiveEntry.clockInTime,
         clockOutTime: now.toISOString(),
         hoursWorked: Math.round(hoursWorked * 100) / 100, // Round to 2 decimal places
         location: req.body.location || "ICU Unit",
@@ -5962,14 +5965,14 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/staff/posts", requireAuth, async (req, res) => {
+  app.post("/api/staff/posts", requireAuth, async (req: any, res) => {
     try {
       const newPost = {
         id: Date.now(),
-        authorId: req.user.id,
-        authorName: req.user.username,
+        authorId: req.user!.id,
+        authorName: req.user!.username,
         authorAvatar:
-          req.user.avatar ||
+          req.user!.avatar ||
           "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
         content: req.body.content,
         timestamp: new Date().toISOString(),
@@ -6168,7 +6171,7 @@ export function registerRoutes(app: Express): Server {
             const urgency = urgencies[Math.floor(Math.random() * urgencies.length)];
 
             // Base rates with premium adjustments
-            const baseRates = {
+            const baseRates: { [key: string]: number } = {
               "Registered Nurse": 35,
               "Licensed Practical Nurse": 28,
               "Certified Nursing Assistant": 18,
