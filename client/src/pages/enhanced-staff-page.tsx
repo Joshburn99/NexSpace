@@ -175,6 +175,48 @@ export default function EnhancedStaffPage() {
     queryKey: ["/api/facilities"],
   });
 
+  // Facility association mutations
+  const addFacilityAssociation = useMutation({
+    mutationFn: async ({ staffId, facilityId }: { staffId: number; facilityId: number }) => {
+      return apiRequest(`/api/staff/${staffId}/facilities`, "POST", { facilityId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
+      setShowFacilitySearch(false);
+      toast({
+        title: "Success",
+        description: "Facility association added successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add facility association",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const removeFacilityAssociation = useMutation({
+    mutationFn: async ({ staffId, facilityId }: { staffId: number; facilityId: number }) => {
+      return apiRequest(`/api/staff/${staffId}/facilities/${facilityId}`, "DELETE");
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
+      toast({
+        title: "Success",
+        description: "Facility association removed successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to remove facility association",
+        variant: "destructive",
+      });
+    },
+  });
+
   // Filter staff members
   const filteredStaff = (staffMembers || []).filter((staff) => {
     const matchesSearch =
@@ -1161,8 +1203,7 @@ export default function EnhancedStaffPage() {
                   </div>
 
                   {/* Facility Associations - Only for workers */}
-                  {(selectedStaff.role === "internal_employee" || selectedStaff.role === "contractor_1099") && 
-                   sessionState?.user?.role === "super_admin" && (
+                  {sessionState?.user?.role === "super_admin" && (
                     <div className="space-y-4 border-t pt-6">
                       <div className="flex items-center justify-between">
                         <div>
@@ -1183,9 +1224,9 @@ export default function EnhancedStaffPage() {
 
                       {/* Current Facility Associations */}
                       <div className="space-y-2">
-                        {selectedStaff.associatedFacilities?.length > 0 ? (
-                          selectedStaff.associatedFacilities.map((facilityId: number) => {
-                            const facility = facilitiesData?.find(f => f.id === facilityId);
+                        {(selectedStaff as any).associatedFacilities?.length > 0 ? (
+                          (selectedStaff as any).associatedFacilities.map((facilityId: number) => {
+                            const facility = (facilitiesData as any)?.find((f: any) => f.id === facilityId);
                             return (
                               <div key={facilityId} className="flex items-center justify-between p-3 border rounded-lg">
                                 <div className="flex items-center gap-3">
@@ -1200,7 +1241,7 @@ export default function EnhancedStaffPage() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => removeFacilityAssociation(selectedStaff.id, facilityId)}
+                                  onClick={() => removeFacilityAssociation.mutate({ staffId: selectedStaff.id, facilityId })}
                                   className="text-red-600 hover:text-red-700"
                                 >
                                   <X className="h-4 w-4" />
@@ -1221,6 +1262,106 @@ export default function EnhancedStaffPage() {
                 </div>
               </TabsContent>
             </Tabs>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Facility Search Dialog */}
+      {showFacilitySearch && selectedStaff && (
+        <Dialog open={showFacilitySearch} onOpenChange={setShowFacilitySearch}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Add Facility Association</DialogTitle>
+              <DialogDescription>
+                Select facilities to associate with {selectedStaff.firstName} {selectedStaff.lastName}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {/* Search Input */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="Search facilities by name, location, or type..."
+                  value={facilitySearchTerm}
+                  onChange={(e) => setFacilitySearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+
+              {/* Facility List */}
+              <div className="max-h-96 overflow-y-auto space-y-2">
+                {(facilitiesData as any)?.filter((facility: any) => {
+                  const searchLower = facilitySearchTerm.toLowerCase();
+                  return !searchLower || 
+                    facility.name?.toLowerCase().includes(searchLower) ||
+                    facility.address?.toLowerCase().includes(searchLower) ||
+                    facility.type?.toLowerCase().includes(searchLower);
+                }).map((facility: any) => {
+                  const isAlreadyAssociated = (selectedStaff as any).associatedFacilities?.includes(facility.id);
+                  return (
+                    <div 
+                      key={facility.id} 
+                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                        isAlreadyAssociated 
+                          ? 'bg-muted border-muted opacity-50' 
+                          : 'hover:bg-muted/50 border-border'
+                      }`}
+                      onClick={() => {
+                        if (!isAlreadyAssociated) {
+                          addFacilityAssociation.mutate({ 
+                            staffId: selectedStaff.id, 
+                            facilityId: facility.id 
+                          });
+                        }
+                      }}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="h-4 w-4 text-blue-600" />
+                            <div className="font-medium">{facility.name}</div>
+                            {isAlreadyAssociated && (
+                              <Badge variant="secondary" className="text-xs">
+                                Already Associated
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-sm text-muted-foreground mt-1">
+                            {facility.address}
+                          </div>
+                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                            <span>Type: {facility.type || 'Hospital'}</span>
+                            {facility.bedCount && (
+                              <span>Beds: {facility.bedCount}</span>
+                            )}
+                            {facility.rating && (
+                              <div className="flex items-center gap-1">
+                                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                <span>{facility.rating}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {!isAlreadyAssociated && (
+                          <Button size="sm" variant="outline">
+                            Add
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {(facilitiesData as any)?.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                    <p>No facilities available</p>
+                    <p className="text-sm">Add facilities in Facility Management first</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       )}
