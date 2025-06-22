@@ -148,7 +148,7 @@ const statusColors = {
   suspended: "bg-red-500",
 };
 
-export default function EnhancedStaffPage() {
+function EnhancedStaffPageContent() {
   const { toast } = useToast();
   const { startImpersonation, sessionState } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
@@ -240,24 +240,31 @@ export default function EnhancedStaffPage() {
     },
   });
 
-  // Filter staff members
+  // Filter staff members with comprehensive null safety
   const filteredStaff = (staffMembers || []).filter((staff) => {
-    const matchesSearch =
-      searchTerm === "" ||
-      `${staff.firstName} ${staff.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      staff.specialty.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!staff) return false;
+    
+    try {
+      const matchesSearch =
+        searchTerm === "" ||
+        `${staff.firstName || ""} ${staff.lastName || ""}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (staff.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (staff.specialty || "").toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesWorkerType =
-      selectedWorkerType === "all" || staff.workerType === selectedWorkerType;
-    const matchesSpecialty = selectedSpecialty === "all" || staff.specialty === selectedSpecialty;
-    const matchesStatus = selectedStatus === "all" || staff.status === selectedStatus;
+      const matchesWorkerType =
+        selectedWorkerType === "all" || staff.workerType === selectedWorkerType;
+      const matchesSpecialty = selectedSpecialty === "all" || staff.specialty === selectedSpecialty;
+      const matchesStatus = selectedStatus === "all" || staff.status === selectedStatus;
 
-    return matchesSearch && matchesWorkerType && matchesSpecialty && matchesStatus;
+      return matchesSearch && matchesWorkerType && matchesSpecialty && matchesStatus;
+    } catch (error) {
+      console.error('Error filtering staff member:', error, staff);
+      return false;
+    }
   });
 
-  // Get unique values for filters
-  const specialties = Array.from(new Set((staffMembers || []).map((s) => s.specialty)));
+  // Get unique values for filters with null safety
+  const specialties = Array.from(new Set((staffMembers || []).map((s) => s?.specialty).filter(Boolean)));
 
   const createStaffMutation = useMutation({
     mutationFn: async (staffData: any) => {
@@ -368,6 +375,17 @@ export default function EnhancedStaffPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-red-500 mb-2">Failed to load staff data</p>
+          <p className="text-sm text-muted-foreground">Please try refreshing the page</p>
+        </div>
       </div>
     );
   }
@@ -744,25 +762,26 @@ export default function EnhancedStaffPage() {
                   <CardTitle>Top Performers</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {filteredStaff
-                    .sort((a, b) => b.rating - a.rating)
+                  {(filteredStaff || [])
+                    .filter(staff => staff && typeof staff.rating === 'number')
+                    .sort((a, b) => (b?.rating || 0) - (a?.rating || 0))
                     .slice(0, 5)
                     .map((staff) => (
-                      <div key={staff.id} className="flex items-center space-x-3">
+                      <div key={staff?.id || Math.random()} className="flex items-center space-x-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={staff.profileImage} />
+                          <AvatarImage src={staff?.profileImage} />
                           <AvatarFallback className="text-xs">
-                            {staff.firstName?.[0] || ""}
-                            {staff.lastName?.[0] || ""}
+                            {staff?.firstName?.[0] || ""}
+                            {staff?.lastName?.[0] || ""}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">
-                            {staff.firstName} {staff.lastName}
+                            {staff?.firstName || ""} {staff?.lastName || ""}
                           </p>
                           <div className="flex items-center">
                             <Star className="h-3 w-3 text-yellow-500 mr-1" />
-                            <span className="text-xs text-muted-foreground">{staff.rating}/5</span>
+                            <span className="text-xs text-muted-foreground">{staff?.rating || 0}/5</span>
                           </div>
                         </div>
                       </div>
@@ -775,13 +794,13 @@ export default function EnhancedStaffPage() {
                   <CardTitle>Recent Certifications</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {staffPosts
-                    .filter((post) => post.type === "certification")
+                  {(staffPosts || [])
+                    .filter((post) => post && post.type === "certification")
                     .slice(0, 3)
                     .map((post) => (
-                      <div key={post.id} className="text-sm">
-                        <p className="font-medium">{post.authorName}</p>
-                        <p className="text-muted-foreground">{post.content}</p>
+                      <div key={post?.id || Math.random()} className="text-sm">
+                        <p className="font-medium">{post?.authorName || "Unknown"}</p>
+                        <p className="text-muted-foreground">{post?.content || ""}</p>
                       </div>
                     ))}
                 </CardContent>
@@ -1391,5 +1410,25 @@ export default function EnhancedStaffPage() {
         </Dialog>
       )}
     </div>
+  );
+}
+
+export default function EnhancedStaffPage() {
+  return (
+    <ErrorBoundary
+      fallback={
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-red-500 mb-2">Something went wrong with the staff page</p>
+            <p className="text-sm text-muted-foreground">Please refresh the page to try again</p>
+          </div>
+        </div>
+      }
+      onError={(error, errorInfo) => {
+        console.error('EnhancedStaffPage Error:', error, errorInfo);
+      }}
+    >
+      <EnhancedStaffPageContent />
+    </ErrorBoundary>
   );
 }
