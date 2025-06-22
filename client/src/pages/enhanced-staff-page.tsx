@@ -240,11 +240,19 @@ function EnhancedStaffPageContent() {
     },
   });
 
-  // Filter staff members with comprehensive null safety
+  // Filter staff members with comprehensive null safety and exclude superusers
   const filteredStaff = (staffMembers || []).filter((staff) => {
     if (!staff) return false;
     
     try {
+      // Exclude superusers - only show employees and contractors
+      const isEligibleWorkerType = staff.workerType === "internal_employee" || 
+                                   staff.workerType === "contractor_1099" || 
+                                   staff.workerType === "agency_staff" || 
+                                   staff.workerType === "float_pool";
+      
+      if (!isEligibleWorkerType) return false;
+
       const matchesSearch =
         searchTerm === "" ||
         `${staff.firstName || ""} ${staff.lastName || ""}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1085,27 +1093,31 @@ function EnhancedStaffPageContent() {
                     <div>
                       <h3 className="font-medium mb-2">Certifications</h3>
                       <div className="flex flex-wrap gap-2">
-                        {selectedStaff.certifications.map((cert, i) => (
+                        {(selectedStaff.certifications || []).map((cert, i) => (
                           <Badge key={i} variant="secondary">
                             <Award className="h-3 w-3 mr-1" />
                             {cert}
                           </Badge>
                         ))}
+                        {(!selectedStaff.certifications || selectedStaff.certifications.length === 0) && (
+                          <span className="text-sm text-muted-foreground">No certifications listed</span>
+                        )}
                       </div>
                     </div>
 
-                    {selectedStaff.skills && selectedStaff.skills.length > 0 && (
-                      <div>
-                        <h3 className="font-medium mb-2">Skills</h3>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedStaff.skills.map((skill, i) => (
-                            <Badge key={i} variant="outline">
-                              {skill}
-                            </Badge>
-                          ))}
-                        </div>
+                    <div>
+                      <h3 className="font-medium mb-2">Skills</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {(selectedStaff.skills || []).map((skill, i) => (
+                          <Badge key={i} variant="outline">
+                            {skill}
+                          </Badge>
+                        ))}
+                        {(!selectedStaff.skills || selectedStaff.skills.length === 0) && (
+                          <span className="text-sm text-muted-foreground">No skills listed</span>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
                 )}
               </TabsContent>
@@ -1114,72 +1126,78 @@ function EnhancedStaffPageContent() {
                 <div>
                   <h3 className="font-medium mb-4">Work History</h3>
                   <div className="space-y-4">
-                    {selectedStaff.workHistory?.map((work, i) => (
+                    {(selectedStaff.workHistory || []).map((work, i) => (
                       <Card key={i}>
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h4 className="font-medium">{work.position}</h4>
-                              <p className="text-sm text-muted-foreground">{work.facility}</p>
+                              <h4 className="font-medium">{work?.position || "Unknown Position"}</h4>
+                              <p className="text-sm text-muted-foreground">{work?.facility || "Unknown Facility"}</p>
                               <p className="text-xs text-muted-foreground mt-1">
-                                {work.startDate} - {work.endDate || "Present"}
+                                {work?.startDate || "Unknown"} - {work?.endDate || "Present"}
                               </p>
                             </div>
                           </div>
-                          {work.description && <p className="text-sm mt-2">{work.description}</p>}
+                          {work?.description && <p className="text-sm mt-2">{work.description}</p>}
                         </CardContent>
                       </Card>
-                    )) || <p className="text-muted-foreground">No work history available.</p>}
+                    ))}
+                    {(!selectedStaff.workHistory || selectedStaff.workHistory.length === 0) && (
+                      <p className="text-muted-foreground">No work history available.</p>
+                    )}
                   </div>
                 </div>
 
                 <div>
                   <h3 className="font-medium mb-4">Education</h3>
                   <div className="space-y-4">
-                    {selectedStaff.education?.map((edu, i) => (
+                    {(selectedStaff.education || []).map((edu, i) => (
                       <Card key={i}>
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h4 className="font-medium">{edu.degree}</h4>
-                              <p className="text-sm text-muted-foreground">{edu.institution}</p>
+                              <h4 className="font-medium">{edu?.degree || "Unknown Degree"}</h4>
+                              <p className="text-sm text-muted-foreground">{edu?.institution || "Unknown Institution"}</p>
                               <p className="text-xs text-muted-foreground mt-1">
-                                Graduated {edu.graduationYear}
-                                {edu.gpa && ` • GPA: ${edu.gpa}`}
+                                Graduated {edu?.graduationYear || "Unknown"}
+                                {edu?.gpa && ` • GPA: ${edu.gpa}`}
                               </p>
                             </div>
                             <GraduationCap className="h-5 w-5 text-muted-foreground" />
                           </div>
                         </CardContent>
                       </Card>
-                    )) || <p className="text-muted-foreground">No education history available.</p>}
+                    ))}
+                    {(!selectedStaff.education || selectedStaff.education.length === 0) && (
+                      <p className="text-muted-foreground">No education history available.</p>
+                    )}
                   </div>
                 </div>
               </TabsContent>
 
               <TabsContent value="documents" className="space-y-6">
                 <div className="space-y-4">
-                  {selectedStaff.documents?.map((doc, i) => (
+                  {(selectedStaff.documents || []).map((doc, i) => (
                     <Card key={i}>
                       <CardContent className="p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
                             <FileText className="h-5 w-5 text-muted-foreground" />
                             <div>
-                              <h4 className="font-medium">{doc.name}</h4>
+                              <h4 className="font-medium">{doc?.name || "Unknown Document"}</h4>
                               <p className="text-sm text-muted-foreground">
-                                {doc.type} • Uploaded{" "}
-                                {new Date(doc.uploadDate).toLocaleDateString()}
+                                {doc?.type || "Unknown Type"} • Uploaded{" "}
+                                {doc?.uploadDate ? new Date(doc.uploadDate).toLocaleDateString() : "Unknown"}
                               </p>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            {doc.verified && (
+                            {doc?.verified && (
                               <Badge variant="default" className="bg-green-500">
                                 Verified
                               </Badge>
                             )}
-                            {doc.expirationDate && (
+                            {doc?.expirationDate && (
                               <Badge variant="outline">
                                 Expires {new Date(doc.expirationDate).toLocaleDateString()}
                               </Badge>
@@ -1188,7 +1206,10 @@ function EnhancedStaffPageContent() {
                         </div>
                       </CardContent>
                     </Card>
-                  )) || <p className="text-muted-foreground">No documents uploaded.</p>}
+                  ))}
+                  {(!selectedStaff.documents || selectedStaff.documents.length === 0) && (
+                    <p className="text-muted-foreground">No documents uploaded.</p>
+                  )}
                 </div>
               </TabsContent>
 
