@@ -33,18 +33,23 @@ import {
   shiftRequests,
   shiftHistory,
   users,
+  messages,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { recommendationEngine } from "./recommendation-engine";
 import type { RecommendationCriteria } from "./recommendation-engine";
+import { UnifiedDataService } from "./unified-data-service";
 import multer from "multer";
 import OpenAI from "openai";
 
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
   setupAuth(app);
+  
+  // Initialize unified data service
+  let unifiedDataService: UnifiedDataService;
 
   // Configure multer for file uploads
   const upload = multer({
@@ -7095,6 +7100,9 @@ export function registerRoutes(app: Express): Server {
 
   // WebSocket setup for real-time messaging
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
+  
+  // Initialize unified data service with WebSocket support
+  unifiedDataService = new UnifiedDataService(wss);
 
   wss.on("connection", (ws: WebSocket, req) => {
     console.log("WebSocket connection established");

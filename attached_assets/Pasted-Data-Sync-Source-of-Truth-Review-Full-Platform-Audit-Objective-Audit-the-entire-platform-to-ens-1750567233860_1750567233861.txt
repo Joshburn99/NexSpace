@@ -1,0 +1,77 @@
+Data Sync & Source of Truth Review — Full Platform Audit
+Objective:
+Audit the entire platform to ensure that every page, tab, and widget is pulling data from the correct, authoritative source (“single source of truth”) and not using out-of-date, stale, or duplicated data.
+
+Checklist for Replit AI Agent:
+Identify & List All Data Models
+
+List all main data entities (Users, Shifts, Facilities, Credentials, Messages, Requests, Invoices, Teams, etc.).
+
+For each model, specify its authoritative table/source (e.g., Postgres table, Drizzle ORM model, etc.).
+
+Trace All Data Flows
+
+For each major page/tab (e.g., Staff Management, Shift Scheduling, Messaging, Profiles, Invoices, Notifications, Credentials, Calendar views), document:
+
+Which data models are read/written?
+
+Which API endpoints are used?
+
+Are there any caching or in-memory copies that could lead to stale data?
+
+Detect and Flag Data Mismatches
+
+Automatically compare data from the backend (“source of truth”) against what is shown in the UI for:
+
+Shifts: Ensure every schedule, calendar, “open shifts,” and “my schedule” page is using the same live data and status fields.
+
+Staff/User Profiles: Confirm that edits (even via impersonation) reflect everywhere instantly (e.g., Staff Management, worker “My Profile,” and any related roles or permissions).
+
+Messaging: Messages/inbox should match for both sender and receiver, and message history should be consistent across user types.
+
+Credentials: Credentials shown on profile, credential uploads, and compliance dashboards must all match the database and status must propagate.
+
+Invoices/Logs: “Professional Invoices” and “Work Logs” should always reflect backend records, filtered for user permissions.
+
+Review Impersonation Logic
+
+Confirm that impersonation always presents the actual data for the selected user and that quitting impersonation reliably returns to superuser context.
+
+Validate Role-Based Data Filtering
+
+For each user role (superuser, facility admin, employee, contractor, etc.), confirm that:
+
+Only allowed data is shown (no leaks across roles).
+
+All filters (facility, specialty, status, etc.) function correctly and consistently.
+
+Document and Suggest Fixes
+
+For every issue, list:
+
+What data is out of sync or not pulling from the source of truth
+
+What needs to be changed (e.g., switch from client cache to API, unify queries, add DB triggers, etc.)
+
+Where to check for logic bugs (API, context providers, React state, etc.)
+
+Suggest “unified fetch hooks” for all client data so everything always comes from a live backend endpoint.
+
+Auto-Generate a Fix Plan
+
+Provide a step-by-step migration/fix plan to make all UI/UX elements consistent with backend data.
+
+Recommend improvements in code structure (context, providers, API clients, etc.) for maintaining a single source of truth going forward.
+
+Additional Notes/Questions for the Reviewer:
+
+Where is your “source of truth” for each entity? (DB table? API endpoint? Context provider?)
+
+Are there any pages where users should see “live” data vs. cached snapshots?
+
+Should all edits to staff, shifts, etc. be instantly reflected everywhere, or are there exceptions?
+
+Are there background jobs or sync processes that could lead to lag or data divergence?
+
+Please review the whole codebase for any places where data could get out of sync, especially after profile edits, shift actions, or impersonation.
+
