@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useStaff } from "@/contexts/StaffContext";
@@ -165,6 +165,22 @@ export default function EnhancedStaffPage() {
   const { data: staffMembers = [], isLoading } = useQuery<StaffMember[]>({
     queryKey: ["/api/staff"],
   });
+
+  // Handle profile URL parameter
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const profileId = urlParams.get('profile');
+    
+    if (profileId && staffMembers.length > 0) {
+      const staffMember = staffMembers.find(s => s.id === parseInt(profileId));
+      if (staffMember) {
+        setSelectedStaff(staffMember);
+        // Clean up URL parameter
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, '', newUrl);
+      }
+    }
+  }, [staffMembers]);
 
   const { data: staffPosts = [] } = useQuery<StaffPost[]>({
     queryKey: ["/api/staff/posts"],
