@@ -896,6 +896,29 @@ export default function EnhancedCalendarPage() {
                         </Button>
                       </div>
                     </div>
+                    
+                    {/* Invoice Information for Completed Shifts */}
+                    {(selectedShift.status === 'completed' || selectedShift.status === 'pending_review') && selectedShift.invoiceAmount && (
+                      <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-sm font-semibold text-green-800 dark:text-green-200">Invoice Information</Label>
+                          <Badge variant={selectedShift.invoiceStatus === 'approved' ? 'default' : 'secondary'}>
+                            {selectedShift.invoiceStatus === 'approved' ? 'Approved' : 'Pending Review'}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Hours Worked:</span>
+                            <span className="ml-2 font-medium">{selectedShift.invoiceHours}h</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Amount:</span>
+                            <span className="ml-2 font-medium">${selectedShift.invoiceAmount.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     {selectedShift.assignedStaffEmail && (
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span>Email:</span>
