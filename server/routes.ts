@@ -312,7 +312,150 @@ export function registerRoutes(app: Express): Server {
       });
 
       // Get template-generated shifts if they exist
-      const templateShifts = (global as any).templateGeneratedShifts || [];
+      let templateShifts = (global as any).templateGeneratedShifts || [];
+      
+      // Auto-generate shifts from active templates (force refresh for testing)
+      if (templateShifts.length === 0 || true) {
+        const activeTemplates = [
+          {
+            id: 1,
+            name: "ICU Day Shift RN",
+            department: "ICU",
+            specialty: "Registered Nurse",
+            facilityId: 1,
+            facilityName: "Portland General Hospital",
+            minStaff: 2,
+            maxStaff: 4,
+            startTime: "07:00",
+            endTime: "19:00",
+            daysOfWeek: [1, 2, 3, 4, 5], // Mon-Fri
+            isActive: true,
+            hourlyRate: 45,
+          },
+          {
+            id: 2,
+            name: "Emergency Night Coverage",
+            department: "Emergency",
+            specialty: "Registered Nurse",
+            facilityId: 1,
+            facilityName: "Portland General Hospital",
+            minStaff: 3,
+            maxStaff: 5,
+            startTime: "19:00",
+            endTime: "07:00",
+            daysOfWeek: [0, 1, 2, 3, 4, 5, 6], // Every day
+            isActive: true,
+            hourlyRate: 52,
+          },
+          {
+            id: 3,
+            name: "OR Morning Team",
+            department: "Operating Room",
+            specialty: "Surgical Technologist",
+            facilityId: 1,
+            facilityName: "Portland General Hospital",
+            minStaff: 1,
+            maxStaff: 2,
+            startTime: "06:00",
+            endTime: "14:00",
+            daysOfWeek: [1, 2, 3, 4, 5], // Mon-Fri
+            isActive: true,
+            hourlyRate: 48,
+          }
+        ];
+
+        // Generate shifts for next 30 days from active templates
+        const generatedShifts: any[] = [];
+        const today = new Date();
+        const currentDate = new Date();
+        
+        for (const template of activeTemplates) {
+          if (template.isActive) {
+            for (let i = 0; i < 30; i++) {
+              const date = new Date(today);
+              date.setDate(today.getDate() + i);
+              
+              if (template.daysOfWeek.includes(date.getDay())) {
+                // Generate minimum required shifts for each day
+                for (let staffCount = 0; staffCount < template.minStaff; staffCount++) {
+                  const shiftId = Date.now() + i * 10000 + template.id * 100 + staffCount;
+                  generatedShifts.push({
+                    id: shiftId,
+                    title: template.name,
+                    date: date.toISOString().split('T')[0],
+                    startTime: template.startTime,
+                    endTime: template.endTime,
+                    department: template.department,
+                    specialty: template.specialty === "Registered Nurse" ? "RN" : 
+                              template.specialty === "Licensed Practical Nurse" ? "LPN" :
+                              template.specialty === "Surgical Technologist" ? "CST" : 
+                              template.specialty,
+                    facilityId: template.facilityId,
+                    facilityName: template.facilityName,
+                    status: "open",
+                    rate: template.hourlyRate,
+                    urgency: "medium",
+                    description: `${template.department} shift - ${template.name}`,
+                    templateId: template.id,
+                    createdFromTemplate: true,
+                    assignedStaffId: null,
+                    assignedStaffName: null,
+                    assignedStaffEmail: null,
+                    assignedStaffSpecialty: null,
+                    assignedStaffRating: null,
+                    invoiceAmount: null,
+                    invoiceStatus: null,
+                    invoiceHours: null
+                  });
+                }
+              }
+            }
+          }
+        }
+        
+        // Assign some staff to shifts to show realistic filling
+        const assignableStaff = filteredStaff.filter(staff => 
+          staff.specialty === "RN" || staff.specialty === "LPN" || staff.specialty === "CST"
+        );
+        
+        // Fill approximately 40% of shifts with available staff
+        let filledCount = 0;
+        const targetFilled = Math.floor(generatedShifts.length * 0.4);
+        
+        for (let i = 0; i < generatedShifts.length && filledCount < targetFilled; i++) {
+          const shift = generatedShifts[i];
+          const matchingStaff = assignableStaff.filter(staff => 
+            staff.specialty === shift.specialty || 
+            (shift.specialty === "RN" && staff.specialty === "RN") ||
+            (shift.specialty === "CST" && staff.specialty === "RN") // RNs can cover surgical roles
+          );
+          
+          if (matchingStaff.length > 0 && Math.random() > 0.6) {
+            const assignedStaff = matchingStaff[Math.floor(Math.random() * matchingStaff.length)];
+            shift.status = new Date(shift.date) < currentDate ? "completed" : "filled";
+            shift.assignedStaffId = assignedStaff.id;
+            shift.assignedStaffName = `${assignedStaff.firstName} ${assignedStaff.lastName}`;
+            shift.assignedStaffEmail = assignedStaff.email;
+            shift.assignedStaffSpecialty = assignedStaff.specialty;
+            shift.assignedStaffRating = 4.5 + Math.random() * 0.5; // Random rating 4.5-5.0
+            
+            // Add invoice info for completed shifts
+            if (shift.status === "completed") {
+              const hours = shift.startTime === "07:00" && shift.endTime === "19:00" ? 12 : 
+                           shift.startTime === "19:00" && shift.endTime === "07:00" ? 12 : 8;
+              shift.invoiceAmount = hours * shift.rate;
+              shift.invoiceStatus = Math.random() > 0.5 ? "approved" : "pending_review";
+              shift.invoiceHours = hours;
+            }
+            
+            filledCount++;
+          }
+        }
+        
+        // Store generated shifts
+        (global as any).templateGeneratedShifts = generatedShifts;
+        templateShifts = generatedShifts;
+      }
       
       // Current date for status logic
       const currentDate = new Date();
@@ -342,7 +485,7 @@ export function registerRoutes(app: Express): Server {
           endTime: "23:00",
           department: "Emergency",
           specialty: "RN",
-          status: new Date("2025-06-19") < currentDate ? "completed" : "filled",
+          status: new Date("2025-06-19") < new Date() ? "completed" : "filled",
           facilityId: 1,
           facilityName: "Portland General Hospital",
           rate: 45.0,
