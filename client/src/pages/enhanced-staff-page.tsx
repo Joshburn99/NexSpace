@@ -178,7 +178,7 @@ export default function EnhancedStaffPage() {
   // Facility association mutations
   const addFacilityAssociation = useMutation({
     mutationFn: async ({ staffId, facilityId }: { staffId: number; facilityId: number }) => {
-      return apiRequest(`/api/staff/${staffId}/facilities`, "POST", { facilityId });
+      return apiRequest("POST", `/api/staff/${staffId}/facilities`, { facilityId });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
@@ -199,7 +199,7 @@ export default function EnhancedStaffPage() {
 
   const removeFacilityAssociation = useMutation({
     mutationFn: async ({ staffId, facilityId }: { staffId: number; facilityId: number }) => {
-      return apiRequest(`/api/staff/${staffId}/facilities/${facilityId}`, "DELETE");
+      return apiRequest("DELETE", `/api/staff/${staffId}/facilities/${facilityId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
