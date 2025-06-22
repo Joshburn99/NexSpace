@@ -300,8 +300,23 @@ export function registerRoutes(app: Express): Server {
   // Shifts API with example data showing various statuses
   app.get("/api/shifts", requireAuth, async (req: any, res) => {
     try {
+      // Get staff data from unified service to ensure consistency
+      const dbStaffData = await unifiedDataService.getStaffWithAssociations();
+      
+      // Filter staff to match "all staff" page logic - exclude superusers
+      const filteredStaff = dbStaffData.filter(staff => {
+        const superuserEmails = ['joshburn@nexspace.com', 'brian.nangle@nexspace.com'];
+        if (superuserEmails.includes(staff.email)) return false;
+        if (staff?.role === "super_admin" || staff?.role === "facility_manager") return false;
+        return true;
+      });
+
       // Get template-generated shifts if they exist
       const templateShifts = (global as any).templateGeneratedShifts || [];
+      
+      // Current date for status logic
+      const currentDate = new Date();
+      const currentDateStr = currentDate.toISOString().split('T')[0];
       
       const exampleShifts = [
         {
@@ -327,18 +342,21 @@ export function registerRoutes(app: Express): Server {
           endTime: "23:00",
           department: "Emergency",
           specialty: "RN",
-          status: "filled",
+          status: new Date("2025-06-19") < currentDate ? "completed" : "filled",
           facilityId: 1,
           facilityName: "Portland General Hospital",
           rate: 45.0,
           urgency: "critical",
           description: "Emergency department evening shift",
-          assignedStaffId: 15,
-          assignedStaffName: "Sarah Martinez",
-          assignedStaffEmail: "sarah.martinez@hospital.com",
+          assignedStaffId: filteredStaff[0]?.id || 3,
+          assignedStaffName: filteredStaff[0] ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}` : "Alice Smith",
+          assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
           assignedStaffPhone: "(503) 555-0123",
-          assignedStaffSpecialty: "RN",
+          assignedStaffSpecialty: filteredStaff[0]?.specialty || "RN",
           assignedStaffRating: 4.8,
+          invoiceAmount: new Date("2025-06-19") < currentDate ? 360.00 : null,
+          invoiceStatus: new Date("2025-06-19") < currentDate ? "pending_review" : null,
+          invoiceHours: new Date("2025-06-19") < currentDate ? 8 : null,
         },
         {
           id: 3,
@@ -567,6 +585,108 @@ export function registerRoutes(app: Express): Server {
           rate: 26.5,
           urgency: "low",
           description: "Pharmacy technician coverage needed",
+        },
+        // Add more shifts matching active shift templates
+        {
+          id: 17,
+          title: "ICU Day Shift RN",
+          date: "2025-06-23",
+          startTime: "07:00",
+          endTime: "19:00",
+          department: "ICU",
+          specialty: "RN",
+          status: "filled",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 45.0,
+          urgency: "high",
+          description: "Primary ICU coverage",
+          assignedStaffId: filteredStaff[1]?.id || 4,
+          assignedStaffName: filteredStaff[1] ? `${filteredStaff[1].firstName} ${filteredStaff[1].lastName}` : "Bob Johnson",
+          assignedStaffEmail: filteredStaff[1]?.email || "bob.johnson@nexspace.com",
+          assignedStaffSpecialty: filteredStaff[1]?.specialty || "RN",
+          assignedStaffRating: 4.6,
+        },
+        {
+          id: 18,
+          title: "Emergency Night Coverage",
+          date: "2025-06-24",
+          startTime: "19:00",
+          endTime: "07:00",
+          department: "Emergency",
+          specialty: "RN",
+          status: "open",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 52.0,
+          urgency: "critical",
+          description: "24/7 emergency coverage",
+        },
+        {
+          id: 19,
+          title: "OR Morning Team",
+          date: "2025-06-25",
+          startTime: "06:00",
+          endTime: "14:00",
+          department: "Operating Room",
+          specialty: "RN",
+          status: "filled",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 48.0,
+          urgency: "high",
+          description: "Morning surgical team coverage",
+          assignedStaffId: filteredStaff[0]?.id || 3,
+          assignedStaffName: filteredStaff[0] ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}` : "Alice Smith",
+          assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
+          assignedStaffSpecialty: filteredStaff[0]?.specialty || "RN",
+          assignedStaffRating: 4.8,
+        },
+        {
+          id: 20,
+          title: "ICU Night Shift",
+          date: "2025-06-18",
+          startTime: "19:00",
+          endTime: "07:00",
+          department: "ICU",
+          specialty: "RN",
+          status: new Date("2025-06-18") < currentDate ? "completed" : "filled",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 48.0,
+          urgency: "high",
+          description: "Night ICU coverage",
+          assignedStaffId: filteredStaff[1]?.id || 4,
+          assignedStaffName: filteredStaff[1] ? `${filteredStaff[1].firstName} ${filteredStaff[1].lastName}` : "Bob Johnson",
+          assignedStaffEmail: filteredStaff[1]?.email || "bob.johnson@nexspace.com",
+          assignedStaffSpecialty: filteredStaff[1]?.specialty || "RN",
+          assignedStaffRating: 4.6,
+          invoiceAmount: new Date("2025-06-18") < currentDate ? 576.00 : null,
+          invoiceStatus: new Date("2025-06-18") < currentDate ? "approved" : null,
+          invoiceHours: new Date("2025-06-18") < currentDate ? 12 : null,
+        },
+        {
+          id: 21,
+          title: "Emergency Day Shift",
+          date: "2025-06-17",
+          startTime: "07:00",
+          endTime: "19:00",
+          department: "Emergency",
+          specialty: "RN",
+          status: new Date("2025-06-17") < currentDate ? "completed" : "filled",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 50.0,
+          urgency: "critical",
+          description: "Day emergency coverage",
+          assignedStaffId: filteredStaff[0]?.id || 3,
+          assignedStaffName: filteredStaff[0] ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}` : "Alice Smith",
+          assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
+          assignedStaffSpecialty: filteredStaff[0]?.specialty || "RN",
+          assignedStaffRating: 4.8,
+          invoiceAmount: new Date("2025-06-17") < currentDate ? 600.00 : null,
+          invoiceStatus: new Date("2025-06-17") < currentDate ? "pending_review" : null,
+          invoiceHours: new Date("2025-06-17") < currentDate ? 12 : null,
         },
       ];
 

@@ -64,7 +64,7 @@ interface EnhancedShift {
   specialty: string;
   facilityId: number;
   facilityName: string;
-  status: "open" | "requested" | "confirmed" | "cancelled" | "filled" | "expired" | "in_progress" | "completed";
+  status: "open" | "requested" | "confirmed" | "cancelled" | "filled" | "expired" | "in_progress" | "completed" | "pending_review";
   rate: number;
   urgency: "low" | "medium" | "high" | "critical";
   description: string;
@@ -74,6 +74,9 @@ interface EnhancedShift {
   assignedStaffPhone?: string;
   assignedStaffSpecialty?: string;
   assignedStaffRating?: number;
+  invoiceAmount?: number;
+  invoiceStatus?: "pending_review" | "approved" | "rejected";
+  invoiceHours?: number;
 }
 
 interface CalendarFilter {
@@ -116,6 +119,7 @@ const statusConfig = {
   expired: { icon: AlertTriangle, color: "#dc2626", label: "Expired" },
   in_progress: { icon: PlayCircle, color: "#8b5cf6", label: "In Progress" },
   completed: { icon: CheckCircle, color: "#059669", label: "Completed" },
+  pending_review: { icon: Timer, color: "#8b5cf6", label: "Pending Review" },
   ncns: { icon: AlertTriangle, color: "#ef4444", label: "NCNS" },
   pending_timesheet: { icon: Timer, color: "#f59e0b", label: "Pending Timesheet" },
   paid: { icon: CheckCircle, color: "#10b981", label: "Paid" },
