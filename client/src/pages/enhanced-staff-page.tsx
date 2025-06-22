@@ -3,6 +3,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useStaff } from "@/contexts/StaffContext";
 import { useSession } from "@/contexts/SessionContext";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -162,23 +163,29 @@ export default function EnhancedStaffPage() {
   const [facilitySearchTerm, setFacilitySearchTerm] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: staffMembers = [], isLoading } = useQuery<StaffMember[]>({
+  const { data: staffMembers = [], isLoading, error } = useQuery<StaffMember[]>({
     queryKey: ["/api/staff"],
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
-  // Handle profile URL parameter
+  // Handle profile URL parameter with error handling
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const profileId = urlParams.get('profile');
-    
-    if (profileId && staffMembers.length > 0) {
-      const staffMember = staffMembers.find(s => s.id === parseInt(profileId));
-      if (staffMember) {
-        setSelectedStaff(staffMember);
-        // Clean up URL parameter
-        const newUrl = window.location.pathname;
-        window.history.replaceState({}, '', newUrl);
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const profileId = urlParams.get('profile');
+      
+      if (profileId && Array.isArray(staffMembers) && staffMembers.length > 0) {
+        const staffMember = staffMembers.find(s => s?.id === parseInt(profileId));
+        if (staffMember) {
+          setSelectedStaff(staffMember);
+          // Clean up URL parameter
+          const newUrl = window.location.pathname;
+          window.history.replaceState({}, '', newUrl);
+        }
       }
+    } catch (error) {
+      console.error('Error handling profile URL parameter:', error);
     }
   }, [staffMembers]);
 
@@ -631,14 +638,14 @@ export default function EnhancedStaffPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-1">
-                    {staff.certifications.slice(0, 2).map((cert, i) => (
+                    {(staff.certifications || []).slice(0, 2).map((cert, i) => (
                       <Badge key={i} variant="secondary" className="text-xs">
                         {cert}
                       </Badge>
                     ))}
-                    {staff.certifications.length > 2 && (
+                    {(staff.certifications || []).length > 2 && (
                       <Badge variant="secondary" className="text-xs">
-                        +{staff.certifications.length - 2} more
+                        +{(staff.certifications || []).length - 2} more
                       </Badge>
                     )}
                   </div>
@@ -829,9 +836,11 @@ export default function EnhancedStaffPage() {
                   <div>
                     <p className="text-sm font-medium">Avg Rating</p>
                     <p className="text-2xl font-bold">
-                      {(
-                        staffMembers.reduce((sum, s) => sum + s.rating, 0) / staffMembers.length
-                      ).toFixed(1)}
+                      {staffMembers && staffMembers.length > 0
+                        ? (
+                            staffMembers.reduce((sum, s) => sum + (s?.rating || 0), 0) / staffMembers.length
+                          ).toFixed(1)
+                        : "0.0"}
                     </p>
                   </div>
                 </div>
