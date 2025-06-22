@@ -580,6 +580,124 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Worker-specific open shifts API
+  app.get("/api/shifts/worker-open", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      
+      // Get template-generated shifts if they exist
+      const templateShifts = (global as any).templateGeneratedShifts || [];
+      
+      const exampleShifts = [
+        {
+          id: 1,
+          title: "ICU Day Shift",
+          date: "2025-06-19",
+          startTime: "07:00",
+          endTime: "19:00",
+          department: "ICU",
+          specialty: "RN",
+          status: "open",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 42.5,
+          urgency: "high",
+          description: "12-hour ICU nursing shift, ACLS certification required",
+        },
+        {
+          id: 6,
+          title: "Emergency Night Shift",
+          date: "2025-06-20",
+          startTime: "19:00",
+          endTime: "07:00",
+          department: "Emergency",
+          specialty: "RN",
+          status: "open",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 45.0,
+          urgency: "critical",
+          description: "Overnight emergency department coverage",
+        },
+        {
+          id: 10,
+          title: "Physical Therapy",
+          date: "2025-06-21",
+          startTime: "08:00",
+          endTime: "16:00",
+          department: "Rehabilitation",
+          specialty: "Physical Therapist",
+          status: "open",
+          facilityId: 2,
+          facilityName: "OHSU Hospital",
+          rate: 38.75,
+          urgency: "medium",
+          description: "Outpatient physical therapy clinic",
+        },
+        {
+          id: 12,
+          title: "Surgical Support",
+          date: "2025-06-22",
+          startTime: "06:00",
+          endTime: "14:00",
+          department: "Operating Room",
+          specialty: "Surgical Technologist",
+          status: "open",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 28.5,
+          urgency: "high",
+          description: "OR support for scheduled surgeries",
+        },
+        {
+          id: 13,
+          title: "Respiratory Care",
+          date: "2025-06-23",
+          startTime: "15:00",
+          endTime: "23:00",
+          department: "Pulmonary",
+          specialty: "Respiratory Therapist",
+          status: "open",
+          facilityId: 2,
+          facilityName: "OHSU Hospital",
+          rate: 35.0,
+          urgency: "medium",
+          description: "Evening respiratory therapy coverage",
+        }
+      ];
+
+      // Combine example shifts with template-generated shifts
+      const allShifts = [...exampleShifts, ...templateShifts];
+      
+      // Filter shifts for workers based on their specialty and associated facilities
+      let filteredShifts = allShifts.filter(shift => shift.status === "open");
+      
+      // If user has specialty, filter by specialty
+      if (user.specialty) {
+        filteredShifts = filteredShifts.filter(shift => 
+          shift.specialty === user.specialty
+        );
+      }
+      
+      // If user has associated facilities, filter by those facilities
+      if (user.associatedFacilities && Array.isArray(user.associatedFacilities)) {
+        filteredShifts = filteredShifts.filter(shift => 
+          user.associatedFacilities.includes(shift.facilityId)
+        );
+      } else if (user.facilityId) {
+        // Fallback to single facility if associatedFacilities not set
+        filteredShifts = filteredShifts.filter(shift => 
+          shift.facilityId === user.facilityId
+        );
+      }
+      
+      res.json(filteredShifts);
+    } catch (error) {
+      console.error("Error fetching worker open shifts:", error);
+      res.status(500).json({ message: "Failed to fetch open shifts" });
+    }
+  });
+
   app.post(
     "/api/shifts",
     requireAuth,

@@ -2,6 +2,7 @@ import { useState, useRef } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useStaff } from "@/contexts/StaffContext";
+import { useSession } from "@/contexts/SessionContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -146,6 +147,7 @@ const statusColors = {
 
 export default function EnhancedStaffPage() {
   const { toast } = useToast();
+  const { startImpersonation } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedWorkerType, setSelectedWorkerType] = useState("all");
   const [selectedSpecialty, setSelectedSpecialty] = useState("all");

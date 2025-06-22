@@ -35,6 +35,9 @@ export const users = pgTable("users", {
   avatar: text("avatar"),
   isActive: boolean("is_active").default(true),
   facilityId: integer("facility_id"),
+  specialty: text("specialty"), // Worker specialty (RN, CNA, PT, etc.)
+  associatedFacilities: jsonb("associated_facilities"), // Array of facility IDs for workers
+  availabilityStatus: text("availability_status").default("available"), // available, unavailable, busy
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
