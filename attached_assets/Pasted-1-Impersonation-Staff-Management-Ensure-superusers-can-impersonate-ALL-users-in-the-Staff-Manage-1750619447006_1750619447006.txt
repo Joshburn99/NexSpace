@@ -1,0 +1,108 @@
+1️⃣ Impersonation & Staff Management
+Ensure superusers can impersonate ALL users in the Staff Management section—including Sarah Johnson and all current/future workers.
+
+Remove superusers (Josh Burnett, Brian Nangle, etc.) from the All Staff section, so only real workers and facility users show up.
+
+Sync facility association:
+
+Each worker must be associated with one or more facilities.
+
+Add this association to their profile (visible to superusers in Staff Management).
+
+Confirm that when a superuser impersonates a user, they have the same permissions and navigation as that user would see.
+
+2️⃣ Navigation & Access
+On worker UI, remove the Enhanced Calendar and make sure Open Shifts tab is a list view—showing only:
+
+Shifts that are open/requested, not assigned
+
+Only shifts that match the worker’s specialty and facilities
+
+Make sure workers cannot see:
+
+Enhanced Calendar
+
+Advanced Scheduling
+
+Facility/Team management screens
+
+All schedule/calendar tabs should have robust filters:
+
+Filter by facility name, facility team, worker name, specialty, and status
+
+Filters must function on all relevant calendar/list views
+
+3️⃣ UI & Status Improvements
+On Enhanced Calendar view:
+
+Entire shift block color should match the status (not just the corner icon)
+
+Status icon should be in the top right of each shift
+
+Add more status types:
+
+NCNS (No Call, No Show)
+
+Pending Invoice Review
+
+Completed
+
+Any others necessary for healthcare workflows
+
+Ensure status logic:
+
+Past shifts: cannot be requested, cannot be posted by facility users, cannot show as open
+
+Future shifts: can’t show statuses like NCNS, Cancelled, or Pending Invoice Review unless triggered by actual workflow events
+
+4️⃣ Scheduling & Templates
+“Shift Templates” should be a dedicated tab, not a scheduling view
+
+Shift Templates control the facility schedules:
+
+If Portland General Hospital has an ICU Day Shift template for 4 RNs, show 4 open shifts each day on the Portland General schedule
+
+Use OnShift-style interface for facility users (see attached screenshot) for scheduling grid & shift management
+
+5️⃣ Professional Invoices / Timesheets Logic
+Clock in button should:
+
+Only be available within a 15-min window before shift start
+
+Not available if not scheduled for a shift at that time
+
+Clock out should:
+
+Prompt submission of Professional Invoice (contractors) or Timesheet (employees)
+
+Route submission to the facility user
+
+Auto-approve if all criteria met (per facility’s workflow automation); otherwise, require manual approval
+
+Shifts and invoice/timesheet data should flow to “My Schedule” (worker view) and be accessible for both employees and contractors, labeled accordingly
+
+No worker should be able to see other workers’ timesheets/invoices
+
+6️⃣ Data Source of Truth & Syncing
+Audit and refactor all data flows so all pages, lists, and widgets use a centralized source of truth (ideally, the “shifts” collection/table in the DB)
+
+All “schedule,” “my schedule,” “open shifts,” “staff management,” “insights,” and related pages must reflect the same up-to-date data
+
+All workers shown on shifts must appear in All Staff, and all workers in All Staff should be assignable/request shifts
+
+Build out enough sample worker profiles so the platform is realistically populated for testing and demo
+
+7️⃣ Advanced Scheduling Logic
+Do not allow shifts in the past to be requested or posted
+
+Apply additional scheduling logic as needed (e.g., no double-booking workers, no over-scheduling, compliance checks)
+
+Add logic and flow for professional invoices and timesheets as above
+
+8️⃣ General Improvements
+Fix 404 errors for Enhanced Calendar, Scheduling, Advanced Scheduling
+
+All data changes (profile updates, schedule requests, messages) should immediately sync across the platform, and persist for impersonated/superuser sessions
+
+Feel free to suggest further workflow improvements as you see gaps!
+

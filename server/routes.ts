@@ -593,11 +593,18 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/shifts/worker-open", requireAuth, async (req: any, res) => {
     try {
       const user = req.user;
+      const currentDate = new Date().toISOString().split('T')[0];
+      
+      // Get user's specialty and facility associations
+      const userStaff = await unifiedDataService.getStaffWithAssociations();
+      const currentUserStaff = userStaff.find(s => s.email === user.email);
+      const userSpecialty = currentUserStaff?.specialty || 'RN';
+      const userFacilities = currentUserStaff?.associatedFacilities || [1];
       
       // Get template-generated shifts if they exist
       const templateShifts = (global as any).templateGeneratedShifts || [];
       
-      const exampleShifts = [
+      const workerShifts = [
         {
           id: 1,
           title: "ICU Day Shift",
@@ -1457,8 +1464,17 @@ export function registerRoutes(app: Express): Server {
         }
       }));
 
-      // Return combined database and legacy data
-      res.json([...staffData]);
+      // Filter out superusers from staff list for regular views
+      const filteredStaffData = dbStaffData.filter(staff => {
+        // Exclude superusers (Josh Burnett, Brian Nangle, etc.) from regular staff views
+        const superuserEmails = ['joshburn@nexspace.com', 'brian.nangle@nexspace.com'];
+        return !superuserEmails.includes(staff.email);
+      });
+
+      // For impersonation/admin views, show all users including superusers
+      const showAllUsers = req.query.includeAdmins === 'true' || req.user?.role === 'super_admin';
+      
+      res.json(showAllUsers ? dbStaffData : filteredStaffData);
     } catch (error) {
       console.error("Error fetching staff:", error);
       res.status(500).json({ message: "Failed to fetch staff data" });
@@ -2944,6 +2960,40 @@ export function registerRoutes(app: Express): Server {
       res.json(staffData);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch staff data" });
+    }
+  });
+
+  // Staff posts API endpoint
+  app.get("/api/staff/posts", requireAuth, async (req, res) => {
+    try {
+      const samplePosts = [
+        {
+          id: 1,
+          authorId: 5,
+          authorName: "David Rodriguez",
+          type: "achievement",
+          content: "Just completed my 100th shift! Grateful for the opportunity to serve patients.",
+          timestamp: "2025-06-21T10:00:00Z",
+          likes: 12,
+          comments: 3,
+          attachments: []
+        },
+        {
+          id: 2,
+          authorId: 6,
+          authorName: "Lisa Thompson",
+          type: "update",
+          content: "Starting a new certification program in respiratory therapy. Always learning!",
+          timestamp: "2025-06-20T15:30:00Z",
+          likes: 8,
+          comments: 1,
+          attachments: []
+        }
+      ];
+      res.json(samplePosts);
+    } catch (error) {
+      console.error("Error fetching staff posts:", error);
+      res.status(500).json({ message: "Failed to fetch staff posts" });
     }
   });
 

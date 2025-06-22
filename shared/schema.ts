@@ -146,7 +146,7 @@ export const shifts = pgTable("shifts", {
   endTime: text("end_time").notNull(), // HH:MM format
   rate: decimal("rate", { precision: 6, scale: 2 }).notNull(),
   premiumMultiplier: decimal("premium_multiplier", { precision: 3, scale: 2 }).default("1.00"),
-  status: text("status").notNull().default("open"), // open, assigned, requested, in_progress, completed, cancelled, ncns, facility_cancelled
+  status: text("status").notNull().default("open"), // open, assigned, requested, in_progress, completed, cancelled, ncns, facility_cancelled, pending_invoice_review
   urgency: text("urgency").default("medium"), // low, medium, high, critical
   description: text("description"),
   requiredStaff: integer("required_staff").default(1),
