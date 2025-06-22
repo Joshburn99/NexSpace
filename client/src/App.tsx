@@ -69,6 +69,7 @@ import ShiftTemplatesPage from "@/pages/shift-templates-page";
 import AdvancedSchedulingPage from "@/pages/advanced-scheduling-page";
 import FacilitySchedulePage from "@/pages/facility-schedule-page";
 import WorkerOpenShiftsPage from "@/pages/worker-open-shifts-page";
+import WorkerMyRequestsPage from "@/pages/worker-my-requests-page";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -114,7 +115,7 @@ function AppContent() {
       <ProtectedRoute path="/profile" component={SettingsPage} />
       <ProtectedRoute path="/my-profile" component={EnhancedProfilePage} />
       <ProtectedRoute path="/teams" component={EnhancedStaffPage} />
-      <ProtectedRoute path="/my-requests" component={ShiftRequestsPage} />
+      <ProtectedRoute path="/my-requests" component={WorkerMyRequestsPage} />
       <ProtectedRoute path="/my-schedule" component={MySchedulePage} />
       <ProtectedRoute path="/resources" component={CredentialsPage} />
       <ProtectedRoute path="/my-pto" component={PTOPage} />

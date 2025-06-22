@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, MapPin, DollarSign, Building2, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useSessionContext } from "@/contexts/SessionContext";
+import { useAuth } from "@/hooks/use-auth";
 
 interface ShiftRequest {
   id: number;
@@ -24,7 +24,7 @@ interface ShiftRequest {
 
 export default function WorkerMyRequestsPage() {
   const { toast } = useToast();
-  const { user } = useSessionContext();
+  const { user } = useAuth();
 
   // Fetch worker's shift requests - only unassigned requests by this worker
   const { data: myRequests = [], isLoading } = useQuery({
@@ -33,7 +33,7 @@ export default function WorkerMyRequestsPage() {
   });
 
   // Filter to only show requests by current worker that are still unassigned
-  const workerRequests = myRequests.filter((request: ShiftRequest) => 
+  const workerRequests = (myRequests as ShiftRequest[]).filter((request: ShiftRequest) => 
     request.requestedBy === user?.id && 
     ["requested", "pending"].includes(request.status)
   );
