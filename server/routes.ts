@@ -26,8 +26,10 @@ import {
   facilities,
   shiftRequests,
   shiftHistory,
+  users,
 } from "@shared/schema";
 import { db } from "./db";
+import { eq } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { recommendationEngine } from "./recommendation-engine";
 import type { RecommendationCriteria } from "./recommendation-engine";
@@ -5553,9 +5555,22 @@ export function registerRoutes(app: Express): Server {
       if (!staff.length) {
         return res.status(404).json({ message: "Staff member not found" });
       }
+
+      // Get current associated facilities or initialize empty array
+      const currentFacilities = staff[0].associatedFacilities as number[] || [];
       
-      // Add facility association logic here
-      // For now, just return success
+      // Add facility if not already associated
+      if (!currentFacilities.includes(parseInt(facilityId))) {
+        const updatedFacilities = [...currentFacilities, parseInt(facilityId)];
+        
+        await db.update(users)
+          .set({ 
+            associatedFacilities: updatedFacilities,
+            updatedAt: new Date()
+          })
+          .where(eq(users.id, parseInt(staffId)));
+      }
+      
       res.json({ message: "Facility association added successfully" });
     } catch (error) {
       console.error("Error adding facility association:", error);
@@ -5567,8 +5582,25 @@ export function registerRoutes(app: Express): Server {
     try {
       const { staffId, facilityId } = req.params;
       
-      // Remove facility association logic here
-      // For now, just return success
+      // Get current staff member
+      const staff = await db.select().from(users).where(eq(users.id, parseInt(staffId))).limit(1);
+      if (!staff.length) {
+        return res.status(404).json({ message: "Staff member not found" });
+      }
+
+      // Get current associated facilities
+      const currentFacilities = staff[0].associatedFacilities as number[] || [];
+      
+      // Remove facility from associations
+      const updatedFacilities = currentFacilities.filter(id => id !== parseInt(facilityId));
+      
+      await db.update(users)
+        .set({ 
+          associatedFacilities: updatedFacilities,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, parseInt(staffId)));
+      
       res.json({ message: "Facility association removed successfully" });
     } catch (error) {
       console.error("Error removing facility association:", error);
