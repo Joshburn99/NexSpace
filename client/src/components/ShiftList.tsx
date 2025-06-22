@@ -28,8 +28,14 @@ interface ShiftListProps {
 export function ShiftList({ status }: ShiftListProps) {
   const { user } = useAuth();
 
+  // Use worker-specific API endpoints for employees/contractors
+  const isWorker = user?.role === "internal_employee" || user?.role === "contractor_1099";
+  const apiEndpoint = isWorker 
+    ? (status === "upcoming" ? "/api/shifts/my-shifts" : "/api/shifts/worker-open")
+    : `/api/shifts?status=${status}`;
+
   const { data: shifts, isLoading } = useQuery<Shift[]>({
-    queryKey: [`/api/shifts?status=${status}`],
+    queryKey: [apiEndpoint],
   });
 
   const getUrgencyColor = (urgency?: string) => {

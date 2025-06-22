@@ -158,6 +158,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
           items: [
             { path: "/my-schedule", icon: Calendar, label: "My Schedule" },
             { path: "/worker-open-shifts", icon: ClipboardList, label: "Open Shifts" },
+            { path: "/my-requests", icon: FileText, label: "My Requests" },
             { path: "/time-clock", icon: Clock, label: "Time Clock" },
           ],
         },

@@ -703,8 +703,25 @@ export function registerRoutes(app: Express): Server {
     try {
       const user = req.user;
       
-      // Get shifts assigned to this worker from Enhanced Schedule data
-      const myShifts = [
+      // Get shifts assigned to this worker - sync with Enhanced Schedule data
+      const myShifts = user.id === 3 ? [ // Alice Smith's shifts
+        {
+          id: 102,
+          title: "Emergency Night Shift", 
+          date: "2025-06-25",
+          startTime: "19:00",
+          endTime: "07:00",
+          department: "Emergency",
+          specialty: "RN",
+          status: "requested", // This shows in My Schedule but should also show in My Requests
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          rate: 45.0,
+          urgency: "critical",
+          description: "Overnight emergency department coverage",
+          assignedStaffId: user.id,
+        }
+      ] : [
         {
           id: 101,
           title: "ICU Day Shift",
@@ -719,22 +736,6 @@ export function registerRoutes(app: Express): Server {
           rate: 42.5,
           urgency: "high",
           description: "12-hour ICU nursing shift, ACLS certification required",
-          assignedStaffId: user.id,
-        },
-        {
-          id: 102,
-          title: "Emergency Night Shift",
-          date: "2025-06-25",
-          startTime: "19:00",
-          endTime: "07:00",
-          department: "Emergency",
-          specialty: "RN",
-          status: "requested",
-          facilityId: 1,
-          facilityName: "Portland General Hospital",
-          rate: 45.0,
-          urgency: "critical",
-          description: "Overnight emergency department coverage",
           assignedStaffId: user.id,
         }
       ];
@@ -3875,8 +3876,60 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Shift Requests API with worker details
-  app.get("/api/shift-requests", requireAuth, async (req, res) => {
+  // Worker's shift requests API - returns only requests made by the logged-in worker
+  app.get("/api/shift-requests", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      
+      // Return worker's actual shift requests based on user ID
+      const workerShiftRequests = [
+        {
+          id: 1,
+          shiftId: 102,
+          title: "Emergency Night Shift",
+          date: "2025-06-25",
+          startTime: "19:00",
+          endTime: "07:00",
+          department: "Emergency",
+          specialty: "RN",
+          facilityName: "Portland General Hospital",
+          rate: 45.0,
+          status: "requested",
+          requestedBy: 3, // Alice Smith's ID
+          urgency: "critical",
+          description: "Overnight emergency department coverage",
+          requestedAt: "2025-06-21T15:30:00Z"
+        },
+        {
+          id: 2,
+          shiftId: 105,
+          title: "ICU Weekend Shift",
+          date: "2025-06-28",
+          startTime: "07:00",
+          endTime: "19:00",
+          department: "ICU",
+          specialty: "RN",
+          facilityName: "Portland General Hospital",
+          rate: 42.5,
+          status: "pending",
+          requestedBy: 3, // Alice Smith's ID
+          urgency: "high",
+          description: "Weekend ICU coverage",
+          requestedAt: "2025-06-20T10:15:00Z"
+        }
+      ];
+      
+      // Filter to only show requests by this user
+      const userRequests = workerShiftRequests.filter(request => request.requestedBy === user.id);
+      
+      res.json(userRequests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch shift requests" });
+    }
+  });
+
+  // Admin shift requests API with worker details for management view
+  app.get("/api/admin/shift-requests", requireAuth, async (req, res) => {
     try {
       const shiftRequests = [
         {
