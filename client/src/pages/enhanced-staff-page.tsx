@@ -398,7 +398,7 @@ export default function EnhancedStaffPage() {
                 </div>
                 
                 {/* Facility Associations - Only visible to superusers */}
-                {user?.role === "super_admin" && (
+                {currentUser?.role === "super_admin" && (
                   <div>
                     <Label htmlFor="associatedFacilities">Associated Facilities (for workers)</Label>
                     <Select name="associatedFacilities">
