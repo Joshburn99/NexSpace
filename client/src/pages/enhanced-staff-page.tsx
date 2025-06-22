@@ -147,7 +147,7 @@ const statusColors = {
 
 export default function EnhancedStaffPage() {
   const { toast } = useToast();
-  const { startImpersonation } = useSession();
+  const { startImpersonation, sessionState } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedWorkerType, setSelectedWorkerType] = useState("all");
   const [selectedSpecialty, setSelectedSpecialty] = useState("all");
@@ -398,7 +398,7 @@ export default function EnhancedStaffPage() {
                 </div>
                 
                 {/* Facility Associations - Only visible to superusers */}
-                {currentSession?.user?.role === "super_admin" && (
+                {sessionState?.user?.role === "super_admin" && (
                   <div>
                     <Label htmlFor="associatedFacilities">Associated Facilities (for workers)</Label>
                     <Select name="associatedFacilities">

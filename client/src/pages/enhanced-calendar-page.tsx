@@ -128,6 +128,15 @@ export default function EnhancedCalendarPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Redirect workers to their Open Shifts list view
+  const isWorker = user?.role === "internal_employee" || user?.role === "contractor_1099";
+  
+  if (isWorker) {
+    // Import and render worker Open Shifts page instead
+    const WorkerOpenShiftsPage = require("./worker-open-shifts-page").default;
+    return <WorkerOpenShiftsPage />;
+  }
   
   const calendarRef = useRef<FullCalendar>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
