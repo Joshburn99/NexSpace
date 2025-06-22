@@ -555,7 +555,7 @@ export default function EnhancedStaffPage() {
                       <SelectItem value="all">All Specialties</SelectItem>
                       {specialties.map((specialty) => (
                         <SelectItem key={specialty} value={specialty}>
-                          {specialty.replace("_", " ").toUpperCase()}
+                          {specialty?.replace("_", " ").toUpperCase() || "N/A"}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -602,7 +602,7 @@ export default function EnhancedStaffPage() {
                         {staff.firstName} {staff.lastName}
                       </h3>
                       <p className="text-sm text-muted-foreground truncate">
-                        {staff.specialty.replace("_", " ")}
+                        {staff.specialty?.replace("_", " ") || "N/A"}
                       </p>
                     </div>
                   </div>
@@ -686,7 +686,7 @@ export default function EnhancedStaffPage() {
                           {new Date(post.timestamp).toLocaleDateString()}
                         </p>
                       </div>
-                      <Badge variant="outline">{post.type.replace("_", " ")}</Badge>
+                      <Badge variant="outline">{post.type?.replace("_", " ") || "N/A"}</Badge>
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -882,7 +882,7 @@ export default function EnhancedStaffPage() {
                       {selectedStaff.firstName} {selectedStaff.lastName}
                     </DialogTitle>
                     <DialogDescription className="text-base">
-                      {selectedStaff.specialty.replace("_", " ")} •{" "}
+                      {selectedStaff.specialty?.replace("_", " ") || "N/A"} •{" "}
                       {workerTypeLabels[selectedStaff.workerType]}
                     </DialogDescription>
                   </div>
