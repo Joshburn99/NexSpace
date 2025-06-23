@@ -251,6 +251,66 @@ export const shiftAssignments = pgTable("shift_assignments", {
   status: text("status").notNull().default("assigned"), // assigned, unassigned, completed
 });
 
+// Shift templates for generating recurring shifts - replaces in-memory template storage
+export const shiftTemplates = pgTable("shift_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  department: text("department").notNull(),
+  specialty: text("specialty").notNull(),
+  facilityId: integer("facility_id").notNull(),
+  facilityName: text("facility_name").notNull(),
+  minStaff: integer("min_staff").notNull().default(1),
+  maxStaff: integer("max_staff").notNull().default(1),
+  shiftType: text("shift_type").notNull(), // day, night, swing
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
+  daysOfWeek: jsonb("days_of_week").notNull(), // [0,1,2,3,4,5,6] for sun-sat
+  isActive: boolean("is_active").default(true),
+  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }).notNull(),
+  notes: text("notes"),
+  buildingId: text("building_id"),
+  buildingName: text("building_name"),
+  generatedShiftsCount: integer("generated_shifts_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Generated shifts from templates - replaces global templateGeneratedShifts
+export const generatedShifts = pgTable("generated_shifts", {
+  id: text("id").primaryKey(), // stable ID format: templateId + date + position
+  templateId: integer("template_id").notNull(),
+  title: text("title").notNull(),
+  date: text("date").notNull(),
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
+  department: text("department").notNull(),
+  specialty: text("specialty").notNull(),
+  facilityId: integer("facility_id").notNull(),
+  facilityName: text("facility_name").notNull(),
+  buildingId: text("building_id"),
+  buildingName: text("building_name"),
+  status: text("status").notNull().default("open"), // open, filled, cancelled
+  rate: decimal("rate", { precision: 10, scale: 2 }).notNull(),
+  urgency: text("urgency").default("medium"),
+  description: text("description"),
+  requiredWorkers: integer("required_workers").default(1),
+  minStaff: integer("min_staff").default(1),
+  maxStaff: integer("max_staff").default(1),
+  totalHours: integer("total_hours").default(8),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Session data for persistence across server restarts - replaces file-based sessions
+export const userSessions = pgTable("user_sessions", {
+  id: text("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  sessionData: jsonb("session_data").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Credentials table
 export const credentials = pgTable("credentials", {
   id: serial("id").primaryKey(),
