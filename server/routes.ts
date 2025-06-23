@@ -918,14 +918,15 @@ export function registerRoutes(app: Express): Server {
         };
         
         // Debug logging for assignment tracking
-        if (assignedWorkerIds.length > 0) {
-          console.log(`Shift ${shift.id} assignments:`, {
-            assignedWorkerIds,
-            assignedStaff: assignedStaff.map(s => s.name),
-            filledPositions: assignedWorkerIds.length,
-            totalPositions: updatedShift.totalPositions
-          });
-        }
+        console.log(`Processing shift ${shift.id}:`, {
+          originalShiftId: shift.id,
+          assignedWorkerIds,
+          assignedStaffCount: assignedStaff.length,
+          assignedStaffNames: assignedStaff.map(s => s.name),
+          filledPositions: assignedWorkerIds.length,
+          totalPositions: updatedShift.totalPositions,
+          status: updatedShift.status
+        });
         
         // Update status based on assignments and requests
         const totalRequired = shift.totalPositions || 3;
