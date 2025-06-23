@@ -49,10 +49,13 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
 
   if (!shift || !facility) return null;
 
-  const canAssignMore = assignedWorkers.length < shift.requiredWorkers;
-  const spotsRemaining = shift.requiredWorkers - assignedWorkers.length;
+  // Use backend assignment data for accurate calculations
+  const filledPositions = shift.filledPositions || 0;
+  const totalPositions = shift.totalPositions || shift.requiredWorkers;
+  const canAssignMore = filledPositions < totalPositions;
+  const spotsRemaining = totalPositions - filledPositions;
   const shiftDuration = calculateShiftDuration(shift);
-  const isFullyStaffed = assignedWorkers.length >= shift.requiredWorkers;
+  const isFullyStaffed = filledPositions >= totalPositions;
 
   const handleAssignWorker = async (workerId: string) => {
     setIsAssigning(workerId);
@@ -135,7 +138,7 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                 <div className="text-sm">
                   <span className="font-medium">Status:</span>
                   <Badge variant={isFullyStaffed ? "default" : "destructive"} className="ml-2">
-                    {isFullyStaffed ? 'Fully Staffed' : `${spotsRemaining} spots open`}
+                    {isFullyStaffed ? 'Fully Staffed' : `${spotsRemaining} spot${spotsRemaining === 1 ? '' : 's'} open`}
                   </Badge>
                 </div>
                 {shift.description && (

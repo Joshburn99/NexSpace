@@ -393,14 +393,19 @@ export default function EnhancedCalendarPage() {
       const specialtyColor = (specialtyColors as any)[specialty] || specialtyColors.default;
       const statusInfo = statusConfig[firstShift.status as keyof typeof statusConfig] || statusConfig.open;
       
-      // Calculate filled/total for multi-worker shifts
-      const totalWorkers = group.length;
-      const filledWorkers = group.filter(s => s.assignedStaffName).length;
+      // Calculate filled/total for multi-worker shifts using backend assignment data
+      const totalWorkers = firstShift.totalPositions || group.length;
+      const filledWorkers = firstShift.filledPositions || 0;
       
       let title = '';
       if (totalWorkers === 1) {
-        // Single worker shift: "Worker Name – Start–End Time"
-        title = `${firstShift.assignedStaffName || 'Unassigned'} – ${firstShift.startTime}–${firstShift.endTime}`;
+        // Single worker shift: "Worker Name – Start–End Time" or "Specialty – 0/1 – Start–End Time"
+        const assignedWorkerName = firstShift.assignedStaff?.[0]?.name || firstShift.assignedStaffName;
+        if (assignedWorkerName) {
+          title = `${assignedWorkerName} – ${firstShift.startTime}–${firstShift.endTime}`;
+        } else {
+          title = `${specialty} – 0/1 – ${firstShift.startTime}–${firstShift.endTime}`;
+        }
       } else {
         // Multi-worker shift: "Specialty – Filled/Total – Start–End Time"
         title = `${specialty} – ${filledWorkers}/${totalWorkers} – ${firstShift.startTime}–${firstShift.endTime}`;

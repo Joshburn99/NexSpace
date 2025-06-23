@@ -1,0 +1,72 @@
+I need help fixing a logic/data flow bug in my NexSpace app (React/Vite/TS).
+
+Here’s what’s broken:
+
+When assigning a worker to a shift, the “assigned” number and names don’t update properly.
+
+The modal for each shift doesn’t always show all assigned workers, or it continues to show requests after the shift is filled.
+
+The calendar block for a shift with 3 required workers and 1 assigned shows as “Filled” (incorrect—it should be “1/3” and “partially filled”).
+
+When I assign a worker to a shift with 1 opening (1/1), the modal does not update and still shows requests. It should display the assigned worker, remove the requests, and update the calendar to “Filled”.
+
+What I want:
+
+On calendar:
+
+Every shift should show: Specialty – assigned/required – times (e.g., RN – 1/3 – 19:00)
+
+Only show “Filled” if all assigned = required.
+
+Show the proper icon for Open, Requested, Partially Filled, or Filled.
+
+On modal:
+
+Always show all assigned workers in the Staffing Status section.
+
+When I assign a worker, immediately move them to the assigned section, decrement the requests, and if filled, remove remaining requests.
+
+If a shift is not fully assigned, show all requests below.
+
+If a shift is filled, no further assignments—requests disappear.
+
+Data/State:
+
+Each shift should manage its own assignedWorkers and requestedWorkers. Assigning or updating one shift should never affect other shifts.
+
+Make sure assignedWorkers.length never exceeds requiredWorkers.
+
+Modal and calendar view for a shift must always be in sync.
+
+What’s happening now:
+
+Assigning a worker sometimes doesn’t update the assigned count, and requests remain visible.
+
+The modal might show “0/3 Filled” even if a worker is assigned.
+
+Sometimes, assigning a worker to one shift affects another shift’s assignments or display.
+
+Please help me fix this by:
+
+Reviewing the shift assignment and state update logic.
+
+Refactoring the assign handler so it:
+
+Adds the assigned worker to the correct shift’s assignedWorkers array.
+
+Removes that worker from requestedWorkers for that shift only.
+
+Updates the assigned count in both the modal and the calendar block, using assignedWorkers.length.
+
+Once assignedWorkers.length === requiredWorkers, removes all remaining requests and marks the shift as “Filled.”
+
+Providing a sample handler and state management pattern for this flow (React functional component, useState or useReducer).
+
+Ensuring changes to one shift don’t affect others.
+
+Making the UI update instantly and accurately after assignment, both in the calendar and in the modal.
+
+Screenshots for context are attached.
+
+If you need to see my shift state, data shape, or handler code, ask me.
+

@@ -927,13 +927,18 @@ export function registerRoutes(app: Express): Server {
           });
         }
         
-        // Update status based on assignments
-        if (assignedWorkerIds.length >= (shift.totalPositions || 4)) {
+        // Update status based on assignments and requests
+        const totalRequired = shift.totalPositions || 3;
+        const hasRequests = false; // Will be populated from requests data
+        
+        if (assignedWorkerIds.length >= totalRequired) {
           updatedShift.status = "filled";
         } else if (assignedWorkerIds.length > 0) {
           updatedShift.status = "partially_filled";
+        } else if (hasRequests) {
+          updatedShift.status = "requested";
         } else {
-          updatedShift.status = shift.status || "open";
+          updatedShift.status = "open";
         }
         
         return updatedShift;
