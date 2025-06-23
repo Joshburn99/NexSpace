@@ -1,0 +1,67 @@
+⮕ I’m building NexSpace, a React (Vite, TypeScript) app for healthcare scheduling. Each shift can have multiple required workers (e.g., "RN – 1/3"), and workers can request or be assigned to shifts. Here are the current problems and requirements:
+
+**Problems/Bugs:**
+- Calendar blocks sometimes show incorrect assigned/open numbers (e.g., “1/3” with no assigned workers).
+- Assigning a worker to a shift is incorrectly updating other shifts—shifts must be tracked and updated individually.
+- After assigning a worker, the modal doesn’t show them in the assigned section, and requests aren’t updating/disappearing as expected.
+- “Unassigned” purple shifts should show as “CST – 0/1” and use the “requested” status icon if there are pending requests.
+- Shifts not fully assigned should show the correct status: open (no requests/assignments), requested (requests exist), partially filled (some assigned), filled (all assigned).
+
+**Desired Functionality:**
+1. **Calendar Block:**  
+   - Show “Specialty – assigned/required – time” (e.g., “RN – 2/3 – 19:00”).
+   - If shift is not fully assigned, show status: open/requested/partially filled. If fully assigned, show filled.
+   - For shifts with requests but no assignments, show “requested” icon.
+2. **Shift Modal:**  
+   - List all assigned workers in “Staffing Status” (name, specialty, etc.).
+   - List all workers who have requested the shift with option to assign.
+   - Assign button should only assign up to the requirement (e.g., 3 RNs for a 1/3 shift).
+   - When assigned, worker should move to the assigned section and disappear from requests.
+   - Once filled, no more assignments allowed; unassigned requests should disappear.
+   - Modal should ONLY affect the shift being managed—other shifts must not update.
+3. **Sync:**  
+   - All views (calendar, modal, sidebar, etc.) must update in real-time when changes are made.
+   - Any change in assigned/requested workers for a shift must update its calendar block immediately.
+
+**Code Base:**
+- Shift and user types are similar to:
+interface Shift {
+id: string;
+requiredWorkers: number;
+assignedWorkers: User[];
+requestedWorkers: User[];
+specialty: string;
+startTime: string;
+endTime: string;
+status: string; // 'open', 'requested', 'partiallyFilled', 'filled'
+}
+interface User {
+id: string;
+name: string;
+specialty: string;
+reliability: number;
+rating: number;
+}
+
+sql
+Copy
+Edit
+- I am using mock data arrays and managing state with useState/useReducer at the page or context level.
+- The calendar and modal are separate components; modal is opened by clicking a shift block.
+
+⮕ Please:
+- Refactor or rewrite the logic and example code for shift assignment so that assigning a worker to a shift ONLY updates that shift.
+- On assignment, move the worker from requests to assigned and re-render both the modal and the calendar.
+- Enforce the assignedWorkers.length <= requiredWorkers rule.
+- Display the correct shift status in all views:
+    - Open: no assigned/requested
+    - Requested: no assigned, but one or more requests
+    - Partially Filled: at least one assigned but not full
+    - Filled: all spots assigned, no extra requests visible
+- Show the assigned worker info in the modal as soon as assigned (with example code).
+- Make sure all state/data updates are “atomic” to the shift being changed—NO changes to unrelated shifts.
+- Show the functional React/TypeScript code for a calendar cell, modal, and the assign handler, using mock state.
+
+If you need more context, ask me which files or logic to show. Make all updates as atomic and scalable as possible.
+
+⮕ Here are example screenshots and descriptions if you need UI/UX reference.

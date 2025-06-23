@@ -60,6 +60,11 @@ export interface Shift {
   payRate?: number;
   createdAt: Date;
   updatedAt: Date;
+  // Backend assignment tracking fields
+  assignedStaff?: User[];
+  filledPositions?: number;
+  totalPositions?: number;
+  minStaff?: number;
 }
 
 export interface Assignment {

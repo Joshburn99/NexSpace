@@ -116,7 +116,7 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    {assignedWorkers.length}/{shift.requiredWorkers} workers assigned
+                    {shift.filledPositions || 0}/{shift.totalPositions || shift.requiredWorkers} workers assigned
                   </span>
                   {isFullyStaffed ? (
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -166,11 +166,14 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Assigned Workers ({assignedWorkers.length}/{shift.requiredWorkers})
+                  Assigned Workers ({shift.filledPositions || 0}/{shift.totalPositions || shift.requiredWorkers})
                 </h3>
+                <Badge variant={shift.filledPositions && shift.filledPositions > 0 ? "default" : "secondary"}>
+                  {shift.filledPositions || 0}/{shift.totalPositions || shift.requiredWorkers} Filled
+                </Badge>
               </div>
 
-              {assignedWorkers.length === 0 ? (
+              {(!shift.assignedStaff || shift.assignedStaff.length === 0) ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>No workers assigned to this shift</p>
@@ -178,28 +181,30 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {assignedWorkers.map(worker => (
+                  {(shift.assignedStaff || []).map(worker => (
                     <div
                       key={worker.id}
                       className="flex items-center gap-3 p-3 border rounded-lg bg-green-50 border-green-200"
                     >
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={worker.avatar} />
-                        <AvatarFallback>{getUserInitials(worker)}</AvatarFallback>
+                        <AvatarFallback>
+                          {worker.firstName?.[0]}{worker.lastName?.[0]}
+                        </AvatarFallback>
                       </Avatar>
                       
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">
-                          {getUserFullName(worker)}
+                          {worker.name || `${worker.firstName} ${worker.lastName}`}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {worker.specialty}
                         </div>
                         <div className="flex items-center gap-2 mt-1">
                           <div className="flex items-center">
-                            {getRatingStars(4)}
+                            {getRatingStars(Math.floor(worker.rating || 4))}
                             <span className="text-xs text-muted-foreground ml-1">
-                              4.0
+                              {(worker.rating || 4).toFixed(1)}
                             </span>
                           </div>
                           <div className={`text-xs font-medium ${getReliabilityColor(0.95)}`}>
