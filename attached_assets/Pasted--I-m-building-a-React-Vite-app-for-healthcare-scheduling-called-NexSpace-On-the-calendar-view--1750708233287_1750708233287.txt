@@ -1,0 +1,52 @@
+⮕ I’m building a React (Vite) app for healthcare scheduling called NexSpace.
+
+On the calendar view, each shift block (e.g., "RN – 2/4 – 19:00...") should always show the correct number of assigned workers out of the required total.
+
+In the shift details modal, I want:
+
+1. A list of currently assigned workers for the shift (show name, specialty, and status).
+2. A "Shift Requests" section that lists all clinicians who have requested the shift, showing their info (name, role, reliability, profile button, assign button).
+3. The ability to assign additional workers from requests up to the requiredWorkers limit (e.g., for "RN 2/4", I can assign up to 2 more).
+4. Once assigned, the worker moves to the assigned workers section, and the request disappears from the requests section.
+5. The calendar block and modal should both reflect the real-time count of assigned workers.
+
+Currently, my shift preview shows "RN – 2/4" even when there are no assigned workers, and the pop-up modal does not list the assigned workers or allow me to assign requests.
+
+⮕ Please generate the full React logic and example component code (or update my existing code) to:
+- Properly display assigned workers in both calendar and modal
+- Move users from "requests" to "assigned" when assigned, up to the requirement
+- Prevent assigning more workers than required
+- Keep all data in sync between calendar cell and modal
+
+Assume I’m using TypeScript, with a Shift type like:
+interface Shift {
+id: string;
+requiredWorkers: number;
+assignedWorkers: User[]; // Array of User objects
+requestedWorkers: User[]; // Array of User objects who have requested but not yet assigned
+specialty: string;
+startTime: string;
+endTime: string;
+status: string;
+// etc.
+}
+
+rust
+Copy
+Edit
+You may also use a User type like:
+interface User {
+id: string;
+name: string;
+specialty: string;
+reliability: number;
+rating: number;
+// etc.
+}
+
+pgsql
+Copy
+Edit
+⮕ Please show example code for the calendar block, the modal, and the assign logic, using mock data. Explain where the state should live for a scalable solution.
+
+Make the logic work for multi-worker shifts, and clarify how the UI should behave if all spots are filled.

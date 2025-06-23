@@ -1,6 +1,7 @@
 import type { Assignment } from '../types';
 
 export const mockAssignments: Assignment[] = [
+  // Confirmed assignments (already assigned to shifts)
   {
     id: 'assignment-001',
     userId: 'user-001',
@@ -29,15 +30,6 @@ export const mockAssignments: Assignment[] = [
     notes: 'RT coverage confirmed'
   },
   {
-    id: 'assignment-004',
-    userId: 'user-003',
-    shiftId: 'shift-003',
-    status: 'pending',
-    assignedAt: new Date('2025-06-23T09:45:00Z'),
-    updatedAt: new Date('2025-06-23T09:45:00Z'),
-    notes: 'Waiting for confirmation on night shift'
-  },
-  {
     id: 'assignment-005',
     userId: 'user-005',
     shiftId: 'shift-004',
@@ -47,15 +39,6 @@ export const mockAssignments: Assignment[] = [
     notes: 'PT outpatient coverage'
   },
   {
-    id: 'assignment-006',
-    userId: 'user-001',
-    shiftId: 'shift-005',
-    status: 'declined',
-    assignedAt: new Date('2025-06-21T08:30:00Z'),
-    updatedAt: new Date('2025-06-21T12:15:00Z'),
-    notes: 'Declined due to scheduling conflict'
-  },
-  {
     id: 'assignment-007',
     userId: 'user-007',
     shiftId: 'shift-005',
@@ -63,6 +46,73 @@ export const mockAssignments: Assignment[] = [
     assignedAt: new Date('2025-06-23T13:20:00Z'),
     updatedAt: new Date('2025-06-23T13:20:00Z'),
     notes: 'ED night shift coverage'
+  },
+
+  // Pending requests (workers requesting shifts)
+  {
+    id: 'assignment-004',
+    userId: 'user-003',
+    shiftId: 'shift-003',
+    status: 'pending',
+    assignedAt: new Date('2025-06-23T09:45:00Z'),
+    updatedAt: new Date('2025-06-23T09:45:00Z'),
+    notes: 'Requesting night shift CNA position'
+  },
+  {
+    id: 'assignment-008',
+    userId: 'user-001',
+    shiftId: 'shift-003',
+    status: 'pending',
+    assignedAt: new Date('2025-06-23T14:20:00Z'),
+    updatedAt: new Date('2025-06-23T14:20:00Z'),
+    notes: 'Available for additional night coverage'
+  },
+  {
+    id: 'assignment-009',
+    userId: 'user-007',
+    shiftId: 'shift-003',
+    status: 'pending',
+    assignedAt: new Date('2025-06-23T16:30:00Z'),
+    updatedAt: new Date('2025-06-23T16:30:00Z'),
+    notes: 'Requesting night shift assignment'
+  },
+  {
+    id: 'assignment-010',
+    userId: 'user-001',
+    shiftId: 'shift-005',
+    status: 'pending',
+    assignedAt: new Date('2025-06-23T08:15:00Z'),
+    updatedAt: new Date('2025-06-23T08:15:00Z'),
+    notes: 'Available for ED coverage'
+  },
+  {
+    id: 'assignment-011',
+    userId: 'user-003',
+    shiftId: 'shift-006',
+    status: 'pending',
+    assignedAt: new Date('2025-06-23T12:45:00Z'),
+    updatedAt: new Date('2025-06-23T12:45:00Z'),
+    notes: 'Requesting weekend lab coverage'
+  },
+  {
+    id: 'assignment-012',
+    userId: 'user-001',
+    shiftId: 'shift-002',
+    status: 'pending',
+    assignedAt: new Date('2025-06-23T11:20:00Z'),
+    updatedAt: new Date('2025-06-23T11:20:00Z'),
+    notes: 'Can provide additional RT support'
+  },
+
+  // Declined assignments
+  {
+    id: 'assignment-006',
+    userId: 'user-005',
+    shiftId: 'shift-005',
+    status: 'declined',
+    assignedAt: new Date('2025-06-21T08:30:00Z'),
+    updatedAt: new Date('2025-06-21T12:15:00Z'),
+    notes: 'Declined due to scheduling conflict'
   }
 ];
 
