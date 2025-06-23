@@ -712,3 +712,27 @@ export type InsertPayrollSyncLog = z.infer<typeof insertPayrollSyncLogSchema>;
 export type PayrollSyncLog = typeof payrollSyncLogs.$inferSelect;
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof payments.$inferSelect;
+
+// New table insert schemas and types
+export const insertShiftTemplateSchema = createInsertSchema(shiftTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertGeneratedShiftSchema = createInsertSchema(generatedShifts).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertUserSessionSchema = createInsertSchema(userSessions).omit({
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertShiftTemplate = z.infer<typeof insertShiftTemplateSchema>;
+export type ShiftTemplate = typeof shiftTemplates.$inferSelect;
+export type InsertGeneratedShift = z.infer<typeof insertGeneratedShiftSchema>;
+export type GeneratedShift = typeof generatedShifts.$inferSelect;
+export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
+export type UserSession = typeof userSessions.$inferSelect;

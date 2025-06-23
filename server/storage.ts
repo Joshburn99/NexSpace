@@ -5,6 +5,9 @@ import {
   jobApplications,
   shifts,
   shiftAssignments,
+  shiftTemplates,
+  generatedShifts,
+  userSessions,
   timeClockEntries,
   invoices,
   workLogs,
@@ -31,6 +34,12 @@ import {
   type InsertJobApplication,
   type Shift,
   type InsertShift,
+  type ShiftTemplate,
+  type InsertShiftTemplate,
+  type GeneratedShift,
+  type InsertGeneratedShift,
+  type UserSession,
+  type InsertUserSession,
   type Invoice,
   type InsertInvoice,
   type WorkLog,
@@ -250,6 +259,25 @@ export interface IStorage {
   getShiftAssignments(shiftId: string): Promise<Array<{ workerId: number; assignedAt: string; status: string }>>;
   addShiftAssignment(assignment: { shiftId: string; workerId: number; assignedById: number; status: string }): Promise<void>;
   updateShiftAssignmentStatus(shiftId: string, workerId: number, status: string): Promise<void>;
+
+  // Shift template methods - replaces in-memory template storage
+  createShiftTemplate(template: InsertShiftTemplate): Promise<ShiftTemplate>;
+  getShiftTemplates(facilityId?: number): Promise<ShiftTemplate[]>;
+  updateShiftTemplate(id: number, updates: Partial<InsertShiftTemplate>): Promise<ShiftTemplate | undefined>;
+  deleteShiftTemplate(id: number): Promise<boolean>;
+
+  // Generated shift methods - replaces global templateGeneratedShifts
+  createGeneratedShift(shift: InsertGeneratedShift): Promise<GeneratedShift>;
+  getGeneratedShifts(dateRange?: { start: string; end: string }): Promise<GeneratedShift[]>;
+  updateGeneratedShift(id: string, updates: Partial<InsertGeneratedShift>): Promise<GeneratedShift | undefined>;
+  deleteGeneratedShift(id: string): Promise<boolean>;
+
+  // Session methods - replaces file-based sessions
+  createUserSession(session: InsertUserSession): Promise<UserSession>;
+  getUserSession(sessionId: string): Promise<UserSession | undefined>;
+  updateUserSession(sessionId: string, updates: Partial<InsertUserSession>): Promise<UserSession | undefined>;
+  deleteUserSession(sessionId: string): Promise<boolean>;
+  cleanupExpiredSessions(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1332,6 +1360,101 @@ export class DatabaseStorage implements IStorage {
       console.error("Error in updateShiftAssignmentStatus:", error);
       throw error;
     }
+  }
+
+  // Shift template methods - replaces in-memory template storage
+  async createShiftTemplate(template: InsertShiftTemplate): Promise<ShiftTemplate> {
+    const [result] = await db.insert(shiftTemplates).values(template).returning();
+    return result;
+  }
+
+  async getShiftTemplates(facilityId?: number): Promise<ShiftTemplate[]> {
+    if (facilityId) {
+      return await db.select().from(shiftTemplates)
+        .where(and(eq(shiftTemplates.facilityId, facilityId), eq(shiftTemplates.isActive, true)));
+    }
+    return await db.select().from(shiftTemplates).where(eq(shiftTemplates.isActive, true));
+  }
+
+  async updateShiftTemplate(id: number, updates: Partial<InsertShiftTemplate>): Promise<ShiftTemplate | undefined> {
+    const [result] = await db
+      .update(shiftTemplates)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(shiftTemplates.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteShiftTemplate(id: number): Promise<boolean> {
+    const result = await db
+      .update(shiftTemplates)
+      .set({ isActive: false, updatedAt: new Date() })
+      .where(eq(shiftTemplates.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Generated shift methods - replaces global templateGeneratedShifts
+  async createGeneratedShift(shift: InsertGeneratedShift): Promise<GeneratedShift> {
+    const [result] = await db.insert(generatedShifts).values(shift).returning();
+    return result;
+  }
+
+  async getGeneratedShifts(dateRange?: { start: string; end: string }): Promise<GeneratedShift[]> {
+    let query = db.select().from(generatedShifts);
+    
+    if (dateRange) {
+      query = query.where(and(
+        gte(generatedShifts.date, dateRange.start),
+        lte(generatedShifts.date, dateRange.end)
+      ));
+    }
+    
+    return await query.orderBy(generatedShifts.date, generatedShifts.startTime);
+  }
+
+  async updateGeneratedShift(id: string, updates: Partial<InsertGeneratedShift>): Promise<GeneratedShift | undefined> {
+    const [result] = await db
+      .update(generatedShifts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(generatedShifts.id, id))
+      .returning();
+    return result;
+  }
+
+  async deleteGeneratedShift(id: string): Promise<boolean> {
+    const result = await db.delete(generatedShifts).where(eq(generatedShifts.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Session methods - replaces file-based sessions
+  async createUserSession(session: InsertUserSession): Promise<UserSession> {
+    const [result] = await db.insert(userSessions).values(session).returning();
+    return result;
+  }
+
+  async getUserSession(sessionId: string): Promise<UserSession | undefined> {
+    const [result] = await db.select().from(userSessions)
+      .where(and(eq(userSessions.id, sessionId), gt(userSessions.expiresAt, new Date())));
+    return result;
+  }
+
+  async updateUserSession(sessionId: string, updates: Partial<InsertUserSession>): Promise<UserSession | undefined> {
+    const [result] = await db
+      .update(userSessions)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(userSessions.id, sessionId))
+      .returning();
+    return result;
+  }
+
+  async deleteUserSession(sessionId: string): Promise<boolean> {
+    const result = await db.delete(userSessions).where(eq(userSessions.id, sessionId));
+    return result.rowCount > 0;
+  }
+
+  async cleanupExpiredSessions(): Promise<number> {
+    const result = await db.delete(userSessions).where(lt(userSessions.expiresAt, new Date()));
+    return result.rowCount;
   }
 }
 
