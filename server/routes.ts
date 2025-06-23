@@ -951,8 +951,34 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Shift assignments storage (in-memory for development)
-  const shiftAssignments = new Map();
+  // Database-backed assignment tracking
+  const getShiftAssignments = async (shiftId: string | number) => {
+    const assignments = await db.select({
+      workerId: shiftAssignments.workerId,
+      assignedAt: shiftAssignments.assignedAt,
+    })
+    .from(shiftAssignments)
+    .where(eq(shiftAssignments.shiftId, shiftId.toString()))
+    .where(eq(shiftAssignments.status, 'assigned'));
+    
+    return assignments.map(a => a.workerId);
+  };
+
+  const addShiftAssignment = async (shiftId: string | number, workerId: number, assignedById: number) => {
+    await db.insert(shiftAssignments).values({
+      shiftId: shiftId.toString(),
+      workerId,
+      assignedById,
+      status: 'assigned'
+    });
+  };
+
+  const removeShiftAssignment = async (shiftId: string | number, workerId: number) => {
+    await db.update(shiftAssignments)
+      .set({ status: 'unassigned' })
+      .where(eq(shiftAssignments.shiftId, shiftId.toString()))
+      .where(eq(shiftAssignments.workerId, workerId));
+  };
 
   // Get shift data helper function
   function getShiftData() {

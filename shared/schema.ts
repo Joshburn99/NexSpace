@@ -241,6 +241,16 @@ export const workLogs = pgTable("work_logs", {
   submittedAt: timestamp("submitted_at").defaultNow(),
 });
 
+// Shift assignments table
+export const shiftAssignments = pgTable("shift_assignments", {
+  id: serial("id").primaryKey(),
+  shiftId: text("shift_id").notNull(),
+  workerId: integer("worker_id").notNull(),
+  assignedAt: timestamp("assigned_at").defaultNow(),
+  assignedById: integer("assigned_by_id").notNull(),
+  status: text("status").notNull().default("assigned"), // assigned, unassigned, completed
+});
+
 // Credentials table
 export const credentials = pgTable("credentials", {
   id: serial("id").primaryKey(),
