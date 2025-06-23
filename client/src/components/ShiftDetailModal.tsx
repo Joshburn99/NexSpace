@@ -20,7 +20,7 @@ import {
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
-import type { Shift, User, Facility } from '../types';
+import type { Shift, User, Facility, AssignedWorker } from '../types';
 import { formatShiftTime, calculateShiftDuration } from '../utils/shiftUtils';
 import { getUserFullName, getUserInitials } from '../utils/userUtils';
 
@@ -216,8 +216,8 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleUnassignWorker(worker.id)}
-                        disabled={isAssigning === worker.id}
+                        onClick={() => handleUnassignWorker(worker.id.toString())}
+                        disabled={isAssigning === worker.id.toString()}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
                       >
                         Remove

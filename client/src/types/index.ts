@@ -61,10 +61,22 @@ export interface Shift {
   createdAt: Date;
   updatedAt: Date;
   // Backend assignment tracking fields
-  assignedStaff?: User[];
+  assignedStaff?: AssignedWorker[];
   filledPositions?: number;
   totalPositions?: number;
   minStaff?: number;
+}
+
+// Backend assigned worker structure
+export interface AssignedWorker {
+  id: number;
+  name: string;
+  firstName: string;
+  lastName: string;
+  specialty: Specialty;
+  rating: number;
+  email: string;
+  avatar?: string;
 }
 
 export interface Assignment {
