@@ -228,16 +228,24 @@ export default function EnhancedCalendarPage() {
       
       // Force immediate refresh with a small delay to ensure server has processed
       setTimeout(async () => {
+        // First refetch the shifts data
         await queryClient.refetchQueries({ queryKey: ["/api/shifts"] });
+        
+        // Then get the updated data and update selected shift
         const updatedShifts = queryClient.getQueryData(["/api/shifts"]) as EnhancedShift[];
         if (updatedShifts && selectedShift) {
           const updatedShift = updatedShifts.find(s => s.id === selectedShift.id);
           if (updatedShift) {
-            console.log('Updating selected shift after assignment:', updatedShift);
+            console.log('Updating selected shift after assignment:', {
+              id: updatedShift.id,
+              assignedStaff: (updatedShift as any).assignedStaff,
+              filledPositions: updatedShift.filledPositions,
+              totalPositions: updatedShift.totalPositions
+            });
             setSelectedShift(updatedShift);
           }
         }
-      }, 200);
+      }, 300);
     },
     onError: (error: any) => {
       toast({
@@ -278,16 +286,24 @@ export default function EnhancedCalendarPage() {
       
       // Force immediate refresh with a small delay to ensure server has processed
       setTimeout(async () => {
+        // First refetch the shifts data
         await queryClient.refetchQueries({ queryKey: ["/api/shifts"] });
+        
+        // Then get the updated data and update selected shift
         const updatedShifts = queryClient.getQueryData(["/api/shifts"]) as EnhancedShift[];
         if (updatedShifts && selectedShift) {
           const updatedShift = updatedShifts.find(s => s.id === selectedShift.id);
           if (updatedShift) {
-            console.log('Updating selected shift after unassignment:', updatedShift);
+            console.log('Updating selected shift after unassignment:', {
+              id: updatedShift.id,
+              assignedStaff: (updatedShift as any).assignedStaff,
+              filledPositions: updatedShift.filledPositions,
+              totalPositions: updatedShift.totalPositions
+            });
             setSelectedShift(updatedShift);
           }
         }
-      }, 200);
+      }, 300);
     },
     onError: (error: any) => {
       toast({
@@ -1162,9 +1178,15 @@ export default function EnhancedCalendarPage() {
                     <span>
                       {(() => {
                         const start = new Date(`2000-01-01T${selectedShift.startTime}`);
-                        const end = new Date(`2000-01-01T${selectedShift.endTime}`);
+                        let end = new Date(`2000-01-01T${selectedShift.endTime}`);
+                        
+                        // Handle overnight shifts (end time is next day)
+                        if (end <= start) {
+                          end = new Date(`2000-01-02T${selectedShift.endTime}`);
+                        }
+                        
                         const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-                        return `${hours} hours`;
+                        return `${Math.abs(hours)} hours`;
                       })()}
                     </span>
                   </div>
