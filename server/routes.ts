@@ -1106,8 +1106,44 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ message: "Worker ID is required" });
       }
       
-      // Get shift details to check capacity
-      const shift = await storage.getShift(parseInt(shiftId));
+      // Get shift details - handle both regular shifts and generated shifts
+      let shift;
+      
+      // Try to get as regular shift first (numeric ID)
+      if (!isNaN(parseInt(shiftId))) {
+        shift = await storage.getShift(parseInt(shiftId));
+      }
+      
+      // If not found as regular shift, try as generated shift (string ID)
+      if (!shift) {
+        const generatedShift = await storage.getGeneratedShift(shiftId);
+        if (generatedShift) {
+          // Convert generated shift to compatible format
+          shift = {
+            id: parseInt(generatedShift.id) || 0,
+            title: generatedShift.title,
+            specialty: generatedShift.specialty,
+            description: generatedShift.description,
+            facilityId: generatedShift.facilityId,
+            department: generatedShift.department,
+            date: generatedShift.date,
+            startTime: generatedShift.startTime,
+            endTime: generatedShift.endTime,
+            rate: generatedShift.rate,
+            status: generatedShift.status,
+            urgency: generatedShift.urgency,
+            requiredStaff: generatedShift.requiredWorkers || 1,
+            assignedStaffIds: [],
+            specialRequirements: [],
+            createdById: 1,
+            createdAt: generatedShift.createdAt,
+            updatedAt: generatedShift.updatedAt,
+            facilityName: generatedShift.facilityName,
+            premiumMultiplier: generatedShift.rate
+          };
+        }
+      }
+      
       if (!shift) {
         return res.status(404).json({ message: "Shift not found" });
       }
