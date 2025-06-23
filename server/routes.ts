@@ -1808,7 +1808,15 @@ export function registerRoutes(app: Express): Server {
       // For impersonation/admin views, show all users including superusers
       const showAllUsers = req.query.includeAdmins === 'true' || req.user?.role === 'super_admin';
       
-      res.json(showAllUsers ? dbStaffData : filteredStaffData);
+      // Map database staff to include proper status and impersonation-ready format
+      const mappedStaffData = (showAllUsers ? dbStaffData : filteredStaffData).map(staff => ({
+        ...staffData.find(s => s.id === staff.id) || staff,
+        status: "active", // Ensure all staff are marked as active for impersonation
+        isActive: true,
+        canImpersonate: true
+      }));
+      
+      res.json(mappedStaffData);
     } catch (error) {
       console.error("Error fetching staff:", error);
       res.status(500).json({ message: "Failed to fetch staff data" });
@@ -5335,6 +5343,61 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Shift requests API endpoint
+  app.get("/api/shift-requests/:shiftId", requireAuth, async (req, res) => {
+    try {
+      const shiftId = parseInt(req.params.shiftId);
+      
+      // Mock shift requests data based on shift ID
+      const mockShiftRequests = [
+        {
+          id: 1,
+          shiftId: shiftId,
+          workerId: 3,
+          workerName: "Josh Burnett",
+          specialty: "RN",
+          reliabilityScore: 96,
+          averageRating: 4.8,
+          totalShiftsWorked: 156,
+          hourlyRate: 48,
+          requestedAt: "2025-06-23T10:30:00Z",
+          status: "pending"
+        },
+        {
+          id: 2,
+          shiftId: shiftId,
+          workerId: 4,
+          workerName: "Sarah Johnson",
+          specialty: "LPN",
+          reliabilityScore: 94,
+          averageRating: 4.7,
+          totalShiftsWorked: 142,
+          hourlyRate: 42,
+          requestedAt: "2025-06-23T11:15:00Z",
+          status: "pending"
+        },
+        {
+          id: 3,
+          shiftId: shiftId,
+          workerId: 42,
+          workerName: "Jennifer Kim",
+          specialty: "CST",
+          reliabilityScore: 98,
+          averageRating: 4.9,
+          totalShiftsWorked: 89,
+          hourlyRate: 35,
+          requestedAt: "2025-06-23T09:45:00Z",
+          status: "pending"
+        }
+      ];
+
+      res.json(mockShiftRequests);
+    } catch (error) {
+      console.error("Error fetching shift requests:", error);
+      res.status(500).json({ message: "Failed to fetch shift requests" });
+    }
+  });
+
   app.get("/api/session-status", requireAuth, async (req, res) => {
     try {
       const currentUser = req.user;
@@ -7180,63 +7243,22 @@ export function registerRoutes(app: Express): Server {
 
       const { targetUserId } = req.body;
       
+      // Get target user from database
+      const targetUser = await storage.getUser(targetUserId);
+      if (!targetUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
       // Store original user in session
       (req.session as any).originalUser = req.user;
       (req.session as any).isImpersonating = true;
 
-      // Get target user data
-      let targetUser;
-      
-      if (targetUserId === 2) {
-        targetUser = {
-          id: 2,
-          username: "sarah.johnson",
-          email: "sarah.johnson@portlandgeneral.com",
-          firstName: "Sarah",
-          lastName: "Johnson",
-          role: "facility_manager",
-          facilityId: 1,
-          isActive: true
-        };
-      } else if (targetUserId === 3) {
-        targetUser = {
-          id: 3,
-          username: "JoshBurn",
-          email: "joshburn@gmail.com",
-          firstName: "Josh",
-          lastName: "Burn",
-          role: "employee",
-          facilityId: 1,
-          isActive: true
-        };
-      } else if (targetUserId === 4) {
-        targetUser = {
-          id: 4,
-          username: "mike.davis",
-          email: "mike.davis@contractor.com",
-          firstName: "Mike",
-          lastName: "Davis",
-          role: "contractor",
-          facilityId: null,
-          isActive: true
-        };
-      } else if (targetUserId === 42) {
-        targetUser = {
-          id: 42,
-          username: "jennifer.kim",
-          email: "jennifer.kim@hospital.com",
-          firstName: "Jennifer",
-          lastName: "Kim",
-          role: "employee",
-          facilityId: 1,
-          isActive: true
-        };
-      } else {
-        return res.status(404).json({ message: "User not found" });
-      }
-
       // Set impersonated user as current user
-      (req.session as any).user = targetUser;
+      (req.session as any).user = {
+        ...targetUser,
+        isActive: true,
+        canImpersonate: true
+      };
 
       res.json({
         message: "Impersonation started successfully",
@@ -7244,6 +7266,7 @@ export function registerRoutes(app: Express): Server {
         originalUser: (req.session as any).originalUser
       });
     } catch (error) {
+      console.error("Error starting impersonation:", error);
       res.status(500).json({ message: "Failed to start impersonation" });
     }
   });
