@@ -379,7 +379,9 @@ export function registerRoutes(app: Express): Server {
               if (template.daysOfWeek.includes(date.getDay())) {
                 // Generate minimum required shifts for each day
                 for (let staffCount = 0; staffCount < template.minStaff; staffCount++) {
-                  const shiftId = Date.now() + i * 10000 + template.id * 100 + staffCount;
+                  // Create stable shift ID based on template, date, and position (not timestamp)
+                  const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
+                  const shiftId = parseInt(`${template.id}${dateStr}${staffCount.toString().padStart(2, '0')}`);
                   generatedShifts.push({
                     id: shiftId,
                     title: template.name,
@@ -7278,8 +7280,9 @@ export function registerRoutes(app: Express): Server {
           const shiftDate = date.toISOString().split('T')[0];
           
           // Create shift based on template
+          const dateStr = shiftDate.replace(/-/g, '');
           const newShift = {
-            id: Math.floor(Date.now() + Math.random() * 1000),
+            id: parseInt(`${template.id}${dateStr}00`),
             title: template.name,
             date: shiftDate,
             startTime: template.startTime,
@@ -7530,8 +7533,11 @@ export function registerRoutes(app: Express): Server {
       
       if (template.daysOfWeek.includes(date.getDay())) {
         for (let staffCount = 0; staffCount < template.minStaff; staffCount++) {
+          // Create stable shift ID based on template, date, and position
+          const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
+          const shiftId = parseInt(`${template.id}${dateStr}${staffCount.toString().padStart(2, '0')}`);
           shifts.push({
-            id: Date.now() + i * 1000 + staffCount,
+            id: shiftId,
             templateId: template.id,
             date: date.toISOString().split('T')[0],
             startTime: template.startTime,
