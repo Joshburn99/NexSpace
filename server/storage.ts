@@ -4,6 +4,7 @@ import {
   jobs,
   jobApplications,
   shifts,
+  shiftAssignments,
   timeClockEntries,
   invoices,
   workLogs,
@@ -244,6 +245,11 @@ export interface IStorage {
     errors: string[];
   }>;
   syncWithPayrollProvider(facilityId: number, syncType: string): Promise<PayrollSyncLog>;
+
+  // Shift assignment methods
+  getShiftAssignments(shiftId: string): Promise<Array<{ workerId: number; assignedAt: string; status: string }>>;
+  addShiftAssignment(assignment: { shiftId: string; workerId: number; assignedById: number; status: string }): Promise<void>;
+  updateShiftAssignmentStatus(shiftId: string, workerId: number, status: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1267,6 +1273,60 @@ export class DatabaseStorage implements IStorage {
     } catch (error: any) {
       console.error("Error in getFacilitiesWithinRadius:", error);
       return [];
+    }
+  }
+
+  // Shift assignment methods
+  async getShiftAssignments(shiftId: string): Promise<Array<{ workerId: number; assignedAt: string; status: string }>> {
+    try {
+      const assignments = await db.select({
+        workerId: shiftAssignments.workerId,
+        assignedAt: shiftAssignments.assignedAt,
+        status: shiftAssignments.status,
+      })
+      .from(shiftAssignments)
+      .where(and(
+        eq(shiftAssignments.shiftId, shiftId),
+        eq(shiftAssignments.status, 'assigned')
+      ));
+      
+      return assignments.map(a => ({
+        workerId: a.workerId,
+        assignedAt: a.assignedAt.toISOString(),
+        status: a.status
+      }));
+    } catch (error: any) {
+      console.error("Error in getShiftAssignments:", error);
+      return [];
+    }
+  }
+
+  async addShiftAssignment(assignment: { shiftId: string; workerId: number; assignedById: number; status: string }): Promise<void> {
+    try {
+      await db.insert(shiftAssignments).values({
+        shiftId: assignment.shiftId,
+        workerId: assignment.workerId,
+        assignedById: assignment.assignedById,
+        status: assignment.status,
+        assignedAt: new Date(),
+      });
+    } catch (error: any) {
+      console.error("Error in addShiftAssignment:", error);
+      throw error;
+    }
+  }
+
+  async updateShiftAssignmentStatus(shiftId: string, workerId: number, status: string): Promise<void> {
+    try {
+      await db.update(shiftAssignments)
+        .set({ status })
+        .where(and(
+          eq(shiftAssignments.shiftId, shiftId),
+          eq(shiftAssignments.workerId, workerId)
+        ));
+    } catch (error: any) {
+      console.error("Error in updateShiftAssignmentStatus:", error);
+      throw error;
     }
   }
 }

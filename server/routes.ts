@@ -888,8 +888,8 @@ export function registerRoutes(app: Express): Server {
       const staffData = await unifiedDataService.getStaffWithAssociations();
       
       // Combine example shifts with template-generated shifts
-      const allShifts = getShiftData().map(shift => {
-        const assignedWorkerIds = shiftAssignments.get(shift.id) || [];
+      const allShifts = await Promise.all(getShiftData().map(async shift => {
+        const assignedWorkerIds = await getShiftAssignments(shift.id);
         
         // Get detailed staff info for assigned workers
         const assignedStaff = assignedWorkerIds.map(workerId => {
@@ -944,7 +944,7 @@ export function registerRoutes(app: Express): Server {
         }
         
         return updatedShift;
-      });
+      }));
       
       res.json(allShifts);
     } catch (error) {
@@ -952,8 +952,41 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Simplified assignment tracking with proper persistence
-  const shiftAssignments = new Map();
+  // Database-backed assignment tracking using existing shift_assignments table
+  const getShiftAssignments = async (shiftId: string | number) => {
+    try {
+      const assignments = await storage.getShiftAssignments(shiftId.toString());
+      return assignments.map(a => a.workerId);
+    } catch (error) {
+      console.error(`Error fetching assignments for shift ${shiftId}:`, error);
+      return [];
+    }
+  };
+
+  const addShiftAssignment = async (shiftId: string | number, workerId: number, assignedById: number = 1) => {
+    try {
+      await storage.addShiftAssignment({
+        shiftId: shiftId.toString(),
+        workerId,
+        assignedById,
+        status: 'assigned'
+      });
+      console.log(`Added assignment: worker ${workerId} to shift ${shiftId}`);
+    } catch (error) {
+      console.error(`Error adding assignment:`, error);
+      throw error;
+    }
+  };
+
+  const removeShiftAssignment = async (shiftId: string | number, workerId: number) => {
+    try {
+      await storage.updateShiftAssignmentStatus(shiftId.toString(), workerId, 'unassigned');
+      console.log(`Removed assignment: worker ${workerId} from shift ${shiftId}`);
+    } catch (error) {
+      console.error(`Error removing assignment:`, error);
+      throw error;
+    }
+  };
 
   // Get shift data helper function
   function getShiftData() {
@@ -985,7 +1018,7 @@ export function registerRoutes(app: Express): Server {
       const shiftId = parseInt(req.params.shiftId);
       
       // Get already assigned workers for this shift
-      const assignedWorkerIds = shiftAssignments.get(shiftId) || [];
+      const assignedWorkerIds = await getShiftAssignments(shiftId);
       
       // Get the shift to determine specialty requirement
       const allShifts = getShiftData();
