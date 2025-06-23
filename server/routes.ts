@@ -1040,13 +1040,23 @@ export function registerRoutes(app: Express): Server {
       // Get staff data for realistic requests
       const dbStaffData = await unifiedDataService.getStaffWithAssociations();
       const filteredStaff = dbStaffData.filter(staff => {
-        const superuserEmails = ['joshburn@nexspace.com', 'brian.nangle@nexspace.com'];
+        // Strict role validation - exclude all admin/management roles
+        const ineligibleRoles = ['super_admin', 'facility_admin', 'admin', 'facility_manager', 'manager'];
+        if (ineligibleRoles.includes(staff.role)) return false;
+        
+        // Strict email validation - exclude known superusers
+        const superuserEmails = ['joshburn@nexspace.com', 'josh.burnett@nexspace.com', 'brian.nangle@nexspace.com'];
         if (superuserEmails.includes(staff.email)) return false;
-        if (staff?.role === "super_admin" || staff?.role === "facility_manager") return false;
+        
         // Filter out already assigned workers
         if (assignedWorkerIds.includes(staff.id)) return false;
-        // Filter by specialty - only show workers matching the shift specialty
+        
+        // Strict specialty matching - only workers with exact specialty match
         if (staff.specialty !== requiredSpecialty) return false;
+        
+        // Only include internal employees and verified contractors
+        if (!['internal_employee', 'contractor_1099'].includes(staff.role)) return false;
+        
         return true;
       });
 
@@ -1089,31 +1099,76 @@ export function registerRoutes(app: Express): Server {
   // Shift assignment endpoint
   app.post("/api/shifts/:shiftId/assign", requireAuth, async (req, res) => {
     try {
-      const shiftId = parseInt(req.params.shiftId);
+      const shiftId = req.params.shiftId;
       const { workerId } = req.body;
       
       if (!workerId) {
         return res.status(400).json({ message: "Worker ID is required" });
       }
       
-      // Get current assignments for this shift
-      const currentAssignments = await getShiftAssignments(shiftId);
+      // Get shift details to check capacity
+      const shift = await storage.getShift(parseInt(shiftId));
+      if (!shift) {
+        return res.status(404).json({ message: "Shift not found" });
+      }
+      
+      // Get worker details to validate they can be assigned
+      const worker = await storage.getUser(workerId);
+      if (!worker) {
+        return res.status(404).json({ message: "Worker not found" });
+      }
+      
+      // Validate worker is eligible for assignment (not superuser/admin)
+      const ineligibleRoles = ['super_admin', 'facility_admin', 'admin'];
+      if (ineligibleRoles.includes(worker.role)) {
+        return res.status(400).json({ 
+          message: `Users with role ${worker.role} cannot be assigned to shifts` 
+        });
+      }
+      
+      // Validate specialty match
+      if (worker.specialty !== shift.specialty) {
+        return res.status(400).json({ 
+          message: `Worker specialty (${worker.specialty}) does not match shift requirement (${shift.specialty})` 
+        });
+      }
+      
+      // Get current assignments for this shift using string ID
+      const currentAssignments = await storage.getShiftAssignments(shiftId);
+      const assignedWorkerIds = currentAssignments.map(a => a.workerId);
       
       // Check if worker is already assigned
-      if (currentAssignments.includes(workerId)) {
+      if (assignedWorkerIds.includes(workerId)) {
         return res.status(400).json({ message: "Worker is already assigned to this shift" });
       }
       
-      // Add worker to assignments
-      await addShiftAssignment(shiftId, workerId, req.user?.id || 1);
-      const updatedAssignments = await getShiftAssignments(shiftId);
+      // Get shift capacity from the shift data - multi-worker shifts have higher capacity
+      const maxCapacity = shift.description?.includes('3/3') || shift.description?.includes('Filled') ? 3 : 1;
+      if (currentAssignments.length >= maxCapacity) {
+        return res.status(400).json({ 
+          message: `Shift is at full capacity (${currentAssignments.length}/${maxCapacity})` 
+        });
+      }
       
-      console.log(`Worker ${workerId} assigned to shift ${shiftId}. Total assigned: ${updatedAssignments.length}`);
+      // Add worker to assignments using storage interface
+      await storage.addShiftAssignment({
+        shiftId: shiftId,
+        workerId: workerId,
+        assignedById: (req as any).user?.id || 1,
+        status: 'assigned'
+      });
+      
+      // Get updated assignments
+      const updatedAssignments = await storage.getShiftAssignments(shiftId);
+      
+      console.log(`Worker ${workerId} assigned to shift ${shiftId}. Total assigned: ${updatedAssignments.length}/${maxCapacity}`);
       
       res.json({ 
         success: true, 
         message: "Worker assigned successfully",
-        assignedWorkers: updatedAssignments.length
+        assignedWorkers: updatedAssignments.length,
+        maxCapacity: maxCapacity,
+        assignments: updatedAssignments
       });
     } catch (error) {
       console.error("Error assigning worker:", error);
@@ -1124,31 +1179,35 @@ export function registerRoutes(app: Express): Server {
   // Shift unassignment endpoint
   app.post("/api/shifts/:shiftId/unassign", requireAuth, async (req, res) => {
     try {
-      const shiftId = parseInt(req.params.shiftId);
+      const shiftId = req.params.shiftId;
       const { workerId } = req.body;
       
       if (!workerId) {
         return res.status(400).json({ message: "Worker ID is required" });
       }
       
-      // Get current assignments for this shift
-      const currentAssignments = await getShiftAssignments(shiftId);
+      // Get current assignments for this shift using string ID
+      const currentAssignments = await storage.getShiftAssignments(shiftId);
+      const assignedWorkerIds = currentAssignments.map(a => a.workerId);
       
       // Check if worker is assigned
-      if (!currentAssignments.includes(workerId)) {
+      if (!assignedWorkerIds.includes(workerId)) {
         return res.status(400).json({ message: "Worker is not assigned to this shift" });
       }
       
-      // Remove worker from assignments
-      await removeShiftAssignment(shiftId, workerId);
-      const updatedAssignments = await getShiftAssignments(shiftId);
+      // Update assignment status to 'unassigned' instead of deleting
+      await storage.updateShiftAssignmentStatus(shiftId, workerId, 'unassigned');
+      
+      // Get updated assignments (only active ones)
+      const updatedAssignments = await storage.getShiftAssignments(shiftId);
       
       console.log(`Worker ${workerId} unassigned from shift ${shiftId}. Total assigned: ${updatedAssignments.length}`);
       
       res.json({ 
         success: true, 
         message: "Worker unassigned successfully",
-        assignedWorkers: updatedAssignments.length
+        assignedWorkers: updatedAssignments.length,
+        assignments: updatedAssignments
       });
     } catch (error) {
       console.error("Error unassigning worker:", error);
@@ -1157,7 +1216,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Enhanced assignment endpoint with database backing and proper capacity checking
-  app.post("/api/shifts/:shiftId/assign", requireAuth, async (req, res) => {
+  app.post("/api/shifts/:shiftId/assign-enhanced", requireAuth, async (req, res) => {
     try {
       const shiftId = req.params.shiftId; // Keep as string to match stable ID format
       const { workerId } = req.body;
