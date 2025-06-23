@@ -868,7 +868,79 @@ export default function EnhancedCalendarPage() {
                   )}
                 </div>
 
-                {selectedShift.assignedStaffName ? (
+                {(selectedShift as any).assignedStaff && (selectedShift as any).assignedStaff.length > 0 ? (
+                  <div className="space-y-3">
+                    {(selectedShift as any).assignedStaff.map((staff: any, index: number) => (
+                      <div key={staff.id || index} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                            <User className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{staff.name}</p>
+                            {staff.specialty && (
+                              <p className="text-sm text-muted-foreground">{staff.specialty}</p>
+                            )}
+                            {staff.rating && (
+                              <div className="flex items-center gap-1 mt-1">
+                                <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                                <span className="text-sm text-muted-foreground">{staff.rating.toFixed(1)}/5</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              if (staff.id) {
+                                window.location.href = `/enhanced-staff?profile=${staff.id}`;
+                              }
+                            }}
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            Profile
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              if (staff.id) {
+                                window.location.href = `/messaging?conversation=${staff.id}`;
+                              }
+                            }}
+                          >
+                            <MessageCircle className="h-3 w-3 mr-1" />
+                            Message
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Invoice Information for Completed Shifts Only */}
+                    {selectedShift.status === 'completed' && selectedShift.invoiceAmount && (
+                      <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-sm font-semibold text-green-800 dark:text-green-200">Invoice Information</Label>
+                          <Badge variant={selectedShift.invoiceStatus === 'approved' ? 'default' : 'secondary'}>
+                            {selectedShift.invoiceStatus === 'approved' ? 'Approved' : 'Pending Review'}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Hours Worked:</span>
+                            <span className="ml-2 font-medium">{selectedShift.invoiceHours}h</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Amount:</span>
+                            <span className="ml-2 font-medium">${selectedShift.invoiceAmount.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : selectedShift.assignedStaffName ? (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">

@@ -773,10 +773,31 @@ export function registerRoutes(app: Express): Server {
           rate: 45.0,
           urgency: "high",
           description: "Primary ICU coverage",
-          assignedStaffId: filteredStaff[1]?.id || 4,
-          assignedStaffName: filteredStaff[1] ? `${filteredStaff[1].firstName} ${filteredStaff[1].lastName}` : "Bob Johnson",
-          assignedStaffEmail: filteredStaff[1]?.email || "bob.johnson@nexspace.com",
-          assignedStaffSpecialty: filteredStaff[1]?.specialty || "RN",
+          filledPositions: 2,
+          totalPositions: 3,
+          minStaff: 2,
+          maxStaff: 3,
+          assignedStaff: [
+            {
+              id: filteredStaff[0]?.id || 3,
+              name: filteredStaff[0] ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}` : "Alice Smith",
+              email: filteredStaff[0]?.email || "alice.smith@nexspace.com",
+              specialty: filteredStaff[0]?.specialty || "LPN",
+              rating: 4.6
+            },
+            {
+              id: filteredStaff[1]?.id || 4,
+              name: filteredStaff[1] ? `${filteredStaff[1].firstName} ${filteredStaff[1].lastName}` : "Bob Johnson",
+              email: filteredStaff[1]?.email || "bob.johnson@nexspace.com",
+              specialty: filteredStaff[1]?.specialty || "RN",
+              rating: 4.8
+            }
+          ],
+          // Keep legacy fields for backward compatibility
+          assignedStaffId: filteredStaff[0]?.id || 3,
+          assignedStaffName: filteredStaff[0] ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}` : "Alice Smith",
+          assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
+          assignedStaffSpecialty: filteredStaff[0]?.specialty || "LPN",
           assignedStaffRating: 4.6,
         },
         {
