@@ -197,6 +197,57 @@ export default function EnhancedCalendarPage() {
     enabled: !!selectedShift?.id,
   });
 
+  // Assignment mutations
+  const assignWorkerMutation = useMutation({
+    mutationFn: async ({ shiftId, workerId }: { shiftId: number; workerId: number }) => {
+      return apiRequest(`/api/shifts/${shiftId}/assign`, {
+        method: 'POST',
+        body: { workerId }
+      });
+    },
+    onSuccess: (data, variables) => {
+      toast({
+        title: "Worker Assigned",
+        description: "Worker has been successfully assigned to the shift."
+      });
+      // Invalidate and refetch shifts data
+      queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/shift-requests/${variables.shiftId}`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Assignment Failed",
+        description: error.message || "Failed to assign worker to shift.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const unassignWorkerMutation = useMutation({
+    mutationFn: async ({ shiftId, workerId }: { shiftId: number; workerId: number }) => {
+      return apiRequest(`/api/shifts/${shiftId}/unassign`, {
+        method: 'POST',
+        body: { workerId }
+      });
+    },
+    onSuccess: (data, variables) => {
+      toast({
+        title: "Worker Unassigned",
+        description: "Worker has been removed from the shift."
+      });
+      // Invalidate and refetch shifts data
+      queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/shift-requests/${variables.shiftId}`] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Unassignment Failed",
+        description: error.message || "Failed to remove worker from shift.",
+        variant: "destructive"
+      });
+    }
+  });
+
   // Filter options
   const specialties = ["Registered Nurse", "Licensed Practical Nurse", "Certified Nursing Assistant", "Physical Therapist", "Respiratory Therapist"];
   const statuses = ["open", "requested", "confirmed", "cancelled", "filled"];
