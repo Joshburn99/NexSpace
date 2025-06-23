@@ -913,9 +913,19 @@ export function registerRoutes(app: Express): Server {
           ...shift,
           assignedStaff: assignedStaff,
           filledPositions: assignedWorkerIds.length,
-          totalPositions: shift.totalPositions || 4,
+          totalPositions: shift.totalPositions || 3, // Default to 3 for RN shifts
           minStaff: shift.minStaff || 2
         };
+        
+        // Debug logging for assignment tracking
+        if (assignedWorkerIds.length > 0) {
+          console.log(`Shift ${shift.id} assignments:`, {
+            assignedWorkerIds,
+            assignedStaff: assignedStaff.map(s => s.name),
+            filledPositions: assignedWorkerIds.length,
+            totalPositions: updatedShift.totalPositions
+          });
+        }
         
         // Update status based on assignments
         if (assignedWorkerIds.length >= (shift.totalPositions || 4)) {
@@ -1041,6 +1051,7 @@ export function registerRoutes(app: Express): Server {
       shiftAssignments.set(shiftId, updatedAssignments);
       
       console.log(`Worker ${workerId} assigned to shift ${shiftId}. Total assigned: ${updatedAssignments.length}`);
+      console.log(`Current assignments for all shifts:`, Array.from(shiftAssignments.entries()));
       
       res.json({ 
         success: true, 
