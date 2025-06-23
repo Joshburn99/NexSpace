@@ -1279,6 +1279,8 @@ export class DatabaseStorage implements IStorage {
   // Shift assignment methods
   async getShiftAssignments(shiftId: string): Promise<Array<{ workerId: number; assignedAt: string; status: string }>> {
     try {
+      console.log(`[DEBUG] Querying assignments for shift ${shiftId}`);
+      
       const assignments = await db.select({
         workerId: shiftAssignments.workerId,
         assignedAt: shiftAssignments.assignedAt,
@@ -1289,6 +1291,8 @@ export class DatabaseStorage implements IStorage {
         eq(shiftAssignments.shiftId, shiftId),
         eq(shiftAssignments.status, 'assigned')
       ));
+      
+      console.log(`[DEBUG] Found ${assignments.length} assignments for shift ${shiftId}:`, assignments);
       
       return assignments.map(a => ({
         workerId: a.workerId,

@@ -955,7 +955,9 @@ export function registerRoutes(app: Express): Server {
   // Database-backed assignment tracking using existing shift_assignments table
   const getShiftAssignments = async (shiftId: string | number) => {
     try {
+      console.log(`[ROUTES DEBUG] Getting assignments for shift ${shiftId}`);
       const assignments = await storage.getShiftAssignments(shiftId.toString());
+      console.log(`[ROUTES DEBUG] Retrieved ${assignments.length} assignments for shift ${shiftId}`);
       return assignments.map(a => a.workerId);
     } catch (error) {
       console.error(`Error fetching assignments for shift ${shiftId}:`, error);
