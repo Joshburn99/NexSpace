@@ -193,7 +193,7 @@ export default function EnhancedCalendarPage() {
 
   // Fetch shift requests for selected shift
   const { data: shiftRequests = [] } = useQuery<any[]>({
-    queryKey: ["/api/shift-requests", selectedShift?.id],
+    queryKey: [`/api/shift-requests/${selectedShift?.id}`],
     enabled: !!selectedShift?.id,
   });
 
