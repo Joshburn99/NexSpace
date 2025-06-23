@@ -68,7 +68,7 @@ import {
   type InsertPayment,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, desc, asc, gte, lte, count, sql, or, ilike } from "drizzle-orm";
+import { eq, and, desc, asc, gte, lte, lt, gt, count, sql, or, ilike } from "drizzle-orm";
 import session from "express-session";
 import { Store } from "express-session";
 import connectPg from "connect-pg-simple";
@@ -1390,7 +1390,7 @@ export class DatabaseStorage implements IStorage {
       .update(shiftTemplates)
       .set({ isActive: false, updatedAt: new Date() })
       .where(eq(shiftTemplates.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   // Generated shift methods - replaces global templateGeneratedShifts
@@ -1400,16 +1400,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getGeneratedShifts(dateRange?: { start: string; end: string }): Promise<GeneratedShift[]> {
-    let query = db.select().from(generatedShifts);
-    
     if (dateRange) {
-      query = query.where(and(
-        gte(generatedShifts.date, dateRange.start),
-        lte(generatedShifts.date, dateRange.end)
-      ));
+      return await db.select().from(generatedShifts)
+        .where(and(
+          gte(generatedShifts.date, dateRange.start),
+          lte(generatedShifts.date, dateRange.end)
+        ))
+        .orderBy(generatedShifts.date, generatedShifts.startTime);
     }
     
-    return await query.orderBy(generatedShifts.date, generatedShifts.startTime);
+    return await db.select().from(generatedShifts)
+      .orderBy(generatedShifts.date, generatedShifts.startTime);
   }
 
   async updateGeneratedShift(id: string, updates: Partial<InsertGeneratedShift>): Promise<GeneratedShift | undefined> {
@@ -1423,7 +1424,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteGeneratedShift(id: string): Promise<boolean> {
     const result = await db.delete(generatedShifts).where(eq(generatedShifts.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount || 0) > 0;
   }
 
   // Session methods - replaces file-based sessions
