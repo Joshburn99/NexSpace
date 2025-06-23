@@ -1118,11 +1118,20 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "Worker not found" });
       }
       
-      // Validate worker is eligible for assignment (not superuser/admin)
-      const ineligibleRoles = ['super_admin', 'facility_admin', 'admin'];
-      if (ineligibleRoles.includes(worker.role)) {
+      // Strict validation - prevent superusers/admins from being assigned
+      const ineligibleRoles = ['super_admin', 'facility_admin', 'admin', 'facility_manager', 'manager'];
+      const superuserEmails = ['joshburn@nexspace.com', 'josh.burnett@nexspace.com', 'brian.nangle@nexspace.com'];
+      
+      if (ineligibleRoles.includes(worker.role) || superuserEmails.includes(worker.email)) {
         return res.status(400).json({ 
-          message: `Users with role ${worker.role} cannot be assigned to shifts` 
+          message: `Administrative users cannot be assigned to shifts. Only clinical staff can work shifts.` 
+        });
+      }
+      
+      // Only allow internal employees and verified contractors
+      if (!['internal_employee', 'contractor_1099'].includes(worker.role)) {
+        return res.status(400).json({ 
+          message: `Only clinical staff can be assigned to shifts` 
         });
       }
       
@@ -1142,8 +1151,24 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ message: "Worker is already assigned to this shift" });
       }
       
-      // Get shift capacity from the shift data - multi-worker shifts have higher capacity
-      const maxCapacity = shift.description?.includes('3/3') || shift.description?.includes('Filled') ? 3 : 1;
+      // Determine shift capacity based on shift data - extract from title/description
+      let maxCapacity = 1; // Default single worker
+      
+      // Check for multi-worker indicators in shift title or description
+      const shiftText = `${shift.title} ${shift.description || ''}`.toLowerCase();
+      if (shiftText.includes('icu') || shiftText.includes('intensive') || shiftText.includes('critical')) {
+        maxCapacity = 3; // ICU shifts typically need 3 workers
+      } else if (shiftText.includes('er') || shiftText.includes('emergency') || shiftText.includes('trauma')) {
+        maxCapacity = 4; // ER shifts need more staff
+      } else if (shiftText.includes('surgical') || shiftText.includes('or ') || shiftText.includes('operating')) {
+        maxCapacity = 2; // Surgical shifts need 2 workers
+      }
+      
+      // Override with specific capacity if mentioned in description
+      const capacityMatch = shift.description?.match(/(\d+)\/(\d+)/);
+      if (capacityMatch) {
+        maxCapacity = parseInt(capacityMatch[2]); // Use the denominator as max capacity
+      }
       if (currentAssignments.length >= maxCapacity) {
         return res.status(400).json({ 
           message: `Shift is at full capacity (${currentAssignments.length}/${maxCapacity})` 
@@ -1158,17 +1183,45 @@ export function registerRoutes(app: Express): Server {
         status: 'assigned'
       });
       
-      // Get updated assignments
+      // Get updated assignments and verify the assignment was successful
       const updatedAssignments = await storage.getShiftAssignments(shiftId);
+      const assignmentConfirmed = updatedAssignments.find(a => a.workerId === workerId);
       
-      console.log(`Worker ${workerId} assigned to shift ${shiftId}. Total assigned: ${updatedAssignments.length}/${maxCapacity}`);
+      if (!assignmentConfirmed) {
+        return res.status(500).json({ 
+          message: "Assignment failed - could not confirm in database" 
+        });
+      }
+      
+      // Broadcast real-time update to all connected clients for immediate UI sync
+      if (wss) {
+        const updateMessage = {
+          type: 'SHIFT_ASSIGNMENT_UPDATED',
+          shiftId: shiftId,
+          workerId: workerId,
+          workerName: `${worker.firstName} ${worker.lastName}`,
+          assignments: updatedAssignments,
+          assignedWorkers: updatedAssignments.length,
+          maxCapacity: maxCapacity,
+          action: 'assigned'
+        };
+        
+        wss.clients.forEach((client: WebSocket) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(JSON.stringify(updateMessage));
+          }
+        });
+      }
+      
+      console.log(`[ASSIGNMENT SUCCESS] Worker ${workerId} (${worker.firstName} ${worker.lastName}) assigned to shift ${shiftId}. Total: ${updatedAssignments.length}/${maxCapacity}`);
       
       res.json({ 
         success: true, 
         message: "Worker assigned successfully",
         assignedWorkers: updatedAssignments.length,
         maxCapacity: maxCapacity,
-        assignments: updatedAssignments
+        assignments: updatedAssignments,
+        workerName: `${worker.firstName} ${worker.lastName}`
       });
     } catch (error) {
       console.error("Error assigning worker:", error);
