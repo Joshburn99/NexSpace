@@ -413,33 +413,49 @@ export function registerRoutes(app: Express): Server {
           }
         }
         
-        // Assign some staff to shifts to show realistic filling
+        // Group shifts by template and date to assign multiple staff properly
+        const shiftGroups = new Map();
+        
+        generatedShifts.forEach(shift => {
+          const key = `${shift.templateId}-${shift.date}`;
+          if (!shiftGroups.has(key)) {
+            shiftGroups.set(key, []);
+          }
+          shiftGroups.get(key).push(shift);
+        });
+        
         const assignableStaff = filteredStaff.filter(staff => 
           staff.specialty === "RN" || staff.specialty === "LPN" || staff.specialty === "CST"
         );
         
-        // Fill approximately 40% of shifts with available staff
-        let filledCount = 0;
-        const targetFilled = Math.floor(generatedShifts.length * 0.4);
-        
-        for (let i = 0; i < generatedShifts.length && filledCount < targetFilled; i++) {
-          const shift = generatedShifts[i];
+        // Assign staff to shift groups based on template requirements
+        shiftGroups.forEach((shifts, key) => {
+          const template = activeTemplates.find(t => t.id === shifts[0].templateId);
+          if (!template) return;
+          
           const matchingStaff = assignableStaff.filter(staff => 
-            staff.specialty === shift.specialty || 
-            (shift.specialty === "RN" && staff.specialty === "RN") ||
-            (shift.specialty === "CST" && staff.specialty === "RN") // RNs can cover surgical roles
+            staff.specialty === shifts[0].specialty || 
+            (shifts[0].specialty === "RN" && staff.specialty === "RN") ||
+            (shifts[0].specialty === "CST" && staff.specialty === "RN")
           );
           
-          if (matchingStaff.length > 0 && Math.random() > 0.6) {
-            const assignedStaff = matchingStaff[Math.floor(Math.random() * matchingStaff.length)];
+          // Determine how many positions to fill (partial filling for realism)
+          const fillRate = Math.random() > 0.3 ? 0.7 : 0.4; // 70% or 40% fill rate
+          const positionsToFill = Math.floor(shifts.length * fillRate);
+          
+          // Assign staff to positions
+          for (let i = 0; i < positionsToFill && i < matchingStaff.length; i++) {
+            const shift = shifts[i];
+            const assignedStaff = matchingStaff[i % matchingStaff.length];
+            
             shift.status = new Date(shift.date) < currentDate ? "completed" : "filled";
             shift.assignedStaffId = assignedStaff.id;
             shift.assignedStaffName = `${assignedStaff.firstName} ${assignedStaff.lastName}`;
             shift.assignedStaffEmail = assignedStaff.email;
             shift.assignedStaffSpecialty = assignedStaff.specialty;
-            shift.assignedStaffRating = 4.5 + Math.random() * 0.5; // Random rating 4.5-5.0
+            shift.assignedStaffRating = 4.5 + Math.random() * 0.5;
             
-            // Add invoice info for completed shifts
+            // Only add invoice info for completed shifts
             if (shift.status === "completed") {
               const hours = shift.startTime === "07:00" && shift.endTime === "19:00" ? 12 : 
                            shift.startTime === "19:00" && shift.endTime === "07:00" ? 12 : 8;
@@ -447,10 +463,23 @@ export function registerRoutes(app: Express): Server {
               shift.invoiceStatus = Math.random() > 0.5 ? "approved" : "pending_review";
               shift.invoiceHours = hours;
             }
-            
-            filledCount++;
           }
-        }
+          
+          // Update shift status based on filling
+          const filledCount = shifts.filter(s => s.assignedStaffId).length;
+          const totalRequired = shifts.length;
+          
+          shifts.forEach(shift => {
+            if (!shift.assignedStaffId) {
+              shift.status = "open";
+            }
+            // Add staffing info to shift
+            shift.filledPositions = filledCount;
+            shift.totalPositions = totalRequired;
+            shift.minStaff = template.minStaff;
+            shift.maxStaff = template.maxStaff;
+          });
+        });
         
         // Store generated shifts
         (global as any).templateGeneratedShifts = generatedShifts;
@@ -839,6 +868,50 @@ export function registerRoutes(app: Express): Server {
       res.json(allShifts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch shifts" });
+    }
+  });
+
+  // Shift requests API
+  app.get("/api/shift-requests/:shiftId", requireAuth, async (req, res) => {
+    try {
+      const shiftId = parseInt(req.params.shiftId);
+      
+      // Get staff data for realistic requests
+      const dbStaffData = await unifiedDataService.getStaffWithAssociations();
+      const filteredStaff = dbStaffData.filter(staff => {
+        const superuserEmails = ['joshburn@nexspace.com', 'brian.nangle@nexspace.com'];
+        if (superuserEmails.includes(staff.email)) return false;
+        if (staff?.role === "super_admin" || staff?.role === "facility_manager") return false;
+        return true;
+      });
+
+      // Generate realistic shift requests
+      const shiftRequests = filteredStaff.slice(0, 3).map((staff, index) => ({
+        id: shiftId * 100 + index,
+        shiftId: shiftId,
+        workerId: staff.id,
+        workerName: `${staff.firstName} ${staff.lastName}`,
+        workerEmail: staff.email,
+        specialty: staff.specialty,
+        reliabilityScore: Math.floor(85 + Math.random() * 15), // 85-100%
+        totalShiftsWorked: Math.floor(50 + Math.random() * 150), // 50-200 shifts
+        averageRating: 4.2 + Math.random() * 0.8, // 4.2-5.0 rating
+        requestedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        status: "pending",
+        certifications: staff.specialty === "RN" ? ["RN", "ACLS", "BLS"] : 
+                       staff.specialty === "LPN" ? ["LPN", "BLS"] : 
+                       ["CST", "BLS"],
+        hourlyRate: staff.specialty === "RN" ? 45 + Math.random() * 10 : 
+                   staff.specialty === "LPN" ? 35 + Math.random() * 8 : 
+                   40 + Math.random() * 8,
+        availability: "Available",
+        profileUrl: `/enhanced-staff?profile=${staff.id}`
+      }));
+
+      res.json(shiftRequests);
+    } catch (error) {
+      console.error("Error fetching shift requests:", error);
+      res.status(500).json({ message: "Failed to fetch shift requests" });
     }
   });
 

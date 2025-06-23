@@ -77,6 +77,10 @@ interface EnhancedShift {
   invoiceAmount?: number;
   invoiceStatus?: "pending_review" | "approved" | "rejected";
   invoiceHours?: number;
+  filledPositions?: number;
+  totalPositions?: number;
+  minStaff?: number;
+  maxStaff?: number;
 }
 
 interface CalendarFilter {
@@ -185,6 +189,12 @@ export default function EnhancedCalendarPage() {
   // Fetch shift templates
   const { data: templates = [] } = useQuery<any[]>({
     queryKey: ["/api/shift-templates"],
+  });
+
+  // Fetch shift requests for selected shift
+  const { data: shiftRequests = [] } = useQuery({
+    queryKey: ["/api/shift-requests", selectedShift?.id],
+    enabled: !!selectedShift?.id,
   });
 
   // Filter options
@@ -847,10 +857,19 @@ export default function EnhancedCalendarPage() {
                 </div>
               </div>
 
-              {selectedShift.assignedStaffName && (
-                <div className="bg-muted/50 p-4 rounded-lg">
-                  <Label className="text-base font-semibold">Assigned Worker</Label>
-                  <div className="mt-2 space-y-3">
+              {/* Staffing Information */}
+              <div className="bg-muted/50 p-4 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <Label className="text-base font-semibold">Staffing Status</Label>
+                  {selectedShift.filledPositions !== undefined && selectedShift.totalPositions !== undefined && (
+                    <Badge variant={selectedShift.filledPositions >= (selectedShift.minStaff || 1) ? "default" : "destructive"}>
+                      {selectedShift.filledPositions}/{selectedShift.totalPositions} Filled
+                    </Badge>
+                  )}
+                </div>
+
+                {selectedShift.assignedStaffName ? (
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
@@ -864,7 +883,7 @@ export default function EnhancedCalendarPage() {
                           {selectedShift.assignedStaffRating && (
                             <div className="flex items-center gap-1 mt-1">
                               <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                              <span className="text-sm text-muted-foreground">{selectedShift.assignedStaffRating}/5</span>
+                              <span className="text-sm text-muted-foreground">{selectedShift.assignedStaffRating.toFixed(1)}/5</span>
                             </div>
                           )}
                         </div>
@@ -897,8 +916,8 @@ export default function EnhancedCalendarPage() {
                       </div>
                     </div>
                     
-                    {/* Invoice Information for Completed Shifts */}
-                    {(selectedShift.status === 'completed' || selectedShift.status === 'pending_review') && selectedShift.invoiceAmount && (
+                    {/* Invoice Information for Completed Shifts Only */}
+                    {selectedShift.status === 'completed' && selectedShift.invoiceAmount && (
                       <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
                         <div className="flex items-center justify-between mb-2">
                           <Label className="text-sm font-semibold text-green-800 dark:text-green-200">Invoice Information</Label>
@@ -918,22 +937,17 @@ export default function EnhancedCalendarPage() {
                         </div>
                       </div>
                     )}
-                    
-                    {selectedShift.assignedStaffEmail && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>Email:</span>
-                        <span>{selectedShift.assignedStaffEmail}</span>
-                      </div>
-                    )}
-                    {selectedShift.assignedStaffPhone && (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>Phone:</span>
-                        <span>{selectedShift.assignedStaffPhone}</span>
-                      </div>
-                    )}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="text-center py-4">
+                    <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No staff assigned to this shift</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {selectedShift.totalPositions ? `${selectedShift.totalPositions} position(s) available` : 'Position available'}
+                    </p>
+                  </div>
+                )}
+              </div>
 
               <div>
                 <Label>Description</Label>
@@ -968,25 +982,71 @@ export default function EnhancedCalendarPage() {
                 </div>
               </div>
 
-              {/* Role-based Assignment Controls for Facility Managers and Super Admins */}
+              {/* Shift Requests List for Facility Managers and Super Admins */}
               {user && (user.role === 'facility_manager' || user.role === 'super_admin' || user.role === 'admin') && selectedShift.status === 'open' && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <Label className="text-base font-semibold text-blue-900 dark:text-blue-100">Administrative Actions</Label>
-                  <div className="mt-3 space-y-3">
-                    <div className="text-sm text-blue-700 dark:text-blue-300 mb-3">
-                      As a facility manager, you can view shift requests and directly assign qualified staff to this shift.
-                    </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" className="border-blue-300 text-blue-700 hover:bg-blue-100">
-                        <Users className="h-3 w-3 mr-1" />
-                        View Requests ({Math.floor(Math.random() * 5) + 1})
-                      </Button>
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                        <UserCheck className="h-3 w-3 mr-1" />
-                        Assign Staff
-                      </Button>
-                    </div>
+                  <div className="flex items-center justify-between mb-3">
+                    <Label className="text-base font-semibold text-blue-900 dark:text-blue-100">Shift Requests</Label>
+                    <Badge variant="secondary">{shiftRequests.length} Request{shiftRequests.length !== 1 ? 's' : ''}</Badge>
                   </div>
+                  
+                  {shiftRequests.length > 0 ? (
+                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                      {shiftRequests.map((request: any) => (
+                        <div key={request.id} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center">
+                                <User className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">{request.workerName}</p>
+                                <p className="text-xs text-muted-foreground">{request.specialty}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-center gap-1 mb-1">
+                                <span className="text-xs text-muted-foreground">Reliability:</span>
+                                <span className="text-xs font-medium text-green-600">{request.reliabilityScore}%</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                                <span className="text-xs">{request.averageRating?.toFixed(1)}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-2 grid grid-cols-2 gap-4 text-xs">
+                            <div>
+                              <span className="text-muted-foreground">Shifts Worked:</span>
+                              <span className="ml-1 font-medium">{request.totalShiftsWorked}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Rate:</span>
+                              <span className="ml-1 font-medium">${request.hourlyRate?.toFixed(0)}/hr</span>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-2 flex gap-2">
+                            <Button size="sm" variant="outline" className="flex-1 text-xs">
+                              <ExternalLink className="h-3 w-3 mr-1" />
+                              View Profile
+                            </Button>
+                            <Button size="sm" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs">
+                              <UserCheck className="h-3 w-3 mr-1" />
+                              Assign
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <Users className="h-8 w-8 text-blue-400 mx-auto mb-2" />
+                      <p className="text-sm text-blue-700 dark:text-blue-300">No requests for this shift yet</p>
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Workers can request this shift from their dashboard</p>
+                    </div>
+                  )}
                 </div>
               )}
 
