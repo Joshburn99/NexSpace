@@ -221,9 +221,21 @@ export default function EnhancedCalendarPage() {
         title: "Worker Assigned",
         description: "Worker has been successfully assigned to the shift."
       });
-      // Invalidate and refetch shifts data
+      // Invalidate and refetch all related data
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
       queryClient.invalidateQueries({ queryKey: [`/api/shift-requests/${variables.shiftId}`] });
+      
+      // Update the selected shift data immediately by refetching shifts
+      queryClient.refetchQueries({ queryKey: ["/api/shifts"] }).then(() => {
+        // Find and update the selected shift with fresh data
+        const updatedShifts = queryClient.getQueryData(["/api/shifts"]) as EnhancedShift[];
+        if (updatedShifts && selectedShift) {
+          const updatedShift = updatedShifts.find(s => s.id === selectedShift.id);
+          if (updatedShift) {
+            setSelectedShift(updatedShift);
+          }
+        }
+      });
     },
     onError: (error: any) => {
       toast({
@@ -257,9 +269,21 @@ export default function EnhancedCalendarPage() {
         title: "Worker Unassigned",
         description: "Worker has been removed from the shift."
       });
-      // Invalidate and refetch shifts data
+      // Invalidate and refetch all related data
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
       queryClient.invalidateQueries({ queryKey: [`/api/shift-requests/${variables.shiftId}`] });
+      
+      // Update the selected shift data immediately by refetching shifts
+      queryClient.refetchQueries({ queryKey: ["/api/shifts"] }).then(() => {
+        // Find and update the selected shift with fresh data
+        const updatedShifts = queryClient.getQueryData(["/api/shifts"]) as EnhancedShift[];
+        if (updatedShifts && selectedShift) {
+          const updatedShift = updatedShifts.find(s => s.id === selectedShift.id);
+          if (updatedShift) {
+            setSelectedShift(updatedShift);
+          }
+        }
+      });
     },
     onError: (error: any) => {
       toast({
