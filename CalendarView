@@ -1,0 +1,42 @@
+import React from 'react';
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+// Import FullCalendar styles
+import '@fullcalendar/core/main.css';
+import '@fullcalendar/daygrid/main.css';
+import '@fullcalendar/timegrid/main.css';
+
+const CalendarView: React.FC = () => {
+  // Example shift data; swap this with your real mapping later!
+  const events = [
+    { title: 'Jennifer Kim – 07:00–15:00', date: '2025-06-18', backgroundColor: '#FF4444' }, // RN (red)
+    { title: 'CNA – 4/7 – 07:00–15:00', date: '2025-06-18', backgroundColor: '#5BC0EB' },      // CNA (blue)
+    { title: 'LPN – 15:00–23:00', date: '2025-06-19', backgroundColor: '#00C897' },            // LPN (green)
+    { title: 'Amanda Lee – 19:00–07:00', date: '2025-06-19', backgroundColor: '#5BC0EB' },     // CNA (blue)
+    { title: 'Sarah Martin – 15:00–23:00', date: '2025-06-19', backgroundColor: '#FF4444' },   // RN (red)
+  ];
+
+  return (
+    <div style={{ padding: 24, background: '#fff', borderRadius: 8 }}>
+      <FullCalendar
+        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+        initialView="dayGridMonth"
+        headerToolbar={{
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,timeGridWeek,timeGridDay'
+        }}
+        events={events}
+        dayMaxEvents={6} // Shows "+ X more" after 6 shifts in a day
+        eventClick={function(info) {
+          alert(`Clicked shift: ${info.event.title}`);
+        }}
+        height="auto"
+      />
+    </div>
+  );
+};
+
+export default CalendarView;
