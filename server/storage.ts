@@ -1292,7 +1292,7 @@ export class DatabaseStorage implements IStorage {
       
       return assignments.map(a => ({
         workerId: a.workerId,
-        assignedAt: a.assignedAt.toISOString(),
+        assignedAt: a.assignedAt?.toISOString() || new Date().toISOString(),
         status: a.status
       }));
     } catch (error: any) {

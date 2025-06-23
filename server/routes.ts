@@ -892,8 +892,8 @@ export function registerRoutes(app: Express): Server {
         const assignedWorkerIds = await getShiftAssignments(shift.id);
         
         // Get detailed staff info for assigned workers
-        const assignedStaff = assignedWorkerIds.map(workerId => {
-          const staff = staffData.find(s => s.id === workerId);
+        const assignedStaff = assignedWorkerIds.map((workerId: number) => {
+          const staff = staffData.find((s: any) => s.id === workerId);
           if (staff) {
             return {
               id: staff.id,
@@ -923,7 +923,7 @@ export function registerRoutes(app: Express): Server {
           originalShiftId: shift.id,
           assignedWorkerIds,
           assignedStaffCount: assignedStaff.length,
-          assignedStaffNames: assignedStaff.map(s => s.name),
+          assignedStaffNames: assignedStaff.map((s: any) => s?.name),
           filledPositions: assignedWorkerIds.length,
           totalPositions: updatedShift.totalPositions,
           status: updatedShift.status
@@ -1079,7 +1079,7 @@ export function registerRoutes(app: Express): Server {
       }
       
       // Get current assignments for this shift
-      const currentAssignments = shiftAssignments.get(shiftId) || [];
+      const currentAssignments = await getShiftAssignments(shiftId);
       
       // Check if worker is already assigned
       if (currentAssignments.includes(workerId)) {
@@ -1087,11 +1087,10 @@ export function registerRoutes(app: Express): Server {
       }
       
       // Add worker to assignments
-      const updatedAssignments = [...currentAssignments, workerId];
-      shiftAssignments.set(shiftId, updatedAssignments);
+      await addShiftAssignment(shiftId, workerId, req.user?.id || 1);
+      const updatedAssignments = await getShiftAssignments(shiftId);
       
       console.log(`Worker ${workerId} assigned to shift ${shiftId}. Total assigned: ${updatedAssignments.length}`);
-      console.log(`Current assignments for all shifts:`, Array.from(shiftAssignments.entries()));
       
       res.json({ 
         success: true, 
@@ -1115,11 +1114,16 @@ export function registerRoutes(app: Express): Server {
       }
       
       // Get current assignments for this shift
-      const currentAssignments = shiftAssignments.get(shiftId) || [];
+      const currentAssignments = await getShiftAssignments(shiftId);
+      
+      // Check if worker is assigned
+      if (!currentAssignments.includes(workerId)) {
+        return res.status(400).json({ message: "Worker is not assigned to this shift" });
+      }
       
       // Remove worker from assignments
-      const updatedAssignments = currentAssignments.filter(id => id !== workerId);
-      shiftAssignments.set(shiftId, updatedAssignments);
+      await removeShiftAssignment(shiftId, workerId);
+      const updatedAssignments = await getShiftAssignments(shiftId);
       
       console.log(`Worker ${workerId} unassigned from shift ${shiftId}. Total assigned: ${updatedAssignments.length}`);
       
