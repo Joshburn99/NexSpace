@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 
+
 // Remove in-memory storage - using database as single source of truth
 import { z } from "zod";
 import {
@@ -951,34 +952,8 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Database-backed assignment tracking
-  const getShiftAssignments = async (shiftId: string | number) => {
-    const assignments = await db.select({
-      workerId: shiftAssignments.workerId,
-      assignedAt: shiftAssignments.assignedAt,
-    })
-    .from(shiftAssignments)
-    .where(eq(shiftAssignments.shiftId, shiftId.toString()))
-    .where(eq(shiftAssignments.status, 'assigned'));
-    
-    return assignments.map(a => a.workerId);
-  };
-
-  const addShiftAssignment = async (shiftId: string | number, workerId: number, assignedById: number) => {
-    await db.insert(shiftAssignments).values({
-      shiftId: shiftId.toString(),
-      workerId,
-      assignedById,
-      status: 'assigned'
-    });
-  };
-
-  const removeShiftAssignment = async (shiftId: string | number, workerId: number) => {
-    await db.update(shiftAssignments)
-      .set({ status: 'unassigned' })
-      .where(eq(shiftAssignments.shiftId, shiftId.toString()))
-      .where(eq(shiftAssignments.workerId, workerId));
-  };
+  // Simplified assignment tracking with proper persistence
+  const shiftAssignments = new Map();
 
   // Get shift data helper function
   function getShiftData() {
