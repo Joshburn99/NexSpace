@@ -57,6 +57,13 @@ function killPort5000() {
   // Kill any existing process on port 5000
   await killPort5000();
   
+  // Initialize enhanced staff profiles on startup
+  try {
+    await createEnhancedStaffProfiles();
+  } catch (error) {
+    log("Enhanced staff profiles initialization:", error);
+  }
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
