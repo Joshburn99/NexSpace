@@ -472,10 +472,10 @@ export function registerRoutes(app: Express): Server {
           }
           
           // Update shift status based on filling
-          const filledCount = shifts.filter(s => s.assignedStaffId).length;
+          const filledCount = shifts.filter((s: any) => s.assignedStaffId).length;
           const totalRequired = shifts.length;
           
-          shifts.forEach(shift => {
+          shifts.forEach((shift: any) => {
             if (!shift.assignedStaffId) {
               shift.status = "open";
             }
@@ -1051,7 +1051,7 @@ export function registerRoutes(app: Express): Server {
       });
 
       // Return available workers only if shift has remaining capacity
-      let shiftRequests = [];
+      let shiftRequests: any[] = [];
       
       if (!isAtCapacity && filteredStaff.length > 0) {
         // Generate realistic shift requests from unassigned workers

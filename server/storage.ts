@@ -1390,7 +1390,7 @@ export class DatabaseStorage implements IStorage {
       .update(shiftTemplates)
       .set({ isActive: false, updatedAt: new Date() })
       .where(eq(shiftTemplates.id, id));
-    return (result.rowCount || 0) > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Generated shift methods - replaces global templateGeneratedShifts
@@ -1424,7 +1424,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteGeneratedShift(id: string): Promise<boolean> {
     const result = await db.delete(generatedShifts).where(eq(generatedShifts.id, id));
-    return (result.rowCount || 0) > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Session methods - replaces file-based sessions
@@ -1450,12 +1450,12 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUserSession(sessionId: string): Promise<boolean> {
     const result = await db.delete(userSessions).where(eq(userSessions.id, sessionId));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   async cleanupExpiredSessions(): Promise<number> {
     const result = await db.delete(userSessions).where(lt(userSessions.expiresAt, new Date()));
-    return result.rowCount;
+    return result.rowCount ?? 0;
   }
 }
 
