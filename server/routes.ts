@@ -887,7 +887,7 @@ export function registerRoutes(app: Express): Server {
       const staffData = await unifiedDataService.getStaffWithAssociations();
       
       // Combine example shifts with template-generated shifts
-      const allShifts = [...exampleShifts, ...templateShifts].map(shift => {
+      const allShifts = getShiftData().map(shift => {
         const assignedWorkerIds = shiftAssignments.get(shift.id) || [];
         
         // Get detailed staff info for assigned workers
@@ -896,10 +896,11 @@ export function registerRoutes(app: Express): Server {
           if (staff) {
             return {
               id: staff.id,
+              name: `${staff.firstName} ${staff.lastName}`,
               firstName: staff.firstName,
               lastName: staff.lastName,
               specialty: staff.specialty,
-              rating: 4.2 + Math.random() * 0.8, // Random rating for demo
+              rating: 4.2 + Math.random() * 0.8,
               email: staff.email,
               avatar: staff.avatar
             };
@@ -937,6 +938,30 @@ export function registerRoutes(app: Express): Server {
   // Shift assignments storage (in-memory for development)
   const shiftAssignments = new Map();
 
+  // Get shift data helper function
+  function getShiftData() {
+    const exampleShifts = [
+      {
+        id: 1,
+        title: "ICU Day Shift",
+        date: "2025-06-19",
+        startTime: "07:00",
+        endTime: "19:00",
+        department: "ICU",
+        specialty: "RN",
+        status: "open",
+        facilityId: 1,
+        facilityName: "Portland General Hospital",
+        rate: 45.0,
+        urgency: "high",
+        description: "12-hour ICU nursing shift, ACLS certification required",
+      }
+    ];
+    
+    const templateShifts = (global as any).templateGeneratedShifts || [];
+    return [...exampleShifts, ...templateShifts];
+  }
+
   // Shift requests API
   app.get("/api/shift-requests/:shiftId", requireAuth, async (req, res) => {
     try {
@@ -944,6 +969,11 @@ export function registerRoutes(app: Express): Server {
       
       // Get already assigned workers for this shift
       const assignedWorkerIds = shiftAssignments.get(shiftId) || [];
+      
+      // Get the shift to determine specialty requirement
+      const allShifts = getShiftData();
+      const targetShift = allShifts.find(s => s.id === shiftId);
+      const requiredSpecialty = targetShift?.specialty || "RN";
       
       // Get staff data for realistic requests
       const dbStaffData = await unifiedDataService.getStaffWithAssociations();
@@ -953,6 +983,8 @@ export function registerRoutes(app: Express): Server {
         if (staff?.role === "super_admin" || staff?.role === "facility_manager") return false;
         // Filter out already assigned workers
         if (assignedWorkerIds.includes(staff.id)) return false;
+        // Filter by specialty - only show workers matching the shift specialty
+        if (staff.specialty !== requiredSpecialty) return false;
         return true;
       });
 
