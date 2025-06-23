@@ -200,10 +200,21 @@ export default function EnhancedCalendarPage() {
   // Assignment mutations
   const assignWorkerMutation = useMutation({
     mutationFn: async ({ shiftId, workerId }: { shiftId: number; workerId: number }) => {
-      return apiRequest(`/api/shifts/${shiftId}/assign`, {
+      const response = await fetch(`/api/shifts/${shiftId}/assign`, {
         method: 'POST',
-        body: { workerId }
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ workerId }),
+        credentials: 'include'
       });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Assignment failed');
+      }
+      
+      return response.json();
     },
     onSuccess: (data, variables) => {
       toast({
@@ -225,10 +236,21 @@ export default function EnhancedCalendarPage() {
 
   const unassignWorkerMutation = useMutation({
     mutationFn: async ({ shiftId, workerId }: { shiftId: number; workerId: number }) => {
-      return apiRequest(`/api/shifts/${shiftId}/unassign`, {
+      const response = await fetch(`/api/shifts/${shiftId}/unassign`, {
         method: 'POST',
-        body: { workerId }
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ workerId }),
+        credentials: 'include'
       });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Unassignment failed');
+      }
+      
+      return response.json();
     },
     onSuccess: (data, variables) => {
       toast({
@@ -965,6 +987,22 @@ export default function EnhancedCalendarPage() {
                             <MessageCircle className="h-3 w-3 mr-1" />
                             Message
                           </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => {
+                              if (selectedShift && staff.id) {
+                                unassignWorkerMutation.mutate({
+                                  shiftId: selectedShift.id,
+                                  workerId: staff.id
+                                });
+                              }
+                            }}
+                            disabled={unassignWorkerMutation.isPending}
+                          >
+                            <X className="h-3 w-3 mr-1" />
+                            {unassignWorkerMutation.isPending ? "Removing..." : "Remove"}
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -1155,9 +1193,21 @@ export default function EnhancedCalendarPage() {
                               <ExternalLink className="h-3 w-3 mr-1" />
                               View Profile
                             </Button>
-                            <Button size="sm" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs">
+                            <Button 
+                              size="sm" 
+                              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                              onClick={() => {
+                                if (selectedShift && request.workerId) {
+                                  assignWorkerMutation.mutate({
+                                    shiftId: selectedShift.id,
+                                    workerId: request.workerId
+                                  });
+                                }
+                              }}
+                              disabled={assignWorkerMutation.isPending}
+                            >
                               <UserCheck className="h-3 w-3 mr-1" />
-                              Assign
+                              {assignWorkerMutation.isPending ? "Assigning..." : "Assign"}
                             </Button>
                           </div>
                         </div>
