@@ -216,26 +216,28 @@ export default function EnhancedCalendarPage() {
       
       return response.json();
     },
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => {
       toast({
         title: "Worker Assigned",
         description: "Worker has been successfully assigned to the shift."
       });
+      
       // Invalidate and refetch all related data
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
       queryClient.invalidateQueries({ queryKey: [`/api/shift-requests/${variables.shiftId}`] });
       
-      // Update the selected shift data immediately by refetching shifts
-      queryClient.refetchQueries({ queryKey: ["/api/shifts"] }).then(() => {
-        // Find and update the selected shift with fresh data
+      // Force immediate refresh with a small delay to ensure server has processed
+      setTimeout(async () => {
+        await queryClient.refetchQueries({ queryKey: ["/api/shifts"] });
         const updatedShifts = queryClient.getQueryData(["/api/shifts"]) as EnhancedShift[];
         if (updatedShifts && selectedShift) {
           const updatedShift = updatedShifts.find(s => s.id === selectedShift.id);
           if (updatedShift) {
+            console.log('Updating selected shift after assignment:', updatedShift);
             setSelectedShift(updatedShift);
           }
         }
-      });
+      }, 200);
     },
     onError: (error: any) => {
       toast({
@@ -264,26 +266,28 @@ export default function EnhancedCalendarPage() {
       
       return response.json();
     },
-    onSuccess: (data, variables) => {
+    onSuccess: async (data, variables) => {
       toast({
         title: "Worker Unassigned",
         description: "Worker has been removed from the shift."
       });
+      
       // Invalidate and refetch all related data
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
       queryClient.invalidateQueries({ queryKey: [`/api/shift-requests/${variables.shiftId}`] });
       
-      // Update the selected shift data immediately by refetching shifts
-      queryClient.refetchQueries({ queryKey: ["/api/shifts"] }).then(() => {
-        // Find and update the selected shift with fresh data
+      // Force immediate refresh with a small delay to ensure server has processed
+      setTimeout(async () => {
+        await queryClient.refetchQueries({ queryKey: ["/api/shifts"] });
         const updatedShifts = queryClient.getQueryData(["/api/shifts"]) as EnhancedShift[];
         if (updatedShifts && selectedShift) {
           const updatedShift = updatedShifts.find(s => s.id === selectedShift.id);
           if (updatedShift) {
+            console.log('Updating selected shift after unassignment:', updatedShift);
             setSelectedShift(updatedShift);
           }
         }
-      });
+      }, 200);
     },
     onError: (error: any) => {
       toast({
