@@ -8293,5 +8293,164 @@ export function registerRoutes(app: Express): Server {
     });
   });
 
+  // Shift template routes - replaces in-memory template storage
+  app.get("/api/shift-templates", requireAuth, async (req, res) => {
+    try {
+      const facilityId = req.query.facilityId ? parseInt(req.query.facilityId as string) : undefined;
+      const templates = await storage.getShiftTemplates(facilityId);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching shift templates:", error);
+      res.status(500).json({ message: "Failed to fetch shift templates" });
+    }
+  });
+
+  app.post("/api/shift-templates", requireAuth, async (req, res) => {
+    try {
+      const validatedTemplate = insertShiftTemplateSchema.parse(req.body);
+      const template = await storage.createShiftTemplate(validatedTemplate);
+      res.status(201).json(template);
+    } catch (error) {
+      console.error("Error creating shift template:", error);
+      res.status(500).json({ message: "Failed to create shift template" });
+    }
+  });
+
+  app.put("/api/shift-templates/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updates = insertShiftTemplateSchema.partial().parse(req.body);
+      const template = await storage.updateShiftTemplate(id, updates);
+      
+      if (!template) {
+        return res.status(404).json({ message: "Shift template not found" });
+      }
+      
+      res.json(template);
+    } catch (error) {
+      console.error("Error updating shift template:", error);
+      res.status(500).json({ message: "Failed to update shift template" });
+    }
+  });
+
+  app.delete("/api/shift-templates/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const success = await storage.deleteShiftTemplate(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Shift template not found" });
+      }
+      
+      res.json({ message: "Shift template deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting shift template:", error);
+      res.status(500).json({ message: "Failed to delete shift template" });
+    }
+  });
+
+  // Generated shift routes - replaces global templateGeneratedShifts
+  app.get("/api/generated-shifts", requireAuth, async (req, res) => {
+    try {
+      const dateRange = req.query.start && req.query.end ? {
+        start: req.query.start as string,
+        end: req.query.end as string
+      } : undefined;
+      
+      const shifts = await storage.getGeneratedShifts(dateRange);
+      res.json(shifts);
+    } catch (error) {
+      console.error("Error fetching generated shifts:", error);
+      res.status(500).json({ message: "Failed to fetch generated shifts" });
+    }
+  });
+
+  app.post("/api/generated-shifts", requireAuth, async (req, res) => {
+    try {
+      const validatedShift = insertGeneratedShiftSchema.parse(req.body);
+      const shift = await storage.createGeneratedShift(validatedShift);
+      res.status(201).json(shift);
+    } catch (error) {
+      console.error("Error creating generated shift:", error);
+      res.status(500).json({ message: "Failed to create generated shift" });
+    }
+  });
+
+  app.put("/api/generated-shifts/:id", requireAuth, async (req, res) => {
+    try {
+      const id = req.params.id;
+      const updates = insertGeneratedShiftSchema.partial().parse(req.body);
+      const shift = await storage.updateGeneratedShift(id, updates);
+      
+      if (!shift) {
+        return res.status(404).json({ message: "Generated shift not found" });
+      }
+      
+      res.json(shift);
+    } catch (error) {
+      console.error("Error updating generated shift:", error);
+      res.status(500).json({ message: "Failed to update generated shift" });
+    }
+  });
+
+  app.delete("/api/generated-shifts/:id", requireAuth, async (req, res) => {
+    try {
+      const id = req.params.id;
+      const success = await storage.deleteGeneratedShift(id);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Generated shift not found" });
+      }
+      
+      res.json({ message: "Generated shift deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting generated shift:", error);
+      res.status(500).json({ message: "Failed to delete generated shift" });
+    }
+  });
+
+  // Session management routes - replaces file-based sessions
+  app.get("/api/user-sessions/:sessionId", requireAuth, async (req, res) => {
+    try {
+      const sessionId = req.params.sessionId;
+      const session = await storage.getUserSession(sessionId);
+      
+      if (!session) {
+        return res.status(404).json({ message: "Session not found or expired" });
+      }
+      
+      res.json(session);
+    } catch (error) {
+      console.error("Error fetching user session:", error);
+      res.status(500).json({ message: "Failed to fetch user session" });
+    }
+  });
+
+  app.delete("/api/user-sessions/:sessionId", requireAuth, async (req, res) => {
+    try {
+      const sessionId = req.params.sessionId;
+      const success = await storage.deleteUserSession(sessionId);
+      
+      if (!success) {
+        return res.status(404).json({ message: "Session not found" });
+      }
+      
+      res.json({ message: "Session deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting user session:", error);
+      res.status(500).json({ message: "Failed to delete user session" });
+    }
+  });
+
+  app.post("/api/cleanup-sessions", requireAuth, async (req, res) => {
+    try {
+      const deletedCount = await storage.cleanupExpiredSessions();
+      res.json({ message: `Cleaned up ${deletedCount} expired sessions` });
+    } catch (error) {
+      console.error("Error cleaning up sessions:", error);
+      res.status(500).json({ message: "Failed to cleanup sessions" });
+    }
+  });
+
   return httpServer;
 }
