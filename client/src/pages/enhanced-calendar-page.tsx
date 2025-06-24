@@ -1282,9 +1282,9 @@ export default function EnhancedCalendarPage() {
                     <div className="space-y-2 max-h-48 overflow-y-auto">
                       {shiftRequests.map((request: any) => (
                         <div key={request.id} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center flex-shrink-0">
                                 <User className="h-4 w-4 text-blue-600 dark:text-blue-300" />
                               </div>
                               <div>
