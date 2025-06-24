@@ -984,7 +984,7 @@ export default function EnhancedCalendarPage() {
 
       {/* Shift Detail Modal */}
       <Dialog open={!!selectedShift} onOpenChange={() => setSelectedShift(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Shift Details</DialogTitle>
           </DialogHeader>
@@ -1279,7 +1279,7 @@ export default function EnhancedCalendarPage() {
                   </div>
                   
                   {shiftRequests.length > 0 ? (
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
                       {shiftRequests.map((request: any) => (
                         <div key={request.id} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
                           <div className="flex items-center justify-between">
