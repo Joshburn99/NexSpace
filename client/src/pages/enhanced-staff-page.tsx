@@ -164,26 +164,10 @@ function EnhancedStaffPageContent() {
   const [facilitySearchTerm, setFacilitySearchTerm] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Debug logging
-  useEffect(() => {
-    console.log('EnhancedStaffPage - Component mounted');
-    console.log('Session state:', sessionState);
-  }, []);
-
-  useEffect(() => {
-    console.log('Selected staff changed:', selectedStaff);
-  }, [selectedStaff]);
-
   const { data: staffMembers = [], isLoading, error } = useQuery<StaffMember[]>({
     queryKey: ["/api/staff"],
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    onSuccess: (data) => {
-      console.log('Staff data loaded successfully:', data?.length, 'members');
-    },
-    onError: (error) => {
-      console.error('Failed to load staff data:', error);
-    },
   });
 
   // Handle profile URL parameter with error handling
@@ -258,50 +242,34 @@ function EnhancedStaffPageContent() {
   });
 
   // Filter staff members with comprehensive null safety and exclude superusers
-  const filteredStaff = useMemo(() => {
-    console.log('Filtering staff members. Total:', staffMembers?.length || 0);
+  const filteredStaff = (staffMembers || []).filter((staff) => {
+    if (!staff) return false;
     
-    const filtered = (staffMembers || []).filter((staff) => {
-      if (!staff) {
-        console.warn('Found null/undefined staff member');
-        return false;
-      }
-      
-      try {
-        // Exclude superusers by email (server already filters most, but double-check)
-        const superuserEmails = ['joshburn@nexspace.com', 'brian.nangle@nexspace.com'];
-        if (superuserEmails.includes(staff.email)) {
-          console.log('Excluding superuser:', staff.email);
-          return false;
-        }
+    try {
+      // Exclude superusers by email (server already filters most, but double-check)
+      const superuserEmails = ['joshburn@nexspace.com', 'brian.nangle@nexspace.com'];
+      if (superuserEmails.includes(staff.email)) return false;
 
-        // Exclude by role if present 
-        if (staff?.role === "super_admin" || staff?.role === "facility_manager") {
-          console.log('Excluding by role:', staff.role, staff.email);
-          return false;
-        }
+      // Exclude by role if present 
+      if (staff?.role === "super_admin" || staff?.role === "facility_manager") return false;
 
-        const matchesSearch =
-          searchTerm === "" ||
-          `${staff.firstName || ""} ${staff.lastName || ""}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (staff.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (staff.specialty || "").toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch =
+        searchTerm === "" ||
+        `${staff.firstName || ""} ${staff.lastName || ""}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (staff.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (staff.specialty || "").toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesWorkerType =
-          selectedWorkerType === "all" || staff.workerType === selectedWorkerType;
-        const matchesSpecialty = selectedSpecialty === "all" || staff.specialty === selectedSpecialty;
-        const matchesStatus = selectedStatus === "all" || staff.status === selectedStatus;
+      const matchesWorkerType =
+        selectedWorkerType === "all" || staff.workerType === selectedWorkerType;
+      const matchesSpecialty = selectedSpecialty === "all" || staff.specialty === selectedSpecialty;
+      const matchesStatus = selectedStatus === "all" || staff.status === selectedStatus;
 
-        return matchesSearch && matchesWorkerType && matchesSpecialty && matchesStatus;
-      } catch (error) {
-        console.error('Error filtering staff member:', error, staff);
-        return false;
-      }
-    });
-    
-    console.log('Filtered to:', filtered.length, 'staff members');
-    return filtered;
-  }, [staffMembers, searchTerm, selectedWorkerType, selectedSpecialty, selectedStatus]);
+      return matchesSearch && matchesWorkerType && matchesSpecialty && matchesStatus;
+    } catch (error) {
+      console.error('Error filtering staff member:', error, staff);
+      return false;
+    }
+  });
 
   // Get unique values for filters with null safety
   const specialties = Array.from(new Set((staffMembers || []).map((s) => s?.specialty).filter(Boolean)));
@@ -1471,20 +1439,11 @@ export default function EnhancedStaffPage() {
           <div className="text-center">
             <p className="text-red-500 mb-2">Something went wrong with the staff page</p>
             <p className="text-sm text-muted-foreground">Please refresh the page to try again</p>
-            <Button 
-              onClick={() => window.location.reload()} 
-              className="mt-4"
-              variant="outline"
-            >
-              Refresh Page
-            </Button>
           </div>
         </div>
       }
       onError={(error, errorInfo) => {
         console.error('EnhancedStaffPage Error:', error, errorInfo);
-        console.log('Error componentStack:', errorInfo.componentStack);
-        console.log('Error errorBoundary:', errorInfo.errorBoundary);
       }}
     >
       <EnhancedStaffPageContent />
