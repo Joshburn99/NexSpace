@@ -614,13 +614,13 @@ function EnhancedStaffPageContent() {
 
     {/* Staff Grid */}
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredStaff.map((staff) => (
-              <Card
-                key={staff.id}
-                className="cursor-pointer hover:shadow-lg transition-shadow"
-                onClick={() => setSelectedStaff(staff)}
-              >
-                <CardHeader className="pb-2">
+      {filteredStaff.map((staff) => (
+        <Card
+          key={staff.id}
+          className="cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => setSelectedStaff(staff)}
+        >
+          <CardHeader className="pb-2">
                   <div className="flex items-center space-x-3">
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={staff.profileImage} />
@@ -691,10 +691,10 @@ function EnhancedStaffPageContent() {
                     </Button>
                   </div>
                 </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
+        </Card>
+      ))}
+    </div>
+  </TabsContent>
 
         <TabsContent value="feed" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
