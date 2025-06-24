@@ -1167,6 +1167,54 @@ export default function EnhancedCalendarPage() {
                             </div>
                           </div>
                         </div>
+                        <div className="flex gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              if (selectedShift.assignedStaffId) {
+                                window.location.href = `/enhanced-staff?profile=${selectedShift.assignedStaffId}`;
+                              }
+                            }}
+                          >
+                            <ExternalLink className="h-3 w-3 mr-1" />
+                            Profile
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => {
+                              if (selectedShift.assignedStaffId) {
+                                window.location.href = `/messaging?conversation=${selectedShift.assignedStaffId}`;
+                              }
+                            }}
+                          >
+                            <MessageCircle className="h-3 w-3 mr-1" />
+                            Message
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                ) : selectedShift.assignedStaffName ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                          <User className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{selectedShift.assignedStaffName}</p>
+                          {selectedShift.assignedStaffSpecialty && (
+                            <p className="text-sm text-muted-foreground">{selectedShift.assignedStaffSpecialty}</p>
+                          )}
+                          {selectedShift.assignedStaffRating && (
+                            <div className="flex items-center gap-1 mt-1">
+                              <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                              <span className="text-sm text-muted-foreground">{selectedShift.assignedStaffRating.toFixed(1)}/5</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                       <div className="flex gap-2">
                         <Button 
                           size="sm" 
@@ -1194,6 +1242,7 @@ export default function EnhancedCalendarPage() {
                         </Button>
                       </div>
                     </div>
+                  </div>
                 ) : (
                   <div className="text-center py-8">
                     <Users className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
@@ -1203,29 +1252,60 @@ export default function EnhancedCalendarPage() {
                     </p>
                   </div>
                 )}
-                    
-                    {/* Invoice Information for Completed Shifts Only */}
-                    {selectedShift.status === 'completed' && selectedShift.invoiceAmount && (
-                      <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
-                        <div className="flex items-center justify-between mb-2">
-                          <Label className="text-sm font-semibold text-green-800 dark:text-green-200">Invoice Information</Label>
-                          <Badge variant={selectedShift.invoiceStatus === 'approved' ? 'default' : 'secondary'}>
-                            {selectedShift.invoiceStatus === 'approved' ? 'Approved' : 'Pending Review'}
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Hours Worked:</span>
-                            <span className="ml-2 font-medium">{selectedShift.invoiceHours}h</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Amount:</span>
-                            <span className="ml-2 font-medium">${selectedShift.invoiceAmount.toFixed(2)}</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+              </div>
+
+              <div>
+                <Label>Description</Label>
+                <p className="mt-1 text-sm text-muted-foreground">{selectedShift.description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Urgency Level</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className={`w-2 h-2 rounded-full ${
+                      selectedShift.urgency === 'critical' ? 'bg-red-500' :
+                      selectedShift.urgency === 'high' ? 'bg-orange-500' :
+                      selectedShift.urgency === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                    }`} />
+                    <span className="capitalize">{selectedShift.urgency}</span>
                   </div>
+                </div>
+                <div>
+                  <Label>Shift Duration</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span>{(() => {
+                      const start = new Date(`2000-01-01T${selectedShift.startTime}`);
+                      const end = new Date(`2000-01-01T${selectedShift.endTime}`);
+                      let hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                      if (hours < 0) hours += 24;
+                      return `${hours} hours`;
+                    })()}</span>
+                  </div>
+                </div>
+              </div>
+
+              {selectedShift.status === 'completed' && selectedShift.invoiceAmount && (
+                <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-sm font-semibold text-green-800 dark:text-green-200">Invoice Information</Label>
+                    <Badge variant={selectedShift.invoiceStatus === 'approved' ? 'default' : 'secondary'}>
+                      {selectedShift.invoiceStatus === 'approved' ? 'Approved' : 'Pending Review'}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Hours Worked:</span>
+                      <span className="ml-2 font-medium">{selectedShift.invoiceHours}h</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Amount:</span>
+                      <span className="ml-2 font-medium">${selectedShift.invoiceAmount.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
                 ) : (
                   <div className="text-center py-4">
                     <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
