@@ -893,7 +893,36 @@ export function registerRoutes(app: Express): Server {
       const staffData = await unifiedDataService.getStaffWithAssociations();
       
       // Combine example shifts with template-generated shifts
-      const allShifts = await Promise.all(getShiftData().map(async shift => {
+      // Get database-generated shifts and merge with example shifts
+      const dbShifts = await db.select().from(generatedShifts);
+      
+      // Convert database shifts to proper format
+      const formattedDbShifts = dbShifts.map(shift => ({
+        id: shift.id,
+        title: shift.title,
+        date: shift.date,
+        startTime: shift.startTime,
+        endTime: shift.endTime,
+        department: shift.department,
+        specialty: shift.specialty,
+        facilityId: shift.facilityId,
+        facilityName: shift.facilityName,
+        buildingId: shift.buildingId,
+        buildingName: shift.buildingName,
+        status: shift.status,
+        rate: parseFloat(shift.rate?.toString() || "0"),
+        urgency: shift.urgency,
+        description: shift.description,
+        totalPositions: shift.requiredWorkers || 1,
+        minStaff: shift.minStaff || 1,
+        maxStaff: shift.maxStaff || 1,
+        totalHours: shift.totalHours || 8
+      }));
+      
+      // Combine database shifts with example shifts
+      const combinedShifts = [...getShiftData(), ...formattedDbShifts];
+      
+      const allShifts = await Promise.all(combinedShifts.map(async shift => {
         const assignedWorkerIds = await getShiftAssignments(shift.id);
         
         // Get detailed staff info for assigned workers
@@ -7242,6 +7271,60 @@ export function registerRoutes(app: Express): Server {
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to delete shift template" });
+    }
+  });
+
+  // Post shift endpoint - generates individual shifts to database
+  app.post("/api/shifts/post", requireAuth, async (req, res) => {
+    try {
+      const { shiftData } = req.body;
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Generate unique shift ID using timestamp and random component
+      const shiftId = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+      
+      // Insert shift into generated_shifts table
+      await db.insert(generatedShifts).values({
+        id: shiftId,
+        templateId: shiftData.templateId || 0,
+        title: shiftData.title,
+        date: shiftData.date,
+        startTime: shiftData.startTime,
+        endTime: shiftData.endTime,
+        department: shiftData.department,
+        specialty: shiftData.specialty,
+        facilityId: shiftData.facilityId,
+        facilityName: shiftData.facilityName,
+        buildingId: shiftData.buildingId,
+        buildingName: shiftData.buildingName,
+        status: "open",
+        rate: shiftData.rate,
+        urgency: shiftData.urgency || "medium",
+        description: shiftData.description,
+        requiredWorkers: shiftData.requiredWorkers || 1,
+        minStaff: shiftData.minStaff || 1,
+        maxStaff: shiftData.maxStaff || 1,
+        totalHours: shiftData.totalHours || 8
+      });
+      
+      res.json({
+        message: "Shift posted successfully",
+        shiftId,
+        shift: {
+          id: shiftId,
+          ...shiftData,
+          status: "open",
+          createdAt: new Date().toISOString()
+        }
+      });
+      
+    } catch (error) {
+      console.error('Post shift error:', error);
+      res.status(500).json({ message: "Failed to post shift" });
     }
   });
 

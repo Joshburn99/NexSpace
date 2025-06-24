@@ -256,6 +256,44 @@ export default function EnhancedCalendarPage() {
     }
   });
 
+  // Post shift mutation
+  const postShiftMutation = useMutation({
+    mutationFn: async (shiftData: any) => {
+      const response = await fetch('/api/shifts/post', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ shiftData }),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to post shift');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Shift Posted",
+        description: "Shift has been successfully posted to the database."
+      });
+      
+      // Refresh shifts data
+      queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+      setShowPostShiftModal(false);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Post Shift Failed",
+        description: error.message || "Failed to post shift.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const unassignWorkerMutation = useMutation({
     mutationFn: async ({ shiftId, workerId }: { shiftId: number; workerId: number }) => {
       const response = await fetch(`/api/shifts/${shiftId}/unassign`, {
