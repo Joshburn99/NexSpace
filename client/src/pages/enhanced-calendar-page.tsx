@@ -1306,16 +1306,7 @@ export default function EnhancedCalendarPage() {
                   </div>
                 </div>
               )}
-                ) : (
-                  <div className="text-center py-4">
-                    <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">No staff assigned to this shift</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {selectedShift.totalPositions ? `${selectedShift.totalPositions} position(s) available` : 'Position available'}
-                    </p>
-                  </div>
-                )}
-              </div>
+
 
               <div>
                 <Label>Description</Label>
