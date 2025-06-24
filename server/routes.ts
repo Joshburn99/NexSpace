@@ -7290,6 +7290,8 @@ export function registerRoutes(app: Express): Server {
       const shiftData = req.body;
       const userId = (req as any).user?.id;
       
+      console.log("Post shift request data:", shiftData);
+      
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
       }
@@ -7301,20 +7303,20 @@ export function registerRoutes(app: Express): Server {
       await db.insert(generatedShifts).values({
         id: shiftId,
         templateId: shiftData.templateId || 0,
-        title: shiftData.title,
-        date: shiftData.date,
-        startTime: shiftData.startTime,
-        endTime: shiftData.endTime,
-        department: shiftData.department,
-        specialty: shiftData.specialty,
-        facilityId: shiftData.facilityId,
-        facilityName: shiftData.facilityName,
-        buildingId: shiftData.buildingId,
-        buildingName: shiftData.buildingName,
+        title: shiftData.title || "Untitled Shift",
+        date: shiftData.date || new Date().toISOString().split('T')[0],
+        startTime: shiftData.startTime || "07:00",
+        endTime: shiftData.endTime || "19:00",
+        department: shiftData.department || "General",
+        specialty: shiftData.specialty || "General",
+        facilityId: shiftData.facilityId || 1,
+        facilityName: shiftData.facilityName || "General Hospital",
+        buildingId: shiftData.buildingId || "main-building",
+        buildingName: shiftData.buildingName || "Main Building",
         status: "open",
-        rate: shiftData.rate,
+        rate: shiftData.rate || shiftData.hourlyRate || "45.00",
         urgency: shiftData.urgency || "medium",
-        description: shiftData.description,
+        description: shiftData.description || "",
         requiredWorkers: shiftData.requiredWorkers || 1,
         minStaff: shiftData.minStaff || 1,
         maxStaff: shiftData.maxStaff || 1,
