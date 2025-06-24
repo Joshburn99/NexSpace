@@ -410,20 +410,20 @@ export default function ShiftTemplatesPage() {
                   <Label>Specialty</Label>
                   <Select 
                     value={templateForm.watch("specialty")} 
-                    onValueChange={(value) => templateForm.setValue("specialty", value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select specialty" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SPECIALTIES.map((specialty) => (
-                        <SelectItem key={specialty} value={specialty}>
-                          {specialty}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              onValueChange={(value) => templateForm.setValue("specialty", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select specialty" />
+                </SelectTrigger>
+                <SelectContent>
+                  {SPECIALTIES.map((specialty, idx) => (
+                    <SelectItem key={`${specialty}-${idx}`} value={specialty}>
+                      {specialty}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4">

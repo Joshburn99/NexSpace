@@ -690,15 +690,15 @@ export default function EnhancedCalendarPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Specialties</SelectItem>
-                    {specialties.map((specialty) => (
-                      <SelectItem key={specialty} value={specialty}>
-                        {specialty}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {specialties.map((specialty, idx) => (
+                <SelectItem key={`${specialty}-${idx}`} value={specialty}>
+                  {specialty}
+                </SelectItem>
+              ))}
+              </SelectContent>
+              </Select>
               </div>
-
+              
               {/* Status Filter */}
               <div>
                 <Label>Status</Label>
@@ -753,18 +753,13 @@ export default function EnhancedCalendarPage() {
                   const facility = (facilities as any[]).find((f: any) => f.id.toString() === facilityId);
                   return facility ? (
                     <Badge key={facilityId} variant="secondary">
-                      <Building className="h-3 w-3 mr-1" />
-                      {facility.name}
-                    </Badge>
-                  ) : null;
-                })}
-                {filters.specialties.map(specialty => (
-                  <Badge key={specialty} variant="secondary">
-                    <Users className="h-3 w-3 mr-1" />
-                    {specialty}
-                  </Badge>
-                ))}
-                {filters.statuses.map(status => (
+                      <Building {filters.specialties.map((specialty, idx) => (
+                          <Badge key={`${specialty}-${idx}`} variant="secondary">
+                            <Users className="h-3 w-3 mr-1" />
+                            {specialty}
+                          </Badge>
+                        ))}
+{filters.statuses.map(status => (
                   <Badge key={status} variant="secondary">
                     <CheckCircle className="h-3 w-3 mr-1" />
                     {status.charAt(0).toUpperCase() + status.slice(1)}

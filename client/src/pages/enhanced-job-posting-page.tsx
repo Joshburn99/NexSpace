@@ -219,40 +219,41 @@ export default function EnhancedJobPostingPage() {
                       onValueChange={(value) => handleInputChange("position", value)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select position" />
+                      <SelectValue placeholder="Select position" />
                       </SelectTrigger>
                       <SelectContent>
-                        {positions.map((position) => (
-                          <SelectItem key={position} value={position}>
+                        {positions.map((position, idx) => (
+                          <SelectItem key={`${position}-${idx}`} value={position}>
                             {position}
                           </SelectItem>
                         ))}
                       </SelectContent>
-                    </Select>
-                  </div>
-                </div>
+                      </Select>
+                      </div>
+                      </div>
 
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="specialty">Specialty *</Label>
-                    <Select
-                      value={jobData.specialty}
-                      onValueChange={(value) => handleInputChange("specialty", value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select specialty" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {specialties.map((specialty) => (
-                          <SelectItem key={specialty} value={specialty}>
-                            {specialty}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="department">Department</Label>
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="specialty">Specialty *</Label>
+                          <Select
+                            value={jobData.specialty}
+                            onValueChange={(value) => handleInputChange("specialty", value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select specialty" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {specialties.map((specialty, idx) => (
+                                <SelectItem key={`${specialty}-${idx}`} value={specialty}>
+                                  {specialty}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label
+htmlFor="department">Department</Label>
                     <Input
                       id="department"
                       value={jobData.department}

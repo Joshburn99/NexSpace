@@ -249,10 +249,10 @@ const ShiftDashboard: React.FC = () => {
 
       {/* Shifts by Specialty */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {Object.entries(shiftsBySpecialty).map(([specialty, shifts]) => (
-          <Card key={specialty}>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+                {Object.entries(shiftsBySpecialty).map(([specialty, shifts], idx) => (
+                  <Card key={`${specialty}-${idx}`}>
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
                 {specialty} Shifts
                 <Badge variant="secondary">{shifts.length}</Badge>
               </CardTitle>
