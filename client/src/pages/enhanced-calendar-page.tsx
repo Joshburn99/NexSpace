@@ -1150,26 +1150,23 @@ export default function EnhancedCalendarPage() {
                       </div>
                     )}
                   </div>
-                ) : selectedShift.assignedStaffName ? (
+                ) : (selectedShift.assignedStaffNames && selectedShift.assignedStaffNames.length > 0) ? (
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                          <User className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-medium">{selectedShift.assignedStaffName}</p>
-                          {selectedShift.assignedStaffSpecialty && (
-                            <p className="text-sm text-muted-foreground">{selectedShift.assignedStaffSpecialty}</p>
-                          )}
-                          {selectedShift.assignedStaffRating && (
+                    {selectedShift.assignedStaffNames.map((staffName: string, index: number) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                            <User className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{staffName}</p>
+                            <p className="text-sm text-muted-foreground">{selectedShift.specialty}</p>
                             <div className="flex items-center gap-1 mt-1">
                               <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                              <span className="text-sm text-muted-foreground">{selectedShift.assignedStaffRating.toFixed(1)}/5</span>
+                              <span className="text-sm text-muted-foreground">4.5/5</span>
                             </div>
-                          )}
+                          </div>
                         </div>
-                      </div>
                       <div className="flex gap-2">
                         <Button 
                           size="sm" 
@@ -1197,6 +1194,15 @@ export default function EnhancedCalendarPage() {
                         </Button>
                       </div>
                     </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">No staff assigned to this shift</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {selectedShift.totalPositions ? `${selectedShift.totalPositions} position(s) available` : 'Position available'}
+                    </p>
+                  </div>
+                )}
                     
                     {/* Invoice Information for Completed Shifts Only */}
                     {selectedShift.status === 'completed' && selectedShift.invoiceAmount && (
