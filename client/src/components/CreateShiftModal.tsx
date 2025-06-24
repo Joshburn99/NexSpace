@@ -246,7 +246,12 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
                 onValueChange={(value) => setFormData(prev => ({ ...prev, premiumMultiplier: parseFloat(value) }))}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue>
+                    {formData.premiumMultiplier === 1.0 
+                      ? "1.0x (Standard)" 
+                      : `${formData.premiumMultiplier}x (+${Math.round((formData.premiumMultiplier - 1) * 100)}%)`
+                    }
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1.0">1.0x (Standard)</SelectItem>
