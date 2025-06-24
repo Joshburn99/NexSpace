@@ -1944,7 +1944,7 @@ export default function EnhancedCalendarPage() {
               const totalHours = calculateHoursBetween(startTime, endTime);
               
               // Get multiplier and base rate (placeholder - will be calculated from staff profile when workers request)
-              const multiplier = parseFloat(formData.get('rateMultiplier') as string) || 1.0;
+              const multiplier = parseFloat(formData.get('rateMultiplier') as string) || 1.1;
               const baseRate = 45.00; // Base rate placeholder - actual rate comes from staff profile during assignment
               
               const shiftData = {
@@ -2075,10 +2075,10 @@ export default function EnhancedCalendarPage() {
                     <input 
                       name="rateMultiplier"
                       type="range" 
-                      min="1.1" 
+                      min="1.0" 
                       max="1.6" 
                       step="0.1" 
-                      defaultValue="1.3"
+                      defaultValue="1.1"
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                       onChange={(e) => {
                         const multiplierValue = document.querySelector('.multiplier-display');
@@ -2088,8 +2088,8 @@ export default function EnhancedCalendarPage() {
                       }}
                     />
                     <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>1.1x</span>
-                      <span className="multiplier-display">1.3x</span>
+                      <span>1.0x</span>
+                      <span className="multiplier-display">1.1x</span>
                       <span>1.6x</span>
                     </div>
                     <p className="text-xs text-gray-600 mt-1">Applied to worker's base rate upon request</p>
