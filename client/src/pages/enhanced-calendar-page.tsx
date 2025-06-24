@@ -393,21 +393,23 @@ export default function EnhancedCalendarPage() {
       const specialtyColor = (specialtyColors as any)[specialty] || specialtyColors.default;
       const statusInfo = statusConfig[firstShift.status as keyof typeof statusConfig] || statusConfig.open;
       
-      // Calculate filled/total for multi-worker shifts using backend assignment data
-      const totalWorkers = firstShift.totalPositions || group.length;
+      // Calculate filled/total using backend assignment data with proper single-worker handling
+      const totalWorkers = firstShift.totalPositions || 1; // Default to 1 for single shifts
       const filledWorkers = firstShift.filledPositions || 0;
       
       let title = '';
       if (totalWorkers === 1) {
-        // Single worker shift: show worker name if assigned, otherwise show "Unassigned"
+        // Single worker shift: show worker name if assigned, otherwise show "Requesting"
         const assignedWorkerName = firstShift.assignedStaffNames?.[0] || 
                                  firstShift.assignedStaff?.[0]?.name || 
-                                 firstShift.assignedStaff?.[0]?.firstName + ' ' + firstShift.assignedStaff?.[0]?.lastName ||
+                                 (firstShift.assignedStaff?.[0]?.firstName && firstShift.assignedStaff?.[0]?.lastName ? 
+                                  `${firstShift.assignedStaff[0].firstName} ${firstShift.assignedStaff[0].lastName}` : null) ||
                                  firstShift.assignedStaffName;
+        
         if (assignedWorkerName && filledWorkers > 0) {
           title = `${assignedWorkerName} – ${firstShift.startTime}–${firstShift.endTime}`;
         } else {
-          title = `Unassigned – ${firstShift.startTime}–${firstShift.endTime}`;
+          title = `Requesting – ${firstShift.startTime}–${firstShift.endTime}`;
         }
       } else {
         // Multi-worker shift: "Specialty – Filled/Total – Start–End Time"

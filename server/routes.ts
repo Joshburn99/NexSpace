@@ -1166,10 +1166,23 @@ export function registerRoutes(app: Express): Server {
         });
       }
       
-      // Validate specialty match
+      // Strict specialty validation - prevent mismatched assignments
       if (worker.specialty !== shift.specialty) {
         return res.status(400).json({ 
-          message: `Worker specialty (${worker.specialty}) does not match shift requirement (${shift.specialty})` 
+          message: `Specialty mismatch: ${worker.specialty} worker cannot be assigned to ${shift.specialty} shift` 
+        });
+      }
+      
+      // Additional validation for specific specialty restrictions
+      if (shift.specialty === 'CST' && worker.specialty !== 'CST') {
+        return res.status(400).json({ 
+          message: `Only certified surgical technicians (CST) can be assigned to OR shifts` 
+        });
+      }
+      
+      if (shift.specialty === 'RN' && worker.specialty && !['RN', 'BSN', 'MSN'].includes(worker.specialty || '')) {
+        return res.status(400).json({ 
+          message: `Only registered nurses can be assigned to RN shifts` 
         });
       }
       
