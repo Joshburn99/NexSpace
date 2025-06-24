@@ -894,30 +894,38 @@ export function registerRoutes(app: Express): Server {
       
       // Combine example shifts with template-generated shifts
       // Get database-generated shifts and merge with example shifts
-      const dbShifts = await db.select().from(generatedShifts);
+      let dbShifts = [];
+      let formattedDbShifts = [];
       
-      // Convert database shifts to proper format
-      const formattedDbShifts = dbShifts.map(shift => ({
-        id: shift.id,
-        title: shift.title,
-        date: shift.date,
-        startTime: shift.startTime,
-        endTime: shift.endTime,
-        department: shift.department,
-        specialty: shift.specialty,
-        facilityId: shift.facilityId,
-        facilityName: shift.facilityName,
-        buildingId: shift.buildingId,
-        buildingName: shift.buildingName,
-        status: shift.status,
-        rate: parseFloat(shift.rate?.toString() || "0"),
-        urgency: shift.urgency,
-        description: shift.description,
-        totalPositions: shift.requiredWorkers || 1,
-        minStaff: shift.minStaff || 1,
-        maxStaff: shift.maxStaff || 1,
-        totalHours: shift.totalHours || 8
-      }));
+      try {
+        dbShifts = await db.select().from(generatedShifts);
+        
+        // Convert database shifts to proper format
+        formattedDbShifts = dbShifts.map(shift => ({
+          id: shift.id,
+          title: shift.title,
+          date: shift.date,
+          startTime: shift.startTime,
+          endTime: shift.endTime,
+          department: shift.department,
+          specialty: shift.specialty,
+          facilityId: shift.facilityId,
+          facilityName: shift.facilityName,
+          buildingId: shift.buildingId,
+          buildingName: shift.buildingName,
+          status: shift.status,
+          rate: parseFloat(shift.rate?.toString() || "0"),
+          urgency: shift.urgency,
+          description: shift.description,
+          totalPositions: shift.requiredWorkers || 1,
+          minStaff: shift.minStaff || 1,
+          maxStaff: shift.maxStaff || 1,
+          totalHours: shift.totalHours || 8
+        }));
+      } catch (error) {
+        console.error('Error fetching database shifts:', error);
+        // Continue with example shifts only if database query fails
+      }
       
       // Combine database shifts with example shifts
       const combinedShifts = [...getShiftData(), ...formattedDbShifts];

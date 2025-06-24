@@ -278,8 +278,8 @@ export default function EnhancedCalendarPage() {
     },
     onSuccess: () => {
       toast({
-        title: "Shift Posted",
-        description: "Shift has been successfully posted to the database."
+        title: "Shift Added",
+        description: "Shift has been successfully added to the schedule."
       });
       
       // Refresh shifts data
@@ -288,8 +288,8 @@ export default function EnhancedCalendarPage() {
     },
     onError: (error: any) => {
       toast({
-        title: "Post Shift Failed",
-        description: error.message || "Failed to post shift.",
+        title: "Add Shift Failed",
+        description: error.message || "Failed to add shift.",
         variant: "destructive"
       });
     }
@@ -550,24 +550,14 @@ export default function EnhancedCalendarPage() {
             Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
           </Button>
           {user && (user.role === 'facility_manager' || user.role === 'super_admin' || user.role === 'admin') && (
-            <>
-              <Button
-                onClick={() => setShowAddShiftDialog(true)}
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Calendar className="h-4 w-4 mr-2" />
-                Add Shift
-              </Button>
-              <Button
-                onClick={() => setShowPostShiftModal(true)}
-                size="sm"
-                className="bg-green-600 hover:bg-green-700 text-white"
-              >
-                <PlayCircle className="h-4 w-4 mr-2" />
-                Post Shift
-              </Button>
-            </>
+            <Button
+              onClick={() => setShowPostShiftModal(true)}
+              size="sm"
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Calendar className="h-4 w-4 mr-2" />
+              Add Shift
+            </Button>
           )}
           <div className="flex gap-1">
             <Button
@@ -1915,12 +1905,12 @@ export default function EnhancedCalendarPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Post Shift Modal */}
+      {/* Add Shift Modal */}
       {showPostShiftModal && (
         <Dialog open={showPostShiftModal} onOpenChange={setShowPostShiftModal}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Post New Shift</DialogTitle>
+              <DialogTitle>Add New Shift</DialogTitle>
             </DialogHeader>
             
             <form onSubmit={(e) => {
@@ -2071,7 +2061,7 @@ export default function EnhancedCalendarPage() {
                   type="submit"
                   disabled={postShiftMutation.isPending}
                 >
-                  {postShiftMutation.isPending ? "Posting..." : "Post Shift"}
+                  {postShiftMutation.isPending ? "Adding..." : "Add Shift"}
                 </Button>
               </div>
             </form>
