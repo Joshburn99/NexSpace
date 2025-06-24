@@ -508,8 +508,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getGeneratedShift(id: string): Promise<any | undefined> {
-    const [shift] = await db.select().from(generatedShifts).where(eq(generatedShifts.id, id));
-    return shift || undefined;
+    try {
+      const [shift] = await db.select().from(generatedShifts).where(eq(generatedShifts.id, id));
+      return shift || undefined;
+    } catch (error) {
+      console.error(`[STORAGE] Error getting generated shift ${id}:`, error);
+      return undefined;
+    }
   }
 
   async createShift(insertShift: InsertShift): Promise<Shift> {

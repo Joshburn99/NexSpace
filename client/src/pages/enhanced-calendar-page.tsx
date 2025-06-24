@@ -399,12 +399,15 @@ export default function EnhancedCalendarPage() {
       
       let title = '';
       if (totalWorkers === 1) {
-        // Single worker shift: "Worker Name – Start–End Time" or "Specialty – 0/1 – Start–End Time"
-        const assignedWorkerName = firstShift.assignedStaff?.[0]?.name || firstShift.assignedStaffName;
-        if (assignedWorkerName) {
+        // Single worker shift: show worker name if assigned, otherwise show "Unassigned"
+        const assignedWorkerName = firstShift.assignedStaffNames?.[0] || 
+                                 firstShift.assignedStaff?.[0]?.name || 
+                                 firstShift.assignedStaff?.[0]?.firstName + ' ' + firstShift.assignedStaff?.[0]?.lastName ||
+                                 firstShift.assignedStaffName;
+        if (assignedWorkerName && filledWorkers > 0) {
           title = `${assignedWorkerName} – ${firstShift.startTime}–${firstShift.endTime}`;
         } else {
-          title = `${specialty} – 0/1 – ${firstShift.startTime}–${firstShift.endTime}`;
+          title = `Unassigned – ${firstShift.startTime}–${firstShift.endTime}`;
         }
       } else {
         // Multi-worker shift: "Specialty – Filled/Total – Start–End Time"

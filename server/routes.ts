@@ -1106,42 +1106,37 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ message: "Worker ID is required" });
       }
       
-      // Get shift details - handle both regular shifts and generated shifts
+      // Get shift details - prioritize generated shifts (string IDs) over regular shifts
       let shift;
       
-      // Try to get as regular shift first (numeric ID)
-      if (!isNaN(parseInt(shiftId))) {
+      // Try generated shift first (most common case for assignments)
+      const generatedShift = await storage.getGeneratedShift(shiftId);
+      if (generatedShift) {
+        shift = {
+          id: parseInt(generatedShift.id) || 0,
+          title: generatedShift.title,
+          specialty: generatedShift.specialty,
+          description: generatedShift.description,
+          facilityId: generatedShift.facilityId,
+          department: generatedShift.department,
+          date: generatedShift.date,
+          startTime: generatedShift.startTime,
+          endTime: generatedShift.endTime,
+          rate: generatedShift.rate,
+          status: generatedShift.status,
+          urgency: generatedShift.urgency,
+          requiredStaff: generatedShift.requiredWorkers || 1,
+          assignedStaffIds: [],
+          specialRequirements: [],
+          createdById: 1,
+          createdAt: generatedShift.createdAt,
+          updatedAt: generatedShift.updatedAt,
+          facilityName: generatedShift.facilityName,
+          premiumMultiplier: generatedShift.rate
+        };
+      } else if (!isNaN(parseInt(shiftId))) {
+        // Fallback to regular shift table for numeric IDs
         shift = await storage.getShift(parseInt(shiftId));
-      }
-      
-      // If not found as regular shift, try as generated shift (string ID)
-      if (!shift) {
-        const generatedShift = await storage.getGeneratedShift(shiftId);
-        if (generatedShift) {
-          // Convert generated shift to compatible format
-          shift = {
-            id: parseInt(generatedShift.id) || 0,
-            title: generatedShift.title,
-            specialty: generatedShift.specialty,
-            description: generatedShift.description,
-            facilityId: generatedShift.facilityId,
-            department: generatedShift.department,
-            date: generatedShift.date,
-            startTime: generatedShift.startTime,
-            endTime: generatedShift.endTime,
-            rate: generatedShift.rate,
-            status: generatedShift.status,
-            urgency: generatedShift.urgency,
-            requiredStaff: generatedShift.requiredWorkers || 1,
-            assignedStaffIds: [],
-            specialRequirements: [],
-            createdById: 1,
-            createdAt: generatedShift.createdAt,
-            updatedAt: generatedShift.updatedAt,
-            facilityName: generatedShift.facilityName,
-            premiumMultiplier: generatedShift.rate
-          };
-        }
       }
       
       if (!shift) {
@@ -1187,24 +1182,10 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ message: "Worker is already assigned to this shift" });
       }
       
-      // Determine shift capacity based on shift data - extract from title/description
-      let maxCapacity = 1; // Default single worker
+      // Get shift capacity from database - use requiredStaff or requiredWorkers
+      const maxCapacity = shift.requiredStaff || generatedShift?.requiredWorkers || generatedShift?.maxStaff || 1;
       
-      // Check for multi-worker indicators in shift title or description
-      const shiftText = `${shift.title} ${shift.description || ''}`.toLowerCase();
-      if (shiftText.includes('icu') || shiftText.includes('intensive') || shiftText.includes('critical')) {
-        maxCapacity = 3; // ICU shifts typically need 3 workers
-      } else if (shiftText.includes('er') || shiftText.includes('emergency') || shiftText.includes('trauma')) {
-        maxCapacity = 4; // ER shifts need more staff
-      } else if (shiftText.includes('surgical') || shiftText.includes('or ') || shiftText.includes('operating')) {
-        maxCapacity = 2; // Surgical shifts need 2 workers
-      }
-      
-      // Override with specific capacity if mentioned in description
-      const capacityMatch = shift.description?.match(/(\d+)\/(\d+)/);
-      if (capacityMatch) {
-        maxCapacity = parseInt(capacityMatch[2]); // Use the denominator as max capacity
-      }
+      console.log(`[CAPACITY CHECK] Shift ${shiftId}: maxCapacity=${maxCapacity}, currentAssignments=${currentAssignments.length}`);
       if (currentAssignments.length >= maxCapacity) {
         return res.status(400).json({ 
           message: `Shift is at full capacity (${currentAssignments.length}/${maxCapacity})` 
