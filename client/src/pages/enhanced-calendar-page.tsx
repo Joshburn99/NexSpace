@@ -989,7 +989,7 @@ export default function EnhancedCalendarPage() {
             <DialogTitle>Shift Details</DialogTitle>
           </DialogHeader>
           {selectedShift && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Facility</Label>
@@ -1253,63 +1253,62 @@ export default function EnhancedCalendarPage() {
                   </div>
                 )}
               </div>
-
-              <div>
-                <Label>Description</Label>
-                <p className="mt-1 text-sm text-muted-foreground">{selectedShift.description}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Urgency Level</Label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <div className={`w-2 h-2 rounded-full ${
-                      selectedShift.urgency === 'critical' ? 'bg-red-500' :
-                      selectedShift.urgency === 'high' ? 'bg-orange-500' :
-                      selectedShift.urgency === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                    }`} />
-                    <span className="capitalize">{selectedShift.urgency}</span>
-                  </div>
+                  <Label>Description</Label>
+                  <p className="mt-1 text-sm text-muted-foreground">{selectedShift.description}</p>
                 </div>
-                <div>
-                  <Label>Shift Duration</Label>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>{(() => {
-                      const start = new Date(`2000-01-01T${selectedShift.startTime}`);
-                      const end = new Date(`2000-01-01T${selectedShift.endTime}`);
-                      let hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-                      if (hours < 0) hours += 24;
-                      return `${hours} hours`;
-                    })()}</span>
-                  </div>
-                </div>
-              </div>
 
-              {selectedShift.status === 'completed' && selectedShift.invoiceAmount && (
-                <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
-                  <div className="flex items-center justify-between mb-2">
-                    <Label className="text-sm font-semibold text-green-800 dark:text-green-200">Invoice Information</Label>
-                    <Badge variant={selectedShift.invoiceStatus === 'approved' ? 'default' : 'secondary'}>
-                      {selectedShift.invoiceStatus === 'approved' ? 'Approved' : 'Pending Review'}
-                    </Badge>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Hours Worked:</span>
-                      <span className="ml-2 font-medium">{selectedShift.invoiceHours}h</span>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Urgency Level</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className={`w-2 h-2 rounded-full ${
+                        selectedShift.urgency === 'critical' ? 'bg-red-500' :
+                        selectedShift.urgency === 'high' ? 'bg-orange-500' :
+                        selectedShift.urgency === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                      }`} />
+                      <span className="capitalize">{selectedShift.urgency}</span>
                     </div>
-                    <div>
-                      <span className="text-muted-foreground">Amount:</span>
-                      <span className="ml-2 font-medium">${selectedShift.invoiceAmount.toFixed(2)}</span>
+                  </div>
+                  <div>
+                    <Label>Shift Duration</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span>{(() => {
+                        const start = new Date(`2000-01-01T${selectedShift.startTime}`);
+                        const end = new Date(`2000-01-01T${selectedShift.endTime}`);
+                        let hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                        if (hours < 0) hours += 24;
+                        return `${hours} hours`;
+                      })()}</span>
                     </div>
                   </div>
                 </div>
-              )}
 
-              {/* Shift Requests List for Facility Managers and Super Admins */}
-              {user && (user.role === 'facility_manager' || user.role === 'super_admin' || user.role === 'admin') && selectedShift.status === 'open' && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                {selectedShift.status === 'completed' && selectedShift.invoiceAmount && (
+                  <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                    <div className="flex items-center justify-between mb-2">
+                      <Label className="text-sm font-semibold text-green-800 dark:text-green-200">Invoice Information</Label>
+                      <Badge variant={selectedShift.invoiceStatus === 'approved' ? 'default' : 'secondary'}>
+                        {selectedShift.invoiceStatus === 'approved' ? 'Approved' : 'Pending Review'}
+                      </Badge>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Hours Worked:</span>
+                        <span className="ml-2 font-medium">{selectedShift.invoiceHours}h</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Amount:</span>
+                        <span className="ml-2 font-medium">${selectedShift.invoiceAmount.toFixed(2)}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Shift Requests List for Facility Managers and Super Admins */}
+                {user && (user.role === 'facility_manager' || user.role === 'super_admin' || user.role === 'admin') && selectedShift.status === 'open' && (
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                   <div className="flex items-center justify-between mb-3">
                     <Label className="text-base font-semibold text-blue-900 dark:text-blue-100">Shift Requests</Label>
                     <Badge variant="secondary">{shiftRequests.length} Request{shiftRequests.length !== 1 ? 's' : ''}</Badge>
