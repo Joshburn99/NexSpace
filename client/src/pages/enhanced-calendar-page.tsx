@@ -1253,34 +1253,36 @@ export default function EnhancedCalendarPage() {
                   </div>
                 )}
                 
-                <div>
-                  <Label>Description</Label>
-                  <p className="mt-1 text-sm text-muted-foreground">{selectedShift.description}</p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
+                <div className="mt-6 space-y-4">
                   <div>
-                    <Label>Urgency Level</Label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className={`w-2 h-2 rounded-full ${
-                        selectedShift.urgency === 'critical' ? 'bg-red-500' :
-                        selectedShift.urgency === 'high' ? 'bg-orange-500' :
-                        selectedShift.urgency === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                      }`} />
-                      <span className="capitalize">{selectedShift.urgency}</span>
-                    </div>
+                    <Label>Description</Label>
+                    <p className="mt-1 text-sm text-muted-foreground">{selectedShift.description}</p>
                   </div>
-                  <div>
-                    <Label>Shift Duration</Label>
-                    <div className="flex items-center gap-2 mt-1">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
-                      <span>{(() => {
-                        const start = new Date(`2000-01-01T${selectedShift.startTime}`);
-                        const end = new Date(`2000-01-01T${selectedShift.endTime}`);
-                        let hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-                        if (hours < 0) hours += 24;
-                        return `${hours} hours`;
-                      })()}</span>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Urgency Level</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className={`w-2 h-2 rounded-full ${
+                          selectedShift.urgency === 'critical' ? 'bg-red-500' :
+                          selectedShift.urgency === 'high' ? 'bg-orange-500' :
+                          selectedShift.urgency === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                        }`} />
+                        <span className="capitalize">{selectedShift.urgency}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Shift Duration</Label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span>{(() => {
+                          const start = new Date(`2000-01-01T${selectedShift.startTime}`);
+                          const end = new Date(`2000-01-01T${selectedShift.endTime}`);
+                          let hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                          if (hours < 0) hours += 24;
+                          return `${hours} hours`;
+                        })()}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
