@@ -45,7 +45,7 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
   onAssignWorker,
   onUnassignWorker
 }) => {
-  const [isAssigning, setIsAssigning = useState<string | null>(null);
+  const [isAssigning, setIsAssigning] = useState<string | null>(null);
 
   if (!shift || !facility) return null;
 
@@ -94,7 +94,7 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Badge variant="outline">{shift.specialty}</Badge>
@@ -102,7 +102,7 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 max-h-[calc(90vh-120px)] overflow-y-auto">
+        <ScrollArea className="max-h-[calc(90vh-8rem)]">
           <div className="space-y-6">
             {/* Shift Overview */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -195,7 +195,7 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                           {worker.firstName?.[0]}{worker.lastName?.[0]}
                         </AvatarFallback>
                       </Avatar>
-
+                      
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">
                           {worker.name || `${worker.firstName} ${worker.lastName}`}
@@ -264,7 +264,7 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                         <AvatarImage src={worker.avatar} />
                         <AvatarFallback>{getUserInitials(worker)}</AvatarFallback>
                       </Avatar>
-
+                      
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">
                           {getUserFullName(worker)}
