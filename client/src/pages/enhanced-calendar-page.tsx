@@ -748,34 +748,36 @@ export default function EnhancedCalendarPage() {
 
             {/* Filter Summary */}
             {activeFilterCount > 0 && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {filters.facilities.map(facilityId => {
-                  const facility = (facilities as any[]).find((f: any) => f.id.toString() === facilityId);
-                  return facility ? (
-                    <Badge key={facilityId} variant="secondary">
-                      <Building className="h-3 w-3 mr-1" />
-                      {facility.name}
+              <div className="mt-4 space-y-2">
+                <div className="flex flex-wrap gap-2">
+                  {filters.facilities.map(facilityId => {
+                    const facility = (facilities as any[]).find((f: any) => f.id.toString() === facilityId);
+                    return facility ? (
+                      <Badge key={facilityId} variant="secondary">
+                        <Building className="h-3 w-3 mr-1" />
+                        {facility.name}
+                      </Badge>
+                    ) : null;
+                  })}
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {filters.specialties.map((specialty, idx) => (
+                    <Badge key={`${specialty}-${idx}`} variant="secondary">
+                      <Users className="h-3 w-3 mr-1" />
+                      {specialty}
                     </Badge>
-                  ) : null;
-                })}
-              </div>
+                  ))}
+                </div>
 
-              <div className="flex flex-wrap gap-2">
-                {filters.specialties.map((specialty, idx) => (
-                  <Badge key={`${specialty}-${idx}`} variant="secondary">
-                    <Users className="h-3 w-3 mr-1" />
-                    {specialty}
-                  </Badge>
-                ))}
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {filters.statuses.map(status => (
-                  <Badge key={status} variant="secondary">
-                    <CheckCircle className="h-3 w-3 mr-1" />
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </Badge>
-                ))}
+                <div className="flex flex-wrap gap-2">
+                  {filters.statuses.map(status => (
+                    <Badge key={status} variant="secondary">
+                      <CheckCircle className="h-3 w-3 mr-1" />
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </Badge>
+                  ))}
+                </div>
               </div>
             )}
           </CardContent>
