@@ -156,6 +156,7 @@ export default function EnhancedCalendarPage() {
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [showUseTemplateModal, setShowUseTemplateModal] = useState(false);
+  const [showPostShiftModal, setShowPostShiftModal] = useState(false);
   const [activeTab, setActiveTab] = useState("calendar");
   
   // Advanced filters state
@@ -549,14 +550,24 @@ export default function EnhancedCalendarPage() {
             Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
           </Button>
           {user && (user.role === 'facility_manager' || user.role === 'super_admin' || user.role === 'admin') && (
-            <Button
-              onClick={() => setShowAddShiftDialog(true)}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              Add Shift
-            </Button>
+            <>
+              <Button
+                onClick={() => setShowAddShiftDialog(true)}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <Calendar className="h-4 w-4 mr-2" />
+                Add Shift
+              </Button>
+              <Button
+                onClick={() => setShowPostShiftModal(true)}
+                size="sm"
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <PlayCircle className="h-4 w-4 mr-2" />
+                Post Shift
+              </Button>
+            </>
           )}
           <div className="flex gap-1">
             <Button
@@ -1903,6 +1914,170 @@ export default function EnhancedCalendarPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Post Shift Modal */}
+      {showPostShiftModal && (
+        <Dialog open={showPostShiftModal} onOpenChange={setShowPostShiftModal}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Post New Shift</DialogTitle>
+            </DialogHeader>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const facilityId = parseInt(formData.get('facilityId') as string);
+              const facility = (facilities as any[])?.find(f => f.id === facilityId);
+              
+              const shiftData = {
+                title: formData.get('title'),
+                date: formData.get('date'),
+                startTime: formData.get('startTime'),
+                endTime: formData.get('endTime'),
+                department: formData.get('department'),
+                specialty: formData.get('specialty'),
+                facilityId: facilityId,
+                facilityName: facility?.name || 'Unknown Facility',
+                rate: parseFloat(formData.get('rate') as string),
+                urgency: formData.get('urgency'),
+                description: formData.get('description'),
+                requiredWorkers: parseInt(formData.get('requiredWorkers') as string) || 1,
+                minStaff: parseInt(formData.get('minStaff') as string) || 1,
+                maxStaff: parseInt(formData.get('maxStaff') as string) || 1,
+                totalHours: parseInt(formData.get('totalHours') as string) || 8,
+                buildingId: 'main-building',
+                buildingName: 'Main Building'
+              };
+              postShiftMutation.mutate(shiftData);
+            }} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="title">Shift Title</Label>
+                  <Input name="title" placeholder="e.g., ICU Day Shift" required />
+                </div>
+                <div>
+                  <Label htmlFor="date">Date</Label>
+                  <Input name="date" type="date" required />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="startTime">Start Time</Label>
+                  <Input name="startTime" type="time" required />
+                </div>
+                <div>
+                  <Label htmlFor="endTime">End Time</Label>
+                  <Input name="endTime" type="time" required />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="department">Department</Label>
+                  <Select name="department" required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ICU">ICU</SelectItem>
+                      <SelectItem value="Emergency">Emergency</SelectItem>
+                      <SelectItem value="Operating Room">Operating Room</SelectItem>
+                      <SelectItem value="Medical/Surgical">Medical/Surgical</SelectItem>
+                      <SelectItem value="Pediatrics">Pediatrics</SelectItem>
+                      <SelectItem value="Oncology">Oncology</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="specialty">Specialty</Label>
+                  <Select name="specialty" required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select specialty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="RN">RN</SelectItem>
+                      <SelectItem value="LPN">LPN</SelectItem>
+                      <SelectItem value="CNA">CNA</SelectItem>
+                      <SelectItem value="CST">CST</SelectItem>
+                      <SelectItem value="RT">RT</SelectItem>
+                      <SelectItem value="PT">PT</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="facilityId">Facility</Label>
+                  <Select name="facilityId" required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select facility" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(facilities as any[])?.map((facility) => (
+                        <SelectItem key={facility.id} value={facility.id.toString()}>
+                          {facility.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="rate">Hourly Rate ($)</Label>
+                  <Input name="rate" type="number" step="0.01" placeholder="45.00" required />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="requiredWorkers">Required Workers</Label>
+                  <Input name="requiredWorkers" type="number" min="1" defaultValue="1" />
+                </div>
+                <div>
+                  <Label htmlFor="urgency">Urgency</Label>
+                  <Select name="urgency" defaultValue="medium">
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="low">Low</SelectItem>
+                      <SelectItem value="medium">Medium</SelectItem>
+                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="critical">Critical</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="totalHours">Total Hours</Label>
+                  <Input name="totalHours" type="number" min="1" defaultValue="8" />
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Input name="description" placeholder="Shift details and requirements" />
+              </div>
+              
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowPostShiftModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={postShiftMutation.isPending}
+                >
+                  {postShiftMutation.isPending ? "Posting..." : "Post Shift"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 }
