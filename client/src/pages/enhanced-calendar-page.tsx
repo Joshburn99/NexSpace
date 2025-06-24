@@ -989,7 +989,7 @@ export default function EnhancedCalendarPage() {
             <DialogTitle>Shift Details</DialogTitle>
           </DialogHeader>
           {selectedShift && (
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Facility</Label>
@@ -1150,51 +1150,6 @@ export default function EnhancedCalendarPage() {
                       </div>
                     )}
                   </div>
-                ) : (selectedShift.assignedStaffNames && selectedShift.assignedStaffNames.length > 0) ? (
-                  <div className="space-y-3">
-                    {selectedShift.assignedStaffNames.map((staffName: string, index: number) => (
-                      <div key={index} className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                            <User className="h-5 w-5 text-primary" />
-                          </div>
-                          <div>
-                            <p className="font-medium">{staffName}</p>
-                            <p className="text-sm text-muted-foreground">{selectedShift.specialty}</p>
-                            <div className="flex items-center gap-1 mt-1">
-                              <Star className="h-3 w-3 text-yellow-500 fill-current" />
-                              <span className="text-sm text-muted-foreground">4.5/5</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              if (selectedShift.assignedStaffId) {
-                                window.location.href = `/enhanced-staff?profile=${selectedShift.assignedStaffId}`;
-                              }
-                            }}
-                          >
-                            <ExternalLink className="h-3 w-3 mr-1" />
-                            Profile
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline"
-                            onClick={() => {
-                              if (selectedShift.assignedStaffId) {
-                                window.location.href = `/messaging?conversation=${selectedShift.assignedStaffId}`;
-                              }
-                            }}
-                          >
-                            <MessageCircle className="h-3 w-3 mr-1" />
-                            Message
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
                 ) : selectedShift.assignedStaffName ? (
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
@@ -1242,51 +1197,177 @@ export default function EnhancedCalendarPage() {
                         </Button>
                       </div>
                     </div>
+                    
+                    {/* Invoice Information for Completed Shifts Only */}
+                    {selectedShift.status === 'completed' && selectedShift.invoiceAmount && (
+                      <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
+                        <div className="flex items-center justify-between mb-2">
+                          <Label className="text-sm font-semibold text-green-800 dark:text-green-200">Invoice Information</Label>
+                          <Badge variant={selectedShift.invoiceStatus === 'approved' ? 'default' : 'secondary'}>
+                            {selectedShift.invoiceStatus === 'approved' ? 'Approved' : 'Pending Review'}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Hours Worked:</span>
+                            <span className="ml-2 font-medium">{selectedShift.invoiceHours}h</span>
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Amount:</span>
+                            <span className="ml-2 font-medium">${selectedShift.invoiceAmount.toFixed(2)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-2" />
+                  <div className="text-center py-4">
+                    <AlertCircle className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
                     <p className="text-sm text-muted-foreground">No staff assigned to this shift</p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {selectedShift.totalPositions ? `${selectedShift.totalPositions} position(s) available` : 'Position available'}
                     </p>
                   </div>
                 )}
-                
-                <div className="mt-6 space-y-4">
-                  <div>
-                    <Label>Description</Label>
-                    <p className="mt-1 text-sm text-muted-foreground">{selectedShift.description}</p>
-                  </div>
+              </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Urgency Level</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className={`w-2 h-2 rounded-full ${
-                          selectedShift.urgency === 'critical' ? 'bg-red-500' :
-                          selectedShift.urgency === 'high' ? 'bg-orange-500' :
-                          selectedShift.urgency === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                        }`} />
-                        <span className="capitalize">{selectedShift.urgency}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Shift Duration</Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span>{(() => {
-                          const start = new Date(`2000-01-01T${selectedShift.startTime}`);
-                          const end = new Date(`2000-01-01T${selectedShift.endTime}`);
-                          let hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-                          if (hours < 0) hours += 24;
-                          return `${hours} hours`;
-                        })()}</span>
-                      </div>
-                    </div>
+              <div>
+                <Label>Description</Label>
+                <p className="mt-1 text-sm text-muted-foreground">{selectedShift.description}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Urgency Level</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <div className={`w-2 h-2 rounded-full ${
+                      selectedShift.urgency === 'critical' ? 'bg-red-500' :
+                      selectedShift.urgency === 'high' ? 'bg-orange-500' :
+                      selectedShift.urgency === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
+                    }`} />
+                    <span className="capitalize">{selectedShift.urgency}</span>
+                  </div>
+                </div>
+                <div>
+                  <Label>Shift Duration</Label>
+                  <div className="flex items-center gap-2 mt-1">
+                    <Timer className="h-4 w-4 text-muted-foreground" />
+                    <span>
+                      {(() => {
+                        const start = new Date(`2000-01-01T${selectedShift.startTime}`);
+                        let end = new Date(`2000-01-01T${selectedShift.endTime}`);
+                        
+                        // Handle overnight shifts (end time is next day)
+                        if (end <= start) {
+                          end = new Date(`2000-01-02T${selectedShift.endTime}`);
+                        }
+                        
+                        const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                        return `${Math.abs(hours)} hours`;
+                      })()}
+                    </span>
                   </div>
                 </div>
               </div>
+
+              {/* Shift Requests List for Facility Managers and Super Admins */}
+              {user && (user.role === 'facility_manager' || user.role === 'super_admin' || user.role === 'admin') && selectedShift.status === 'open' && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-center justify-between mb-3">
+                    <Label className="text-base font-semibold text-blue-900 dark:text-blue-100">Shift Requests</Label>
+                    <Badge variant="secondary">{shiftRequests.length} Request{shiftRequests.length !== 1 ? 's' : ''}</Badge>
+                  </div>
+                  
+                  {shiftRequests.length > 0 ? (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {shiftRequests.map((request: any) => (
+                        <div key={request.id} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center flex-shrink-0">
+                                <User className="h-4 w-4 text-blue-600 dark:text-blue-300" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-sm">{request.workerName}</p>
+                                <p className="text-xs text-muted-foreground">{request.specialty}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="flex items-center gap-1 mb-1">
+                                <span className="text-xs text-muted-foreground">Reliability:</span>
+                                <span className="text-xs font-medium text-green-600">{request.reliabilityScore}%</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Star className="h-3 w-3 text-yellow-500 fill-current" />
+                                <span className="text-xs">{request.averageRating?.toFixed(1)}</span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-2 grid grid-cols-2 gap-4 text-xs">
+                            <div>
+                              <span className="text-muted-foreground">Shifts Worked:</span>
+                              <span className="ml-1 font-medium">{request.totalShiftsWorked}</span>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Rate:</span>
+                              <span className="ml-1 font-medium">${request.hourlyRate?.toFixed(0)}/hr</span>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-2 flex gap-2">
+                            <Button size="sm" variant="outline" className="flex-1 text-xs">
+                              <ExternalLink className="h-3 w-3 mr-1" />
+                              View Profile
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white text-xs"
+                              onClick={() => {
+                                if (selectedShift && request.workerId) {
+                                  assignWorkerMutation.mutate({
+                                    shiftId: selectedShift.id,
+                                    workerId: request.workerId
+                                  });
+                                }
+                              }}
+                              disabled={assignWorkerMutation.isPending}
+                            >
+                              <UserCheck className="h-3 w-3 mr-1" />
+                              {assignWorkerMutation.isPending ? "Assigning..." : "Assign"}
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <Users className="h-8 w-8 text-blue-400 mx-auto mb-2" />
+                      <p className="text-sm text-blue-700 dark:text-blue-300">No requests for this shift yet</p>
+                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Workers can request this shift from their dashboard</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Regular Employee Request Action */}
+              {user && (user.role === 'employee' || user.role === 'contractor') && selectedShift.status === 'open' && !selectedShift.assignedStaffId && (
+                <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <Label className="text-base font-semibold text-green-900 dark:text-green-100">Request This Shift</Label>
+                      <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                        Submit a request to work this shift. Your request will be reviewed by the facility manager.
+                      </p>
+                    </div>
+                    <Button className="bg-green-600 hover:bg-green-700 text-white">
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Request Shift
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </DialogContent>
       </Dialog>

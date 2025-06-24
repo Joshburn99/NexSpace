@@ -21,9 +21,6 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 - Added database integration for both manual shift creation and template-based generation
 - Improved specialty validation preventing LPN assignments to CST shifts
 - Calendar display now shows "Requesting" instead of "Unassigned" with proper capacity ratios (1/1)
-- Fixed shift detail modal sizing to fit within screen viewport with proper scrolling
-- Resolved data synchronization issue between assignment database and calendar display
-- Enhanced assigned staff display to show proper worker names and assignment status
 
 ### June 23, 2025 - TypeScript Foundation Restructure
 - Created comprehensive TypeScript interface system in `client/src/types/`
