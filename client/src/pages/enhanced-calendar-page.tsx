@@ -1871,6 +1871,7 @@ export default function EnhancedCalendarPage() {
                 const response = await fetch('/api/shifts/from-template', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
                   body: JSON.stringify({
                     templateId: selectedTemplate.id,
                     startDate: formData.get('startDate') || new Date().toISOString().split('T')[0],

@@ -13,6 +13,15 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### June 24, 2025 - Individual Shift IDs & Consolidated Shift Creation
+- Removed duplicate "Post Shift" button, consolidated functionality into single "Add Shift" button
+- Implemented unique individual shift IDs using timestamp+random generation for database storage
+- Fixed 500 errors in shifts API by adding proper error handling for database queries
+- Enhanced template-based shift generation to create shifts with individual IDs in generated_shifts table
+- Added database integration for both manual shift creation and template-based generation
+- Improved specialty validation preventing LPN assignments to CST shifts
+- Calendar display now shows "Requesting" instead of "Unassigned" with proper capacity ratios (1/1)
+
 ### June 23, 2025 - TypeScript Foundation Restructure
 - Created comprehensive TypeScript interface system in `client/src/types/`
 - Implemented mock data structure with realistic healthcare scenarios

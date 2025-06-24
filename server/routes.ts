@@ -7336,10 +7336,15 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Create shifts from template endpoint
+  // Create shifts from template endpoint - generates multiple shifts with individual IDs
   app.post("/api/shifts/from-template", requireAuth, async (req, res) => {
     try {
       const { templateId, startDate, endDate, daysInAdvance } = req.body;
+      const userId = (req as any).user?.id;
+      
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
       
       // Get templates from the same source as the shift-templates API
       const templates = [
@@ -7488,24 +7493,8 @@ export function registerRoutes(app: Express): Server {
         }
       }
       
-      // Store the generated shifts in a global array that persists during session
-      if (!(global as any).templateGeneratedShifts) {
-        (global as any).templateGeneratedShifts = [];
-      }
-      
-      // Add generated shifts to persistent storage
-      generatedShifts.forEach(shift => {
-        // Check if shift already exists to avoid duplicates
-        const exists = (global as any).templateGeneratedShifts.find((s: any) => 
-          s.date === shift.date && 
-          s.startTime === shift.startTime && 
-          s.department === shift.department
-        );
-        
-        if (!exists) {
-          (global as any).templateGeneratedShifts.push(shift);
-        }
-      });
+      // All shifts are now stored in database via individual inserts above
+      console.log(`Generated ${generatedShifts.length} shifts from template ${template.name}`);
       
       res.json({
         message: `Successfully created ${generatedShifts.length} shifts from template`,
