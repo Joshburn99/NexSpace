@@ -32,6 +32,8 @@ import {
   facilities,
   shiftRequests,
   shiftHistory,
+  shiftTemplates,
+  generatedShifts,
   users,
   messages,
 } from "@shared/schema";
@@ -7285,7 +7287,7 @@ export function registerRoutes(app: Express): Server {
   // Post shift endpoint - generates individual shifts to database
   app.post("/api/shifts/post", requireAuth, async (req, res) => {
     try {
-      const { shiftData } = req.body;
+      const shiftData = req.body;
       const userId = (req as any).user?.id;
       
       if (!userId) {
