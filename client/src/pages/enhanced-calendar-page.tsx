@@ -1285,6 +1285,7 @@ export default function EnhancedCalendarPage() {
                   </div>
                 </div>
               </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>
