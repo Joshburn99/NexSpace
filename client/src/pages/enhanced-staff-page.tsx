@@ -609,9 +609,11 @@ function EnhancedStaffPageContent() {
             </SelectContent>
           </Select>
         </div>
+      </CardContent>
+    </Card>
 
-          {/* Staff Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+    {/* Staff Grid */}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredStaff.map((staff) => (
               <Card
                 key={staff.id}
