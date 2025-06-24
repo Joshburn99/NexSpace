@@ -191,8 +191,11 @@ export default function EnhancedCalendarPage() {
   });
 
   // Fetch shifts with filters
-  const { data: shifts = [], isLoading } = useQuery<EnhancedShift[]>({
+  const { data: shifts = [], isLoading, refetch: refetchShifts } = useQuery<EnhancedShift[]>({
     queryKey: ["/api/shifts", filters, searchTerm],
+    staleTime: 0, // Always fetch fresh data
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
   });
 
   // Fetch facilities for filters
@@ -300,9 +303,16 @@ export default function EnhancedCalendarPage() {
         description: "Shift has been successfully added to the schedule."
       });
       
-      // Refresh shifts data
+      // Force immediate refresh of calendar data
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/shifts", filters, searchTerm] });
+      refetchShifts();
       setShowPostShiftModal(false);
+      
+      // Force page refresh to ensure new shift appears
+      setTimeout(() => {
+        window.location.reload();
+      }, 300);
     },
     onError: (error: any) => {
       toast({

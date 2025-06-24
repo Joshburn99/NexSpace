@@ -7287,10 +7287,14 @@ export function registerRoutes(app: Express): Server {
   // Post shift endpoint - generates individual shifts to database
   app.post("/api/shifts/post", requireAuth, async (req, res) => {
     try {
-      const shiftData = req.body;
+      const requestBody = req.body;
       const userId = (req as any).user?.id;
       
-      console.log("Post shift request data:", shiftData);
+      console.log("Post shift request body:", requestBody);
+      
+      // Extract shiftData from request body (the mutation wraps it in { shiftData })
+      const shiftData = requestBody.shiftData || requestBody;
+      console.log("Extracted shift data:", shiftData);
       
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
