@@ -136,6 +136,24 @@ export default function EnhancedCalendarPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Helper function to calculate hours between two times
+  const calculateHoursBetween = (startTime: string, endTime: string): number => {
+    if (!startTime || !endTime) return 8;
+    
+    const start = new Date(`2000-01-01 ${startTime}`);
+    const end = new Date(`2000-01-01 ${endTime}`);
+    
+    // Handle overnight shifts
+    if (end < start) {
+      end.setDate(end.getDate() + 1);
+    }
+    
+    const diffMs = end.getTime() - start.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    
+    return Math.round(diffHours * 10) / 10; // Round to 1 decimal place
+  };
 
   // Redirect workers to their Open Shifts list view
   const isWorker = user?.role === "internal_employee" || user?.role === "contractor_1099";
@@ -1920,22 +1938,33 @@ export default function EnhancedCalendarPage() {
               const facilityId = parseInt(formData.get('facilityId') as string);
               const facility = (facilities as any[])?.find(f => f.id === facilityId);
               
+              // Calculate total hours from start and end time
+              const startTime = formData.get('startTime') as string;
+              const endTime = formData.get('endTime') as string;
+              const totalHours = calculateHoursBetween(startTime, endTime);
+              
+              // Get multiplier and base rate (placeholder - will be calculated from staff profile when workers request)
+              const multiplier = parseFloat(formData.get('rateMultiplier') as string) || 1.0;
+              const baseRate = 45.00; // Base rate placeholder - actual rate comes from staff profile during assignment
+              
               const shiftData = {
                 title: formData.get('title'),
                 date: formData.get('date'),
-                startTime: formData.get('startTime'),
-                endTime: formData.get('endTime'),
+                startTime: startTime,
+                endTime: endTime,
                 department: formData.get('department'),
                 specialty: formData.get('specialty'),
                 facilityId: facilityId,
                 facilityName: facility?.name || 'Unknown Facility',
-                rate: parseFloat(formData.get('rate') as string),
+                hourlyRate: baseRate * multiplier,
+                rate: baseRate * multiplier,
+                rateMultiplier: multiplier,
                 urgency: formData.get('urgency'),
                 description: formData.get('description'),
                 requiredWorkers: parseInt(formData.get('requiredWorkers') as string) || 1,
                 minStaff: parseInt(formData.get('minStaff') as string) || 1,
                 maxStaff: parseInt(formData.get('maxStaff') as string) || 1,
-                totalHours: parseInt(formData.get('totalHours') as string) || 8,
+                totalHours: totalHours,
                 buildingId: 'main-building',
                 buildingName: 'Main Building'
               };
@@ -1955,11 +1984,37 @@ export default function EnhancedCalendarPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="startTime">Start Time</Label>
-                  <Input name="startTime" type="time" required />
+                  <Input 
+                    name="startTime" 
+                    type="time" 
+                    required 
+                    onChange={(e) => {
+                      const startTime = e.target.value;
+                      const endTimeInput = document.querySelector('input[name="endTime"]') as HTMLInputElement;
+                      const totalHoursInput = document.querySelector('input[name="totalHours"]') as HTMLInputElement;
+                      if (endTimeInput?.value && totalHoursInput) {
+                        const hours = calculateHoursBetween(startTime, endTimeInput.value);
+                        totalHoursInput.value = hours.toString();
+                      }
+                    }}
+                  />
                 </div>
                 <div>
                   <Label htmlFor="endTime">End Time</Label>
-                  <Input name="endTime" type="time" required />
+                  <Input 
+                    name="endTime" 
+                    type="time" 
+                    required 
+                    onChange={(e) => {
+                      const endTime = e.target.value;
+                      const startTimeInput = document.querySelector('input[name="startTime"]') as HTMLInputElement;
+                      const totalHoursInput = document.querySelector('input[name="totalHours"]') as HTMLInputElement;
+                      if (startTimeInput?.value && totalHoursInput) {
+                        const hours = calculateHoursBetween(startTimeInput.value, endTime);
+                        totalHoursInput.value = hours.toString();
+                      }
+                    }}
+                  />
                 </div>
               </div>
               
@@ -2015,8 +2070,30 @@ export default function EnhancedCalendarPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="rate">Hourly Rate ($)</Label>
-                  <Input name="rate" type="number" step="0.01" placeholder="45.00" required />
+                  <Label htmlFor="rateMultiplier">Rate Multiplier</Label>
+                  <div className="px-2">
+                    <input 
+                      name="rateMultiplier"
+                      type="range" 
+                      min="1.1" 
+                      max="1.6" 
+                      step="0.1" 
+                      defaultValue="1.3"
+                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                      onChange={(e) => {
+                        const multiplierValue = document.querySelector('.multiplier-display');
+                        if (multiplierValue) {
+                          multiplierValue.textContent = `${e.target.value}x`;
+                        }
+                      }}
+                    />
+                    <div className="flex justify-between text-xs text-gray-500 mt-1">
+                      <span>1.1x</span>
+                      <span className="multiplier-display">1.3x</span>
+                      <span>1.6x</span>
+                    </div>
+                    <p className="text-xs text-gray-600 mt-1">Applied to worker's base rate upon request</p>
+                  </div>
                 </div>
               </div>
               
@@ -2041,7 +2118,8 @@ export default function EnhancedCalendarPage() {
                 </div>
                 <div>
                   <Label htmlFor="totalHours">Total Hours</Label>
-                  <Input name="totalHours" type="number" min="1" defaultValue="8" />
+                  <Input name="totalHours" type="number" min="1" defaultValue="8" readOnly className="bg-gray-100" />
+                  <p className="text-xs text-gray-600 mt-1">Auto-calculated from start/end time</p>
                 </div>
               </div>
               
