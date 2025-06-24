@@ -609,8 +609,9 @@ function EnhancedStaffPageContent() {
             </SelectContent>
           </Select>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </CardContent>
+  </Card>
 
     {/* Staff Grid */}
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -621,80 +622,80 @@ function EnhancedStaffPageContent() {
           onClick={() => setSelectedStaff(staff)}
         >
           <CardHeader className="pb-2">
-                  <div className="flex items-center space-x-3">
-                    <Avatar className="h-12 w-12">
-                      <AvatarImage src={staff.profileImage} />
-                      <AvatarFallback>
-                        {staff.firstName?.[0] || ""}
-                        {staff.lastName?.[0] || ""}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium truncate">
-                        {staff.firstName} {staff.lastName}
-                      </h3>
-                      <p className="text-sm text-muted-foreground truncate">
-                        {staff.specialty?.replace("_", " ") || "N/A"}
-                      </p>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Badge className={`${statusColors[staff.status || 'active']} text-white`}>
-                      {(staff.status || 'active').charAt(0).toUpperCase() + (staff.status || 'active').slice(1)}
-                    </Badge>
-                    <Badge variant="outline">{workerTypeLabels[staff.workerType] || 'Staff'}</Badge>
-                  </div>
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-12 w-12">
+                <AvatarImage src={staff.profileImage} />
+                <AvatarFallback>
+                  {staff.firstName?.[0] || ""}
+                  {staff.lastName?.[0] || ""}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium truncate">
+                  {staff.firstName} {staff.lastName}
+                </h3>
+                <p className="text-sm text-muted-foreground truncate">
+                  {staff.specialty?.replace("_", " ") || "N/A"}
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Badge className={`${statusColors[staff.status || 'active']} text-white`}>
+                {(staff.status || 'active').charAt(0).toUpperCase() + (staff.status || 'active').slice(1)}
+              </Badge>
+              <Badge variant="outline">{workerTypeLabels[staff.workerType] || 'Staff'}</Badge>
+            </div>
 
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <MapPin className="h-3 w-3 mr-1" />
-                    {staff.location}
-                  </div>
+            <div className="flex items-center text-sm text-muted-foreground">
+              <MapPin className="h-3 w-3 mr-1" />
+              {staff.location}
+            </div>
 
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center">
-                      <Star className="h-3 w-3 mr-1 text-yellow-500" />
-                      {staff.rating}/5
-                    </div>
-                    <div className="flex items-center">
-                      <DollarSign className="h-3 w-3 mr-1" />${staff.hourlyRate}/hr
-                    </div>
-                  </div>
+            <div className="flex items-center justify-between text-sm">
+              <div className="flex items-center">
+                <Star className="h-3 w-3 mr-1 text-yellow-500" />
+                {staff.rating}/5
+              </div>
+              <div className="flex items-center">
+                <DollarSign className="h-3 w-3 mr-1" />${staff.hourlyRate}/hr
+              </div>
+            </div>
 
-                  <div className="flex flex-wrap gap-1">
-                    {(staff.certifications || []).slice(0, 2).map((cert, i) => (
-                      <Badge key={i} variant="secondary" className="text-xs">
-                        {cert}
-                      </Badge>
-                    ))}
-                    {(staff.certifications || []).length > 2 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{(staff.certifications || []).length - 2} more
-                      </Badge>
-                    )}
-                  </div>
-                  
-                  {/* Impersonation Button */}
-                  <div className="pt-2 border-t">
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        startImpersonation(staff.id);
-                      }}
-                      variant="outline"
-                      size="sm"
-                      className="w-full text-xs"
-                    >
-                      <Users className="h-3 w-3 mr-1" />
-                      Impersonate User
-                    </Button>
-                  </div>
-                </CardContent>
+            <div className="flex flex-wrap gap-1">
+              {(staff.certifications || []).slice(0, 2).map((cert, i) => (
+                <Badge key={i} variant="secondary" className="text-xs">
+                  {cert}
+                </Badge>
+              ))}
+              {(staff.certifications || []).length > 2 && (
+                <Badge variant="secondary" className="text-xs">
+                  +{(staff.certifications || []).length - 2} more
+                </Badge>
+              )}
+            </div>
+            
+            {/* Impersonation Button */}
+            <div className="pt-2 border-t">
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  startImpersonation(staff.id);
+                }}
+                variant="outline"
+                size="sm"
+                className="w-full text-xs"
+              >
+                <Users className="h-3 w-3 mr-1" />
+                Impersonate User
+              </Button>
+            </div>
+          </CardContent>
         </Card>
       ))}
     </div>
-  </TabsContent>
+        </TabsContent>
 
         <TabsContent value="feed" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
