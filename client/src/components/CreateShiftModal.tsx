@@ -240,25 +240,29 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="premiumMultiplier">Rate Multiplier</Label>
-              <div className="space-y-3">
-                <input
-                  id="premiumMultiplier"
-                  type="range"
-                  min="1.0"
-                  max="1.6"
-                  step="0.1"
-                  value={formData.premiumMultiplier}
-                  onChange={(e) => setFormData(prev => ({ ...prev, premiumMultiplier: parseFloat(e.target.value) }))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
-                />
-                <div className="flex justify-between text-xs text-gray-500">
-                  <span>1.0x</span>
-                  <span className="font-medium">{formData.premiumMultiplier.toFixed(1)}x</span>
-                  <span>1.6x</span>
-                </div>
-                <p className="text-xs text-gray-600">Applied to worker's base rate upon request</p>
-              </div>
+              <Label htmlFor="premiumMultiplier">Premium</Label>
+              <Select 
+                value={formData.premiumMultiplier.toString()} 
+                onValueChange={(value) => setFormData(prev => ({ ...prev, premiumMultiplier: parseFloat(value) }))}
+              >
+                <SelectTrigger>
+                  <SelectValue>
+                    {formData.premiumMultiplier === 1.0 
+                      ? "1.0x (Standard)" 
+                      : `${formData.premiumMultiplier}x (+${Math.round((formData.premiumMultiplier - 1) * 100)}%)`
+                    }
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1.0">1.0x (Standard)</SelectItem>
+                  <SelectItem value="1.1">1.1x (+10%)</SelectItem>
+                  <SelectItem value="1.15">1.15x (+15%)</SelectItem>
+                  <SelectItem value="1.25">1.25x (+25%)</SelectItem>
+                  <SelectItem value="1.35">1.35x (+35%)</SelectItem>
+                  <SelectItem value="1.5">1.5x (+50%)</SelectItem>
+                  <SelectItem value="1.7">1.7x (+70%)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
