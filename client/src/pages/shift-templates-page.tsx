@@ -350,24 +350,26 @@ export default function ShiftTemplatesPage() {
     // Set editing state first
     setEditingTemplate(template);
     
-    // Prepare the form data with proper types
+    // Prepare the form data with proper mapping from database fields
     const formData = {
       name: template.name || "",
       department: template.department || "",
       specialty: template.specialty || "",
-      facilityId: template.facilityId || 0,
-      facilityName: template.facilityName || "",
-      buildingId: template.buildingId || "",
-      buildingName: template.buildingName || "",
-      minStaff: Number(template.minStaff) || 1,
-      maxStaff: Number(template.maxStaff) || 1,
-      shiftType: template.shiftType || "day",
-      startTime: template.startTime || "07:00",
-      endTime: template.endTime || "19:00",
-      daysOfWeek: Array.isArray(template.daysOfWeek) ? template.daysOfWeek : [1, 2, 3, 4, 5],
-      isActive: template.isActive !== undefined ? template.isActive : true,
-      hourlyRate: Number(template.hourlyRate) || 0,
-      daysPostedOut: Number(template.daysPostedOut) || 7,
+      facilityId: template.facilityId || template.facility_id || 0,
+      facilityName: template.facilityName || template.facility_name || "",
+      buildingId: template.buildingId || template.building_id || "",
+      buildingName: template.buildingName || template.building_name || "",
+      minStaff: Number(template.minStaff || template.min_staff) || 1,
+      maxStaff: Number(template.maxStaff || template.max_staff) || 1,
+      shiftType: template.shiftType || template.shift_type || "day",
+      startTime: template.startTime || template.start_time || "07:00",
+      endTime: template.endTime || template.end_time || "19:00",
+      daysOfWeek: Array.isArray(template.daysOfWeek) ? template.daysOfWeek : 
+                 Array.isArray(template.days_of_week) ? template.days_of_week : [1, 2, 3, 4, 5],
+      isActive: template.isActive !== undefined ? template.isActive : 
+               template.is_active !== undefined ? template.is_active : true,
+      hourlyRate: Number(template.hourlyRate || template.hourly_rate) || 0,
+      daysPostedOut: Number(template.daysPostedOut || template.days_posted_out) || 7,
       notes: template.notes || "",
     };
     
@@ -381,19 +383,30 @@ export default function ShiftTemplatesPage() {
     
     // Force immediate form update with validation after dialog opens
     setTimeout(() => {
+      // Reset completely then set all values
+      templateForm.reset(formData);
+      
       Object.entries(formData).forEach(([key, value]) => {
-        templateForm.setValue(key as any, value, { shouldValidate: false, shouldTouch: true });
-      });
-      console.log('Form values after manual setting:', templateForm.getValues());
-      console.log('Form state after setting:', {
-        isValid: templateForm.formState.isValid,
-        errors: templateForm.formState.errors,
-        dirtyFields: templateForm.formState.dirtyFields
+        templateForm.setValue(key as any, value, { 
+          shouldValidate: false, 
+          shouldTouch: true,
+          shouldDirty: true 
+        });
       });
       
-      // Force a re-render by triggering a form state change
+      // Force re-render of all form controls
       templateForm.trigger();
-    }, 200);
+      
+      console.log('Final form values:', templateForm.getValues());
+      console.log('Form watch values:', {
+        name: templateForm.watch("name"),
+        department: templateForm.watch("department"), 
+        specialty: templateForm.watch("specialty"),
+        facilityId: templateForm.watch("facilityId"),
+        shiftType: templateForm.watch("shiftType"),
+        minStaff: templateForm.watch("minStaff")
+      });
+    }, 300);
     
     // Dialog is opened above in the timeout
   };

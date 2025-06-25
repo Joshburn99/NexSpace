@@ -7130,16 +7130,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Shift Templates API - Database-based template storage
-  app.get("/api/shift-templates", requireAuth, async (req, res) => {
-    try {
-      const templates = await storage.getShiftTemplates();
-      res.json(templates);
-    } catch (error) {
-      console.error('Error fetching shift templates:', error);
-      res.status(500).json({ message: "Failed to fetch shift templates" });
-    }
-  });
+  // Remove this duplicate route - using the one below with transformations
 
   app.post("/api/shift-templates", requireAuth, async (req, res) => {
     try {
@@ -7208,11 +7199,26 @@ export function registerRoutes(app: Express): Server {
 
       console.log('UPDATED TEMPLATE FROM DB:', updatedTemplate);
       
-      // Verify the update was persisted by fetching the template again
-      const verificationTemplate = await storage.getShiftTemplate(templateId);
-      console.log('VERIFICATION FETCH:', verificationTemplate);
+      // Transform database response to camelCase for frontend
+      const transformedTemplate = {
+        ...updatedTemplate,
+        facilityId: updatedTemplate.facilityId || updatedTemplate.facility_id,
+        facilityName: updatedTemplate.facilityName || updatedTemplate.facility_name,
+        buildingId: updatedTemplate.buildingId || updatedTemplate.building_id,
+        buildingName: updatedTemplate.buildingName || updatedTemplate.building_name,
+        minStaff: updatedTemplate.minStaff || updatedTemplate.min_staff,
+        maxStaff: updatedTemplate.maxStaff || updatedTemplate.max_staff,
+        shiftType: updatedTemplate.shiftType || updatedTemplate.shift_type,
+        startTime: updatedTemplate.startTime || updatedTemplate.start_time,
+        endTime: updatedTemplate.endTime || updatedTemplate.end_time,
+        daysOfWeek: updatedTemplate.daysOfWeek || updatedTemplate.days_of_week,
+        isActive: updatedTemplate.isActive !== undefined ? updatedTemplate.isActive : updatedTemplate.is_active,
+        hourlyRate: updatedTemplate.hourlyRate || updatedTemplate.hourly_rate,
+        daysPostedOut: updatedTemplate.daysPostedOut || updatedTemplate.days_posted_out,
+      };
       
-      res.json(updatedTemplate);
+      console.log('TRANSFORMED UPDATED TEMPLATE:', transformedTemplate);
+      res.json(transformedTemplate);
     } catch (error) {
       console.error('Error updating shift template:', error);
       res.status(500).json({ message: "Failed to update shift template", error: error.message });
@@ -8485,7 +8491,27 @@ export function registerRoutes(app: Express): Server {
     try {
       const facilityId = req.query.facilityId ? parseInt(req.query.facilityId as string) : undefined;
       const templates = await storage.getShiftTemplates(facilityId);
-      res.json(templates);
+      
+      // Transform database fields to camelCase for frontend
+      const transformedTemplates = templates.map(template => ({
+        ...template,
+        facilityId: template.facilityId || template.facility_id,
+        facilityName: template.facilityName || template.facility_name,
+        buildingId: template.buildingId || template.building_id,
+        buildingName: template.buildingName || template.building_name,
+        minStaff: template.minStaff || template.min_staff,
+        maxStaff: template.maxStaff || template.max_staff,
+        shiftType: template.shiftType || template.shift_type,
+        startTime: template.startTime || template.start_time,
+        endTime: template.endTime || template.end_time,
+        daysOfWeek: template.daysOfWeek || template.days_of_week,
+        isActive: template.isActive !== undefined ? template.isActive : template.is_active,
+        hourlyRate: template.hourlyRate || template.hourly_rate,
+        daysPostedOut: template.daysPostedOut || template.days_posted_out,
+      }));
+      
+      console.log('Transformed templates for frontend:', transformedTemplates[0]);
+      res.json(transformedTemplates);
     } catch (error) {
       console.error("Error fetching shift templates:", error);
       res.status(500).json({ message: "Failed to fetch shift templates" });
