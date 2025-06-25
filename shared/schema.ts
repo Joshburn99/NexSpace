@@ -267,6 +267,7 @@ export const shiftTemplates = pgTable("shift_templates", {
   daysOfWeek: jsonb("days_of_week").notNull(), // [0,1,2,3,4,5,6] for sun-sat
   isActive: boolean("is_active").default(true),
   hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }).notNull(),
+  daysPostedOut: integer("days_posted_out").default(7),
   notes: text("notes"),
   buildingId: text("building_id"),
   buildingName: text("building_name"),
