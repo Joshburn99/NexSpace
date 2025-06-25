@@ -501,27 +501,18 @@ export default function ShiftTemplatesPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Days Posted Out</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    max="90"
-                    {...templateForm.register("daysPostedOut", { valueAsNumber: true })}
-                    placeholder="7"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    How many days in advance shifts are automatically posted
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2 pt-6">
-                  <Switch
-                    checked={templateForm.watch("isActive")}
-                    onCheckedChange={(checked) => templateForm.setValue("isActive", checked)}
-                  />
-                  <Label>Active Template</Label>
-                </div>
+              <div>
+                <Label>Days Posted Out</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="90"
+                  {...templateForm.register("daysPostedOut", { valueAsNumber: true })}
+                  placeholder="7"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  How many days in advance shifts are automatically posted
+                </p>
               </div>
 
               {/* Hourly Rate - Only visible to superusers */}
@@ -540,6 +531,14 @@ export default function ShiftTemplatesPage() {
                   </p>
                 </div>
               )}
+
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={templateForm.watch("isActive")}
+                  onCheckedChange={(checked) => templateForm.setValue("isActive", checked)}
+                />
+                <Label>Active Template</Label>
+              </div>
 
               <div>
                 <Label>Notes (Optional)</Label>
