@@ -1591,13 +1591,13 @@ export default function EnhancedCalendarPage() {
 
       {/* Template Creation/Edit Modal */}
       <Dialog open={showTemplateModal} onOpenChange={setShowTemplateModal}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {selectedTemplate ? 'Edit Template' : 'Create Shift Template'}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-2">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium">Template Name</Label>
@@ -1712,23 +1712,17 @@ export default function EnhancedCalendarPage() {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium">Min Staff Required</Label>
-                <Input 
-                  type="number" 
-                  placeholder="1"
-                  defaultValue={selectedTemplate?.minStaff || "1"}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Max Staff Capacity</Label>
-                <Input 
-                  type="number" 
-                  placeholder="3"
-                  defaultValue={selectedTemplate?.maxStaff || "3"}
-                />
-              </div>
+            <div>
+              <Label className="text-sm font-medium">Staff Required</Label>
+              <Input 
+                type="number" 
+                placeholder="1"
+                defaultValue={selectedTemplate?.minStaff || selectedTemplate?.maxStaff || "1"}
+                min="1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Number of staff positions needed for this shift
+              </p>
             </div>
             
             <div>
@@ -1843,7 +1837,7 @@ export default function EnhancedCalendarPage() {
 
       {/* Use Template Modal */}
       <Dialog open={showUseTemplateModal} onOpenChange={setShowUseTemplateModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Schedule Shifts from Template</DialogTitle>
           </DialogHeader>

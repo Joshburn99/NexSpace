@@ -13,6 +13,12 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### June 24, 2025 - Enhanced Calendar Templates UX Improvements
+- Consolidated Min/Max staff requirements into single "Staff Required" field for better usability
+- Added scrolling capability to template creation/edit modal (max-h-[90vh] overflow-y-auto)
+- Improved template popup accessibility with proper height constraints (max-h-[65vh])
+- Enhanced Use Template modal with scrolling support for better mobile compatibility
+
 ### June 24, 2025 - Individual Shift IDs & Consolidated Shift Creation
 - Removed duplicate "Post Shift" button, consolidated functionality into single "Add Shift" button
 - Implemented unique individual shift IDs using timestamp+random generation for database storage
