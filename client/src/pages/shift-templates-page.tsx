@@ -73,6 +73,7 @@ const templateSchema = z.object({
   specialty: z.string().min(1, "Specialty is required"),
   facilityId: z.number().min(1, "Facility is required"),
   minStaff: z.number().min(1, "Staff required must be at least 1"),
+  maxStaff: z.number().min(1, "Maximum staff must be at least 1"),
   shiftType: z.string(),
   startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
   endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
@@ -81,6 +82,9 @@ const templateSchema = z.object({
   hourlyRate: z.number().min(0, "Hourly rate must be positive").optional(),
   daysPostedOut: z.number().min(1, "Days posted out must be at least 1").max(90, "Days posted out cannot exceed 90").default(7),
   notes: z.string().optional(),
+}).refine((data) => data.maxStaff >= data.minStaff, {
+  message: "Maximum staff must be greater than or equal to minimum staff",
+  path: ["maxStaff"],
 });
 
 interface ShiftTemplate {
@@ -299,6 +303,7 @@ export default function ShiftTemplatesPage() {
       specialty: template.specialty,
       facilityId: template.facilityId,
       minStaff: template.minStaff,
+      maxStaff: template.maxStaff,
       shiftType: template.shiftType,
       startTime: template.startTime,
       endTime: template.endTime,
@@ -462,16 +467,38 @@ export default function ShiftTemplatesPage() {
                 </div>
               </div>
 
-              <div>
-                <Label>Staff Required</Label>
-                <Input
-                  type="number"
-                  min="1"
-                  {...templateForm.register("minStaff", { valueAsNumber: true })}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Number of staff positions needed for this shift
-                </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Staff Required</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    {...templateForm.register("minStaff", { 
+                      valueAsNumber: true,
+                      onChange: (e) => {
+                        const value = parseInt(e.target.value);
+                        if (value && value >= 1) {
+                          // Auto-set maxStaff to same value for consistency
+                          templateForm.setValue("maxStaff", value);
+                        }
+                      }
+                    })}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Number of staff positions needed
+                  </p>
+                </div>
+                <div>
+                  <Label>Maximum Staff</Label>
+                  <Input
+                    type="number"
+                    min="1"
+                    {...templateForm.register("maxStaff", { valueAsNumber: true })}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Maximum staff that can be assigned
+                  </p>
+                </div>
               </div>
 
               <div>

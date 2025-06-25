@@ -7150,9 +7150,9 @@ export function registerRoutes(app: Express): Server {
         department,
         specialty,
         facilityId,
-        facilityName,
+        facilityName: facilityName || "Unknown Facility",
         minStaff,
-        maxStaff,
+        maxStaff: maxStaff || minStaff, // Default maxStaff to minStaff if not provided
         shiftType,
         startTime,
         endTime,
@@ -7183,7 +7183,7 @@ export function registerRoutes(app: Express): Server {
         facilityId,
         facilityName,
         minStaff,
-        maxStaff,
+        maxStaff: maxStaff || minStaff, // Ensure maxStaff is at least minStaff
         shiftType,
         startTime,
         endTime,
