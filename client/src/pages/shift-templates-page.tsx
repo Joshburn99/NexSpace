@@ -72,6 +72,7 @@ const templateSchema = z.object({
   department: z.string().min(1, "Department is required"),
   specialty: z.string().min(1, "Specialty is required"),
   facilityId: z.number().min(1, "Facility is required"),
+  facilityName: z.string().optional(),
   minStaff: z.number().min(1, "Staff required must be at least 1"),
   maxStaff: z.number().min(1, "Maximum staff must be at least 1"),
   shiftType: z.string(),
@@ -172,15 +173,17 @@ export default function ShiftTemplatesPage() {
   });
 
   // Template form
-  const templateForm = useForm({
+  const templateForm = useForm<z.infer<typeof templateSchema>>({
     resolver: zodResolver(templateSchema),
     defaultValues: {
       name: "",
       department: "",
       specialty: "",
       facilityId: 0,
+      facilityName: "",
       minStaff: 1,
-      shiftType: "day" as const,
+      maxStaff: 1,
+      shiftType: "day",
       startTime: "07:00",
       endTime: "19:00",
       daysOfWeek: [1, 2, 3, 4, 5],
@@ -297,11 +300,13 @@ export default function ShiftTemplatesPage() {
 
   const handleEditTemplate = (template: ShiftTemplate) => {
     setEditingTemplate(template);
+    // Reset form with template data
     templateForm.reset({
       name: template.name,
       department: template.department,
       specialty: template.specialty,
       facilityId: template.facilityId,
+      facilityName: template.facilityName,
       minStaff: template.minStaff,
       maxStaff: template.maxStaff,
       shiftType: template.shiftType,
@@ -317,6 +322,9 @@ export default function ShiftTemplatesPage() {
   };
 
   const handleTemplateSubmit = (data: z.infer<typeof templateSchema>) => {
+    console.log('Submitting template data:', data);
+    console.log('Editing template:', editingTemplate);
+    
     if (editingTemplate) {
       updateTemplateMutation.mutate({ id: editingTemplate.id, data });
     } else {
@@ -379,7 +387,14 @@ export default function ShiftTemplatesPage() {
                   <Label>Facility</Label>
                   <Select 
                     value={templateForm.watch("facilityId")?.toString() || ""} 
-                    onValueChange={(value) => templateForm.setValue("facilityId", parseInt(value))}
+                    onValueChange={(value) => {
+                      templateForm.setValue("facilityId", parseInt(value));
+                      // Also set facilityName for consistency
+                      const selectedFacility = facilities.find(f => f.id === parseInt(value));
+                      if (selectedFacility) {
+                        templateForm.setValue("facilityName", selectedFacility.name);
+                      }
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select facility" />
@@ -579,7 +594,11 @@ export default function ShiftTemplatesPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setIsTemplateDialogOpen(false)}
+                  onClick={() => {
+                    setIsTemplateDialogOpen(false);
+                    setEditingTemplate(null);
+                    templateForm.reset();
+                  }}
                   className="flex-1"
                 >
                   Cancel
@@ -589,7 +608,7 @@ export default function ShiftTemplatesPage() {
                   className="flex-1"
                   disabled={createTemplateMutation.isPending || updateTemplateMutation.isPending}
                 >
-                  {editingTemplate ? "Update Template" : "Create Template"}
+                  {createTemplateMutation.isPending || updateTemplateMutation.isPending ? "Saving..." : editingTemplate ? "Update Template" : "Create Template"}
                 </Button>
               </div>
             </form>
