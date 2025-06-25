@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -78,6 +79,7 @@ const templateSchema = z.object({
   daysOfWeek: z.array(z.number()).min(1, "Select at least one day"),
   isActive: z.boolean().default(true),
   hourlyRate: z.number().min(0, "Hourly rate must be positive").optional(),
+  daysPostedOut: z.number().min(1, "Days posted out must be at least 1").max(90, "Days posted out cannot exceed 90").default(7),
   notes: z.string().optional(),
 });
 
@@ -96,6 +98,7 @@ interface ShiftTemplate {
   daysOfWeek: number[];
   isActive: boolean;
   hourlyRate?: number;
+  daysPostedOut: number;
   notes?: string;
   generatedShiftsCount: number;
   createdAt: string;
@@ -142,6 +145,7 @@ const DEPARTMENTS = [
 ];
 
 export default function ShiftTemplatesPage() {
+  const { user } = useAuth();
   const [isTemplateDialogOpen, setIsTemplateDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<ShiftTemplate | null>(null);
   const [deleteTemplate, setDeleteTemplate] = useState<ShiftTemplate | null>(null);
@@ -178,6 +182,7 @@ export default function ShiftTemplatesPage() {
       daysOfWeek: [1, 2, 3, 4, 5],
       isActive: true,
       hourlyRate: 0,
+      daysPostedOut: 7,
       notes: "",
     },
   });
@@ -300,6 +305,7 @@ export default function ShiftTemplatesPage() {
       daysOfWeek: template.daysOfWeek,
       isActive: template.isActive,
       hourlyRate: template.hourlyRate || 0,
+      daysPostedOut: template.daysPostedOut || 7,
       notes: template.notes || "",
     });
     setIsTemplateDialogOpen(true);
@@ -497,14 +503,17 @@ export default function ShiftTemplatesPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Hourly Rate (Optional)</Label>
+                  <Label>Days Posted Out</Label>
                   <Input
                     type="number"
-                    step="0.01"
-                    min="0"
-                    {...templateForm.register("hourlyRate", { valueAsNumber: true })}
-                    placeholder="0.00"
+                    min="1"
+                    max="90"
+                    {...templateForm.register("daysPostedOut", { valueAsNumber: true })}
+                    placeholder="7"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    How many days in advance shifts are automatically posted
+                  </p>
                 </div>
                 <div className="flex items-center space-x-2 pt-6">
                   <Switch
@@ -514,6 +523,23 @@ export default function ShiftTemplatesPage() {
                   <Label>Active Template</Label>
                 </div>
               </div>
+
+              {/* Hourly Rate - Only visible to superusers */}
+              {user?.role === 'superuser' && (
+                <div>
+                  <Label>Hourly Rate (Optional)</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    {...templateForm.register("hourlyRate", { valueAsNumber: true })}
+                    placeholder="0.00"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Only visible to superusers
+                  </p>
+                </div>
+              )}
 
               <div>
                 <Label>Notes (Optional)</Label>
