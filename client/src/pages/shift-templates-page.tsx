@@ -71,8 +71,7 @@ const templateSchema = z.object({
   department: z.string().min(1, "Department is required"),
   specialty: z.string().min(1, "Specialty is required"),
   facilityId: z.number().min(1, "Facility is required"),
-  minStaff: z.number().min(1, "Minimum staff must be at least 1"),
-  maxStaff: z.number().min(1, "Maximum staff must be at least 1"),
+  minStaff: z.number().min(1, "Staff required must be at least 1"),
   shiftType: z.string(),
   startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
   endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
@@ -173,7 +172,6 @@ export default function ShiftTemplatesPage() {
       specialty: "",
       facilityId: 0,
       minStaff: 1,
-      maxStaff: 3,
       shiftType: "day" as const,
       startTime: "07:00",
       endTime: "19:00",
@@ -296,7 +294,6 @@ export default function ShiftTemplatesPage() {
       specialty: template.specialty,
       facilityId: template.facilityId,
       minStaff: template.minStaff,
-      maxStaff: template.maxStaff,
       shiftType: template.shiftType,
       startTime: template.startTime,
       endTime: template.endTime,
@@ -347,13 +344,13 @@ export default function ShiftTemplatesPage() {
               Create Template
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>
                 {editingTemplate ? "Edit Shift Template" : "Create Shift Template"}
               </DialogTitle>
             </DialogHeader>
-            <form onSubmit={templateForm.handleSubmit(handleTemplateSubmit)} className="space-y-4">
+            <form onSubmit={templateForm.handleSubmit(handleTemplateSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Template Name</Label>
@@ -459,23 +456,16 @@ export default function ShiftTemplatesPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Min Staff Required</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    {...templateForm.register("minStaff", { valueAsNumber: true })}
-                  />
-                </div>
-                <div>
-                  <Label>Max Staff Capacity</Label>
-                  <Input
-                    type="number"
-                    min="1"
-                    {...templateForm.register("maxStaff", { valueAsNumber: true })}
-                  />
-                </div>
+              <div>
+                <Label>Staff Required</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  {...templateForm.register("minStaff", { valueAsNumber: true })}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Number of staff positions needed for this shift
+                </p>
               </div>
 
               <div>
