@@ -7206,7 +7206,12 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "Template not found" });
       }
 
-      console.log('UPDATED TEMPLATE:', updatedTemplate);
+      console.log('UPDATED TEMPLATE FROM DB:', updatedTemplate);
+      
+      // Verify the update was persisted by fetching the template again
+      const verificationTemplate = await storage.getShiftTemplate(templateId);
+      console.log('VERIFICATION FETCH:', verificationTemplate);
+      
       res.json(updatedTemplate);
     } catch (error) {
       console.error('Error updating shift template:', error);

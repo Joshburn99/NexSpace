@@ -235,8 +235,11 @@ export default function ShiftTemplatesPage() {
       console.log('=== UPDATE SUCCESS ===');
       console.log('Updated template received:', updatedTemplate);
       
+      // Force refresh of data to ensure UI shows latest changes
       queryClient.invalidateQueries({ queryKey: ["/api/shift-templates"] });
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+      
+      // Close dialog and reset form
       setIsTemplateDialogOpen(false);
       templateForm.reset({
         name: "",
@@ -258,9 +261,10 @@ export default function ShiftTemplatesPage() {
         notes: "",
       });
       setEditingTemplate(null);
+      
       toast({
-        title: "Template Updated",
-        description: "Template updated and shifts regenerated automatically.",
+        title: "Template Updated Successfully",
+        description: `Updated "${updatedTemplate.name}" - changes will reflect immediately.`,
       });
     },
     onError: (error) => {
@@ -583,9 +587,9 @@ export default function ShiftTemplatesPage() {
                 <div>
                   <Label>Specialty</Label>
                   <Select 
-                    value={templateForm.watch("specialty")} 
-              onValueChange={(value) => templateForm.setValue("specialty", value)}
-              >
+                    value={templateForm.watch("specialty") || ""} 
+                    onValueChange={(value) => templateForm.setValue("specialty", value)}
+                  >
                 <SelectTrigger>
                   <SelectValue placeholder="Select specialty" />
                 </SelectTrigger>
@@ -604,11 +608,11 @@ export default function ShiftTemplatesPage() {
                 <div>
                   <Label>Shift Type</Label>
                   <Select 
-                    value={templateForm.watch("shiftType")} 
+                    value={templateForm.watch("shiftType") || ""} 
                     onValueChange={(value) => templateForm.setValue("shiftType", value as "day" | "evening" | "night")}
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue placeholder="Select shift type" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="day">Day Shift</SelectItem>
