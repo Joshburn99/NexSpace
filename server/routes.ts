@@ -7444,6 +7444,8 @@ export function registerRoutes(app: Express): Server {
       }
       
       // Generate shifts based on template and date range
+      // Use template's daysPostedOut if daysInAdvance is not provided
+      const actualDaysInAdvance = daysInAdvance || template.daysPostedOut || 7;
       const generatedShifts = [];
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -7477,6 +7479,7 @@ export function registerRoutes(app: Express): Server {
             maxStaff: template.maxStaff,
             status: 'open' as const,
             hourlyRate: template.hourlyRate,
+            daysPostedOut: template.daysPostedOut,
             description: template.notes || `${template.department} shift`,
             urgency: 'medium' as const,
             priority: 'standard' as const,
