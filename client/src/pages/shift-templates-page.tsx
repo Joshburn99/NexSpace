@@ -660,7 +660,11 @@ export default function ShiftTemplatesPage() {
                   type="number"
                   min="1"
                   max="90"
-                  {...templateForm.register("daysPostedOut", { valueAsNumber: true })}
+                  value={templateForm.watch("daysPostedOut")}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    templateForm.setValue("daysPostedOut", value || 7);
+                  }}
                   placeholder="7"
                 />
                 <p className="text-xs text-muted-foreground mt-1">
@@ -676,7 +680,11 @@ export default function ShiftTemplatesPage() {
                     type="number"
                     step="0.01"
                     min="0"
-                    {...templateForm.register("hourlyRate", { valueAsNumber: true })}
+                    value={templateForm.watch("hourlyRate") || ""}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value);
+                      templateForm.setValue("hourlyRate", isNaN(value) ? 0 : value);
+                    }}
                     placeholder="0.00"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
@@ -696,7 +704,8 @@ export default function ShiftTemplatesPage() {
               <div>
                 <Label>Notes (Optional)</Label>
                 <Input
-                  {...templateForm.register("notes")}
+                  value={templateForm.watch("notes") || ""}
+                  onChange={(e) => templateForm.setValue("notes", e.target.value)}
                   placeholder="Additional template details..."
                 />
               </div>
