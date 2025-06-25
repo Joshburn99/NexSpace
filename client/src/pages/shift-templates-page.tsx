@@ -222,15 +222,41 @@ export default function ShiftTemplatesPage() {
   // Update template mutation
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, ...data }: { id: number } & z.infer<typeof templateSchema>) => {
-      console.log('Update mutation called with:', { id, data });
+      console.log('=== UPDATE MUTATION DEBUG ===');
+      console.log('Template ID:', id);
+      console.log('Update data being sent:', JSON.stringify(data, null, 2));
+      
       const response = await apiRequest("PUT", `/api/shift-templates/${id}`, data);
-      return response.json();
+      const result = await response.json();
+      console.log('Update response:', result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (updatedTemplate) => {
+      console.log('=== UPDATE SUCCESS ===');
+      console.log('Updated template received:', updatedTemplate);
+      
       queryClient.invalidateQueries({ queryKey: ["/api/shift-templates"] });
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
       setIsTemplateDialogOpen(false);
-      templateForm.reset();
+      templateForm.reset({
+        name: "",
+        department: "",
+        specialty: "",
+        facilityId: 0,
+        facilityName: "",
+        buildingId: "",
+        buildingName: "",
+        minStaff: 1,
+        maxStaff: 1,
+        shiftType: "day",
+        startTime: "07:00",
+        endTime: "19:00",
+        daysOfWeek: [1, 2, 3, 4, 5],
+        isActive: true,
+        hourlyRate: 0,
+        daysPostedOut: 7,
+        notes: "",
+      });
       setEditingTemplate(null);
       toast({
         title: "Template Updated",
