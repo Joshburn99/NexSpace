@@ -73,6 +73,8 @@ const templateSchema = z.object({
   specialty: z.string().min(1, "Specialty is required"),
   facilityId: z.number().min(1, "Facility is required"),
   facilityName: z.string().optional(),
+  buildingId: z.string().optional(),
+  buildingName: z.string().optional(),
   minStaff: z.number().min(1, "Staff required must be at least 1"),
   maxStaff: z.number().min(1, "Maximum staff must be at least 1"),
   shiftType: z.string(),
@@ -95,6 +97,8 @@ interface ShiftTemplate {
   specialty: string;
   facilityId: number;
   facilityName: string;
+  buildingId?: string;
+  buildingName?: string;
   minStaff: number;
   maxStaff: number;
   shiftType: "day" | "evening" | "night";
@@ -181,6 +185,8 @@ export default function ShiftTemplatesPage() {
       specialty: "",
       facilityId: 0,
       facilityName: "",
+      buildingId: "",
+      buildingName: "",
       minStaff: 1,
       maxStaff: 1,
       shiftType: "day",
@@ -317,6 +323,8 @@ export default function ShiftTemplatesPage() {
       specialty: template.specialty,
       facilityId: template.facilityId,
       facilityName: template.facilityName,
+      buildingId: template.buildingId || "",
+      buildingName: template.buildingName || "",
       minStaff: template.minStaff,
       maxStaff: template.maxStaff,
       shiftType: template.shiftType,
