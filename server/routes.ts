@@ -7231,19 +7231,19 @@ export function registerRoutes(app: Express): Server {
       // Transform database response to camelCase for frontend
       const transformedTemplate = {
         ...updatedTemplate,
-        facilityId: updatedTemplate.facilityId || updatedTemplate.facility_id,
-        facilityName: updatedTemplate.facilityName || updatedTemplate.facility_name,
-        buildingId: updatedTemplate.buildingId || updatedTemplate.building_id,
-        buildingName: updatedTemplate.buildingName || updatedTemplate.building_name,
-        minStaff: updatedTemplate.minStaff || updatedTemplate.min_staff,
-        maxStaff: updatedTemplate.maxStaff || updatedTemplate.max_staff,
-        shiftType: updatedTemplate.shiftType || updatedTemplate.shift_type,
-        startTime: updatedTemplate.startTime || updatedTemplate.start_time,
-        endTime: updatedTemplate.endTime || updatedTemplate.end_time,
-        daysOfWeek: updatedTemplate.daysOfWeek || updatedTemplate.days_of_week,
-        isActive: updatedTemplate.isActive !== undefined ? updatedTemplate.isActive : updatedTemplate.is_active,
-        hourlyRate: updatedTemplate.hourlyRate || updatedTemplate.hourly_rate,
-        daysPostedOut: updatedTemplate.daysPostedOut || updatedTemplate.days_posted_out,
+        facilityId: updatedTemplate.facilityId,
+        facilityName: updatedTemplate.facilityName,
+        buildingId: updatedTemplate.buildingId,
+        buildingName: updatedTemplate.buildingName,
+        minStaff: updatedTemplate.minStaff,
+        maxStaff: updatedTemplate.maxStaff,
+        shiftType: updatedTemplate.shiftType,
+        startTime: updatedTemplate.startTime,
+        endTime: updatedTemplate.endTime,
+        daysOfWeek: updatedTemplate.daysOfWeek,
+        isActive: updatedTemplate.isActive,
+        hourlyRate: updatedTemplate.hourlyRate,
+        daysPostedOut: updatedTemplate.daysPostedOut,
       };
       
       console.log('TRANSFORMED UPDATED TEMPLATE:', transformedTemplate);
@@ -7433,7 +7433,7 @@ export function registerRoutes(app: Express): Server {
       }
       
       // Generate shifts based on template and date range
-      const actualDaysInAdvance = daysInAdvance || template.daysPostedOut || 7;
+      const actualDaysInAdvance = daysInAdvance || 7;
       const newShifts = [];
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -7480,7 +7480,7 @@ export function registerRoutes(app: Express): Server {
           
           // Insert shift into database
           try {
-            await db.insert(generatedShifts).values({
+            const result = await db.insert(generatedShifts).values({
               id: uniqueShiftId,
               templateId: template.id,
               title: template.name,
@@ -7494,7 +7494,7 @@ export function registerRoutes(app: Express): Server {
               buildingId: (template as any).buildingId || "main-building",
               buildingName: (template as any).buildingName || "Main Building",
               status: 'open',
-              rate: parseFloat(template.hourlyRate.toString()),
+              rate: template.hourlyRate.toString(),
               urgency: 'medium',
               description: template.notes || `${template.department} shift`,
               requiredWorkers: template.maxStaff,
@@ -7502,6 +7502,8 @@ export function registerRoutes(app: Express): Server {
               maxStaff: template.maxStaff,
               totalHours: 8
             });
+            
+            console.log('Successfully inserted shift:', uniqueShiftId);
             
             newShifts.push(shiftData);
           } catch (insertError) {
@@ -7513,9 +7515,9 @@ export function registerRoutes(app: Express): Server {
       console.log(`Generated and saved ${newShifts.length} shifts from template ${template.name}`);
       
       res.json({
-        message: `Successfully created ${createdShifts.length} shifts from template`,
-        generatedShifts: createdShifts.length,
-        shifts: createdShifts,
+        message: `Successfully created ${newShifts.length} shifts from template`,
+        generatedShifts: newShifts.length,
+        shifts: newShifts,
         template: template.name,
         dateRange: { startDate, endDate },
         daysInAdvance
@@ -8540,19 +8542,19 @@ export function registerRoutes(app: Express): Server {
       // Transform database fields to camelCase for frontend
       const transformedTemplates = templates.map(template => ({
         ...template,
-        facilityId: template.facilityId || template.facility_id,
-        facilityName: template.facilityName || template.facility_name,
-        buildingId: template.buildingId || template.building_id,
-        buildingName: template.buildingName || template.building_name,
-        minStaff: template.minStaff || template.min_staff,
-        maxStaff: template.maxStaff || template.max_staff,
-        shiftType: template.shiftType || template.shift_type,
-        startTime: template.startTime || template.start_time,
-        endTime: template.endTime || template.end_time,
-        daysOfWeek: template.daysOfWeek || template.days_of_week,
-        isActive: template.isActive !== undefined ? template.isActive : template.is_active,
-        hourlyRate: template.hourlyRate || template.hourly_rate,
-        daysPostedOut: template.daysPostedOut || template.days_posted_out,
+        facilityId: template.facilityId,
+        facilityName: template.facilityName,
+        buildingId: template.buildingId,
+        buildingName: template.buildingName,
+        minStaff: template.minStaff,
+        maxStaff: template.maxStaff,
+        shiftType: template.shiftType,
+        startTime: template.startTime,
+        endTime: template.endTime,
+        daysOfWeek: template.daysOfWeek,
+        isActive: template.isActive,
+        hourlyRate: template.hourlyRate,
+        daysPostedOut: template.daysPostedOut,
       }));
       
       console.log('Transformed templates for frontend:', transformedTemplates[0]);
