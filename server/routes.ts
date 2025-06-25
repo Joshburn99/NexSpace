@@ -7130,117 +7130,43 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Shift Templates API - Dynamic template-based shift generation
+  // Shift Templates API - Database-based template storage
   app.get("/api/shift-templates", requireAuth, async (req, res) => {
     try {
-      const templates = [
-        {
-          id: 1,
-          name: "ICU Day Shift RN",
-          department: "ICU",
-          specialty: "Registered Nurse",
-          facilityId: 1,
-          facilityName: "Portland General Hospital",
-          minStaff: 2,
-          maxStaff: 4,
-          shiftType: "day",
-          startTime: "07:00",
-          endTime: "19:00",
-          daysOfWeek: [1, 2, 3, 4, 5],
-          isActive: true,
-          hourlyRate: 45,
-          notes: "Primary ICU coverage",
-          generatedShiftsCount: 156,
-          createdAt: "2025-06-01T00:00:00Z",
-          updatedAt: "2025-06-20T00:00:00Z"
-        },
-        {
-          id: 2,
-          name: "Emergency Night Coverage",
-          department: "Emergency",
-          specialty: "Registered Nurse",
-          facilityId: 1,
-          facilityName: "Portland General Hospital",
-          minStaff: 3,
-          maxStaff: 5,
-          shiftType: "night",
-          startTime: "19:00",
-          endTime: "07:00",
-          daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
-          isActive: true,
-          hourlyRate: 52,
-          notes: "24/7 emergency coverage",
-          generatedShiftsCount: 217,
-          createdAt: "2025-06-01T00:00:00Z",
-          updatedAt: "2025-06-20T00:00:00Z"
-        },
-        {
-          id: 3,
-          name: "OR Morning Team",
-          department: "Operating Room",
-          specialty: "Surgical Technologist",
-          facilityId: 2,
-          facilityName: "Maple Grove Memory Care",
-          minStaff: 1,
-          maxStaff: 2,
-          shiftType: "day",
-          startTime: "06:00",
-          endTime: "14:00",
-          daysOfWeek: [1, 2, 3, 4, 5],
-          isActive: true,
-          hourlyRate: 38,
-          notes: "Morning surgical procedures",
-          generatedShiftsCount: 104,
-          createdAt: "2025-06-05T00:00:00Z",
-          updatedAt: "2025-06-20T00:00:00Z"
-        },
-        {
-          id: 4,
-          name: "Med-Surg Evening LPN",
-          department: "Medical-Surgical",
-          specialty: "Licensed Practical Nurse",
-          facilityId: 3,
-          facilityName: "Sunrise Assisted Living",
-          minStaff: 2,
-          maxStaff: 3,
-          shiftType: "evening",
-          startTime: "15:00",
-          endTime: "23:00",
-          daysOfWeek: [1, 2, 3, 4, 5, 6, 0],
-          isActive: false,
-          hourlyRate: 28,
-          notes: "Evening medication rounds",
-          generatedShiftsCount: 78,
-          createdAt: "2025-06-10T00:00:00Z",
-          updatedAt: "2025-06-19T00:00:00Z"
-        }
-      ];
+      const templates = await storage.getShiftTemplates();
       res.json(templates);
     } catch (error) {
+      console.error('Error fetching shift templates:', error);
       res.status(500).json({ message: "Failed to fetch shift templates" });
     }
   });
 
   app.post("/api/shift-templates", requireAuth, async (req, res) => {
     try {
-      const templateData = req.body;
-      const newTemplate = {
-        id: Date.now(),
-        ...templateData,
+      const { name, department, specialty, facilityId, facilityName, minStaff, maxStaff, shiftType, startTime, endTime, daysOfWeek, hourlyRate, daysPostedOut, notes } = req.body;
+      
+      const newTemplate = await storage.createShiftTemplate({
+        name,
+        department,
+        specialty,
+        facilityId,
+        facilityName,
+        minStaff,
+        maxStaff,
+        shiftType,
+        startTime,
+        endTime,
+        daysOfWeek,
+        hourlyRate,
+        daysPostedOut: daysPostedOut || 7,
+        notes,
+        isActive: true,
         generatedShiftsCount: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      
-      // Auto-generate shifts for the next 30 days based on template
-      const generatedShifts = generateShiftsFromTemplate(newTemplate);
-      
-      res.json({
-        template: newTemplate,
-        generatedShifts: generatedShifts.length,
-        message: `Template created and ${generatedShifts.length} shifts generated automatically`
       });
+
+      res.status(201).json(newTemplate);
     } catch (error) {
+      console.error('Error creating shift template:', error);
       res.status(500).json({ message: "Failed to create shift template" });
     }
   });
@@ -7248,24 +7174,32 @@ export function registerRoutes(app: Express): Server {
   app.put("/api/shift-templates/:id", requireAuth, async (req, res) => {
     try {
       const templateId = parseInt(req.params.id);
-      const updates = req.body;
+      const { name, department, specialty, facilityId, facilityName, minStaff, maxStaff, shiftType, startTime, endTime, daysOfWeek, hourlyRate, daysPostedOut, notes } = req.body;
       
-      // Simulate template update and shift regeneration
-      const updatedTemplate = {
-        id: templateId,
-        ...updates,
-        updatedAt: new Date().toISOString()
-      };
-      
-      // Regenerate all future shifts based on updated template
-      const regeneratedShifts = generateShiftsFromTemplate(updatedTemplate);
-      
-      res.json({
-        template: updatedTemplate,
-        regeneratedShifts: regeneratedShifts.length,
-        message: `Template updated and ${regeneratedShifts.length} future shifts regenerated`
+      const updatedTemplate = await storage.updateShiftTemplate(templateId, {
+        name,
+        department,
+        specialty,
+        facilityId,
+        facilityName,
+        minStaff,
+        maxStaff,
+        shiftType,
+        startTime,
+        endTime,
+        daysOfWeek,
+        hourlyRate,
+        daysPostedOut,
+        notes,
       });
+
+      if (!updatedTemplate) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+
+      res.json(updatedTemplate);
     } catch (error) {
+      console.error('Error updating shift template:', error);
       res.status(500).json({ message: "Failed to update shift template" });
     }
   });
@@ -7274,12 +7208,17 @@ export function registerRoutes(app: Express): Server {
     try {
       const templateId = parseInt(req.params.id);
       
-      // Simulate deletion of template and all associated future shifts
+      const deleted = await storage.deleteShiftTemplate(templateId);
+      
+      if (!deleted) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+
       res.json({
-        message: "Template and all associated future shifts deleted successfully",
-        deletedShifts: 47
+        message: "Template deleted successfully"
       });
     } catch (error) {
+      console.error('Error deleting shift template:', error);
       res.status(500).json({ message: "Failed to delete shift template" });
     }
   });
