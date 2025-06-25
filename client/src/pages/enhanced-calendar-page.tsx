@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -26,7 +26,6 @@ import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
-import { useRef } from 'react';
 import {
   Calendar,
   Clock,
@@ -423,7 +422,7 @@ export default function EnhancedCalendarPage() {
       shift.specialty?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesFacility = filters.facilities.length === 0 || 
-      filters.facilities.includes((shift.facilityId || shift.facility_id)?.toString());
+      filters.facilities.includes(shift.facilityId?.toString());
     
     const matchesSpecialty = filters.specialties.length === 0 || 
       filters.specialties.includes(shift.specialty);
@@ -433,13 +432,10 @@ export default function EnhancedCalendarPage() {
 
     // Fix worker matching to check assigned staff properly
     const matchesWorker = filters.workers.length === 0 || 
-      (shift.assignedStaff && shift.assignedStaff.some((staff: any) => 
+      ((shift as any).assignedStaff && (shift as any).assignedStaff.some((staff: any) => 
         filters.workers.includes(staff.id?.toString() || staff.workerId?.toString())
       )) ||
-      (shift.assignedStaffId && filters.workers.includes(shift.assignedStaffId.toString())) ||
-      (shift.assignedStaffIds && shift.assignedStaffIds.some((id: any) => 
-        filters.workers.includes(id.toString())
-      ));
+      (shift.assignedStaffId && filters.workers.includes(shift.assignedStaffId.toString()));
 
     return matchesSearch && matchesFacility && matchesSpecialty && matchesStatus && matchesWorker;
   });
