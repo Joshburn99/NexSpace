@@ -314,7 +314,8 @@ export default function ShiftTemplatesPage() {
   });
 
   const handleEditTemplate = (template: ShiftTemplate) => {
-    console.log('Editing template:', template);
+    console.log('=== EDITING TEMPLATE DEBUG ===');
+    console.log('Template data received:', JSON.stringify(template, null, 2));
     
     // Set editing state first
     setEditingTemplate(template);
@@ -328,42 +329,52 @@ export default function ShiftTemplatesPage() {
       facilityName: template.facilityName || "",
       buildingId: template.buildingId || "",
       buildingName: template.buildingName || "",
-      minStaff: template.minStaff || 1,
-      maxStaff: template.maxStaff || 1,
+      minStaff: Number(template.minStaff) || 1,
+      maxStaff: Number(template.maxStaff) || 1,
       shiftType: template.shiftType || "day",
       startTime: template.startTime || "07:00",
       endTime: template.endTime || "19:00",
-      daysOfWeek: template.daysOfWeek || [1, 2, 3, 4, 5],
+      daysOfWeek: Array.isArray(template.daysOfWeek) ? template.daysOfWeek : [1, 2, 3, 4, 5],
       isActive: template.isActive !== undefined ? template.isActive : true,
-      hourlyRate: template.hourlyRate || 0,
-      daysPostedOut: template.daysPostedOut || 7,
+      hourlyRate: Number(template.hourlyRate) || 0,
+      daysPostedOut: Number(template.daysPostedOut) || 7,
       notes: template.notes || "",
     };
     
-    console.log('Setting form data:', formData);
+    console.log('Processed form data:', JSON.stringify(formData, null, 2));
     
     // Reset form with the template data
     templateForm.reset(formData);
     
-    // Force form to update immediately
-    Object.entries(formData).forEach(([key, value]) => {
-      templateForm.setValue(key as any, value, { shouldValidate: true });
-    });
+    // Force immediate form update with validation
+    setTimeout(() => {
+      Object.entries(formData).forEach(([key, value]) => {
+        templateForm.setValue(key as any, value, { shouldValidate: false, shouldTouch: true });
+      });
+      console.log('Form values after manual setting:', templateForm.getValues());
+      console.log('Form state after setting:', {
+        isValid: templateForm.formState.isValid,
+        errors: templateForm.formState.errors,
+        dirtyFields: templateForm.formState.dirtyFields
+      });
+    }, 100);
     
-    // Open dialog after setting form data
+    // Open dialog
     setIsTemplateDialogOpen(true);
-    
-    console.log('Form values after setting:', templateForm.getValues());
   };
 
   const handleTemplateSubmit = (data: z.infer<typeof templateSchema>) => {
-    console.log('Submitting template data:', data);
-    console.log('Editing template:', editingTemplate);
+    console.log('=== TEMPLATE SUBMISSION DEBUG ===');
+    console.log('Submitted data:', JSON.stringify(data, null, 2));
+    console.log('Editing template ID:', editingTemplate?.id);
     console.log('Form errors:', templateForm.formState.errors);
+    console.log('Is editing mode:', !!editingTemplate);
     
     if (editingTemplate) {
+      console.log('Calling UPDATE mutation for template ID:', editingTemplate.id);
       updateTemplateMutation.mutate({ id: editingTemplate.id, ...data });
     } else {
+      console.log('Calling CREATE mutation');
       createTemplateMutation.mutate(data);
     }
   };
@@ -599,13 +610,11 @@ export default function ShiftTemplatesPage() {
                   <Input
                     type="number"
                     min="1"
-                    value={templateForm.watch("minStaff")}
+                    value={templateForm.watch("minStaff")?.toString() || "1"}
                     onChange={(e) => {
-                      const value = parseInt(e.target.value);
-                      templateForm.setValue("minStaff", value || 1);
-                      if (value && value >= 1) {
-                        templateForm.setValue("maxStaff", value);
-                      }
+                      const value = parseInt(e.target.value) || 1;
+                      templateForm.setValue("minStaff", value);
+                      templateForm.setValue("maxStaff", value);
                     }}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
@@ -617,10 +626,10 @@ export default function ShiftTemplatesPage() {
                   <Input
                     type="number"
                     min="1"
-                    value={templateForm.watch("maxStaff")}
+                    value={templateForm.watch("maxStaff")?.toString() || "1"}
                     onChange={(e) => {
-                      const value = parseInt(e.target.value);
-                      templateForm.setValue("maxStaff", value || 1);
+                      const value = parseInt(e.target.value) || 1;
+                      templateForm.setValue("maxStaff", value);
                     }}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
@@ -637,9 +646,9 @@ export default function ShiftTemplatesPage() {
                       <input
                         type="checkbox"
                         id={`day-${day.value}`}
-                        checked={templateForm.watch("daysOfWeek").includes(day.value)}
+                        checked={(templateForm.watch("daysOfWeek") || []).includes(day.value)}
                         onChange={(e) => {
-                          const current = templateForm.watch("daysOfWeek");
+                          const current = templateForm.watch("daysOfWeek") || [];
                           if (e.target.checked) {
                             templateForm.setValue("daysOfWeek", [...current, day.value]);
                           } else {
@@ -662,10 +671,10 @@ export default function ShiftTemplatesPage() {
                   type="number"
                   min="1"
                   max="90"
-                  value={templateForm.watch("daysPostedOut")}
+                  value={templateForm.watch("daysPostedOut")?.toString() || "7"}
                   onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    templateForm.setValue("daysPostedOut", value || 7);
+                    const value = parseInt(e.target.value) || 7;
+                    templateForm.setValue("daysPostedOut", value);
                   }}
                   placeholder="7"
                 />
@@ -682,10 +691,10 @@ export default function ShiftTemplatesPage() {
                     type="number"
                     step="0.01"
                     min="0"
-                    value={templateForm.watch("hourlyRate") || ""}
+                    value={templateForm.watch("hourlyRate")?.toString() || "0"}
                     onChange={(e) => {
-                      const value = parseFloat(e.target.value);
-                      templateForm.setValue("hourlyRate", isNaN(value) ? 0 : value);
+                      const value = parseFloat(e.target.value) || 0;
+                      templateForm.setValue("hourlyRate", value);
                     }}
                     placeholder="0.00"
                   />

@@ -7177,7 +7177,7 @@ export function registerRoutes(app: Express): Server {
       console.log('UPDATE REQUEST - Template ID:', templateId);
       console.log('UPDATE REQUEST - Body:', req.body);
       
-      const { name, department, specialty, facilityId, facilityName, minStaff, maxStaff, shiftType, startTime, endTime, daysOfWeek, hourlyRate, daysPostedOut, notes } = req.body;
+      const { name, department, specialty, facilityId, facilityName, buildingId, buildingName, minStaff, maxStaff, shiftType, startTime, endTime, daysOfWeek, hourlyRate, daysPostedOut, notes } = req.body;
       
       const updateData = {
         name,
