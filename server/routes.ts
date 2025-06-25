@@ -8496,22 +8496,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.put("/api/shift-templates/:id", requireAuth, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const updates = insertShiftTemplateSchema.partial().parse(req.body);
-      const template = await storage.updateShiftTemplate(id, updates);
-      
-      if (!template) {
-        return res.status(404).json({ message: "Shift template not found" });
-      }
-      
-      res.json(template);
-    } catch (error) {
-      console.error("Error updating shift template:", error);
-      res.status(500).json({ message: "Failed to update shift template" });
-    }
-  });
+  // Remove this duplicate - keeping the more comprehensive version above
 
   app.delete("/api/shift-templates/:id", requireAuth, async (req, res) => {
     try {

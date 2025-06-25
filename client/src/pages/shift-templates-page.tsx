@@ -221,7 +221,7 @@ export default function ShiftTemplatesPage() {
 
   // Update template mutation
   const updateTemplateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: z.infer<typeof templateSchema> }) => {
+    mutationFn: async ({ id, ...data }: { id: number } & z.infer<typeof templateSchema>) => {
       console.log('Update mutation called with:', { id, data });
       const response = await apiRequest("PUT", `/api/shift-templates/${id}`, data);
       return response.json();
@@ -316,41 +316,45 @@ export default function ShiftTemplatesPage() {
   const handleEditTemplate = (template: ShiftTemplate) => {
     console.log('Editing template:', template);
     
-    // First, prepare the form data
+    // Set editing state first
+    setEditingTemplate(template);
+    
+    // Prepare the form data with proper types
     const formData = {
-      name: template.name,
-      department: template.department,
-      specialty: template.specialty,
-      facilityId: template.facilityId,
-      facilityName: template.facilityName,
+      name: template.name || "",
+      department: template.department || "",
+      specialty: template.specialty || "",
+      facilityId: template.facilityId || 0,
+      facilityName: template.facilityName || "",
       buildingId: template.buildingId || "",
       buildingName: template.buildingName || "",
-      minStaff: template.minStaff,
-      maxStaff: template.maxStaff,
-      shiftType: template.shiftType,
-      startTime: template.startTime,
-      endTime: template.endTime,
-      daysOfWeek: template.daysOfWeek || [],
-      isActive: template.isActive,
+      minStaff: template.minStaff || 1,
+      maxStaff: template.maxStaff || 1,
+      shiftType: template.shiftType || "day",
+      startTime: template.startTime || "07:00",
+      endTime: template.endTime || "19:00",
+      daysOfWeek: template.daysOfWeek || [1, 2, 3, 4, 5],
+      isActive: template.isActive !== undefined ? template.isActive : true,
       hourlyRate: template.hourlyRate || 0,
       daysPostedOut: template.daysPostedOut || 7,
       notes: template.notes || "",
     };
     
     console.log('Setting form data:', formData);
-    console.log('Current form values before reset:', templateForm.getValues());
     
-    // Reset form with the template data first
+    // Reset form with the template data
     templateForm.reset(formData);
     
-    // Add a small delay to ensure the form has updated
-    setTimeout(() => {
-      console.log('Form values after reset:', templateForm.getValues());
-    }, 100);
-    
-    // Then set editing state and open dialog
-    setEditingTemplate(template);
+    // Open dialog after setting form data
     setIsTemplateDialogOpen(true);
+    
+    // Force form to update by setting values explicitly
+    setTimeout(() => {
+      Object.entries(formData).forEach(([key, value]) => {
+        templateForm.setValue(key as any, value);
+      });
+      console.log('Form values after explicit set:', templateForm.getValues());
+    }, 50);
   };
 
   const handleTemplateSubmit = (data: z.infer<typeof templateSchema>) => {
@@ -359,7 +363,7 @@ export default function ShiftTemplatesPage() {
     console.log('Form errors:', templateForm.formState.errors);
     
     if (editingTemplate) {
-      updateTemplateMutation.mutate({ id: editingTemplate.id, data });
+      updateTemplateMutation.mutate({ id: editingTemplate.id, ...data });
     } else {
       createTemplateMutation.mutate(data);
     }
