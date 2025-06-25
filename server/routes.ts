@@ -7433,9 +7433,8 @@ export function registerRoutes(app: Express): Server {
       }
       
       // Generate shifts based on template and date range
-      // Use template's daysPostedOut if daysInAdvance is not provided
       const actualDaysInAdvance = daysInAdvance || template.daysPostedOut || 7;
-      const generatedShifts = [];
+      const newShifts = [];
       const start = new Date(startDate);
       const end = new Date(endDate);
       
@@ -7467,61 +7466,56 @@ export function registerRoutes(app: Express): Server {
             facilityName: template.facilityName,
             buildingId: (template as any).buildingId || "main-building",
             buildingName: (template as any).buildingName || "Main Building",
-            location: `${template.facilityName} - ${(template as any).buildingName || "Main Building"}`,
             minStaff: template.minStaff,
             maxStaff: template.maxStaff,
             status: 'open',
             hourlyRate: parseFloat(template.hourlyRate.toString()),
             description: template.notes || `${template.department} shift`,
             urgency: 'medium',
-            priority: 'standard',
             shiftType: template.shiftType,
             templateId: template.id,
             templateName: template.name,
-            totalHours: 8,
-            assignedStaffIds: [],
-            applicantIds: [],
-            requiredCertifications: []
+            totalHours: 8
           };
           
-          // Insert shift into database using correct table and fields
+          // Insert shift into database
           try {
             await db.insert(generatedShifts).values({
               id: uniqueShiftId,
               templateId: template.id,
-              title: shiftData.title,
-              date: shiftData.date,
-              startTime: shiftData.startTime,
-              endTime: shiftData.endTime,
-              department: shiftData.department,
+              title: template.name,
+              date: shiftDate,
+              startTime: template.startTime,
+              endTime: template.endTime,
+              department: template.department,
               specialty: shiftData.specialty,
-              facilityId: shiftData.facilityId,
-              facilityName: shiftData.facilityName,
-              buildingId: shiftData.buildingId,
-              buildingName: shiftData.buildingName,
-              status: shiftData.status,
-              rate: shiftData.hourlyRate,
-              urgency: shiftData.urgency,
-              description: shiftData.description,
-              requiredWorkers: shiftData.maxStaff,
-              minStaff: shiftData.minStaff,
-              maxStaff: shiftData.maxStaff,
-              totalHours: shiftData.totalHours
+              facilityId: template.facilityId,
+              facilityName: template.facilityName,
+              buildingId: (template as any).buildingId || "main-building",
+              buildingName: (template as any).buildingName || "Main Building",
+              status: 'open',
+              rate: parseFloat(template.hourlyRate.toString()),
+              urgency: 'medium',
+              description: template.notes || `${template.department} shift`,
+              requiredWorkers: template.maxStaff,
+              minStaff: template.minStaff,
+              maxStaff: template.maxStaff,
+              totalHours: 8
             });
             
-            generatedShifts.push(shiftData);
+            newShifts.push(shiftData);
           } catch (insertError) {
             console.error('Error inserting shift:', insertError);
           }
         }
       }
       
-      console.log(`Generated and saved ${generatedShifts.length} shifts from template ${template.name}`);
+      console.log(`Generated and saved ${newShifts.length} shifts from template ${template.name}`);
       
       res.json({
-        message: `Successfully created ${generatedShifts.length} shifts from template`,
-        generatedShifts: generatedShifts.length,
-        shifts: generatedShifts,
+        message: `Successfully created ${createdShifts.length} shifts from template`,
+        generatedShifts: createdShifts.length,
+        shifts: createdShifts,
         template: template.name,
         dateRange: { startDate, endDate },
         daysInAdvance

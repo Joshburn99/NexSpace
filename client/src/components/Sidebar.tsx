@@ -42,16 +42,14 @@ const navigationItems: NavItem[] = [
     label: "Scheduling",
     icon: <Calendar className="w-5 h-5" />,
     children: [
-      { label: "Calendar View", href: "/calendar", icon: <Calendar className="w-4 h-4" /> },
       {
         label: "Enhanced Calendar",
         href: "/calendar-view",
         icon: <Calendar className="w-4 h-4" />,
       },
-      { label: "Scheduling", href: "/scheduling", icon: <Calendar className="w-4 h-4" /> },
       {
-        label: "Advanced Scheduling",
-        href: "/advanced-scheduling",
+        label: "Shift Templates",
+        href: "/scheduling",
         icon: <Calendar className="w-4 h-4" />,
       },
       { label: "Open Shifts", href: "/shifts-open", icon: <Clock className="w-4 h-4" /> },
