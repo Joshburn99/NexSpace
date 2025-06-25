@@ -7174,9 +7174,12 @@ export function registerRoutes(app: Express): Server {
   app.put("/api/shift-templates/:id", requireAuth, async (req, res) => {
     try {
       const templateId = parseInt(req.params.id);
+      console.log('UPDATE REQUEST - Template ID:', templateId);
+      console.log('UPDATE REQUEST - Body:', req.body);
+      
       const { name, department, specialty, facilityId, facilityName, minStaff, maxStaff, shiftType, startTime, endTime, daysOfWeek, hourlyRate, daysPostedOut, notes } = req.body;
       
-      const updatedTemplate = await storage.updateShiftTemplate(templateId, {
+      const updateData = {
         name,
         department,
         specialty,
@@ -7191,16 +7194,21 @@ export function registerRoutes(app: Express): Server {
         hourlyRate,
         daysPostedOut,
         notes,
-      });
+      };
+      
+      console.log('UPDATE DATA:', updateData);
+
+      const updatedTemplate = await storage.updateShiftTemplate(templateId, updateData);
 
       if (!updatedTemplate) {
         return res.status(404).json({ message: "Template not found" });
       }
 
+      console.log('UPDATED TEMPLATE:', updatedTemplate);
       res.json(updatedTemplate);
     } catch (error) {
       console.error('Error updating shift template:', error);
-      res.status(500).json({ message: "Failed to update shift template" });
+      res.status(500).json({ message: "Failed to update shift template", error: error.message });
     }
   });
 

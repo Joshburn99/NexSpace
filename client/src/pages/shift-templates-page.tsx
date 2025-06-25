@@ -308,10 +308,13 @@ export default function ShiftTemplatesPage() {
   });
 
   const handleEditTemplate = (template: ShiftTemplate) => {
+    console.log('Editing template:', template);
     setEditingTemplate(template);
-    // Set form values immediately for editing
+    setIsTemplateDialogOpen(true);
+    
+    // Use setTimeout to ensure dialog is open and form is rendered
     setTimeout(() => {
-      templateForm.reset({
+      const formData = {
         name: template.name,
         department: template.department,
         specialty: template.specialty,
@@ -327,9 +330,11 @@ export default function ShiftTemplatesPage() {
         hourlyRate: template.hourlyRate || 0,
         daysPostedOut: template.daysPostedOut || 7,
         notes: template.notes || "",
-      });
-    }, 100);
-    setIsTemplateDialogOpen(true);
+      };
+      
+      console.log('Setting form data:', formData);
+      templateForm.reset(formData);
+    }, 200);
   };
 
   const handleTemplateSubmit = (data: z.infer<typeof templateSchema>) => {
@@ -365,7 +370,13 @@ export default function ShiftTemplatesPage() {
             Manage reusable shift templates that automatically generate facility schedules
           </p>
         </div>
-        <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+        <Dialog open={isTemplateDialogOpen} onOpenChange={(open) => {
+          setIsTemplateDialogOpen(open);
+          if (!open) {
+            setEditingTemplate(null);
+            templateForm.reset();
+          }
+        }}>
           <DialogTrigger asChild>
             <Button onClick={() => {
               setEditingTemplate(null);
