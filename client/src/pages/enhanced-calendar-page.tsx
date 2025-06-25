@@ -132,6 +132,23 @@ const statusConfig = {
   early_departure: { icon: AlertCircle, color: "#ea580c", label: "Early Departure" }
 };
 
+// Helper function to get SVG paths for status icons
+const getStatusIconSVG = (status: string) => {
+  const svgPaths = {
+    open: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+    requested: '<circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>',
+    confirmed: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/>',
+    filled: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16,11 18,13 22,9"/>',
+    cancelled: '<circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/>',
+    expired: '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="m12 17 .01 0"/>',
+    in_progress: '<circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16 10,8"/>',
+    completed: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/>',
+    pending_review: '<circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>',
+    default: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>'
+  };
+  return svgPaths[status as keyof typeof svgPaths] || svgPaths.default;
+};
+
 export default function EnhancedCalendarPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -843,30 +860,10 @@ export default function EnhancedCalendarPage() {
       {/* Calendar */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Shift Calendar
-              {isLoading && <Badge variant="secondary">Loading...</Badge>}
-            </div>
-            {/* Status Icons Legend */}
-            <div className="flex items-center gap-4">
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Status:</span>
-              {Object.entries(statusConfig).map(([key, config]) => {
-                const Icon = config.icon;
-                return (
-                  <div key={key} className="flex items-center gap-1">
-                    <div 
-                      className="w-3 h-3 rounded-full flex items-center justify-center" 
-                      style={{ backgroundColor: config.color }}
-                    >
-                      <Icon className="w-1.5 h-1.5 text-white" />
-                    </div>
-                    <span className="text-xs text-gray-600 dark:text-gray-400">{config.label}</span>
-                  </div>
-                );
-              })}
-            </div>
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Shift Calendar
+            {isLoading && <Badge variant="secondary">Loading...</Badge>}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -953,15 +950,7 @@ export default function EnhancedCalendarPage() {
               const statusInfo = statusConfig[shift.status as keyof typeof statusConfig] || statusConfig.open;
               const isGrouped = extendedProps.isGrouped;
               const specialty = extendedProps.specialty;
-              const statusIcons = {
-                open: '○',
-                requested: '◐',
-                confirmed: '●',
-                filled: '✓',
-                cancelled: '✕',
-                completed: '✓'
-              };
-              const statusIcon = statusIcons[shift.status as keyof typeof statusIcons] || '○';
+              const StatusIcon = statusInfo.icon;
               
               let displayText = '';
               if (isGrouped) {
@@ -969,17 +958,19 @@ export default function EnhancedCalendarPage() {
                 displayText = `${specialty} – ${extendedProps.filledWorkers}/${extendedProps.totalWorkers} – ${shift.startTime}–${shift.endTime}`;
               } else {
                 // Single worker shift: "Worker Name – Start–End Time"
-                const workerName = shift.assignedStaffName || 'Unassigned';
+                const workerName = shift.assignedStaffName || 'Requesting';
                 displayText = `${workerName} – ${shift.startTime}–${shift.endTime}`;
               }
               
               return {
                 html: `
                   <div class="fc-event-content-custom relative w-full h-full p-1 rounded border" style="background-color: ${eventInfo.event.backgroundColor}; min-height: 18px; border-color: ${eventInfo.event.borderColor};">
-                    <div class="absolute top-0 right-0 w-3 h-3 flex items-center justify-center text-white text-xs font-bold z-10">
-                      ${statusIcon}
+                    <div class="absolute top-0 right-0 w-4 h-4 flex items-center justify-center rounded-full" style="background-color: ${statusInfo.color};">
+                      <svg class="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        ${getStatusIconSVG(shift.status)}
+                      </svg>
                     </div>
-                    <div class="text-xs font-medium text-white truncate pr-3" style="max-width: calc(100% - 12px); line-height: 1.1;">
+                    <div class="text-xs font-medium text-white truncate pr-5" style="max-width: calc(100% - 20px); line-height: 1.1;">
                       ${displayText}
                     </div>
                   </div>
