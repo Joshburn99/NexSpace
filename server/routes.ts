@@ -929,11 +929,13 @@ export function registerRoutes(app: Express): Server {
         // Continue with example shifts only if database query fails
       }
       
-      // Combine database shifts with example shifts
+      // Combine database shifts with example shifts and normalize IDs
       const combinedShifts = [...getShiftData(), ...formattedDbShifts];
       
       const allShifts = await Promise.all(combinedShifts.map(async shift => {
-        const assignedWorkerIds = await getShiftAssignments(shift.id);
+        // Normalize shift ID to string format for consistent assignment lookup
+        const normalizedShiftId = shift.id.toString();
+        const assignedWorkerIds = await getShiftAssignments(normalizedShiftId);
         
         // Get detailed staff info for assigned workers
         const assignedStaff = assignedWorkerIds.map((workerId: number) => {
@@ -953,39 +955,40 @@ export function registerRoutes(app: Express): Server {
           return null;
         }).filter(Boolean);
         
+        // Calculate proper staffing levels
+        const totalPositions = shift.totalPositions || shift.requiredWorkers || shift.required_staff || 1;
+        const filledPositions = assignedWorkerIds.length;
+        
         // Update shift with real assignment data
         const updatedShift = {
           ...shift,
           assignedStaff: assignedStaff,
-          filledPositions: assignedWorkerIds.length,
-          totalPositions: shift.totalPositions || 3, // Default to 3 for RN shifts
-          minStaff: shift.minStaff || 2
+          assignedStaffNames: assignedStaff.map((s: any) => s?.name),
+          filledPositions: filledPositions,
+          totalPositions: totalPositions,
+          minStaff: shift.minStaff || Math.max(1, totalPositions - 1)
         };
         
-        // Debug logging for assignment tracking
-        console.log(`Processing shift ${shift.id}:`, {
-          originalShiftId: shift.id,
-          assignedWorkerIds,
-          assignedStaffCount: assignedStaff.length,
-          assignedStaffNames: assignedStaff.map((s: any) => s?.name),
-          filledPositions: assignedWorkerIds.length,
-          totalPositions: updatedShift.totalPositions,
-          status: updatedShift.status
-        });
-        
-        // Update status based on assignments and requests
-        const totalRequired = shift.totalPositions || 3;
-        const hasRequests = false; // Will be populated from requests data
-        
-        if (assignedWorkerIds.length >= totalRequired) {
+        // Update status based on actual assignments
+        if (filledPositions >= totalPositions) {
           updatedShift.status = "filled";
-        } else if (assignedWorkerIds.length > 0) {
+        } else if (filledPositions > 0) {
           updatedShift.status = "partially_filled";
-        } else if (hasRequests) {
-          updatedShift.status = "requested";
         } else {
           updatedShift.status = "open";
         }
+        
+        // Debug logging for assignment tracking
+        console.log(`Processing shift ${normalizedShiftId}:`, {
+          originalShiftId: shift.id,
+          normalizedShiftId,
+          assignedWorkerIds,
+          assignedStaffCount: assignedStaff.length,
+          assignedStaffNames: assignedStaff.map((s: any) => s?.name),
+          filledPositions,
+          totalPositions,
+          status: updatedShift.status
+        });
         
         return updatedShift;
       }));

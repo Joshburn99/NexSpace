@@ -399,18 +399,18 @@ export default function EnhancedCalendarPage() {
   });
 
   // Extract unique filter options from actual shift data
-  const specialties = React.useMemo(() => {
-    const uniqueSpecialties = [...new Set(shifts.map(s => s.specialty))].filter(Boolean);
+  const specialties = useMemo(() => {
+    const uniqueSpecialties = Array.from(new Set(shifts.map(s => s.specialty))).filter(Boolean);
     return uniqueSpecialties.length > 0 ? uniqueSpecialties : ["RN", "LPN", "CNA", "PT", "RT"];
   }, [shifts]);
 
-  const statuses = React.useMemo(() => {
-    const uniqueStatuses = [...new Set(shifts.map(s => s.status))].filter(Boolean);
+  const statuses = useMemo(() => {
+    const uniqueStatuses = Array.from(new Set(shifts.map(s => s.status))).filter(Boolean);
     return uniqueStatuses.length > 0 ? uniqueStatuses : ["open", "requested", "confirmed", "cancelled", "filled"];
   }, [shifts]);
 
-  const departments = React.useMemo(() => {
-    const uniqueDepartments = [...new Set(shifts.map(s => s.department))].filter(Boolean);
+  const departments = useMemo(() => {
+    const uniqueDepartments = Array.from(new Set(shifts.map(s => s.department))).filter(Boolean);
     return uniqueDepartments.length > 0 ? uniqueDepartments : ["ICU", "Emergency", "Medical-Surgical", "Operating Room", "Labor & Delivery"];
   }, [shifts]);
 
