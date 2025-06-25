@@ -345,16 +345,15 @@ export default function ShiftTemplatesPage() {
     // Reset form with the template data
     templateForm.reset(formData);
     
+    // Force form to update immediately
+    Object.entries(formData).forEach(([key, value]) => {
+      templateForm.setValue(key as any, value, { shouldValidate: true });
+    });
+    
     // Open dialog after setting form data
     setIsTemplateDialogOpen(true);
     
-    // Force form to update by setting values explicitly
-    setTimeout(() => {
-      Object.entries(formData).forEach(([key, value]) => {
-        templateForm.setValue(key as any, value);
-      });
-      console.log('Form values after explicit set:', templateForm.getValues());
-    }, 50);
+    console.log('Form values after setting:', templateForm.getValues());
   };
 
   const handleTemplateSubmit = (data: z.infer<typeof templateSchema>) => {
@@ -458,9 +457,8 @@ export default function ShiftTemplatesPage() {
                 <div>
                   <Label>Template Name</Label>
                   <Input
-                    {...templateForm.register("name")}
                     placeholder="ICU Day Shift RN"
-                    value={templateForm.watch("name")}
+                    value={templateForm.watch("name") || ""}
                     onChange={(e) => templateForm.setValue("name", e.target.value)}
                   />
                   {templateForm.formState.errors.name && (
@@ -581,7 +579,7 @@ export default function ShiftTemplatesPage() {
                   <Label>Start Time</Label>
                   <Input
                     type="time"
-                    value={templateForm.watch("startTime")}
+                    value={templateForm.watch("startTime") || "07:00"}
                     onChange={(e) => templateForm.setValue("startTime", e.target.value)}
                   />
                 </div>
@@ -589,7 +587,7 @@ export default function ShiftTemplatesPage() {
                   <Label>End Time</Label>
                   <Input
                     type="time"
-                    value={templateForm.watch("endTime")}
+                    value={templateForm.watch("endTime") || "19:00"}
                     onChange={(e) => templateForm.setValue("endTime", e.target.value)}
                   />
                 </div>

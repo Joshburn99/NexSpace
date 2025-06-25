@@ -7185,6 +7185,8 @@ export function registerRoutes(app: Express): Server {
         specialty,
         facilityId,
         facilityName,
+        buildingId,
+        buildingName,
         minStaff,
         maxStaff: maxStaff || minStaff, // Ensure maxStaff is at least minStaff
         shiftType,
