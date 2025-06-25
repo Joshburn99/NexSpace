@@ -50,7 +50,7 @@ export function registerRoutes(app: Express): Server {
   // Setup authentication routes
   setupAuth(app);
   
-  // Initialize unified data service
+  // Initialize unified data service (will be properly initialized with WebSocket later)
   let unifiedDataService: UnifiedDataService;
 
   // Configure multer for file uploads
