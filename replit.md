@@ -13,6 +13,12 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### June 25, 2025 - Template Editing Investigation
+- Investigated template editing modal pre-population and persistence issues
+- Identified data flow challenges between database schema (snake_case) and frontend (camelCase)
+- Added comprehensive debugging and field transformation logic
+- Issue remains unresolved - requires further architectural review of form state management
+
 ### June 24, 2025 - Enhanced Shift Templates with Role-Based Access
 - Consolidated Min/Max staff requirements into single "Staff Required" field for better usability
 - Added scrolling capability to template creation/edit modal (max-h-[90vh] overflow-y-auto)
