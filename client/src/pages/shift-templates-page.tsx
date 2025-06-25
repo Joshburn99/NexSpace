@@ -372,7 +372,10 @@ export default function ShiftTemplatesPage() {
     // Reset form with the template data
     templateForm.reset(formData);
     
-    // Force immediate form update with validation
+    // Open dialog first
+    setIsTemplateDialogOpen(true);
+    
+    // Force immediate form update with validation after dialog opens
     setTimeout(() => {
       Object.entries(formData).forEach(([key, value]) => {
         templateForm.setValue(key as any, value, { shouldValidate: false, shouldTouch: true });
@@ -383,10 +386,12 @@ export default function ShiftTemplatesPage() {
         errors: templateForm.formState.errors,
         dirtyFields: templateForm.formState.dirtyFields
       });
-    }, 100);
+      
+      // Force a re-render by triggering a form state change
+      templateForm.trigger();
+    }, 200);
     
-    // Open dialog
-    setIsTemplateDialogOpen(true);
+    // Dialog is opened above in the timeout
   };
 
   const handleTemplateSubmit = (data: z.infer<typeof templateSchema>) => {
@@ -560,7 +565,7 @@ export default function ShiftTemplatesPage() {
                 <div>
                   <Label>Department</Label>
                   <Select 
-                    value={templateForm.watch("department")} 
+                    value={templateForm.watch("department") || ""} 
                     onValueChange={(value) => templateForm.setValue("department", value)}
                   >
                     <SelectTrigger>
