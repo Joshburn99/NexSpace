@@ -118,7 +118,7 @@ const statusConfig = {
   open: { icon: AlertCircle, color: "#ef4444", label: "Open" },
   requested: { icon: Clock, color: "#f59e0b", label: "Requested" },
   confirmed: { icon: CheckCircle2, color: "#10b981", label: "Confirmed" },
-  filled: { icon: UserCheck, color: "#3b82f6", label: "Filled" },
+  filled: { icon: User, color: "#3b82f6", label: "Filled" },
   cancelled: { icon: XCircle, color: "#6b7280", label: "Cancelled" },
   expired: { icon: AlertTriangle, color: "#dc2626", label: "Expired" },
   in_progress: { icon: PlayCircle, color: "#8b5cf6", label: "In Progress" },
@@ -135,7 +135,7 @@ const statusConfig = {
 // Helper function to get SVG paths for status icons
 const getStatusIconSVG = (status: string) => {
   const svgPaths = {
-    open: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+    open: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="8" r="1"/><circle cx="12" cy="16" r="1"/>',
     requested: '<circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/>',
     confirmed: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/>',
     filled: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16,11 18,13 22,9"/>',
