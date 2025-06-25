@@ -309,32 +309,34 @@ export default function ShiftTemplatesPage() {
 
   const handleEditTemplate = (template: ShiftTemplate) => {
     console.log('Editing template:', template);
+    
+    // First, prepare the form data
+    const formData = {
+      name: template.name,
+      department: template.department,
+      specialty: template.specialty,
+      facilityId: template.facilityId,
+      facilityName: template.facilityName,
+      minStaff: template.minStaff,
+      maxStaff: template.maxStaff,
+      shiftType: template.shiftType,
+      startTime: template.startTime,
+      endTime: template.endTime,
+      daysOfWeek: template.daysOfWeek || [],
+      isActive: template.isActive,
+      hourlyRate: template.hourlyRate || 0,
+      daysPostedOut: template.daysPostedOut || 7,
+      notes: template.notes || "",
+    };
+    
+    console.log('Setting form data:', formData);
+    
+    // Reset form with the template data first
+    templateForm.reset(formData);
+    
+    // Then set editing state and open dialog
     setEditingTemplate(template);
     setIsTemplateDialogOpen(true);
-    
-    // Use setTimeout to ensure dialog is open and form is rendered
-    setTimeout(() => {
-      const formData = {
-        name: template.name,
-        department: template.department,
-        specialty: template.specialty,
-        facilityId: template.facilityId,
-        facilityName: template.facilityName,
-        minStaff: template.minStaff,
-        maxStaff: template.maxStaff,
-        shiftType: template.shiftType,
-        startTime: template.startTime,
-        endTime: template.endTime,
-        daysOfWeek: template.daysOfWeek,
-        isActive: template.isActive,
-        hourlyRate: template.hourlyRate || 0,
-        daysPostedOut: template.daysPostedOut || 7,
-        notes: template.notes || "",
-      };
-      
-      console.log('Setting form data:', formData);
-      templateForm.reset(formData);
-    }, 200);
   };
 
   const handleTemplateSubmit = (data: z.infer<typeof templateSchema>) => {
