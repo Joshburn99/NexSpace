@@ -7446,10 +7446,14 @@ export function registerRoutes(app: Express): Server {
         if (template.daysOfWeek.includes(dayOfWeek)) {
           const shiftDate = date.toISOString().split('T')[0];
           
-          // Create shift based on template
-          const dateStr = shiftDate.replace(/-/g, '');
-          const newShift = {
-            id: parseInt(`${template.id}${dateStr}00`),
+          // Create unique shift ID with timestamp
+          const timestamp = Date.now();
+          const randomSuffix = Math.floor(Math.random() * 10000);
+          const uniqueShiftId = `${timestamp}${randomSuffix}`;
+          
+          // Create shift data for database insertion
+          const shiftData = {
+            id: uniqueShiftId,
             title: template.name,
             date: shiftDate,
             startTime: template.startTime,
@@ -7466,35 +7470,53 @@ export function registerRoutes(app: Express): Server {
             location: `${template.facilityName} - ${(template as any).buildingName || "Main Building"}`,
             minStaff: template.minStaff,
             maxStaff: template.maxStaff,
-            status: 'open' as const,
-            hourlyRate: template.hourlyRate,
-            daysPostedOut: template.daysPostedOut,
+            status: 'open',
+            hourlyRate: parseFloat(template.hourlyRate.toString()),
             description: template.notes || `${template.department} shift`,
-            urgency: 'medium' as const,
-            priority: 'standard' as const,
-            priorityTiers: (template as any).priorityTiers || {
-              employees: true,
-              contractors: true,
-              outsideAgencies: false
-            },
-            staffingPriorityOrder: (template as any).staffingPriorityOrder || ["employees", "contractors"],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            assignedStaffIds: [],
-            applicantIds: [],
-            requiredCertifications: [],
-            totalHours: 12,
+            urgency: 'medium',
+            priority: 'standard',
             shiftType: template.shiftType,
             templateId: template.id,
-            templateName: template.name
+            templateName: template.name,
+            totalHours: 8,
+            assignedStaffIds: [],
+            applicantIds: [],
+            requiredCertifications: []
           };
           
-          generatedShifts.push(newShift);
+          // Insert shift into database using correct table and fields
+          try {
+            await db.insert(generatedShifts).values({
+              id: uniqueShiftId,
+              templateId: template.id,
+              title: shiftData.title,
+              date: shiftData.date,
+              startTime: shiftData.startTime,
+              endTime: shiftData.endTime,
+              department: shiftData.department,
+              specialty: shiftData.specialty,
+              facilityId: shiftData.facilityId,
+              facilityName: shiftData.facilityName,
+              buildingId: shiftData.buildingId,
+              buildingName: shiftData.buildingName,
+              status: shiftData.status,
+              rate: shiftData.hourlyRate,
+              urgency: shiftData.urgency,
+              description: shiftData.description,
+              requiredWorkers: shiftData.maxStaff,
+              minStaff: shiftData.minStaff,
+              maxStaff: shiftData.maxStaff,
+              totalHours: shiftData.totalHours
+            });
+            
+            generatedShifts.push(shiftData);
+          } catch (insertError) {
+            console.error('Error inserting shift:', insertError);
+          }
         }
       }
       
-      // All shifts are now stored in database via individual inserts above
-      console.log(`Generated ${generatedShifts.length} shifts from template ${template.name}`);
+      console.log(`Generated and saved ${generatedShifts.length} shifts from template ${template.name}`);
       
       res.json({
         message: `Successfully created ${generatedShifts.length} shifts from template`,

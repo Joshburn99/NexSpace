@@ -400,7 +400,9 @@ export default function EnhancedCalendarPage() {
   // Extract unique filter options from actual shift data
   const specialties = useMemo(() => {
     const uniqueSpecialties = Array.from(new Set(shifts.map(s => s.specialty))).filter(Boolean);
-    return uniqueSpecialties.length > 0 ? uniqueSpecialties : ["RN", "LPN", "CNA", "PT", "RT"];
+    // Use the same specialty codes as the calendar colors
+    const defaultSpecialties = ["RN", "LPN", "CNA", "RT", "PT", "OT", "CST", "PCT", "MA", "EMT", "CRNA", "NP", "PA"];
+    return uniqueSpecialties.length > 0 ? uniqueSpecialties : defaultSpecialties;
   }, [shifts]);
 
   const statuses = useMemo(() => {
