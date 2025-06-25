@@ -338,9 +338,15 @@ export default function ShiftTemplatesPage() {
     };
     
     console.log('Setting form data:', formData);
+    console.log('Current form values before reset:', templateForm.getValues());
     
     // Reset form with the template data first
     templateForm.reset(formData);
+    
+    // Add a small delay to ensure the form has updated
+    setTimeout(() => {
+      console.log('Form values after reset:', templateForm.getValues());
+    }, 100);
     
     // Then set editing state and open dialog
     setEditingTemplate(template);
@@ -384,13 +390,49 @@ export default function ShiftTemplatesPage() {
           setIsTemplateDialogOpen(open);
           if (!open) {
             setEditingTemplate(null);
-            templateForm.reset();
+            templateForm.reset({
+              name: "",
+              department: "",
+              specialty: "",
+              facilityId: 0,
+              facilityName: "",
+              buildingId: "",
+              buildingName: "",
+              minStaff: 1,
+              maxStaff: 1,
+              shiftType: "day",
+              startTime: "07:00",
+              endTime: "19:00",
+              daysOfWeek: [1, 2, 3, 4, 5],
+              isActive: true,
+              hourlyRate: 0,
+              daysPostedOut: 7,
+              notes: "",
+            });
           }
         }}>
           <DialogTrigger asChild>
             <Button onClick={() => {
               setEditingTemplate(null);
-              templateForm.reset();
+              templateForm.reset({
+                name: "",
+                department: "",
+                specialty: "",
+                facilityId: 0,
+                facilityName: "",
+                buildingId: "",
+                buildingName: "",
+                minStaff: 1,
+                maxStaff: 1,
+                shiftType: "day",
+                startTime: "07:00",
+                endTime: "19:00",
+                daysOfWeek: [1, 2, 3, 4, 5],
+                isActive: true,
+                hourlyRate: 0,
+                daysPostedOut: 7,
+                notes: "",
+              });
             }}>
               <Plus className="h-4 w-4 mr-2" />
               Create Template
@@ -402,6 +444,11 @@ export default function ShiftTemplatesPage() {
                 {editingTemplate ? "Edit Shift Template" : "Create Shift Template"}
               </DialogTitle>
             </DialogHeader>
+            {editingTemplate && (
+              <div className="text-sm text-gray-600 mb-4">
+                Editing: {editingTemplate.name}
+              </div>
+            )}
             <form onSubmit={templateForm.handleSubmit(handleTemplateSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -409,6 +456,8 @@ export default function ShiftTemplatesPage() {
                   <Input
                     {...templateForm.register("name")}
                     placeholder="ICU Day Shift RN"
+                    value={templateForm.watch("name")}
+                    onChange={(e) => templateForm.setValue("name", e.target.value)}
                   />
                   {templateForm.formState.errors.name && (
                     <p className="text-sm text-red-600 mt-1">
@@ -441,6 +490,31 @@ export default function ShiftTemplatesPage() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div>
+                <Label>Building/Unit</Label>
+                <Select 
+                  value={templateForm.watch("buildingId") || ""} 
+                  onValueChange={(value) => {
+                    templateForm.setValue("buildingId", value);
+                    templateForm.setValue("buildingName", value ? `Building ${value}` : "");
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select building or unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="main">Main Building</SelectItem>
+                    <SelectItem value="east">East Wing</SelectItem>
+                    <SelectItem value="west">West Wing</SelectItem>
+                    <SelectItem value="north">North Tower</SelectItem>
+                    <SelectItem value="south">South Tower</SelectItem>
+                    <SelectItem value="icu">ICU Unit</SelectItem>
+                    <SelectItem value="er">Emergency Unit</SelectItem>
+                    <SelectItem value="pediatric">Pediatric Unit</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -503,14 +577,16 @@ export default function ShiftTemplatesPage() {
                   <Label>Start Time</Label>
                   <Input
                     type="time"
-                    {...templateForm.register("startTime")}
+                    value={templateForm.watch("startTime")}
+                    onChange={(e) => templateForm.setValue("startTime", e.target.value)}
                   />
                 </div>
                 <div>
                   <Label>End Time</Label>
                   <Input
                     type="time"
-                    {...templateForm.register("endTime")}
+                    value={templateForm.watch("endTime")}
+                    onChange={(e) => templateForm.setValue("endTime", e.target.value)}
                   />
                 </div>
               </div>
@@ -521,16 +597,14 @@ export default function ShiftTemplatesPage() {
                   <Input
                     type="number"
                     min="1"
-                    {...templateForm.register("minStaff", { 
-                      valueAsNumber: true,
-                      onChange: (e) => {
-                        const value = parseInt(e.target.value);
-                        if (value && value >= 1) {
-                          // Auto-set maxStaff to same value for consistency
-                          templateForm.setValue("maxStaff", value);
-                        }
+                    value={templateForm.watch("minStaff")}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      templateForm.setValue("minStaff", value || 1);
+                      if (value && value >= 1) {
+                        templateForm.setValue("maxStaff", value);
                       }
-                    })}
+                    }}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Number of staff positions needed
@@ -541,7 +615,11 @@ export default function ShiftTemplatesPage() {
                   <Input
                     type="number"
                     min="1"
-                    {...templateForm.register("maxStaff", { valueAsNumber: true })}
+                    value={templateForm.watch("maxStaff")}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value);
+                      templateForm.setValue("maxStaff", value || 1);
+                    }}
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Maximum staff that can be assigned
@@ -630,7 +708,25 @@ export default function ShiftTemplatesPage() {
                   onClick={() => {
                     setIsTemplateDialogOpen(false);
                     setEditingTemplate(null);
-                    templateForm.reset();
+                    templateForm.reset({
+                      name: "",
+                      department: "",
+                      specialty: "",
+                      facilityId: 0,
+                      facilityName: "",
+                      buildingId: "",
+                      buildingName: "",
+                      minStaff: 1,
+                      maxStaff: 1,
+                      shiftType: "day",
+                      startTime: "07:00",
+                      endTime: "19:00",
+                      daysOfWeek: [1, 2, 3, 4, 5],
+                      isActive: true,
+                      hourlyRate: 0,
+                      daysPostedOut: 7,
+                      notes: "",
+                    });
                   }}
                   className="flex-1"
                 >
