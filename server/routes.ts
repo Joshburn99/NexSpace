@@ -1173,9 +1173,35 @@ export function registerRoutes(app: Express): Server {
           facilityName: generatedShift.facilityName,
           premiumMultiplier: generatedShift.rate
         };
-      } else if (!isNaN(parseInt(shiftId))) {
-        // Fallback to regular shift table for numeric IDs
-        shift = await storage.getShift(parseInt(shiftId));
+      } else {
+        // For regular shifts, get from the example shifts data since database shifts table doesn't have title column
+        const allShifts = getShiftData();
+        const exampleShift = allShifts.find(s => s.id.toString() === shiftId);
+        
+        if (exampleShift) {
+          shift = {
+            id: exampleShift.id,
+            title: exampleShift.title,
+            specialty: exampleShift.specialty,
+            description: exampleShift.description,
+            facilityId: exampleShift.facilityId,
+            department: exampleShift.department,
+            date: exampleShift.date,
+            startTime: exampleShift.startTime,
+            endTime: exampleShift.endTime,
+            rate: exampleShift.rate,
+            status: exampleShift.status,
+            urgency: exampleShift.urgency,
+            requiredStaff: exampleShift.requiredWorkers || 1,
+            assignedStaffIds: [],
+            specialRequirements: [],
+            createdById: 1,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            facilityName: exampleShift.facilityName,
+            premiumMultiplier: exampleShift.rate
+          };
+        }
       }
       
       if (!shift) {
