@@ -398,21 +398,32 @@ export default function EnhancedCalendarPage() {
     }
   });
 
-  // Filter options
-  const specialties = ["Registered Nurse", "Licensed Practical Nurse", "Certified Nursing Assistant", "Physical Therapist", "Respiratory Therapist"];
-  const statuses = ["open", "requested", "confirmed", "cancelled", "filled"];
-  const departments = ["ICU", "Emergency", "Medical-Surgical", "Operating Room", "Labor & Delivery"];
+  // Extract unique filter options from actual shift data
+  const specialties = React.useMemo(() => {
+    const uniqueSpecialties = [...new Set(shifts.map(s => s.specialty))].filter(Boolean);
+    return uniqueSpecialties.length > 0 ? uniqueSpecialties : ["RN", "LPN", "CNA", "PT", "RT"];
+  }, [shifts]);
 
-  // Apply filters to shifts
+  const statuses = React.useMemo(() => {
+    const uniqueStatuses = [...new Set(shifts.map(s => s.status))].filter(Boolean);
+    return uniqueStatuses.length > 0 ? uniqueStatuses : ["open", "requested", "confirmed", "cancelled", "filled"];
+  }, [shifts]);
+
+  const departments = React.useMemo(() => {
+    const uniqueDepartments = [...new Set(shifts.map(s => s.department))].filter(Boolean);
+    return uniqueDepartments.length > 0 ? uniqueDepartments : ["ICU", "Emergency", "Medical-Surgical", "Operating Room", "Labor & Delivery"];
+  }, [shifts]);
+
+  // Apply filters to shifts with proper field mapping
   const filteredShifts = shifts.filter(shift => {
     const matchesSearch = searchTerm === "" || 
-      shift.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      shift.facilityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      shift.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      shift.specialty.toLowerCase().includes(searchTerm.toLowerCase());
+      shift.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      shift.facilityName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      shift.department?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      shift.specialty?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesFacility = filters.facilities.length === 0 || 
-      filters.facilities.includes(shift.facilityId.toString());
+      filters.facilities.includes((shift.facilityId || shift.facility_id)?.toString());
     
     const matchesSpecialty = filters.specialties.length === 0 || 
       filters.specialties.includes(shift.specialty);
@@ -420,8 +431,15 @@ export default function EnhancedCalendarPage() {
     const matchesStatus = filters.statuses.length === 0 || 
       filters.statuses.includes(shift.status);
 
+    // Fix worker matching to check assigned staff properly
     const matchesWorker = filters.workers.length === 0 || 
-      (shift.assignedStaffId && filters.workers.includes(shift.assignedStaffId.toString()));
+      (shift.assignedStaff && shift.assignedStaff.some((staff: any) => 
+        filters.workers.includes(staff.id?.toString() || staff.workerId?.toString())
+      )) ||
+      (shift.assignedStaffId && filters.workers.includes(shift.assignedStaffId.toString())) ||
+      (shift.assignedStaffIds && shift.assignedStaffIds.some((id: any) => 
+        filters.workers.includes(id.toString())
+      ));
 
     return matchesSearch && matchesFacility && matchesSpecialty && matchesStatus && matchesWorker;
   });
