@@ -216,6 +216,7 @@ export default function ShiftTemplatesPage() {
   // Update template mutation
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: z.infer<typeof templateSchema> }) => {
+      console.log('Update mutation called with:', { id, data });
       const response = await apiRequest("PUT", `/api/shift-templates/${id}`, data);
       return response.json();
     },
@@ -228,6 +229,14 @@ export default function ShiftTemplatesPage() {
       toast({
         title: "Template Updated",
         description: "Template updated and shifts regenerated automatically.",
+      });
+    },
+    onError: (error) => {
+      console.error('Update template error:', error);
+      toast({
+        title: "Update Failed",
+        description: "Failed to update template. Please try again.",
+        variant: "destructive",
       });
     },
   });
@@ -300,30 +309,33 @@ export default function ShiftTemplatesPage() {
 
   const handleEditTemplate = (template: ShiftTemplate) => {
     setEditingTemplate(template);
-    // Reset form with template data
-    templateForm.reset({
-      name: template.name,
-      department: template.department,
-      specialty: template.specialty,
-      facilityId: template.facilityId,
-      facilityName: template.facilityName,
-      minStaff: template.minStaff,
-      maxStaff: template.maxStaff,
-      shiftType: template.shiftType,
-      startTime: template.startTime,
-      endTime: template.endTime,
-      daysOfWeek: template.daysOfWeek,
-      isActive: template.isActive,
-      hourlyRate: template.hourlyRate || 0,
-      daysPostedOut: template.daysPostedOut || 7,
-      notes: template.notes || "",
-    });
+    // Set form values immediately for editing
+    setTimeout(() => {
+      templateForm.reset({
+        name: template.name,
+        department: template.department,
+        specialty: template.specialty,
+        facilityId: template.facilityId,
+        facilityName: template.facilityName,
+        minStaff: template.minStaff,
+        maxStaff: template.maxStaff,
+        shiftType: template.shiftType,
+        startTime: template.startTime,
+        endTime: template.endTime,
+        daysOfWeek: template.daysOfWeek,
+        isActive: template.isActive,
+        hourlyRate: template.hourlyRate || 0,
+        daysPostedOut: template.daysPostedOut || 7,
+        notes: template.notes || "",
+      });
+    }, 100);
     setIsTemplateDialogOpen(true);
   };
 
   const handleTemplateSubmit = (data: z.infer<typeof templateSchema>) => {
     console.log('Submitting template data:', data);
     console.log('Editing template:', editingTemplate);
+    console.log('Form errors:', templateForm.formState.errors);
     
     if (editingTemplate) {
       updateTemplateMutation.mutate({ id: editingTemplate.id, data });
