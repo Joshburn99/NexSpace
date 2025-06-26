@@ -3,7 +3,6 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { exec } from "child_process";
 import { createEnhancedStaffProfiles } from "./enhanced-staff-data";
-import { DailyShiftGenerator } from "./daily-shift-generator";
 
 const app = express();
 app.use(express.json());
@@ -57,14 +56,14 @@ function killPort5000() {
 (async () => {
   // Kill any existing process on port 5000
   await killPort5000();
-
+  
   // Initialize enhanced staff profiles on startup
   try {
     await createEnhancedStaffProfiles();
   } catch (error) {
     log("Enhanced staff profiles initialization:", error);
   }
-
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -95,26 +94,7 @@ function killPort5000() {
     },
     () => {
       console.log(`Server running on port ${PORT}`);
-
-  // Initialize shift generation on startup
-  setTimeout(async () => {
-    try {
-      console.log('[STARTUP] Initializing daily shift generation...');
-      await DailyShiftGenerator.generateDailyShifts();
-    } catch (error) {
-      console.error('[STARTUP] Failed to initialize shift generation:', error);
+      log(`serving on port ${PORT}`);
     }
-  }, 5000); // Wait 5 seconds for server to fully start
-
-  // Set up daily shift generation (runs every 24 hours)
-  setInterval(async () => {
-    try {
-      console.log('[SCHEDULER] Running daily shift generation...');
-      await DailyShiftGenerator.generateDailyShifts();
-    } catch (error) {
-      console.error('[SCHEDULER] Daily shift generation failed:', error);
-    }
-  }, 24 * 60 * 60 * 1000); // 24 hours
-}
   );
 })();

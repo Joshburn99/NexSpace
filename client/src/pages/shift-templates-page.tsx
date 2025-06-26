@@ -167,33 +167,8 @@ export default function ShiftTemplatesPage() {
   const queryClient = useQueryClient();
 
   // Fetch templates
-  const getQueryFn = async (url: string) => {
-    const response = await apiRequest("GET", url);
-    if (!response.ok) {
-      throw new Error(`Failed to fetch data: ${response.status}`);
-    }
-    return response.json();
-  };
-  const { 
-    data: templates = [], 
-    isLoading, 
-    error,
-    refetch,
-    isError
-  } = useQuery({
+  const { data: templates = [], isLoading } = useQuery<ShiftTemplate[]>({
     queryKey: ["/api/shift-templates"],
-    queryFn: () => getQueryFn("/api/shift-templates"),
-    retry: 3,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    staleTime: 30000, // Consider data stale after 30 seconds
-    onError: (error) => {
-      console.error("Failed to fetch templates:", error);
-      toast({
-        title: "Error Loading Templates",
-        description: "Failed to load shift templates. Please try refreshing the page.",
-        variant: "destructive",
-      });
-    }
   });
 
   // Fetch facilities for template assignment
@@ -246,73 +221,58 @@ export default function ShiftTemplatesPage() {
 
   // Update template mutation
   const updateTemplateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: any }) => {
-      console.log("=== UPDATE MUTATION DEBUG ===");
-      console.log("Template ID:", id);
-      console.log("Update data being sent:", JSON.stringify(data, null, 2));
-
-      try {
-        const response = await apiRequest("PUT", `/api/shift-templates/${id}`, data);
-        console.log("Response status:", response.status);
-        console.log("Response headers:", Object.fromEntries(response.headers.entries()));
-
-        let responseData;
-        try {
-          responseData = await response.json();
-          console.log("Response data:", JSON.stringify(responseData, null, 2));
-        } catch (parseError) {
-          console.error("Failed to parse response JSON:", parseError);
-          throw new Error(`Server returned invalid JSON (status ${response.status})`);
-        }
-
-        if (!response.ok) {
-          console.error("Update failed with response:", responseData);
-          const errorMessage = responseData?.message || responseData?.details || `Server error: ${response.status}`;
-          throw new Error(errorMessage);
-        }
-
-        console.log("Update successful:", responseData);
-        return responseData;
-
-      } catch (networkError) {
-        console.error("Network or request error:", networkError);
-        throw new Error(`Update failed: ${networkError.message}`);
-      }
+    mutationFn: async ({ id, ...data }: { id: number } & z.infer<typeof templateSchema>) => {
+      console.log('=== UPDATE MUTATION DEBUG ===');
+      console.log('Template ID:', id);
+      console.log('Update data being sent:', JSON.stringify(data, null, 2));
+      
+      const response = await apiRequest("PUT", `/api/shift-templates/${id}`, data);
+      const result = await response.json();
+      console.log('Update response:', result);
+      return result;
     },
-    onSuccess: (data) => {
-      console.log("Update mutation succeeded:", data);
+    onSuccess: (updatedTemplate) => {
+      console.log('=== UPDATE SUCCESS ===');
+      console.log('Updated template received:', updatedTemplate);
+      
+      // Force refresh of data to ensure UI shows latest changes
       queryClient.invalidateQueries({ queryKey: ["/api/shift-templates"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+      
+      // Close dialog and reset form
       setIsTemplateDialogOpen(false);
+      templateForm.reset({
+        name: "",
+        department: "",
+        specialty: "",
+        facilityId: 0,
+        facilityName: "",
+        buildingId: "",
+        buildingName: "",
+        minStaff: 1,
+        maxStaff: 1,
+        shiftType: "day",
+        startTime: "07:00",
+        endTime: "19:00",
+        daysOfWeek: [1, 2, 3, 4, 5],
+        isActive: true,
+        hourlyRate: 0,
+        daysPostedOut: 7,
+        notes: "",
+      });
       setEditingTemplate(null);
+      
       toast({
-        title: "Success",
-        description: `Template "${data.name}" updated successfully. Generated ${data.generatedShiftsCount || 0} shifts.`,
-        duration: 5000,
+        title: "Template Updated Successfully",
+        description: `Updated "${updatedTemplate.name}" - changes will reflect immediately.`,
       });
     },
-    onError: (error: Error) => {
-      console.error("Update template error:", {
-        message: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString()
-      });
-
-      let errorMessage = "Failed to update template";
-      if (error.message.includes("validation")) {
-        errorMessage = "Invalid template data. Please check all required fields.";
-      } else if (error.message.includes("not found")) {
-        errorMessage = "Template not found. It may have been deleted.";
-      } else if (error.message.includes("Network")) {
-        errorMessage = "Network error. Please check your connection and try again.";
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
+    onError: (error) => {
+      console.error('Update template error:', error);
       toast({
         title: "Update Failed",
-        description: errorMessage,
+        description: "Failed to update template. Please try again.",
         variant: "destructive",
-        duration: 8000,
       });
     },
   });
@@ -386,10 +346,10 @@ export default function ShiftTemplatesPage() {
   const handleEditTemplate = (template: ShiftTemplate) => {
     console.log('=== EDITING TEMPLATE DEBUG ===');
     console.log('Template data received:', JSON.stringify(template, null, 2));
-
+    
     // Set editing state first
     setEditingTemplate(template);
-
+    
     // Prepare the form data with proper mapping from database fields
     const formData = {
       name: template.name || "",
@@ -412,20 +372,20 @@ export default function ShiftTemplatesPage() {
       daysPostedOut: Number(template.daysPostedOut || template.days_posted_out) || 7,
       notes: template.notes || "",
     };
-
+    
     console.log('Processed form data:', JSON.stringify(formData, null, 2));
-
+    
     // Reset form with the template data
     templateForm.reset(formData);
-
+    
     // Open dialog first
     setIsTemplateDialogOpen(true);
-
+    
     // Force immediate form update with validation after dialog opens
     setTimeout(() => {
       // Reset completely then set all values
       templateForm.reset(formData);
-
+      
       Object.entries(formData).forEach(([key, value]) => {
         templateForm.setValue(key as any, value, { 
           shouldValidate: false, 
@@ -433,10 +393,10 @@ export default function ShiftTemplatesPage() {
           shouldDirty: true 
         });
       });
-
+      
       // Force re-render of all form controls
       templateForm.trigger();
-
+      
       console.log('Final form values:', templateForm.getValues());
       console.log('Form watch values:', {
         name: templateForm.watch("name"),
@@ -447,83 +407,23 @@ export default function ShiftTemplatesPage() {
         minStaff: templateForm.watch("minStaff")
       });
     }, 300);
-
+    
     // Dialog is opened above in the timeout
   };
 
-  const { handleSubmit, formState: { errors, isValid, dirtyFields } } = templateForm;
-
-  const handleTemplateSubmit = async (data: any) => {
-    console.log("=== TEMPLATE SUBMISSION DEBUG ===");
-    console.log("Submitted data:", JSON.stringify(data, null, 2));
-    console.log("Editing template ID:", editingTemplate?.id);
-    console.log("Form errors:", errors);
-    console.log("Is editing mode:", !!editingTemplate);
-    console.log("Form is valid:", isValid);
-    console.log("Form dirty fields:", dirtyFields);
-
-    // Validate required fields locally before submission
-    const requiredFields = ['name', 'department', 'specialty', 'facilityId', 'minStaff', 'maxStaff', 'startTime', 'endTime', 'daysOfWeek'];
-    const missingFields = requiredFields.filter(field => {
-      const value = data[field];
-      if (field === 'daysOfWeek') {
-        return !Array.isArray(value) || value.length === 0;
-      }
-      return value === undefined || value === null || value === '';
-    });
-
-    if (missingFields.length > 0) {
-      console.error("Missing required fields:", missingFields);
-      toast({
-        title: "Validation Error",
-        description: `Please fill in all required fields: ${missingFields.join(', ')}`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate data ranges
-    if (data.minStaff > data.maxStaff) {
-      toast({
-        title: "Validation Error",
-        description: "Minimum staff cannot be greater than maximum staff",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (data.daysPostedOut < 1 || data.daysPostedOut > 365) {
-      toast({
-        title: "Validation Error", 
-        description: "Days posted out must be between 1 and 365",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Show loading state
-    const loadingToast = toast({
-      title: editingTemplate ? "Updating Template..." : "Creating Template...",
-      description: "Please wait while we process your request.",
-      duration: 0, // Don't auto-dismiss
-    });
-
-    try {
-      if (editingTemplate) {
-        console.log("Calling UPDATE mutation for template ID:", editingTemplate.id);
-        await updateTemplateMutation.mutateAsync({ id: editingTemplate.id, data });
-      } else {
-        console.log("Calling CREATE mutation");
-        await createTemplateMutation.mutateAsync(data);
-      }
-
-      // Dismiss loading toast on success (success toast will be shown by mutation)
-      loadingToast.dismiss?.();
-
-    } catch (error) {
-      console.error("Submission error:", error);
-      loadingToast.dismiss?.();
-      // Error toast will be shown by mutation onError
+  const handleTemplateSubmit = (data: z.infer<typeof templateSchema>) => {
+    console.log('=== TEMPLATE SUBMISSION DEBUG ===');
+    console.log('Submitted data:', JSON.stringify(data, null, 2));
+    console.log('Editing template ID:', editingTemplate?.id);
+    console.log('Form errors:', templateForm.formState.errors);
+    console.log('Is editing mode:', !!editingTemplate);
+    
+    if (editingTemplate) {
+      console.log('Calling UPDATE mutation for template ID:', editingTemplate.id);
+      updateTemplateMutation.mutate({ id: editingTemplate.id, ...data });
+    } else {
+      console.log('Calling CREATE mutation');
+      createTemplateMutation.mutate(data);
     }
   };
 
@@ -611,7 +511,7 @@ export default function ShiftTemplatesPage() {
                 Editing: {editingTemplate.name}
               </div>
             )}
-            <form onSubmit={handleSubmit(handleTemplateSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+            <form onSubmit={templateForm.handleSubmit(handleTemplateSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Template Name</Label>
@@ -902,17 +802,10 @@ export default function ShiftTemplatesPage() {
                 </Button>
                 <Button 
                   type="submit" 
-                  className="flex-1 min-w-[120px]"
-                  disabled={!isValid || createTemplateMutation.isPending || updateTemplateMutation.isPending}
+                  className="flex-1"
+                  disabled={createTemplateMutation.isPending || updateTemplateMutation.isPending}
                 >
-                  {createTemplateMutation.isPending || updateTemplateMutation.isPending ? (
-                    <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                      {editingTemplate ? "Updating..." : "Creating..."}
-                    </div>
-                  ) : (
-                    editingTemplate ? "Update Template" : "Create Template"
-                  )}
+                  {createTemplateMutation.isPending || updateTemplateMutation.isPending ? "Saving..." : editingTemplate ? "Update Template" : "Create Template"}
                 </Button>
               </div>
             </form>
@@ -1010,25 +903,6 @@ export default function ShiftTemplatesPage() {
         <CardContent>
           {isLoading ? (
             <div className="text-center py-8">Loading templates...</div>
-          ) : isError ? (
-            <div className="text-center py-8">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Failed to Load Templates</h3>
-              <p className="text-gray-600 mb-4">
-                We couldn't load your shift templates. This might be due to a network issue or server problem.
-              </p>
-              <div className="flex gap-2 justify-center">
-                <Button onClick={() => refetch()} variant="outline">
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Try Again
-                </Button>
-                <Button onClick={() => window.location.reload()}>
-                  Refresh Page
-                </Button>
-              </div>
-            </div>
           ) : filteredTemplates.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No templates found. Create your first shift template to get started.
