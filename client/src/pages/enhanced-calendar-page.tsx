@@ -189,8 +189,18 @@ export default function EnhancedCalendarPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddShiftDialog, setShowAddShiftDialog] = useState(false);
-
-  const [showPostShiftModal, setShowPostShiftModal] = useState(false);
+  const [shiftFormData, setShiftFormData] = useState({
+    title: '',
+    specialty: 'RN',
+    date: format(new Date(), 'yyyy-MM-dd'),
+    facilityId: '',
+    startTime: '07:00',
+    endTime: '19:00',
+    rate: '',
+    urgency: 'medium',
+    description: '',
+    requiredStaff: '1'
+  });
 
   
   // Advanced filters state
@@ -230,6 +240,51 @@ export default function EnhancedCalendarPage() {
   const { data: shiftRequests = [] } = useQuery<any[]>({
     queryKey: [`/api/shift-requests/${selectedShift?.id}`],
     enabled: !!selectedShift?.id,
+  });
+
+  // Create shift mutation
+  const createShiftMutation = useMutation({
+    mutationFn: async (shiftData: any) => {
+      const response = await fetch('/api/shifts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(shiftData),
+        credentials: 'include'
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create shift');
+      }
+      
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+      toast({ title: "Success", description: "Shift created successfully" });
+      setShowAddShiftDialog(false);
+      setShiftFormData({
+        title: '',
+        specialty: 'RN',
+        date: format(new Date(), 'yyyy-MM-dd'),
+        facilityId: '',
+        startTime: '07:00',
+        endTime: '19:00',
+        rate: '',
+        urgency: 'medium',
+        description: '',
+        requiredStaff: '1'
+      });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to create shift",
+        variant: "destructive"
+      });
+    }
   });
 
   // Assignment mutations
@@ -320,7 +375,7 @@ export default function EnhancedCalendarPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/shifts", filters, searchTerm] });
       refetchShifts();
-      setShowPostShiftModal(false);
+      setShowAddShiftDialog(false);
       
       // Force page refresh to ensure new shift appears
       setTimeout(() => {
@@ -586,7 +641,7 @@ export default function EnhancedCalendarPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button
-            onClick={() => setShowPostShiftModal(true)}
+            onClick={() => setShowAddShiftDialog(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -607,16 +662,7 @@ export default function EnhancedCalendarPage() {
             <Filter className="h-4 w-4 mr-2" />
             Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
           </Button>
-          {user && (user.role === 'facility_manager' || user.role === 'super_admin' || user.role === 'admin') && (
-            <Button
-              onClick={() => setShowPostShiftModal(true)}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              Add Shift
-            </Button>
-          )}
+
           <div className="flex gap-1">
             <Button
               variant={viewMode === "dayGridMonth" ? "default" : "outline"}
