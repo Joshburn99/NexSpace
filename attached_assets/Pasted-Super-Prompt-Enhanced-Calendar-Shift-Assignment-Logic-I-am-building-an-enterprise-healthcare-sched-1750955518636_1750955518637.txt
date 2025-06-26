@@ -1,0 +1,33 @@
+Super Prompt: Enhanced Calendar Shift Assignment Logic
+
+I am building an enterprise healthcare scheduling app in React with TypeScript and Vite. On my Enhanced Calendar page, each shift can require multiple workers (for example, 3 RNs for one shift). The shift detail modal must allow me to assign requests one-by-one until the required number is filled (e.g., 1/3, 2/3, 3/3), and must not prevent me from assigning requests while the shift is still not fully filled.
+
+Currently, I can only assign the first worker to the shift. After that, the modal doesn't show the remaining requests or allow further assignments. See the attached screenshot for an example (Michael Chen assigned, requirement is 3, only 1/3 filled, but no way to assign more).
+
+Please do the following:
+
+Audit the code for the Shift Details modal and the assignment logic.
+
+Ensure the list of pending shift requests is visible and assignable while the shift is not yet fully filled (e.g., 1/3 or 2/3).
+
+Update the UI so that for any shift where the assigned count is less than the requirement, the “requests” section continues to display and allow assignments.
+
+After a worker is assigned, immediately refresh the list so it shows the updated count (e.g., 2/3) and remaining unassigned requests.
+
+Once the requirement is fully met (e.g., 3/3), hide or disable the requests section for that shift.
+
+Ensure the assignment logic only affects the selected shift and does not interfere with other shifts.
+
+Use unique keys for any lists in React.
+
+If you need more context (code, API structure, database schema), ask me and I’ll provide it.
+
+Summary:
+
+The shift assignment modal should allow assigning as many requests as needed up to the required number.
+
+“Requests” should remain visible and actionable until the shift is 100% filled.
+
+Assigned staff should display in a list (“Staffing Status”) that updates in real time.
+
+Please identify the root cause and fix all logic/UI issues preventing multi-worker assignment in the shift modal. 

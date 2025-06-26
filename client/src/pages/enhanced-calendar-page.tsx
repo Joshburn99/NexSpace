@@ -1282,16 +1282,28 @@ export default function EnhancedCalendarPage() {
               </div>
 
               {/* Shift Requests List for Facility Managers and Super Admins */}
-              {user && (user.role === 'facility_manager' || user.role === 'super_admin' || user.role === 'admin') && selectedShift.status === 'open' && (
+              {user && (user.role === 'facility_manager' || user.role === 'super_admin' || user.role === 'admin') && 
+               selectedShift.status !== 'filled' && selectedShift.status !== 'cancelled' && selectedShift.status !== 'completed' && 
+               (selectedShift.filledPositions || 0) < (selectedShift.totalPositions || 1) && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                   <div className="flex items-center justify-between mb-3">
                     <Label className="text-base font-semibold text-blue-900 dark:text-blue-100">Shift Requests</Label>
-                    <Badge variant="secondary">{shiftRequests.length} Request{shiftRequests.length !== 1 ? 's' : ''}</Badge>
+                    {(() => {
+                      const assignedStaff = (selectedShift as any).assignedStaff || [];
+                      const availableRequests = shiftRequests.filter((request: any) => 
+                        !assignedStaff.some((staff: any) => staff.id === request.workerId)
+                      );
+                      return <Badge variant="secondary">{availableRequests.length} Available Request{availableRequests.length !== 1 ? 's' : ''}</Badge>;
+                    })()}
                   </div>
                   
                   {shiftRequests.length > 0 ? (
                     <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {shiftRequests.map((request: any) => (
+                      {shiftRequests.filter((request: any) => {
+                        // Filter out already assigned workers
+                        const assignedStaff = (selectedShift as any).assignedStaff || [];
+                        return !assignedStaff.some((staff: any) => staff.id === request.workerId);
+                      }).map((request: any) => (
                         <div key={request.id} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
