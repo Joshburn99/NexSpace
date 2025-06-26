@@ -193,6 +193,7 @@ export default function EnhancedCalendarPage() {
     title: '',
     specialty: 'RN',
     date: format(new Date(), 'yyyy-MM-dd'),
+    selectedDates: [] as string[],
     facilityId: '',
     startTime: '07:00',
     endTime: '19:00',
@@ -269,6 +270,7 @@ export default function EnhancedCalendarPage() {
         title: '',
         specialty: 'RN',
         date: format(new Date(), 'yyyy-MM-dd'),
+        selectedDates: [],
         facilityId: '',
         startTime: '07:00',
         endTime: '19:00',
@@ -1416,9 +1418,12 @@ export default function EnhancedCalendarPage() {
 
       {/* Add Shift Dialog */}
       <Dialog open={showAddShiftDialog} onOpenChange={setShowAddShiftDialog}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add New Shift</DialogTitle>
+            <DialogDescription>
+              Create a new shift assignment for your facility
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
@@ -1452,13 +1457,45 @@ export default function EnhancedCalendarPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label className="text-sm font-medium">Date</Label>
-                <input 
-                  type="date" 
-                  className="w-full mt-1 p-2 border rounded-md"
-                  value={shiftFormData.date}
-                  onChange={(e) => setShiftFormData({...shiftFormData, date: e.target.value})}
-                />
+                <Label className="text-sm font-medium">Date Selection</Label>
+                <div className="space-y-2">
+                  <input 
+                    type="date" 
+                    className="w-full mt-1 p-2 border rounded-md"
+                    value={shiftFormData.date}
+                    onChange={(e) => setShiftFormData({...shiftFormData, date: e.target.value})}
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        if (shiftFormData.date && !shiftFormData.selectedDates.includes(shiftFormData.date)) {
+                          setShiftFormData({
+                            ...shiftFormData,
+                            selectedDates: [...shiftFormData.selectedDates, shiftFormData.date]
+                          });
+                        }
+                      }}
+                    >
+                      Add Date
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShiftFormData({...shiftFormData, selectedDates: []})}
+                    >
+                      Clear All
+                    </Button>
+                  </div>
+                  {shiftFormData.selectedDates.length > 0 && (
+                    <div className="text-xs text-muted-foreground">
+                      Selected dates: {shiftFormData.selectedDates.join(', ')}
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <Label className="text-sm font-medium">Facility</Label>
