@@ -1491,359 +1491,31 @@ export default function EnhancedCalendarPage() {
       </Dialog>
         </>
       )}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium">Template Name</Label>
-                <Input 
-                  placeholder="e.g., ICU Day Shift RN"
-                  defaultValue={selectedTemplate?.name || ""}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Facility</Label>
-                <Select defaultValue={selectedTemplate?.facilityId || ""}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select facility" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(facilities as any[]).map((facility: any) => (
-                      <SelectItem key={facility.id} value={facility.id.toString()}>
-                        {facility.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium">Building/Unit</Label>
-              <Select defaultValue={selectedTemplate?.buildingId || ""}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select building or unit" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="main-building">Main Building</SelectItem>
-                  <SelectItem value="north-wing">North Wing</SelectItem>
-                  <SelectItem value="south-wing">South Wing</SelectItem>
-                  <SelectItem value="west-tower">West Tower</SelectItem>
-                  <SelectItem value="emergency-dept">Emergency Department</SelectItem>
-                  <SelectItem value="icu-unit">ICU Unit</SelectItem>
-                  <SelectItem value="or-suite">OR Suite</SelectItem>
-                  <SelectItem value="maternity-ward">Maternity Ward</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium">Department</Label>
-                <Select defaultValue={selectedTemplate?.department || ""}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select department" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ICU">ICU</SelectItem>
-                    <SelectItem value="Emergency">Emergency</SelectItem>
-                    <SelectItem value="Medical/Surgical">Medical/Surgical</SelectItem>
-                    <SelectItem value="Operating Room">Operating Room</SelectItem>
-                    <SelectItem value="Labor & Delivery">Labor & Delivery</SelectItem>
-                    <SelectItem value="Pediatrics">Pediatrics</SelectItem>
-                    <SelectItem value="Rehabilitation">Rehabilitation</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Specialty</Label>
-                <Select defaultValue={selectedTemplate?.specialty || ""}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select specialty" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="RN">RN - Registered Nurse</SelectItem>
-                    <SelectItem value="LPN">LPN - Licensed Practical Nurse</SelectItem>
-                    <SelectItem value="CNA">CNA - Certified Nursing Assistant</SelectItem>
-                    <SelectItem value="RT">RT - Respiratory Therapist</SelectItem>
-                    <SelectItem value="PT">PT - Physical Therapist</SelectItem>
-                    <SelectItem value="OT">OT - Occupational Therapist</SelectItem>
-                    <SelectItem value="CST">CST - Certified Surgical Tech</SelectItem>
-                    <SelectItem value="PCT">PCT - Patient Care Technician</SelectItem>
-                    <SelectItem value="MA">MA - Medical Assistant</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <Label className="text-sm font-medium">Shift Type</Label>
-                <Select defaultValue={selectedTemplate?.shiftType || "Day Shift"}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select shift type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Day Shift">Day Shift</SelectItem>
-                    <SelectItem value="Night Shift">Night Shift</SelectItem>
-                    <SelectItem value="Evening Shift">Evening Shift</SelectItem>
-                    <SelectItem value="Weekend Shift">Weekend Shift</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label className="text-sm font-medium">Start Time</Label>
-                <Input 
-                  type="time"
-                  defaultValue={selectedTemplate?.startTime || "07:00"}
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium">End Time</Label>
-                <Input 
-                  type="time"
-                  defaultValue={selectedTemplate?.endTime || "19:00"}
-                />
-              </div>
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium">Staff Required</Label>
-              <Input 
-                type="number" 
-                placeholder="1"
-                defaultValue={selectedTemplate?.minStaff || selectedTemplate?.maxStaff || "1"}
-                min="1"
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Number of staff positions needed for this shift
-              </p>
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium">Staffing Priority Tiers</Label>
-              <div className="space-y-3 mt-2">
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-green-100 text-green-800 rounded-full flex items-center justify-center text-sm font-medium">1</div>
-                    <div>
-                      <div className="font-medium">Employees</div>
-                      <div className="text-xs text-gray-500">Internal staff members - highest priority</div>
-                    </div>
-                  </div>
-                  <input type="checkbox" defaultChecked className="rounded" />
-                </div>
-                
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center text-sm font-medium">2</div>
-                    <div>
-                      <div className="font-medium">Contractors (Float Pool)</div>
-                      <div className="text-xs text-gray-500">Contract workers - medium priority</div>
-                    </div>
-                  </div>
-                  <input type="checkbox" defaultChecked className="rounded" />
-                </div>
-                
-                <div className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-orange-100 text-orange-800 rounded-full flex items-center justify-center text-sm font-medium">3</div>
-                    <div>
-                      <div className="font-medium">Outside Agencies</div>
-                      <div className="text-xs text-gray-500">External staffing agencies - lowest priority</div>
-                    </div>
-                  </div>
-                  <input type="checkbox" className="rounded" />
-                </div>
-              </div>
-              <div className="text-xs text-gray-500 mt-2">
-                Shifts will be offered to staff groups in priority order. Higher priority groups get first access to available shifts.
-              </div>
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium">Days of Week</Label>
-              <div className="flex gap-4 mt-2">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-                  <label key={day} className="flex items-center gap-2">
-                    <input 
-                      type="checkbox" 
-                      defaultChecked={selectedTemplate?.daysOfWeek?.includes(day) || day !== 'Sun' && day !== 'Sat'}
-                      className="rounded"
-                    />
-                    <span className="text-sm">{day}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium">Hourly Rate (Optional)</Label>
-                <Input 
-                  type="number" 
-                  placeholder="0"
-                  step="0.01"
-                  defaultValue={selectedTemplate?.hourlyRate || "0"}
-                />
-              </div>
-              <div className="flex items-center gap-2 mt-6">
-                <input 
-                  type="checkbox" 
-                  id="activeTemplate"
-                  defaultChecked={selectedTemplate?.active !== false}
-                  className="rounded"
-                />
-                <Label htmlFor="activeTemplate" className="text-sm font-medium">Active Template</Label>
-              </div>
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium">Notes (Optional)</Label>
-              <textarea 
-                className="w-full mt-1 p-2 border rounded-md"
-                rows={3}
-                placeholder="Additional template details..."
-                defaultValue={selectedTemplate?.notes || ""}
-              />
-            </div>
-          </div>
-          
-          <div className="flex justify-end gap-2 mt-6">
-            <Button variant="outline" onClick={() => {
-              setShowTemplateModal(false);
-              setSelectedTemplate(null);
-            }}>
-              Cancel
-            </Button>
-            <Button onClick={() => {
-              toast({ 
-                title: selectedTemplate ? "Template Updated" : "Template Created", 
-                description: "Shift template has been saved successfully" 
-              });
-              setShowTemplateModal(false);
-              setSelectedTemplate(null);
-            }}>
-              {selectedTemplate ? 'Update Template' : 'Create Template'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Use Template Modal */}
-      <Dialog open={showUseTemplateModal} onOpenChange={setShowUseTemplateModal}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Schedule Shifts from Template</DialogTitle>
-          </DialogHeader>
-          <form data-use-template className="space-y-4">
-            <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <h4 className="font-medium text-sm mb-2">Template: {selectedTemplate?.name}</h4>
-              <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
-                <div>Department: {selectedTemplate?.department}</div>
-                <div>Specialty: {selectedTemplate?.specialty}</div>
-                <div>Time: {selectedTemplate?.startTime} - {selectedTemplate?.endTime}</div>
-              </div>
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium">Start Date</Label>
-              <Input 
-                name="startDate"
-                type="date"
-                defaultValue={new Date().toISOString().split('T')[0]}
-              />
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium">End Date</Label>
-              <Input 
-                name="endDate"
-                type="date"
-                defaultValue={new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]}
-              />
-            </div>
-            
-            <div>
-              <Label className="text-sm font-medium">Days in Advance to Post</Label>
-              <select name="daysInAdvance" className="w-full mt-1 p-2 border rounded-md" defaultValue="7">
-                <option value="1">1 day</option>
-                <option value="3">3 days</option>
-                <option value="7">7 days</option>
-                <option value="14">14 days</option>
-                <option value="21">21 days</option>
-                <option value="30">30 days</option>
-              </select>
-            </div>
-            
-            <div className="text-xs text-gray-500">
-              Shifts will be created based on the template's selected days of the week within the date range.
-            </div>
-          </form>
-          
-          <div className="flex justify-end gap-2 mt-6">
-            <Button variant="outline" onClick={() => {
-              setShowUseTemplateModal(false);
-              setSelectedTemplate(null);
-            }}>
-              Cancel
-            </Button>
-            <Button onClick={async () => {
-              try {
-                const form = document.querySelector('form[data-use-template]') as HTMLFormElement;
-                const formData = new FormData(form);
-                
-                const response = await fetch('/api/shifts/from-template', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  credentials: 'include',
-                  body: JSON.stringify({
-                    templateId: selectedTemplate.id,
-                    startDate: formData.get('startDate') || new Date().toISOString().split('T')[0],
-                    endDate: formData.get('endDate') || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                    daysInAdvance: parseInt(formData.get('daysInAdvance') as string) || 7
-                  })
-                });
-                
-                if (response.ok) {
-                  const result = await response.json();
-                  toast({ 
-                    title: "Shifts Created", 
-                    description: `${result.generatedShifts} shifts have been scheduled from the template` 
-                  });
-                  setShowUseTemplateModal(false);
-                  setSelectedTemplate(null);
-                  // Refresh shifts data without page reload
-                  queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
-                } else {
-                  throw new Error('Failed to create shifts');
-                }
-              } catch (error) {
-                toast({ 
-                  title: "Error", 
-                  description: "Failed to create shifts from template" 
-                });
-              }
-            }}>
-              Create Shifts
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Add Shift Modal */}
       {showPostShiftModal && (
         <Dialog open={showPostShiftModal} onOpenChange={setShowPostShiftModal}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Shift</DialogTitle>
             </DialogHeader>
-            
-            <form onSubmit={(e) => {
+            <form onSubmit={async (e) => {
               e.preventDefault();
-              const formData = new FormData(e.currentTarget);
+              const formData = new FormData(e.target as HTMLFormElement);
+              
+              // Validate facility selection
               const facilityId = parseInt(formData.get('facilityId') as string);
               const facility = (facilities as any[])?.find(f => f.id === facilityId);
+              if (!facility) {
+                toast({
+                  title: "Error",
+                  description: "Please select a valid facility",
+                  variant: "destructive"
+                });
+                return;
+              }
               
-              // Calculate total hours from start and end time
+              // Calculate total hours
               const startTime = formData.get('startTime') as string;
               const endTime = formData.get('endTime') as string;
               const totalHours = calculateHoursBetween(startTime, endTime);
@@ -1986,29 +1658,33 @@ export default function EnhancedCalendarPage() {
                       defaultValue="1.0"
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                       onChange={(e) => {
-                        const multiplierValue = document.querySelector('.multiplier-display');
-                        if (multiplierValue) {
-                          multiplierValue.textContent = `${e.target.value}x`;
-                        }
+                        const output = document.getElementById('rateOutput');
+                        if (output) output.textContent = `${e.target.value}x`;
                       }}
                     />
                     <div className="flex justify-between text-xs text-gray-500 mt-1">
                       <span>1.0x</span>
-                      <span className="multiplier-display">1.0x</span>
+                      <span id="rateOutput">1.0x</span>
                       <span>1.6x</span>
                     </div>
-                    <p className="text-xs text-gray-600 mt-1">Applied to worker's base rate upon request</p>
                   </div>
                 </div>
               </div>
               
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="requiredWorkers">Required Workers</Label>
-                  <Input name="requiredWorkers" type="number" min="1" defaultValue="1" />
+                  <Label htmlFor="requiredWorkers">Workers Required</Label>
+                  <Input 
+                    name="requiredWorkers" 
+                    type="number" 
+                    min="1" 
+                    max="10" 
+                    defaultValue="1" 
+                    required 
+                  />
                 </div>
                 <div>
-                  <Label htmlFor="urgency">Urgency</Label>
+                  <Label htmlFor="urgency">Urgency Level</Label>
                   <Select name="urgency" defaultValue="medium">
                     <SelectTrigger>
                       <SelectValue />
@@ -2021,19 +1697,21 @@ export default function EnhancedCalendarPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label htmlFor="totalHours">Total Hours</Label>
-                  <Input name="totalHours" type="number" min="1" defaultValue="8" readOnly className="bg-gray-100" />
-                  <p className="text-xs text-gray-600 mt-1">Auto-calculated from start/end time</p>
-                </div>
               </div>
               
               <div>
                 <Label htmlFor="description">Description</Label>
-                <Input name="description" placeholder="Shift details and requirements" />
+                <textarea 
+                  name="description" 
+                  className="w-full mt-1 p-2 border rounded-md" 
+                  rows={3}
+                  placeholder="Additional shift details..."
+                />
               </div>
               
-              <div className="flex justify-end gap-2 pt-4">
+              <Input name="totalHours" type="hidden" defaultValue="8" />
+              
+              <div className="flex justify-end gap-2 mt-6">
                 <Button
                   type="button"
                   variant="outline"
