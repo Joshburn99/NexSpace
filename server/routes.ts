@@ -320,8 +320,8 @@ export function registerRoutes(app: Express): Server {
       // Get template-generated shifts if they exist
       let templateShifts = (global as any).templateGeneratedShifts || [];
       
-      // Auto-generate shifts from active templates (force refresh for testing)
-      if (templateShifts.length === 0 || true) {
+      // Auto-generate shifts from active templates if none exist
+      if (templateShifts.length === 0) {
         const activeTemplates = [
           {
             id: 1,
@@ -7686,13 +7686,186 @@ export function registerRoutes(app: Express): Server {
     try {
       const templateId = parseInt(req.params.id);
       
-      // Simulate regenerating all future shifts for this template
-      const regeneratedCount = 34;
+      // Get the template data
+      const templates = [
+        {
+          id: 1,
+          name: "ICU Day Shift RN",
+          department: "ICU",
+          specialty: "Registered Nurse",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          minStaff: 2,
+          maxStaff: 4,
+          shiftType: "day",
+          startTime: "07:00",
+          endTime: "19:00",
+          daysOfWeek: [1, 2, 3, 4, 5],
+          isActive: true,
+          hourlyRate: 45,
+          notes: "Primary ICU coverage",
+          generatedShiftsCount: 156,
+          createdAt: "2025-06-01T00:00:00Z",
+          updatedAt: "2025-06-20T00:00:00Z"
+        },
+        {
+          id: 2,
+          name: "Emergency Night Coverage",
+          department: "Emergency",
+          specialty: "Registered Nurse",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          minStaff: 3,
+          maxStaff: 5,
+          shiftType: "night",
+          startTime: "19:00",
+          endTime: "07:00",
+          daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+          isActive: true,
+          hourlyRate: 52,
+          notes: "24/7 emergency coverage",
+          generatedShiftsCount: 203,
+          createdAt: "2025-06-01T00:00:00Z",
+          updatedAt: "2025-06-20T00:00:00Z"
+        },
+        {
+          id: 3,
+          name: "OR Morning Team",
+          department: "Operating Room",
+          specialty: "Surgical Technologist",
+          facilityId: 1,
+          facilityName: "Portland General Hospital",
+          minStaff: 1,
+          maxStaff: 2,
+          shiftType: "day",
+          startTime: "06:00",
+          endTime: "14:00",
+          daysOfWeek: [1, 2, 3, 4, 5],
+          isActive: true,
+          hourlyRate: 38,
+          notes: "Morning surgical procedures",
+          generatedShiftsCount: 87,
+          createdAt: "2025-06-01T00:00:00Z",
+          updatedAt: "2025-06-20T00:00:00Z"
+        },
+        {
+          id: 4,
+          name: "Weekend Float Pool",
+          department: "Float Pool",
+          specialty: "Registered Nurse",
+          facilityId: 2,
+          facilityName: "OHSU Hospital",
+          minStaff: 2,
+          maxStaff: 3,
+          shiftType: "day",
+          startTime: "07:00",
+          endTime: "19:00",
+          daysOfWeek: [0, 6],
+          isActive: true,
+          hourlyRate: 48,
+          notes: "Weekend float coverage",
+          generatedShiftsCount: 52,
+          createdAt: "2025-06-01T00:00:00Z",
+          updatedAt: "2025-06-20T00:00:00Z"
+        },
+        {
+          id: 5,
+          name: "Rehab",
+          department: "Medical-Surgical",
+          specialty: "Certified Nursing Assistant",
+          facilityId: 4,
+          facilityName: "Rose City Nursing Center",
+          minStaff: 2,
+          maxStaff: 2,
+          shiftType: "day",
+          startTime: "07:00",
+          endTime: "19:00",
+          daysOfWeek: [1, 2, 3, 4, 5, 0, 6],
+          isActive: true,
+          hourlyRate: 0,
+          notes: "CNA for the day shift sitter",
+          generatedShiftsCount: 0,
+          createdAt: "2025-06-25T23:26:56.850Z",
+          updatedAt: "2025-06-26T20:52:30.906Z"
+        }
+      ];
+      
+      const template = templates.find(t => t.id === templateId);
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Remove existing shifts for this template from future dates
+      let existingShifts = (global as any).templateGeneratedShifts || [];
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      
+      // Filter out future shifts from this template
+      existingShifts = existingShifts.filter((shift: any) => 
+        shift.templateId !== templateId || shift.date < todayStr
+      );
+      
+      // Generate new shifts for next 30 days
+      const newShifts: any[] = [];
+      for (let i = 0; i < 30; i++) {
+        const date = new Date(today);
+        date.setDate(today.getDate() + i);
+        
+        if (template.daysOfWeek.includes(date.getDay())) {
+          // Generate required number of shifts for each day
+          for (let staffCount = 0; staffCount < template.minStaff; staffCount++) {
+            const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
+            const shiftId = parseInt(`${template.id}${dateStr}${staffCount.toString().padStart(2, '0')}`);
+            
+            newShifts.push({
+              id: shiftId,
+              title: template.name,
+              date: date.toISOString().split('T')[0],
+              startTime: template.startTime,
+              endTime: template.endTime,
+              department: template.department,
+              specialty: template.specialty === "Registered Nurse" ? "RN" : 
+                        template.specialty === "Licensed Practical Nurse" ? "LPN" :
+                        template.specialty === "Certified Nursing Assistant" ? "CNA" :
+                        template.specialty === "Surgical Technologist" ? "CST" :
+                        template.specialty,
+              facilityId: template.facilityId,
+              facilityName: template.facilityName,
+              status: "open",
+              rate: template.hourlyRate || 0,
+              urgency: "medium",
+              description: `${template.department} shift - ${template.name}`,
+              templateId: template.id,
+              createdFromTemplate: true,
+              assignedStaffId: null,
+              assignedStaffName: null,
+              assignedStaffEmail: null,
+              assignedStaffSpecialty: null,
+              assignedStaffRating: null,
+              invoiceAmount: null,
+              invoiceStatus: null,
+              invoiceHours: null,
+              filledPositions: 0,
+              totalPositions: 1,
+              minStaff: template.minStaff,
+              maxStaff: template.maxStaff
+            });
+          }
+        }
+      }
+      
+      // Update global shifts data
+      (global as any).templateGeneratedShifts = [...existingShifts, ...newShifts];
+      
+      console.log(`[REGENERATE] Generated ${newShifts.length} new shifts for template "${template.name}" (ID: ${templateId})`);
+      
       res.json({
-        message: `Successfully regenerated ${regeneratedCount} future shifts from template`,
-        regeneratedShifts: regeneratedCount
+        message: `Successfully regenerated ${newShifts.length} future shifts from template "${template.name}"`,
+        regeneratedShifts: newShifts.length,
+        templateName: template.name
       });
     } catch (error) {
+      console.error('Regenerate shifts error:', error);
       res.status(500).json({ message: "Failed to regenerate shifts" });
     }
   });
