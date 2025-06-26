@@ -224,6 +224,15 @@ export default function EnhancedCalendarPage() {
     staleTime: 0, // Always fetch fresh data
     refetchOnWindowFocus: true,
     refetchOnMount: true,
+    queryFn: async () => {
+      const response = await fetch('/api/shifts', {
+        credentials: 'include'
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch shifts');
+      }
+      return response.json();
+    }
   });
 
   // Fetch facilities for filters
