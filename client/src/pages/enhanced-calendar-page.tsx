@@ -571,13 +571,77 @@ export default function EnhancedCalendarPage() {
         </Card>
       )}
 
+      {/* Schedule Overview Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Shifts</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{filteredShifts.length}</div>
+            <p className="text-xs text-muted-foreground">
+              {Array.isArray(shifts) && (shifts as any[]).length > filteredShifts.length ? 
+                `${filteredShifts.length} of ${(shifts as any[]).length} shown` : 
+                'All shifts displayed'
+              }
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Open Positions</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {filteredShifts.filter(shift => shift.status === 'open').length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Awaiting assignment
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Filled Shifts</CardTitle>
+            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {filteredShifts.filter(shift => shift.status === 'filled' || shift.status === 'confirmed').length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Staff assigned
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Urgent Coverage</CardTitle>
+            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {filteredShifts.filter(shift => shift.urgency === 'critical' || shift.urgency === 'high').length}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              High priority shifts
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
       {/* Calendar Component */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Schedule Overview
+              Calendar View
             </div>
             <div className="text-sm text-muted-foreground">
               {filteredShifts.length} shifts displayed
