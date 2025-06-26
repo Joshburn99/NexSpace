@@ -337,6 +337,7 @@ export function registerRoutes(app: Express): Server {
             daysOfWeek: [1, 2, 3, 4, 5], // Mon-Fri
             isActive: true,
             hourlyRate: 45,
+            daysPostedOut: 14, // 2 weeks
           },
           {
             id: 2,
@@ -352,6 +353,7 @@ export function registerRoutes(app: Express): Server {
             daysOfWeek: [0, 1, 2, 3, 4, 5, 6], // Every day
             isActive: true,
             hourlyRate: 52,
+            daysPostedOut: 7, // 1 week
           },
           {
             id: 3,
@@ -367,17 +369,19 @@ export function registerRoutes(app: Express): Server {
             daysOfWeek: [1, 2, 3, 4, 5], // Mon-Fri
             isActive: true,
             hourlyRate: 48,
+            daysPostedOut: 10, // 10 days
           }
         ];
 
-        // Generate shifts for next 30 days from active templates
+        // Generate shifts based on template's daysPostedOut setting
         const generatedShifts: any[] = [];
         const today = new Date();
         const currentDate = new Date();
         
         for (const template of activeTemplates) {
           if (template.isActive) {
-            for (let i = 0; i < 30; i++) {
+            const daysToGenerate = template.daysPostedOut || 7; // Default to 7 days if not specified
+            for (let i = 0; i < daysToGenerate; i++) {
               const date = new Date(today);
               date.setDate(today.getDate() + i);
               
@@ -5314,6 +5318,180 @@ export function registerRoutes(app: Express): Server {
       res.status(500).json({ message: "Failed to delete requirement" });
     }
   });
+
+  // Shift Templates API
+  app.get("/api/shift-templates", requireAuth, async (req, res) => {
+    try {
+      const templates = await db.select().from(shiftTemplates);
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching shift templates:", error);
+      res.status(500).json({ message: "Failed to fetch shift templates" });
+    }
+  });
+
+  app.post("/api/shift-templates", requireAuth, async (req, res) => {
+    try {
+      const templateData = insertShiftTemplateSchema.parse(req.body);
+      const [template] = await db.insert(shiftTemplates).values(templateData).returning();
+      
+      // Generate shifts based on the template's daysPostedOut setting
+      await generateShiftsFromTemplate(template);
+      
+      res.status(201).json(template);
+    } catch (error) {
+      console.error("Error creating shift template:", error);
+      res.status(500).json({ message: "Failed to create shift template" });
+    }
+  });
+
+  app.put("/api/shift-templates/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = insertShiftTemplateSchema.partial().parse(req.body);
+      
+      const [template] = await db.update(shiftTemplates)
+        .set({ ...updateData, updatedAt: new Date() })
+        .where(eq(shiftTemplates.id, id))
+        .returning();
+      
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Regenerate shifts with new daysPostedOut setting
+      await regenerateShiftsFromTemplate(template);
+      
+      res.json(template);
+    } catch (error) {
+      console.error("Error updating shift template:", error);
+      res.status(500).json({ message: "Failed to update shift template" });
+    }
+  });
+
+  app.delete("/api/shift-templates/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Delete associated generated shifts
+      await db.delete(generatedShifts).where(eq(generatedShifts.templateId, id));
+      
+      // Delete the template
+      await db.delete(shiftTemplates).where(eq(shiftTemplates.id, id));
+      
+      res.json({ message: "Template deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting shift template:", error);
+      res.status(500).json({ message: "Failed to delete shift template" });
+    }
+  });
+
+  app.post("/api/shift-templates/:id/regenerate", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const [template] = await db.select().from(shiftTemplates).where(eq(shiftTemplates.id, id));
+      
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      await regenerateShiftsFromTemplate(template);
+      
+      res.json({ message: "Shifts regenerated successfully" });
+    } catch (error) {
+      console.error("Error regenerating shifts:", error);
+      res.status(500).json({ message: "Failed to regenerate shifts" });
+    }
+  });
+
+  app.patch("/api/shift-templates/:id/status", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const { isActive } = req.body;
+      
+      const [template] = await db.update(shiftTemplates)
+        .set({ isActive, updatedAt: new Date() })
+        .where(eq(shiftTemplates.id, id))
+        .returning();
+      
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      // Regenerate shifts based on new status
+      if (isActive) {
+        await generateShiftsFromTemplate(template);
+      } else {
+        // Deactivate future shifts from this template
+        await db.delete(generatedShifts)
+          .where(eq(generatedShifts.templateId, id));
+      }
+      
+      res.json(template);
+    } catch (error) {
+      console.error("Error updating template status:", error);
+      res.status(500).json({ message: "Failed to update template status" });
+    }
+  });
+
+  // Helper functions for shift generation
+  async function generateShiftsFromTemplate(template: any) {
+    const today = new Date();
+    const daysToGenerate = template.daysPostedOut || 7;
+    
+    for (let i = 0; i < daysToGenerate; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      
+      if (template.daysOfWeek && template.daysOfWeek.includes(date.getDay())) {
+        for (let staffCount = 0; staffCount < (template.minStaff || 1); staffCount++) {
+          const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
+          const shiftId = `${template.id}${dateStr}${staffCount.toString().padStart(2, '0')}`;
+          
+          const shiftData = {
+            id: shiftId,
+            templateId: template.id,
+            title: template.name,
+            date: date.toISOString().split('T')[0],
+            startTime: template.startTime,
+            endTime: template.endTime,
+            department: template.department,
+            specialty: template.specialty,
+            facilityId: template.facilityId,
+            facilityName: template.facilityName,
+            buildingId: template.buildingId,
+            buildingName: template.buildingName,
+            status: "open",
+            rate: template.hourlyRate ? template.hourlyRate.toString() : "0",
+            urgency: "medium",
+            description: template.notes || `${template.department} shift - ${template.name}`,
+            requiredWorkers: template.minStaff || 1,
+            totalPositions: template.maxStaff || 1,
+            minStaff: template.minStaff || 1,
+            maxStaff: template.maxStaff || 1,
+            createdAt: new Date(),
+            updatedAt: new Date()
+          };
+          
+          try {
+            await db.insert(generatedShifts).values(shiftData).onConflictDoNothing();
+          } catch (error) {
+            console.error(`Error inserting shift ${shiftId}:`, error);
+          }
+        }
+      }
+    }
+  }
+
+  async function regenerateShiftsFromTemplate(template: any) {
+    // Delete existing future shifts from this template
+    const today = new Date().toISOString().split('T')[0];
+    await db.delete(generatedShifts)
+      .where(eq(generatedShifts.templateId, template.id));
+    
+    // Generate new shifts
+    await generateShiftsFromTemplate(template);
+  }
 
   // Shift assignment and synchronization
   app.post("/api/shift-requests/:id/assign", requireAuth, async (req, res) => {
