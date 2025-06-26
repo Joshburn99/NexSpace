@@ -28,6 +28,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import {
   Calendar,
+  Plus,
   Clock,
   Users,
   Filter,
@@ -189,7 +190,7 @@ export default function EnhancedCalendarPage() {
   const [showAddShiftDialog, setShowAddShiftDialog] = useState(false);
 
   const [showPostShiftModal, setShowPostShiftModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("calendar");
+
   
   // Advanced filters state
   const [filters, setFilters] = useState<CalendarFilter>({
@@ -583,12 +584,13 @@ export default function EnhancedCalendarPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-auto">
-            <TabsList>
-              <TabsTrigger value="calendar">Calendar</TabsTrigger>
-              <TabsTrigger value="templates">Shift Templates</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <Button
+            onClick={() => setShowPostShiftModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Shift
+          </Button>
         </div>
       </div>
 
