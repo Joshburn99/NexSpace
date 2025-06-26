@@ -967,7 +967,8 @@ export function registerRoutes(app: Express): Server {
       }
       
       // Combine all shifts: example + generated + main database shifts
-      const combinedShifts = [...getShiftData(), ...formattedDbShifts];
+      const shiftData = await getShiftData();
+      const combinedShifts = [...shiftData, ...formattedDbShifts];
       
       const allShifts = await Promise.all(combinedShifts.map(async shift => {
         // Normalize shift ID to string format for consistent assignment lookup
@@ -1075,7 +1076,7 @@ export function registerRoutes(app: Express): Server {
   };
 
   // Get shift data helper function
-  function getShiftData() {
+  async function getShiftData() {
     const exampleShifts = [
       {
         id: 1,
@@ -1094,8 +1095,30 @@ export function registerRoutes(app: Express): Server {
       }
     ];
     
-    const templateShifts = (global as any).templateGeneratedShifts || [];
-    return [...exampleShifts, ...templateShifts];
+    // Get database-generated shifts from templates
+    const generatedShifts = await storage.getGeneratedShifts();
+    
+    // Transform generated shifts to match the expected format
+    const transformedGeneratedShifts = generatedShifts.map(shift => ({
+      id: shift.id,
+      title: shift.title,
+      date: shift.date,
+      startTime: shift.startTime,
+      endTime: shift.endTime,
+      department: shift.department,
+      specialty: shift.specialty,
+      status: shift.status,
+      facilityId: shift.facilityId,
+      facilityName: shift.facilityName,
+      rate: shift.rate,
+      urgency: shift.urgency,
+      description: shift.description,
+      templateId: shift.templateId,
+      requiredWorkers: shift.requiredWorkers,
+      assignedWorkerIds: shift.assignedWorkerIds || []
+    }));
+    
+    return [...exampleShifts, ...transformedGeneratedShifts];
   }
 
   // Enhanced shift requests API with database-backed assignment checking
@@ -1109,7 +1132,7 @@ export function registerRoutes(app: Express): Server {
       
       // Get the shift to determine specialty requirement and capacity
       // Check both example shifts and database-generated shifts
-      const allShifts = getShiftData();
+      const allShifts = await getShiftData();
       let targetShift = allShifts.find(s => s.id.toString() === shiftId);
       
       // If not found in example shifts, check database-generated shifts
@@ -7686,13 +7709,87 @@ export function registerRoutes(app: Express): Server {
     try {
       const templateId = parseInt(req.params.id);
       
-      // Simulate regenerating all future shifts for this template
-      const regeneratedCount = 34;
+      // Get the template from database
+      const templates = await storage.getShiftTemplates();
+      const template = templates.find(t => t.id === templateId);
+      
+      if (!template) {
+        return res.status(404).json({ message: "Template not found" });
+      }
+      
+      if (!template.isActive) {
+        return res.status(400).json({ message: "Cannot regenerate shifts from inactive template" });
+      }
+      
+      // Delete existing future shifts for this template
+      const today = new Date().toISOString().split('T')[0];
+      const existingShifts = await storage.getGeneratedShifts();
+      const futureShifts = existingShifts.filter(s => 
+        s.templateId === templateId && s.date >= today
+      );
+      
+      // Delete the existing future shifts
+      for (const shift of futureShifts) {
+        await storage.deleteGeneratedShift(shift.id);
+      }
+      
+      // Generate new shifts for the next daysPostedOut days
+      const daysToGenerate = template.daysPostedOut || 7;
+      const generatedShifts = [];
+      
+      for (let i = 0; i < daysToGenerate; i++) {
+        const date = new Date();
+        date.setDate(date.getDate() + i);
+        const dayOfWeek = date.getDay();
+        
+        // Check if this day is included in the template
+        if (template.daysOfWeek.includes(dayOfWeek)) {
+          const shiftDate = date.toISOString().split('T')[0];
+          
+          // Generate shifts based on minStaff requirement
+          for (let staffIndex = 0; staffIndex < template.minStaff; staffIndex++) {
+            // Create unique shift ID
+            const timestamp = Date.now();
+            const randomSuffix = Math.floor(Math.random() * 10000);
+            const uniqueShiftId = `${timestamp}${randomSuffix}${staffIndex}`;
+            
+            const shiftData = {
+              id: uniqueShiftId,
+              title: template.name,
+              date: shiftDate,
+              startTime: template.startTime,
+              endTime: template.endTime,
+              department: template.department,
+              specialty: template.specialty === "Registered Nurse" ? "RN" : 
+                        template.specialty === "Licensed Practical Nurse" ? "LPN" :
+                        template.specialty === "Certified Nursing Assistant" ? "CNA" :
+                        template.specialty === "Surgical Technologist" ? "CST" :
+                        template.specialty,
+              facilityId: template.facilityId,
+              facilityName: template.facilityName,
+              status: "open" as const,
+              rate: parseFloat(template.hourlyRate?.toString() || "0"),
+              urgency: "medium" as const,
+              description: `${template.department} shift - ${template.name}`,
+              templateId: template.id,
+              requiredWorkers: template.minStaff,
+              assignedWorkerIds: [],
+              createdAt: new Date(),
+              updatedAt: new Date()
+            };
+            
+            await storage.createGeneratedShift(shiftData);
+            generatedShifts.push(shiftData);
+          }
+        }
+      }
+      
       res.json({
-        message: `Successfully regenerated ${regeneratedCount} future shifts from template`,
-        regeneratedShifts: regeneratedCount
+        message: `Successfully regenerated ${generatedShifts.length} future shifts from template`,
+        regeneratedShifts: generatedShifts.length
       });
     } catch (error) {
+      console.error("Error regenerating shifts:", error);
       res.status(500).json({ message: "Failed to regenerate shifts" });
     }
   });
