@@ -20,6 +20,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 import FullCalendar from '@fullcalendar/react';
@@ -998,6 +999,9 @@ export default function EnhancedCalendarPage() {
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Shift Details</DialogTitle>
+            <DialogDescription>
+              Manage shift assignments and view staffing information
+            </DialogDescription>
           </DialogHeader>
           {selectedShift && (
             <div className="space-y-4">
@@ -1297,13 +1301,16 @@ export default function EnhancedCalendarPage() {
                     })()}
                   </div>
                   
-                  {shiftRequests.length > 0 ? (
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {shiftRequests.filter((request: any) => {
-                        // Filter out already assigned workers
-                        const assignedStaff = (selectedShift as any).assignedStaff || [];
-                        return !assignedStaff.some((staff: any) => staff.id === request.workerId);
-                      }).map((request: any) => (
+                  {(() => {
+                    const assignedStaff = (selectedShift as any).assignedStaff || [];
+                    const availableRequests = shiftRequests.filter((request: any) => 
+                      !assignedStaff.some((staff: any) => staff.id === request.workerId)
+                    );
+                    
+                    if (availableRequests.length > 0) {
+                      return (
+                        <div className="space-y-2 max-h-48 overflow-y-auto">
+                          {availableRequests.map((request: any) => (
                         <div key={request.id} className="bg-white dark:bg-gray-800 p-3 rounded-lg border border-blue-200 dark:border-blue-700">
                           <div className="flex items-start justify-between gap-3">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -1362,14 +1369,28 @@ export default function EnhancedCalendarPage() {
                           </div>
                         </div>
                       ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4">
-                      <Users className="h-8 w-8 text-blue-400 mx-auto mb-2" />
-                      <p className="text-sm text-blue-700 dark:text-blue-300">No requests for this shift yet</p>
-                      <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">Workers can request this shift from their dashboard</p>
-                    </div>
-                  )}
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="text-center py-4">
+                          <Users className="h-8 w-8 text-blue-400 mx-auto mb-2" />
+                          <p className="text-sm text-blue-700 dark:text-blue-300">
+                            {shiftRequests.length > 0 
+                              ? "All eligible workers have been assigned to this shift" 
+                              : "No requests for this shift yet"
+                            }
+                          </p>
+                          <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                            {shiftRequests.length > 0 
+                              ? "Additional positions can be filled when new workers submit requests" 
+                              : "Workers can request this shift from their dashboard"
+                            }
+                          </p>
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
               )}
 
