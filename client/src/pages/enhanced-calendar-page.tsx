@@ -1471,11 +1471,17 @@ export default function EnhancedCalendarPage() {
                   type="text" 
                   className="w-full mt-1 p-2 border rounded-md"
                   placeholder="ICU Day Shift"
+                  value={shiftFormData.title}
+                  onChange={(e) => setShiftFormData({...shiftFormData, title: e.target.value})}
                 />
               </div>
               <div>
                 <Label className="text-sm font-medium">Specialty</Label>
-                <select className="w-full mt-1 p-2 border rounded-md">
+                <select 
+                  className="w-full mt-1 p-2 border rounded-md"
+                  value={shiftFormData.specialty}
+                  onChange={(e) => setShiftFormData({...shiftFormData, specialty: e.target.value})}
+                >
                   <option value="RN">RN - Registered Nurse</option>
                   <option value="LPN">LPN - Licensed Practical Nurse</option>
                   <option value="CNA">CNA - Certified Nursing Assistant</option>
@@ -1493,14 +1499,23 @@ export default function EnhancedCalendarPage() {
                 <input 
                   type="date" 
                   className="w-full mt-1 p-2 border rounded-md"
+                  value={shiftFormData.date}
+                  onChange={(e) => setShiftFormData({...shiftFormData, date: e.target.value})}
                 />
               </div>
               <div>
                 <Label className="text-sm font-medium">Facility</Label>
-                <select className="w-full mt-1 p-2 border rounded-md">
-                  <option value="1">Portland General Hospital</option>
-                  <option value="2">Oregon Health & Science University</option>
-                  <option value="3">Providence Portland Medical Center</option>
+                <select 
+                  className="w-full mt-1 p-2 border rounded-md"
+                  value={shiftFormData.facilityId}
+                  onChange={(e) => setShiftFormData({...shiftFormData, facilityId: e.target.value})}
+                >
+                  <option value="">Select Facility</option>
+                  {(facilities as any[]).map((facility: any) => (
+                    <option key={facility.id} value={facility.id.toString()}>
+                      {facility.name}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -1510,7 +1525,8 @@ export default function EnhancedCalendarPage() {
                 <input 
                   type="time" 
                   className="w-full mt-1 p-2 border rounded-md"
-                  defaultValue="07:00"
+                  value={shiftFormData.startTime}
+                  onChange={(e) => setShiftFormData({...shiftFormData, startTime: e.target.value})}
                 />
               </div>
               <div>
@@ -1518,7 +1534,8 @@ export default function EnhancedCalendarPage() {
                 <input 
                   type="time" 
                   className="w-full mt-1 p-2 border rounded-md"
-                  defaultValue="19:00"
+                  value={shiftFormData.endTime}
+                  onChange={(e) => setShiftFormData({...shiftFormData, endTime: e.target.value})}
                 />
               </div>
             </div>
@@ -1530,11 +1547,30 @@ export default function EnhancedCalendarPage() {
                   className="w-full mt-1 p-2 border rounded-md"
                   placeholder="45.00"
                   step="0.01"
+                  value={shiftFormData.rate}
+                  onChange={(e) => setShiftFormData({...shiftFormData, rate: e.target.value})}
                 />
               </div>
               <div>
+                <Label className="text-sm font-medium">Required Staff</Label>
+                <input 
+                  type="number" 
+                  className="w-full mt-1 p-2 border rounded-md"
+                  min="1"
+                  max="10"
+                  value={shiftFormData.requiredStaff}
+                  onChange={(e) => setShiftFormData({...shiftFormData, requiredStaff: e.target.value})}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
                 <Label className="text-sm font-medium">Urgency</Label>
-                <select className="w-full mt-1 p-2 border rounded-md">
+                <select 
+                  className="w-full mt-1 p-2 border rounded-md"
+                  value={shiftFormData.urgency}
+                  onChange={(e) => setShiftFormData({...shiftFormData, urgency: e.target.value})}
+                >
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
@@ -1548,6 +1584,8 @@ export default function EnhancedCalendarPage() {
                 className="w-full mt-1 p-2 border rounded-md"
                 rows={3}
                 placeholder="Additional shift details and requirements..."
+                value={shiftFormData.description}
+                onChange={(e) => setShiftFormData({...shiftFormData, description: e.target.value})}
               />
             </div>
           </div>
@@ -1555,11 +1593,34 @@ export default function EnhancedCalendarPage() {
             <Button variant="outline" onClick={() => setShowAddShiftDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={() => {
-              toast({ title: "Shift Created", description: "New shift has been added successfully" });
-              setShowAddShiftDialog(false);
-            }}>
-              Create Shift
+            <Button 
+              onClick={() => {
+                if (!shiftFormData.title || !shiftFormData.facilityId) {
+                  toast({ 
+                    title: "Validation Error", 
+                    description: "Please fill in required fields (Title and Facility)", 
+                    variant: "destructive" 
+                  });
+                  return;
+                }
+                
+                createShiftMutation.mutate({
+                  title: shiftFormData.title,
+                  specialty: shiftFormData.specialty,
+                  date: shiftFormData.date,
+                  facilityId: parseInt(shiftFormData.facilityId),
+                  startTime: shiftFormData.startTime,
+                  endTime: shiftFormData.endTime,
+                  rate: parseFloat(shiftFormData.rate) || 45,
+                  urgency: shiftFormData.urgency,
+                  description: shiftFormData.description,
+                  requiredStaff: parseInt(shiftFormData.requiredStaff) || 1,
+                  status: 'open'
+                });
+              }}
+              disabled={createShiftMutation.isPending}
+            >
+              {createShiftMutation.isPending ? "Creating..." : "Create Shift"}
             </Button>
           </div>
         </DialogContent>
