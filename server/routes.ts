@@ -1679,11 +1679,19 @@ export function registerRoutes(app: Express): Server {
     auditLog("CREATE", "shift"),
     async (req: any, res) => {
       try {
-        const shiftData = insertShiftSchema.parse({
+        console.log("=== SHIFT CREATION DEBUG ===");
+        console.log("Request body:", JSON.stringify(req.body, null, 2));
+        console.log("User:", { id: req.user.id, facilityId: req.user.facilityId });
+        
+        const dataToValidate = {
           ...req.body,
           facilityId: req.user.facilityId || req.body.facilityId,
           createdById: req.user.id,
-        });
+        };
+        
+        console.log("Data to validate:", JSON.stringify(dataToValidate, null, 2));
+        
+        const shiftData = insertShiftSchema.parse(dataToValidate);
 
         const shift = await storage.createShift(shiftData);
         res.status(201).json(shift);

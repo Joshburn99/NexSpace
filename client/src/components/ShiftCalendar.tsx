@@ -224,7 +224,7 @@ const ShiftCalendar: React.FC = () => {
                       
                       return (
                         <ShiftCalendarCell
-                          key={`${date}-${shiftData.shift.id}`}
+                          key={`${date}-${shiftData.shift.id}-${shiftData.shift.startTime}-${shiftData.shift.specialty}`}
                           shift={shiftData.shift}
                           assignedWorkers={shiftData.assignedWorkers}
                           requestedWorkers={shiftData.requestedWorkers}
