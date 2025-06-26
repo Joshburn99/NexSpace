@@ -1167,7 +1167,7 @@ export function registerRoutes(app: Express): Server {
           rate: generatedShift.rate,
           status: generatedShift.status,
           urgency: generatedShift.urgency,
-          requiredStaff: generatedShift.requiredWorkers || 1,
+          requiredStaff: generatedShift.requiredWorkers || generatedShift.totalPositions || 3,
           assignedStaffIds: [],
           specialRequirements: [],
           createdById: 1,
@@ -1195,7 +1195,7 @@ export function registerRoutes(app: Express): Server {
             rate: exampleShift.rate,
             status: exampleShift.status,
             urgency: exampleShift.urgency,
-            requiredStaff: exampleShift.requiredWorkers || 1,
+            requiredStaff: exampleShift.requiredWorkers || exampleShift.totalPositions || 3,
             assignedStaffIds: [],
             specialRequirements: [],
             createdById: 1,
@@ -1263,8 +1263,15 @@ export function registerRoutes(app: Express): Server {
         return res.status(400).json({ message: "Worker is already assigned to this shift" });
       }
       
-      // Get shift capacity from database - use requiredStaff or requiredWorkers
-      const maxCapacity = shift.requiredStaff || generatedShift?.requiredWorkers || generatedShift?.maxStaff || 1;
+      // Get shift capacity from database - use all possible field names for required workers
+      const maxCapacity = shift.requiredStaff || 
+                          shift.requiredWorkers || 
+                          shift.totalPositions || 
+                          shift.required_staff ||
+                          generatedShift?.requiredWorkers || 
+                          generatedShift?.maxStaff || 
+                          generatedShift?.totalPositions ||
+                          3; // Default to 3 for multi-worker shifts instead of 1
       
       console.log(`[CAPACITY CHECK] Shift ${shiftId}: maxCapacity=${maxCapacity}, currentAssignments=${currentAssignments.length}`);
       if (currentAssignments.length >= maxCapacity) {
