@@ -200,11 +200,13 @@ export default function EnhancedCalendarPage() {
     }
   });
 
-  // Fetch data
-  const { data: shifts = [], isLoading: shiftsLoading } = useQuery({
+  // Fetch data with enhanced refresh for regenerated shifts
+  const { data: shifts = [], isLoading: shiftsLoading, refetch: refetchShifts } = useQuery({
     queryKey: ['/api/shifts'],
-    staleTime: 30000, // 30 seconds
-    refetchInterval: 30000 // Auto-refresh every 30 seconds
+    staleTime: 10000, // 10 seconds for faster updates
+    refetchInterval: 15000, // Auto-refresh every 15 seconds for real-time updates
+    refetchOnWindowFocus: true, // Refetch when window gains focus
+    refetchOnReconnect: true // Refetch on network reconnect
   });
 
   const { data: facilities = [] } = useQuery({

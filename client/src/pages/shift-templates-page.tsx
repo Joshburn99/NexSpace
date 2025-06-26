@@ -317,10 +317,14 @@ export default function ShiftTemplatesPage() {
       return response.json();
     },
     onSuccess: (data) => {
-      // Force immediate refresh of all shift-related data
+      // Force immediate refresh of all shift-related data with specific timing
       queryClient.invalidateQueries({ queryKey: ["/api/shift-templates"] });
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
-      queryClient.refetchQueries({ queryKey: ["/api/shifts"] });
+      
+      // Wait a moment then force refetch to ensure data consistency
+      setTimeout(() => {
+        queryClient.refetchQueries({ queryKey: ["/api/shifts"] });
+      }, 100);
       
       // Also refresh facilities and staff to ensure complete data consistency
       queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
@@ -328,7 +332,7 @@ export default function ShiftTemplatesPage() {
       
       toast({
         title: "Shifts Regenerated",
-        description: `Successfully regenerated ${data.regeneratedShifts || 'all future'} shifts from this template.`,
+        description: `Successfully regenerated ${data.regeneratedShifts || 'all future'} shifts from this template. Enhanced Calendar will update automatically.`,
       });
     },
     onError: (error) => {
