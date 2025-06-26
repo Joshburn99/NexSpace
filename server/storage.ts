@@ -525,7 +525,7 @@ export class DatabaseStorage implements IStorage {
   async getShiftsByDateRange(facilityId: number, startDate: Date, endDate: Date): Promise<Shift[]> {
     const startDateStr = startDate.toISOString().split('T')[0]; // YYYY-MM-DD format
     const endDateStr = endDate.toISOString().split('T')[0]; // YYYY-MM-DD format
-    
+
     return await db
       .select()
       .from(shifts)
@@ -1318,7 +1318,7 @@ export class DatabaseStorage implements IStorage {
   async getShiftAssignments(shiftId: string): Promise<Array<{ workerId: number; assignedAt: string; status: string }>> {
     try {
       console.log(`[DEBUG] Querying assignments for shift ${shiftId}`);
-      
+
       const assignments = await db.select({
         workerId: shiftAssignments.workerId,
         assignedAt: shiftAssignments.assignedAt,
@@ -1329,9 +1329,9 @@ export class DatabaseStorage implements IStorage {
         eq(shiftAssignments.shiftId, shiftId),
         eq(shiftAssignments.status, 'assigned')
       ));
-      
+
       console.log(`[DEBUG] Found ${assignments.length} assignments for shift ${shiftId}:`, assignments);
-      
+
       return assignments.map(a => ({
         workerId: a.workerId,
         assignedAt: a.assignedAt?.toISOString() || new Date().toISOString(),
@@ -1418,7 +1418,7 @@ export class DatabaseStorage implements IStorage {
         ))
         .orderBy(generatedShifts.date, generatedShifts.startTime);
     }
-    
+
     return await db.select().from(generatedShifts)
       .orderBy(generatedShifts.date, generatedShifts.startTime);
   }

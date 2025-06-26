@@ -154,34 +154,34 @@ export default function EnhancedCalendarPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   // Helper function to calculate hours between two times
   const calculateHoursBetween = (startTime: string, endTime: string): number => {
     if (!startTime || !endTime) return 8;
-    
+
     const start = new Date(`2000-01-01 ${startTime}`);
     const end = new Date(`2000-01-01 ${endTime}`);
-    
+
     // Handle overnight shifts
     if (end < start) {
       end.setDate(end.getDate() + 1);
     }
-    
+
     const diffMs = end.getTime() - start.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
-    
+
     return Math.round(diffHours * 10) / 10; // Round to 1 decimal place
   };
 
   // Redirect workers to their Open Shifts list view
   const isWorker = user?.role === "internal_employee" || user?.role === "contractor_1099";
-  
+
   if (isWorker) {
     // Import and render worker Open Shifts page instead
     const WorkerOpenShiftsPage = require("./worker-open-shifts-page").default;
     return <WorkerOpenShiftsPage />;
   }
-  
+
   const calendarRef = useRef<FullCalendar>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"dayGridMonth" | "timeGridWeek" | "timeGridDay">("dayGridMonth");
@@ -200,10 +200,11 @@ export default function EnhancedCalendarPage() {
     rate: '45.00',
     urgency: 'medium',
     description: '',
-    requiredStaff: '1'
+    requiredStaff: '1',
+    shiftType: 'Day', // added shiftType to state
   });
 
-  
+
   // Advanced filters state
   const [filters, setFilters] = useState<CalendarFilter>({
     facilities: [],
@@ -254,13 +255,13 @@ export default function EnhancedCalendarPage() {
         body: JSON.stringify(shiftData),
         credentials: 'include'
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         console.error('Shift creation error:', error);
         throw new Error(error.message || error.fieldErrors?.join('; ') || 'Failed to create shift');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
@@ -278,7 +279,8 @@ export default function EnhancedCalendarPage() {
         rate: '45.00',
         urgency: 'medium',
         description: '',
-        requiredStaff: '1'
+        requiredStaff: '1',
+        shiftType: 'Day',
       });
     },
     onError: (error: any) => {
@@ -301,12 +303,12 @@ export default function EnhancedCalendarPage() {
         body: JSON.stringify({ workerId }),
         credentials: 'include'
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Assignment failed');
       }
-      
+
       return response.json();
     },
     onSuccess: async (data, variables) => {
@@ -314,16 +316,16 @@ export default function EnhancedCalendarPage() {
         title: "Worker Assigned",
         description: "Worker has been successfully assigned to the shift."
       });
-      
+
       // Invalidate and refetch all related data
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
       queryClient.invalidateQueries({ queryKey: [`/api/shift-requests/${variables.shiftId}`] });
-      
+
       // Force immediate refresh with a small delay to ensure server has processed
       setTimeout(async () => {
         // First refetch the shifts data
         await queryClient.refetchQueries({ queryKey: ["/api/shifts"] });
-        
+
         // Then get the updated data and update selected shift
         const updatedShifts = queryClient.getQueryData(["/api/shifts"]) as EnhancedShift[];
         if (updatedShifts && selectedShift) {
@@ -361,12 +363,12 @@ export default function EnhancedCalendarPage() {
         body: JSON.stringify({ workerId }),
         credentials: 'include'
       });
-      
+
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || 'Unassignment failed');
       }
-      
+
       return response.json();
     },
     onSuccess: async (data, variables) => {
@@ -374,16 +376,16 @@ export default function EnhancedCalendarPage() {
         title: "Worker Unassigned",
         description: "Worker has been removed from the shift."
       });
-      
+
       // Invalidate and refetch all related data
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
       queryClient.invalidateQueries({ queryKey: [`/api/shift-requests/${variables.shiftId}`] });
-      
+
       // Force immediate refresh with a small delay to ensure server has processed
       setTimeout(async () => {
         // First refetch the shifts data
         await queryClient.refetchQueries({ queryKey: ["/api/shifts"] });
-        
+
         // Then get the updated data and update selected shift
         const updatedShifts = queryClient.getQueryData(["/api/shifts"]) as EnhancedShift[];
         if (updatedShifts && selectedShift) {
@@ -437,10 +439,10 @@ export default function EnhancedCalendarPage() {
 
     const matchesFacility = filters.facilities.length === 0 || 
       filters.facilities.includes(shift.facilityId?.toString());
-    
+
     const matchesSpecialty = filters.specialties.length === 0 || 
       filters.specialties.includes(shift.specialty);
-    
+
     const matchesStatus = filters.statuses.length === 0 || 
       filters.statuses.includes(shift.status);
 
@@ -458,7 +460,7 @@ export default function EnhancedCalendarPage() {
   const processedShifts = filteredShifts.map(shift => {
     const shiftDateTime = new Date(`${shift.date}T${shift.endTime}`);
     const now = new Date();
-    
+
     if (shift.status === "open" && shiftDateTime < now) {
       return { ...shift, status: "expired" as const };
     }
@@ -468,7 +470,7 @@ export default function EnhancedCalendarPage() {
   // Group shifts by date, specialty, and time for monthly view
   const groupShiftsByDay = (shifts: any[]) => {
     const groupedByDate: { [date: string]: any[] } = {};
-    
+
     shifts.forEach(shift => {
       if (!groupedByDate[shift.date]) {
         groupedByDate[shift.date] = [];
@@ -480,7 +482,7 @@ export default function EnhancedCalendarPage() {
     Object.keys(groupedByDate).forEach(date => {
       const dayShifts = groupedByDate[date];
       const grouped: { [key: string]: any[] } = {};
-      
+
       dayShifts.forEach(shift => {
         const groupKey = `${shift.specialty}-${shift.startTime}-${shift.endTime}`;
         if (!grouped[groupKey]) {
@@ -488,10 +490,10 @@ export default function EnhancedCalendarPage() {
         }
         grouped[groupKey].push(shift);
       });
-      
+
       groupedByDate[date] = Object.values(grouped);
     });
-    
+
     return groupedByDate;
   };
 
@@ -504,11 +506,11 @@ export default function EnhancedCalendarPage() {
       const specialty = firstShift.specialty;
       const specialtyColor = (specialtyColors as any)[specialty] || specialtyColors.default;
       const statusInfo = statusConfig[firstShift.status as keyof typeof statusConfig] || statusConfig.open;
-      
+
       // Calculate filled/total using backend assignment data with proper single-worker handling
       const totalWorkers = firstShift.totalPositions || 1; // Default to 1 for single shifts
       const filledWorkers = firstShift.filledPositions || 0;
-      
+
       let title = '';
       if (totalWorkers === 1) {
         // Single worker shift: show worker name if assigned, otherwise show "Requesting"
@@ -517,7 +519,7 @@ export default function EnhancedCalendarPage() {
                                  (firstShift.assignedStaff?.[0]?.firstName && firstShift.assignedStaff?.[0]?.lastName ? 
                                   `${firstShift.assignedStaff[0].firstName} ${firstShift.assignedStaff[0].lastName}` : null) ||
                                  firstShift.assignedStaffName;
-        
+
         if (assignedWorkerName && filledWorkers > 0) {
           title = `${assignedWorkerName} – ${firstShift.startTime}–${firstShift.endTime}`;
         } else {
@@ -527,7 +529,7 @@ export default function EnhancedCalendarPage() {
         // Multi-worker shift: "Specialty – Filled/Total – Start–End Time"
         title = `${specialty} – ${filledWorkers}/${totalWorkers} – ${firstShift.startTime}–${firstShift.endTime}`;
       }
-      
+
       return {
         id: `${date}-${groupIndex}-${firstShift.id}`,
         title,
@@ -734,7 +736,7 @@ export default function EnhancedCalendarPage() {
               </SelectContent>
               </Select>
               </div>
-              
+
               {/* Status Filter */}
               <div>
                 <Label>Status</Label>
@@ -970,7 +972,7 @@ export default function EnhancedCalendarPage() {
               const isGrouped = extendedProps.isGrouped;
               const specialty = extendedProps.specialty;
               const StatusIcon = statusInfo.icon;
-              
+
               let displayText = '';
               if (isGrouped) {
                 // Multi-worker shift: "Specialty – Filled/Total – Start–End Time"
@@ -980,7 +982,7 @@ export default function EnhancedCalendarPage() {
                 const workerName = shift.assignedStaffName || 'Requesting';
                 displayText = `${workerName} – ${shift.startTime}–${shift.endTime}`;
               }
-              
+
               return {
                 html: `
                   <div class="fc-event-content-custom relative w-full h-full p-1 rounded border" style="background-color: ${eventInfo.event.backgroundColor}; min-height: 18px; border-color: ${eventInfo.event.borderColor};">
@@ -1027,7 +1029,7 @@ export default function EnhancedCalendarPage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Date & Time</Label>
@@ -1148,7 +1150,7 @@ export default function EnhancedCalendarPage() {
                         </div>
                       </div>
                     ))}
-                    
+
                     {/* Invoice Information for Completed Shifts Only */}
                     {selectedShift.status === 'completed' && selectedShift.invoiceAmount && (
                       <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
@@ -1218,7 +1220,7 @@ export default function EnhancedCalendarPage() {
                         </Button>
                       </div>
                     </div>
-                    
+
                     {/* Invoice Information for Completed Shifts Only */}
                     {selectedShift.status === 'completed' && selectedShift.invoiceAmount && (
                       <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg border border-green-200 dark:border-green-800">
@@ -1277,12 +1279,12 @@ export default function EnhancedCalendarPage() {
                       {(() => {
                         const start = new Date(`2000-01-01T${selectedShift.startTime}`);
                         let end = new Date(`2000-01-01T${selectedShift.endTime}`);
-                        
+
                         // Handle overnight shifts (end time is next day)
                         if (end <= start) {
                           end = new Date(`2000-01-02T${selectedShift.endTime}`);
                         }
-                        
+
                         const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
                         return `${Math.abs(hours)} hours`;
                       })()}
@@ -1306,7 +1308,7 @@ export default function EnhancedCalendarPage() {
                       return <Badge variant="secondary">{availableRequests.length} Available Request{availableRequests.length !== 1 ? 's' : ''}</Badge>;
                     })()}
                   </div>
-                  
+
                   {shiftRequests.filter((request: any) => {
                     const assignedStaff = (selectedShift as any).assignedStaff || [];
                     return !assignedStaff.some((staff: any) => staff.id === request.workerId);
@@ -1338,7 +1340,7 @@ export default function EnhancedCalendarPage() {
                               </div>
                             </div>
                           </div>
-                          
+
                           <div className="mt-2 grid grid-cols-2 gap-4 text-xs">
                             <div>
                               <span className="text-muted-foreground">Shifts Worked:</span>
@@ -1349,7 +1351,7 @@ export default function EnhancedCalendarPage() {
                               <span className="ml-1 font-medium">${request.hourlyRate?.toFixed(0)}/hr</span>
                             </div>
                           </div>
-                          
+
                           <div className="mt-2 flex gap-2">
                             <Button size="sm" variant="outline" className="flex-1 text-xs">
                               <ExternalLink className="h-3 w-3 mr-1" />
@@ -1468,7 +1470,7 @@ export default function EnhancedCalendarPage() {
                       onChange={(e) => {
                         const newDate = e.target.value;
                         setShiftFormData({...shiftFormData, date: newDate});
-                        
+
                         // Auto-add date to selection if not already selected
                         if (newDate && !shiftFormData.selectedDates.includes(newDate)) {
                           setShiftFormData(prev => ({
@@ -1573,7 +1575,7 @@ export default function EnhancedCalendarPage() {
                   onChange={(e) => setShiftFormData({...shiftFormData, requiredStaff: e.target.value})}
                 />
               </div>
-            </div>
+              </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium">Urgency</Label>
@@ -1586,6 +1588,18 @@ export default function EnhancedCalendarPage() {
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
                   <option value="critical">Critical</option>
+                </select>
+              </div>
+              <div>
+                <Label className="text-sm font-medium">Shift Type</Label>
+                <select 
+                  className="w-full mt-1 p-2 border rounded-md"
+                  value={shiftFormData.shiftType}
+                  onChange={(e) => setShiftFormData({...shiftFormData, shiftType: e.target.value})}
+                >
+                  <option value="Day">Day</option>
+                  <option value="Night">Night</option>
+                  <option value="Evening">Evening</option>
                 </select>
               </div>
             </div>
@@ -1626,6 +1640,7 @@ export default function EnhancedCalendarPage() {
                     title: shiftFormData.title || `${shiftFormData.specialty} Shift`,
                     specialty: shiftFormData.specialty,
                     department: shiftFormData.specialty, // Use specialty as department fallback
+                    shiftType: shiftFormData.shiftType,
                     date: date,
                     facilityId: parseInt(shiftFormData.facilityId),
                     startTime: shiftFormData.startTime,
