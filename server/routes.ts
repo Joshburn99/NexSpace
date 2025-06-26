@@ -5596,52 +5596,129 @@ export function registerRoutes(app: Express): Server {
   app.put("/api/shift-templates/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      console.log(`[TEMPLATE UPDATE] Updating template ${id} with data:`, req.body);
+      console.log(`[TEMPLATE UPDATE] Updating template ${id} with data:`, JSON.stringify(req.body, null, 2));
       
-      const updateData = insertShiftTemplateSchema.partial().parse(req.body);
+      // Validate the ID
+      if (isNaN(id) || id <= 0) {
+        console.error(`[TEMPLATE UPDATE] Invalid template ID: ${req.params.id}`);
+        return res.status(400).json({ 
+          message: "Invalid template ID", 
+          details: "Template ID must be a positive integer",
+          receivedId: req.params.id 
+        });
+      }
+
+      // Check if template exists first
+      const existingTemplate = await db.select().from(shiftTemplates).where(eq(shiftTemplates.id, id)).limit(1);
+      if (existingTemplate.length === 0) {
+        console.error(`[TEMPLATE UPDATE] Template ${id} not found in database`);
+        return res.status(404).json({ 
+          message: "Template not found", 
+          details: `No template exists with ID ${id}`,
+          templateId: id 
+        });
+      }
+
+      console.log(`[TEMPLATE UPDATE] Found existing template:`, JSON.stringify(existingTemplate[0], null, 2));
+
+      // Validate the update data with detailed error reporting
+      let updateData;
+      try {
+        updateData = insertShiftTemplateSchema.partial().parse(req.body);
+        console.log(`[TEMPLATE UPDATE] Validated update data:`, JSON.stringify(updateData, null, 2));
+      } catch (validationError) {
+        console.error(`[TEMPLATE UPDATE] Validation error:`, validationError);
+        return res.status(400).json({ 
+          message: "Invalid template data", 
+          details: "Request data failed validation",
+          validationErrors: validationError.errors || validationError.message,
+          receivedData: req.body
+        });
+      }
+
+      // Perform the update with error handling
+      let updatedTemplate;
+      try {
+        const [template] = await db.update(shiftTemplates)
+          .set({ ...updateData, updatedAt: new Date() })
+          .where(eq(shiftTemplates.id, id))
+          .returning();
+
+        updatedTemplate = template;
+        console.log(`[TEMPLATE UPDATE] Database update successful:`, JSON.stringify(template, null, 2));
+      } catch (dbError) {
+        console.error(`[TEMPLATE UPDATE] Database update failed:`, dbError);
+        return res.status(500).json({ 
+          message: "Database update failed", 
+          details: dbError.message || "Unknown database error",
+          templateId: id,
+          sqlState: dbError.code
+        });
+      }
       
-      const [template] = await db.update(shiftTemplates)
-        .set({ ...updateData, updatedAt: new Date() })
-        .where(eq(shiftTemplates.id, id))
-        .returning();
-      
-      if (!template) {
-        return res.status(404).json({ message: "Template not found" });
+      if (!updatedTemplate) {
+        console.error(`[TEMPLATE UPDATE] Update returned no data for template ${id}`);
+        return res.status(500).json({ 
+          message: "Update failed", 
+          details: "Database update completed but returned no data",
+          templateId: id
+        });
       }
       
       // Transform database response to frontend format
       const formattedTemplate = {
-        id: template.id,
-        name: template.name,
-        department: template.department,
-        specialty: template.specialty,
-        facilityId: template.facilityId,
-        facilityName: template.facilityName,
-        buildingId: template.buildingId,
-        buildingName: template.buildingName,
-        minStaff: template.minStaff,
-        maxStaff: template.maxStaff,
-        shiftType: template.shiftType,
-        startTime: template.startTime,
-        endTime: template.endTime,
-        daysOfWeek: template.daysOfWeek,
-        isActive: template.isActive,
-        hourlyRate: template.hourlyRate?.toString() || "0.00",
-        daysPostedOut: template.daysPostedOut,
-        notes: template.notes,
-        generatedShiftsCount: template.generatedShiftsCount || 0,
-        createdAt: template.createdAt,
-        updatedAt: template.updatedAt
+        id: updatedTemplate.id,
+        name: updatedTemplate.name,
+        department: updatedTemplate.department,
+        specialty: updatedTemplate.specialty,
+        facilityId: updatedTemplate.facilityId,
+        facilityName: updatedTemplate.facilityName,
+        buildingId: updatedTemplate.buildingId,
+        buildingName: updatedTemplate.buildingName,
+        minStaff: updatedTemplate.minStaff,
+        maxStaff: updatedTemplate.maxStaff,
+        shiftType: updatedTemplate.shiftType,
+        startTime: updatedTemplate.startTime,
+        endTime: updatedTemplate.endTime,
+        daysOfWeek: updatedTemplate.daysOfWeek,
+        isActive: updatedTemplate.isActive,
+        hourlyRate: updatedTemplate.hourlyRate?.toString() || "0.00",
+        daysPostedOut: updatedTemplate.daysPostedOut,
+        notes: updatedTemplate.notes,
+        generatedShiftsCount: updatedTemplate.generatedShiftsCount || 0,
+        createdAt: updatedTemplate.createdAt,
+        updatedAt: updatedTemplate.updatedAt
       };
+
+      console.log(`[TEMPLATE UPDATE] Formatted response:`, JSON.stringify(formattedTemplate, null, 2));
       
       // Regenerate shifts with new settings
-      await regenerateShiftsFromTemplate(template);
+      try {
+        await regenerateShiftsFromTemplate(updatedTemplate);
+        console.log(`[TEMPLATE UPDATE] Successfully regenerated shifts for template ${id}`);
+      } catch (regenerateError) {
+        console.error(`[TEMPLATE UPDATE] Failed to regenerate shifts:`, regenerateError);
+        // Don't fail the entire update if shift regeneration fails
+        // Just log the error and continue
+      }
       
       console.log(`[TEMPLATE UPDATE] Successfully updated template ${id}`);
       res.json(formattedTemplate);
+      
     } catch (error) {
-      console.error("Error updating shift template:", error);
-      res.status(500).json({ message: "Failed to update shift template", error: error.message });
+      console.error(`[TEMPLATE UPDATE] Unexpected error updating template ${req.params.id}:`, {
+        message: error.message,
+        stack: error.stack,
+        requestBody: req.body,
+        templateId: req.params.id
+      });
+      
+      res.status(500).json({ 
+        message: "Failed to update shift template", 
+        details: error.message || "An unexpected error occurred",
+        templateId: req.params.id,
+        timestamp: new Date().toISOString()
+      });
     }
   });
 
