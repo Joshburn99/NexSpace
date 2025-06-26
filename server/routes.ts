@@ -1689,6 +1689,7 @@ export function registerRoutes(app: Express): Server {
           facilityId: req.user?.facilityId || req.body.facilityId,
           department: req.body.department || req.body.specialty,
           specialty: req.body.specialty,
+          shiftType: req.body.shiftType || 'Day', // Add missing shiftType field
           date: req.body.date,
           startTime: req.body.startTime,
           endTime: req.body.endTime,
