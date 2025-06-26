@@ -1690,6 +1690,7 @@ export function registerRoutes(app: Express): Server {
           facilityName: req.body.facilityName || 'Default Facility', // Add missing facilityName
           department: req.body.department || req.body.specialty,
           specialty: req.body.specialty,
+          shiftType: req.body.shiftType || 'Day', // Add missing shiftType mapping
           date: req.body.date,
           startTime: req.body.startTime,
           endTime: req.body.endTime,
@@ -1710,7 +1711,7 @@ export function registerRoutes(app: Express): Server {
         });
         
         // Validate each required field manually first - check against actual database schema
-        const requiredFields = ['facilityId', 'department', 'specialty', 'date', 'startTime', 'endTime', 'rate', 'createdById'];
+        const requiredFields = ['facilityId', 'department', 'specialty', 'shiftType', 'date', 'startTime', 'endTime', 'rate', 'createdById'];
         const missingFields = requiredFields.filter(field => !(dataToValidate as any)[field]);
         
         if (missingFields.length > 0) {

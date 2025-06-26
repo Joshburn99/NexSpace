@@ -141,6 +141,7 @@ export const shifts = pgTable("shifts", {
   facilityName: text("facility_name"),
   department: text("department").notNull(),
   specialty: text("specialty").notNull(),
+  shiftType: text("shift_type").notNull().default("Day"), // Day, Night, Evening, Weekend, On-Call
   date: text("date").notNull(), // YYYY-MM-DD format
   startTime: text("start_time").notNull(), // HH:MM format
   endTime: text("end_time").notNull(), // HH:MM format
@@ -596,6 +597,7 @@ export const insertShiftSchema = createInsertSchema(shifts).omit({
   assignedStaffIds: true, // Make assignedStaffIds optional
   specialRequirements: true, // Make specialRequirements optional
   premiumMultiplier: true, // Make premiumMultiplier optional
+  shiftType: true, // Make shiftType optional with default
 });
 
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({
