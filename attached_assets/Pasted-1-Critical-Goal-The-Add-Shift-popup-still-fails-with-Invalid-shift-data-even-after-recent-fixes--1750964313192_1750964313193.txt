@@ -1,0 +1,77 @@
+1. Critical Goal:
+The Add Shift popup still fails with “Invalid shift data” even after recent fixes.
+I need to know the exact validation error and have the issue fully resolved so I can create shifts.
+
+2. Requirements & Constraints:
+
+Title field is not needed for shift creation. Remove from all validation.
+
+I must be able to select multiple dates and create one shift per date, with each shift properly created in the database.
+
+All required backend fields (facility, department, specialty, start/end time, rate, required staff, urgency, description, etc.) must be present and valid in the payload.
+
+3. What’s Not Working:
+
+I still get the same “Invalid shift data” error, and server logs aren’t surfacing which field is failing.
+
+The current debugging does not show a detailed field-level error in the logs.
+
+Sometimes the request might not even reach the intended backend endpoint, or there is a schema mismatch or missing field/type issue.
+
+The UI experience for selecting multiple dates is now improved but shift creation is still failing.
+
+4. What You Need to Do:
+
+a) Enhance backend logging:
+
+Log the entire incoming shift creation payload and each field’s type/validation step.
+
+Log the exact field and reason for any failure (“Expected number, got string”; “Missing required: specialty”; etc.).
+
+If the request isn’t reaching the backend at all, log that and explain why.
+
+b) Explicit validation:
+
+For each required field, log whether it is present, non-empty, and valid.
+
+Remove the title requirement entirely if present in the validation schema.
+
+c) Show an exact, user-facing error message in the frontend (not just “Invalid shift data”), e.g.:
+
+“Missing required field: facility”
+
+“Invalid rate: must be a number”
+
+“Specialty is required”
+
+d) Allow shift creation for multiple days.
+
+Creating shifts for multiple selected dates should result in multiple shifts—one per day—each fully validated and created.
+
+Ensure the UI and backend agree on the schema and all required fields.
+
+5. Debug Example:
+If the error persists, respond with:
+
+The exact backend logs showing the received payload.
+
+The result of schema validation (field-by-field).
+
+The field and error causing the failure.
+
+6. Finalize:
+
+Once the field-level bug is found, fix the form/frontend/backend so valid shifts can be created, and update the validation to prevent this in the future.
+
+Confirm shift creation is working with a test shift.
+
+Summary:
+
+Remove all title requirements for shift creation.
+
+Show field-level validation errors.
+
+Enable smooth, error-free creation of one shift per selected date.
+
+Provide full debugging if anything fails.
+

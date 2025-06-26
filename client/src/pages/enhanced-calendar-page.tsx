@@ -257,7 +257,8 @@ export default function EnhancedCalendarPage() {
       
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to create shift');
+        console.error('Shift creation error:', error);
+        throw new Error(error.message || error.fieldErrors?.join('; ') || 'Failed to create shift');
       }
       
       return response.json();

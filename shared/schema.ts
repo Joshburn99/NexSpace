@@ -589,6 +589,8 @@ export const insertJobApplicationSchema = createInsertSchema(jobApplications).om
 export const insertShiftSchema = createInsertSchema(shifts).omit({
   id: true,
   createdAt: true,
+}).partial({
+  title: true, // Make title optional
 });
 
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({

@@ -1679,17 +1679,45 @@ export function registerRoutes(app: Express): Server {
     auditLog("CREATE", "shift"),
     async (req: any, res) => {
       try {
-        console.log("=== SHIFT CREATION DEBUG ===");
-        console.log("Request body:", JSON.stringify(req.body, null, 2));
-        console.log("User:", { id: req.user.id, facilityId: req.user.facilityId });
+        console.log("=== SHIFT CREATION REQUEST ===");
+        console.log("Raw request body:", JSON.stringify(req.body, null, 2));
+        console.log("User info:", { id: req.user?.id, facilityId: req.user?.facilityId });
         
+        // Build the data object step by step with validation
         const dataToValidate = {
-          ...req.body,
-          facilityId: req.user.facilityId || req.body.facilityId,
-          createdById: req.user.id,
+          title: req.body.title || `${req.body.specialty || 'Shift'} Assignment`,
+          facilityId: req.user?.facilityId || req.body.facilityId,
+          department: req.body.department || req.body.specialty,
+          specialty: req.body.specialty,
+          date: req.body.date,
+          startTime: req.body.startTime,
+          endTime: req.body.endTime,
+          rate: String(req.body.rate), // Convert to string for decimal parsing
+          urgency: req.body.urgency || 'medium',
+          description: req.body.description || '',
+          requiredStaff: Number(req.body.requiredStaff) || 1,
+          status: req.body.status || 'open',
+          createdById: req.user?.id,
         };
         
-        console.log("Data to validate:", JSON.stringify(dataToValidate, null, 2));
+        console.log("Prepared data for validation:");
+        Object.entries(dataToValidate).forEach(([key, value]) => {
+          console.log(`  ${key}: ${JSON.stringify(value)} (${typeof value})`);
+        });
+        
+        // Validate each required field manually first (title is now optional)
+        const requiredFields = ['facilityId', 'department', 'specialty', 'date', 'startTime', 'endTime', 'rate', 'createdById'];
+        const missingFields = requiredFields.filter(field => !(dataToValidate as any)[field]);
+        
+        if (missingFields.length > 0) {
+          console.log("Missing required fields:", missingFields);
+          return res.status(400).json({ 
+            message: `Missing required fields: ${missingFields.join(', ')}`,
+            missingFields 
+          });
+        }
+        
+        console.log("All required fields present, attempting Zod validation...");
         
         const shiftData = insertShiftSchema.parse(dataToValidate);
 
@@ -1697,12 +1725,28 @@ export function registerRoutes(app: Express): Server {
         res.status(201).json(shift);
       } catch (error) {
         if (error instanceof z.ZodError) {
-          console.error("=== VALIDATION ERRORS ===");
-          console.error("Shift validation errors:", JSON.stringify(error.errors, null, 2));
-          console.error("Request body:", JSON.stringify(req.body, null, 2));
-          console.error("User data:", { id: req.user.id, facilityId: req.user.facilityId });
-          console.error("==========================");
-          res.status(400).json({ message: "Invalid shift data", errors: error.errors });
+          console.error("=== ZOD VALIDATION ERRORS ===");
+          error.errors.forEach((err, index) => {
+            console.error(`Error ${index + 1}:`);
+            console.error(`  Field: ${err.path.join('.')}`);
+            console.error(`  Message: ${err.message}`);
+            console.error(`  Code: ${err.code}`);
+            if ('expected' in err) console.error(`  Expected: ${err.expected}`);
+            if ('received' in err) console.error(`  Received: ${err.received}`);
+          });
+          console.error("==============================");
+          
+          // Create user-friendly error messages
+          const fieldErrors = error.errors.map(err => {
+            const field = err.path.join('.');
+            return `${field}: ${err.message}`;
+          });
+          
+          res.status(400).json({ 
+            message: `Validation failed: ${fieldErrors.join('; ')}`,
+            fieldErrors,
+            zodErrors: error.errors 
+          });
         } else {
           console.error("Shift creation error:", error);
           res.status(500).json({ message: "Failed to create shift" });
