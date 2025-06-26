@@ -346,50 +346,7 @@ export default function EnhancedCalendarPage() {
     }
   });
 
-  // Post shift mutation
-  const postShiftMutation = useMutation({
-    mutationFn: async (shiftData: any) => {
-      const response = await fetch('/api/shifts/post', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ shiftData }),
-        credentials: 'include'
-      });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to post shift');
-      }
-      
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Shift Added",
-        description: "Shift has been successfully added to the schedule."
-      });
-      
-      // Force immediate refresh of calendar data
-      queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/shifts", filters, searchTerm] });
-      refetchShifts();
-      setShowAddShiftDialog(false);
-      
-      // Force page refresh to ensure new shift appears
-      setTimeout(() => {
-        window.location.reload();
-      }, 300);
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Add Shift Failed",
-        description: error.message || "Failed to add shift.",
-        variant: "destructive"
-      });
-    }
-  });
+
 
   const unassignWorkerMutation = useMutation({
     mutationFn: async ({ shiftId, workerId }: { shiftId: number; workerId: number }) => {

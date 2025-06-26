@@ -13,6 +13,15 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### June 26, 2025 - Add Shift Button Implementation & UI Cleanup
+- Removed duplicate "Add Shift" button from filter controls area
+- Implemented fully functional Add Shift modal with controlled form inputs
+- Connected form to backend `/api/shifts` POST endpoint with proper validation
+- Added form fields: title, specialty, date, facility, start/end time, rate, required staff, urgency, description
+- Integrated form submission with React Query mutations and proper error handling
+- Form auto-resets after successful submission and refreshes calendar data
+- Added client-side validation requiring title and facility fields
+
 ### June 26, 2025 - Critical Specialty Matching & Multi-Worker Assignment Fixes
 - Fixed critical specialty validation bug preventing proper worker filtering for shifts
 - Enhanced shift requests endpoint to check both example and database-generated shifts
