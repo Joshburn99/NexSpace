@@ -372,34 +372,13 @@ export default function EnhancedCalendarPage() {
             </Button>
           )}
           <div className="flex gap-1">
-            <Button
-              variant={viewMode === "dayGridMonth" ? "default" : "outline"}
-              onClick={() => {
-                setViewMode("dayGridMonth");
-                calendarRef.current?.getApi().changeView("dayGridMonth");
-              }}
-              size="sm"
-            >
+            <Button variant="outline" size="sm">
               Month
             </Button>
-            <Button
-              variant={viewMode === "timeGridWeek" ? "default" : "outline"}
-              onClick={() => {
-                setViewMode("timeGridWeek");
-                calendarRef.current?.getApi().changeView("timeGridWeek");
-              }}
-              size="sm"
-            >
+            <Button variant="default" size="sm">
               Week
             </Button>
-            <Button
-              variant={viewMode === "timeGridDay" ? "default" : "outline"}
-              onClick={() => {
-                setViewMode("timeGridDay");
-                calendarRef.current?.getApi().changeView("timeGridDay");
-              }}
-              size="sm"
-            >
+            <Button variant="outline" size="sm">
               Day
             </Button>
           </div>
@@ -651,7 +630,8 @@ export default function EnhancedCalendarPage() {
       </Card>
 
       {/* Shift Detail Modal */}
-      <Dialog open={!!selectedShift} onOpenChange={() => setSelectedShift(null)}>
+      {selectedShift && (
+        <Dialog open={!!selectedShift} onOpenChange={() => setSelectedShift(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -727,7 +707,8 @@ export default function EnhancedCalendarPage() {
             </div>
           )}
         </DialogContent>
-      </Dialog>
+        </Dialog>
+      )}
 
       {/* Post Shift Modal */}
       {showPostShiftModal && (
