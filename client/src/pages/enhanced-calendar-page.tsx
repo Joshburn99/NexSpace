@@ -1491,18 +1491,6 @@ export default function EnhancedCalendarPage() {
       </Dialog>
         </>
       )}
-
-
-
-      {/* Template Creation/Edit Modal */}
-      <Dialog open={showTemplateModal} onOpenChange={setShowTemplateModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedTemplate ? 'Edit Template' : 'Create Shift Template'}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-2">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-medium">Template Name</Label>
