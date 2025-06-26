@@ -1687,17 +1687,20 @@ export function registerRoutes(app: Express): Server {
         const dataToValidate = {
           title: req.body.title || `${req.body.specialty || 'Shift'} Assignment`,
           facilityId: req.user?.facilityId || req.body.facilityId,
+          facilityName: req.body.facilityName || 'Default Facility', // Add missing facilityName
           department: req.body.department || req.body.specialty,
           specialty: req.body.specialty,
-          shiftType: req.body.shiftType || 'Day', // Add missing shiftType field
           date: req.body.date,
           startTime: req.body.startTime,
           endTime: req.body.endTime,
           rate: String(req.body.rate), // Convert to string for decimal parsing
+          premiumMultiplier: req.body.premiumMultiplier || "1.00", // Add missing premiumMultiplier
+          status: req.body.status || 'open',
           urgency: req.body.urgency || 'medium',
           description: req.body.description || '',
           requiredStaff: Number(req.body.requiredStaff) || 1,
-          status: req.body.status || 'open',
+          assignedStaffIds: req.body.assignedStaffIds || [],
+          specialRequirements: req.body.specialRequirements || [],
           createdById: req.user?.id,
         };
         
@@ -1706,7 +1709,7 @@ export function registerRoutes(app: Express): Server {
           console.log(`  ${key}: ${JSON.stringify(value)} (${typeof value})`);
         });
         
-        // Validate each required field manually first (title is now optional)
+        // Validate each required field manually first - check against actual database schema
         const requiredFields = ['facilityId', 'department', 'specialty', 'date', 'startTime', 'endTime', 'rate', 'createdById'];
         const missingFields = requiredFields.filter(field => !(dataToValidate as any)[field]);
         
@@ -1720,10 +1723,24 @@ export function registerRoutes(app: Express): Server {
         
         console.log("All required fields present, attempting Zod validation...");
         
-        const shiftData = insertShiftSchema.parse(dataToValidate);
-
-        const shift = await storage.createShift(shiftData);
-        res.status(201).json(shift);
+        try {
+          const shiftData = insertShiftSchema.parse(dataToValidate);
+          console.log("Zod validation passed, creating shift with data:", shiftData);
+          
+          const shift = await storage.createShift(shiftData);
+          console.log("Shift created successfully:", shift);
+          res.status(201).json(shift);
+        } catch (dbError: any) {
+          console.error("Database insertion error:", dbError);
+          console.error("Error details:", {
+            message: dbError.message,
+            code: dbError.code,
+            detail: dbError.detail,
+            column: dbError.column,
+            table: dbError.table
+          });
+          throw dbError; // Re-throw to be caught by outer catch block
+        }
       } catch (error) {
         if (error instanceof z.ZodError) {
           console.error("=== ZOD VALIDATION ERRORS ===");
