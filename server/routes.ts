@@ -902,16 +902,20 @@ export function registerRoutes(app: Express): Server {
       // Get staff data for assignment display
       const staffData = await unifiedDataService.getStaffWithAssociations();
       
-      // Combine example shifts with template-generated shifts
-      // Get database-generated shifts and merge with example shifts
-      let dbShifts = [];
+      // Get all database shifts from multiple tables
+      let dbGeneratedShifts = [];
+      let dbMainShifts = [];
       let formattedDbShifts = [];
       
       try {
-        dbShifts = await db.select().from(generatedShifts);
+        // Get template-generated shifts
+        dbGeneratedShifts = await db.select().from(generatedShifts);
         
-        // Convert database shifts to proper format
-        formattedDbShifts = dbShifts.map(shift => ({
+        // Get main shifts table (where new shifts are created)
+        dbMainShifts = await db.select().from(shifts);
+        
+        // Convert generated shifts to proper format
+        const formattedGeneratedShifts = dbGeneratedShifts.map(shift => ({
           id: shift.id,
           title: shift.title,
           date: shift.date,
@@ -932,12 +936,37 @@ export function registerRoutes(app: Express): Server {
           maxStaff: shift.maxStaff || 1,
           totalHours: shift.totalHours || 8
         }));
+        
+        // Convert main shifts to proper format
+        const formattedMainShifts = dbMainShifts.map(shift => ({
+          id: shift.id,
+          title: shift.title,
+          date: shift.date,
+          startTime: shift.startTime,
+          endTime: shift.endTime,
+          department: shift.department,
+          specialty: shift.specialty,
+          facilityId: shift.facilityId,
+          facilityName: shift.facilityName,
+          status: shift.status,
+          rate: parseFloat(shift.rate?.toString() || "0"),
+          urgency: shift.urgency,
+          description: shift.description,
+          totalPositions: shift.requiredStaff || 1,
+          minStaff: 1,
+          maxStaff: shift.requiredStaff || 1,
+          totalHours: 8
+        }));
+        
+        formattedDbShifts = [...formattedGeneratedShifts, ...formattedMainShifts];
+        console.log(`[SHIFTS API] Loaded ${formattedMainShifts.length} main shifts, ${formattedGeneratedShifts.length} generated shifts`);
+        
       } catch (error) {
         console.error('Error fetching database shifts:', error);
         // Continue with example shifts only if database query fails
       }
       
-      // Combine database shifts with example shifts and normalize IDs
+      // Combine all shifts: example + generated + main database shifts
       const combinedShifts = [...getShiftData(), ...formattedDbShifts];
       
       const allShifts = await Promise.all(combinedShifts.map(async shift => {
