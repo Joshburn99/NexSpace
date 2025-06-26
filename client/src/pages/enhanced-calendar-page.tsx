@@ -1605,10 +1605,10 @@ export default function EnhancedCalendarPage() {
             </Button>
             <Button 
               onClick={() => {
-                if (!shiftFormData.title || !shiftFormData.facilityId) {
+                if (!shiftFormData.facilityId) {
                   toast({ 
                     title: "Validation Error", 
-                    description: "Please fill in required fields (Title and Facility)", 
+                    description: "Please select a facility", 
                     variant: "destructive" 
                   });
                   return;
@@ -1622,7 +1622,7 @@ export default function EnhancedCalendarPage() {
                 // Create a shift for each selected date
                 datesToCreate.forEach(date => {
                   createShiftMutation.mutate({
-                    title: shiftFormData.title,
+                    title: shiftFormData.title || `${shiftFormData.specialty} Shift`,
                     specialty: shiftFormData.specialty,
                     department: shiftFormData.specialty, // Use specialty as department fallback
                     date: date,
@@ -1631,7 +1631,7 @@ export default function EnhancedCalendarPage() {
                     endTime: shiftFormData.endTime,
                     rate: parseFloat(shiftFormData.rate) || 45.00,
                     urgency: shiftFormData.urgency,
-                    description: shiftFormData.description,
+                    description: shiftFormData.description || '',
                     requiredStaff: parseInt(shiftFormData.requiredStaff) || 1,
                     status: 'open'
                   });

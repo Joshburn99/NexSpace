@@ -1697,9 +1697,11 @@ export function registerRoutes(app: Express): Server {
         res.status(201).json(shift);
       } catch (error) {
         if (error instanceof z.ZodError) {
-          console.error("Shift validation errors:", error.errors);
-          console.error("Request body:", req.body);
+          console.error("=== VALIDATION ERRORS ===");
+          console.error("Shift validation errors:", JSON.stringify(error.errors, null, 2));
+          console.error("Request body:", JSON.stringify(req.body, null, 2));
           console.error("User data:", { id: req.user.id, facilityId: req.user.facilityId });
+          console.error("==========================");
           res.status(400).json({ message: "Invalid shift data", errors: error.errors });
         } else {
           console.error("Shift creation error:", error);
