@@ -998,7 +998,7 @@ export default function EnhancedCalendarPage() {
               </div>
 
               <div className="grid gap-4">
-                {templates.map((template: any) => (
+                {(templates as any[]).map((template: any) => (
                   <Card key={template.id} className="p-4">
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -1049,7 +1049,7 @@ export default function EnhancedCalendarPage() {
                     </div>
                   </Card>
                 ))}
-                {templates.length === 0 && (
+                {(templates as any[]).length === 0 && (
                   <div className="text-center py-8 text-gray-500">
                     <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>No templates created yet</p>
@@ -1077,7 +1077,7 @@ export default function EnhancedCalendarPage() {
                 department: formData.get('department'),
                 specialty: formData.get('specialty'),
                 facilityId: parseInt(formData.get('facilityId') as string),
-                facilityName: facilities.find((f: any) => f.id === parseInt(formData.get('facilityId') as string))?.name || '',
+                facilityName: (facilities as any[]).find((f: any) => f.id === parseInt(formData.get('facilityId') as string))?.name || '',
                 buildingId: formData.get('buildingId') || '',
                 buildingName: formData.get('buildingName') || '',
                 minStaff: parseInt(formData.get('minStaff') as string),
@@ -1129,7 +1129,7 @@ export default function EnhancedCalendarPage() {
                       <SelectValue placeholder="Select facility" />
                     </SelectTrigger>
                     <SelectContent>
-                      {facilities.map((facility: any) => (
+                      {(facilities as any[]).map((facility: any) => (
                         <SelectItem key={facility.id} value={facility.id.toString()}>
                           {facility.name}
                         </SelectItem>
