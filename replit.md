@@ -13,6 +13,16 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### June 26, 2025 - Critical Specialty Matching & Multi-Worker Assignment Fixes
+- Fixed critical specialty validation bug preventing proper worker filtering for shifts
+- Enhanced shift requests endpoint to check both example and database-generated shifts
+- Corrected backend assignment logic to use proper requiredWorkers capacity instead of defaulting to 1
+- Updated ICU Day Shift to support 3 workers and Emergency Department to support 2 workers
+- Fixed flawed RN validation logic in assignment endpoint with incorrect conditions
+- Resolved React key duplication warnings by using unique date-groupIndex-shiftID combinations
+- Implemented strict specialty matching: only CNA workers for CNA shifts, RN for RN shifts, etc.
+- Added comprehensive backend validation to prevent cross-specialty assignments at API level
+
 ### June 25, 2025 - Template Editing Investigation
 - Investigated template editing modal pre-population and persistence issues
 - Identified data flow challenges between database schema (snake_case) and frontend (camelCase)

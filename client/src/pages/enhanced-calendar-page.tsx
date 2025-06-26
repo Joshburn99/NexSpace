@@ -514,7 +514,7 @@ export default function EnhancedCalendarPage() {
       }
       
       return {
-        id: `${date}-${groupIndex}`,
+        id: `${date}-${groupIndex}-${firstShift.id}`,
         title,
         start: `${date}T${firstShift.startTime}`,
         end: `${date}T${firstShift.endTime}`,

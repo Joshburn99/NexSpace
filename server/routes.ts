@@ -1105,49 +1105,30 @@ export function registerRoutes(app: Express): Server {
       const requiredSpecialty = targetShift?.specialty || "RN";
       const maxCapacity = targetShift?.requiredWorkers || targetShift?.totalPositions || 3;
       
-      console.log(`[SHIFT REQUESTS] Shift ${shiftId}: Required specialty: ${requiredSpecialty}, Max capacity: ${maxCapacity}`);
-      
       // Check if shift is already at capacity
       const isAtCapacity = currentAssignments.length >= maxCapacity;
       
       // Get staff data for realistic requests
       const dbStaffData = await unifiedDataService.getStaffWithAssociations();
-      console.log(`[SHIFT REQUESTS] Total staff available: ${dbStaffData.length}`);
       
       const filteredStaff = dbStaffData.filter(staff => {
         // Strict role validation - exclude all admin/management roles
         const ineligibleRoles = ['super_admin', 'facility_admin', 'admin', 'facility_manager', 'manager'];
-        if (ineligibleRoles.includes(staff.role)) {
-          console.log(`[FILTER] Excluding ${staff.firstName} ${staff.lastName} - ineligible role: ${staff.role}`);
-          return false;
-        }
+        if (ineligibleRoles.includes(staff.role)) return false;
         
         // Strict email validation - exclude known superusers
         const superuserEmails = ['joshburn@nexspace.com', 'josh.burnett@nexspace.com', 'brian.nangle@nexspace.com'];
-        if (superuserEmails.includes(staff.email)) {
-          console.log(`[FILTER] Excluding ${staff.firstName} ${staff.lastName} - superuser email: ${staff.email}`);
-          return false;
-        }
+        if (superuserEmails.includes(staff.email)) return false;
         
         // Filter out already assigned workers
-        if (assignedWorkerIds.includes(staff.id)) {
-          console.log(`[FILTER] Excluding ${staff.firstName} ${staff.lastName} - already assigned`);
-          return false;
-        }
+        if (assignedWorkerIds.includes(staff.id)) return false;
         
         // Strict specialty matching - only workers with exact specialty match
-        if (staff.specialty !== requiredSpecialty) {
-          console.log(`[FILTER] Excluding ${staff.firstName} ${staff.lastName} - specialty mismatch: ${staff.specialty} != ${requiredSpecialty}`);
-          return false;
-        }
+        if (staff.specialty !== requiredSpecialty) return false;
         
         // Only include internal employees and verified contractors
-        if (!['internal_employee', 'contractor_1099'].includes(staff.role)) {
-          console.log(`[FILTER] Excluding ${staff.firstName} ${staff.lastName} - invalid role: ${staff.role}`);
-          return false;
-        }
+        if (!['internal_employee', 'contractor_1099'].includes(staff.role)) return false;
         
-        console.log(`[FILTER] Including ${staff.firstName} ${staff.lastName} - specialty: ${staff.specialty}, role: ${staff.role}`);
         return true;
       });
 
