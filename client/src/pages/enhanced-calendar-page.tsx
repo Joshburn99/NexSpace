@@ -21,7 +21,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import ShiftCalendar from "@/components/ShiftCalendar";
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
 import {
   Calendar,
   Clock,
@@ -175,7 +178,9 @@ export default function EnhancedCalendarPage() {
     return <WorkerOpenShiftsPage />;
   }
   
+  const calendarRef = useRef<FullCalendar>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState<"dayGridMonth" | "timeGridWeek" | "timeGridDay">("dayGridMonth");
   const [selectedShift, setSelectedShift] = useState<EnhancedShift | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -372,13 +377,34 @@ export default function EnhancedCalendarPage() {
             </Button>
           )}
           <div className="flex gap-1">
-            <Button variant="outline" size="sm">
+            <Button
+              variant={viewMode === "dayGridMonth" ? "default" : "outline"}
+              onClick={() => {
+                setViewMode("dayGridMonth");
+                calendarRef.current?.getApi().changeView("dayGridMonth");
+              }}
+              size="sm"
+            >
               Month
             </Button>
-            <Button variant="default" size="sm">
+            <Button
+              variant={viewMode === "timeGridWeek" ? "default" : "outline"}
+              onClick={() => {
+                setViewMode("timeGridWeek");
+                calendarRef.current?.getApi().changeView("timeGridWeek");
+              }}
+              size="sm"
+            >
               Week
             </Button>
-            <Button variant="outline" size="sm">
+            <Button
+              variant={viewMode === "timeGridDay" ? "default" : "outline"}
+              onClick={() => {
+                setViewMode("timeGridDay");
+                calendarRef.current?.getApi().changeView("timeGridDay");
+              }}
+              size="sm"
+            >
               Day
             </Button>
           </div>
@@ -625,13 +651,38 @@ export default function EnhancedCalendarPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ShiftCalendar />
+          <div className="calendar-container">
+            <FullCalendar
+              ref={calendarRef}
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+              initialView="dayGridMonth"
+              headerToolbar={{
+                left: 'prev,next today',
+                center: 'title',
+                right: ''
+              }}
+              events={calendarEvents}
+              eventClick={(info) => {
+                const shift = info.event.extendedProps.shift;
+                setSelectedShift(shift);
+              }}
+              height="auto"
+              eventTimeFormat={{
+                hour: 'numeric',
+                minute: '2-digit',
+                meridiem: 'short'
+              }}
+              eventDisplay="block"
+              dayMaxEvents={3}
+              moreLinkClick="popover"
+              eventClassNames="cursor-pointer hover:opacity-80"
+            />
+          </div>
         </CardContent>
       </Card>
 
       {/* Shift Detail Modal */}
-      {selectedShift && (
-        <Dialog open={!!selectedShift} onOpenChange={() => setSelectedShift(null)}>
+      <Dialog open={!!selectedShift} onOpenChange={() => setSelectedShift(null)}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -707,8 +758,7 @@ export default function EnhancedCalendarPage() {
             </div>
           )}
         </DialogContent>
-        </Dialog>
-      )}
+      </Dialog>
 
       {/* Post Shift Modal */}
       {showPostShiftModal && (

@@ -7618,38 +7618,6 @@ export function registerRoutes(app: Express): Server {
           daysOfWeek: [1, 2, 3, 4, 5],
           isActive: true,
           hourlyRate: 38
-        },
-        {
-          id: 4,
-          name: "Medical-Surgical Day",
-          department: "Medical-Surgical",
-          specialty: "Certified Nursing Assistant",
-          facilityId: 1,
-          facilityName: "Portland General Hospital",
-          minStaff: 1,
-          maxStaff: 1,
-          shiftType: "day",
-          startTime: "07:00",
-          endTime: "19:00",
-          daysOfWeek: [1, 2, 3, 4, 5, 6, 0],
-          isActive: true,
-          hourlyRate: 19
-        },
-        {
-          id: 5,
-          name: "ICU Night Coverage",
-          department: "ICU",
-          specialty: "Licensed Practical Nurse",
-          facilityId: 1,
-          facilityName: "Portland General Hospital",
-          minStaff: 1,
-          maxStaff: 1,
-          shiftType: "night",
-          startTime: "19:00",
-          endTime: "07:00",
-          daysOfWeek: [1, 2, 3, 4, 5, 6, 0],
-          isActive: true,
-          hourlyRate: 19
         }
       ];
       
