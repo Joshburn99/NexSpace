@@ -375,7 +375,7 @@ export default function ShiftTemplatesPage() {
       buildingName: template.buildingName || "",
       minStaff: Number(template.minStaff) || 1,
       maxStaff: Number(template.maxStaff) || 1,
-      shiftType: template.shiftType || "day",
+      shiftType: (template.shiftType as "day" | "evening" | "night") || "day",
       startTime: template.startTime || "07:00",
       endTime: template.endTime || "19:00",
       daysOfWeek: Array.isArray(template.daysOfWeek) ? template.daysOfWeek : [1, 2, 3, 4, 5],
