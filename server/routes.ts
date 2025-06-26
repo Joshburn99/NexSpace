@@ -1260,7 +1260,7 @@ export function registerRoutes(app: Express): Server {
         };
       } else {
         // For regular shifts, get from the example shifts data since database shifts table doesn't have title column
-        const allShifts = getShiftData();
+        const allShifts = await getShiftData();
         const exampleShift = allShifts.find(s => s.id.toString() === shiftId);
         
         if (exampleShift) {
@@ -1466,7 +1466,7 @@ export function registerRoutes(app: Express): Server {
       }
 
       // Get shift details to check capacity
-      const allShifts = getShiftData();
+      const allShifts = await getShiftData();
       const targetShift = allShifts.find(s => s.id.toString() === shiftId);
       
       if (!targetShift) {
@@ -7768,7 +7768,7 @@ export function registerRoutes(app: Express): Server {
               facilityId: template.facilityId,
               facilityName: template.facilityName,
               status: "open" as const,
-              rate: parseFloat(template.hourlyRate?.toString() || "0"),
+              rate: template.hourlyRate?.toString() || "0.00",
               urgency: "medium" as const,
               description: `${template.department} shift - ${template.name}`,
               templateId: template.id,
