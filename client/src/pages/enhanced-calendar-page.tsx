@@ -197,7 +197,7 @@ export default function EnhancedCalendarPage() {
     facilityId: '',
     startTime: '07:00',
     endTime: '19:00',
-    rate: '',
+    rate: '45.00',
     urgency: 'medium',
     description: '',
     requiredStaff: '1'
@@ -274,7 +274,7 @@ export default function EnhancedCalendarPage() {
         facilityId: '',
         startTime: '07:00',
         endTime: '19:00',
-        rate: '',
+        rate: '45.00',
         urgency: 'medium',
         description: '',
         requiredStaff: '1'
@@ -1597,24 +1597,33 @@ export default function EnhancedCalendarPage() {
                   });
                   return;
                 }
-                
-                createShiftMutation.mutate({
-                  title: shiftFormData.title,
-                  specialty: shiftFormData.specialty,
-                  date: shiftFormData.date,
-                  facilityId: parseInt(shiftFormData.facilityId),
-                  startTime: shiftFormData.startTime,
-                  endTime: shiftFormData.endTime,
-                  rate: parseFloat(shiftFormData.rate) || 45,
-                  urgency: shiftFormData.urgency,
-                  description: shiftFormData.description,
-                  requiredStaff: parseInt(shiftFormData.requiredStaff) || 1,
-                  status: 'open'
+
+                // Use selected dates if any, otherwise use single date
+                const datesToCreate = shiftFormData.selectedDates.length > 0 
+                  ? shiftFormData.selectedDates 
+                  : [shiftFormData.date];
+
+                // Create a shift for each selected date
+                datesToCreate.forEach(date => {
+                  createShiftMutation.mutate({
+                    title: shiftFormData.title,
+                    specialty: shiftFormData.specialty,
+                    department: shiftFormData.specialty, // Use specialty as department fallback
+                    date: date,
+                    facilityId: parseInt(shiftFormData.facilityId),
+                    startTime: shiftFormData.startTime,
+                    endTime: shiftFormData.endTime,
+                    rate: parseFloat(shiftFormData.rate) || 45.00,
+                    urgency: shiftFormData.urgency,
+                    description: shiftFormData.description,
+                    requiredStaff: parseInt(shiftFormData.requiredStaff) || 1,
+                    status: 'open'
+                  });
                 });
               }}
               disabled={createShiftMutation.isPending}
             >
-              {createShiftMutation.isPending ? "Creating..." : "Create Shift"}
+              {createShiftMutation.isPending ? "Creating..." : `Create Shift${shiftFormData.selectedDates.length > 1 ? 's' : ''}`}
             </Button>
           </div>
         </DialogContent>
