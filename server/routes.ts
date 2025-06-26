@@ -7237,22 +7237,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/shifts", requireAuth, async (req, res) => {
-    try {
-      const shiftData = req.body;
-      const newShift = {
-        id: Date.now(),
-        ...shiftData,
-        status: "open",
-        createdById: req.user?.id,
-        createdAt: new Date().toISOString(),
-      };
-      res.json(newShift);
-    } catch (error) {
-      console.error("Error creating shift:", error);
-      res.status(500).json({ message: "Failed to create shift" });
-    }
-  });
+  // Duplicate route removed - using the one with proper validation at line ~1676
 
   // Remove this duplicate route - using the one below with transformations
 
