@@ -187,9 +187,7 @@ export default function EnhancedCalendarPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddShiftDialog, setShowAddShiftDialog] = useState(false);
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
-  const [showUseTemplateModal, setShowUseTemplateModal] = useState(false);
+
   const [showPostShiftModal, setShowPostShiftModal] = useState(false);
   const [activeTab, setActiveTab] = useState("calendar");
   
@@ -224,10 +222,7 @@ export default function EnhancedCalendarPage() {
     queryKey: ["/api/staff"],
   });
 
-  // Fetch shift templates
-  const { data: templates = [] } = useQuery<any[]>({
-    queryKey: ["/api/shift-templates"],
-  });
+
 
   // Fetch shift requests for selected shift
   const { data: shiftRequests = [] } = useQuery<any[]>({
@@ -1497,104 +1492,7 @@ export default function EnhancedCalendarPage() {
         </>
       )}
 
-      {/* Shift Templates Tab */}
-      {activeTab === "templates" && (
-        <div className="space-y-6">
-          {/* Templates Header */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold">Shift Templates</h2>
-              <p className="text-gray-600 dark:text-gray-400">Create and manage reusable shift templates</p>
-            </div>
-            <Button onClick={() => setShowTemplateModal(true)}>
-              <Calendar className="w-4 h-4 mr-2" />
-              Create Template
-            </Button>
-          </div>
 
-          {/* Templates Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {(templates as any[]).map((template: any) => (
-              <Card key={template.id} className="cursor-pointer hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">{template.name}</CardTitle>
-                    <Badge 
-                      style={{ 
-                        backgroundColor: specialtyColors[template.specialty as keyof typeof specialtyColors] || specialtyColors.default,
-                        color: 'white' 
-                      }}
-                    >
-                      {template.specialty}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Building className="w-4 h-4" />
-                      <span>{template.department} - {template.facilityName}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Clock className="w-4 h-4" />
-                      <span>{template.startTime} - {template.endTime}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <DollarSign className="w-4 h-4" />
-                      <span>${template.hourlyRate}/hr</span>
-                    </div>
-                    <div className="flex gap-1 mt-2">
-                      <Badge variant="outline" className="text-xs">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                        Employees
-                      </Badge>
-                      <Badge variant="outline" className="text-xs">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full mr-1"></div>
-                        Float Pool
-                      </Badge>
-                    </div>
-                    {template.notes && (
-                      <p className="text-sm text-gray-500 mt-2">{template.notes}</p>
-                    )}
-                  </div>
-                  <div className="flex gap-2 mt-4">
-                    <Button 
-                      size="sm" 
-                      onClick={() => {
-                        setSelectedTemplate(template);
-                        setShowUseTemplateModal(true);
-                      }}
-                    >
-                      Use Template
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedTemplate(template);
-                        setShowTemplateModal(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            
-            {(templates as any[]).length === 0 && (
-              <div className="col-span-full text-center py-12">
-                <Calendar className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No templates yet</h3>
-                <p className="text-gray-500 mb-4">Create your first shift template to get started</p>
-                <Button onClick={() => setShowTemplateModal(true)}>
-                  Create Template
-                </Button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Template Creation/Edit Modal */}
       <Dialog open={showTemplateModal} onOpenChange={setShowTemplateModal}>
