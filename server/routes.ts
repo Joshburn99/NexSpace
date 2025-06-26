@@ -906,8 +906,8 @@ export function registerRoutes(app: Express): Server {
       
       // Combine example shifts with template-generated shifts
       // Get database-generated shifts and merge with example shifts
-      let dbShifts = [];
-      let formattedDbShifts = [];
+      let dbShifts: any[] = [];
+      let formattedDbShifts: any[] = [];
       
       try {
         dbShifts = await db.select().from(generatedShifts);
@@ -7260,7 +7260,10 @@ export function registerRoutes(app: Express): Server {
       res.json(transformedTemplate);
     } catch (error) {
       console.error('Error updating shift template:', error);
-      res.status(500).json({ message: "Failed to update shift template", error: error.message });
+      res.status(500).json({ 
+        message: "Failed to update shift template", 
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
