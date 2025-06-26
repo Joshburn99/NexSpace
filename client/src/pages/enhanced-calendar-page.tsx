@@ -1459,40 +1459,56 @@ export default function EnhancedCalendarPage() {
               <div>
                 <Label className="text-sm font-medium">Date Selection</Label>
                 <div className="space-y-2">
-                  <input 
-                    type="date" 
-                    className="w-full mt-1 p-2 border rounded-md"
-                    value={shiftFormData.date}
-                    onChange={(e) => setShiftFormData({...shiftFormData, date: e.target.value})}
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        if (shiftFormData.date && !shiftFormData.selectedDates.includes(shiftFormData.date)) {
-                          setShiftFormData({
-                            ...shiftFormData,
-                            selectedDates: [...shiftFormData.selectedDates, shiftFormData.date]
-                          });
+                  <div className="relative">
+                    <input 
+                      type="date" 
+                      className="w-full mt-1 p-2 border rounded-md pr-10"
+                      value={shiftFormData.date}
+                      onChange={(e) => {
+                        const newDate = e.target.value;
+                        setShiftFormData({...shiftFormData, date: newDate});
+                        
+                        // Auto-add date to selection if not already selected
+                        if (newDate && !shiftFormData.selectedDates.includes(newDate)) {
+                          setShiftFormData(prev => ({
+                            ...prev,
+                            date: newDate,
+                            selectedDates: [...prev.selectedDates, newDate].sort()
+                          }));
                         }
                       }}
-                    >
-                      Add Date
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShiftFormData({...shiftFormData, selectedDates: []})}
-                    >
-                      Clear All
-                    </Button>
+                      multiple={false}
+                    />
                   </div>
                   {shiftFormData.selectedDates.length > 0 && (
-                    <div className="text-xs text-muted-foreground">
-                      Selected dates: {shiftFormData.selectedDates.join(', ')}
+                    <div className="space-y-1">
+                      <div className="text-xs font-medium text-gray-700">Selected dates ({shiftFormData.selectedDates.length}):</div>
+                      <div className="flex flex-wrap gap-1">
+                        {shiftFormData.selectedDates.map(date => (
+                          <span key={date} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                            {date}
+                            <button
+                              type="button"
+                              onClick={() => setShiftFormData(prev => ({
+                                ...prev,
+                                selectedDates: prev.selectedDates.filter(d => d !== date)
+                              }))}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              ×
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShiftFormData(prev => ({...prev, selectedDates: []}))}
+                        className="h-6 text-xs"
+                      >
+                        Clear All
+                      </Button>
                     </div>
                   )}
                 </div>
@@ -1623,7 +1639,7 @@ export default function EnhancedCalendarPage() {
               }}
               disabled={createShiftMutation.isPending}
             >
-              {createShiftMutation.isPending ? "Creating..." : `Create Shift${shiftFormData.selectedDates.length > 1 ? 's' : ''}`}
+{createShiftMutation.isPending ? "Creating..." : `Create ${shiftFormData.selectedDates.length > 1 ? `${shiftFormData.selectedDates.length} Shifts` : 'Shift'}`}
             </Button>
           </div>
         </DialogContent>

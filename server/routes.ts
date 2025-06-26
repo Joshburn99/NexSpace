@@ -1681,7 +1681,7 @@ export function registerRoutes(app: Express): Server {
       try {
         const shiftData = insertShiftSchema.parse({
           ...req.body,
-          facilityId: req.user.facilityId,
+          facilityId: req.user.facilityId || req.body.facilityId,
           createdById: req.user.id,
         });
 
@@ -1689,8 +1689,12 @@ export function registerRoutes(app: Express): Server {
         res.status(201).json(shift);
       } catch (error) {
         if (error instanceof z.ZodError) {
+          console.error("Shift validation errors:", error.errors);
+          console.error("Request body:", req.body);
+          console.error("User data:", { id: req.user.id, facilityId: req.user.facilityId });
           res.status(400).json({ message: "Invalid shift data", errors: error.errors });
         } else {
+          console.error("Shift creation error:", error);
           res.status(500).json({ message: "Failed to create shift" });
         }
       }
