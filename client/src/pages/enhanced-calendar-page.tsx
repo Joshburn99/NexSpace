@@ -48,7 +48,9 @@ import {
   CheckCircle2,
   XCircle,
   Star,
-  PlayCircle
+  PlayCircle,
+  Plus,
+  RefreshCw
 } from "lucide-react";
 import { format, addDays, startOfWeek } from "date-fns";
 
@@ -186,6 +188,11 @@ export default function EnhancedCalendarPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddShiftDialog, setShowAddShiftDialog] = useState(false);
   const [showPostShiftModal, setShowPostShiftModal] = useState(false);
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const [showCreateTemplateModal, setShowCreateTemplateModal] = useState(false);
+  const [showUseTemplateModal, setShowUseTemplateModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [editingTemplate, setEditingTemplate] = useState<any>(null);
   
   // Advanced filters state
   const [filters, setFilters] = useState<CalendarFilter>({
@@ -217,6 +224,12 @@ export default function EnhancedCalendarPage() {
     queryKey: ['/api/staff']
   });
 
+  // Fetch shift templates
+  const { data: templates = [], refetch: refetchTemplates } = useQuery({
+    queryKey: ['/api/shift-templates'],
+    staleTime: 30000 // 30 seconds
+  });
+
   // Create mutation for posting shifts
   const postShiftMutation = useMutation({
     mutationFn: async (shiftData: any) => {
@@ -239,6 +252,31 @@ export default function EnhancedCalendarPage() {
       toast({
         title: "Error",
         description: error.message || "Failed to create shift",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Template regeneration mutation
+  const regenerateShiftsMutation = useMutation({
+    mutationFn: async (templateId: number) => {
+      const response = await apiRequest('POST', `/api/shift-templates/${templateId}/regenerate`);
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Success",
+        description: `Generated ${data.generatedCount} shifts from template`
+      });
+      // Immediately invalidate and refetch shift data
+      queryClient.invalidateQueries({ queryKey: ['/api/shifts'] });
+      refetchShifts();
+      refetchTemplates();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to regenerate shifts",
         variant: "destructive"
       });
     }
@@ -350,7 +388,26 @@ export default function EnhancedCalendarPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {/* Template functionality moved to navbar */}
+          {user && (user.role === 'facility_manager' || user.role === 'super_admin' || user.role === 'admin') && (
+            <>
+              <Button
+                onClick={() => setShowTemplatesModal(true)}
+                variant="outline"
+                size="sm"
+              >
+                <PlayCircle className="h-4 w-4 mr-2" />
+                Templates
+              </Button>
+              <Button
+                onClick={() => setShowCreateTemplateModal(true)}
+                variant="outline"
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Template
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -909,6 +966,278 @@ export default function EnhancedCalendarPage() {
                   disabled={postShiftMutation.isPending}
                 >
                   {postShiftMutation.isPending ? "Adding..." : "Add Shift"}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Templates Management Modal */}
+      {showTemplatesModal && (
+        <Dialog open={showTemplatesModal} onOpenChange={setShowTemplatesModal}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Shift Templates</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <p className="text-sm text-gray-600">
+                  Manage and generate shifts from templates
+                </p>
+                <Button
+                  onClick={() => {
+                    setShowTemplatesModal(false);
+                    setShowCreateTemplateModal(true);
+                  }}
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Template
+                </Button>
+              </div>
+
+              <div className="grid gap-4">
+                {templates.map((template: any) => (
+                  <Card key={template.id} className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="font-semibold">{template.name}</h3>
+                          <Badge variant={template.isActive ? "default" : "secondary"}>
+                            {template.isActive ? "Active" : "Inactive"}
+                          </Badge>
+                          <Badge variant="outline">
+                            {template.specialty}
+                          </Badge>
+                        </div>
+                        <div className="text-sm text-gray-600 space-y-1">
+                          <p><strong>Facility:</strong> {template.facilityName}</p>
+                          <p><strong>Department:</strong> {template.department}</p>
+                          <p><strong>Schedule:</strong> {template.startTime} - {template.endTime}</p>
+                          <p><strong>Staff Required:</strong> {template.minStaff}-{template.maxStaff}</p>
+                          <p><strong>Days:</strong> {template.daysOfWeek?.map((day: number) => 
+                            ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day]
+                          ).join(', ')}</p>
+                          {template.generatedShiftsCount > 0 && (
+                            <p><strong>Generated Shifts:</strong> {template.generatedShiftsCount}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedTemplate(template);
+                            setShowUseTemplateModal(true);
+                          }}
+                        >
+                          <PlayCircle className="h-4 w-4 mr-1" />
+                          Use
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => regenerateShiftsMutation.mutate(template.id)}
+                          disabled={regenerateShiftsMutation.isPending}
+                        >
+                          <RefreshCw className={`h-4 w-4 mr-1 ${regenerateShiftsMutation.isPending ? 'animate-spin' : ''}`} />
+                          Regenerate
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+                {templates.length === 0 && (
+                  <div className="text-center py-8 text-gray-500">
+                    <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p>No templates created yet</p>
+                    <p className="text-sm">Create your first template to get started</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Create Template Modal */}
+      {showCreateTemplateModal && (
+        <Dialog open={showCreateTemplateModal} onOpenChange={setShowCreateTemplateModal}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Create Shift Template</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const templateData = {
+                name: formData.get('name'),
+                department: formData.get('department'),
+                specialty: formData.get('specialty'),
+                facilityId: parseInt(formData.get('facilityId') as string),
+                facilityName: facilities.find((f: any) => f.id === parseInt(formData.get('facilityId') as string))?.name || '',
+                buildingId: formData.get('buildingId') || '',
+                buildingName: formData.get('buildingName') || '',
+                minStaff: parseInt(formData.get('minStaff') as string),
+                maxStaff: parseInt(formData.get('maxStaff') as string),
+                shiftType: formData.get('shiftType'),
+                startTime: formData.get('startTime'),
+                endTime: formData.get('endTime'),
+                daysOfWeek: Array.from(formData.getAll('daysOfWeek')).map(Number),
+                isActive: formData.get('isActive') === 'on',
+                hourlyRate: parseFloat(formData.get('hourlyRate') as string) || 0,
+                daysPostedOut: parseInt(formData.get('daysPostedOut') as string) || 7,
+                notes: formData.get('notes') || ''
+              };
+              
+              // Create template
+              apiRequest('POST', '/api/shift-templates', templateData)
+                .then(() => {
+                  toast({
+                    title: "Success",
+                    description: "Template created successfully"
+                  });
+                  setShowCreateTemplateModal(false);
+                  refetchTemplates();
+                })
+                .catch((error) => {
+                  toast({
+                    title: "Error",
+                    description: "Failed to create template",
+                    variant: "destructive"
+                  });
+                });
+            }} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="name">Template Name</Label>
+                  <Input name="name" placeholder="e.g., ICU Night Coverage" required />
+                </div>
+                <div>
+                  <Label htmlFor="department">Department</Label>
+                  <Input name="department" placeholder="e.g., ICU, Emergency" required />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="facilityId">Facility</Label>
+                  <Select name="facilityId" required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select facility" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {facilities.map((facility: any) => (
+                        <SelectItem key={facility.id} value={facility.id.toString()}>
+                          {facility.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="specialty">Specialty</Label>
+                  <Select name="specialty" required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select specialty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Registered Nurse">RN - Registered Nurse</SelectItem>
+                      <SelectItem value="Licensed Practical Nurse">LPN - Licensed Practical Nurse</SelectItem>
+                      <SelectItem value="Certified Nursing Assistant">CNA - Certified Nursing Assistant</SelectItem>
+                      <SelectItem value="Respiratory Therapist">RT - Respiratory Therapist</SelectItem>
+                      <SelectItem value="Physical Therapist">PT - Physical Therapist</SelectItem>
+                      <SelectItem value="Occupational Therapist">OT - Occupational Therapist</SelectItem>
+                      <SelectItem value="Certified Surgical Tech">CST - Certified Surgical Tech</SelectItem>
+                      <SelectItem value="Patient Care Technician">PCT - Patient Care Technician</SelectItem>
+                      <SelectItem value="Medical Assistant">MA - Medical Assistant</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="startTime">Start Time</Label>
+                  <Input name="startTime" type="time" required />
+                </div>
+                <div>
+                  <Label htmlFor="endTime">End Time</Label>
+                  <Input name="endTime" type="time" required />
+                </div>
+                <div>
+                  <Label htmlFor="shiftType">Shift Type</Label>
+                  <Select name="shiftType" required>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="day">Day</SelectItem>
+                      <SelectItem value="evening">Evening</SelectItem>
+                      <SelectItem value="night">Night</SelectItem>
+                      <SelectItem value="weekend">Weekend</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="minStaff">Staff Required</Label>
+                  <Input name="minStaff" type="number" min="1" defaultValue="1" required />
+                </div>
+                <div>
+                  <Label htmlFor="maxStaff">Maximum Staff</Label>
+                  <Input name="maxStaff" type="number" min="1" defaultValue="1" required />
+                </div>
+              </div>
+
+              <div>
+                <Label>Days of Week</Label>
+                <div className="flex gap-2 mt-2">
+                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+                    <label key={day} className="flex items-center space-x-1">
+                      <input type="checkbox" name="daysOfWeek" value={index} />
+                      <span className="text-sm">{day}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+
+              {user && (user.role === 'super_admin' || user.role === 'admin') && (
+                <div>
+                  <Label htmlFor="hourlyRate">Hourly Rate ($)</Label>
+                  <Input name="hourlyRate" type="number" step="0.01" min="0" placeholder="0.00" />
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="daysPostedOut">Days Posted Out</Label>
+                <Input name="daysPostedOut" type="number" min="1" max="90" defaultValue="7" required />
+              </div>
+
+              <div>
+                <Label htmlFor="notes">Notes</Label>
+                <Input name="notes" placeholder="Additional requirements or notes" />
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input type="checkbox" name="isActive" id="isActive" defaultChecked />
+                <Label htmlFor="isActive">Template is active</Label>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowCreateTemplateModal(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Create Template
                 </Button>
               </div>
             </form>
