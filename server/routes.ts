@@ -1297,7 +1297,7 @@ export function registerRoutes(app: Express): Server {
         });
       }
       
-      if (shift.specialty === 'RN' && worker.specialty && !['RN', 'BSN', 'MSN'].includes(worker.specialty || '')) {
+      if (shift.specialty === 'RN' && !['RN', 'BSN', 'MSN'].includes(worker.specialty || '')) {
         return res.status(400).json({ 
           message: `Only registered nurses can be assigned to RN shifts` 
         });
