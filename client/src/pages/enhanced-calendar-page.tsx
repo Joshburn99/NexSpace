@@ -21,14 +21,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import {
   Calendar,
-  Plus,
   Clock,
   Users,
   Filter,
@@ -50,7 +49,8 @@ import {
   CheckCircle2,
   XCircle,
   Star,
-  PlayCircle
+  PlayCircle,
+  Plus
 } from "lucide-react";
 import { format, addDays, startOfWeek } from "date-fns";
 
@@ -594,8 +594,7 @@ export default function EnhancedCalendarPage() {
         </div>
       </div>
 
-      {activeTab === "calendar" && (
-        <>
+
       {/* Filter Controls */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -1491,247 +1490,6 @@ export default function EnhancedCalendarPage() {
           </div>
         </DialogContent>
       </Dialog>
-        </>
-      )}
-
-      {/* Add Shift Modal */}
-      {showPostShiftModal && (
-        <Dialog open={showPostShiftModal} onOpenChange={setShowPostShiftModal}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Add New Shift</DialogTitle>
-            </DialogHeader>
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              const formData = new FormData(e.target as HTMLFormElement);
-              
-              // Validate facility selection
-              const facilityId = parseInt(formData.get('facilityId') as string);
-              const facility = (facilities as any[])?.find(f => f.id === facilityId);
-              if (!facility) {
-                toast({
-                  title: "Error",
-                  description: "Please select a valid facility",
-                  variant: "destructive"
-                });
-                return;
-              }
-              
-              // Calculate total hours
-              const startTime = formData.get('startTime') as string;
-              const endTime = formData.get('endTime') as string;
-              const totalHours = calculateHoursBetween(startTime, endTime);
-              
-              // Get multiplier and base rate (placeholder - will be calculated from staff profile when workers request)
-              const multiplier = parseFloat(formData.get('rateMultiplier') as string) || 1.0;
-              const baseRate = 45.00; // Base rate placeholder - actual rate comes from staff profile during assignment
-              
-              const shiftData = {
-                title: formData.get('title'),
-                date: formData.get('date'),
-                startTime: startTime,
-                endTime: endTime,
-                department: formData.get('department'),
-                specialty: formData.get('specialty'),
-                facilityId: facilityId,
-                facilityName: facility?.name || 'Unknown Facility',
-                hourlyRate: baseRate * multiplier,
-                rate: baseRate * multiplier,
-                rateMultiplier: multiplier,
-                urgency: formData.get('urgency'),
-                description: formData.get('description'),
-                requiredWorkers: parseInt(formData.get('requiredWorkers') as string) || 1,
-                minStaff: parseInt(formData.get('minStaff') as string) || 1,
-                maxStaff: parseInt(formData.get('maxStaff') as string) || 1,
-                totalHours: totalHours,
-                buildingId: 'main-building',
-                buildingName: 'Main Building'
-              };
-              postShiftMutation.mutate(shiftData);
-            }} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="title">Shift Title</Label>
-                  <Input name="title" placeholder="e.g., ICU Day Shift" required />
-                </div>
-                <div>
-                  <Label htmlFor="date">Date</Label>
-                  <Input name="date" type="date" required />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="startTime">Start Time</Label>
-                  <Input 
-                    name="startTime" 
-                    type="time" 
-                    required 
-                    onChange={(e) => {
-                      const startTime = e.target.value;
-                      const endTimeInput = document.querySelector('input[name="endTime"]') as HTMLInputElement;
-                      const totalHoursInput = document.querySelector('input[name="totalHours"]') as HTMLInputElement;
-                      if (endTimeInput?.value && totalHoursInput) {
-                        const hours = calculateHoursBetween(startTime, endTimeInput.value);
-                        totalHoursInput.value = hours.toString();
-                      }
-                    }}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="endTime">End Time</Label>
-                  <Input 
-                    name="endTime" 
-                    type="time" 
-                    required 
-                    onChange={(e) => {
-                      const endTime = e.target.value;
-                      const startTimeInput = document.querySelector('input[name="startTime"]') as HTMLInputElement;
-                      const totalHoursInput = document.querySelector('input[name="totalHours"]') as HTMLInputElement;
-                      if (startTimeInput?.value && totalHoursInput) {
-                        const hours = calculateHoursBetween(startTimeInput.value, endTime);
-                        totalHoursInput.value = hours.toString();
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="department">Department</Label>
-                  <Select name="department" required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select department" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ICU">ICU</SelectItem>
-                      <SelectItem value="Emergency">Emergency</SelectItem>
-                      <SelectItem value="Operating Room">Operating Room</SelectItem>
-                      <SelectItem value="Medical/Surgical">Medical/Surgical</SelectItem>
-                      <SelectItem value="Pediatrics">Pediatrics</SelectItem>
-                      <SelectItem value="Oncology">Oncology</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="specialty">Specialty</Label>
-                  <Select name="specialty" required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select specialty" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="RN">RN</SelectItem>
-                      <SelectItem value="LPN">LPN</SelectItem>
-                      <SelectItem value="CNA">CNA</SelectItem>
-                      <SelectItem value="CST">CST</SelectItem>
-                      <SelectItem value="RT">RT</SelectItem>
-                      <SelectItem value="PT">PT</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="facilityId">Facility</Label>
-                  <Select name="facilityId" required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select facility" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {(facilities as any[])?.map((facility) => (
-                        <SelectItem key={facility.id} value={facility.id.toString()}>
-                          {facility.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="rateMultiplier">Rate Multiplier</Label>
-                  <div className="px-2">
-                    <input 
-                      name="rateMultiplier"
-                      type="range" 
-                      min="1.0" 
-                      max="1.6" 
-                      step="0.1" 
-                      defaultValue="1.0"
-                      className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                      onChange={(e) => {
-                        const output = document.getElementById('rateOutput');
-                        if (output) output.textContent = `${e.target.value}x`;
-                      }}
-                    />
-                    <div className="flex justify-between text-xs text-gray-500 mt-1">
-                      <span>1.0x</span>
-                      <span id="rateOutput">1.0x</span>
-                      <span>1.6x</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="requiredWorkers">Workers Required</Label>
-                  <Input 
-                    name="requiredWorkers" 
-                    type="number" 
-                    min="1" 
-                    max="10" 
-                    defaultValue="1" 
-                    required 
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="urgency">Urgency Level</Label>
-                  <Select name="urgency" defaultValue="medium">
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="critical">Critical</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <textarea 
-                  name="description" 
-                  className="w-full mt-1 p-2 border rounded-md" 
-                  rows={3}
-                  placeholder="Additional shift details..."
-                />
-              </div>
-              
-              <Input name="totalHours" type="hidden" defaultValue="8" />
-              
-              <div className="flex justify-end gap-2 mt-6">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setShowPostShiftModal(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={postShiftMutation.isPending}
-                >
-                  {postShiftMutation.isPending ? "Adding..." : "Add Shift"}
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
-      )}
     </div>
   );
 }
