@@ -38,8 +38,7 @@ import {
   messages,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { recommendationEngine } from "./recommendation-engine";
 import type { RecommendationCriteria } from "./recommendation-engine";
 import { UnifiedDataService } from "./unified-data-service";
@@ -5323,7 +5322,33 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/shift-templates", requireAuth, async (req, res) => {
     try {
       const templates = await db.select().from(shiftTemplates);
-      res.json(templates);
+      
+      // Transform database response to frontend format
+      const formattedTemplates = templates.map(template => ({
+        id: template.id,
+        name: template.name,
+        department: template.department,
+        specialty: template.specialty,
+        facilityId: template.facilityId,
+        facilityName: template.facilityName,
+        buildingId: template.buildingId,
+        buildingName: template.buildingName,
+        minStaff: template.minStaff,
+        maxStaff: template.maxStaff,
+        shiftType: template.shiftType,
+        startTime: template.startTime,
+        endTime: template.endTime,
+        daysOfWeek: template.daysOfWeek,
+        isActive: template.isActive,
+        hourlyRate: template.hourlyRate?.toString() || "0.00",
+        daysPostedOut: template.daysPostedOut,
+        notes: template.notes,
+        generatedShiftsCount: template.generatedShiftsCount || 0,
+        createdAt: template.createdAt,
+        updatedAt: template.updatedAt
+      }));
+      
+      res.json(formattedTemplates);
     } catch (error) {
       console.error("Error fetching shift templates:", error);
       res.status(500).json({ message: "Failed to fetch shift templates" });
@@ -5348,6 +5373,8 @@ export function registerRoutes(app: Express): Server {
   app.put("/api/shift-templates/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      console.log(`[TEMPLATE UPDATE] Updating template ${id} with data:`, req.body);
+      
       const updateData = insertShiftTemplateSchema.partial().parse(req.body);
       
       const [template] = await db.update(shiftTemplates)
@@ -5359,13 +5386,39 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "Template not found" });
       }
       
-      // Regenerate shifts with new daysPostedOut setting
+      // Transform database response to frontend format
+      const formattedTemplate = {
+        id: template.id,
+        name: template.name,
+        department: template.department,
+        specialty: template.specialty,
+        facilityId: template.facilityId,
+        facilityName: template.facilityName,
+        buildingId: template.buildingId,
+        buildingName: template.buildingName,
+        minStaff: template.minStaff,
+        maxStaff: template.maxStaff,
+        shiftType: template.shiftType,
+        startTime: template.startTime,
+        endTime: template.endTime,
+        daysOfWeek: template.daysOfWeek,
+        isActive: template.isActive,
+        hourlyRate: template.hourlyRate?.toString() || "0.00",
+        daysPostedOut: template.daysPostedOut,
+        notes: template.notes,
+        generatedShiftsCount: template.generatedShiftsCount || 0,
+        createdAt: template.createdAt,
+        updatedAt: template.updatedAt
+      };
+      
+      // Regenerate shifts with new settings
       await regenerateShiftsFromTemplate(template);
       
-      res.json(template);
+      console.log(`[TEMPLATE UPDATE] Successfully updated template ${id}`);
+      res.json(formattedTemplate);
     } catch (error) {
       console.error("Error updating shift template:", error);
-      res.status(500).json({ message: "Failed to update shift template" });
+      res.status(500).json({ message: "Failed to update shift template", error: error.message });
     }
   });
 
@@ -5439,6 +5492,14 @@ export function registerRoutes(app: Express): Server {
     const today = new Date();
     const daysToGenerate = template.daysPostedOut || 7;
     
+    console.log(`[SHIFT GENERATION] Generating ${daysToGenerate} days of shifts for template ${template.name}`);
+    
+    const generatedCount = await db.select({ count: sql`count(*)` })
+      .from(generatedShifts)
+      .where(eq(generatedShifts.templateId, template.id));
+    
+    console.log(`[SHIFT GENERATION] Current shifts for template ${template.id}:`, generatedCount[0]?.count || 0);
+    
     for (let i = 0; i < daysToGenerate; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
@@ -5458,9 +5519,9 @@ export function registerRoutes(app: Express): Server {
             department: template.department,
             specialty: template.specialty,
             facilityId: template.facilityId,
-            facilityName: template.facilityName,
-            buildingId: template.buildingId,
-            buildingName: template.buildingName,
+            facilityName: template.facilityName || "Unknown Facility",
+            buildingId: template.buildingId || null,
+            buildingName: template.buildingName || null,
             status: "open",
             rate: template.hourlyRate ? template.hourlyRate.toString() : "0",
             urgency: "medium",
@@ -5469,18 +5530,46 @@ export function registerRoutes(app: Express): Server {
             totalPositions: template.maxStaff || 1,
             minStaff: template.minStaff || 1,
             maxStaff: template.maxStaff || 1,
+            totalHours: calculateShiftHours(template.startTime, template.endTime),
             createdAt: new Date(),
             updatedAt: new Date()
           };
           
           try {
             await db.insert(generatedShifts).values(shiftData).onConflictDoNothing();
+            console.log(`[SHIFT GENERATION] Created shift ${shiftId} for ${date.toISOString().split('T')[0]}`);
           } catch (error) {
             console.error(`Error inserting shift ${shiftId}:`, error);
           }
         }
       }
     }
+
+    // Update generated shifts count
+    const newCount = await db.select({ count: sql`count(*)` })
+      .from(generatedShifts)
+      .where(eq(generatedShifts.templateId, template.id));
+    
+    await db.update(shiftTemplates)
+      .set({ generatedShiftsCount: parseInt(newCount[0]?.count?.toString() || "0") })
+      .where(eq(shiftTemplates.id, template.id));
+    
+    console.log(`[SHIFT GENERATION] Template ${template.id} now has ${newCount[0]?.count || 0} total shifts`);
+  }
+
+  function calculateShiftHours(startTime: string, endTime: string): number {
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+    
+    let hours = endHour - startHour;
+    let minutes = endMin - startMin;
+    
+    // Handle overnight shifts
+    if (hours < 0) {
+      hours += 24;
+    }
+    
+    return hours + (minutes / 60);
   }
 
   async function regenerateShiftsFromTemplate(template: any) {
