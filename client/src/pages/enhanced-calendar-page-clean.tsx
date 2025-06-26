@@ -218,12 +218,10 @@ export default function EnhancedCalendarPage() {
   // Create mutation for posting shifts
   const postShiftMutation = useMutation({
     mutationFn: async (shiftData: any) => {
-      return await fetch('/api/shifts', {
+      return apiRequest('/api/shifts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify(shiftData)
-      }).then(res => res.json());
+      });
     },
     onSuccess: () => {
       toast({
@@ -244,9 +242,9 @@ export default function EnhancedCalendarPage() {
 
   // Filter shifts based on current filters
   const filteredShifts = useMemo(() => {
-    if (!shifts || !Array.isArray(shifts)) return [];
+    if (!shifts) return [];
     
-    return (shifts as EnhancedShift[]).filter((shift: EnhancedShift) => {
+    return shifts.filter((shift: EnhancedShift) => {
       // Search term filter
       if (searchTerm && !shift.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
           !shift.facilityName.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -280,8 +278,8 @@ export default function EnhancedCalendarPage() {
   }, [shifts, searchTerm, filters]);
 
   // Get unique values for filter dropdowns
-  const specialties = Array.isArray(shifts) ? Array.from(new Set((shifts as EnhancedShift[]).map(shift => shift.specialty))) : [];
-  const statuses = Array.isArray(shifts) ? Array.from(new Set((shifts as EnhancedShift[]).map(shift => shift.status))) : [];
+  const specialties = [...new Set(shifts.map((shift: EnhancedShift) => shift.specialty))];
+  const statuses = [...new Set(shifts.map((shift: EnhancedShift) => shift.status))];
 
   // Transform shifts into calendar events
   const calendarEvents = filteredShifts.map((shift: EnhancedShift) => {

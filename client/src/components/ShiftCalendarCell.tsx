@@ -38,22 +38,78 @@ const ShiftCalendarCell: React.FC<ShiftCalendarCellProps> = ({
   };
 
   return (
-    <div
+    <Button
+      variant="outline"
       onClick={() => onShiftClick(shift)}
       className={`
-        w-full p-2 border rounded cursor-pointer hover:shadow-sm transition-all text-xs
+        w-full h-auto p-3 flex flex-col items-start gap-2 hover:shadow-md transition-all
         ${getStatusColor()} ${className}
       `}
     >
-      <div className="flex items-center justify-between">
-        <span className="font-medium truncate">
-          {formatShiftTime(shift)} {shift.specialty}
-        </span>
-        <span className="text-xs ml-1">
-          ({getStaffingDisplay()})
-        </span>
+      {/* Header with specialty and staffing */}
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs">
+            {shift.specialty}
+          </Badge>
+          <span className="font-semibold text-sm">
+            {getStaffingDisplay()}
+          </span>
+        </div>
+        
+        {/* Status indicators */}
+        <div className="flex items-center gap-1">
+          {hasRequests && !isFullyStaffed && (
+            <Badge variant="outline" className="text-xs bg-blue-50">
+              {requestedWorkers.length} requests
+            </Badge>
+          )}
+          {isUnderstaffed && (
+            <AlertTriangle className="h-3 w-3 text-orange-500" />
+          )}
+          {isFullyStaffed && (
+            <Users className="h-3 w-3 text-green-500" />
+          )}
+        </div>
       </div>
-    </div>
+
+      {/* Time and title */}
+      <div className="w-full text-left">
+        <div className="font-medium text-sm truncate">
+          {shift.title}
+        </div>
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Clock className="h-3 w-3" />
+          {formatShiftTime(shift)}
+        </div>
+      </div>
+
+      {/* Assigned workers preview (show first 2, then +X more) */}
+      {assignedWorkers.length > 0 && (
+        <div className="w-full">
+          <div className="text-xs text-muted-foreground mb-1">Assigned:</div>
+          <div className="flex flex-wrap gap-1">
+            {assignedWorkers.slice(0, 2).map(worker => (
+              <Badge key={worker.id} variant="default" className="text-xs">
+                {worker.firstName} {worker.lastName.charAt(0)}.
+              </Badge>
+            ))}
+            {assignedWorkers.length > 2 && (
+              <Badge variant="outline" className="text-xs">
+                +{assignedWorkers.length - 2} more
+              </Badge>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Show empty state when no workers assigned */}
+      {assignedWorkers.length === 0 && (
+        <div className="w-full text-xs text-muted-foreground italic">
+          No workers assigned
+        </div>
+      )}
+    </Button>
   );
 };
 

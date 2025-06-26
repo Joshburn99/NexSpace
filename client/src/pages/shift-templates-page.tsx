@@ -316,30 +316,12 @@ export default function ShiftTemplatesPage() {
       const response = await apiRequest("POST", `/api/shift-templates/${templateId}/regenerate`);
       return response.json();
     },
-    onSuccess: (data) => {
-      // Force immediate refresh of all shift-related data with specific timing
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/shift-templates"] });
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
-      
-      // Wait a moment then force refetch to ensure data consistency
-      setTimeout(() => {
-        queryClient.refetchQueries({ queryKey: ["/api/shifts"] });
-      }, 100);
-      
-      // Also refresh facilities and staff to ensure complete data consistency
-      queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
-      
       toast({
         title: "Shifts Regenerated",
-        description: `Successfully regenerated ${data.regeneratedShifts || 'all future'} shifts from this template. Enhanced Calendar will update automatically.`,
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Regeneration Failed",
-        description: "Failed to regenerate shifts. Please try again.",
-        variant: "destructive",
+        description: "All future shifts have been regenerated from this template.",
       });
     },
   });
@@ -368,24 +350,26 @@ export default function ShiftTemplatesPage() {
     // Set editing state first
     setEditingTemplate(template);
     
-    // Prepare the form data with proper camelCase mapping
+    // Prepare the form data with proper mapping from database fields
     const formData = {
       name: template.name || "",
       department: template.department || "",
       specialty: template.specialty || "",
-      facilityId: template.facilityId || 0,
-      facilityName: template.facilityName || "",
-      buildingId: template.buildingId || "",
-      buildingName: template.buildingName || "",
-      minStaff: Number(template.minStaff) || 1,
-      maxStaff: Number(template.maxStaff) || 1,
-      shiftType: (template.shiftType as "day" | "evening" | "night") || "day",
-      startTime: template.startTime || "07:00",
-      endTime: template.endTime || "19:00",
-      daysOfWeek: Array.isArray(template.daysOfWeek) ? template.daysOfWeek : [1, 2, 3, 4, 5],
-      isActive: template.isActive !== undefined ? template.isActive : true,
-      hourlyRate: Number(template.hourlyRate) || 0,
-      daysPostedOut: Number(template.daysPostedOut) || 7,
+      facilityId: template.facilityId || template.facility_id || 0,
+      facilityName: template.facilityName || template.facility_name || "",
+      buildingId: template.buildingId || template.building_id || "",
+      buildingName: template.buildingName || template.building_name || "",
+      minStaff: Number(template.minStaff || template.min_staff) || 1,
+      maxStaff: Number(template.maxStaff || template.max_staff) || 1,
+      shiftType: template.shiftType || template.shift_type || "day",
+      startTime: template.startTime || template.start_time || "07:00",
+      endTime: template.endTime || template.end_time || "19:00",
+      daysOfWeek: Array.isArray(template.daysOfWeek) ? template.daysOfWeek : 
+                 Array.isArray(template.days_of_week) ? template.days_of_week : [1, 2, 3, 4, 5],
+      isActive: template.isActive !== undefined ? template.isActive : 
+               template.is_active !== undefined ? template.is_active : true,
+      hourlyRate: Number(template.hourlyRate || template.hourly_rate) || 0,
+      daysPostedOut: Number(template.daysPostedOut || template.days_posted_out) || 7,
       notes: template.notes || "",
     };
     

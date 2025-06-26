@@ -13,15 +13,7 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
-### June 25, 2025 - Enhanced Calendar Schedule Overview Restoration & Regenerate Integration
-- Restored Schedule Overview section with comprehensive shift statistics cards (Total, Open, Filled, Urgent)
-- Fixed Enhanced Calendar page compilation errors and centralized template functionality in navbar
-- Enhanced Regenerate Shifts functionality with immediate query invalidation and refetch
-- Connected template regeneration to Enhanced Calendar for real-time shift data flow
-- Removed all template-related content from Enhanced Calendar as requested
-- Template operations now exclusively handled in Shift Templates navbar tab
-
-### June 25, 2025 - Template Editing Investigation  
+### June 25, 2025 - Template Editing Investigation
 - Investigated template editing modal pre-population and persistence issues
 - Identified data flow challenges between database schema (snake_case) and frontend (camelCase)
 - Added comprehensive debugging and field transformation logic
