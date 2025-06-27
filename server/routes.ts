@@ -302,130 +302,103 @@ export function registerRoutes(app: Express): Server {
     }
   );
 
-  // Shifts API with example data showing various statuses
+  // Clean database-only shifts API
   app.get("/api/shifts", requireAuth, async (req: any, res) => {
     try {
-      // Get staff data from unified service to ensure consistency
-      const dbStaffData = await unifiedDataService.getStaffWithAssociations();
-      
-      // Filter staff to match "all staff" page logic - exclude superusers
-      const filteredStaff = dbStaffData.filter(staff => {
-        const superuserEmails = ['joshburn@nexspace.com', 'brian.nangle@nexspace.com'];
-        if (superuserEmails.includes(staff.email)) return false;
-        if (staff?.role === "super_admin" || staff?.role === "facility_manager") return false;
-        return true;
-      });
+      // Get staff data for assignment display
+      const staffData = await unifiedDataService.getStaffWithAssociations();
 
-      // Get template-generated shifts if they exist
-      let templateShifts = (global as any).templateGeneratedShifts || [];
+      // Get all database shifts from both tables
+      const dbGeneratedShifts = await db.select().from(generatedShifts);
+      const dbMainShifts = await db.select().from(shifts);
       
-      // Auto-generate shifts from active templates if none exist
-      if (templateShifts.length === 0) {
-        const activeTemplates = [
-          {
-            id: 1,
-            name: "ICU Day Shift RN",
-            department: "ICU",
-            specialty: "Registered Nurse",
-            facilityId: 1,
-            facilityName: "Portland General Hospital",
-            minStaff: 2,
-            maxStaff: 4,
-            startTime: "07:00",
-            endTime: "19:00",
-            daysOfWeek: [1, 2, 3, 4, 5], // Mon-Fri
-            isActive: true,
-            hourlyRate: 45,
-            daysPostedOut: 14, // 2 weeks
-          },
-          {
-            id: 2,
-            name: "Emergency Night Coverage",
-            department: "Emergency",
-            specialty: "Registered Nurse",
-            facilityId: 1,
-            facilityName: "Portland General Hospital",
-            minStaff: 3,
-            maxStaff: 5,
-            startTime: "19:00",
-            endTime: "07:00",
-            daysOfWeek: [0, 1, 2, 3, 4, 5, 6], // Every day
-            isActive: true,
-            hourlyRate: 52,
-            daysPostedOut: 7, // 1 week
-          },
-          {
-            id: 3,
-            name: "OR Morning Team",
-            department: "Operating Room",
-            specialty: "Surgical Technologist",
-            facilityId: 1,
-            facilityName: "Portland General Hospital",
-            minStaff: 1,
-            maxStaff: 2,
-            startTime: "06:00",
-            endTime: "14:00",
-            daysOfWeek: [1, 2, 3, 4, 5], // Mon-Fri
-            isActive: true,
-            hourlyRate: 48,
-            daysPostedOut: 10, // 10 days
-          }
-        ];
-
-        // Generate shifts based on template's daysPostedOut setting
-        const generatedShifts: any[] = [];
-        const today = new Date();
-        const currentDate = new Date();
+      // Convert generated shifts to proper format
+      const formattedGeneratedShifts = dbGeneratedShifts.map(shift => ({
+        id: shift.id,
+        title: shift.title,
+        date: shift.date,
+        startTime: shift.startTime,
+        endTime: shift.endTime,
+        department: shift.department,
+        specialty: shift.specialty,
+        facilityId: shift.facilityId,
+        facilityName: shift.facilityName,
+        buildingId: shift.buildingId,
+        buildingName: shift.buildingName,
+        status: shift.status,
+        rate: parseFloat(shift.rate?.toString() || "0"),
+        urgency: shift.urgency,
+        description: shift.description,
+        totalPositions: shift.requiredWorkers || 1,
+        minStaff: shift.minStaff || 1,
+        maxStaff: shift.maxStaff || 1,
+        totalHours: shift.totalHours || 8
+      }));
+      
+      // Convert main shifts to proper format
+      const formattedMainShifts = dbMainShifts.map(shift => ({
+        id: shift.id,
+        title: shift.title,
+        date: shift.date,
+        startTime: shift.startTime,
+        endTime: shift.endTime,
+        department: shift.department,
+        specialty: shift.specialty,
+        facilityId: shift.facilityId,
+        facilityName: shift.facilityName,
+        status: shift.status,
+        rate: parseFloat(shift.rate?.toString() || "0"),
+        urgency: shift.urgency,
+        description: shift.description,
+        totalPositions: shift.requiredStaff || 1,
+        minStaff: shift.minStaff || 1,
+        maxStaff: shift.maxStaff || 1,
+        totalHours: shift.totalHours || 8
+      }));
+      
+      // Combine all database shifts
+      const allShifts = [...formattedGeneratedShifts, ...formattedMainShifts];
+      
+      // Add assignment information to each shift
+      const shiftsWithAssignments = await Promise.all(allShifts.map(async (shift) => {
+        const assignments = await db.select().from(shiftAssignments)
+          .where(eq(shiftAssignments.shiftId, shift.id.toString()));
         
-        for (const template of activeTemplates) {
-          if (template.isActive) {
-            const daysToGenerate = template.daysPostedOut || 7; // Default to 7 days if not specified
-            for (let i = 0; i < daysToGenerate; i++) {
-              const date = new Date(today);
-              date.setDate(today.getDate() + i);
-              
-              if (template.daysOfWeek.includes(date.getDay())) {
-                // Generate minimum required shifts for each day
-                for (let staffCount = 0; staffCount < template.minStaff; staffCount++) {
-                  // Create stable shift ID based on template, date, and position (not timestamp)
-                  const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
-                  const shiftId = parseInt(`${template.id}${dateStr}${staffCount.toString().padStart(2, '0')}`);
-                  generatedShifts.push({
-                    id: shiftId,
-                    title: template.name,
-                    date: date.toISOString().split('T')[0],
-                    startTime: template.startTime,
-                    endTime: template.endTime,
-                    department: template.department,
-                    specialty: template.specialty === "Registered Nurse" ? "RN" : 
-                              template.specialty === "Licensed Practical Nurse" ? "LPN" :
-                              template.specialty === "Surgical Technologist" ? "CST" : 
-                              template.specialty,
-                    facilityId: template.facilityId,
-                    facilityName: template.facilityName,
-                    status: "open",
-                    rate: template.hourlyRate,
-                    urgency: "medium",
-                    description: `${template.department} shift - ${template.name}`,
-                    templateId: template.id,
-                    createdFromTemplate: true,
-                    assignedStaffId: null,
-                    assignedStaffName: null,
-                    assignedStaffEmail: null,
-                    assignedStaffSpecialty: null,
-                    assignedStaffRating: null,
-                    invoiceAmount: null,
-                    invoiceStatus: null,
-                    invoiceHours: null
-                  });
-                }
-              }
-            }
-          }
+        const assignedWorkerIds = assignments.map(a => a.workerId);
+        const assignedStaff = assignedWorkerIds.map(workerId => 
+          staffData.find(staff => staff.id === workerId)
+        ).filter(Boolean);
+        
+        const filledPositions = assignedWorkerIds.length;
+        const totalPositions = shift.totalPositions;
+        
+        // Update status based on assignments
+        let status = shift.status;
+        if (filledPositions >= totalPositions) {
+          status = "filled";
+        } else if (filledPositions > 0) {
+          status = "partially_filled";
+        } else {
+          status = "open";
         }
         
-        // Group shifts by template and date to assign multiple staff properly
-        const shiftGroups = new Map();
+        return {
+          ...shift,
+          assignedStaff,
+          assignedStaffNames: assignedStaff.map(s => `${s.firstName} ${s.lastName}`),
+          filledPositions,
+          totalPositions,
+          status
+        };
+      }));
+      
+      res.json(shiftsWithAssignments);
+    } catch (error) {
+      console.error("Error fetching shifts:", error);
+      res.status(500).json({ message: "Failed to fetch shifts" });
+    }
+  });
+  // Legacy scheduling templates page removed - using ShiftTemplatesPage only
         
         generatedShifts.forEach(shift => {
           const key = `${shift.templateId}-${shift.date}`;
@@ -7876,30 +7849,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/shift-templates/:id/status", requireAuth, async (req, res) => {
-    try {
-      const templateId = parseInt(req.params.id);
-      const { isActive } = req.body;
-      
-      if (isActive) {
-        // Generate new shifts when activating template
-        const newShifts = 23;
-        res.json({
-          message: `Template activated and ${newShifts} new shifts generated`,
-          generatedShifts: newShifts
-        });
-      } else {
-        // Remove future open shifts when deactivating template
-        const removedShifts = 15;
-        res.json({
-          message: `Template deactivated and ${removedShifts} future open shifts removed`,
-          removedShifts: removedShifts
-        });
-      }
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update template status" });
-    }
-  });
+  // Duplicate PATCH handler removed - using unified handler above
 
   app.post("/api/shift-templates/:id/regenerate", requireAuth, async (req, res) => {
     try {
