@@ -94,7 +94,7 @@ export const enhancedFacilitySchema = insertFacilitySchema.extend({
   emrSystem: z.string().optional().nullable(),
 
   // Contract & Dates
-  contractStartDate: z.string().optional().nullable(),
+  contractStartDate: z.coerce.date().optional().nullable(),
 
   // Payroll Integration
   payrollProviderId: z.number().optional().nullable(),

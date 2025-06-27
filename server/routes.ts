@@ -5967,20 +5967,213 @@ export function registerRoutes(app: Express): Server {
     requireAuth,
     requirePermission("facilities.update"),
     auditLog("UPDATE", "facility"),
-    async (req, res) => {
+    async (req: any, res) => {
       try {
         const id = parseInt(req.params.id);
-        const updates = req.body;
-        const facility = await storage.updateFacility(id, updates);
+        console.log(`Partially updating facility ${id} with data:`, req.body);
+
+        // Check if facility exists
+        const existingFacility = await storage.getFacility(id);
+        if (!existingFacility) {
+          return res.status(404).json({ message: "Facility not found" });
+        }
+
+        // Import enhanced validation
+        const { enhancedFacilityUpdateSchema, validateFacilityRates, validateStaffingTargets, validateTimezone } = await import("./enhanced-facility-validation");
+        
+        // Validate partial update data
+        const updateData = enhancedFacilityUpdateSchema.parse({
+          ...req.body,
+          updatedAt: new Date()
+        });
+
+        // Business rule validations for fields being updated
+        if (updateData.billRates || updateData.payRates) {
+          const billRates = updateData.billRates || existingFacility.billRates;
+          const payRates = updateData.payRates || existingFacility.payRates;
+          
+          const ratesValidation = validateFacilityRates(billRates, payRates);
+          if (!ratesValidation.valid) {
+            return res.status(400).json({ 
+              message: "Invalid rates configuration", 
+              errors: ratesValidation.errors 
+            });
+          }
+        }
+
+        if (updateData.staffingTargets) {
+          const staffingValidation = validateStaffingTargets(updateData.staffingTargets);
+          if (!staffingValidation.valid) {
+            return res.status(400).json({ 
+              message: "Invalid staffing targets", 
+              errors: staffingValidation.errors 
+            });
+          }
+        }
+
+        if (updateData.timezone && !validateTimezone(updateData.timezone)) {
+          return res.status(400).json({ message: "Invalid timezone" });
+        }
+
+        const facility = await storage.updateFacility(id, updateData);
+        if (!facility) {
+          return res.status(404).json({ message: "Facility not found" });
+        }
+
+        console.log("Facility partially updated successfully:", facility);
+        res.json(facility);
+      } catch (error) {
+        console.error("Error updating facility:", error);
+        
+        if (error instanceof z.ZodError) {
+          const fieldErrors = error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }));
+          
+          return res.status(400).json({ 
+            message: "Validation failed", 
+            fieldErrors,
+            details: error.errors
+          });
+        }
+        
+        res.status(500).json({ message: "Failed to update facility" });
+      }
+    }
+  );
+
+  // Enhanced Facility Management Endpoints
+
+  // Get single facility with enhanced data
+  app.get("/api/facilities/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const facility = await storage.getFacility(id);
+
+      if (!facility) {
+        return res.status(404).json({ message: "Facility not found" });
+      }
+
+      res.json(facility);
+    } catch (error) {
+      console.error("Error fetching facility:", error);
+      res.status(500).json({ message: "Failed to fetch facility" });
+    }
+  });
+
+  // Update facility rates
+  app.post("/api/facilities/:id/rates", 
+    requireAuth, 
+    requirePermission("facilities.update"),
+    auditLog("UPDATE", "facility_rates"),
+    async (req: any, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        const { billRates, payRates, floatPoolMargins } = req.body;
+
+        // Import validation
+        const { validateFacilityRates } = await import("./enhanced-facility-validation");
+
+        // Validate rates
+        const ratesValidation = validateFacilityRates(billRates, payRates);
+        if (!ratesValidation.valid) {
+          return res.status(400).json({ 
+            message: "Invalid rates configuration", 
+            errors: ratesValidation.errors 
+          });
+        }
+
+        const updateData: any = { updatedAt: new Date() };
+        if (billRates) updateData.billRates = billRates;
+        if (payRates) updateData.payRates = payRates;
+        if (floatPoolMargins) updateData.floatPoolMargins = floatPoolMargins;
+
+        const facility = await storage.updateFacility(id, updateData);
+        if (!facility) {
+          return res.status(404).json({ message: "Facility not found" });
+        }
+
+        res.json({
+          message: "Rates updated successfully",
+          billRates: facility.billRates,
+          payRates: facility.payRates,
+          floatPoolMargins: facility.floatPoolMargins
+        });
+      } catch (error) {
+        console.error("Error updating facility rates:", error);
+        res.status(500).json({ message: "Failed to update rates" });
+      }
+    }
+  );
+
+  // Update staffing targets
+  app.post("/api/facilities/:id/staffing-targets", 
+    requireAuth, 
+    requirePermission("facilities.update"),
+    auditLog("UPDATE", "facility_staffing"),
+    async (req: any, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        const { staffingTargets } = req.body;
+
+        // Import validation
+        const { validateStaffingTargets } = await import("./enhanced-facility-validation");
+
+        const staffingValidation = validateStaffingTargets(staffingTargets);
+        if (!staffingValidation.valid) {
+          return res.status(400).json({ 
+            message: "Invalid staffing targets", 
+            errors: staffingValidation.errors 
+          });
+        }
+
+        const facility = await storage.updateFacility(id, { 
+          staffingTargets,
+          updatedAt: new Date() 
+        });
 
         if (!facility) {
           return res.status(404).json({ message: "Facility not found" });
         }
 
-        res.json(facility);
+        res.json({
+          message: "Staffing targets updated successfully",
+          staffingTargets: facility.staffingTargets
+        });
       } catch (error) {
-        console.error("Error updating facility:", error);
-        res.status(400).json({ message: "Failed to update facility" });
+        console.error("Error updating staffing targets:", error);
+        res.status(500).json({ message: "Failed to update staffing targets" });
+      }
+    }
+  );
+
+  // Update workflow automation configuration
+  app.post("/api/facilities/:id/workflow-config", 
+    requireAuth, 
+    requirePermission("facilities.update"),
+    auditLog("UPDATE", "facility_workflow"),
+    async (req: any, res) => {
+      try {
+        const id = parseInt(req.params.id);
+        const { workflowAutomationConfig } = req.body;
+
+        const facility = await storage.updateFacility(id, { 
+          workflowAutomationConfig,
+          updatedAt: new Date() 
+        });
+
+        if (!facility) {
+          return res.status(404).json({ message: "Facility not found" });
+        }
+
+        res.json({
+          message: "Workflow configuration updated successfully",
+          workflowAutomationConfig: facility.workflowAutomationConfig
+        });
+      } catch (error) {
+        console.error("Error updating workflow configuration:", error);
+        res.status(500).json({ message: "Failed to update workflow configuration" });
       }
     }
   );
