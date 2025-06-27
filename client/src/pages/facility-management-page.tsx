@@ -170,12 +170,8 @@ export default function FacilityManagementPage() {
   // Debug user authentication (remove in production)
   console.log('User data in facility management:', { user, isSuperuser, role: user?.role });
 
-  // Fetch facilities
-  const { data: facilities = [], isLoading, error } = useQuery({
-    queryKey: ["/api/facilities"],
-    enabled: true,
-    retry: 1
-  });
+  // Fetch facilities using centralized hook
+  const { data: facilities = [], isLoading, error } = useFacilities();
 
   // Create facility mutation
   const createFacilityMutation = useMutation({
@@ -915,7 +911,7 @@ export default function FacilityManagementPage() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-end">
+            <div className="flex items-end gap-2">
               <Button 
                 variant="outline" 
                 onClick={() => {
@@ -925,6 +921,16 @@ export default function FacilityManagementPage() {
                 }}
               >
                 Clear Filters
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
+                  queryClient.refetchQueries({ queryKey: ["/api/facilities"] });
+                  toast({ title: "Refreshed", description: "Facility list updated" });
+                }}
+              >
+                Refresh
               </Button>
             </div>
           </div>
