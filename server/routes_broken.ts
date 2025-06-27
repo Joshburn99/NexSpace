@@ -398,46 +398,36 @@ export function registerRoutes(app: Express): Server {
       res.status(500).json({ message: "Failed to fetch shifts" });
     }
   });
-  
-  // Worker-specific open shifts API
-  app.get("/api/shifts/worker-open", requireAuth, async (req: any, res) => {
-    try {
-      const user = req.user;
-      const currentDate = new Date().toISOString().split('T')[0];
-      
-      // Get user's specialty and facility associations
-      const userStaff = await unifiedDataService.getStaffWithAssociations();
-      const currentUserStaff = userStaff.find(s => s.email === user.email);
-      const userSpecialty = currentUserStaff?.specialty || 'RN';
-      const userFacilities = currentUserStaff?.associatedFacilities || [1];
-      
-      // Get template-generated shifts if they exist
-      const templateShifts = (global as any).templateGeneratedShifts || [];
-      
-      const workerShifts = [
-        {
-          id: 1,
-          title: "ICU Day Shift",
-          date: "2025-06-19",
-          startTime: "07:00",
-          endTime: "19:00",
-          department: "ICU",
-          specialty: "RN",
-          status: "open",
-          facilityId: 1,
-          facilityName: "Portland General Hospital",
-          rate: 42.5,
-          urgency: "high",
-          description: "12-hour ICU nursing shift, ACLS certification required",
-        }
-      ];
-      
-      res.json(workerShifts);
-    } catch (error) {
-      console.error("Error fetching worker shifts:", error);
-      res.status(500).json({ message: "Failed to fetch worker shifts" });
-    }
-  });
+  // Remove the second duplicate GET /api/shifts handler
+          for (let i = 0; i < positionsToFill && i < matchingStaff.length; i++) {
+            const shift = shifts[i];
+            const assignedStaff = matchingStaff[i % matchingStaff.length];
+            
+            shift.status = new Date(shift.date) < currentDate ? "completed" : "filled";
+            shift.assignedStaffId = assignedStaff.id;
+            shift.assignedStaffName = `${assignedStaff.firstName} ${assignedStaff.lastName}`;
+            shift.assignedStaffEmail = assignedStaff.email;
+            shift.assignedStaffSpecialty = assignedStaff.specialty;
+            shift.assignedStaffRating = 4.5 + Math.random() * 0.5;
+            
+            // Only add invoice info for completed shifts
+            if (shift.status === "completed") {
+              const hours = shift.startTime === "07:00" && shift.endTime === "19:00" ? 12 : 
+                           shift.startTime === "19:00" && shift.endTime === "07:00" ? 12 : 8;
+              shift.invoiceAmount = hours * shift.rate;
+              shift.invoiceStatus = Math.random() > 0.5 ? "approved" : "pending_review";
+              shift.invoiceHours = hours;
+            }
+          }
+          
+          // Update shift status based on filling
+          const filledCount = shifts.filter((s: any) => s.assignedStaffId).length;
+          const totalRequired = shifts.length;
+          
+          shifts.forEach((shift: any) => {
+            if (!shift.assignedStaffId) {
+              shift.status = "open";
+            }
             // Add staffing info to shift
             shift.filledPositions = filledCount;
             shift.totalPositions = totalRequired;
