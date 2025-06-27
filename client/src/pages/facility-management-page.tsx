@@ -1739,6 +1739,262 @@ export default function FacilityManagementPage() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Document Management Modal */}
+      <Dialog open={showDocumentModal} onOpenChange={setShowDocumentModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Manage Facility Documents - {selectedFacility?.name}</DialogTitle>
+            <DialogDescription>
+              Upload compliance documents and set credential requirements for workers at this facility.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* Credential Requirements Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center">
+                <Shield className="h-5 w-5 mr-2" />
+                Required Credentials for Workers
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Select credentials that workers must have and acknowledge before submitting shift requests at this facility.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Object.entries(
+                  AVAILABLE_CREDENTIALS.reduce((acc, cred) => {
+                    if (!acc[cred.category]) acc[cred.category] = [];
+                    acc[cred.category].push(cred);
+                    return acc;
+                  }, {} as Record<string, typeof AVAILABLE_CREDENTIALS>)
+                ).map(([category, creds]) => (
+                  <div key={category} className="space-y-2">
+                    <h4 className="font-medium text-sm capitalize">
+                      {category.replace('_', ' ')}
+                    </h4>
+                    <div className="space-y-2">
+                      {creds.map((credential) => (
+                        <div key={credential.id} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={credential.id}
+                            checked={selectedCredentials.includes(credential.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCredentials([...selectedCredentials, credential.id]);
+                              } else {
+                                setSelectedCredentials(selectedCredentials.filter(id => id !== credential.id));
+                              }
+                            }}
+                            className="rounded border-gray-300 text-primary focus:ring-primary"
+                          />
+                          <label htmlFor={credential.id} className="text-sm">
+                            {credential.name}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* Document Upload Section */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center">
+                <Upload className="h-5 w-5 mr-2" />
+                Upload Compliance Documents
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Upload facility policies, procedures, licenses, and other compliance documents that workers need to review.
+              </p>
+
+              {/* File Upload Area */}
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setDocumentFile(file);
+                    }
+                  }}
+                  className="hidden"
+                  id="document-upload"
+                />
+                <label htmlFor="document-upload" className="cursor-pointer">
+                  <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
+                    <Upload className="h-12 w-12" />
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <span className="font-medium text-primary hover:text-primary/80">
+                      Click to upload
+                    </span> or drag and drop
+                  </div>
+                  <p className="text-xs text-gray-500">PDF, DOC, DOCX up to 10MB</p>
+                </label>
+              </div>
+
+              {documentFile && (
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <FileText className="h-4 w-4 text-gray-500" />
+                    <span className="text-sm font-medium">{documentFile.name}</span>
+                    <span className="text-xs text-gray-500">
+                      ({(documentFile.size / 1024 / 1024).toFixed(2)} MB)
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setDocumentFile(null)}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
+
+              {/* Document Details Form */}
+              {documentFile && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Document Name</Label>
+                    <Input
+                      placeholder="Enter document name"
+                      defaultValue={documentFile.name.replace(/\.[^/.]+$/, "")}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Document Type</Label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="policy">Policy</SelectItem>
+                        <SelectItem value="procedure">Procedure</SelectItem>
+                        <SelectItem value="license">License</SelectItem>
+                        <SelectItem value="certification">Certification</SelectItem>
+                        <SelectItem value="contract">Contract</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Expiration Date (Optional)</Label>
+                    <Input type="date" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Status</Label>
+                    <Select defaultValue="active">
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="pending_renewal">Pending Renewal</SelectItem>
+                        <SelectItem value="expired">Expired</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Separator />
+
+            {/* Current Documents */}
+            {selectedFacility?.regulatoryDocs && selectedFacility.regulatoryDocs.length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <FileText className="h-5 w-5 mr-2" />
+                  Current Documents
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {selectedFacility.regulatoryDocs.map((doc) => (
+                    <Card key={doc.id}>
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="space-y-1">
+                            <h4 className="font-medium text-sm">{doc.name}</h4>
+                            <Badge variant={
+                              doc.status === 'active' ? 'default' : 
+                              doc.status === 'expired' ? 'destructive' : 'secondary'
+                            }>
+                              {doc.status.replace('_', ' ')}
+                            </Badge>
+                            <p className="text-xs text-gray-500">
+                              Type: {doc.type} • Uploaded: {new Date(doc.uploadDate).toLocaleDateString()}
+                            </p>
+                            {doc.expirationDate && (
+                              <p className="text-xs text-gray-500">
+                                Expires: {new Date(doc.expirationDate).toLocaleDateString()}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex space-x-1">
+                            {doc.url && (
+                              <Button variant="ghost" size="sm">
+                                <Download className="h-4 w-4" />
+                              </Button>
+                            )}
+                            <Button variant="ghost" size="sm">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex justify-between pt-4">
+            <Button variant="outline" onClick={() => setShowDocumentModal(false)}>
+              Cancel
+            </Button>
+            <div className="space-x-2">
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  // Save credential requirements
+                  console.log('Selected credentials:', selectedCredentials);
+                  toast({
+                    title: "Credential Requirements Updated",
+                    description: `${selectedCredentials.length} credentials set as required for this facility.`,
+                  });
+                }}
+              >
+                Save Requirements
+              </Button>
+              {documentFile && (
+                <Button 
+                  onClick={() => {
+                    setUploadingDocument(true);
+                    // Simulate upload
+                    setTimeout(() => {
+                      setUploadingDocument(false);
+                      setDocumentFile(null);
+                      toast({
+                        title: "Document Uploaded",
+                        description: "The compliance document has been uploaded successfully.",
+                      });
+                    }, 2000);
+                  }}
+                  disabled={uploadingDocument}
+                >
+                  {uploadingDocument ? "Uploading..." : "Upload Document"}
+                </Button>
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
