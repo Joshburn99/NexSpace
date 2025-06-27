@@ -19,6 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { useFacilities } from "@/hooks/use-facility";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Building2, 
@@ -164,8 +165,8 @@ export default function FacilityManagementPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Check if user is superuser with fallback check for admin
-  const isSuperuser = user?.role === 'superuser' || user?.role === 'admin' || user?.role === 'facility_admin';
+  // Check if user is superuser with fallback check for admin  
+  const isSuperuser = user?.role === 'super_admin' || user?.role === 'superuser' || user?.role === 'admin' || user?.role === 'facility_admin';
   
   // Debug user authentication (remove in production)
   console.log('User data in facility management:', { user, isSuperuser, role: user?.role });
