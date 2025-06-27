@@ -164,12 +164,15 @@ export default function FacilityManagementPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   
-  // Check if user is superuser
-  const isSuperuser = user?.role === 'superuser';
+  // Check if user is superuser with fallback check for admin
+  const isSuperuser = user?.role === 'superuser' || user?.role === 'admin' || user?.role === 'facility_admin';
+  
+  // Debug user authentication (remove in production)
+  console.log('User data in facility management:', { user, isSuperuser, role: user?.role });
 
   // Fetch facilities
   const { data: facilities = [], isLoading, error } = useQuery({
-    queryKey: ["/api/facilities", { search: searchTerm, state: filterState, facilityType: filterType }],
+    queryKey: ["/api/facilities"],
     enabled: true,
     retry: 1
   });
@@ -185,6 +188,7 @@ export default function FacilityManagementPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
+      queryClient.refetchQueries({ queryKey: ["/api/facilities"] });
       setShowCreateModal(false);
       toast({ title: "Success", description: "Facility created successfully" });
     },
