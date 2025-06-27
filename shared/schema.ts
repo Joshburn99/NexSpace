@@ -12,6 +12,71 @@ import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Enhanced Facility Management Types
+export interface FloatPoolMargins {
+  [specialty: string]: number; // e.g., { "Registered Nurse": 15.00, "CNA": 8.00 }
+}
+
+export interface SpecialtyRates {
+  [specialty: string]: number; // e.g., { "Registered Nurse": 45.00, "LPN": 32.00 }
+}
+
+export interface WorkflowAutomationConfig {
+  autoApproveShifts?: boolean;
+  autoNotifyManagers?: boolean;
+  autoGenerateInvoices?: boolean;
+  requireManagerApproval?: boolean;
+  enableOvertimeAlerts?: boolean;
+  autoAssignBySpecialty?: boolean;
+}
+
+export interface ShiftManagementSettings {
+  overtimeThreshold?: number; // hours before overtime kicks in
+  maxConsecutiveShifts?: number;
+  minHoursBetweenShifts?: number;
+  allowBackToBackShifts?: boolean;
+  requireManagerApprovalForOvertime?: boolean;
+  autoCalculateOvertime?: boolean;
+}
+
+export interface StaffingTargets {
+  [department: string]: {
+    targetHours: number;
+    minStaff: number;
+    maxStaff: number;
+    preferredStaffMix?: { [specialty: string]: number };
+  };
+}
+
+export interface CustomRules {
+  floatPoolRules?: {
+    maxHoursPerWeek?: number;
+    specialtyRestrictions?: string[];
+    requireAdditionalTraining?: boolean;
+  };
+  overtimeRules?: {
+    maxOvertimeHours?: number;
+    overtimeApprovalRequired?: boolean;
+    overtimeRate?: number;
+  };
+  attendanceRules?: {
+    maxLateArrivals?: number;
+    maxNoCallNoShows?: number;
+    probationaryPeriod?: number;
+  };
+  requiredDocuments?: string[];
+}
+
+export interface RegulatoryDocument {
+  id: string;
+  name: string;
+  type: 'license' | 'certification' | 'policy' | 'procedure' | 'contract';
+  url?: string;
+  uploadDate: string;
+  expirationDate?: string;
+  status: 'active' | 'expired' | 'pending_renewal';
+}
+
 // User roles enum
 export const UserRole = {
   INTERNAL_EMPLOYEE: "internal_employee",
@@ -84,6 +149,26 @@ export const facilities = pgTable("facilities", {
   latitude: decimal("latitude", { precision: 10, scale: 8 }),
   longitude: decimal("longitude", { precision: 11, scale: 8 }),
   isActive: boolean("is_active").default(true),
+  
+  // New Enhanced Facility Management Fields
+  autoAssignmentEnabled: boolean("auto_assignment_enabled").default(false),
+  teamId: integer("team_id"), // nullable for corporate/team grouping
+  netTerms: text("net_terms").default("Net 30"), // billing terms
+  floatPoolMargins: jsonb("float_pool_margins"), // { specialty: dollarAmount }
+  billRates: jsonb("bill_rates"), // { specialty: dollarAmount }
+  payRates: jsonb("pay_rates"), // { specialty: dollarAmount }
+  workflowAutomationConfig: jsonb("workflow_automation_config"), // workflow toggles
+  timezone: text("timezone").default("America/New_York"),
+  shiftManagementSettings: jsonb("shift_management_settings"), // overtime rules, etc.
+  billingContactName: text("billing_contact_name"),
+  billingContactEmail: text("billing_contact_email"),
+  staffingTargets: jsonb("staffing_targets"), // { department: targetHours }
+  emrSystem: text("emr_system"), // EMR/PMS system name
+  contractStartDate: timestamp("contract_start_date"),
+  payrollProviderId: integer("payroll_provider_id"), // FK to payroll_providers
+  customRules: jsonb("custom_rules"), // float pool, overtime, attendance rules
+  regulatoryDocs: jsonb("regulatory_docs"), // array of document URLs/metadata
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -541,11 +626,15 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   auditLogs: many(auditLogs),
 }));
 
-export const facilitiesRelations = relations(facilities, ({ many }) => ({
+export const facilitiesRelations = relations(facilities, ({ one, many }) => ({
   users: many(users),
   jobs: many(jobs),
   shifts: many(shifts),
   invoices: many(invoices),
+  payrollProvider: one(payrollProviders, { 
+    fields: [facilities.payrollProviderId], 
+    references: [payrollProviders.id] 
+  }),
 }));
 
 export const jobsRelations = relations(jobs, ({ one, many }) => ({
