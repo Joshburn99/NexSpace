@@ -5148,87 +5148,8 @@ export function registerRoutes(app: Express): Server {
   // Additional facility management routes
   // Note: Main facilities endpoint is already defined above
 
-  // Scheduling Configuration API
-  app.get("/api/scheduling/templates", requireAuth, async (req, res) => {
-    try {
-      const templates = [
-        {
-          id: 1,
-          name: "ICU Day Shift",
-          department: "ICU",
-          specialty: "Registered Nurse",
-          minStaff: 2,
-          maxStaff: 4,
-          shiftType: "day",
-          startTime: "07:00",
-          endTime: "19:00",
-          isActive: true,
-        },
-        {
-          id: 2,
-          name: "Emergency Night",
-          department: "Emergency",
-          specialty: "Registered Nurse",
-          minStaff: 3,
-          maxStaff: 5,
-          shiftType: "night",
-          startTime: "19:00",
-          endTime: "07:00",
-          isActive: true,
-        },
-        {
-          id: 3,
-          name: "OR Morning",
-          department: "Operating Room",
-          specialty: "Surgical Technologist",
-          minStaff: 1,
-          maxStaff: 2,
-          shiftType: "day",
-          startTime: "06:00",
-          endTime: "14:00",
-          isActive: true,
-        },
-      ];
-      res.json(templates);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch templates" });
-    }
-  });
-
-  app.post("/api/scheduling/templates", requireAuth, async (req, res) => {
-    try {
-      const template = {
-        id: Date.now(),
-        ...req.body,
-        createdAt: "2025-06-19T00:00:00Z",
-        updatedAt: "2025-06-19T00:00:00Z",
-      };
-      res.status(201).json(template);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to create template" });
-    }
-  });
-
-  app.put("/api/scheduling/templates/:id", requireAuth, async (req, res) => {
-    try {
-      const template = {
-        id: parseInt(req.params.id),
-        ...req.body,
-        updatedAt: new Date(),
-      };
-      res.json(template);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to update template" });
-    }
-  });
-
-  app.delete("/api/scheduling/templates/:id", requireAuth, async (req, res) => {
-    try {
-      res.json({ message: "Template deleted successfully" });
-    } catch (error) {
-      res.status(500).json({ message: "Failed to delete template" });
-    }
-  });
+  // Deprecated: Scheduling Configuration API - functionality moved to /api/shift-templates
+  // These endpoints are maintained for backwards compatibility but redirect to shift templates
 
   app.get("/api/scheduling/requirements", requireAuth, async (req, res) => {
     try {
