@@ -157,7 +157,6 @@ export function registerRoutes(app: Express): Server {
         .insert(shifts)
         .values({
           ...shiftData,
-          id: `shift-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           createdAt: new Date(),
           updatedAt: new Date(),
         })
@@ -443,16 +442,11 @@ export function registerRoutes(app: Express): Server {
     }
   }
 
-  // WebSocket setup
+  // Temporarily disable WebSocket setup to resolve connection issues
   const server = createServer(app);
-  const wss = new WebSocketServer({ server });
-
-  wss.on("connection", (ws: WebSocket) => {
-    console.log("Client connected");
-    ws.on("close", () => {
-      console.log("Client disconnected");
-    });
-  });
-
+  
+  // Note: WebSocket functionality disabled due to connection conflicts
+  // TODO: Re-enable WebSocket connections after resolving Vite dev server conflicts
+  
   return server;
 }
