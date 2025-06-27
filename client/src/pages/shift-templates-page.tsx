@@ -225,7 +225,7 @@ export default function ShiftTemplatesPage() {
       console.log('=== UPDATE MUTATION DEBUG ===');
       console.log('Template ID:', id);
       console.log('Update data being sent:', JSON.stringify(data, null, 2));
-      
+
       const response = await apiRequest("PUT", `/api/shift-templates/${id}`, data);
       const result = await response.json();
       console.log('Update response:', result);
@@ -234,11 +234,11 @@ export default function ShiftTemplatesPage() {
     onSuccess: (updatedTemplate) => {
       console.log('=== UPDATE SUCCESS ===');
       console.log('Updated template received:', updatedTemplate);
-      
+
       // Force refresh of data to ensure UI shows latest changes
       queryClient.invalidateQueries({ queryKey: ["/api/shift-templates"] });
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
-      
+
       // Close dialog and reset form
       setIsTemplateDialogOpen(false);
       templateForm.reset({
@@ -261,7 +261,7 @@ export default function ShiftTemplatesPage() {
         notes: "",
       });
       setEditingTemplate(null);
-      
+
       toast({
         title: "Template Updated Successfully",
         description: `Updated "${updatedTemplate.name}" - changes will reflect immediately.`,
@@ -294,34 +294,61 @@ export default function ShiftTemplatesPage() {
     },
   });
 
-  // Toggle template status mutation
   const toggleStatusMutation = useMutation({
     mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
       const response = await apiRequest("PATCH", `/api/shift-templates/${id}/status`, { isActive });
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      // Invalidate all related queries
       queryClient.invalidateQueries({ queryKey: ["/api/shift-templates"] });
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+
+      // Force calendar refresh for immediate visual feedback
+      queryClient.refetchQueries({ queryKey: ["/api/shifts"] });
+
       toast({
-        title: "Status Updated",
-        description: "Template status updated and shifts adjusted accordingly.",
+        title: "Template Updated",
+        description: variables.isActive 
+          ? "Template activated - new shifts will be generated" 
+          : "Template deactivated - existing shifts preserved",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update template status",
+        variant: "destructive",
       });
     },
   });
 
-  // Regenerate shifts mutation
   const regenerateShiftsMutation = useMutation({
     mutationFn: async (templateId: number) => {
       const response = await apiRequest("POST", `/api/shift-templates/${templateId}/regenerate`);
       return response.json();
     },
     onSuccess: () => {
+      // Invalidate all related queries to ensure UI updates
       queryClient.invalidateQueries({ queryKey: ["/api/shift-templates"] });
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+
+      // Force immediate refetch of calendar data
+      const shiftsQuery = queryClient.getQueryData(["/api/shifts"]);
+      if (shiftsQuery) {
+        queryClient.refetchQueries({ queryKey: ["/api/shifts"] });
+      }
+
       toast({
         title: "Shifts Regenerated",
-        description: "All future shifts have been regenerated from this template.",
+        description: "Template shifts have been regenerated and calendar updated",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to regenerate shifts",
+        variant: "destructive",
       });
     },
   });
@@ -346,10 +373,10 @@ export default function ShiftTemplatesPage() {
   const handleEditTemplate = (template: ShiftTemplate) => {
     console.log('=== EDITING TEMPLATE DEBUG ===');
     console.log('Template data received:', JSON.stringify(template, null, 2));
-    
+
     // Set editing state first
     setEditingTemplate(template);
-    
+
     // Prepare the form data with proper mapping from database fields
     const formData = {
       name: template.name || "",
@@ -372,20 +399,20 @@ export default function ShiftTemplatesPage() {
       daysPostedOut: Number(template.daysPostedOut || template.days_posted_out) || 7,
       notes: template.notes || "",
     };
-    
+
     console.log('Processed form data:', JSON.stringify(formData, null, 2));
-    
+
     // Reset form with the template data
     templateForm.reset(formData);
-    
+
     // Open dialog first
     setIsTemplateDialogOpen(true);
-    
+
     // Force immediate form update with validation after dialog opens
     setTimeout(() => {
       // Reset completely then set all values
       templateForm.reset(formData);
-      
+
       Object.entries(formData).forEach(([key, value]) => {
         templateForm.setValue(key as any, value, { 
           shouldValidate: false, 
@@ -393,10 +420,10 @@ export default function ShiftTemplatesPage() {
           shouldDirty: true 
         });
       });
-      
+
       // Force re-render of all form controls
       templateForm.trigger();
-      
+
       console.log('Final form values:', templateForm.getValues());
       console.log('Form watch values:', {
         name: templateForm.watch("name"),
@@ -407,7 +434,7 @@ export default function ShiftTemplatesPage() {
         minStaff: templateForm.watch("minStaff")
       });
     }, 300);
-    
+
     // Dialog is opened above in the timeout
   };
 
@@ -417,7 +444,7 @@ export default function ShiftTemplatesPage() {
     console.log('Editing template ID:', editingTemplate?.id);
     console.log('Form errors:', templateForm.formState.errors);
     console.log('Is editing mode:', !!editingTemplate);
-    
+
     if (editingTemplate) {
       console.log('Calling UPDATE mutation for template ID:', editingTemplate.id);
       updateTemplateMutation.mutate({ id: editingTemplate.id, ...data });
