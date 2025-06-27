@@ -13,9 +13,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useForm } from "react-hook-form";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { 
   Building2, 
@@ -33,7 +36,14 @@ import {
   Target,
   AlertTriangle,
   CheckCircle,
-  XCircle
+  XCircle,
+  Edit,
+  Save,
+  X,
+  Plus,
+  Trash2,
+  Eye,
+  EyeOff
 } from "lucide-react";
 
 // Enhanced Facility Types
@@ -147,8 +157,15 @@ export default function FacilityManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterState, setFilterState] = useState("");
   const [filterType, setFilterType] = useState("");
+  const [editingSection, setEditingSection] = useState<string | null>(null);
+  const [showJsonView, setShowJsonView] = useState<Record<string, boolean>>({});
   
   const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
+  // Check if user is superuser
+  const isSuperuser = user?.role === 'superuser';
 
   // Fetch facilities
   const { data: facilities = [], isLoading, error } = useQuery({
@@ -159,50 +176,92 @@ export default function FacilityManagementPage() {
 
   // Create facility mutation
   const createFacilityMutation = useMutation({
-    mutationFn: (data: EnhancedFacilityForm) => 
-      apiRequest("/api/facilities", {
+    mutationFn: (data: EnhancedFacilityForm) => {
+      return fetch("/api/facilities", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
-      }),
+      }).then(res => res.json());
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
       setShowCreateModal(false);
+      toast({ title: "Success", description: "Facility created successfully" });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to create facility",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Update facility PATCH mutation
+  const updateFacilityMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<EnhancedFacility> }) => {
+      return fetch(`/api/facilities/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      }).then(res => res.json());
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
+      setEditingSection(null);
+      toast({ title: "Success", description: "Facility updated successfully" });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Failed to update facility",
+        variant: "destructive"
+      });
     }
   });
 
   // Update facility rates mutation
   const updateRatesMutation = useMutation({
-    mutationFn: ({ id, rates }: { id: number; rates: any }) =>
-      apiRequest(`/api/facilities/${id}/rates`, {
+    mutationFn: ({ id, rates }: { id: number; rates: any }) => {
+      return fetch(`/api/facilities/${id}/rates`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(rates)
-      }),
+      }).then(res => res.json());
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
+      toast({ title: "Success", description: "Rates updated successfully" });
     }
   });
 
   // Update staffing targets mutation
   const updateStaffingMutation = useMutation({
-    mutationFn: ({ id, staffingTargets }: { id: number; staffingTargets: any }) =>
-      apiRequest(`/api/facilities/${id}/staffing-targets`, {
+    mutationFn: ({ id, staffingTargets }: { id: number; staffingTargets: any }) => {
+      return fetch(`/api/facilities/${id}/staffing-targets`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ staffingTargets })
-      }),
+      }).then(res => res.json());
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
+      toast({ title: "Success", description: "Staffing targets updated successfully" });
     }
   });
 
   // Update workflow configuration mutation
   const updateWorkflowMutation = useMutation({
-    mutationFn: ({ id, workflowAutomationConfig }: { id: number; workflowAutomationConfig: any }) =>
-      apiRequest(`/api/facilities/${id}/workflow-config`, {
+    mutationFn: ({ id, workflowAutomationConfig }: { id: number; workflowAutomationConfig: any }) => {
+      return fetch(`/api/facilities/${id}/workflow-config`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ workflowAutomationConfig })
-      }),
+      }).then(res => res.json());
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
+      toast({ title: "Success", description: "Workflow configuration updated successfully" });
     }
   });
 
@@ -233,15 +292,236 @@ export default function FacilityManagementPage() {
     createFacilityMutation.mutate(data);
   };
 
+  // Enhanced editing forms for complex fields
+  const RatesEditForm = ({ facility, onSave }: { facility: EnhancedFacility; onSave: (data: any) => void }) => {
+    const [billRates, setBillRates] = useState(facility.billRates || {});
+    const [payRates, setPayRates] = useState(facility.payRates || {});
+    const [floatPoolMargins, setFloatPoolMargins] = useState(facility.floatPoolMargins || {});
+
+    const specialties = ["Registered Nurse", "Licensed Practical Nurse", "Certified Nursing Assistant", "Physical Therapist", "Respiratory Therapist"];
+
+    const handleSave = () => {
+      onSave({ billRates, payRates, floatPoolMargins });
+    };
+
+    return (
+      <div className="space-y-6">
+        <div>
+          <h4 className="font-semibold mb-3">Bill Rates (per hour)</h4>
+          <div className="grid grid-cols-2 gap-4">
+            {specialties.map(specialty => (
+              <div key={`bill-${specialty}`} className="space-y-2">
+                <Label>{specialty}</Label>
+                <Input
+                  type="number"
+                  value={billRates[specialty] || ''}
+                  onChange={(e) => setBillRates({...billRates, [specialty]: parseFloat(e.target.value) || 0})}
+                  placeholder="$0.00"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h4 className="font-semibold mb-3">Pay Rates (per hour)</h4>
+          <div className="grid grid-cols-2 gap-4">
+            {specialties.map(specialty => (
+              <div key={`pay-${specialty}`} className="space-y-2">
+                <Label>{specialty}</Label>
+                <Input
+                  type="number"
+                  value={payRates[specialty] || ''}
+                  onChange={(e) => setPayRates({...payRates, [specialty]: parseFloat(e.target.value) || 0})}
+                  placeholder="$0.00"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h4 className="font-semibold mb-3">Float Pool Margins (%)</h4>
+          <div className="grid grid-cols-3 gap-4">
+            {specialties.slice(0, 3).map(specialty => (
+              <div key={`margin-${specialty}`} className="space-y-2">
+                <Label>{specialty}</Label>
+                <Input
+                  type="number"
+                  value={floatPoolMargins[specialty] || ''}
+                  onChange={(e) => setFloatPoolMargins({...floatPoolMargins, [specialty]: parseFloat(e.target.value) || 0})}
+                  placeholder="0%"
+                  max="100"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={() => setEditingSection(null)}>Cancel</Button>
+          <Button onClick={handleSave}>Save Rates</Button>
+        </div>
+      </div>
+    );
+  };
+
+  const StaffingTargetsEditForm = ({ facility, onSave }: { facility: EnhancedFacility; onSave: (data: any) => void }) => {
+    const [targets, setTargets] = useState(facility.staffingTargets || {});
+
+    const departments = ["ICU", "Emergency", "Medical/Surgical", "Operating Room", "Labor & Delivery"];
+
+    const addDepartment = (dept: string) => {
+      setTargets({
+        ...targets,
+        [dept]: {
+          targetHours: 168,
+          minStaff: 1,
+          maxStaff: 10,
+          preferredStaffMix: {}
+        }
+      });
+    };
+
+    const updateDepartment = (dept: string, field: string, value: any) => {
+      setTargets({
+        ...targets,
+        [dept]: {
+          ...targets[dept],
+          [field]: value
+        }
+      });
+    };
+
+    const removeDepartment = (dept: string) => {
+      const newTargets = { ...targets };
+      delete newTargets[dept];
+      setTargets(newTargets);
+    };
+
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h4 className="font-semibold">Staffing Targets by Department</h4>
+          <Select onValueChange={addDepartment}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Add Department" />
+            </SelectTrigger>
+            <SelectContent>
+              {departments.filter(dept => !targets[dept]).map(dept => (
+                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-4">
+          {Object.entries(targets).map(([dept, target]) => (
+            <Card key={dept}>
+              <CardHeader className="pb-3">
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-sm">{dept}</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => removeDepartment(dept)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label>Target Hours/Week</Label>
+                    <Input
+                      type="number"
+                      value={target.targetHours}
+                      onChange={(e) => updateDepartment(dept, 'targetHours', parseInt(e.target.value) || 0)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Min Staff</Label>
+                    <Input
+                      type="number"
+                      value={target.minStaff}
+                      onChange={(e) => updateDepartment(dept, 'minStaff', parseInt(e.target.value) || 0)}
+                    />
+                  </div>
+                  <div>
+                    <Label>Max Staff</Label>
+                    <Input
+                      type="number"
+                      value={target.maxStaff}
+                      onChange={(e) => updateDepartment(dept, 'maxStaff', parseInt(e.target.value) || 0)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={() => setEditingSection(null)}>Cancel</Button>
+          <Button onClick={() => onSave({ staffingTargets: targets })}>Save Targets</Button>
+        </div>
+      </div>
+    );
+  };
+
+  const WorkflowConfigEditForm = ({ facility, onSave }: { facility: EnhancedFacility; onSave: (data: any) => void }) => {
+    const [config, setConfig] = useState(facility.workflowAutomationConfig || {});
+
+    const updateConfig = (field: string, value: boolean) => {
+      setConfig({ ...config, [field]: value });
+    };
+
+    const workflowOptions = [
+      { key: 'autoApproveShifts', label: 'Auto-approve shifts', description: 'Automatically approve shift assignments' },
+      { key: 'autoNotifyManagers', label: 'Auto-notify managers', description: 'Send notifications to managers for important events' },
+      { key: 'autoGenerateInvoices', label: 'Auto-generate invoices', description: 'Automatically create invoices for completed shifts' },
+      { key: 'requireManagerApproval', label: 'Require manager approval', description: 'Manager approval required for certain actions' },
+      { key: 'enableOvertimeAlerts', label: 'Enable overtime alerts', description: 'Alert when workers approach overtime limits' },
+      { key: 'autoAssignBySpecialty', label: 'Auto-assign by specialty', description: 'Automatically match workers to shifts by specialty' }
+    ];
+
+    return (
+      <div className="space-y-6">
+        <h4 className="font-semibold">Workflow Automation Configuration</h4>
+        
+        <div className="space-y-4">
+          {workflowOptions.map(option => (
+            <div key={option.key} className="flex items-center justify-between rounded-lg border p-4">
+              <div className="space-y-0.5">
+                <div className="text-sm font-medium">{option.label}</div>
+                <div className="text-xs text-muted-foreground">{option.description}</div>
+              </div>
+              <Switch
+                checked={config[option.key] || false}
+                onCheckedChange={(checked) => updateConfig(option.key, checked)}
+              />
+            </div>
+          ))}
+        </div>
+
+        <div className="flex justify-end space-x-2">
+          <Button variant="outline" onClick={() => setEditingSection(null)}>Cancel</Button>
+          <Button onClick={() => onSave({ workflowAutomationConfig: config })}>Save Configuration</Button>
+        </div>
+      </div>
+    );
+  };
+
   // Filter facilities
-  const filteredFacilities = facilities.filter((facility: EnhancedFacility) => {
+  const filteredFacilities = Array.isArray(facilities) ? facilities.filter((facility: EnhancedFacility) => {
     const matchesSearch = !searchTerm || 
       facility.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       facility.city?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesState = !filterState || facility.state === filterState;
     const matchesType = !filterType || facility.facilityType === filterType;
     return matchesSearch && matchesState && matchesType;
-  });
+  }) : [];
 
   if (error) {
     return (
@@ -772,135 +1052,384 @@ export default function FacilityManagementPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium">Contact Information</CardTitle>
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="text-sm font-medium">Contact Information</CardTitle>
+                        {isSuperuser && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingSection(editingSection === 'contact' ? null : 'contact')}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{selectedFacility.address}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{selectedFacility.phone}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{selectedFacility.email}</span>
-                      </div>
+                      {editingSection === 'contact' ? (
+                        <div className="space-y-3">
+                          <div>
+                            <Label>Address</Label>
+                            <Input defaultValue={selectedFacility.address} />
+                          </div>
+                          <div>
+                            <Label>Phone</Label>
+                            <Input defaultValue={selectedFacility.phone} />
+                          </div>
+                          <div>
+                            <Label>Email</Label>
+                            <Input defaultValue={selectedFacility.email} />
+                          </div>
+                          <div className="flex justify-end space-x-2">
+                            <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>Cancel</Button>
+                            <Button size="sm">Save</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{selectedFacility.address}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Phone className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{selectedFacility.phone}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{selectedFacility.email}</span>
+                          </div>
+                          {selectedFacility.billingContactName && (
+                            <div className="flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm">Billing: {selectedFacility.billingContactName}</span>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </CardContent>
                   </Card>
                   
                   <Card>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-sm font-medium">Operational Details</CardTitle>
+                      <div className="flex justify-between items-center">
+                        <CardTitle className="text-sm font-medium">Operational Settings</CardTitle>
+                        {isSuperuser && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingSection(editingSection === 'operations' ? null : 'operations')}
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Bed Count:</span>
-                        <span className="text-sm font-medium">{selectedFacility.bedCount}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">EMR System:</span>
-                        <span className="text-sm font-medium">{selectedFacility.emrSystem || "Not specified"}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Payment Terms:</span>
-                        <span className="text-sm font-medium">{selectedFacility.netTerms || "Net 30"}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-muted-foreground">Auto Assignment:</span>
-                        <Badge variant={selectedFacility.autoAssignmentEnabled ? "default" : "secondary"}>
-                          {selectedFacility.autoAssignmentEnabled ? "Enabled" : "Disabled"}
-                        </Badge>
-                      </div>
+                      {editingSection === 'operations' ? (
+                        <div className="space-y-3">
+                          <div>
+                            <Label>Bed Count</Label>
+                            <Input type="number" defaultValue={selectedFacility.bedCount} />
+                          </div>
+                          <div>
+                            <Label>EMR System</Label>
+                            <Select defaultValue={selectedFacility.emrSystem || ""}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select EMR" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Epic">Epic</SelectItem>
+                                <SelectItem value="Cerner">Cerner</SelectItem>
+                                <SelectItem value="Allscripts">Allscripts</SelectItem>
+                                <SelectItem value="Meditech">Meditech</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Payment Terms</Label>
+                            <Select defaultValue={selectedFacility.netTerms || "Net 30"}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Net 15">Net 15</SelectItem>
+                                <SelectItem value="Net 30">Net 30</SelectItem>
+                                <SelectItem value="Net 45">Net 45</SelectItem>
+                                <SelectItem value="Net 60">Net 60</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label>Timezone</Label>
+                            <Select defaultValue={selectedFacility.timezone || "America/New_York"}>
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="America/New_York">Eastern Time</SelectItem>
+                                <SelectItem value="America/Chicago">Central Time</SelectItem>
+                                <SelectItem value="America/Denver">Mountain Time</SelectItem>
+                                <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <Label>Auto Assignment</Label>
+                            <Switch defaultChecked={selectedFacility.autoAssignmentEnabled} />
+                          </div>
+                          <div className="flex justify-end space-x-2">
+                            <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>Cancel</Button>
+                            <Button size="sm">Save</Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-muted-foreground">Bed Count:</span>
+                            <span className="text-sm font-medium">{selectedFacility.bedCount}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-muted-foreground">EMR System:</span>
+                            <span className="text-sm font-medium">{selectedFacility.emrSystem || "Not specified"}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-muted-foreground">Payment Terms:</span>
+                            <span className="text-sm font-medium">{selectedFacility.netTerms || "Net 30"}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-muted-foreground">Timezone:</span>
+                            <span className="text-sm font-medium">{selectedFacility.timezone?.replace("America/", "") || "Eastern"}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-muted-foreground">Auto Assignment:</span>
+                            <Badge variant={selectedFacility.autoAssignmentEnabled ? "default" : "secondary"}>
+                              {selectedFacility.autoAssignmentEnabled ? "Enabled" : "Disabled"}
+                            </Badge>
+                          </div>
+                          {selectedFacility.contractStartDate && (
+                            <div className="flex justify-between">
+                              <span className="text-sm text-muted-foreground">Contract Start:</span>
+                              <span className="text-sm font-medium">
+                                {new Date(selectedFacility.contractStartDate).toLocaleDateString()}
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
+
+                {!isSuperuser && (
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      You have read-only access to facility information. Contact a superuser to make changes.
+                    </AlertDescription>
+                  </Alert>
+                )}
               </TabsContent>
               
               <TabsContent value="rates" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <DollarSign className="h-4 w-4" />
-                        Bill Rates by Specialty
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {selectedFacility.billRates ? (
-                        <div className="space-y-2">
-                          {Object.entries(selectedFacility.billRates).map(([specialty, rate]) => (
-                            <div key={specialty} className="flex justify-between">
-                              <span className="text-sm">{specialty}:</span>
-                              <span className="text-sm font-medium">${rate}/hr</span>
-                            </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">No rates configured</p>
+                {editingSection === 'rates' ? (
+                  <RatesEditForm 
+                    facility={selectedFacility} 
+                    onSave={(data) => updateRatesMutation.mutate({ id: selectedFacility.id, rates: data })}
+                  />
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">Facility Rates & Margins</h3>
+                      {isSuperuser && (
+                        <Button
+                          variant="outline"
+                          onClick={() => setEditingSection('rates')}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Rates
+                        </Button>
                       )}
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-sm font-medium">Pay Rates by Specialty</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {selectedFacility.payRates ? (
-                        <div className="space-y-2">
-                          {Object.entries(selectedFacility.payRates).map(([specialty, rate]) => (
-                            <div key={specialty} className="flex justify-between">
-                              <span className="text-sm">{specialty}:</span>
-                              <span className="text-sm font-medium">${rate}/hr</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <DollarSign className="h-4 w-4" />
+                            Bill Rates (per hour)
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {selectedFacility.billRates && Object.keys(selectedFacility.billRates).length > 0 ? (
+                            <div className="space-y-2">
+                              {Object.entries(selectedFacility.billRates).map(([specialty, rate]) => (
+                                <div key={specialty} className="flex justify-between">
+                                  <span className="text-sm">{specialty}:</span>
+                                  <span className="text-sm font-medium text-green-600">${rate}/hr</span>
+                                </div>
+                              ))}
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">No rates configured</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">No bill rates configured</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-sm font-medium">Pay Rates (per hour)</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {selectedFacility.payRates && Object.keys(selectedFacility.payRates).length > 0 ? (
+                            <div className="space-y-2">
+                              {Object.entries(selectedFacility.payRates).map(([specialty, rate]) => (
+                                <div key={specialty} className="flex justify-between">
+                                  <span className="text-sm">{specialty}:</span>
+                                  <span className="text-sm font-medium text-blue-600">${rate}/hr</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">No pay rates configured</p>
+                          )}
+                        </CardContent>
+                      </Card>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-sm font-medium">Float Pool Margins (%)</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {selectedFacility.floatPoolMargins && Object.keys(selectedFacility.floatPoolMargins).length > 0 ? (
+                            <div className="space-y-2">
+                              {Object.entries(selectedFacility.floatPoolMargins).map(([specialty, margin]) => (
+                                <div key={specialty} className="flex justify-between">
+                                  <span className="text-sm">{specialty}:</span>
+                                  <span className="text-sm font-medium text-purple-600">{margin}%</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">No margins configured</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {selectedFacility.billRates && selectedFacility.payRates && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-sm font-medium">Profit Analysis</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2">
+                            {Object.keys(selectedFacility.billRates).map(specialty => {
+                              const billRate = selectedFacility.billRates?.[specialty] || 0;
+                              const payRate = selectedFacility.payRates?.[specialty] || 0;
+                              const profit = billRate - payRate;
+                              const margin = billRate > 0 ? ((profit / billRate) * 100).toFixed(1) : '0';
+                              
+                              return (
+                                <div key={specialty} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                                  <span className="text-sm font-medium">{specialty}</span>
+                                  <div className="text-right">
+                                    <div className="text-sm">Profit: ${profit}/hr</div>
+                                    <div className="text-xs text-muted-foreground">Margin: {margin}%</div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </>
+                )}
               </TabsContent>
               
               <TabsContent value="staffing" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Target className="h-4 w-4" />
-                      Staffing Targets by Department
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {selectedFacility.staffingTargets ? (
-                      <div className="space-y-4">
+                {editingSection === 'staffing' ? (
+                  <StaffingTargetsEditForm 
+                    facility={selectedFacility} 
+                    onSave={(data) => updateStaffingMutation.mutate({ id: selectedFacility.id, staffingTargets: data.staffingTargets })}
+                  />
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">Department Staffing Targets</h3>
+                      {isSuperuser && (
+                        <Button
+                          variant="outline"
+                          onClick={() => setEditingSection('staffing')}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Targets
+                        </Button>
+                      )}
+                    </div>
+
+                    {selectedFacility.staffingTargets && Object.keys(selectedFacility.staffingTargets).length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {Object.entries(selectedFacility.staffingTargets).map(([dept, targets]) => (
-                          <div key={dept} className="border rounded-lg p-3">
-                            <h4 className="font-medium mb-2">{dept}</h4>
-                            <div className="grid grid-cols-3 gap-4 text-sm">
-                              <div>
-                                <span className="text-muted-foreground">Target Hours:</span>
-                                <p className="font-medium">{targets.targetHours}/week</p>
+                          <Card key={dept}>
+                            <CardHeader className="pb-3">
+                              <CardTitle className="text-sm font-medium flex items-center gap-2">
+                                <Target className="h-4 w-4" />
+                                {dept}
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="grid grid-cols-3 gap-4 text-sm">
+                                <div className="text-center">
+                                  <div className="text-2xl font-bold text-blue-600">{targets.targetHours}</div>
+                                  <div className="text-xs text-muted-foreground">Target Hours/Week</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-2xl font-bold text-green-600">{targets.minStaff}</div>
+                                  <div className="text-xs text-muted-foreground">Min Staff</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-2xl font-bold text-orange-600">{targets.maxStaff}</div>
+                                  <div className="text-xs text-muted-foreground">Max Staff</div>
+                                </div>
                               </div>
-                              <div>
-                                <span className="text-muted-foreground">Min Staff:</span>
-                                <p className="font-medium">{targets.minStaff}</p>
-                              </div>
-                              <div>
-                                <span className="text-muted-foreground">Max Staff:</span>
-                                <p className="font-medium">{targets.maxStaff}</p>
-                              </div>
-                            </div>
-                          </div>
+                              
+                              {targets.preferredStaffMix && Object.keys(targets.preferredStaffMix).length > 0 && (
+                                <div className="mt-3 pt-3 border-t">
+                                  <div className="text-xs font-medium text-muted-foreground mb-2">Preferred Staff Mix:</div>
+                                  <div className="space-y-1">
+                                    {Object.entries(targets.preferredStaffMix).map(([role, percentage]) => (
+                                      <div key={role} className="flex justify-between text-xs">
+                                        <span>{role}:</span>
+                                        <span>{percentage}%</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </CardContent>
+                          </Card>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-sm text-muted-foreground">No staffing targets configured</p>
+                      <Card>
+                        <CardContent className="pt-6">
+                          <div className="text-center">
+                            <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                            <h3 className="text-lg font-semibold text-gray-600">No staffing targets configured</h3>
+                            <p className="text-sm text-gray-500 mt-2">
+                              {isSuperuser 
+                                ? "Click 'Edit Targets' to set up department-specific staffing goals"
+                                : "Contact a superuser to configure staffing targets"
+                              }
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
                     )}
-                  </CardContent>
-                </Card>
+                  </>
+                )}
               </TabsContent>
               
               <TabsContent value="workflow" className="space-y-4">
