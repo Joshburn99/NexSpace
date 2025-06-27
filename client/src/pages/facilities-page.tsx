@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useFacilities, getFacilityDisplayName, getFacilityAddress, type EnhancedFacility } from "@/hooks/use-facility";
 import {
   Dialog,
   DialogContent,
@@ -61,21 +62,14 @@ export default function FacilitiesPage() {
   const [selectedState, setSelectedState] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
-  const [selectedFacility, setSelectedFacility] = useState<Facility | null>(null);
+  const [selectedFacility, setSelectedFacility] = useState<EnhancedFacility | null>(null);
   const [mapLocation, setMapLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch facilities
-  const { data: facilities = [], isLoading } = useQuery({
-    queryKey: ["/api/facilities"],
-    queryFn: async () => {
-      const response = await fetch("/api/facilities");
-      if (!response.ok) throw new Error("Failed to fetch facilities");
-      return response.json();
-    },
-  });
+  // Fetch facilities using centralized hook
+  const { data: facilities = [], isLoading } = useFacilities();
 
   // Create facility form
   const createForm = useForm<z.infer<typeof createFacilitySchema>>({
@@ -273,7 +267,7 @@ export default function FacilitiesPage() {
     "WY",
   ];
 
-  const filteredFacilities = facilities.filter((facility: Facility) => {
+  const filteredFacilities = facilities.filter((facility: EnhancedFacility) => {
     const matchesSearch =
       !searchQuery ||
       facility.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -580,12 +574,12 @@ export default function FacilitiesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredFacilities.map((facility: Facility) => (
+          {filteredFacilities.map((facility: EnhancedFacility) => (
             <Card key={facility.id} className="hover:shadow-lg transition-shadow">
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
-                    <CardTitle className="text-lg">{facility.name}</CardTitle>
+                    <CardTitle className="text-lg">{getFacilityDisplayName(facility)}</CardTitle>
                     <CardDescription className="flex items-center">
                       <Building2 className="h-4 w-4 mr-1" />
                       {facility.facilityType?.replace("_", " ")}
