@@ -28,10 +28,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertFacilitySchema, type Facility } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Loader2,
   Plus,
@@ -45,6 +49,10 @@ import {
   RefreshCw,
   Import,
   Map,
+  Edit,
+  AlertTriangle,
+  Save,
+  X,
 } from "lucide-react";
 import InteractiveMap from "@/components/InteractiveMap";
 import { z } from "zod";
@@ -62,11 +70,51 @@ export default function FacilitiesPage() {
   const [selectedState, setSelectedState] = useState("");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [facilityToEdit, setFacilityToEdit] = useState<EnhancedFacility | null>(null);
   const [selectedFacility, setSelectedFacility] = useState<EnhancedFacility | null>(null);
   const [mapLocation, setMapLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const { toast } = useToast();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Enhanced facility edit form schema
+  const enhancedFacilityEditSchema = z.object({
+    // Basic Information
+    name: z.string().min(1, "Facility name is required"),
+    address: z.string().optional(),
+    city: z.string().optional(),
+    state: z.string().optional(),
+    zipCode: z.string().optional(),
+    phone: z.string().optional(),
+    email: z.string().email().optional().or(z.literal("")),
+    website: z.string().optional(),
+    facilityType: z.string().optional(),
+    bedCount: z.number().min(0).optional(),
+    isActive: z.boolean(),
+    
+    // Enhanced Fields
+    autoAssignmentEnabled: z.boolean().optional(),
+    teamId: z.number().optional(),
+    netTerms: z.string().optional(),
+    timezone: z.string().optional(),
+    billingContactName: z.string().optional(),
+    billingContactEmail: z.string().email().optional().or(z.literal("")),
+    emrSystem: z.string().optional(),
+    contractStartDate: z.string().optional(),
+    payrollProviderId: z.number().optional(),
+    
+    // JSON Fields - simplified for form handling
+    floatPoolMargins: z.string().optional(),
+    billRates: z.string().optional(),
+    payRates: z.string().optional(),
+    workflowAutomationConfig: z.string().optional(),
+    shiftManagementSettings: z.string().optional(),
+    staffingTargets: z.string().optional(),
+    customRules: z.string().optional(),
+    regulatoryDocs: z.string().optional(),
+  });
 
   // Fetch facilities using centralized hook
   const { data: facilities = [], isLoading } = useFacilities();
@@ -152,6 +200,161 @@ export default function FacilitiesPage() {
     },
   });
 
+  // Enhanced facility edit form
+  const editForm = useForm<z.infer<typeof enhancedFacilityEditSchema>>({
+    resolver: zodResolver(enhancedFacilityEditSchema),
+    defaultValues: {
+      name: "",
+      address: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      phone: "",
+      email: "",
+      website: "",
+      facilityType: "",
+      bedCount: 0,
+      isActive: true,
+      autoAssignmentEnabled: false,
+      teamId: undefined,
+      netTerms: "",
+      timezone: "",
+      billingContactName: "",
+      billingContactEmail: "",
+      emrSystem: "",
+      contractStartDate: "",
+      payrollProviderId: undefined,
+      floatPoolMargins: "",
+      billRates: "",
+      payRates: "",
+      workflowAutomationConfig: "",
+      shiftManagementSettings: "",
+      staffingTargets: "",
+      customRules: "",
+      regulatoryDocs: "",
+    },
+  });
+
+  // Edit facility mutation with downstream effects handling
+  const editFacilityMutation = useMutation({
+    mutationFn: async (data: z.infer<typeof enhancedFacilityEditSchema>) => {
+      if (!facilityToEdit) throw new Error("No facility selected for editing");
+      
+      // Prepare JSON fields
+      const payload = {
+        ...data,
+        floatPoolMargins: data.floatPoolMargins ? JSON.parse(data.floatPoolMargins) : null,
+        billRates: data.billRates ? JSON.parse(data.billRates) : null,
+        payRates: data.payRates ? JSON.parse(data.payRates) : null,
+        workflowAutomationConfig: data.workflowAutomationConfig ? JSON.parse(data.workflowAutomationConfig) : null,
+        shiftManagementSettings: data.shiftManagementSettings ? JSON.parse(data.shiftManagementSettings) : null,
+        staffingTargets: data.staffingTargets ? JSON.parse(data.staffingTargets) : null,
+        customRules: data.customRules ? JSON.parse(data.customRules) : null,
+        regulatoryDocs: data.regulatoryDocs ? JSON.parse(data.regulatoryDocs) : null,
+      };
+
+      const response = await fetch(`/api/enhanced-facilities/${facilityToEdit.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to update facility");
+      }
+      
+      return response.json();
+    },
+    onSuccess: (updatedFacility) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/enhanced-facilities"] });
+      
+      // Handle downstream effects if facility was deactivated
+      if (!updatedFacility.isActive && facilityToEdit?.isActive) {
+        handleFacilityDeactivation(facilityToEdit.id);
+      }
+      
+      setIsEditDialogOpen(false);
+      setFacilityToEdit(null);
+      editForm.reset();
+      
+      toast({
+        title: "Success",
+        description: `Facility "${updatedFacility.name}" updated successfully`,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update facility",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Handle facility deactivation downstream effects
+  const handleFacilityDeactivation = async (facilityId: number) => {
+    try {
+      // Disable all shift templates for deactivated facility
+      const response = await fetch(`/api/shift-templates/deactivate-by-facility/${facilityId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+      });
+      
+      if (response.ok) {
+        queryClient.invalidateQueries({ queryKey: ["/api/shift-templates"] });
+        toast({
+          title: "Templates Disabled",
+          description: "All shift templates for this facility have been disabled to prevent new shift generation.",
+        });
+      }
+    } catch (error) {
+      console.error("Failed to disable facility templates:", error);
+      toast({
+        title: "Warning",
+        description: "Facility updated but some templates may still be active. Please review shift templates manually.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Open edit dialog with facility data
+  const openEditDialog = (facility: EnhancedFacility) => {
+    setFacilityToEdit(facility);
+    editForm.reset({
+      name: facility.name || "",
+      address: facility.address || "",
+      city: facility.city || "",
+      state: facility.state || "",
+      zipCode: facility.zipCode || "",
+      phone: facility.phone || "",
+      email: facility.email || "",
+      website: facility.website || "",
+      facilityType: facility.facilityType || "",
+      bedCount: facility.bedCount || 0,
+      isActive: facility.isActive ?? true,
+      autoAssignmentEnabled: facility.autoAssignmentEnabled ?? false,
+      teamId: facility.teamId || undefined,
+      netTerms: facility.netTerms || "",
+      timezone: facility.timezone || "",
+      billingContactName: facility.billingContactName || "",
+      billingContactEmail: facility.billingContactEmail || "",
+      emrSystem: facility.emrSystem || "",
+      contractStartDate: facility.contractStartDate || "",
+      payrollProviderId: facility.payrollProviderId || undefined,
+      floatPoolMargins: facility.floatPoolMargins ? JSON.stringify(facility.floatPoolMargins, null, 2) : "",
+      billRates: facility.billRates ? JSON.stringify(facility.billRates, null, 2) : "",
+      payRates: facility.payRates ? JSON.stringify(facility.payRates, null, 2) : "",
+      workflowAutomationConfig: facility.workflowAutomationConfig ? JSON.stringify(facility.workflowAutomationConfig, null, 2) : "",
+      shiftManagementSettings: facility.shiftManagementSettings ? JSON.stringify(facility.shiftManagementSettings, null, 2) : "",
+      staffingTargets: facility.staffingTargets ? JSON.stringify(facility.staffingTargets, null, 2) : "",
+      customRules: facility.customRules ? JSON.stringify(facility.customRules, null, 2) : "",
+      regulatoryDocs: facility.regulatoryDocs ? JSON.stringify(facility.regulatoryDocs, null, 2) : "",
+    });
+    setIsEditDialogOpen(true);
+  };
+
   const onCreateSubmit = (data: z.infer<typeof createFacilitySchema>) => {
     const facilityData = {
       ...data,
@@ -159,6 +362,10 @@ export default function FacilitiesPage() {
       longitude: mapLocation?.lng,
     };
     createFacilityMutation.mutate(facilityData);
+  };
+
+  const onEditSubmit = (data: z.infer<typeof enhancedFacilityEditSchema>) => {
+    editFacilityMutation.mutate(data);
   };
 
   const handleLocationSelect = (location: { lat: number; lng: number; address?: string }) => {
@@ -639,9 +846,22 @@ export default function FacilitiesPage() {
                 </div>
 
                 <div className="flex justify-between items-center pt-2">
-                  <Button variant="outline" size="sm" onClick={() => setSelectedFacility(facility)}>
-                    View Details
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setSelectedFacility(facility)}>
+                      View Details
+                    </Button>
+                    {user?.role === "superuser" && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => openEditDialog(facility)}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit
+                      </Button>
+                    )}
+                  </div>
                   <Badge variant={facility.isActive ? "default" : "secondary"}>
                     {facility.isActive ? "Active" : "Inactive"}
                   </Badge>
