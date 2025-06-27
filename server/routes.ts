@@ -69,7 +69,6 @@ export function registerRoutes(app: Express): Server {
         facilityName: sql<string>`${facilities.name}`.as('facilityName'),
         department: shifts.department,
         specialty: shifts.specialty,
-        shiftType: shifts.shiftType,
         date: shifts.date,
         startTime: shifts.startTime,
         endTime: shifts.endTime,
@@ -77,9 +76,6 @@ export function registerRoutes(app: Express): Server {
         status: shifts.status,
         urgency: shifts.urgency,
         requiredStaff: shifts.requiredStaff,
-        premiumMultiplier: shifts.premiumMultiplier,
-        templateId: sql<number>`NULL`.as('templateId'),
-        createdFromTemplate: sql<boolean>`false`.as('createdFromTemplate'),
         createdAt: shifts.createdAt,
         updatedAt: shifts.updatedAt,
       }).from(shifts)
@@ -137,8 +133,8 @@ export function registerRoutes(app: Express): Server {
           totalPositions,
           assignedWorkerIds: [],
           assignedWorkerNames: [],
-          templateId: shift.templateId,
-          createdFromTemplate: shift.createdFromTemplate,
+          templateId: null,
+          createdFromTemplate: false,
         };
       });
 
@@ -149,6 +145,28 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error fetching shifts:", error);
       res.status(500).json({ message: "Failed to fetch shifts" });
+    }
+  });
+
+  // Create new shift (for Add Shift button)
+  app.post("/api/shifts", async (req, res) => {
+    try {
+      const shiftData = insertShiftSchema.parse(req.body);
+      
+      const [newShift] = await db
+        .insert(shifts)
+        .values({
+          ...shiftData,
+          id: `shift-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .returning();
+
+      res.status(201).json(newShift);
+    } catch (error) {
+      console.error("Error creating shift:", error);
+      res.status(500).json({ message: "Failed to create shift" });
     }
   });
 
@@ -165,19 +183,18 @@ export function registerRoutes(app: Express): Server {
         facilityId: shiftTemplates.facilityId,
         facilityName: shiftTemplates.facilityName,
         buildingId: shiftTemplates.buildingId,
-        floorNumber: shiftTemplates.floorNumber,
-        roomNumber: shiftTemplates.roomNumber,
+        buildingName: shiftTemplates.buildingName,
         shiftType: shiftTemplates.shiftType,
         startTime: shiftTemplates.startTime,
         endTime: shiftTemplates.endTime,
         daysOfWeek: shiftTemplates.daysOfWeek,
         hourlyRate: shiftTemplates.hourlyRate,
-        requiredStaff: shiftTemplates.requiredStaff,
-        premiumMultiplier: shiftTemplates.premiumMultiplier,
-        urgency: shiftTemplates.urgency,
+        minStaff: shiftTemplates.minStaff,
+        maxStaff: shiftTemplates.maxStaff,
         notes: shiftTemplates.notes,
         daysPostedOut: shiftTemplates.daysPostedOut,
         isActive: shiftTemplates.isActive,
+        generatedShiftsCount: shiftTemplates.generatedShiftsCount,
         createdAt: shiftTemplates.createdAt,
         updatedAt: shiftTemplates.updatedAt,
       }).from(shiftTemplates);
@@ -388,9 +405,10 @@ export function registerRoutes(app: Express): Server {
             endTime: template.endTime,
             rate: template.hourlyRate.toString(),
             status: 'open',
-            urgency: template.urgency,
-            requiredStaff: template.requiredStaff,
-            premiumMultiplier: template.premiumMultiplier,
+            urgency: 'medium',
+            requiredWorkers: template.maxStaff || 1,
+            minStaff: template.minStaff || 1,
+            maxStaff: template.maxStaff || 1,
             templateId: template.id,
             createdFromTemplate: true,
             createdAt: new Date(),
