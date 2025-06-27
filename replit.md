@@ -13,6 +13,16 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### June 27, 2025 - Template System Consolidation & Enhanced Testing Infrastructure
+- **Duplicate Template Removal**: Successfully consolidated duplicate template systems by removing deprecated `/api/scheduling/templates` endpoints and `scheduling-templates-page.tsx` component
+- **Single Source of Truth**: Established "Shift Templates" as the unified template system with comprehensive database-backed functionality
+- **Enhanced Facility Integration**: Updated shift template system to seamlessly work with centralized enhanced facility profiles using `getFacilityDisplayName()` and `useFacilities()` hooks
+- **Backend Testing Suite**: Created comprehensive `test-shift-templates.ts` with 5 test scenarios covering create, update, generate, facility integration, and delete workflows
+- **Frontend Testing Framework**: Built complete React testing suite for template page with mocking, form validation, API interaction, and workflow testing
+- **API Test Endpoint**: Added `/api/test/shift-templates` endpoint for automated testing and validation of template functionality
+- **Type Safety Improvements**: Fixed schema mapping issues in shift templates page and eliminated deprecated snake_case field references
+- **Template Workflow Validation**: Ensured all existing shift template logic (regenerating shifts, facility linking, auto-creation) works with enhanced facility profiles
+
 ### June 27, 2025 - Complete Enhanced Facility Management System & Centralized Facility Infrastructure
 - **Database Schema Extension**: Successfully implemented 17 new facility management columns including auto_assignment_enabled, team_id, net_terms, float_pool_margins, bill_rates, pay_rates, workflow_automation_config, timezone, shift_management_settings, billing contacts, staffing_targets, emr_system, contract dates, payroll_provider_id, custom_rules, regulatory_docs
 - **Enhanced API Endpoints**: Built comprehensive facility management API with GET/POST/PATCH endpoints supporting enhanced validation, rates management, staffing targets, and workflow configuration

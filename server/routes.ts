@@ -5148,6 +5148,46 @@ export function registerRoutes(app: Express): Server {
   // Additional facility management routes
   // Note: Main facilities endpoint is already defined above
 
+  // Test endpoints for template system validation
+  app.get("/api/test/shift-templates", requireAuth, async (req, res) => {
+    try {
+      const { runShiftTemplateTests } = await import('./test-shift-templates');
+      
+      // Capture console output for test results
+      const originalLog = console.log;
+      const originalError = console.error;
+      const logs: string[] = [];
+      
+      console.log = (...args) => {
+        logs.push(args.join(' '));
+        originalLog(...args);
+      };
+      
+      console.error = (...args) => {
+        logs.push('ERROR: ' + args.join(' '));
+        originalError(...args);
+      };
+      
+      await runShiftTemplateTests();
+      
+      // Restore console
+      console.log = originalLog;
+      console.error = originalError;
+      
+      res.json({
+        message: "Shift template tests completed",
+        testOutput: logs,
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      console.error("Test execution failed:", error);
+      res.status(500).json({ 
+        message: "Test execution failed", 
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // Deprecated: Scheduling Configuration API - functionality moved to /api/shift-templates
   // These endpoints are maintained for backwards compatibility but redirect to shift templates
 
