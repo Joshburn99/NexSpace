@@ -895,6 +895,605 @@ export default function FacilitiesPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Enhanced Facility Edit Modal */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5" />
+              Edit Facility Profile: {facilityToEdit?.name}
+            </DialogTitle>
+          </DialogHeader>
+
+          <Form {...editForm}>
+            <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-6">
+              <Tabs defaultValue="basic" className="w-full">
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                  <TabsTrigger value="contacts">Contacts</TabsTrigger>
+                  <TabsTrigger value="billing">Billing & Rates</TabsTrigger>
+                  <TabsTrigger value="operations">Operations</TabsTrigger>
+                  <TabsTrigger value="compliance">Compliance</TabsTrigger>
+                </TabsList>
+
+                {/* Basic Information Tab */}
+                <TabsContent value="basic" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Facility Name *</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="facilityType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Facility Type</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select facility type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="hospital">Hospital</SelectItem>
+                              <SelectItem value="clinic">Clinic</SelectItem>
+                              <SelectItem value="urgent_care">Urgent Care</SelectItem>
+                              <SelectItem value="nursing_home">Nursing Home</SelectItem>
+                              <SelectItem value="rehab_center">Rehabilitation Center</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Address</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>City</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="state"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>State</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="zipCode"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>ZIP Code</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="bedCount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bed Count</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              {...field} 
+                              onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="timezone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Timezone</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select timezone" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="America/New_York">Eastern Time</SelectItem>
+                              <SelectItem value="America/Chicago">Central Time</SelectItem>
+                              <SelectItem value="America/Denver">Mountain Time</SelectItem>
+                              <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="isActive"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                              Facility Status
+                            </FormLabel>
+                            <div className="text-sm text-muted-foreground">
+                              {field.value ? "Active - Can generate shifts" : "Inactive - Templates disabled"}
+                            </div>
+                            {!field.value && (
+                              <div className="flex items-center gap-1 text-sm text-amber-600">
+                                <AlertTriangle className="h-3 w-3" />
+                                Deactivating will disable all shift templates
+                              </div>
+                            )}
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+
+                {/* Contacts Tab */}
+                <TabsContent value="contacts" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number</FormLabel>
+                          <FormControl>
+                            <Input type="tel" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="billingContactName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Billing Contact Name</FormLabel>
+                          <FormControl>
+                            <Input {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="billingContactEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Billing Contact Email</FormLabel>
+                          <FormControl>
+                            <Input type="email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={editForm.control}
+                    name="website"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Website</FormLabel>
+                        <FormControl>
+                          <Input type="url" {...field} placeholder="https://" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+
+                {/* Billing & Rates Tab */}
+                <TabsContent value="billing" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="netTerms"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Net Terms</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select payment terms" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="NET_15">Net 15</SelectItem>
+                              <SelectItem value="NET_30">Net 30</SelectItem>
+                              <SelectItem value="NET_45">Net 45</SelectItem>
+                              <SelectItem value="NET_60">Net 60</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="contractStartDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contract Start Date</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={editForm.control}
+                    name="billRates"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Bill Rates (JSON)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            rows={4}
+                            placeholder='{"RN": 75, "LPN": 55, "CNA": 35}'
+                          />
+                        </FormControl>
+                        <div className="text-xs text-muted-foreground">
+                          JSON format: {"{"}"specialty": hourlyRate{"}"}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="payRates"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Pay Rates (JSON)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            rows={4}
+                            placeholder='{"RN": 45, "LPN": 32, "CNA": 22}'
+                          />
+                        </FormControl>
+                        <div className="text-xs text-muted-foreground">
+                          JSON format: {"{"}"specialty": hourlyRate{"}"}
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="floatPoolMargins"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Float Pool Margins (JSON)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            rows={3}
+                            placeholder='{"standard": 1.15, "premium": 1.25, "holiday": 1.5}'
+                          />
+                        </FormControl>
+                        <div className="text-xs text-muted-foreground">
+                          JSON format with multipliers for different shift types
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+
+                {/* Operations Tab */}
+                <TabsContent value="operations" className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="autoAssignmentEnabled"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base">
+                              Auto Assignment
+                            </FormLabel>
+                            <div className="text-sm text-muted-foreground">
+                              Automatically assign qualified staff to open shifts
+                            </div>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="emrSystem"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>EMR System</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select EMR system" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Epic">Epic</SelectItem>
+                              <SelectItem value="Cerner">Cerner</SelectItem>
+                              <SelectItem value="Meditech">Meditech</SelectItem>
+                              <SelectItem value="Allscripts">Allscripts</SelectItem>
+                              <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={editForm.control}
+                    name="workflowAutomationConfig"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Workflow Automation Config (JSON)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            rows={4}
+                            placeholder='{"autoApprove": true, "notificationHours": 24, "escalationThreshold": 3}'
+                          />
+                        </FormControl>
+                        <div className="text-xs text-muted-foreground">
+                          Configure automated workflow settings
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="shiftManagementSettings"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Shift Management Settings (JSON)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            rows={4}
+                            placeholder='{"maxConsecutiveDays": 5, "minRestHours": 8, "overtimeThreshold": 40}'
+                          />
+                        </FormControl>
+                        <div className="text-xs text-muted-foreground">
+                          Define shift scheduling rules and constraints
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="staffingTargets"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Staffing Targets (JSON)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            rows={4}
+                            placeholder='{"ICU": {"RN": 4, "CNA": 2}, "Emergency": {"RN": 6, "LPN": 2}}'
+                          />
+                        </FormControl>
+                        <div className="text-xs text-muted-foreground">
+                          Department-specific staffing targets by role
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+
+                {/* Compliance Tab */}
+                <TabsContent value="compliance" className="space-y-4">
+                  <FormField
+                    control={editForm.control}
+                    name="customRules"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Custom Rules (JSON)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            rows={4}
+                            placeholder='{"requireCertification": true, "backgroundCheckRequired": true, "drugTestPolicy": "pre-employment"}'
+                          />
+                        </FormControl>
+                        <div className="text-xs text-muted-foreground">
+                          Facility-specific operational rules and requirements
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={editForm.control}
+                    name="regulatoryDocs"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Regulatory Documents (JSON)</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            rows={4}
+                            placeholder='{"license": {"number": "FL123456", "expiry": "2024-12-31"}, "accreditation": {"type": "Joint Commission", "status": "Active"}}'
+                          />
+                        </FormControl>
+                        <div className="text-xs text-muted-foreground">
+                          Track licenses, certifications, and compliance documents
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={editForm.control}
+                      name="teamId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Team ID</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              {...field} 
+                              onChange={e => field.onChange(parseInt(e.target.value) || undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={editForm.control}
+                      name="payrollProviderId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Payroll Provider ID</FormLabel>
+                          <FormControl>
+                            <Input 
+                              type="number" 
+                              {...field} 
+                              onChange={e => field.onChange(parseInt(e.target.value) || undefined)}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              <Separator />
+
+              <div className="flex justify-end gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setIsEditDialogOpen(false)}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={editFacilityMutation.isPending}
+                >
+                  {editFacilityMutation.isPending ? (
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4 mr-2" />
+                  )}
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -5148,6 +5148,44 @@ export function registerRoutes(app: Express): Server {
   // Additional facility management routes
   // Note: Main facilities endpoint is already defined above
 
+  // Deactivate all shift templates for a facility (used when facility is deactivated)
+  app.patch("/api/shift-templates/deactivate-by-facility/:facilityId", requireAuth, async (req, res) => {
+    // Check if user is superuser
+    if (req.user?.role !== "superuser") {
+      return res.status(403).json({ message: "Superuser access required" });
+    }
+    try {
+      const facilityId = parseInt(req.params.facilityId);
+      
+      if (!facilityId || isNaN(facilityId)) {
+        return res.status(400).json({ message: "Invalid facility ID" });
+      }
+
+      const result = await db
+        .update(shiftTemplates)
+        .set({ 
+          isActive: false, 
+          updatedAt: new Date() 
+        })
+        .where(eq(shiftTemplates.facilityId, facilityId))
+        .returning();
+
+      console.log(`Deactivated ${result.length} shift templates for facility ${facilityId}`);
+
+      res.json({
+        message: `Deactivated ${result.length} shift templates for facility`,
+        deactivatedTemplates: result.length,
+        facilityId
+      });
+    } catch (error) {
+      console.error("Error deactivating facility templates:", error);
+      res.status(500).json({ 
+        message: "Failed to deactivate facility templates",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   // Test endpoints for template system validation
   app.get("/api/test/shift-templates", requireAuth, async (req, res) => {
     try {
