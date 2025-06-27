@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
+import { createEnhancedFacilitiesRoutes } from "./enhanced-facilities-routes";
 
 
 // Remove in-memory storage - using database as single source of truth
@@ -5908,12 +5909,55 @@ export function registerRoutes(app: Express): Server {
     auditLog("CREATE", "facility"),
     async (req: any, res) => {
       try {
-        const validatedData = insertFacilitySchema.parse(req.body);
-        const facility = await storage.createFacility(validatedData);
+        console.log("Creating facility with enhanced data:", req.body);
+        
+        // Import enhanced validation
+        const { enhancedFacilitySchema, validateFacilityRates, validateStaffingTargets, validateTimezone } = await import("./enhanced-facility-validation");
+        
+        // Validate the enhanced facility data
+        const facilityData = enhancedFacilitySchema.parse(req.body);
+        
+        // Additional business rule validations
+        const ratesValidation = validateFacilityRates(facilityData.billRates, facilityData.payRates);
+        if (!ratesValidation.valid) {
+          return res.status(400).json({ 
+            message: "Invalid rates configuration", 
+            errors: ratesValidation.errors 
+          });
+        }
+
+        const staffingValidation = validateStaffingTargets(facilityData.staffingTargets);
+        if (!staffingValidation.valid) {
+          return res.status(400).json({ 
+            message: "Invalid staffing targets", 
+            errors: staffingValidation.errors 
+          });
+        }
+
+        if (facilityData.timezone && !validateTimezone(facilityData.timezone)) {
+          return res.status(400).json({ message: "Invalid timezone" });
+        }
+
+        const facility = await storage.createFacility(facilityData);
+        console.log("Enhanced facility created successfully:", facility);
         res.status(201).json(facility);
       } catch (error) {
         console.error("Error creating facility:", error);
-        res.status(400).json({ message: "Failed to create facility" });
+        
+        if (error instanceof z.ZodError) {
+          const fieldErrors = error.errors.map(err => ({
+            field: err.path.join('.'),
+            message: err.message
+          }));
+          
+          return res.status(400).json({ 
+            message: "Validation failed", 
+            fieldErrors,
+            details: error.errors
+          });
+        }
+        
+        res.status(500).json({ message: "Failed to create facility" });
       }
     }
   );
@@ -6093,52 +6137,27 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Facilities API endpoint
-  app.get("/api/facilities", async (req, res) => {
+  // Enhanced Facilities API with complete field support
+  app.get("/api/facilities", requireAuth, async (req, res) => {
     try {
-      const facilities = [
-        {
-          id: 1,
-          name: "Portland General Hospital",
-          address: "3181 SW Sam Jackson Park Rd, Portland, OR 97239",
-          type: "Hospital",
-          status: "active",
-          phone: "(503) 494-8311",
-          capacity: 450,
-          currentStaff: 340
-        },
-        {
-          id: 2,
-          name: "Maple Grove Memory Care",
-          address: "12450 SW 69th Ave, Portland, OR 97223",
-          type: "Memory Care",
-          status: "active",
-          phone: "(503) 639-3500",
-          capacity: 85,
-          currentStaff: 62
-        },
-        {
-          id: 3,
-          name: "Sunset Senior Living",
-          address: "8505 SW Canyon Rd, Portland, OR 97225",
-          type: "Assisted Living",
-          status: "active",
-          phone: "(503) 297-8866",
-          capacity: 120,
-          currentStaff: 89
-        },
-        {
-          id: 4,
-          name: "Cedar Hills Rehabilitation Center",
-          address: "10300 SW Eastridge St, Portland, OR 97225",
-          type: "Rehabilitation",
-          status: "active",
-          phone: "(503) 292-5600",
-          capacity: 95,
-          currentStaff: 71
-        }
-      ];
-      res.json(facilities);
+      const { state, facilityType, active, search } = req.query;
+      const facilitiesData = await storage.getAllFacilities();
+      
+      // Apply filters if provided
+      let filteredData = facilitiesData;
+      if (state) filteredData = filteredData.filter(f => f.state === state);
+      if (facilityType) filteredData = filteredData.filter(f => f.facilityType === facilityType);
+      if (active !== undefined) filteredData = filteredData.filter(f => f.isActive === (active === 'true'));
+      if (search) {
+        const searchTerm = (search as string).toLowerCase();
+        filteredData = filteredData.filter(f => 
+          f.name?.toLowerCase().includes(searchTerm) ||
+          f.city?.toLowerCase().includes(searchTerm) ||
+          f.address?.toLowerCase().includes(searchTerm)
+        );
+      }
+      
+      res.json(filteredData);
     } catch (error) {
       console.error("Error fetching facilities:", error);
       res.status(500).json({ message: "Failed to fetch facilities" });
