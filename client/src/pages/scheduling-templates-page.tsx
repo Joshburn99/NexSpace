@@ -151,21 +151,3 @@ export default function SchedulingTemplatesPage() {
     </div>
   );
 }
-// This component has been deprecated. Please use ShiftTemplatesPage instead.
-// All scheduling template functionality is now handled by the new unified template system.
-
-export function SchedulingConfigPage() {
-  return (
-    <div className="p-6">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold mb-4">Page Moved</h1>
-        <p className="text-muted-foreground mb-4">
-          This page has been moved to the new Shift Templates section.
-        </p>
-        <p className="text-sm text-muted-foreground">
-          Please use the "Shift Templates" option in the sidebar navigation.
-        </p>
-      </div>
-    </div>
-  );
-}
