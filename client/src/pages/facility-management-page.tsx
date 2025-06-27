@@ -518,8 +518,8 @@ export default function FacilityManagementPage() {
     const matchesSearch = !searchTerm || 
       facility.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       facility.city?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesState = !filterState || facility.state === filterState;
-    const matchesType = !filterType || facility.facilityType === filterType;
+    const matchesState = !filterState || filterState === "all" || facility.state === filterState;
+    const matchesType = !filterType || filterType === "all" || facility.facilityType === filterType;
     return matchesSearch && matchesState && matchesType;
   }) : [];
 
@@ -888,7 +888,7 @@ export default function FacilityManagementPage() {
                   <SelectValue placeholder="All states" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All states</SelectItem>
+                  <SelectItem value="all">All states</SelectItem>
                   <SelectItem value="OR">Oregon</SelectItem>
                   <SelectItem value="CA">California</SelectItem>
                   <SelectItem value="WA">Washington</SelectItem>
@@ -903,7 +903,7 @@ export default function FacilityManagementPage() {
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All types</SelectItem>
+                  <SelectItem value="all">All types</SelectItem>
                   <SelectItem value="Hospital">Hospital</SelectItem>
                   <SelectItem value="Clinic">Clinic</SelectItem>
                   <SelectItem value="Skilled Nursing">Skilled Nursing</SelectItem>
