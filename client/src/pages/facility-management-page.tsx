@@ -471,7 +471,7 @@ export default function FacilityManagementPage() {
   };
 
   const WorkflowConfigEditForm = ({ facility, onSave }: { facility: EnhancedFacility; onSave: (data: any) => void }) => {
-    const [config, setConfig] = useState(facility.workflowAutomationConfig || {});
+    const [config, setConfig] = useState<Record<string, boolean>>(facility.workflowAutomationConfig || {});
 
     const updateConfig = (field: string, value: boolean) => {
       setConfig({ ...config, [field]: value });
@@ -1433,78 +1433,154 @@ export default function FacilityManagementPage() {
               </TabsContent>
               
               <TabsContent value="workflow" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Workflow className="h-4 w-4" />
-                      Automation Configuration
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {selectedFacility.workflowAutomationConfig ? (
-                      <div className="grid grid-cols-2 gap-4">
-                        {Object.entries(selectedFacility.workflowAutomationConfig).map(([key, value]) => (
-                          <div key={key} className="flex items-center justify-between">
-                            <span className="text-sm capitalize">
-                              {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
-                            </span>
-                            <Badge variant={value ? "default" : "secondary"}>
-                              {value ? "Enabled" : "Disabled"}
-                            </Badge>
+                {editingSection === 'workflow' ? (
+                  <WorkflowConfigEditForm 
+                    facility={selectedFacility} 
+                    onSave={(data) => updateWorkflowMutation.mutate({ id: selectedFacility.id, workflowAutomationConfig: data.workflowAutomationConfig })}
+                  />
+                ) : (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-lg font-semibold">Workflow & Automation</h3>
+                      {isSuperuser && (
+                        <Button
+                          variant="outline"
+                          onClick={() => setEditingSection('workflow')}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Workflow
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <Workflow className="h-4 w-4" />
+                            Automation Configuration
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {selectedFacility.workflowAutomationConfig && Object.keys(selectedFacility.workflowAutomationConfig).length > 0 ? (
+                            <div className="space-y-3">
+                              {Object.entries(selectedFacility.workflowAutomationConfig).map(([key, value]) => (
+                                <div key={key} className="flex items-center justify-between">
+                                  <span className="text-sm capitalize">
+                                    {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                                  </span>
+                                  <Badge variant={value ? "default" : "secondary"}>
+                                    {value ? "Enabled" : "Disabled"}
+                                  </Badge>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">No automation rules configured</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <Clock className="h-4 w-4" />
+                            Shift Management Rules
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {selectedFacility.shiftManagementSettings && Object.keys(selectedFacility.shiftManagementSettings).length > 0 ? (
+                            <div className="space-y-2">
+                              {Object.entries(selectedFacility.shiftManagementSettings).map(([key, value]) => (
+                                <div key={key} className="flex justify-between">
+                                  <span className="text-sm capitalize">
+                                    {key.replace(/([A-Z])/g, ' $1').toLowerCase()}:
+                                  </span>
+                                  <span className="text-sm font-medium">
+                                    {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : 
+                                     key.includes('Hours') ? `${value} hrs` :
+                                     key.includes('Shifts') ? `${value} shifts` : value}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-sm text-muted-foreground">No shift rules configured</p>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {selectedFacility.customRules && (
+                      <Card>
+                        <CardHeader>
+                          <CardTitle className="text-sm font-medium">Custom Operational Rules</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            {selectedFacility.customRules.floatPoolRules && (
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-sm">Float Pool Rules</h4>
+                                <div className="text-sm space-y-1">
+                                  <div>Max Hours/Week: {selectedFacility.customRules.floatPoolRules.maxHoursPerWeek}</div>
+                                  <div>Additional Training: {selectedFacility.customRules.floatPoolRules.requireAdditionalTraining ? 'Required' : 'Not Required'}</div>
+                                  {selectedFacility.customRules.floatPoolRules.specialtyRestrictions && (
+                                    <div>Restrictions: {selectedFacility.customRules.floatPoolRules.specialtyRestrictions.join(', ')}</div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+
+                            {selectedFacility.customRules.overtimeRules && (
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-sm">Overtime Rules</h4>
+                                <div className="text-sm space-y-1">
+                                  <div>Max Overtime: {selectedFacility.customRules.overtimeRules.maxOvertimeHours} hrs</div>
+                                  <div>Overtime Rate: {selectedFacility.customRules.overtimeRules.overtimeRate}x</div>
+                                  <div>Approval Required: {selectedFacility.customRules.overtimeRules.overtimeApprovalRequired ? 'Yes' : 'No'}</div>
+                                </div>
+                              </div>
+                            )}
+
+                            {selectedFacility.customRules.attendanceRules && (
+                              <div className="space-y-2">
+                                <h4 className="font-medium text-sm">Attendance Rules</h4>
+                                <div className="text-sm space-y-1">
+                                  <div>Max Late Arrivals: {selectedFacility.customRules.attendanceRules.maxLateArrivals}</div>
+                                  <div>Max No-Shows: {selectedFacility.customRules.attendanceRules.maxNoCallNoShows}</div>
+                                  <div>Probation: {selectedFacility.customRules.attendanceRules.probationaryPeriod} days</div>
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No workflow configuration</p>
+                        </CardContent>
+                      </Card>
                     )}
-                  </CardContent>
-                </Card>
-                
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      Shift Management Settings
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {selectedFacility.shiftManagementSettings ? (
-                      <div className="space-y-2">
-                        {Object.entries(selectedFacility.shiftManagementSettings).map(([key, value]) => (
-                          <div key={key} className="flex justify-between">
-                            <span className="text-sm capitalize">
-                              {key.replace(/([A-Z])/g, ' $1').toLowerCase()}:
-                            </span>
-                            <span className="text-sm font-medium">
-                              {typeof value === 'boolean' ? (value ? 'Yes' : 'No') : value}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No shift management settings</p>
-                    )}
-                  </CardContent>
-                </Card>
+                  </>
+                )}
               </TabsContent>
               
               <TabsContent value="compliance" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <Shield className="h-4 w-4" />
-                      Regulatory Documents
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {selectedFacility.regulatoryDocs && selectedFacility.regulatoryDocs.length > 0 ? (
-                      <div className="space-y-3">
-                        {selectedFacility.regulatoryDocs.map((doc) => (
-                          <div key={doc.id} className="flex items-center justify-between border rounded-lg p-3">
-                            <div>
-                              <p className="font-medium text-sm">{doc.name}</p>
-                              <p className="text-xs text-muted-foreground capitalize">{doc.type}</p>
-                            </div>
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg font-semibold">Regulatory Compliance & Documentation</h3>
+                  {isSuperuser && (
+                    <Button
+                      variant="outline"
+                      onClick={() => setEditingSection('compliance')}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Manage Documents
+                    </Button>
+                  )}
+                </div>
+
+                {selectedFacility.regulatoryDocs && selectedFacility.regulatoryDocs.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {selectedFacility.regulatoryDocs.map((doc) => (
+                      <Card key={doc.id}>
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between">
+                            <CardTitle className="text-sm font-medium">{doc.name}</CardTitle>
                             <Badge 
                               variant={
                                 doc.status === 'active' ? 'default' : 
@@ -1514,11 +1590,80 @@ export default function FacilityManagementPage() {
                               {doc.status}
                             </Badge>
                           </div>
-                        ))}
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Type:</span>
+                              <span className="capitalize">{doc.type}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Uploaded:</span>
+                              <span>{new Date(doc.uploadDate).toLocaleDateString()}</span>
+                            </div>
+                            {doc.expirationDate && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Expires:</span>
+                                <span className={new Date(doc.expirationDate) < new Date() ? 'text-red-600 font-medium' : ''}>
+                                  {new Date(doc.expirationDate).toLocaleDateString()}
+                                </span>
+                              </div>
+                            )}
+                            {doc.url && (
+                              <div className="pt-2">
+                                <Button variant="ghost" size="sm" className="w-full">
+                                  <FileText className="h-3 w-3 mr-2" />
+                                  View Document
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <Card>
+                    <CardContent className="pt-6">
+                      <div className="text-center">
+                        <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-600">No regulatory documents uploaded</h3>
+                        <p className="text-sm text-gray-500 mt-2">
+                          {isSuperuser 
+                            ? "Click 'Manage Documents' to upload licenses, certifications, and compliance documents"
+                            : "Contact a superuser to upload regulatory documents"
+                          }
+                        </p>
                       </div>
-                    ) : (
-                      <p className="text-sm text-muted-foreground">No regulatory documents uploaded</p>
-                    )}
+                    </CardContent>
+                  </Card>
+                )}
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-sm font-medium">Compliance Summary</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-3 gap-4 text-center">
+                      <div>
+                        <div className="text-2xl font-bold text-green-600">
+                          {selectedFacility.regulatoryDocs?.filter(doc => doc.status === 'active').length || 0}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Active Documents</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold text-orange-600">
+                          {selectedFacility.regulatoryDocs?.filter(doc => doc.status === 'pending_renewal').length || 0}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Pending Renewal</div>
+                      </div>
+                      <div>
+                        <div className="text-2xl font-bold text-red-600">
+                          {selectedFacility.regulatoryDocs?.filter(doc => doc.status === 'expired').length || 0}
+                        </div>
+                        <div className="text-xs text-muted-foreground">Expired</div>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
                 
