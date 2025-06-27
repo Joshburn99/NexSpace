@@ -300,15 +300,20 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         {expanded ? (
-          <div className="flex items-center">
-            <Logo className="h-8 w-8 mr-2" />
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">NexSpace</h1>
-              <p className="text-xs text-gray-500">Healthcare Staffing</p>
+          <div className="flex items-center justify-center w-full">
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-1">
+                <span className="text-3xl font-bold">
+                  <span className="text-blue-500">N</span>
+                  <span className="text-black">exSpace</span>
+                </span>
+              </div>
             </div>
           </div>
         ) : (
-          <Logo className="h-8 w-8" />
+          <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
+            <span className="text-white font-bold text-lg">N</span>
+          </div>
         )}
         {onToggle && (
           <Button variant="ghost" size="sm" onClick={onToggle} className="p-1">
