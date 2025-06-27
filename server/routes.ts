@@ -6083,7 +6083,7 @@ export function registerRoutes(app: Express): Server {
           });
         }
 
-        const updateData: any = { updatedAt: new Date() };
+        const updateData: any = {};
         if (billRates) updateData.billRates = billRates;
         if (payRates) updateData.payRates = payRates;
         if (floatPoolMargins) updateData.floatPoolMargins = floatPoolMargins;
@@ -6128,8 +6128,7 @@ export function registerRoutes(app: Express): Server {
         }
 
         const facility = await storage.updateFacility(id, { 
-          staffingTargets,
-          updatedAt: new Date() 
+          staffingTargets
         });
 
         if (!facility) {
@@ -6158,8 +6157,7 @@ export function registerRoutes(app: Express): Server {
         const { workflowAutomationConfig } = req.body;
 
         const facility = await storage.updateFacility(id, { 
-          workflowAutomationConfig,
-          updatedAt: new Date() 
+          workflowAutomationConfig
         });
 
         if (!facility) {
