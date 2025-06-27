@@ -44,7 +44,9 @@ import {
   Plus,
   Trash2,
   Eye,
-  EyeOff
+  EyeOff,
+  Upload,
+  Download
 } from "lucide-react";
 
 // Enhanced Facility Types
@@ -152,6 +154,24 @@ const enhancedFacilitySchema = basicFacilitySchema.extend({
 type BasicFacilityForm = z.infer<typeof basicFacilitySchema>;
 type EnhancedFacilityForm = z.infer<typeof enhancedFacilitySchema>;
 
+// Available credentials that can be set as requirements
+const AVAILABLE_CREDENTIALS = [
+  { id: 'rn_license', name: 'RN License', category: 'nursing' },
+  { id: 'lpn_license', name: 'LPN License', category: 'nursing' },
+  { id: 'cna_certification', name: 'CNA Certification', category: 'nursing' },
+  { id: 'bls_certification', name: 'BLS Certification', category: 'safety' },
+  { id: 'acls_certification', name: 'ACLS Certification', category: 'safety' },
+  { id: 'pals_certification', name: 'PALS Certification', category: 'safety' },
+  { id: 'cpr_certification', name: 'CPR Certification', category: 'safety' },
+  { id: 'background_check', name: 'Background Check', category: 'screening' },
+  { id: 'drug_screening', name: 'Drug Screening', category: 'screening' },
+  { id: 'tb_test', name: 'TB Test', category: 'health' },
+  { id: 'hep_b_vaccination', name: 'Hepatitis B Vaccination', category: 'health' },
+  { id: 'covid_vaccination', name: 'COVID-19 Vaccination', category: 'health' },
+  { id: 'flu_vaccination', name: 'Flu Vaccination', category: 'health' },
+  { id: 'professional_liability', name: 'Professional Liability Insurance', category: 'insurance' },
+];
+
 export default function FacilityManagementPage() {
   const [selectedFacility, setSelectedFacility] = useState<EnhancedFacility | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -160,6 +180,10 @@ export default function FacilityManagementPage() {
   const [filterType, setFilterType] = useState("");
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [showJsonView, setShowJsonView] = useState<Record<string, boolean>>({});
+  const [showDocumentModal, setShowDocumentModal] = useState(false);
+  const [uploadingDocument, setUploadingDocument] = useState(false);
+  const [selectedCredentials, setSelectedCredentials] = useState<string[]>([]);
+  const [documentFile, setDocumentFile] = useState<File | null>(null);
   
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -1577,7 +1601,7 @@ export default function FacilityManagementPage() {
                   {isSuperuser && (
                     <Button
                       variant="outline"
-                      onClick={() => setEditingSection('compliance')}
+                      onClick={() => setShowDocumentModal(true)}
                     >
                       <FileText className="h-4 w-4 mr-2" />
                       Manage Documents

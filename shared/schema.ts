@@ -138,7 +138,6 @@ export const facilities = pgTable("facilities", {
   adminName: text("admin_name"),
   adminTitle: text("admin_title"),
   medicalDirector: text("medical_director"),
-  emergencyContact: text("emergency_contact"),
   lastInspectionDate: timestamp("last_inspection_date"),
   deficiencyCount: integer("deficiency_count"),
   complaintsCount: integer("complaints_count"),
