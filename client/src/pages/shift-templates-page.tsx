@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useFacilities, getFacilityDisplayName } from "@/hooks/use-facility";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -171,10 +172,8 @@ export default function ShiftTemplatesPage() {
     queryKey: ["/api/shift-templates"],
   });
 
-  // Fetch facilities for template assignment
-  const { data: facilities = [] } = useQuery<Facility[]>({
-    queryKey: ["/api/facilities"],
-  });
+  // Fetch facilities for template assignment using centralized hook
+  const { data: facilities = [] } = useFacilities({ isActive: true });
 
   // Template form
   const templateForm = useForm<z.infer<typeof templateSchema>>({
@@ -562,7 +561,7 @@ export default function ShiftTemplatesPage() {
                       // Also set facilityName for consistency
                       const selectedFacility = facilities.find(f => f.id === parseInt(value));
                       if (selectedFacility) {
-                        templateForm.setValue("facilityName", selectedFacility.name);
+                        templateForm.setValue("facilityName", getFacilityDisplayName(selectedFacility));
                       }
                     }}
                   >
@@ -572,7 +571,7 @@ export default function ShiftTemplatesPage() {
                     <SelectContent>
                       {facilities.map((facility) => (
                         <SelectItem key={facility.id} value={facility.id.toString()}>
-                          {facility.name}
+                          {getFacilityDisplayName(facility)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -873,7 +872,7 @@ export default function ShiftTemplatesPage() {
                   <SelectItem value="all">All Facilities</SelectItem>
                   {facilities.map((facility) => (
                     <SelectItem key={facility.id} value={facility.id.toString()}>
-                      {facility.name}
+                      {getFacilityDisplayName(facility)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -966,7 +965,7 @@ export default function ShiftTemplatesPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Building className="h-4 w-4 text-muted-foreground" />
-                          {template.facilityName}
+                          {getFacilityDisplayName(facilities.find(f => f.id === template.facilityId)) || template.facilityName}
                         </div>
                       </TableCell>
                       <TableCell>{template.department}</TableCell>
