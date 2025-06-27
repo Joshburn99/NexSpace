@@ -9,11 +9,13 @@ import {
   insertShiftSchema,
   insertShiftTemplateSchema,
   insertGeneratedShiftSchema,
+  insertFacilitySchema,
   shifts,
   generatedShifts,
   shiftTemplates,
   facilities,
   users,
+  staff,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
@@ -166,6 +168,247 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error creating shift:", error);
       res.status(500).json({ message: "Failed to create shift" });
+    }
+  });
+
+  // Comprehensive Facility Management API - Central Source of Truth
+  
+  // Get all facilities with full operational data
+  app.get("/api/facilities", async (req, res) => {
+    try {
+      const facilitiesData = await db.select().from(facilities);
+      res.json(facilitiesData);
+    } catch (error) {
+      console.error("Error fetching facilities:", error);
+      res.status(500).json({ message: "Failed to fetch facilities" });
+    }
+  });
+
+  // Get single facility with complete profile
+  app.get("/api/facilities/:id", async (req, res) => {
+    try {
+      const facilityId = parseInt(req.params.id);
+      const [facility] = await db
+        .select()
+        .from(facilities)
+        .where(eq(facilities.id, facilityId));
+
+      if (!facility) {
+        return res.status(404).json({ message: "Facility not found" });
+      }
+
+      res.json(facility);
+    } catch (error) {
+      console.error("Error fetching facility:", error);
+      res.status(500).json({ message: "Failed to fetch facility" });
+    }
+  });
+
+  // Create new facility with comprehensive operational setup
+  app.post("/api/facilities", async (req, res) => {
+    try {
+      const facilityData = insertFacilitySchema.parse(req.body);
+      
+      // Set default operational configurations for new facility
+      const defaultConfig = {
+        // Default dashboard configuration
+        dashboardConfig: {
+          modules: ["shifts", "staff", "analytics", "alerts"],
+          layout: "standard",
+          refreshInterval: 30
+        },
+        
+        // Default KPI targets
+        kpiTargets: {
+          staffingRatio: 0.95,
+          overtimePercentage: 0.15,
+          shiftFillRate: 0.98,
+          avgResponseTime: 30
+        },
+        
+        // Default alert thresholds
+        alertThresholds: {
+          lowStaffing: 0.8,
+          highOvertime: 0.25,
+          criticalShifts: 1
+        },
+        
+        // Default shift times
+        standardShiftTimes: {
+          day: { start: "07:00", end: "19:00" },
+          evening: { start: "15:00", end: "23:00" },
+          night: { start: "23:00", end: "07:00" }
+        },
+        
+        // Default minimum staffing levels
+        minimumStaffingLevels: {
+          "Registered Nurse": 2,
+          "Licensed Practical Nurse": 1,
+          "Certified Nursing Assistant": 3
+        },
+        
+        // Default hourly rate ranges
+        hourlyRateRanges: {
+          "Registered Nurse": { min: 35, max: 65 },
+          "Licensed Practical Nurse": { min: 25, max: 40 },
+          "Certified Nursing Assistant": { min: 18, max: 28 }
+        },
+        
+        // Default attendance policies
+        attendancePolicies: {
+          tardyGracePeriod: 10,
+          maxConsecutiveAbsences: 3,
+          requireCallIn: 2
+        },
+        
+        // Default time clock settings
+        timeClockSettings: {
+          roundingRules: "15min",
+          breakDuration: 30,
+          requireBreakOut: true
+        }
+      };
+
+      const [newFacility] = await db
+        .insert(facilities)
+        .values({
+          ...facilityData,
+          ...defaultConfig
+        })
+        .returning();
+
+      res.status(201).json(newFacility);
+    } catch (error) {
+      console.error("Error creating facility:", error);
+      res.status(500).json({ message: "Failed to create facility" });
+    }
+  });
+
+  // Update facility operational data
+  app.put("/api/facilities/:id", async (req, res) => {
+    try {
+      const facilityId = parseInt(req.params.id);
+      const updateData = insertFacilitySchema.partial().parse(req.body);
+
+      const [updatedFacility] = await db
+        .update(facilities)
+        .set({
+          ...updateData,
+          updatedAt: new Date()
+        })
+        .where(eq(facilities.id, facilityId))
+        .returning();
+
+      if (!updatedFacility) {
+        return res.status(404).json({ message: "Facility not found" });
+      }
+
+      res.json(updatedFacility);
+    } catch (error) {
+      console.error("Error updating facility:", error);
+      res.status(500).json({ message: "Failed to update facility" });
+    }
+  });
+
+  // Get facility operational dashboard data
+  app.get("/api/facilities/:id/dashboard", async (req, res) => {
+    try {
+      const facilityId = parseInt(req.params.id);
+      
+      // Get facility basic info
+      const [facility] = await db
+        .select({
+          id: facilities.id,
+          name: facilities.name,
+          facilityType: facilities.facilityType,
+          dashboardConfig: facilities.dashboardConfig,
+          kpiTargets: facilities.kpiTargets,
+          alertThresholds: facilities.alertThresholds
+        })
+        .from(facilities)
+        .where(eq(facilities.id, facilityId));
+
+      if (!facility) {
+        return res.status(404).json({ message: "Facility not found" });
+      }
+
+      // Get shift statistics for the facility
+      const shiftStats = await db
+        .select({
+          total: sql<number>`count(*)`,
+          filled: sql<number>`count(*) filter (where status = 'filled')`,
+          open: sql<number>`count(*) filter (where status = 'open')`
+        })
+        .from(generatedShifts)
+        .where(eq(generatedShifts.facilityId, facilityId));
+
+      // Get staff count for the facility
+      const staffStats = await db
+        .select({
+          total: sql<number>`count(*)`,
+          active: sql<number>`count(*) filter (where availability_status = 'available')`
+        })
+        .from(staff)
+        .where(eq(staff.userId, facilityId)); // Assuming staff is linked to facility
+
+      const dashboardData = {
+        facility,
+        stats: {
+          shifts: shiftStats[0] || { total: 0, filled: 0, open: 0 },
+          staff: staffStats[0] || { total: 0, active: 0 }
+        },
+        kpis: {
+          staffingRatio: staffStats[0]?.active / (staffStats[0]?.total || 1),
+          shiftFillRate: shiftStats[0]?.filled / (shiftStats[0]?.total || 1)
+        }
+      };
+
+      res.json(dashboardData);
+    } catch (error) {
+      console.error("Error fetching facility dashboard:", error);
+      res.status(500).json({ message: "Failed to fetch facility dashboard" });
+    }
+  });
+
+  // Get facility staff management data
+  app.get("/api/facilities/:id/staff", async (req, res) => {
+    try {
+      const facilityId = parseInt(req.params.id);
+      
+      const facilityStaff = await db
+        .select()
+        .from(staff)
+        .where(eq(staff.userId, facilityId)); // Adjust relationship as needed
+
+      res.json(facilityStaff);
+    } catch (error) {
+      console.error("Error fetching facility staff:", error);
+      res.status(500).json({ message: "Failed to fetch facility staff" });
+    }
+  });
+
+  // Get facility shift analytics
+  app.get("/api/facilities/:id/analytics", async (req, res) => {
+    try {
+      const facilityId = parseInt(req.params.id);
+      const { startDate, endDate } = req.query;
+
+      // Build analytics data specific to this facility
+      const shiftsAnalytics = await db
+        .select({
+          date: generatedShifts.date,
+          department: generatedShifts.department,
+          specialty: generatedShifts.specialty,
+          status: generatedShifts.status,
+          rate: generatedShifts.rate
+        })
+        .from(generatedShifts)
+        .where(eq(generatedShifts.facilityId, facilityId));
+
+      res.json(shiftsAnalytics);
+    } catch (error) {
+      console.error("Error fetching facility analytics:", error);
+      res.status(500).json({ message: "Failed to fetch facility analytics" });
     }
   });
 

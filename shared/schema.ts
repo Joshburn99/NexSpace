@@ -84,6 +84,69 @@ export const facilities = pgTable("facilities", {
   latitude: decimal("latitude", { precision: 10, scale: 8 }),
   longitude: decimal("longitude", { precision: 11, scale: 8 }),
   isActive: boolean("is_active").default(true),
+  
+  // Enhanced operational data for comprehensive facility management
+  // Dashboard & Analytics Configuration
+  dashboardConfig: jsonb("dashboard_config"), // custom dashboard layout preferences
+  kpiTargets: jsonb("kpi_targets"), // performance targets and goals
+  alertThresholds: jsonb("alert_thresholds"), // when to trigger notifications
+  
+  // Staffing & Scheduling Management
+  standardShiftTimes: jsonb("standard_shift_times"), // facility's standard shift patterns
+  minimumStaffingLevels: jsonb("minimum_staffing_levels"), // by department/specialty
+  maximumOvertimeHours: integer("maximum_overtime_hours").default(40),
+  floatPoolEnabled: boolean("float_pool_enabled").default(false),
+  floatPoolRules: jsonb("float_pool_rules"), // cross-training requirements, rotation rules
+  
+  // Financial & Billing Operations
+  hourlyRateRanges: jsonb("hourly_rate_ranges"), // by specialty/experience level
+  premiumRateMultipliers: jsonb("premium_rate_multipliers"), // holiday, overtime, etc.
+  budgetAllocations: jsonb("budget_allocations"), // departmental budgets
+  invoicingPreferences: jsonb("invoicing_preferences"), // billing cycles, payment terms
+  preferredPayrollProvider: text("preferred_payroll_provider"),
+  
+  // Compliance & Quality Management
+  requiredCertifications: jsonb("required_certifications"), // by role/department
+  complianceRequirements: jsonb("compliance_requirements"), // state/federal requirements
+  qualityMetrics: jsonb("quality_metrics"), // resident satisfaction, safety scores
+  auditSchedule: jsonb("audit_schedule"), // internal/external audit calendar
+  
+  // Operations & Workflow Management
+  departmentStructure: jsonb("department_structure"), // organizational hierarchy
+  approvalWorkflows: jsonb("approval_workflows"), // for shifts, time-off, expenses
+  notificationSettings: jsonb("notification_settings"), // who gets what alerts
+  automationRules: jsonb("automation_rules"), // workflow automation preferences
+  
+  // Technology & Integration Settings
+  systemIntegrations: jsonb("system_integrations"), // connected systems/APIs
+  dataRetentionPolicies: jsonb("data_retention_policies"), // how long to keep various data
+  backupSchedule: jsonb("backup_schedule"), // data backup preferences
+  securitySettings: jsonb("security_settings"), // access controls, password policies
+  
+  // Vendor & Agency Management
+  preferredAgencies: jsonb("preferred_agencies"), // staffing agencies and rates
+  vendorContracts: jsonb("vendor_contracts"), // active vendor relationships
+  agencyUsageLimits: jsonb("agency_usage_limits"), // cost controls and restrictions
+  
+  // Job Board & Recruitment Settings
+  jobPostingTemplates: jsonb("job_posting_templates"), // standard job descriptions
+  recruitmentSettings: jsonb("recruitment_settings"), // posting preferences, screening criteria
+  referralProgram: jsonb("referral_program"), // employee referral incentives
+  
+  // Attendance & Time Management Policies
+  attendancePolicies: jsonb("attendance_policies"), // tardiness, absence rules
+  timeClockSettings: jsonb("time_clock_settings"), // break rules, overtime calculations
+  shiftDifferentials: jsonb("shift_differentials"), // night/weekend pay differences
+  
+  // Emergency & Contingency Planning
+  emergencyContactHierarchy: jsonb("emergency_contact_hierarchy"), // who to call in what order
+  contingencyPlans: jsonb("contingency_plans"), // staffing shortage protocols
+  emergencyProcedures: jsonb("emergency_procedures"), // facility-specific emergency plans
+  
+  // Reporting & Analytics Preferences
+  reportingFrequency: jsonb("reporting_frequency"), // how often to generate various reports
+  analyticsSettings: jsonb("analytics_settings"), // what metrics to track and display
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
