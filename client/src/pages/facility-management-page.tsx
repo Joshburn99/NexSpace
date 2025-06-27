@@ -916,8 +916,8 @@ export default function FacilityManagementPage() {
                 variant="outline" 
                 onClick={() => {
                   setSearchTerm("");
-                  setFilterState("");
-                  setFilterType("");
+                  setFilterState("all");
+                  setFilterType("all");
                 }}
               >
                 Clear Filters
