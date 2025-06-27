@@ -362,9 +362,12 @@ export class DatabaseStorage implements IStorage {
     id: number,
     updates: Partial<InsertFacility>
   ): Promise<Facility | undefined> {
+    // Remove fields that don't exist in the database
+    const { updatedAt, ...validUpdates } = updates as any;
+    
     const [facility] = await db
       .update(facilities)
-      .set({ ...updates, updatedAt: new Date() })
+      .set(validUpdates)
       .where(eq(facilities.id, id))
       .returning();
     return facility || undefined;

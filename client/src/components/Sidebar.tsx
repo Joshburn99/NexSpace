@@ -76,11 +76,6 @@ const navigationItems: NavItem[] = [
       { label: "Referral System", href: "/staff/referrals", icon: <Users className="w-4 h-4" /> },
       { label: "Credentials", href: "/credentials", icon: <Shield className="w-4 h-4" /> },
       {
-        label: "Facility Management",
-        href: "/facility-management",
-        icon: <Users className="w-4 h-4" />,
-      },
-      {
         label: "Facility Recommendations",
         href: "/facility-recommendations",
         icon: <Users className="w-4 h-4" />,
