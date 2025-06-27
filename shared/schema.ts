@@ -728,6 +728,12 @@ export const insertShiftTemplateSchema = createInsertSchema(shiftTemplates).omit
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  hourlyRate: z.union([z.string(), z.number()]).transform((val) => val.toString()),
+  facilityId: z.union([z.string(), z.number()]).transform((val) => parseInt(val.toString())),
+  minStaff: z.union([z.string(), z.number()]).transform((val) => parseInt(val.toString())),
+  maxStaff: z.union([z.string(), z.number()]).transform((val) => parseInt(val.toString())),
+  daysPostedOut: z.union([z.string(), z.number()]).transform((val) => parseInt(val.toString())),
 });
 
 export const insertGeneratedShiftSchema = createInsertSchema(generatedShifts).omit({

@@ -5411,14 +5411,19 @@ export function registerRoutes(app: Express): Server {
         updatedAt: template.updatedAt
       };
       
-      // Regenerate shifts with new settings
-      await regenerateShiftsFromTemplate(template);
+      // Only regenerate shifts if template is active
+      if (template.isActive) {
+        await regenerateShiftsFromTemplate(template);
+        console.log(`[TEMPLATE UPDATE] Regenerated shifts for active template ${id}`);
+      } else {
+        console.log(`[TEMPLATE UPDATE] Skipped shift regeneration for inactive template ${id}`);
+      }
       
       console.log(`[TEMPLATE UPDATE] Successfully updated template ${id}`);
       res.json(formattedTemplate);
     } catch (error) {
       console.error("Error updating shift template:", error);
-      res.status(500).json({ message: "Failed to update shift template", error: error.message });
+      res.status(500).json({ message: "Failed to update shift template", error: (error as Error).message });
     }
   });
 
@@ -5471,16 +5476,24 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "Template not found" });
       }
       
-      // Regenerate shifts based on new status
+      // Handle status change logic
       if (isActive) {
+        // Generate new shifts when activating template
         await generateShiftsFromTemplate(template);
+        console.log(`[TEMPLATE STATUS] Template ${id} activated and shifts generated`);
       } else {
-        // Deactivate future shifts from this template
-        await db.delete(generatedShifts)
-          .where(eq(generatedShifts.templateId, id));
+        // Do NOT delete existing shifts when deactivating
+        // Just stop generating new shifts for this template
+        console.log(`[TEMPLATE STATUS] Template ${id} deactivated - existing shifts preserved`);
       }
       
-      res.json(template);
+      res.json({
+        message: isActive ? "Template activated and shifts generated" : "Template deactivated - existing shifts preserved",
+        template: {
+          ...template,
+          hourlyRate: template.hourlyRate?.toString() || "0.00"
+        }
+      });
     } catch (error) {
       console.error("Error updating template status:", error);
       res.status(500).json({ message: "Failed to update template status" });
@@ -7586,68 +7599,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.put("/api/shift-templates/:id", requireAuth, async (req, res) => {
-    try {
-      const templateId = parseInt(req.params.id);
-      console.log('UPDATE REQUEST - Template ID:', templateId);
-      console.log('UPDATE REQUEST - Body:', req.body);
-      
-      const { name, department, specialty, facilityId, facilityName, buildingId, buildingName, minStaff, maxStaff, shiftType, startTime, endTime, daysOfWeek, hourlyRate, daysPostedOut, notes } = req.body;
-      
-      const updateData = {
-        name,
-        department,
-        specialty,
-        facilityId,
-        facilityName,
-        buildingId,
-        buildingName,
-        minStaff,
-        maxStaff: maxStaff || minStaff, // Ensure maxStaff is at least minStaff
-        shiftType,
-        startTime,
-        endTime,
-        daysOfWeek,
-        hourlyRate,
-        daysPostedOut,
-        notes,
-      };
-      
-      console.log('UPDATE DATA:', updateData);
-
-      const updatedTemplate = await storage.updateShiftTemplate(templateId, updateData);
-
-      if (!updatedTemplate) {
-        return res.status(404).json({ message: "Template not found" });
-      }
-
-      console.log('UPDATED TEMPLATE FROM DB:', updatedTemplate);
-      
-      // Transform database response to camelCase for frontend
-      const transformedTemplate = {
-        ...updatedTemplate,
-        facilityId: updatedTemplate.facilityId,
-        facilityName: updatedTemplate.facilityName,
-        buildingId: updatedTemplate.buildingId,
-        buildingName: updatedTemplate.buildingName,
-        minStaff: updatedTemplate.minStaff,
-        maxStaff: updatedTemplate.maxStaff,
-        shiftType: updatedTemplate.shiftType,
-        startTime: updatedTemplate.startTime,
-        endTime: updatedTemplate.endTime,
-        daysOfWeek: updatedTemplate.daysOfWeek,
-        isActive: updatedTemplate.isActive,
-        hourlyRate: updatedTemplate.hourlyRate,
-        daysPostedOut: updatedTemplate.daysPostedOut,
-      };
-      
-      console.log('TRANSFORMED UPDATED TEMPLATE:', transformedTemplate);
-      res.json(transformedTemplate);
-    } catch (error) {
-      console.error('Error updating shift template:', error);
-      res.status(500).json({ message: "Failed to update shift template", error: error.message });
-    }
-  });
+  // Duplicate PUT handler removed - using unified handler above
 
   app.delete("/api/shift-templates/:id", requireAuth, async (req, res) => {
     try {
