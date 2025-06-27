@@ -21,11 +21,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
-      {/* Force TopBar to always be visible including during impersonation */}
-      <TopBar />
-      
       {showTopLine ? (
         <>
+          <TopBar />
           <TopLine />
           <div className="flex flex-1">
             <RoleBasedSidebar />
