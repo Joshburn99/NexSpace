@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useFacilities, useFacility, getFacilityDisplayName, getFacilityTimezone } from "@/hooks/use-facility";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -226,10 +227,8 @@ export default function EnhancedCalendarPage() {
     refetchOnMount: true,
   });
 
-  // Fetch facilities for filters
-  const { data: facilities = [] } = useQuery({
-    queryKey: ["/api/facilities"],
-  });
+  // Fetch facilities for filters using centralized hook
+  const { data: facilities = [] } = useFacilities({ isActive: true });
 
   // Fetch staff for filters
   const { data: staff = [] } = useQuery({
@@ -1018,7 +1017,7 @@ export default function EnhancedCalendarPage() {
                   <Label>Facility</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Building className="h-4 w-4 text-muted-foreground" />
-                    <span>{selectedShift.facilityName}</span>
+                    <span>{getFacilityDisplayName(facilities.find(f => f.id === selectedShift.facilityId)) || selectedShift.facilityName}</span>
                   </div>
                 </div>
                 <div>
@@ -1475,18 +1474,20 @@ export default function EnhancedCalendarPage() {
               </div>
               <div>
                 <Label className="text-sm font-medium">Facility</Label>
-                <select 
-                  className="w-full mt-1 p-2 border rounded-md"
-                  value={shiftFormData.facilityId}
-                  onChange={(e) => setShiftFormData({...shiftFormData, facilityId: e.target.value})}
-                >
-                  <option value="">Select Facility</option>
-                  {(facilities as any[]).map((facility: any) => (
-                    <option key={facility.id} value={facility.id.toString()}>
-                      {facility.name}
-                    </option>
-                  ))}
-                </select>
+                <div className="mt-1">
+                  <select 
+                    className="w-full p-2 border rounded-md"
+                    value={shiftFormData.facilityId}
+                    onChange={(e) => setShiftFormData({...shiftFormData, facilityId: e.target.value})}
+                  >
+                    <option value="">Select Facility</option>
+                    {facilities.map((facility) => (
+                      <option key={facility.id} value={facility.id.toString()}>
+                        {getFacilityDisplayName(facility)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             </div>
             <div>
