@@ -173,10 +173,25 @@ export function registerRoutes(app: Express): Server {
 
   // Comprehensive Facility Management API - Central Source of Truth
   
-  // Get all facilities with full operational data
+  // Get all facilities with basic operational data
   app.get("/api/facilities", async (req, res) => {
     try {
-      const facilitiesData = await db.select().from(facilities);
+      const facilitiesData = await db.select({
+        id: facilities.id,
+        name: facilities.name,
+        facilityType: facilities.facilityType,
+        address: facilities.address,
+        city: facilities.city,
+        state: facilities.state,
+        zipCode: facilities.zipCode,
+        phone: facilities.phone,
+        email: facilities.email,
+        bedCount: facilities.bedCount,
+        overallRating: facilities.overallRating,
+        isActive: facilities.isActive,
+        createdAt: facilities.createdAt,
+        updatedAt: facilities.updatedAt,
+      }).from(facilities);
       res.json(facilitiesData);
     } catch (error) {
       console.error("Error fetching facilities:", error);
@@ -207,7 +222,7 @@ export function registerRoutes(app: Express): Server {
   // Create new facility with comprehensive operational setup
   app.post("/api/facilities", async (req, res) => {
     try {
-      const facilityData = insertFacilitySchema.parse(req.body);
+      const facilityData = req.body;
       
       // Set default operational configurations for new facility
       const defaultConfig = {
@@ -288,7 +303,7 @@ export function registerRoutes(app: Express): Server {
   app.put("/api/facilities/:id", async (req, res) => {
     try {
       const facilityId = parseInt(req.params.id);
-      const updateData = insertFacilitySchema.partial().parse(req.body);
+      const updateData = req.body;
 
       const [updatedFacility] = await db
         .update(facilities)

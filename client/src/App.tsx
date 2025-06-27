@@ -44,6 +44,7 @@ import CompliancePage from "@/pages/compliance-page";
 import SettingsPage from "@/pages/settings-page";
 import AdminImpersonationPage from "@/pages/admin-impersonation-page";
 import FacilityManagementPage from "@/pages/facility-management-page";
+import ComprehensiveFacilityManagement from "@/pages/comprehensive-facility-management";
 import EnhancedJobPostingPage from "@/pages/enhanced-job-posting-page";
 import WorkflowAutomationPage from "@/pages/workflow-automation-page";
 import ClinicianDashboardWrapper from "@/pages/clinician-dashboard-wrapper";
@@ -128,7 +129,7 @@ function AppContent() {
       <ProtectedRoute path="/admin/users" component={AdminUserManagementPage} />
       <ProtectedRoute path="/admin/audit" component={AdminAuditLogsPage} />
       <ProtectedRoute path="/admin/database" component={AdminDatabaseConsolePage} />
-      <ProtectedRoute path="/facility-management" component={FacilityManagementPage} />
+      <ProtectedRoute path="/facility-management" component={ComprehensiveFacilityManagement} />
       <ProtectedRoute path="/job-posting" component={EnhancedJobPostingPage} />
       <ProtectedRoute path="/workflow-automation" component={WorkflowAutomationPage} />
       <ProtectedRoute path="/clinician-dashboard" component={ClinicianDashboardWrapper} />
