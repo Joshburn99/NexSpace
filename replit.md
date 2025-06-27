@@ -13,6 +13,15 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### June 27, 2025 - Enhanced Facility Management Schema & Database Extension
+- **Database Schema Extension**: Added 17 new facility management columns to support enterprise healthcare operations
+- **Enhanced Fields**: auto_assignment_enabled, team_id, net_terms, float_pool_margins, bill_rates, pay_rates, workflow_automation_config, timezone, shift_management_settings, billing_contact_name, billing_contact_email, staffing_targets, emr_system, contract_start_date, payroll_provider_id, custom_rules, regulatory_docs
+- **TypeScript Interfaces**: Created comprehensive type definitions for JSONB fields including FloatPoolMargins, SpecialtyRates, WorkflowAutomationConfig, ShiftManagementSettings, StaffingTargets, CustomRules, RegulatoryDocument
+- **Database Migration**: Successfully applied schema changes with SQL ALTER TABLE statements, maintaining backward compatibility
+- **Sample Data**: Populated facilities with realistic enterprise configurations including Epic/Cerner EMR systems, timezone-specific settings, specialty-based rate structures
+- **API Foundation**: Updated facility relations to include payroll provider connections and enhanced data retrieval patterns
+- **Implementation Guide**: Created enhanced-facility-example.ts demonstrating complete usage patterns for enterprise facility management
+
 ### June 26, 2025 - Add Shift Button Implementation & UI Cleanup
 - Removed duplicate "Add Shift" button from filter controls area
 - Implemented fully functional Add Shift modal with controlled form inputs
