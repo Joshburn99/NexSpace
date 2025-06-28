@@ -406,9 +406,9 @@ export default function AdminTeamsPage() {
                               size="sm"
                               className="text-destructive hover:text-destructive"
                               onClick={() => {
-                                // TODO: Add remove member functionality
-                                console.log('Remove member:', member.id);
+                                removeMemberMutation.mutate({ teamId: team.id, memberId: member.id });
                               }}
+                              disabled={removeMemberMutation.isPending}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -447,9 +447,9 @@ export default function AdminTeamsPage() {
                               size="sm"
                               className="text-destructive hover:text-destructive"
                               onClick={() => {
-                                // TODO: Add remove facility functionality
-                                console.log('Remove facility:', facility.id);
+                                removeFacilityMutation.mutate({ teamId: team.id, facilityId: facility.facilityId });
                               }}
+                              disabled={removeFacilityMutation.isPending}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>

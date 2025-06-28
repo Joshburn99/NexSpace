@@ -45,7 +45,7 @@ import {
   teamFacilities,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
 import { recommendationEngine } from "./recommendation-engine";
 import type { RecommendationCriteria } from "./recommendation-engine";
 import { UnifiedDataService } from "./unified-data-service";
