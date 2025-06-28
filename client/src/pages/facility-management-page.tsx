@@ -143,12 +143,38 @@ const basicFacilitySchema = z.object({
 });
 
 const enhancedFacilitySchema = basicFacilitySchema.extend({
+  // Enhanced operational fields
   autoAssignmentEnabled: z.boolean().default(false),
   timezone: z.string().default("America/New_York"),
   netTerms: z.string().default("Net 30"),
   emrSystem: z.string().optional(),
+  teamId: z.coerce.number().optional(),
+  
+  // Billing and financial fields
   billingContactName: z.string().optional(),
-  billingContactEmail: z.string().email().optional().or(z.literal(""))
+  billingContactEmail: z.string().email().optional().or(z.literal("")),
+  contractStartDate: z.string().optional(),
+  payrollProviderId: z.coerce.number().optional(),
+  
+  // Rate structure (JSON fields as strings for form handling)
+  billRates: z.string().optional(),
+  payRates: z.string().optional(), 
+  floatPoolMargins: z.string().optional(),
+  
+  // Workflow automation (JSON field as string)
+  workflowAutomationConfig: z.string().optional(),
+  
+  // Shift management settings (JSON field as string)
+  shiftManagementSettings: z.string().optional(),
+  
+  // Staffing targets (JSON field as string)
+  staffingTargets: z.string().optional(),
+  
+  // Custom rules (JSON field as string)
+  customRules: z.string().optional(),
+  
+  // Regulatory documents (JSON field as string)
+  regulatoryDocs: z.string().optional()
 });
 
 type BasicFacilityForm = z.infer<typeof basicFacilitySchema>;
@@ -314,7 +340,21 @@ export default function FacilityManagementPage() {
   });
 
   const onSubmit = (data: EnhancedFacilityForm) => {
-    createFacilityMutation.mutate(data);
+    // Process JSON fields before sending to backend
+    const processedData = {
+      ...data,
+      // Parse JSON fields if they exist and are not empty
+      billRates: data.billRates ? JSON.parse(data.billRates) : null,
+      payRates: data.payRates ? JSON.parse(data.payRates) : null,
+      floatPoolMargins: data.floatPoolMargins ? JSON.parse(data.floatPoolMargins) : null,
+      workflowAutomationConfig: data.workflowAutomationConfig ? JSON.parse(data.workflowAutomationConfig) : null,
+      shiftManagementSettings: data.shiftManagementSettings ? JSON.parse(data.shiftManagementSettings) : null,
+      staffingTargets: data.staffingTargets ? JSON.parse(data.staffingTargets) : null,
+      customRules: data.customRules ? JSON.parse(data.customRules) : null,
+      regulatoryDocs: data.regulatoryDocs ? JSON.parse(data.regulatoryDocs) : null,
+    };
+    
+    createFacilityMutation.mutate(processedData);
   };
 
   // Enhanced editing forms for complex fields
@@ -364,7 +404,7 @@ export default function FacilityManagementPage() {
               <SelectItem value="Cerner">Cerner</SelectItem>
               <SelectItem value="Allscripts">Allscripts</SelectItem>
               <SelectItem value="Meditech">Meditech</SelectItem>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -743,10 +783,12 @@ export default function FacilityManagementPage() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <Tabs defaultValue="basic" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="basic">Basic Info</TabsTrigger>
+                  <TabsList className="grid w-full grid-cols-5">
+                    <TabsTrigger value="basic">Basic</TabsTrigger>
                     <TabsTrigger value="operations">Operations</TabsTrigger>
                     <TabsTrigger value="billing">Billing</TabsTrigger>
+                    <TabsTrigger value="rates">Rates</TabsTrigger>
+                    <TabsTrigger value="workflow">Workflow</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="basic" className="space-y-4">
@@ -1017,6 +1059,170 @@ export default function FacilityManagementPage() {
                             <FormControl>
                               <Input placeholder="billing@facility.com" type="email" {...field} />
                             </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="contractStartDate"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Contract Start Date</FormLabel>
+                            <FormControl>
+                              <Input type="date" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="teamId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Team ID (Optional)</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="1" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="rates" className="space-y-4">
+                    <div className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="billRates"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Bill Rates (JSON Format)</FormLabel>
+                            <FormControl>
+                              <textarea 
+                                className="w-full min-h-[100px] p-3 border rounded-md" 
+                                placeholder='{"RN": 75, "LPN": 55, "CNA": 35}'
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Enter billing rates by specialty in JSON format
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="payRates"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Pay Rates (JSON Format)</FormLabel>
+                            <FormControl>
+                              <textarea 
+                                className="w-full min-h-[100px] p-3 border rounded-md" 
+                                placeholder='{"RN": 45, "LPN": 32, "CNA": 22}'
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Enter pay rates by specialty in JSON format
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="floatPoolMargins"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Float Pool Margins (JSON Format)</FormLabel>
+                            <FormControl>
+                              <textarea 
+                                className="w-full min-h-[80px] p-3 border rounded-md" 
+                                placeholder='{"RN": 15, "LPN": 12, "CNA": 8}'
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Enter float pool margin percentages by specialty
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="workflow" className="space-y-4">
+                    <div className="space-y-4">
+                      <FormField
+                        control={form.control}
+                        name="workflowAutomationConfig"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Workflow Automation Config (JSON)</FormLabel>
+                            <FormControl>
+                              <textarea 
+                                className="w-full min-h-[120px] p-3 border rounded-md" 
+                                placeholder='{"autoApproveShifts": false, "autoNotifyManagers": true, "autoGenerateInvoices": true}'
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Configure workflow automation settings
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="shiftManagementSettings"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Shift Management Settings (JSON)</FormLabel>
+                            <FormControl>
+                              <textarea 
+                                className="w-full min-h-[120px] p-3 border rounded-md" 
+                                placeholder='{"overtimeThreshold": 40, "maxConsecutiveShifts": 5, "minHoursBetweenShifts": 8}'
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Configure shift management rules and thresholds
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="staffingTargets"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Staffing Targets (JSON)</FormLabel>
+                            <FormControl>
+                              <textarea 
+                                className="w-full min-h-[120px] p-3 border rounded-md" 
+                                placeholder='{"ICU": {"targetHours": 168, "minStaff": 2, "maxStaff": 4}}'
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Define staffing targets by department
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}

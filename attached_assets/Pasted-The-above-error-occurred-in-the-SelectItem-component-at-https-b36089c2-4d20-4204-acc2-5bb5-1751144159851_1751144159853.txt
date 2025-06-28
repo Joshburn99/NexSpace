@@ -1,0 +1,102 @@
+The above error occurred in the <SelectItem> component:
+
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=6db91df9:847:7
+    at _c1 (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/components/ui/select.tsx:190:12)
+    at div
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=6db91df9:42:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=6db91df9:79:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=6db91df9:56:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=6db91df9:39:15
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=6db91df9:758:13
+    at div
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=6db91df9:79:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=6db91df9:56:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=6db91df9:39:15
+    at Provider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=6db91df9:38:15)
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=6db91df9:301:58
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=6db91df9:79:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=6db91df9:56:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=6db91df9:42:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2KHYVKMT.js?v=6db91df9:260:22
+    at SelectPortal
+    at _c7 (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/components/ui/select.tsx:111:12)
+    at Provider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=6db91df9:38:15)
+    at Provider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=6db91df9:38:15)
+    at CollectionProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TPYHSINA.js?v=6db91df9:29:13)
+    at Provider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=6db91df9:38:15)
+    at Provider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=6db91df9:38:15)
+    at Popper (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-G2DSZ377.js?v=6db91df9:1921:11)
+    at Select (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-select.js?v=6db91df9:89:5)
+    at div
+    at div
+    at OperationalSettingsEditForm (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/pages/facility-management-page.tsx:223:5)
+    at div
+    at _c9 (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/components/ui/card.tsx:78:12)
+    at div
+    at _c (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/components/ui/card.tsx:20:11)
+    at div
+    at div
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=6db91df9:42:13
+    at Presence (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LUE5KDWX.js?v=6db91df9:24:11)
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=6db91df9:176:13
+    at _c5 (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/components/ui/tabs.tsx:68:12)
+    at div
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=6db91df9:42:13
+    at Provider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=6db91df9:38:15)
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=6db91df9:54:7
+    at div
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=6db91df9:42:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2KHYVKMT.js?v=6db91df9:61:7
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=6db91df9:79:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=6db91df9:56:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=6db91df9:42:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-TY5OFM22.js?v=6db91df9:34:5
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-IE6GNWVQ.js?v=6db91df9:235:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-IE6GNWVQ.js?v=6db91df9:158:58
+    at Presence (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LUE5KDWX.js?v=6db91df9:24:11)
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-IE6GNWVQ.js?v=6db91df9:149:64
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=6db91df9:79:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2K77HOHX.js?v=6db91df9:56:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-Q6YJROYD.js?v=6db91df9:42:13
+    at https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-2KHYVKMT.js?v=6db91df9:260:22
+    at Presence (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-LUE5KDWX.js?v=6db91df9:24:11)
+    at Provider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=6db91df9:38:15)
+    at DialogPortal (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-IE6GNWVQ.js?v=6db91df9:111:11)
+    at _c3 (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/components/ui/dialog.tsx:50:12)
+    at Provider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=6db91df9:38:15)
+    at Dialog (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-IE6GNWVQ.js?v=6db91df9:52:5)
+    at div
+    at FacilityManagementPage (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/pages/facility-management-page.tsx:99:51)
+    at Route (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=6db91df9:323:16)
+    at ProtectedRoute (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/lib/protected-route.tsx:22:3)
+    at Switch (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=6db91df9:379:17)
+    at main
+    at div
+    at div
+    at Layout (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/components/Layout.tsx:24:19)
+    at AppContent (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/App.tsx?v=-AdpkumKNxmrNnGs5bBS_:89:22)
+    at Provider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=6db91df9:38:15)
+    at TooltipProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=6db91df9:64:5)
+    at DashboardProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/DashboardContext.tsx:22:37)
+    at InvoiceProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/InvoiceContext.tsx:406:35)
+    at InsightsProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/InsightsContext.tsx:384:36)
+    at CredentialsProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/CredentialsContext.tsx:315:39)
+    at ProfileProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/ProfileContext.tsx:109:35)
+    at JobProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/JobContext.tsx:87:31)
+    at PTOProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/PTOContext.tsx:99:31)
+    at CredentialVerificationProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/CredentialVerificationContext.tsx:145:50)
+    at EnhancedCredentialProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/EnhancedCredentialContext.tsx:98:46)
+    at MessagingProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/MessagingContext.tsx:62:37)
+    at MessageProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/MessageContext.tsx:107:35)
+    at TeamProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/TeamContext.tsx:77:32)
+    at StaffProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/StaffContext.tsx:21:33)
+    at TimeClockProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/TimeClockContext.tsx:21:37)
+    at ShiftProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/ShiftContext.tsx:265:33)
+    at NotificationProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/NotificationContext.tsx:54:40)
+    at SessionProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/SessionContext.tsx:26:35)
+    at AuthProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/hooks/use-auth.tsx:24:32)
+    at QueryClientProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=6db91df9:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
