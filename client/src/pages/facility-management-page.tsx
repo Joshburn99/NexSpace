@@ -318,6 +318,152 @@ export default function FacilityManagementPage() {
   };
 
   // Enhanced editing forms for complex fields
+  const OperationalSettingsEditForm = ({ 
+    facility, 
+    onSave, 
+    onCancel 
+  }: { 
+    facility: EnhancedFacility; 
+    onSave: (data: any) => void; 
+    onCancel: () => void; 
+  }) => {
+    const [bedCount, setBedCount] = useState(facility.bedCount || 100);
+    const [emrSystem, setEmrSystem] = useState(facility.emrSystem || "");
+    const [netTerms, setNetTerms] = useState(facility.netTerms || "Net 30");
+    const [timezone, setTimezone] = useState(facility.timezone || "America/New_York");
+    const [autoAssignmentEnabled, setAutoAssignmentEnabled] = useState(facility.autoAssignmentEnabled || false);
+
+    const handleSave = () => {
+      onSave({
+        bedCount,
+        emrSystem,
+        netTerms,
+        timezone,
+        autoAssignmentEnabled
+      });
+    };
+
+    return (
+      <div className="space-y-3">
+        <div>
+          <Label>Bed Count</Label>
+          <Input 
+            type="number" 
+            value={bedCount} 
+            onChange={(e) => setBedCount(parseInt(e.target.value) || 0)}
+          />
+        </div>
+        <div>
+          <Label>EMR System</Label>
+          <Select value={emrSystem} onValueChange={setEmrSystem}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select EMR" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Epic">Epic</SelectItem>
+              <SelectItem value="Cerner">Cerner</SelectItem>
+              <SelectItem value="Allscripts">Allscripts</SelectItem>
+              <SelectItem value="Meditech">Meditech</SelectItem>
+              <SelectItem value="">None</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Payment Terms</Label>
+          <Select value={netTerms} onValueChange={setNetTerms}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Net 15">Net 15</SelectItem>
+              <SelectItem value="Net 30">Net 30</SelectItem>
+              <SelectItem value="Net 45">Net 45</SelectItem>
+              <SelectItem value="Net 60">Net 60</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Timezone</Label>
+          <Select value={timezone} onValueChange={setTimezone}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="America/New_York">Eastern Time</SelectItem>
+              <SelectItem value="America/Chicago">Central Time</SelectItem>
+              <SelectItem value="America/Denver">Mountain Time</SelectItem>
+              <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center justify-between">
+          <Label>Auto Assignment</Label>
+          <Switch 
+            checked={autoAssignmentEnabled} 
+            onCheckedChange={setAutoAssignmentEnabled} 
+          />
+        </div>
+        <div className="flex justify-end space-x-2">
+          <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+          <Button size="sm" onClick={handleSave}>Save</Button>
+        </div>
+      </div>
+    );
+  };
+
+  const ContactInfoEditForm = ({ 
+    facility, 
+    onSave, 
+    onCancel 
+  }: { 
+    facility: EnhancedFacility; 
+    onSave: (data: any) => void; 
+    onCancel: () => void; 
+  }) => {
+    const [address, setAddress] = useState(facility.address || "");
+    const [phone, setPhone] = useState(facility.phone || "");
+    const [email, setEmail] = useState(facility.email || "");
+
+    const handleSave = () => {
+      onSave({
+        address,
+        phone,
+        email
+      });
+    };
+
+    return (
+      <div className="space-y-3">
+        <div>
+          <Label>Address</Label>
+          <Input 
+            value={address} 
+            onChange={(e) => setAddress(e.target.value)}
+          />
+        </div>
+        <div>
+          <Label>Phone</Label>
+          <Input 
+            value={phone} 
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </div>
+        <div>
+          <Label>Email</Label>
+          <Input 
+            type="email"
+            value={email} 
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div className="flex justify-end space-x-2">
+          <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+          <Button size="sm" onClick={handleSave}>Save</Button>
+        </div>
+      </div>
+    );
+  };
+
   const RatesEditForm = ({ facility, onSave }: { facility: EnhancedFacility; onSave: (data: any) => void }) => {
     const [billRates, setBillRates] = useState(facility.billRates || {});
     const [payRates, setPayRates] = useState(facility.payRates || {});
@@ -1102,24 +1248,11 @@ export default function FacilityManagementPage() {
                     </CardHeader>
                     <CardContent className="space-y-2">
                       {editingSection === 'contact' ? (
-                        <div className="space-y-3">
-                          <div>
-                            <Label>Address</Label>
-                            <Input defaultValue={selectedFacility.address} />
-                          </div>
-                          <div>
-                            <Label>Phone</Label>
-                            <Input defaultValue={selectedFacility.phone} />
-                          </div>
-                          <div>
-                            <Label>Email</Label>
-                            <Input defaultValue={selectedFacility.email} />
-                          </div>
-                          <div className="flex justify-end space-x-2">
-                            <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>Cancel</Button>
-                            <Button size="sm">Save</Button>
-                          </div>
-                        </div>
+                        <ContactInfoEditForm 
+                          facility={selectedFacility} 
+                          onSave={(data) => updateFacilityMutation.mutate({ id: selectedFacility.id, data })}
+                          onCancel={() => setEditingSection(null)}
+                        />
                       ) : (
                         <>
                           <div className="flex items-center gap-2">
@@ -1162,62 +1295,11 @@ export default function FacilityManagementPage() {
                     </CardHeader>
                     <CardContent className="space-y-2">
                       {editingSection === 'operations' ? (
-                        <div className="space-y-3">
-                          <div>
-                            <Label>Bed Count</Label>
-                            <Input type="number" defaultValue={selectedFacility.bedCount} />
-                          </div>
-                          <div>
-                            <Label>EMR System</Label>
-                            <Select defaultValue={selectedFacility.emrSystem || ""}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select EMR" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Epic">Epic</SelectItem>
-                                <SelectItem value="Cerner">Cerner</SelectItem>
-                                <SelectItem value="Allscripts">Allscripts</SelectItem>
-                                <SelectItem value="Meditech">Meditech</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Label>Payment Terms</Label>
-                            <Select defaultValue={selectedFacility.netTerms || "Net 30"}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Net 15">Net 15</SelectItem>
-                                <SelectItem value="Net 30">Net 30</SelectItem>
-                                <SelectItem value="Net 45">Net 45</SelectItem>
-                                <SelectItem value="Net 60">Net 60</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div>
-                            <Label>Timezone</Label>
-                            <Select defaultValue={selectedFacility.timezone || "America/New_York"}>
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="America/New_York">Eastern Time</SelectItem>
-                                <SelectItem value="America/Chicago">Central Time</SelectItem>
-                                <SelectItem value="America/Denver">Mountain Time</SelectItem>
-                                <SelectItem value="America/Los_Angeles">Pacific Time</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <Label>Auto Assignment</Label>
-                            <Switch defaultChecked={selectedFacility.autoAssignmentEnabled} />
-                          </div>
-                          <div className="flex justify-end space-x-2">
-                            <Button variant="ghost" size="sm" onClick={() => setEditingSection(null)}>Cancel</Button>
-                            <Button size="sm">Save</Button>
-                          </div>
-                        </div>
+                        <OperationalSettingsEditForm 
+                          facility={selectedFacility} 
+                          onSave={(data) => updateFacilityMutation.mutate({ id: selectedFacility.id, data })}
+                          onCancel={() => setEditingSection(null)}
+                        />
                       ) : (
                         <>
                           <div className="flex justify-between">
