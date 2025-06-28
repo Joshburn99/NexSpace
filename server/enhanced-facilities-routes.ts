@@ -2,7 +2,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "./db";
-import { facilities, payrollProviders, type Facility, type InsertFacility } from "@shared/schema";
+import { facilities, payrollProviders, teams, teamFacilities, type Facility, type InsertFacility } from "@shared/schema";
 import { eq, and, desc, asc, ilike } from "drizzle-orm";
 import { 
   enhancedFacilitySchema, 

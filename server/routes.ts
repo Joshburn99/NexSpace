@@ -9466,12 +9466,77 @@ export function registerRoutes(app: Express): Server {
         teamId
       });
       
+      // Add facility to team_facilities table
       const [facility] = await db.insert(teamFacilities).values(validatedData).returning();
+      
+      // Update facility's team_id for synchronization
+      await db
+        .update(facilities)
+        .set({ teamId })
+        .where(eq(facilities.id, validatedData.facilityId));
       
       res.json(facility);
     } catch (error) {
       console.error("Error assigning facility to team:", error);
       res.status(500).json({ message: "Failed to assign facility to team" });
+    }
+  });
+
+  app.patch("/api/teams/:teamId", requireAuth, async (req, res) => {
+    try {
+      if (!["super_admin", "client_administrator"].includes(req.user?.role || "")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const teamId = parseInt(req.params.teamId);
+      const validatedData = insertTeamSchema.partial().parse(req.body);
+      
+      const [updatedTeam] = await db
+        .update(teams)
+        .set(validatedData)
+        .where(eq(teams.id, teamId))
+        .returning();
+      
+      if (!updatedTeam) {
+        return res.status(404).json({ message: "Team not found" });
+      }
+      
+      res.json(updatedTeam);
+    } catch (error) {
+      console.error("Error updating team:", error);
+      res.status(500).json({ message: "Failed to update team" });
+    }
+  });
+
+  app.delete("/api/teams/:teamId/facilities/:facilityId", requireAuth, async (req, res) => {
+    try {
+      if (!["super_admin", "client_administrator"].includes(req.user?.role || "")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const teamId = parseInt(req.params.teamId);
+      const facilityId = parseInt(req.params.facilityId);
+      
+      // Remove facility from team_facilities table
+      await db
+        .delete(teamFacilities)
+        .where(
+          and(
+            eq(teamFacilities.teamId, teamId),
+            eq(teamFacilities.facilityId, facilityId)
+          )
+        );
+      
+      // Update facility's team_id to null for synchronization
+      await db
+        .update(facilities)
+        .set({ teamId: null })
+        .where(eq(facilities.id, facilityId));
+      
+      res.json({ message: "Facility removed from team successfully" });
+    } catch (error) {
+      console.error("Error removing facility from team:", error);
+      res.status(500).json({ message: "Failed to remove facility from team" });
     }
   });
 
