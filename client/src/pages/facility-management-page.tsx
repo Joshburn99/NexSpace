@@ -47,7 +47,8 @@ import {
   Eye,
   EyeOff,
   Upload,
-  Download
+  Download,
+  Search
 } from "lucide-react";
 
 // Enhanced Facility Types
@@ -1559,12 +1560,16 @@ export default function FacilityManagementPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <Label htmlFor="search">Search Facilities</Label>
-              <Input
-                id="search"
-                placeholder="Search by name or city..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                <Input
+                  id="search"
+                  placeholder="Search by name, city, or team..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor="state">Filter by State</Label>
@@ -1573,7 +1578,7 @@ export default function FacilityManagementPage() {
                   <SelectValue placeholder="All states" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All states</SelectItem>
+                  <SelectItem value="">All states</SelectItem>
                   <SelectItem value="OR">Oregon</SelectItem>
                   <SelectItem value="CA">California</SelectItem>
                   <SelectItem value="WA">Washington</SelectItem>
@@ -1588,7 +1593,7 @@ export default function FacilityManagementPage() {
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All types</SelectItem>
+                  <SelectItem value="">All types</SelectItem>
                   <SelectItem value="Hospital">Hospital</SelectItem>
                   <SelectItem value="Clinic">Clinic</SelectItem>
                   <SelectItem value="Skilled Nursing">Skilled Nursing</SelectItem>
@@ -1601,8 +1606,8 @@ export default function FacilityManagementPage() {
                 variant="outline" 
                 onClick={() => {
                   setSearchTerm("");
-                  setFilterState("all");
-                  setFilterType("all");
+                  setFilterState("");
+                  setFilterType("");
                 }}
               >
                 Clear Filters
