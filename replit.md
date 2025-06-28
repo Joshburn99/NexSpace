@@ -13,6 +13,19 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### June 28, 2025 - Enhanced Facility System Integration & Comprehensive Add Facility Form
+- **Backend Integration Fix**: Successfully mounted enhanced facility routes at `/api/facilities` resolving the critical issue where facility edits weren't saving to database
+- **SelectItem Value Fix**: Fixed React error "SelectItem must have a value prop that is not an empty string" by replacing empty string values with proper non-empty values (e.g., "none" instead of "")
+- **Comprehensive Add Facility Form**: Expanded Add Facility modal to include ALL enhanced database fields across 5 comprehensive tabs:
+  - Basic Info: Name, type, address, contact details, bed count
+  - Operations: Auto-assignment, timezone, EMR system selection
+  - Billing: Payment terms, billing contacts, contract dates, team assignment
+  - Rates: Bill rates, pay rates, and float pool margins (JSON format with validation)
+  - Workflow: Automation config, shift management settings, staffing targets (JSON format)
+- **Enhanced Form Processing**: Added robust JSON field processing with error handling and validation for all complex configuration fields
+- **Route Conflict Resolution**: Commented out conflicting basic facility routes to ensure enhanced routes handle all facility operations properly
+- **Form Validation**: Implemented comprehensive Zod schema validation for all enhanced facility fields including JSON structure validation
+
 ### June 27, 2025 - Superuser Facility Profile Editor & Template System Consolidation
 - **Comprehensive Edit Modal**: Built detailed facility profile edit interface with 5 tabbed sections (Basic Info, Contacts, Billing & Rates, Operations, Compliance) for all enhanced facility fields
 - **Role-Based Access Control**: Edit functionality restricted to superusers only with proper authentication checks

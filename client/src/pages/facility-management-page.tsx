@@ -340,21 +340,29 @@ export default function FacilityManagementPage() {
   });
 
   const onSubmit = (data: EnhancedFacilityForm) => {
-    // Process JSON fields before sending to backend
-    const processedData = {
-      ...data,
-      // Parse JSON fields if they exist and are not empty
-      billRates: data.billRates ? JSON.parse(data.billRates) : null,
-      payRates: data.payRates ? JSON.parse(data.payRates) : null,
-      floatPoolMargins: data.floatPoolMargins ? JSON.parse(data.floatPoolMargins) : null,
-      workflowAutomationConfig: data.workflowAutomationConfig ? JSON.parse(data.workflowAutomationConfig) : null,
-      shiftManagementSettings: data.shiftManagementSettings ? JSON.parse(data.shiftManagementSettings) : null,
-      staffingTargets: data.staffingTargets ? JSON.parse(data.staffingTargets) : null,
-      customRules: data.customRules ? JSON.parse(data.customRules) : null,
-      regulatoryDocs: data.regulatoryDocs ? JSON.parse(data.regulatoryDocs) : null,
-    };
-    
-    createFacilityMutation.mutate(processedData);
+    try {
+      // Process JSON fields before sending to backend
+      const processedData = {
+        ...data,
+        // Parse JSON fields if they exist and are not empty, with validation
+        billRates: data.billRates ? JSON.parse(data.billRates) : null,
+        payRates: data.payRates ? JSON.parse(data.payRates) : null,
+        floatPoolMargins: data.floatPoolMargins ? JSON.parse(data.floatPoolMargins) : null,
+        workflowAutomationConfig: data.workflowAutomationConfig ? JSON.parse(data.workflowAutomationConfig) : null,
+        shiftManagementSettings: data.shiftManagementSettings ? JSON.parse(data.shiftManagementSettings) : null,
+        staffingTargets: data.staffingTargets ? JSON.parse(data.staffingTargets) : null,
+        customRules: data.customRules ? JSON.parse(data.customRules) : null,
+        regulatoryDocs: data.regulatoryDocs ? JSON.parse(data.regulatoryDocs) : null,
+      };
+      
+      createFacilityMutation.mutate(processedData);
+    } catch (error) {
+      toast({
+        title: "Invalid JSON",
+        description: "Please check your JSON formatting in the advanced fields",
+        variant: "destructive"
+      });
+    }
   };
 
   // Enhanced editing forms for complex fields
