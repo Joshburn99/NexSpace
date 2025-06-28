@@ -17,6 +17,26 @@ import { Plus, Users, Trash2, Edit, UserPlus } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 // Team types
+interface TeamMember {
+  id: number;
+  userId: number;
+  role: string;
+  joinedAt: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
+interface TeamFacility {
+  id: number;
+  facilityId: number;
+  assignedAt: string;
+  name: string;
+  city: string;
+  state: string;
+  facilityType: string;
+}
+
 interface Team {
   id: number;
   name: string;
@@ -27,6 +47,8 @@ interface Team {
   updatedAt: string;
   memberCount?: number;
   facilityCount?: number;
+  members?: TeamMember[];
+  facilities?: TeamFacility[];
 }
 
 interface User {
@@ -124,6 +146,32 @@ export default function AdminTeamsPage() {
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to assign facility to team", variant: "destructive" });
+    },
+  });
+
+  // Remove team member mutation
+  const removeMemberMutation = useMutation({
+    mutationFn: ({ teamId, memberId }: { teamId: number; memberId: number }) =>
+      apiRequest("DELETE", `/api/teams/${teamId}/members/${memberId}`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      toast({ title: "Success", description: "Member removed from team successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to remove member from team", variant: "destructive" });
+    },
+  });
+
+  // Remove team facility mutation
+  const removeFacilityMutation = useMutation({
+    mutationFn: ({ teamId, facilityId }: { teamId: number; facilityId: number }) =>
+      apiRequest("DELETE", `/api/teams/${teamId}/facilities/${facilityId}`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
+      toast({ title: "Success", description: "Facility removed from team successfully" });
+    },
+    onError: () => {
+      toast({ title: "Error", description: "Failed to remove facility from team", variant: "destructive" });
     },
   });
 
@@ -321,7 +369,7 @@ export default function AdminTeamsPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
+                  <div className="grid grid-cols-3 gap-4 text-sm mb-6">
                     <div>
                       <span className="text-muted-foreground">Team ID:</span>
                       <p className="font-medium">#{team.id}</p>
@@ -334,6 +382,86 @@ export default function AdminTeamsPage() {
                       <span className="text-muted-foreground">Facilities:</span>
                       <p className="font-medium">{team.facilityCount || 0}</p>
                     </div>
+                  </div>
+
+                  {/* Current Members */}
+                  <div className="mb-6">
+                    <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                      <Users className="w-4 h-4" />
+                      Team Members
+                    </h4>
+                    {team.members && team.members.length > 0 ? (
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {team.members.map((member) => (
+                          <div key={member.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{member.firstName} {member.lastName}</span>
+                                <Badge variant="outline">{member.role}</Badge>
+                              </div>
+                              <span className="text-sm text-muted-foreground">{member.email}</span>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => {
+                                // TODO: Add remove member functionality
+                                console.log('Remove member:', member.id);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No members assigned</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Facilities */}
+                  <div>
+                    <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      Assigned Facilities
+                    </h4>
+                    {team.facilities && team.facilities.length > 0 ? (
+                      <div className="space-y-2 max-h-40 overflow-y-auto">
+                        {team.facilities.map((facility) => (
+                          <div key={facility.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">{facility.name}</span>
+                                <Badge variant="outline">{facility.facilityType}</Badge>
+                              </div>
+                              <span className="text-sm text-muted-foreground">
+                                {facility.city}, {facility.state}
+                              </span>
+                            </div>
+                            <Button 
+                              variant="ghost" 
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => {
+                                // TODO: Add remove facility functionality
+                                console.log('Remove facility:', facility.id);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-muted-foreground">
+                        <Plus className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                        <p className="text-sm">No facilities assigned</p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

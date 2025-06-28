@@ -9391,26 +9391,50 @@ export function registerRoutes(app: Express): Server {
     try {
       const teamsFromDB = await db.select().from(teams);
       
-      // Get member and facility counts for each team
-      const teamsWithCounts = await Promise.all(
+      // Get detailed member and facility data for each team
+      const teamsWithDetails = await Promise.all(
         teamsFromDB.map(async (team) => {
-          const memberCount = await db.select({ count: sql`count(*)` })
+          // Get team members with user details
+          const members = await db
+            .select({
+              id: teamMembers.id,
+              userId: teamMembers.userId,
+              role: teamMembers.role,
+              joinedAt: teamMembers.joinedAt,
+              firstName: users.firstName,
+              lastName: users.lastName,
+              email: users.email
+            })
             .from(teamMembers)
+            .leftJoin(users, eq(teamMembers.userId, users.id))
             .where(eq(teamMembers.teamId, team.id));
             
-          const facilityCount = await db.select({ count: sql`count(*)` })
+          // Get team facilities with facility details
+          const teamFacilitiesData = await db
+            .select({
+              id: teamFacilities.id,
+              facilityId: teamFacilities.facilityId,
+              assignedAt: teamFacilities.assignedAt,
+              name: facilities.name,
+              city: facilities.city,
+              state: facilities.state,
+              facilityType: facilities.facilityType
+            })
             .from(teamFacilities)
+            .leftJoin(facilities, eq(teamFacilities.facilityId, facilities.id))
             .where(eq(teamFacilities.teamId, team.id));
             
           return {
             ...team,
-            memberCount: Number(memberCount[0]?.count || 0),
-            facilityCount: Number(facilityCount[0]?.count || 0)
+            memberCount: members.length,
+            facilityCount: teamFacilitiesData.length,
+            members,
+            facilities: teamFacilitiesData
           };
         })
       );
       
-      res.json(teamsWithCounts);
+      res.json(teamsWithDetails);
     } catch (error) {
       console.error("Error fetching teams:", error);
       res.status(500).json({ message: "Failed to fetch teams" });
@@ -9537,6 +9561,32 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error removing facility from team:", error);
       res.status(500).json({ message: "Failed to remove facility from team" });
+    }
+  });
+
+  app.delete("/api/teams/:teamId/members/:memberId", requireAuth, async (req, res) => {
+    try {
+      if (!["super_admin", "client_administrator"].includes(req.user?.role || "")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const teamId = parseInt(req.params.teamId);
+      const memberId = parseInt(req.params.memberId);
+      
+      // Remove member from team_members table
+      await db
+        .delete(teamMembers)
+        .where(
+          and(
+            eq(teamMembers.teamId, teamId),
+            eq(teamMembers.id, memberId)
+          )
+        );
+      
+      res.json({ message: "Member removed from team successfully" });
+    } catch (error) {
+      console.error("Error removing member from team:", error);
+      res.status(500).json({ message: "Failed to remove member from team" });
     }
   });
 
