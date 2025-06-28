@@ -121,6 +121,14 @@ export function createEnhancedFacilitiesRoutes(
           .values(facilityData as any)
           .returning();
 
+        // Handle team assignment if teamId is provided
+        if (facilityData.teamId) {
+          await db.insert(teamFacilities).values({
+            teamId: facilityData.teamId,
+            facilityId: newFacility.id
+          });
+        }
+
         console.log("Facility created successfully:", newFacility);
         res.status(201).json(newFacility);
       } catch (error) {
@@ -304,6 +312,22 @@ export function createEnhancedFacilitiesRoutes(
           .set(updateData as any)
           .where(eq(facilities.id, id))
           .returning();
+
+        // Handle team synchronization if teamId is being updated
+        if (updateData.teamId !== undefined) {
+          // Remove any existing team assignments for this facility
+          await db
+            .delete(teamFacilities)
+            .where(eq(teamFacilities.facilityId, id));
+          
+          // Add new team assignment if teamId is not null
+          if (updateData.teamId !== null) {
+            await db.insert(teamFacilities).values({
+              teamId: updateData.teamId,
+              facilityId: id
+            });
+          }
+        }
 
         console.log("Facility partially updated successfully:", updatedFacility);
         res.json(updatedFacility);
