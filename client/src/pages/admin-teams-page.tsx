@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Plus, Users, Trash2, Edit, UserPlus } from "lucide-react";
+import { Plus, Users, Trash2, Edit, UserPlus, Search, Eye } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 
 // Team types
@@ -90,7 +90,9 @@ export default function AdminTeamsPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showMemberModal, setShowMemberModal] = useState(false);
   const [showFacilityModal, setShowFacilityModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
 
   // Fetch teams

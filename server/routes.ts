@@ -9490,6 +9490,18 @@ export function registerRoutes(app: Express): Server {
         teamId
       });
       
+      // Check if facility is already assigned to another team
+      const existingAssignment = await db
+        .select()
+        .from(teamFacilities)
+        .where(eq(teamFacilities.facilityId, validatedData.facilityId));
+        
+      if (existingAssignment.length > 0) {
+        return res.status(400).json({ 
+          message: "Facility is already assigned to another team. Each facility can only belong to one team." 
+        });
+      }
+      
       // Add facility to team_facilities table
       const [facility] = await db.insert(teamFacilities).values(validatedData).returning();
       
