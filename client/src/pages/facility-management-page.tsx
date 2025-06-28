@@ -14,6 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -228,6 +229,9 @@ export default function FacilityManagementPage() {
   const [uploadingDocument, setUploadingDocument] = useState(false);
   const [selectedCredentials, setSelectedCredentials] = useState<string[]>([]);
   const [documentFile, setDocumentFile] = useState<File | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [viewMode, setViewMode] = useState<'list' | 'cards'>('list');
   
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -241,6 +245,37 @@ export default function FacilityManagementPage() {
 
   // Fetch facilities using centralized hook
   const { data: facilities = [], isLoading, error } = useFacilities();
+  
+  // Fetch teams for team name display
+  const { data: teams = [] } = useQuery({
+    queryKey: ["/api/teams"],
+  });
+
+  // Helper function to get team name by ID
+  const getTeamName = (teamId: number | undefined) => {
+    if (!teamId) return "No Team";
+    const team = (teams as any[]).find(t => t.id === teamId);
+    return team?.name || "Unknown Team";
+  };
+
+  // Filter facilities based on search and filters
+  const filteredFacilities = Array.isArray(facilities) ? facilities.filter((facility: EnhancedFacility) => {
+    const matchesSearch = searchTerm === "" || 
+      facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      facility.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      facility.state.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      getTeamName(facility.teamId).toLowerCase().includes(searchTerm.toLowerCase());
+      
+    const matchesState = filterState === "" || facility.state === filterState;
+    const matchesType = filterType === "" || facility.facilityType === filterType;
+    
+    return matchesSearch && matchesState && matchesType;
+  }) : [];
+
+  // Pagination calculation
+  const totalPages = Math.ceil(filteredFacilities.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedFacilities = filteredFacilities.slice(startIndex, startIndex + itemsPerPage);
 
   // Create facility mutation
   const createFacilityMutation = useMutation({
@@ -817,15 +852,7 @@ export default function FacilityManagementPage() {
     );
   };
 
-  // Filter facilities
-  const filteredFacilities = Array.isArray(facilities) ? facilities.filter((facility: EnhancedFacility) => {
-    const matchesSearch = !searchTerm || 
-      facility.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      facility.city?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesState = !filterState || filterState === "all" || facility.state === filterState;
-    const matchesType = !filterType || filterType === "all" || facility.facilityType === filterType;
-    return matchesSearch && matchesState && matchesType;
-  }) : [];
+
 
   if (error) {
     return (
@@ -1595,25 +1622,143 @@ export default function FacilityManagementPage() {
         </CardContent>
       </Card>
 
-      {/* Facilities Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="pt-6">
-                <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-1/2 mb-4"></div>
-                <div className="space-y-2">
-                  <div className="h-3 bg-gray-200 rounded w-full"></div>
-                  <div className="h-3 bg-gray-200 rounded w-5/6"></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      {/* View Mode Toggle */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {startIndex + 1}-{Math.min(startIndex + itemsPerPage, filteredFacilities.length)} of {filteredFacilities.length} facilities
+          </div>
+          <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+            setItemsPerPage(Number(value));
+            setCurrentPage(1);
+          }}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="25">25 per page</SelectItem>
+              <SelectItem value="50">50 per page</SelectItem>
+              <SelectItem value="100">100 per page</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('list')}
+          >
+            List View
+          </Button>
+          <Button
+            variant={viewMode === 'cards' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setViewMode('cards')}
+          >
+            Card View
+          </Button>
+        </div>
+      </div>
+
+      {/* Facilities List */}
+      {isLoading ? (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="space-y-3">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="animate-pulse flex space-x-4">
+                  <div className="h-4 bg-gray-200 rounded w-1/4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/6"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/6"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/6"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/6"></div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : viewMode === 'list' ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Facilities Management</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Facility Name</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Team</TableHead>
+                  <TableHead>Beds</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>EMR</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedFacilities.map((facility: EnhancedFacility) => (
+                  <TableRow key={facility.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-medium">{facility.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{facility.facilityType}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-sm">{facility.city}, {facility.state}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={facility.teamId ? "default" : "secondary"}>
+                        {getTeamName(facility.teamId)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Users className="h-3 w-3 text-muted-foreground" />
+                        <span className="text-sm">{facility.bedCount}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={facility.isActive ? "default" : "secondary"}>
+                          {facility.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                        {facility.autoAssignmentEnabled && (
+                          <CheckCircle className="h-3 w-3 text-green-600" />
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-muted-foreground">
+                        {facility.emrSystem || "None"}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setSelectedFacility(facility)}
+                      >
+                        <Settings className="h-4 w-4 mr-1" />
+                        Manage
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredFacilities.map((facility: EnhancedFacility) => (
+          {paginatedFacilities.map((facility: EnhancedFacility) => (
             <Card key={facility.id} className="hover:shadow-lg transition-shadow cursor-pointer">
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start">
@@ -1640,6 +1785,13 @@ export default function FacilityManagementPage() {
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Users className="h-4 w-4" />
                     {facility.bedCount} beds
+                  </div>
+                  
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="text-muted-foreground">Team:</span>
+                    <Badge variant={facility.teamId ? "default" : "secondary"}>
+                      {getTeamName(facility.teamId)}
+                    </Badge>
                   </div>
                   
                   {facility.emrSystem && (
@@ -1673,6 +1825,49 @@ export default function FacilityManagementPage() {
               </CardContent>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between mt-6">
+          <div className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1}
+            >
+              First
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages}
+            >
+              Last
+            </Button>
+          </div>
         </div>
       )}
 
