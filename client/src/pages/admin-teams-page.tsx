@@ -263,7 +263,7 @@ export default function AdminTeamsPage() {
       </div>
 
       <div className="grid gap-6">
-        {teams.length === 0 ? (
+        {(teams as Team[]).length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Users className="w-12 h-12 text-muted-foreground mb-4" />
@@ -279,7 +279,7 @@ export default function AdminTeamsPage() {
           </Card>
         ) : (
           <div className="grid gap-4">
-            {teams.map((team: Team) => (
+            {(teams as Team[]).map((team: Team) => (
               <Card key={team.id}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -363,7 +363,7 @@ export default function AdminTeamsPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {users.map((user: User) => (
+                        {(users as User[]).map((user: User) => (
                           <SelectItem key={user.id} value={user.id.toString()}>
                             {user.firstName} {user.lastName} ({user.email})
                           </SelectItem>
@@ -432,7 +432,7 @@ export default function AdminTeamsPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {facilities.map((facility: Facility) => (
+                        {(facilities as Facility[]).map((facility: Facility) => (
                           <SelectItem key={facility.id} value={facility.id.toString()}>
                             {facility.name} - {facility.city}, {facility.state}
                           </SelectItem>
