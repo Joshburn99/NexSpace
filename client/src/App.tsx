@@ -53,6 +53,7 @@ import FloatPoolAnalyticsPage from "@/pages/float-pool-analytics-page";
 import FacilityRecommendationsPage from "@/pages/facility-recommendations-page";
 import VendorInvoicesPage from "@/pages/vendor-invoices-page";
 import AdminUserManagementPage from "@/pages/admin-user-management-page";
+import AdminTeamsPage from "@/pages/admin-teams-page";
 import AdminAuditLogsPage from "@/pages/admin-audit-logs-page";
 import AdminDatabaseConsolePage from "@/pages/admin-database-console-page";
 import SystemSettingsPage from "@/pages/system-settings-page";
@@ -126,6 +127,7 @@ function AppContent() {
       <ProtectedRoute path="/system-settings" component={SystemSettingsPage} />
       <ProtectedRoute path="/admin/impersonation" component={AdminImpersonationPage} />
       <ProtectedRoute path="/admin/users" component={AdminUserManagementPage} />
+      <ProtectedRoute path="/admin/teams" component={AdminTeamsPage} />
       <ProtectedRoute path="/admin/audit" component={AdminAuditLogsPage} />
       <ProtectedRoute path="/admin/database" component={AdminDatabaseConsolePage} />
       <ProtectedRoute path="/facility-management" component={FacilityManagementPage} />

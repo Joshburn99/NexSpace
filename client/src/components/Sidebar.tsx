@@ -165,6 +165,11 @@ const navigationItems: NavItem[] = [
         icon: <Users className="w-4 h-4" />,
       },
       {
+        label: "Teams",
+        href: "/admin/teams",
+        icon: <Users className="w-4 h-4" />,
+      },
+      {
         label: "System Settings",
         href: "/system-settings",
         icon: <Settings className="w-4 h-4" />,

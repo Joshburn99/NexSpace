@@ -798,6 +798,23 @@ export const insertTimesheetSchema = createInsertSchema(timesheets).omit({
   updatedAt: true,
 });
 
+// Team insert schemas
+export const insertTeamSchema = createInsertSchema(teams).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTeamMemberSchema = createInsertSchema(teamMembers).omit({
+  id: true,
+  joinedAt: true,
+});
+
+export const insertTeamFacilitySchema = createInsertSchema(teamFacilities).omit({
+  id: true,
+  assignedAt: true,
+});
+
 export const insertTimesheetEntrySchema = createInsertSchema(timesheetEntries).omit({
   id: true,
   createdAt: true,
