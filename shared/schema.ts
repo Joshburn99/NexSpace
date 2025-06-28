@@ -397,6 +397,34 @@ export const userSessions = pgTable("user_sessions", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Teams table for managing facility-user relationships
+export const teams = pgTable("teams", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  leaderId: integer("leader_id"), // reference to users table
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Team members junction table for many-to-many relationship
+export const teamMembers = pgTable("team_members", {
+  id: serial("id").primaryKey(),
+  teamId: integer("team_id").notNull(),
+  userId: integer("user_id").notNull(),
+  role: text("role").default("member"), // leader, member, coordinator
+  joinedAt: timestamp("joined_at").defaultNow(),
+});
+
+// Team facilities junction table for many-to-many relationship
+export const teamFacilities = pgTable("team_facilities", {
+  id: serial("id").primaryKey(),
+  teamId: integer("team_id").notNull(),
+  facilityId: integer("facility_id").notNull(),
+  assignedAt: timestamp("assigned_at").defaultNow(),
+});
+
 // Credentials table
 export const credentials = pgTable("credentials", {
   id: serial("id").primaryKey(),
@@ -634,6 +662,23 @@ export const facilitiesRelations = relations(facilities, ({ one, many }) => ({
     fields: [facilities.payrollProviderId], 
     references: [payrollProviders.id] 
   }),
+  teamFacilities: many(teamFacilities),
+}));
+
+export const teamsRelations = relations(teams, ({ one, many }) => ({
+  leader: one(users, { fields: [teams.leaderId], references: [users.id] }),
+  members: many(teamMembers),
+  facilities: many(teamFacilities),
+}));
+
+export const teamMembersRelations = relations(teamMembers, ({ one }) => ({
+  team: one(teams, { fields: [teamMembers.teamId], references: [teams.id] }),
+  user: one(users, { fields: [teamMembers.userId], references: [users.id] }),
+}));
+
+export const teamFacilitiesRelations = relations(teamFacilities, ({ one }) => ({
+  team: one(teams, { fields: [teamFacilities.teamId], references: [teams.id] }),
+  facility: one(facilities, { fields: [teamFacilities.facilityId], references: [facilities.id] }),
 }));
 
 export const jobsRelations = relations(jobs, ({ one, many }) => ({
