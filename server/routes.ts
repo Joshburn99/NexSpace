@@ -135,6 +135,10 @@ export function registerRoutes(app: Express): Server {
     };
   };
 
+  // Mount enhanced facility routes
+  const enhancedFacilityRoutes = createEnhancedFacilitiesRoutes(requireAuth, requirePermission, auditLog);
+  app.use("/api/facilities", enhancedFacilityRoutes);
+
   // Users API
   app.get("/api/users/:id", requireAuth, async (req: any, res) => {
     try {
@@ -4660,108 +4664,10 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Facilities API - using example data for now
-  app.get("/api/facilities", requireAuth, async (req, res) => {
-    try {
-      const exampleFacilities = [
-        {
-          id: 1,
-          name: "Portland General Hospital",
-          facilityType: "hospital",
-          address: "3181 SW Sam Jackson Park Rd",
-          city: "Portland",
-          state: "OR",
-          zipCode: "97239",
-          phone: "(503) 494-8311",
-          email: "admin@portlandgeneral.com",
-          website: "https://portlandgeneral.com",
-          cmsId: "380001",
-          npiNumber: "1234567890",
-          isActive: true,
-          bedCount: 576,
-          overallRating: 4,
-          staffingRating: 4,
-          qualityMeasureRating: 4,
-          latitude: 45.4992,
-          longitude: -122.6853,
-          createdAt: "2025-01-15T00:00:00Z",
-          updatedAt: "2025-06-19T00:00:00Z",
-        },
-        {
-          id: 2,
-          name: "OHSU Hospital",
-          facilityType: "hospital",
-          address: "3181 SW Sam Jackson Park Rd",
-          city: "Portland",
-          state: "OR",
-          zipCode: "97239",
-          phone: "(503) 494-8311",
-          email: "info@ohsu.edu",
-          website: "https://ohsu.edu",
-          cmsId: "380002",
-          npiNumber: "1234567891",
-          isActive: true,
-          bedCount: 576,
-          overallRating: 5,
-          staffingRating: 5,
-          qualityMeasureRating: 5,
-          latitude: 45.4992,
-          longitude: -122.6853,
-          createdAt: "2025-01-15T00:00:00Z",
-          updatedAt: "2025-06-19T00:00:00Z",
-        },
-        {
-          id: 3,
-          name: "Legacy Emanuel Medical Center",
-          facilityType: "hospital",
-          address: "2801 N Gantenbein Ave",
-          city: "Portland",
-          state: "OR",
-          zipCode: "97227",
-          phone: "(503) 413-2200",
-          email: "contact@legacyhealth.org",
-          website: "https://legacyhealth.org",
-          cmsId: "380003",
-          npiNumber: "1234567892",
-          isActive: true,
-          bedCount: 368,
-          overallRating: 4,
-          staffingRating: 4,
-          qualityMeasureRating: 4,
-          latitude: 45.5375,
-          longitude: -122.6669,
-          createdAt: "2025-01-15T00:00:00Z",
-          updatedAt: "2025-06-19T00:00:00Z",
-        },
-        {
-          id: 4,
-          name: "Rose City Nursing Center",
-          facilityType: "nursing_home",
-          address: "5561 NE Sandy Blvd",
-          city: "Portland",
-          state: "OR",
-          zipCode: "97213",
-          phone: "(503) 281-7275",
-          email: "admin@rosecitynursing.com",
-          website: "https://rosecitynursing.com",
-          cmsId: "380004",
-          npiNumber: "1234567893",
-          isActive: true,
-          bedCount: 100,
-          overallRating: 3,
-          staffingRating: 3,
-          qualityMeasureRating: 3,
-          latitude: 45.5368,
-          longitude: -122.6035,
-          createdAt: "2025-01-15T00:00:00Z",
-          updatedAt: "2025-06-19T00:00:00Z",
-        },
-      ];
-      res.json(exampleFacilities);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch facilities" });
-    }
-  });
+  // Facilities API - now handled by enhanced facility routes
+  // app.get("/api/facilities", requireAuth, async (req, res) => {
+  //   ... commented out in favor of enhanced facility routes
+  // });
 
   // Super Admin impersonation
   app.post("/api/admin/impersonate/:userId", requireAuth, async (req: any, res) => {
