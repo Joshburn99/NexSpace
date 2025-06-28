@@ -66,20 +66,20 @@ interface Facility {
   state: string;
 }
 
-// Form schemas
+// Schemas
 const teamSchema = z.object({
   name: z.string().min(1, "Team name is required"),
   description: z.string().optional(),
-  leaderId: z.coerce.number().optional(),
+  leaderId: z.number().optional(),
 });
 
 const teamMemberSchema = z.object({
-  userId: z.coerce.number(),
-  role: z.string().default("member"),
+  userId: z.number({ required_error: "Please select a user" }),
+  role: z.string().min(1, "Role is required"),
 });
 
 const teamFacilitySchema = z.object({
-  facilityId: z.coerce.number(),
+  facilityId: z.number({ required_error: "Please select a facility" }),
 });
 
 type TeamForm = z.infer<typeof teamSchema>;
@@ -132,8 +132,9 @@ export default function AdminTeamsPage() {
       setShowMemberModal(false);
       toast({ title: "Success", description: "Team member added successfully" });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to add team member", variant: "destructive" });
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || "Failed to add team member";
+      toast({ title: "Error", description: message, variant: "destructive" });
     },
   });
 
@@ -146,8 +147,9 @@ export default function AdminTeamsPage() {
       setShowFacilityModal(false);
       toast({ title: "Success", description: "Facility assigned to team successfully" });
     },
-    onError: () => {
-      toast({ title: "Error", description: "Failed to assign facility to team", variant: "destructive" });
+    onError: (error: any) => {
+      const message = error?.response?.data?.message || "Failed to assign facility to team";
+      toast({ title: "Error", description: message, variant: "destructive" });
     },
   });
 
@@ -217,6 +219,14 @@ export default function AdminTeamsPage() {
       addFacilityMutation.mutate({ ...data, teamId: selectedTeam.id });
     }
   };
+
+  // Filter teams based on search term
+  const filteredTeams = (teams as Team[]).filter(team =>
+    team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    team.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    team.facilities?.some(f => f.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    team.members?.some(m => `${m.firstName} ${m.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   if (teamsLoading) {
     return <div>Loading teams...</div>;
@@ -312,165 +322,242 @@ export default function AdminTeamsPage() {
         </Dialog>
       </div>
 
-      <div className="grid gap-6">
-        {(teams as Team[]).length === 0 ? (
+      {/* Search Bar */}
+      <div className="flex items-center gap-4">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+          <Input
+            placeholder="Search teams, members, or facilities..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {filteredTeams.length} of {(teams as Team[]).length} teams
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {filteredTeams.length === 0 ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Users className="w-12 h-12 text-muted-foreground mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No teams found</h3>
-              <p className="text-muted-foreground text-center mb-4">
-                Get started by creating your first team to manage facility-user relationships.
-              </p>
-              <Button onClick={() => setShowCreateModal(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Team
-              </Button>
+              {searchTerm ? (
+                <>
+                  <h3 className="text-lg font-semibold mb-2">No teams match your search</h3>
+                  <p className="text-muted-foreground text-center mb-4">
+                    Try adjusting your search terms or browse all teams.
+                  </p>
+                  <Button variant="outline" onClick={() => setSearchTerm("")}>
+                    Clear Search
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <h3 className="text-lg font-semibold mb-2">No teams found</h3>
+                  <p className="text-muted-foreground text-center mb-4">
+                    Get started by creating your first team to manage facility-user relationships.
+                  </p>
+                  <Button onClick={() => setShowCreateModal(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Your First Team
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         ) : (
-          <div className="grid gap-4">
-            {(teams as Team[]).map((team: Team) => (
-              <Card key={team.id}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        {team.name}
+          <Card>
+            <CardHeader>
+              <CardTitle>Teams List</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Team Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Members</TableHead>
+                    <TableHead>Facilities</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTeams.map((team: Team) => (
+                    <TableRow key={team.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium">{team.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <Badge variant={team.isActive ? "default" : "secondary"}>
                           {team.isActive ? "Active" : "Inactive"}
                         </Badge>
-                      </CardTitle>
-                      {team.description && (
-                        <p className="text-muted-foreground mt-1">{team.description}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedTeam(team);
-                          setShowMemberModal(true);
-                        }}
-                      >
-                        <UserPlus className="w-4 h-4 mr-2" />
-                        Add Member
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedTeam(team);
-                          setShowFacilityModal(true);
-                        }}
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Facility
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-3 gap-4 text-sm mb-6">
-                    <div>
-                      <span className="text-muted-foreground">Team ID:</span>
-                      <p className="font-medium">#{team.id}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Members:</span>
-                      <p className="font-medium">{team.memberCount || 0}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Facilities:</span>
-                      <p className="font-medium">{team.facilityCount || 0}</p>
-                    </div>
-                  </div>
-
-                  {/* Current Members */}
-                  <div className="mb-6">
-                    <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      Team Members
-                    </h4>
-                    {team.members && team.members.length > 0 ? (
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {team.members.map((member) => (
-                          <div key={member.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{member.firstName} {member.lastName}</span>
-                                <Badge variant="outline">{member.role}</Badge>
-                              </div>
-                              <span className="text-sm text-muted-foreground">{member.email}</span>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => {
-                                removeMemberMutation.mutate({ teamId: team.id, memberId: member.id });
-                              }}
-                              disabled={removeMemberMutation.isPending}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">No members assigned</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Current Facilities */}
-                  <div>
-                    <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                      <Plus className="w-4 h-4" />
-                      Assigned Facilities
-                    </h4>
-                    {team.facilities && team.facilities.length > 0 ? (
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {team.facilities.map((facility) => (
-                          <div key={facility.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-medium">{facility.name}</span>
-                                <Badge variant="outline">{facility.facilityType}</Badge>
-                              </div>
-                              <span className="text-sm text-muted-foreground">
-                                {facility.city}, {facility.state}
-                              </span>
-                            </div>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              className="text-destructive hover:text-destructive"
-                              onClick={() => {
-                                removeFacilityMutation.mutate({ teamId: team.id, facilityId: facility.facilityId });
-                              }}
-                              disabled={removeFacilityMutation.isPending}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-8 text-muted-foreground">
-                        <Plus className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">No facilities assigned</p>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                      </TableCell>
+                      <TableCell>{team.memberCount || 0}</TableCell>
+                      <TableCell>{team.facilityCount || 0}</TableCell>
+                      <TableCell className="max-w-xs truncate">
+                        {team.description || "No description"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedTeam(team);
+                              setShowDetailsModal(true);
+                            }}
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            Details
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedTeam(team);
+                              setShowMemberModal(true);
+                            }}
+                          >
+                            <UserPlus className="w-4 h-4 mr-2" />
+                            Add Member
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedTeam(team);
+                              setShowFacilityModal(true);
+                            }}
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Facility
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         )}
       </div>
+
+      {/* Team Details Modal */}
+      <Dialog open={showDetailsModal} onOpenChange={setShowDetailsModal}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Team Details - {selectedTeam?.name}</DialogTitle>
+          </DialogHeader>
+          {selectedTeam && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <span className="text-sm text-muted-foreground">Team ID:</span>
+                  <p className="font-medium">#{selectedTeam.id}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">Status:</span>
+                  <div className="mt-1">
+                    <Badge variant={selectedTeam.isActive ? "default" : "secondary"}>
+                      {selectedTeam.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <span className="text-sm text-muted-foreground">Description:</span>
+                  <p className="font-medium">{selectedTeam.description || "No description"}</p>
+                </div>
+              </div>
+
+              {/* Current Members */}
+              <div>
+                <h4 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Team Members ({selectedTeam.memberCount || 0})
+                </h4>
+                {selectedTeam.members && selectedTeam.members.length > 0 ? (
+                  <div className="space-y-2 max-h-60 overflow-y-auto border rounded-lg p-4">
+                    {selectedTeam.members.map((member) => (
+                      <div key={member.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{member.firstName} {member.lastName}</span>
+                            <Badge variant="outline">{member.role}</Badge>
+                          </div>
+                          <span className="text-sm text-muted-foreground">{member.email}</span>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => {
+                            removeMemberMutation.mutate({ teamId: selectedTeam.id, memberId: member.id });
+                          }}
+                          disabled={removeMemberMutation.isPending}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground border rounded-lg">
+                    <Users className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No members assigned</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Current Facilities */}
+              <div>
+                <h4 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                  <Plus className="w-5 h-5" />
+                  Assigned Facilities ({selectedTeam.facilityCount || 0})
+                </h4>
+                {selectedTeam.facilities && selectedTeam.facilities.length > 0 ? (
+                  <div className="space-y-2 max-h-60 overflow-y-auto border rounded-lg p-4">
+                    {selectedTeam.facilities.map((facility) => (
+                      <div key={facility.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{facility.name}</span>
+                            <Badge variant="outline">{facility.facilityType}</Badge>
+                          </div>
+                          <span className="text-sm text-muted-foreground">
+                            {facility.city}, {facility.state}
+                          </span>
+                        </div>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => {
+                            removeFacilityMutation.mutate({ teamId: selectedTeam.id, facilityId: facility.facilityId });
+                          }}
+                          disabled={removeFacilityMutation.isPending}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground border rounded-lg">
+                    <Plus className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No facilities assigned</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Add Member Modal */}
       <Dialog open={showMemberModal} onOpenChange={setShowMemberModal}>
@@ -518,9 +605,9 @@ export default function AdminTeamsPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        <SelectItem value="leader">Team Leader</SelectItem>
                         <SelectItem value="member">Member</SelectItem>
-                        <SelectItem value="coordinator">Coordinator</SelectItem>
-                        <SelectItem value="leader">Leader</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
