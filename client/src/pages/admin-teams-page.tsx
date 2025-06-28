@@ -14,7 +14,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Users, Trash2, Edit, UserPlus } from "lucide-react";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 
 // Team types
 interface Team {
@@ -70,29 +70,25 @@ export default function AdminTeamsPage() {
   const [showFacilityModal, setShowFacilityModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   // Fetch teams
   const { data: teams = [], isLoading: teamsLoading } = useQuery({
     queryKey: ["/api/teams"],
-    queryFn: () => apiRequest("/api/teams"),
   });
 
   // Fetch users for team leader selection
   const { data: users = [] } = useQuery({
     queryKey: ["/api/users"],
-    queryFn: () => apiRequest("/api/users"),
   });
 
   // Fetch facilities for team assignment
   const { data: facilities = [] } = useQuery({
     queryKey: ["/api/facilities"],
-    queryFn: () => apiRequest("/api/facilities"),
   });
 
   // Create team mutation
   const createTeamMutation = useMutation({
-    mutationFn: (data: TeamForm) => apiRequest("/api/teams", { method: "POST", body: data }),
+    mutationFn: (data: TeamForm) => apiRequest("POST", "/api/teams", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
       setShowCreateModal(false);
@@ -106,7 +102,7 @@ export default function AdminTeamsPage() {
   // Add team member mutation
   const addMemberMutation = useMutation({
     mutationFn: ({ teamId, ...data }: TeamMemberForm & { teamId: number }) =>
-      apiRequest(`/api/teams/${teamId}/members`, { method: "POST", body: data }),
+      apiRequest("POST", `/api/teams/${teamId}/members`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
       setShowMemberModal(false);
@@ -120,7 +116,7 @@ export default function AdminTeamsPage() {
   // Add team facility mutation
   const addFacilityMutation = useMutation({
     mutationFn: ({ teamId, ...data }: TeamFacilityForm & { teamId: number }) =>
-      apiRequest(`/api/teams/${teamId}/facilities`, { method: "POST", body: data }),
+      apiRequest("POST", `/api/teams/${teamId}/facilities`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
       setShowFacilityModal(false);
@@ -240,7 +236,7 @@ export default function AdminTeamsPage() {
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="none">No Leader</SelectItem>
-                          {users.map((user: User) => (
+                          {(users as User[]).map((user: User) => (
                             <SelectItem key={user.id} value={user.id.toString()}>
                               {user.firstName} {user.lastName}
                             </SelectItem>

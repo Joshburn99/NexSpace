@@ -28,6 +28,9 @@ import {
   insertShiftTemplateSchema,
   insertGeneratedShiftSchema,
   insertUserSessionSchema,
+  insertTeamSchema,
+  insertTeamMemberSchema,
+  insertTeamFacilitySchema,
   UserRole,
   shifts,
   facilities,
@@ -37,6 +40,9 @@ import {
   generatedShifts,
   users,
   messages,
+  teams,
+  teamMembers,
+  teamFacilities,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql } from "drizzle-orm";
@@ -9377,6 +9383,95 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error cleaning up sessions:", error);
       res.status(500).json({ message: "Failed to cleanup sessions" });
+    }
+  });
+
+  // Teams Management Routes
+  app.get("/api/teams", requireAuth, async (req, res) => {
+    try {
+      const teamsFromDB = await db.select().from(teams);
+      
+      // Get member and facility counts for each team
+      const teamsWithCounts = await Promise.all(
+        teamsFromDB.map(async (team) => {
+          const memberCount = await db.select({ count: sql`count(*)` })
+            .from(teamMembers)
+            .where(eq(teamMembers.teamId, team.id));
+            
+          const facilityCount = await db.select({ count: sql`count(*)` })
+            .from(teamFacilities)
+            .where(eq(teamFacilities.teamId, team.id));
+            
+          return {
+            ...team,
+            memberCount: Number(memberCount[0]?.count || 0),
+            facilityCount: Number(facilityCount[0]?.count || 0)
+          };
+        })
+      );
+      
+      res.json(teamsWithCounts);
+    } catch (error) {
+      console.error("Error fetching teams:", error);
+      res.status(500).json({ message: "Failed to fetch teams" });
+    }
+  });
+
+  app.post("/api/teams", requireAuth, async (req, res) => {
+    try {
+      if (!["super_admin", "client_administrator"].includes(req.user?.role || "")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const validatedData = insertTeamSchema.parse(req.body);
+      const [team] = await db.insert(teams).values(validatedData).returning();
+      
+      res.json(team);
+    } catch (error) {
+      console.error("Error creating team:", error);
+      res.status(500).json({ message: "Failed to create team" });
+    }
+  });
+
+  app.post("/api/teams/:teamId/members", requireAuth, async (req, res) => {
+    try {
+      if (!["super_admin", "client_administrator"].includes(req.user?.role || "")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const teamId = parseInt(req.params.teamId);
+      const validatedData = insertTeamMemberSchema.parse({
+        ...req.body,
+        teamId
+      });
+      
+      const [member] = await db.insert(teamMembers).values(validatedData).returning();
+      
+      res.json(member);
+    } catch (error) {
+      console.error("Error adding team member:", error);
+      res.status(500).json({ message: "Failed to add team member" });
+    }
+  });
+
+  app.post("/api/teams/:teamId/facilities", requireAuth, async (req, res) => {
+    try {
+      if (!["super_admin", "client_administrator"].includes(req.user?.role || "")) {
+        return res.status(403).json({ message: "Admin access required" });
+      }
+
+      const teamId = parseInt(req.params.teamId);
+      const validatedData = insertTeamFacilitySchema.parse({
+        ...req.body,
+        teamId
+      });
+      
+      const [facility] = await db.insert(teamFacilities).values(validatedData).returning();
+      
+      res.json(facility);
+    } catch (error) {
+      console.error("Error assigning facility to team:", error);
+      res.status(500).json({ message: "Failed to assign facility to team" });
     }
   });
 
