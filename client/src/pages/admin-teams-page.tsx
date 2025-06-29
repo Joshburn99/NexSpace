@@ -368,7 +368,7 @@ export default function AdminTeamsPage() {
             </CardContent>
           </Card>
         ) : (
-          <Card>
+          <Card className="max-w-4xl">
             <CardHeader>
               <CardTitle>Teams List</CardTitle>
             </CardHeader>
@@ -380,7 +380,6 @@ export default function AdminTeamsPage() {
                     <TableHead>Status</TableHead>
                     <TableHead>Members</TableHead>
                     <TableHead>Facilities</TableHead>
-                    <TableHead>Description</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -399,9 +398,6 @@ export default function AdminTeamsPage() {
                       </TableCell>
                       <TableCell>{team.memberCount || 0}</TableCell>
                       <TableCell>{team.facilityCount || 0}</TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {team.description || "No description"}
-                      </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button

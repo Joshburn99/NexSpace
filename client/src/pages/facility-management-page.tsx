@@ -224,6 +224,7 @@ export default function FacilityManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterState, setFilterState] = useState("all");
   const [filterType, setFilterType] = useState("all");
+  const [filterTeam, setFilterTeam] = useState("all");
   const [editingSection, setEditingSection] = useState<string | null>(null);
   const [showJsonView, setShowJsonView] = useState<Record<string, boolean>>({});
   const [showDocumentModal, setShowDocumentModal] = useState(false);
@@ -269,8 +270,11 @@ export default function FacilityManagementPage() {
       
     const matchesState = filterState === "" || filterState === "all" || facility.state === filterState;
     const matchesType = filterType === "" || filterType === "all" || facility.facilityType === filterType;
+    const matchesTeam = filterTeam === "" || filterTeam === "all" || 
+      (facility.teamId && facility.teamId.toString() === filterTeam) ||
+      (filterTeam === "none" && !facility.teamId);
     
-    return matchesSearch && matchesState && matchesType;
+    return matchesSearch && matchesState && matchesType && matchesTeam;
   }) : [];
 
   // Pagination calculation
@@ -1601,6 +1605,25 @@ export default function FacilityManagementPage() {
                 </SelectContent>
               </Select>
             </div>
+            
+            <div>
+              <Label htmlFor="team-filter">Filter by Team</Label>
+              <Select value={filterTeam} onValueChange={setFilterTeam}>
+                <SelectTrigger>
+                  <SelectValue placeholder="All teams" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All teams</SelectItem>
+                  <SelectItem value="none">No Team</SelectItem>
+                  {(teams as any[]).map((team: any) => (
+                    <SelectItem key={team.id} value={team.id.toString()}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
             <div className="flex items-end gap-2">
               <Button 
                 variant="outline" 
@@ -1608,6 +1631,7 @@ export default function FacilityManagementPage() {
                   setSearchTerm("");
                   setFilterState("all");
                   setFilterType("all");
+                  setFilterTeam("all");
                 }}
               >
                 Clear Filters
