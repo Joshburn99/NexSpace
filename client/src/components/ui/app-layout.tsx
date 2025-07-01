@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import { NexSpaceLogo } from "@/components/ui/nexspace-logo";
+import nexspaceLogo from "@assets/ChatGPT Image Jun 17, 2025, 01_56_58 PM_1750200821645.png";
 import {
   Activity,
   Calendar,
@@ -257,10 +257,11 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
     <div className="flex h-screen bg-gray-50">
       {/* Left Navigation Sidebar */}
       <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="flex items-center justify-center p-6 border-b border-gray-200">
-          <div className="flex flex-col items-center">
-            <NexSpaceLogo variant="full" size="sm" />
-            <p className="text-sm text-gray-500 mt-1">Healthcare Staffing</p>
+        <div className="flex items-center p-6 border-b border-gray-200">
+          <img src={nexspaceLogo} alt="NexSpace Logo" className="h-10 w-auto mr-3" />
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">NexSpace</h1>
+            <p className="text-sm text-gray-500">Healthcare Staffing</p>
           </div>
         </div>
 
