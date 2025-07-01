@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { LogOut, User } from 'lucide-react';
+import { NexSpaceLogo } from '@/components/ui/nexspace-logo';
 
 export function TopBar() {
   const { user, impersonatedUser, quitImpersonation, originalUser } = useAuth();
@@ -15,15 +16,13 @@ export function TopBar() {
   return (
     <div className="flex items-center justify-between bg-white dark:bg-gray-900 px-6 py-4 shadow-sm border-b border-gray-200 dark:border-gray-700">
       <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 bg-blue-600 rounded flex items-center justify-center">
-            <span className="text-white font-bold text-sm">N</span>
-          </div>
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {isContractor ? 'Contractor Dashboard' : 
-             isEmployee ? 'Employee Dashboard' : 
-             'NexSpace'}
-          </h1>
+        <div className="flex items-center space-x-3">
+          <NexSpaceLogo variant="horizontal" size="sm" />
+          {(isContractor || isEmployee) && (
+            <span className="text-lg font-medium text-gray-600 dark:text-gray-400">
+              {isContractor ? '• Contractor Dashboard' : '• Employee Dashboard'}
+            </span>
+          )}
         </div>
       </div>
       

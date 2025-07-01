@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-import nexspaceLogo from "@assets/ChatGPT Image Jun 17, 2025, 01_56_58 PM_1750200821645.png";
+import { NexSpaceLogo } from "@/components/ui/nexspace-logo";
 import {
   Activity,
   Calendar,
