@@ -13,6 +13,16 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 1, 2025 - Database User Management Cleanup
+- **Users Table Restructure**: Successfully migrated all internal employees and contractors from users table to staff table
+- **Role Separation**: Users table now only contains super_admins and facility users as intended for authentication and facility management
+- **Staff Database Consolidation**: All 30 internal employees and contractors moved to staff table with proper employment type classification
+  - Internal employees → full_time employment_type  
+  - Contractors → contract employment_type
+- **Data Mapping**: Automatically mapped specialties to departments (RN/LPN/CNA → Nursing, CST → Surgery, etc.)
+- **Clean Architecture**: Removed user_id references making staff records independent for better data integrity
+- **Final State**: Users table has 2 super_admins, staff table has 80 total records (57 full-time, 15 contract, 8 existing)
+
 ### June 28, 2025 - Enhanced Facility System Integration & Comprehensive Add Facility Form
 - **Backend Integration Fix**: Successfully mounted enhanced facility routes at `/api/facilities` resolving the critical issue where facility edits weren't saving to database
 - **SelectItem Value Fix**: Fixed React error "SelectItem must have a value prop that is not an empty string" by replacing empty string values with proper non-empty values (e.g., "none" instead of "")

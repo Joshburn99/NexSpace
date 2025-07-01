@@ -106,7 +106,7 @@ function mapSpecialtyToDepartment(specialty: string): string {
 }
 
 // Run the migration if this file is executed directly
-if (import.meta.main) {
+if (process.argv[1] === import.meta.url) {
   migrateUsersToStaff()
     .then((result) => {
       console.log("Migration completed successfully:", result);
