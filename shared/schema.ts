@@ -148,7 +148,7 @@ export const facilities = pgTable("facilities", {
   latitude: decimal("latitude", { precision: 10, scale: 8 }),
   longitude: decimal("longitude", { precision: 11, scale: 8 }),
   isActive: boolean("is_active").default(true),
-  
+
   // New Enhanced Facility Management Fields
   autoAssignmentEnabled: boolean("auto_assignment_enabled").default(false),
   teamId: integer("team_id"), // nullable for corporate/team grouping
@@ -167,7 +167,7 @@ export const facilities = pgTable("facilities", {
   payrollProviderId: integer("payroll_provider_id"), // FK to payroll_providers
   customRules: jsonb("custom_rules"), // float pool, overtime, attendance rules
   regulatoryDocs: jsonb("regulatory_docs"), // array of document URLs/metadata
-  
+
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -339,24 +339,23 @@ export const shiftAssignments = pgTable("shift_assignments", {
 // Shift templates for generating recurring shifts - replaces in-memory template storage
 export const shiftTemplates = pgTable("shift_templates", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
+  title: text("title").notNull(),
+  facilityId: integer("facility_id").notNull(),
+  facilityName: text("facility_name"),
   department: text("department").notNull(),
   specialty: text("specialty").notNull(),
-  facilityId: integer("facility_id").notNull(),
-  facilityName: text("facility_name").notNull(),
-  minStaff: integer("min_staff").notNull().default(1),
-  maxStaff: integer("max_staff").notNull().default(1),
-  shiftType: text("shift_type").notNull(), // day, night, swing
-  startTime: text("start_time").notNull(),
-  endTime: text("end_time").notNull(),
-  daysOfWeek: jsonb("days_of_week").notNull(), // [0,1,2,3,4,5,6] for sun-sat
-  isActive: boolean("is_active").default(true),
-  hourlyRate: decimal("hourly_rate", { precision: 10, scale: 2 }).notNull(),
-  daysPostedOut: integer("days_posted_out").default(7),
-  notes: text("notes"),
-  buildingId: text("building_id"),
-  buildingName: text("building_name"),
-  generatedShiftsCount: integer("generated_shifts_count").default(0),
+  startDate: text("start_date").notNull(), // YYYY-MM-DD format
+  endDate: text("end_date").notNull(), // YYYY-MM-DD format
+  startTime: text("start_time").notNull(), // HH:MM format
+  endTime: text("end_time").notNull(), // HH:MM format
+  quantity: integer("quantity").notNull().default(1), // number of positions
+  rate: decimal("rate", { precision: 6, scale: 2 }).notNull(),
+  premiumMultiplier: decimal("premium_multiplier", { precision: 3, scale: 2 }).default("1.00"),
+  status: text("status").notNull().default("open"), // open, partially_filled, filled, cancelled
+  urgency: text("urgency").default("medium"), // low, medium, high, critical
+  description: text("description"),
+  specialRequirements: text("special_requirements").array(),
+  createdById: integer("created_by_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -514,6 +513,33 @@ export const staff = pgTable("staff", {
   userId: integer("user_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+  // Enhanced staff fields
+  currentLocation: jsonb("current_location"), // { lat: number, lng: number, timestamp: string, accuracy?: number }
+  accountStatus: text("account_status").default("active"), // active, inactive, pending, suspended
+  totalWorkedShifts: integer("total_worked_shifts").default(0),
+  reliabilityScore: decimal("reliability_score", { precision: 3, scale: 2 }).default("0.00"), // 0.00 to 5.00
+  homeZipCode: text("home_zip_code"),
+  homeAddress: text("home_address"),
+
+  // Compliance and licensing fields
+  licenseExpirationDate: timestamp("license_expiration_date"),
+  backgroundCheckDate: timestamp("background_check_date"),
+  drugTestDate: timestamp("drug_test_date"),
+  covidVaccinationStatus: jsonb("covid_vaccination_status"), // { status: 'vaccinated'|'unvaccinated'|'exempt', doses: number, lastDose: string, booster: boolean }
+  requiredCredentialsStatus: jsonb("required_credentials_status"), // { [credentialType]: { status: 'current'|'expired'|'pending', expirationDate: string } }
+
+  // Performance and attendance tracking
+  lateArrivalCount: integer("late_arrival_count").default(0),
+  noCallNoShowCount: integer("no_call_no_show_count").default(0),
+  lastWorkDate: timestamp("last_work_date"),
+
+  // Preferences and scheduling
+  preferredShiftTypes: jsonb("preferred_shift_types"), // ['day', 'night', 'weekend', 'on_call']
+  weeklyAvailability: jsonb("weekly_availability"), // { monday: { available: boolean, startTime: string, endTime: string }, ... }
+
+  // Contact and financial information
+  directDepositInfo: jsonb("direct_deposit_info"), // { bankName: string, routingNumber: string, accountNumber: string, accountType: 'checking'|'savings' } - encrypted
+  emergencyContact: jsonb("emergency_contact"), // { name: string, phone: string, relationship: string, email?: string }
 });
 
 // Payroll Integration Tables

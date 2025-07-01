@@ -28,6 +28,66 @@ export interface StaffMember {
   yearsExperience?: number;
   rating?: number;
   totalShifts?: number;
+  // Enhanced fields
+  associatedFacilities?: number[]; // Array of facility IDs
+  currentLocation?: {
+    lat: number;
+    lng: number;
+    timestamp: string;
+    accuracy?: number;
+  };
+  accountStatus?: 'active' | 'inactive' | 'pending' | 'suspended';
+  totalWorkedShifts?: number;
+  reliabilityScore?: number; // 0.00 to 5.00
+  homeZipCode?: string;
+  homeAddress?: string;
+  availabilityStatus?: 'available' | 'unavailable' | 'busy';
+
+  // Compliance and licensing
+  licenseExpirationDate?: string;
+  backgroundCheckDate?: string;
+  drugTestDate?: string;
+  covidVaccinationStatus?: {
+    status: 'vaccinated' | 'unvaccinated' | 'exempt';
+    doses: number;
+    lastDose?: string;
+    booster: boolean;
+  };
+  requiredCredentialsStatus?: {
+    [credentialType: string]: {
+      status: 'current' | 'expired' | 'pending';
+      expirationDate: string;
+    };
+  };
+
+  // Performance and attendance
+  lateArrivalCount?: number;
+  noCallNoShowCount?: number;
+  lastWorkDate?: string;
+
+  // Preferences and scheduling
+  preferredShiftTypes?: ('day' | 'night' | 'weekend' | 'on_call')[];
+  weeklyAvailability?: {
+    [day: string]: {
+      available: boolean;
+      startTime?: string;
+      endTime?: string;
+    };
+  };
+
+  // Contact and financial
+  directDepositInfo?: {
+    bankName: string;
+    routingNumber: string;
+    accountNumber: string;
+    accountType: 'checking' | 'savings';
+  };
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+    email?: string;
+  };
 }
 
 interface StaffContextType {
@@ -63,11 +123,11 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         },
         body: JSON.stringify(updates),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to update profile');
       }
-      
+
       return response.json();
     },
     onSuccess: () => {
