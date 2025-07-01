@@ -47,8 +47,8 @@ function killPort5000() {
       } else {
         log("Killed process on port 5000");
       }
-      // Add delay to ensure port is fully released
-      setTimeout(resolve, 1000);
+      // Add longer delay to ensure port is fully released
+      setTimeout(resolve, 2000);
     });
   });
 }
@@ -61,7 +61,7 @@ function killPort5000() {
   try {
     await createEnhancedStaffProfiles();
   } catch (error) {
-    log("Enhanced staff profiles initialization:", error);
+    log(`Enhanced staff profiles initialization error: ${error}`);
   }
   
   const server = await registerRoutes(app);
@@ -86,6 +86,31 @@ function killPort5000() {
   // Use environment PORT or fallback to 5000
   // this serves both the API and the client.
   const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
+  
+  server.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.error(`Port ${PORT} is already in use. Attempting to kill process and retry...`);
+      killPort5000().then(() => {
+        setTimeout(() => {
+          server.listen(
+            {
+              port: PORT,
+              host: "0.0.0.0",
+              reusePort: true,
+            },
+            () => {
+              console.log(`Server running on port ${PORT}`);
+              log(`serving on port ${PORT}`);
+            }
+          );
+        }, 1000);
+      });
+    } else {
+      console.error('Server error:', err);
+      process.exit(1);
+    }
+  });
+
   server.listen(
     {
       port: PORT,
