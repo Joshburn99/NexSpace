@@ -88,6 +88,68 @@ export const UserRole = {
 
 export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 
+// Facility User roles enum - specific to facility management
+export const FacilityUserRole = {
+  FACILITY_ADMIN: "facility_admin",
+  SCHEDULING_MANAGER: "scheduling_manager",
+  HR_MANAGER: "hr_manager",
+  DEPARTMENT_HEAD: "department_head",
+  BILLING_MANAGER: "billing_manager",
+  COMPLIANCE_OFFICER: "compliance_officer",
+  STAFF_COORDINATOR: "staff_coordinator",
+  VIEWER: "viewer",
+} as const;
+
+export type FacilityUserRole = (typeof FacilityUserRole)[keyof typeof FacilityUserRole];
+
+// Permission categories for facility users
+export const FacilityPermission = {
+  // Schedule Management
+  VIEW_SCHEDULES: "view_schedules",
+  CREATE_SHIFTS: "create_shifts",
+  EDIT_SHIFTS: "edit_shifts",
+  DELETE_SHIFTS: "delete_shifts",
+  ASSIGN_STAFF: "assign_staff",
+  APPROVE_SHIFT_REQUESTS: "approve_shift_requests",
+  
+  // Staff Management
+  VIEW_STAFF: "view_staff",
+  CREATE_STAFF: "create_staff",
+  EDIT_STAFF: "edit_staff",
+  DEACTIVATE_STAFF: "deactivate_staff",
+  VIEW_STAFF_CREDENTIALS: "view_staff_credentials",
+  MANAGE_STAFF_CREDENTIALS: "manage_staff_credentials",
+  
+  // Facility Management
+  VIEW_FACILITY_PROFILE: "view_facility_profile",
+  EDIT_FACILITY_PROFILE: "edit_facility_profile",
+  MANAGE_FACILITY_SETTINGS: "manage_facility_settings",
+  
+  // Billing & Financial
+  VIEW_BILLING: "view_billing",
+  MANAGE_BILLING: "manage_billing",
+  VIEW_RATES: "view_rates",
+  EDIT_RATES: "edit_rates",
+  APPROVE_INVOICES: "approve_invoices",
+  
+  // Reporting & Analytics
+  VIEW_REPORTS: "view_reports",
+  EXPORT_DATA: "export_data",
+  VIEW_ANALYTICS: "view_analytics",
+  
+  // Compliance & Documentation
+  VIEW_COMPLIANCE: "view_compliance",
+  MANAGE_COMPLIANCE: "manage_compliance",
+  UPLOAD_DOCUMENTS: "upload_documents",
+  
+  // System Administration
+  MANAGE_FACILITY_USERS: "manage_facility_users",
+  MANAGE_PERMISSIONS: "manage_permissions",
+  VIEW_AUDIT_LOGS: "view_audit_logs",
+} as const;
+
+export type FacilityPermission = (typeof FacilityPermission)[keyof typeof FacilityPermission];
+
 // Users table
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -105,6 +167,95 @@ export const users = pgTable("users", {
   availabilityStatus: text("availability_status").default("available"), // available, unavailable, busy
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Facility Users table - dedicated facility management users
+export const facilityUsers = pgTable("facility_users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
+  password: text("password").notNull(),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  role: text("role").notNull(), // FacilityUserRole enum
+  avatar: text("avatar"),
+  isActive: boolean("is_active").default(true),
+  
+  // Facility associations
+  primaryFacilityId: integer("primary_facility_id").notNull(),
+  associatedFacilityIds: jsonb("associated_facility_ids").default([]), // Array of facility IDs
+  
+  // Contact & Profile
+  phone: text("phone"),
+  title: text("title"), // Job title (e.g., "Nursing Director", "Operations Manager")
+  department: text("department"), // Department they manage
+  
+  // Permissions & Access
+  permissions: jsonb("permissions").default([]), // Array of FacilityPermission values
+  customPermissions: jsonb("custom_permissions").default({}), // Custom per-facility permissions
+  
+  // Account Management
+  lastLogin: timestamp("last_login"),
+  loginCount: integer("login_count").default(0),
+  passwordResetRequired: boolean("password_reset_required").default(false),
+  twoFactorEnabled: boolean("two_factor_enabled").default(false),
+  
+  // Audit & Tracking
+  createdById: integer("created_by_id"), // Who created this user
+  notes: text("notes"), // Admin notes about this user
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Facility User Permissions table - tracks specific permissions per facility
+export const facilityUserPermissions = pgTable("facility_user_permissions", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  facilityId: integer("facility_id").notNull(),
+  permission: text("permission").notNull(), // FacilityPermission enum value
+  grantedById: integer("granted_by_id").notNull(), // Who granted this permission
+  grantedAt: timestamp("granted_at").defaultNow(),
+  isActive: boolean("is_active").default(true),
+  
+  // Optional constraints/limitations
+  constraints: jsonb("constraints"), // e.g., { "departments": ["ICU", "ER"], "maxShifts": 50 }
+  expiresAt: timestamp("expires_at"), // Optional expiration date
+  
+  notes: text("notes"), // Reason for granting/specific conditions
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Facility User Role Templates - predefined permission sets
+export const facilityUserRoleTemplates = pgTable("facility_user_role_templates", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // "Scheduling Manager", "HR Director", etc.
+  description: text("description"),
+  role: text("role").notNull(), // FacilityUserRole enum value
+  permissions: jsonb("permissions").notNull(), // Array of FacilityPermission values
+  isDefault: boolean("is_default").default(false), // Default template for this role
+  isActive: boolean("is_active").default(true),
+  
+  // Template metadata
+  createdById: integer("created_by_id").notNull(),
+  facilityId: integer("facility_id"), // Facility-specific template (null for system-wide)
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Facility User Activity Log - audit trail
+export const facilityUserActivityLog = pgTable("facility_user_activity_log", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  facilityId: integer("facility_id").notNull(),
+  action: text("action").notNull(), // "login", "create_shift", "edit_profile", etc.
+  resource: text("resource"), // What was affected (shift ID, staff ID, etc.)
+  details: jsonb("details"), // Additional context/data
+  ipAddress: text("ip_address"),
+  userAgent: text("user_agent"),
+  timestamp: timestamp("timestamp").defaultNow(),
 });
 
 // Facilities table
@@ -923,3 +1074,35 @@ export type InsertGeneratedShift = z.infer<typeof insertGeneratedShiftSchema>;
 export type GeneratedShift = typeof generatedShifts.$inferSelect;
 export type InsertUserSession = z.infer<typeof insertUserSessionSchema>;
 export type UserSession = typeof userSessions.$inferSelect;
+
+// Facility User schemas and types
+export const insertFacilityUserSchema = createInsertSchema(facilityUsers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFacilityUserPermissionSchema = createInsertSchema(facilityUserPermissions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFacilityUserRoleTemplateSchema = createInsertSchema(facilityUserRoleTemplates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFacilityUserActivityLogSchema = createInsertSchema(facilityUserActivityLog).omit({
+  id: true,
+});
+
+export type InsertFacilityUser = z.infer<typeof insertFacilityUserSchema>;
+export type FacilityUser = typeof facilityUsers.$inferSelect;
+export type InsertFacilityUserPermission = z.infer<typeof insertFacilityUserPermissionSchema>;
+export type FacilityUserPermission = typeof facilityUserPermissions.$inferSelect;
+export type InsertFacilityUserRoleTemplate = z.infer<typeof insertFacilityUserRoleTemplateSchema>;
+export type FacilityUserRoleTemplate = typeof facilityUserRoleTemplates.$inferSelect;
+export type InsertFacilityUserActivityLog = z.infer<typeof insertFacilityUserActivityLogSchema>;
+export type FacilityUserActivityLog = typeof facilityUserActivityLog.$inferSelect;

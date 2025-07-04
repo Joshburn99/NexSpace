@@ -43,38 +43,38 @@ export default function AdminUserManagementPage() {
   const [editingPermissions, setEditingPermissions] = useState<any>(null);
 
   const { data: users = [], isLoading } = useQuery({
-    queryKey: ["/api/admin/users"],
+    queryKey: ["/api/facility-users"],
   });
 
   const createUserMutation = useMutation({
     mutationFn: async (userData: any) => {
-      const response = await apiRequest("POST", "/api/admin/users", userData);
+      const response = await apiRequest("POST", "/api/facility-users", userData);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/facility-users"] });
       setIsCreateDialogOpen(false);
     },
   });
 
   const updateUserMutation = useMutation({
     mutationFn: async ({ id, ...userData }: any) => {
-      const response = await apiRequest("PATCH", `/api/admin/users/${id}`, userData);
+      const response = await apiRequest("PATCH", `/api/facility-users/${id}`, userData);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/facility-users"] });
       setSelectedUser(null);
     },
   });
 
   const deactivateUserMutation = useMutation({
     mutationFn: async (userId: number) => {
-      const response = await apiRequest("PATCH", `/api/admin/users/${userId}`, { isActive: false });
+      const response = await apiRequest("PATCH", `/api/facility-users/${userId}/deactivate`, {});
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/facility-users"] });
     },
   });
 
@@ -210,9 +210,9 @@ export default function AdminUserManagementPage() {
             </Button>
           </Link>
         </div>
-        <h1 className="text-3xl font-bold">User Management</h1>
+        <h1 className="text-3xl font-bold">Facility Users</h1>
         <p className="text-muted-foreground">
-          Manage user accounts, roles, and permissions across the platform
+          Manage facility user accounts, roles, and permissions for healthcare facilities
         </p>
       </div>
 
@@ -313,11 +313,11 @@ export default function AdminUserManagementPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
-                  <TableHead>Username</TableHead>
+                  <TableHead>Title/Department</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
+                  <TableHead>Primary Facility</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Permissions</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -325,12 +325,24 @@ export default function AdminUserManagementPage() {
                 {filteredUsers.map((user: any) => (
                   <TableRow key={user.id}>
                     <TableCell>
-                      {user.name || `${user.firstName} ${user.lastName}`}
+                      {`${user.firstName} ${user.lastName}`}
                     </TableCell>
-                    <TableCell>{user.username}</TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        {user.title && <div className="font-medium">{user.title}</div>}
+                        {user.department && <div className="text-sm text-muted-foreground">{user.department}</div>}
+                      </div>
+                    </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
-                      <Badge variant={getRoleBadgeVariant(user.role)}>{user.role}</Badge>
+                      <Badge variant={getRoleBadgeVariant(user.role)}>
+                        {user.role.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        {user.facilityName || `Facility ${user.primaryFacilityId}`}
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant={user.isActive ? "default" : "secondary"}>
@@ -344,20 +356,6 @@ export default function AdminUserManagementPage() {
                           </>
                         )}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {((rolePermissions as any)[user.role] || []).slice(0, 3).map((permission: string) => (
-                          <Badge key={permission} variant="outline" className="text-xs">
-                            {(permissionSets as any)[permission]?.name || permission}
-                          </Badge>
-                        ))}
-                        {((rolePermissions as any)[user.role] || []).length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{((rolePermissions as any)[user.role] || []).length - 3} more
-                          </Badge>
-                        )}
-                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">

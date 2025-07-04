@@ -31,7 +31,13 @@ import {
   insertTeamSchema,
   insertTeamMemberSchema,
   insertTeamFacilitySchema,
+  insertFacilityUserSchema,
+  insertFacilityUserPermissionSchema,
+  insertFacilityUserRoleTemplateSchema,
+  insertFacilityUserActivityLogSchema,
   UserRole,
+  FacilityUserRole,
+  FacilityPermission,
   shifts,
   facilities,
   shiftRequests,
@@ -43,6 +49,10 @@ import {
   teams,
   teamMembers,
   teamFacilities,
+  facilityUsers,
+  facilityUserPermissions,
+  facilityUserRoleTemplates,
+  facilityUserActivityLog,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and } from "drizzle-orm";
@@ -9599,6 +9609,175 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error removing member from team:", error);
       res.status(500).json({ message: "Failed to remove member from team" });
+    }
+  });
+
+  // ===== FACILITY USER MANAGEMENT API =====
+  
+  // Get all facility users
+  app.get("/api/facility-users", requireAuth, async (req, res) => {
+    try {
+      const users = await db.select({
+        id: facilityUsers.id,
+        username: facilityUsers.username,
+        email: facilityUsers.email,
+        firstName: facilityUsers.firstName,
+        lastName: facilityUsers.lastName,
+        role: facilityUsers.role,
+        avatar: facilityUsers.avatar,
+        isActive: facilityUsers.isActive,
+        primaryFacilityId: facilityUsers.primaryFacilityId,
+        associatedFacilityIds: facilityUsers.associatedFacilityIds,
+        phone: facilityUsers.phone,
+        title: facilityUsers.title,
+        department: facilityUsers.department,
+        permissions: facilityUsers.permissions,
+        lastLogin: facilityUsers.lastLogin,
+        loginCount: facilityUsers.loginCount,
+        twoFactorEnabled: facilityUsers.twoFactorEnabled,
+        notes: facilityUsers.notes,
+        createdAt: facilityUsers.createdAt,
+        updatedAt: facilityUsers.updatedAt,
+        facilityName: facilities.name,
+      })
+      .from(facilityUsers)
+      .leftJoin(facilities, eq(facilityUsers.primaryFacilityId, facilities.id))
+      .orderBy(facilityUsers.lastName, facilityUsers.firstName);
+
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching facility users:", error);
+      res.status(500).json({ message: "Failed to fetch facility users" });
+    }
+  });
+
+  // Create facility user
+  app.post("/api/facility-users", requireAuth, async (req, res) => {
+    try {
+      const userData = insertFacilityUserSchema.parse(req.body);
+      
+      // Hash password (in real implementation, use proper bcrypt)
+      const hashedPassword = userData.password; // Placeholder for demo
+      
+      const [newUser] = await db.insert(facilityUsers).values({
+        ...userData,
+        password: hashedPassword,
+        createdById: req.user?.id,
+      }).returning({
+        id: facilityUsers.id,
+        username: facilityUsers.username,
+        email: facilityUsers.email,
+        firstName: facilityUsers.firstName,
+        lastName: facilityUsers.lastName,
+        role: facilityUsers.role,
+        isActive: facilityUsers.isActive,
+        primaryFacilityId: facilityUsers.primaryFacilityId,
+        title: facilityUsers.title,
+        department: facilityUsers.department,
+        permissions: facilityUsers.permissions,
+        createdAt: facilityUsers.createdAt,
+      });
+
+      // Log activity
+      await db.insert(facilityUserActivityLog).values({
+        userId: newUser.id,
+        facilityId: newUser.primaryFacilityId,
+        action: "user_created",
+        details: { createdBy: req.user?.id, role: newUser.role },
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+      });
+
+      res.status(201).json(newUser);
+    } catch (error) {
+      console.error("Error creating facility user:", error);
+      res.status(500).json({ message: "Failed to create facility user" });
+    }
+  });
+
+  // Update facility user
+  app.patch("/api/facility-users/:id", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      // Remove sensitive fields that shouldn't be updated via this endpoint
+      delete updateData.id;
+      delete updateData.password;
+      delete updateData.createdAt;
+      delete updateData.createdById;
+
+      const [updatedUser] = await db.update(facilityUsers)
+        .set({
+          ...updateData,
+          updatedAt: new Date(),
+        })
+        .where(eq(facilityUsers.id, id))
+        .returning({
+          id: facilityUsers.id,
+          username: facilityUsers.username,
+          email: facilityUsers.email,
+          firstName: facilityUsers.firstName,
+          lastName: facilityUsers.lastName,
+          role: facilityUsers.role,
+          isActive: facilityUsers.isActive,
+          primaryFacilityId: facilityUsers.primaryFacilityId,
+          title: facilityUsers.title,
+          department: facilityUsers.department,
+          permissions: facilityUsers.permissions,
+          updatedAt: facilityUsers.updatedAt,
+        });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "Facility user not found" });
+      }
+
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating facility user:", error);
+      res.status(500).json({ message: "Failed to update facility user" });
+    }
+  });
+
+  // Deactivate facility user
+  app.patch("/api/facility-users/:id/deactivate", requireAuth, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      const [deactivatedUser] = await db.update(facilityUsers)
+        .set({
+          isActive: false,
+          updatedAt: new Date(),
+        })
+        .where(eq(facilityUsers.id, id))
+        .returning({
+          id: facilityUsers.id,
+          isActive: facilityUsers.isActive,
+        });
+
+      if (!deactivatedUser) {
+        return res.status(404).json({ message: "Facility user not found" });
+      }
+
+      res.json({ message: "Facility user deactivated successfully" });
+    } catch (error) {
+      console.error("Error deactivating facility user:", error);
+      res.status(500).json({ message: "Failed to deactivate facility user" });
+    }
+  });
+
+  // Get facility user role templates
+  app.get("/api/facility-user-role-templates", requireAuth, async (req, res) => {
+    try {
+      const templates = await db.select()
+        .from(facilityUserRoleTemplates)
+        .where(eq(facilityUserRoleTemplates.isActive, true))
+        .orderBy(facilityUserRoleTemplates.name);
+
+      res.json(templates);
+    } catch (error) {
+      console.error("Error fetching role templates:", error);
+      res.status(500).json({ message: "Failed to fetch role templates" });
     }
   });
 
