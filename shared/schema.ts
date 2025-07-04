@@ -91,61 +91,60 @@ export type UserRole = (typeof UserRole)[keyof typeof UserRole];
 // Facility User roles enum - specific to facility management
 export const FacilityUserRole = {
   FACILITY_ADMIN: "facility_admin",
-  SCHEDULING_MANAGER: "scheduling_manager",
+  SCHEDULING_COORDINATOR: "scheduling_coordinator",
   HR_MANAGER: "hr_manager",
-  DEPARTMENT_HEAD: "department_head",
-  BILLING_MANAGER: "billing_manager",
-  COMPLIANCE_OFFICER: "compliance_officer",
-  STAFF_COORDINATOR: "staff_coordinator",
-  VIEWER: "viewer",
+  CORPORATE: "corporate",
+  REGIONAL_DIRECTOR: "regional_director",
+  BILLING: "billing",
+  SUPERVISOR: "supervisor",
+  DIRECTOR_OF_NURSING: "director_of_nursing",
 } as const;
 
 export type FacilityUserRole = (typeof FacilityUserRole)[keyof typeof FacilityUserRole];
 
 // Permission categories for facility users
 export const FacilityPermission = {
-  // Schedule Management
-  VIEW_SCHEDULES: "view_schedules",
-  CREATE_SHIFTS: "create_shifts",
-  EDIT_SHIFTS: "edit_shifts",
-  DELETE_SHIFTS: "delete_shifts",
-  ASSIGN_STAFF: "assign_staff",
-  APPROVE_SHIFT_REQUESTS: "approve_shift_requests",
-  
-  // Staff Management
-  VIEW_STAFF: "view_staff",
-  CREATE_STAFF: "create_staff",
-  EDIT_STAFF: "edit_staff",
-  DEACTIVATE_STAFF: "deactivate_staff",
-  VIEW_STAFF_CREDENTIALS: "view_staff_credentials",
-  MANAGE_STAFF_CREDENTIALS: "manage_staff_credentials",
-  
   // Facility Management
   VIEW_FACILITY_PROFILE: "view_facility_profile",
   EDIT_FACILITY_PROFILE: "edit_facility_profile",
-  MANAGE_FACILITY_SETTINGS: "manage_facility_settings",
+  
+  // Shift Management
+  CREATE_SHIFTS: "create_shifts",
+  EDIT_SHIFTS: "edit_shifts",
+  DELETE_SHIFTS: "delete_shifts",
+  APPROVE_SHIFT_REQUESTS: "approve_shift_requests",
+  
+  // Staff Management
+  ONBOARD_STAFF: "onboard_staff",
+  OFFBOARD_STAFF: "offboard_staff",
   
   // Billing & Financial
-  VIEW_BILLING: "view_billing",
-  MANAGE_BILLING: "manage_billing",
   VIEW_RATES: "view_rates",
   EDIT_RATES: "edit_rates",
-  APPROVE_INVOICES: "approve_invoices",
+  PREMIUM_SHIFT_MULTIPLIER_1_0: "premium_shift_multiplier_1_0",
+  PREMIUM_SHIFT_MULTIPLIER_1_1: "premium_shift_multiplier_1_1",
+  PREMIUM_SHIFT_MULTIPLIER_1_2: "premium_shift_multiplier_1_2",
+  PREMIUM_SHIFT_MULTIPLIER_1_3: "premium_shift_multiplier_1_3",
+  PREMIUM_SHIFT_MULTIPLIER_1_4: "premium_shift_multiplier_1_4",
+  PREMIUM_SHIFT_MULTIPLIER_1_5: "premium_shift_multiplier_1_5",
+  PREMIUM_SHIFT_MULTIPLIER_1_6: "premium_shift_multiplier_1_6",
   
-  // Reporting & Analytics
-  VIEW_REPORTS: "view_reports",
-  EXPORT_DATA: "export_data",
-  VIEW_ANALYTICS: "view_analytics",
+  // Timesheets & Payroll
+  VIEW_TIMESHEETS: "view_timesheets",
+  EXPORT_TIMESHEETS: "export_timesheets",
+  APPROVE_TIMESHEETS: "approve_timesheets",
+  APPROVE_PAYROLL: "approve_payroll",
   
-  // Compliance & Documentation
-  VIEW_COMPLIANCE: "view_compliance",
-  MANAGE_COMPLIANCE: "manage_compliance",
-  UPLOAD_DOCUMENTS: "upload_documents",
+  // Analytics & Reporting
+  ACCESS_ANALYTICS: "access_analytics",
+  ACCESS_REPORTS: "access_reports",
   
-  // System Administration
-  MANAGE_FACILITY_USERS: "manage_facility_users",
-  MANAGE_PERMISSIONS: "manage_permissions",
-  VIEW_AUDIT_LOGS: "view_audit_logs",
+  // User & Team Management
+  MANAGE_USERS_AND_TEAM: "manage_users_and_team",
+  
+  // Job Management
+  MANAGE_JOB_OPENINGS: "manage_job_openings",
+  VIEW_JOB_OPENINGS: "view_job_openings",
 } as const;
 
 export type FacilityPermission = (typeof FacilityPermission)[keyof typeof FacilityPermission];
@@ -241,6 +240,42 @@ export const facilityUserRoleTemplates = pgTable("facility_user_role_templates",
   createdById: integer("created_by_id").notNull(),
   facilityId: integer("facility_id"), // Facility-specific template (null for system-wide)
   
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Facility User to Facility Association - many-to-many relationship
+export const facilityUserFacilityAssociations = pgTable("facility_user_facility_associations", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  facilityId: integer("facility_id").notNull(),
+  isPrimary: boolean("is_primary").default(false), // One primary facility per user
+  teamId: integer("team_id"), // Associated team for this facility
+  assignedById: integer("assigned_by_id"), // Who assigned this association
+  assignedAt: timestamp("assigned_at").defaultNow(),
+  isActive: boolean("is_active").default(true),
+  
+  // Role-specific permissions for this facility
+  facilitySpecificPermissions: jsonb("facility_specific_permissions").default([]),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Teams table for managing facility user groups
+export const facilityUserTeams = pgTable("facility_user_teams", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  description: text("description"),
+  facilityId: integer("facility_id").notNull(),
+  teamLeadId: integer("team_lead_id"), // Team lead user ID
+  isActive: boolean("is_active").default(true),
+  
+  // Team settings
+  canManageUsers: boolean("can_manage_users").default(false),
+  maxMembers: integer("max_members"),
+  
+  createdById: integer("created_by_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -1098,6 +1133,18 @@ export const insertFacilityUserActivityLogSchema = createInsertSchema(facilityUs
   id: true,
 });
 
+export const insertFacilityUserFacilityAssociationSchema = createInsertSchema(facilityUserFacilityAssociations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFacilityUserTeamSchema = createInsertSchema(facilityUserTeams).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertFacilityUser = z.infer<typeof insertFacilityUserSchema>;
 export type FacilityUser = typeof facilityUsers.$inferSelect;
 export type InsertFacilityUserPermission = z.infer<typeof insertFacilityUserPermissionSchema>;
@@ -1106,3 +1153,7 @@ export type InsertFacilityUserRoleTemplate = z.infer<typeof insertFacilityUserRo
 export type FacilityUserRoleTemplate = typeof facilityUserRoleTemplates.$inferSelect;
 export type InsertFacilityUserActivityLog = z.infer<typeof insertFacilityUserActivityLogSchema>;
 export type FacilityUserActivityLog = typeof facilityUserActivityLog.$inferSelect;
+export type InsertFacilityUserFacilityAssociation = z.infer<typeof insertFacilityUserFacilityAssociationSchema>;
+export type FacilityUserFacilityAssociation = typeof facilityUserFacilityAssociations.$inferSelect;
+export type InsertFacilityUserTeam = z.infer<typeof insertFacilityUserTeamSchema>;
+export type FacilityUserTeam = typeof facilityUserTeams.$inferSelect;

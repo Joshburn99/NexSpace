@@ -35,6 +35,8 @@ import {
   insertFacilityUserPermissionSchema,
   insertFacilityUserRoleTemplateSchema,
   insertFacilityUserActivityLogSchema,
+  insertFacilityUserFacilityAssociationSchema,
+  insertFacilityUserTeamSchema,
   UserRole,
   FacilityUserRole,
   FacilityPermission,
@@ -53,6 +55,8 @@ import {
   facilityUserPermissions,
   facilityUserRoleTemplates,
   facilityUserActivityLog,
+  facilityUserFacilityAssociations,
+  facilityUserTeams,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and } from "drizzle-orm";
@@ -9763,6 +9767,246 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error deactivating facility user:", error);
       res.status(500).json({ message: "Failed to deactivate facility user" });
+    }
+  });
+
+  // Setup sample facility users with updated roles and permissions
+  app.post("/api/setup-facility-users", requireAuth, async (req, res) => {
+    try {
+      // Define role permission mappings based on your requirements
+      const rolePermissions = {
+        facility_admin: [
+          "view_facility_profile", "edit_facility_profile", "create_shifts", "edit_shifts", 
+          "delete_shifts", "approve_shift_requests", "onboard_staff", "offboard_staff",
+          "view_rates", "edit_rates", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
+          "premium_shift_multiplier_1_2", "premium_shift_multiplier_1_3", "premium_shift_multiplier_1_4", 
+          "premium_shift_multiplier_1_5", "premium_shift_multiplier_1_6", "view_timesheets", 
+          "export_timesheets", "approve_timesheets", "approve_payroll", "access_analytics", 
+          "access_reports", "manage_users_and_team", "manage_job_openings", "view_job_openings"
+        ],
+        scheduling_coordinator: [
+          "view_facility_profile", "create_shifts", "edit_shifts", "delete_shifts", 
+          "approve_shift_requests", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
+          "premium_shift_multiplier_1_2", "view_timesheets", "access_reports", 
+          "manage_job_openings", "view_job_openings"
+        ],
+        hr_manager: [
+          "view_facility_profile", "onboard_staff", "offboard_staff", "view_rates", 
+          "view_timesheets", "export_timesheets", "approve_timesheets", "access_analytics", 
+          "access_reports", "manage_users_and_team", "manage_job_openings", "view_job_openings"
+        ],
+        corporate: [
+          "view_facility_profile", "edit_facility_profile", "view_rates", "edit_rates", 
+          "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", "premium_shift_multiplier_1_2", 
+          "premium_shift_multiplier_1_3", "premium_shift_multiplier_1_4", "premium_shift_multiplier_1_5", 
+          "premium_shift_multiplier_1_6", "view_timesheets", "export_timesheets", "approve_timesheets", 
+          "approve_payroll", "access_analytics", "access_reports", "manage_users_and_team"
+        ],
+        regional_director: [
+          "view_facility_profile", "edit_facility_profile", "approve_shift_requests", 
+          "view_rates", "edit_rates", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
+          "premium_shift_multiplier_1_2", "premium_shift_multiplier_1_3", "premium_shift_multiplier_1_4", 
+          "premium_shift_multiplier_1_5", "premium_shift_multiplier_1_6", "view_timesheets", 
+          "export_timesheets", "approve_payroll", "access_analytics", "access_reports", 
+          "manage_users_and_team"
+        ],
+        billing: [
+          "view_facility_profile", "view_rates", "view_timesheets", "export_timesheets", 
+          "approve_timesheets", "approve_payroll", "access_reports"
+        ],
+        supervisor: [
+          "view_facility_profile", "create_shifts", "edit_shifts", "approve_shift_requests", 
+          "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", "view_timesheets", 
+          "approve_timesheets", "access_reports", "view_job_openings"
+        ],
+        director_of_nursing: [
+          "view_facility_profile", "edit_facility_profile", "create_shifts", "edit_shifts", 
+          "delete_shifts", "approve_shift_requests", "onboard_staff", "offboard_staff", 
+          "view_rates", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
+          "premium_shift_multiplier_1_2", "premium_shift_multiplier_1_3", "view_timesheets", 
+          "export_timesheets", "approve_timesheets", "access_analytics", "access_reports", 
+          "manage_job_openings", "view_job_openings"
+        ]
+      };
+
+      // Sample facility users
+      const facilityUsersData = [
+        {
+          username: "admin.sarah",
+          email: "sarah.admin@facility1.com",
+          password: "hashed_password_1",
+          firstName: "Sarah",
+          lastName: "Henderson",
+          role: "facility_admin",
+          primaryFacilityId: 1,
+          associatedFacilityIds: [1],
+          title: "Facility Administrator",
+          department: "Administration",
+          permissions: rolePermissions.facility_admin,
+          isActive: true
+        },
+        {
+          username: "coord.mike",
+          email: "mike.scheduling@facility1.com",
+          password: "hashed_password_2",
+          firstName: "Mike",
+          lastName: "Rodriguez",
+          role: "scheduling_coordinator",
+          primaryFacilityId: 1,
+          associatedFacilityIds: [1, 2],
+          title: "Scheduling Coordinator",
+          department: "Operations",
+          permissions: rolePermissions.scheduling_coordinator,
+          isActive: true
+        },
+        {
+          username: "hr.jennifer",
+          email: "jennifer.hr@facility2.com",
+          password: "hashed_password_3",
+          firstName: "Jennifer",
+          lastName: "Chen",
+          role: "hr_manager",
+          primaryFacilityId: 2,
+          associatedFacilityIds: [2],
+          title: "HR Manager",
+          department: "Human Resources",
+          permissions: rolePermissions.hr_manager,
+          isActive: true
+        },
+        {
+          username: "corp.david",
+          email: "david.corporate@nexspace.com",
+          password: "hashed_password_4",
+          firstName: "David",
+          lastName: "Wilson",
+          role: "corporate",
+          primaryFacilityId: 1,
+          associatedFacilityIds: [1, 2, 3, 4],
+          title: "Corporate Operations Manager",
+          department: "Corporate",
+          permissions: rolePermissions.corporate,
+          isActive: true
+        },
+        {
+          username: "director.lisa",
+          email: "lisa.regional@nexspace.com",
+          password: "hashed_password_5",
+          firstName: "Lisa",
+          lastName: "Thompson",
+          role: "regional_director",
+          primaryFacilityId: 1,
+          associatedFacilityIds: [1, 2, 3],
+          title: "Regional Director - West Coast",
+          department: "Regional Management",
+          permissions: rolePermissions.regional_director,
+          isActive: true
+        },
+        {
+          username: "billing.robert",
+          email: "robert.billing@facility1.com",
+          password: "hashed_password_6",
+          firstName: "Robert",
+          lastName: "Davis",
+          role: "billing",
+          primaryFacilityId: 1,
+          associatedFacilityIds: [1],
+          title: "Billing Coordinator",
+          department: "Finance",
+          permissions: rolePermissions.billing,
+          isActive: true
+        },
+        {
+          username: "supervisor.maria",
+          email: "maria.supervisor@facility2.com",
+          password: "hashed_password_7",
+          firstName: "Maria",
+          lastName: "Garcia",
+          role: "supervisor",
+          primaryFacilityId: 2,
+          associatedFacilityIds: [2],
+          title: "Nursing Supervisor",
+          department: "Nursing",
+          permissions: rolePermissions.supervisor,
+          isActive: true
+        },
+        {
+          username: "don.amanda",
+          email: "amanda.don@facility1.com",
+          password: "hashed_password_8",
+          firstName: "Amanda",
+          lastName: "Johnson",
+          role: "director_of_nursing",
+          primaryFacilityId: 1,
+          associatedFacilityIds: [1],
+          title: "Director of Nursing",
+          department: "Nursing",
+          permissions: rolePermissions.director_of_nursing,
+          isActive: true
+        }
+      ];
+
+      // Clear existing facility users first
+      await db.delete(facilityUserActivityLog);
+      await db.delete(facilityUserFacilityAssociations);
+      await db.delete(facilityUsers);
+
+      // Create facility users
+      const createdUsers = [];
+      for (const userData of facilityUsersData) {
+        const [newUser] = await db.insert(facilityUsers).values({
+          ...userData,
+          createdById: req.user?.id || 1,
+        }).returning({
+          id: facilityUsers.id,
+          username: facilityUsers.username,
+          email: facilityUsers.email,
+          firstName: facilityUsers.firstName,
+          lastName: facilityUsers.lastName,
+          role: facilityUsers.role,
+          primaryFacilityId: facilityUsers.primaryFacilityId,
+          title: facilityUsers.title,
+          department: facilityUsers.department,
+          permissions: facilityUsers.permissions,
+          isActive: facilityUsers.isActive,
+        });
+
+        // Create facility associations
+        for (const facilityId of userData.associatedFacilityIds) {
+          await db.insert(facilityUserFacilityAssociations).values({
+            userId: newUser.id,
+            facilityId: facilityId,
+            isPrimary: facilityId === userData.primaryFacilityId,
+            assignedById: req.user?.id || 1,
+            isActive: true,
+            facilitySpecificPermissions: userData.permissions,
+          });
+        }
+
+        // Log activity
+        await db.insert(facilityUserActivityLog).values({
+          userId: newUser.id,
+          facilityId: newUser.primaryFacilityId,
+          action: "user_created",
+          details: { 
+            createdBy: req.user?.id || 1, 
+            role: newUser.role,
+            setupType: "sample_data"
+          },
+          ipAddress: req.ip,
+          userAgent: req.get('User-Agent'),
+        });
+
+        createdUsers.push(newUser);
+      }
+
+      res.status(201).json({
+        message: "Sample facility users created successfully",
+        users: createdUsers,
+        count: createdUsers.length
+      });
+    } catch (error) {
+      console.error("Error creating sample facility users:", error);
+      res.status(500).json({ message: "Failed to create sample facility users" });
     }
   });
 

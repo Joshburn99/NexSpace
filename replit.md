@@ -13,6 +13,17 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 4, 2025 - Comprehensive Facility User Management System
+- **Updated Role Structure**: Replaced generic facility user roles with specific healthcare management roles:
+  - Facility Admin, Scheduling Coordinator, HR Manager, Corporate, Regional Director, Billing, Supervisor, Director of Nursing
+- **Granular Permissions System**: Implemented 25+ specific permissions including premium shift multipliers (1.0x-1.6x), timesheet management, facility profile editing, staff onboarding/offboarding, analytics access, and job management
+- **Multi-Facility Associations**: Added many-to-many facility associations through dedicated junction table and teams management
+- **Enhanced Database Schema**: Created facilityUserFacilityAssociations and facilityUserTeams tables for complex facility relationships
+- **Data Access Controls**: Facility users can only access data for their associated facilities with role-based permission enforcement
+- **Sample Data System**: Built comprehensive sample data setup with 8 facility users across different roles and facility assignments
+- **Teams-Based Management**: Facility associations managed through teams tab with "manage users and team" permission requirement
+- **Updated UI Interface**: Redesigned facility users page with proper role filtering, multi-facility display, and sample data setup functionality
+
 ### July 1, 2025 - Database User Management Cleanup
 - **Users Table Restructure**: Successfully migrated all internal employees and contractors from users table to staff table
 - **Role Separation**: Users table now only contains super_admins and facility users as intended for authentication and facility management

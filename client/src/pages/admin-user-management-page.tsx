@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Plus, Edit, Trash2, Search, ArrowLeft, Home, UserCheck, UserX, Settings, Shield } from "lucide-react";
+import { Users, Plus, Edit, Trash2, Search, ArrowLeft, Home, UserCheck, UserX, Settings, Shield, Database } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { UserRole } from "@shared/schema";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -78,25 +78,89 @@ export default function AdminUserManagementPage() {
     },
   });
 
-  // Permission sets for different roles
+  // Permission sets for facility users
   const permissionSets = {
-    dashboard: { name: "Dashboard Access", description: "View main dashboard and analytics" },
-    scheduling: { name: "Scheduling", description: "View and manage schedules" },
-    staff: { name: "Staff Management", description: "Manage staff members" },
-    facilities: { name: "Facility Management", description: "Manage facilities" },
-    billing: { name: "Billing & Invoices", description: "Access billing information" },
-    messaging: { name: "Messaging", description: "Send and receive messages" },
-    reports: { name: "Reports & Analytics", description: "Generate and view reports" },
-    admin: { name: "Admin Functions", description: "Administrative privileges" },
-    impersonation: { name: "User Impersonation", description: "Impersonate other users" }
+    view_facility_profile: { name: "View Facility Profile", description: "View facility information" },
+    edit_facility_profile: { name: "Edit Facility Profile", description: "Edit facility settings" },
+    create_shifts: { name: "Create Shifts", description: "Create new shifts" },
+    edit_shifts: { name: "Edit Shifts", description: "Modify existing shifts" },
+    delete_shifts: { name: "Delete Shifts", description: "Remove shifts" },
+    approve_shift_requests: { name: "Approve Shift Requests", description: "Approve shift requests" },
+    onboard_staff: { name: "Onboard Staff", description: "Onboard new staff members" },
+    offboard_staff: { name: "Offboard Staff", description: "Offboard staff members" },
+    view_rates: { name: "View Rates", description: "View billing rates" },
+    edit_rates: { name: "Edit Rates", description: "Modify billing rates" },
+    premium_shift_multiplier_1_0: { name: "Premium 1.0x", description: "Standard rate multiplier" },
+    premium_shift_multiplier_1_1: { name: "Premium 1.1x", description: "110% rate multiplier" },
+    premium_shift_multiplier_1_2: { name: "Premium 1.2x", description: "120% rate multiplier" },
+    premium_shift_multiplier_1_3: { name: "Premium 1.3x", description: "130% rate multiplier" },
+    premium_shift_multiplier_1_4: { name: "Premium 1.4x", description: "140% rate multiplier" },
+    premium_shift_multiplier_1_5: { name: "Premium 1.5x", description: "150% rate multiplier" },
+    premium_shift_multiplier_1_6: { name: "Premium 1.6x", description: "160% rate multiplier" },
+    view_timesheets: { name: "View Timesheets", description: "View employee timesheets" },
+    export_timesheets: { name: "Export Timesheets", description: "Export timesheet data" },
+    approve_timesheets: { name: "Approve Timesheets", description: "Approve timesheets" },
+    approve_payroll: { name: "Approve Payroll", description: "Approve payroll processing" },
+    access_analytics: { name: "Access Analytics", description: "View analytics and insights" },
+    access_reports: { name: "Access Reports", description: "Generate and view reports" },
+    manage_users_and_team: { name: "Manage Users & Team", description: "Manage team members" },
+    manage_job_openings: { name: "Manage Job Openings", description: "Create and manage job postings" },
+    view_job_openings: { name: "View Job Openings", description: "View job postings" }
   };
 
   const rolePermissions = {
-    super_admin: Object.keys(permissionSets),
-    admin: ["dashboard", "scheduling", "staff", "facilities", "billing", "messaging", "reports"],
-    facility_manager: ["dashboard", "scheduling", "staff", "messaging", "reports"],
-    employee: ["dashboard", "scheduling", "messaging"],
-    contractor: ["dashboard", "scheduling", "messaging"]
+    facility_admin: [
+      "view_facility_profile", "edit_facility_profile", "create_shifts", "edit_shifts", 
+      "delete_shifts", "approve_shift_requests", "onboard_staff", "offboard_staff",
+      "view_rates", "edit_rates", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
+      "premium_shift_multiplier_1_2", "premium_shift_multiplier_1_3", "premium_shift_multiplier_1_4", 
+      "premium_shift_multiplier_1_5", "premium_shift_multiplier_1_6", "view_timesheets", 
+      "export_timesheets", "approve_timesheets", "approve_payroll", "access_analytics", 
+      "access_reports", "manage_users_and_team", "manage_job_openings", "view_job_openings"
+    ],
+    scheduling_coordinator: [
+      "view_facility_profile", "create_shifts", "edit_shifts", "delete_shifts", 
+      "approve_shift_requests", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
+      "premium_shift_multiplier_1_2", "view_timesheets", "access_reports", 
+      "manage_job_openings", "view_job_openings"
+    ],
+    hr_manager: [
+      "view_facility_profile", "onboard_staff", "offboard_staff", "view_rates", 
+      "view_timesheets", "export_timesheets", "approve_timesheets", "access_analytics", 
+      "access_reports", "manage_users_and_team", "manage_job_openings", "view_job_openings"
+    ],
+    corporate: [
+      "view_facility_profile", "edit_facility_profile", "view_rates", "edit_rates", 
+      "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", "premium_shift_multiplier_1_2", 
+      "premium_shift_multiplier_1_3", "premium_shift_multiplier_1_4", "premium_shift_multiplier_1_5", 
+      "premium_shift_multiplier_1_6", "view_timesheets", "export_timesheets", "approve_timesheets", 
+      "approve_payroll", "access_analytics", "access_reports", "manage_users_and_team"
+    ],
+    regional_director: [
+      "view_facility_profile", "edit_facility_profile", "approve_shift_requests", 
+      "view_rates", "edit_rates", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
+      "premium_shift_multiplier_1_2", "premium_shift_multiplier_1_3", "premium_shift_multiplier_1_4", 
+      "premium_shift_multiplier_1_5", "premium_shift_multiplier_1_6", "view_timesheets", 
+      "export_timesheets", "approve_payroll", "access_analytics", "access_reports", 
+      "manage_users_and_team"
+    ],
+    billing: [
+      "view_facility_profile", "view_rates", "view_timesheets", "export_timesheets", 
+      "approve_timesheets", "approve_payroll", "access_reports"
+    ],
+    supervisor: [
+      "view_facility_profile", "create_shifts", "edit_shifts", "approve_shift_requests", 
+      "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", "view_timesheets", 
+      "approve_timesheets", "access_reports", "view_job_openings"
+    ],
+    director_of_nursing: [
+      "view_facility_profile", "edit_facility_profile", "create_shifts", "edit_shifts", 
+      "delete_shifts", "approve_shift_requests", "onboard_staff", "offboard_staff", 
+      "view_rates", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
+      "premium_shift_multiplier_1_2", "premium_shift_multiplier_1_3", "view_timesheets", 
+      "export_timesheets", "approve_timesheets", "access_analytics", "access_reports", 
+      "manage_job_openings", "view_job_openings"
+    ]
   };
 
   const filteredUsers = (users as any[]).filter((user: any) => {
@@ -234,13 +298,33 @@ export default function AdminUserManagementPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Roles</SelectItem>
-            <SelectItem value={UserRole.SUPER_ADMIN}>Super Admin</SelectItem>
-            <SelectItem value={UserRole.CLIENT_ADMINISTRATOR}>Client Admin</SelectItem>
-            <SelectItem value={UserRole.FACILITY_MANAGER}>Facility Manager</SelectItem>
-            <SelectItem value={UserRole.INTERNAL_EMPLOYEE}>Internal Employee</SelectItem>
-            <SelectItem value={UserRole.CONTRACTOR_1099}>Contractor</SelectItem>
+            <SelectItem value="facility_admin">Facility Admin</SelectItem>
+            <SelectItem value="scheduling_coordinator">Scheduling Coordinator</SelectItem>
+            <SelectItem value="hr_manager">HR Manager</SelectItem>
+            <SelectItem value="corporate">Corporate</SelectItem>
+            <SelectItem value="regional_director">Regional Director</SelectItem>
+            <SelectItem value="billing">Billing</SelectItem>
+            <SelectItem value="supervisor">Supervisor</SelectItem>
+            <SelectItem value="director_of_nursing">Director of Nursing</SelectItem>
           </SelectContent>
         </Select>
+        <Button 
+          variant="outline" 
+          onClick={async () => {
+            try {
+              const response = await apiRequest("POST", "/api/setup-facility-users", {});
+              const result = await response.json();
+              console.log('Sample users created:', result);
+              queryClient.invalidateQueries({ queryKey: ["/api/facility-users"] });
+            } catch (error) {
+              console.error('Failed to create sample users:', error);
+            }
+          }}
+          className="gap-2"
+        >
+          <Settings className="h-4 w-4" />
+          Setup Sample Data
+        </Button>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2">
