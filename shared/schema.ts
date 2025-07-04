@@ -339,23 +339,24 @@ export const shiftAssignments = pgTable("shift_assignments", {
 // Shift templates for generating recurring shifts - replaces in-memory template storage
 export const shiftTemplates = pgTable("shift_templates", {
   id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  facilityId: integer("facility_id").notNull(),
-  facilityName: text("facility_name"),
+  name: text("name").notNull(),
   department: text("department").notNull(),
   specialty: text("specialty").notNull(),
-  startDate: text("start_date").notNull(), // YYYY-MM-DD format
-  endDate: text("end_date").notNull(), // YYYY-MM-DD format
+  facilityId: integer("facility_id").notNull(),
+  facilityName: text("facility_name"),
+  buildingId: text("building_id"),
+  buildingName: text("building_name"),
+  minStaff: integer("min_staff").notNull(),
+  maxStaff: integer("max_staff").notNull(),
+  shiftType: text("shift_type").notNull(), // day, night, evening
   startTime: text("start_time").notNull(), // HH:MM format
   endTime: text("end_time").notNull(), // HH:MM format
-  quantity: integer("quantity").notNull().default(1), // number of positions
-  rate: decimal("rate", { precision: 6, scale: 2 }).notNull(),
-  premiumMultiplier: decimal("premium_multiplier", { precision: 3, scale: 2 }).default("1.00"),
-  status: text("status").notNull().default("open"), // open, partially_filled, filled, cancelled
-  urgency: text("urgency").default("medium"), // low, medium, high, critical
-  description: text("description"),
-  specialRequirements: text("special_requirements").array(),
-  createdById: integer("created_by_id").notNull(),
+  daysOfWeek: jsonb("days_of_week").notNull(), // array of day numbers [0-6]
+  isActive: boolean("is_active").default(true),
+  hourlyRate: decimal("hourly_rate", { precision: 6, scale: 2 }),
+  daysPostedOut: integer("days_posted_out").default(14),
+  notes: text("notes"),
+  generatedShiftsCount: integer("generated_shifts_count").default(0),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
