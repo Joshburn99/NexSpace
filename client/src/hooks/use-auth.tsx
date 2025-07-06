@@ -165,11 +165,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const startImpersonation = (userToImpersonate: SelectUser) => {
     if (!effectiveUser) return;
     
+    console.log('Starting impersonation:', userToImpersonate);
     setOriginalUser(effectiveUser);
     setCurrentUser(userToImpersonate);
     setImpersonatedUser(userToImpersonate);
     localStorage.setItem('originalUserId', effectiveUser.id.toString());
     localStorage.setItem('impersonateUserId', userToImpersonate.id.toString());
+    
+    // Force query client to update the user data
+    queryClient.setQueryData(["/api/user"], userToImpersonate);
   };
 
   const quitImpersonation = () => {

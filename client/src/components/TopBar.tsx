@@ -8,9 +8,17 @@ import { LogOut, User } from 'lucide-react';
 export function TopBar() {
   const { user, impersonatedUser, quitImpersonation, originalUser } = useAuth();
   const currentUser = impersonatedUser || user;
-  const isImpersonating = !!impersonatedUser;
+  const isImpersonating = !!impersonatedUser && !!originalUser;
   const isContractor = currentUser?.role === 'contractor';
   const isEmployee = currentUser?.role === 'employee';
+  
+  console.log('TopBar render:', { 
+    user, 
+    impersonatedUser, 
+    originalUser, 
+    isImpersonating,
+    currentUser 
+  });
 
   return (
     <div className="flex items-center justify-between bg-white dark:bg-gray-900 px-6 py-4 shadow-sm border-b border-gray-200 dark:border-gray-700">
