@@ -9684,11 +9684,6 @@ export function registerRoutes(app: Express): Server {
   // Get all facility users from users table
   app.get("/api/facility-users", requireAuth, async (req, res) => {
     try {
-      const facilityUserRoles = [
-        'facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing', 
-        'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin'
-      ];
-      
       const facilityUsersData = await db.select({
         id: users.id,
         username: users.username,
@@ -9714,7 +9709,7 @@ export function registerRoutes(app: Express): Server {
       })
       .from(users)
       .leftJoin(facilities, eq(users.facilityId, facilities.id))
-      .where(sql`${users.role} = ANY(${facilityUserRoles})`)
+      .where(sql`${users.role} IN ('facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing', 'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin')`)
       .orderBy(users.lastName, users.firstName);
 
       res.json(facilityUsersData);
