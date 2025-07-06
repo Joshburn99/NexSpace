@@ -1,0 +1,55 @@
+UI Elements by Permission
+With the roles in mind, we will now map specific UI elements and features to the permissions that should govern their visibility or interactivity. This ensures that if a permission is absent, the related UI component is hidden or disabled. We’ll break this down by major functional areas of the app:
+Enhanced Calendar (Scheduling)
+The Enhanced Calendar is the scheduling view where managers can create and manage shifts. We need to tailor this UI based on the user’s scheduling permissions:
+View Schedules (view_schedules): This is the baseline permission to access the calendar page at all. Only users with view_schedules should see the Scheduling/Calendar section in the navigation and load the calendar view. (In practice, all roles except HR and Billing in our list have this permission.) If a user lacks this, hide the entire calendar module from their UI.
+Create Shifts (create_shifts): Controls whether the user can add new shifts. Users without this permission must not see any “Add Shift” or “Create Shift” buttons on the calendar. For example, the “Quick Shift” button in the calendar header should only render if canCreateShifts is true
+GitHub
+. Additionally, double-clicking on a time slot to create a shift should be disabled or show a “permission denied” message for these users
+GitHub
+ (currently the code handles this by checking canCreateShifts in the handleCreateShift function).
+Edit Shifts (edit_shifts): Controls whether existing shifts can be modified (time, details, etc.). If a user lacks edit permission, the calendar should be essentially view-only aside from assignments:
+Shifts should not be draggable to new times (the drag-and-drop logic should check canEditShifts). In code, each shift div is already only draggable if canEditShifts is true
+GitHub
+, which prevents unauthorized users from moving shifts.
+Hide or disable any “Edit” buttons. For example, in the Shift Details modal, the Edit Shift button is shown only if canEditShifts is true
+GitHub
+. Ensure similar edit controls (if any) are conditioned on this permission.
+Users without edit rights can still view shift details, but any form fields should be read-only.
+Delete Shifts (delete_shifts): If you have a UI control to cancel or delete a shift, show it only for users with this permission. For instance, a trash can icon or “Cancel Shift” button in shift details should appear for Facility Admins (who have delete_shifts), but not for roles that lack it. If no delete UI is implemented yet, plan to add one with the same permission check.
+Assign Staff (assign_staff): Controls whether the user can assign/unassign employees to shifts. In the calendar UI:
+Drag-and-drop of staff onto shift slots should only work if the user has assign_staff. The “Available Staff” sidebar list items are draggable only when canAssignStaff is true
+GitHub
+. Users without this permission will see that list in a disabled state (e.g. greyed out with no drag cursor), indicating they cannot assign people.
+In the Shift Details modal, if the user can assign staff, they should see controls to manage assignments (like a “Remove” button next to an assigned staff member or an “Add” action)
+GitHub
+. If they lack assign_staff, hide the remove buttons or any interface to change assigned staff – they can only view who is assigned.
+If a user without assign permission somehow attempts to assign (e.g., via drag action), the app should block it. The current handleDrop function already checks canAssignStaff and will not assign staff if the user lacks permission
+GitHub
+. A toast “You don't have permission to modify shifts” is shown if they try to drop without edit rights
+GitHub
+ – you might extend a similar warning for assign attempts without permission.
+Approve Shift Requests (approve_shift_requests): Governs access to any shift change requests or open shift claims. Users with this permission (Facility Admins and Scheduling Managers per the template) should have access to a “Shift Requests” page or panel where they can review and approve incoming requests (e.g. staff requesting to pick up or swap shifts). Implement the UI such that:
+The navigation item for “Shift Requests” is visible only to those roles. Currently, the sidebar lists Shift Requests under Scheduling for any Facility Manager role
+GitHub
+. This should be refined by permission – e.g., check the user’s approve_shift_requests permission or role == scheduling manager/facility admin. This way, an HR or Department Head (who don’t handle scheduling requests) won’t see an empty or irrelevant page.
+On the Shift Requests page itself, only allow users with the permission to approve/deny requests. Others shouldn’t be able to take action (and likely shouldn’t access the page at all).
+If no such page exists yet, plan to create one. Use top scheduling platforms as inspiration: for example, OnShift and UKG allow managers to see a list of open shifts that staff have requested to fill or trade, and then approve or deny those requests. Your implementation could list pending requests (with details like shift time, who’s requesting, etc.) and provide Approve/Deny buttons for users with the permission.
+View All Shifts (view_all_shifts): (If applicable) In some systems, a permission like this restricts whether a user can see only their department’s shifts vs. all departments. The role templates didn’t list view_all_shifts, but your code references it
+GitHub
+. If you plan to use it (perhaps for roles like Regional Director or Department Head), enforce it on the calendar:
+If a user lacks view_all_shifts, filter the calendar data to show only the shifts relevant to them (e.g., their department or ones they created). Otherwise, show the complete schedule.
+Provide filtering by department (which you already started with the department dropdown on the calendar
+GitHub
+). Department Heads could use that to focus on their area.
+This ensures, for example, a Department Head only sees shifts for their department, not other units.
+Calendar UI Enhancements: In addition to permissions, improving the calendar’s visual cues will make it more user-friendly (taking inspiration from platforms like UKG, OnShift):
+Use color-coding and icons for shift statuses or types. You already color-code shifts based on status (open, filled, urgent, etc.)
+GitHub
+. Consider adding icons or badges for special indicators – e.g., an “urgent” ⚠️ icon for urgent shifts, a checkmark if a shift is fully staffed, or a special marker if a shift has pending approval.
+Show tooltips or details on hover/click for shifts (e.g., requirements or notes), and possibly a legend explaining colors/symbols.
+Ensure responsiveness and usability: the calendar should scroll or adapt if there are many shifts overlapping. Since the Enhanced Calendar is a critical feature, make sure it’s tested at different screen sizes.
+Permission-based edit mode: If a user has only view_schedules but no edit rights, you may want to explicitly render the calendar in a view-only mode. For example, disable drag-and-drop entirely and perhaps do not attach the double-click handler for creating shifts (to avoid even triggering a “denied” toast). This can be done by conditioning those event handlers on canCreateShifts/canEditShifts. Currently, onDoubleClick will call handleCreateShift regardless, but that function immediately stops if no permission
+GitHub
+. It might be better UX to only enable double-click if the user can create shifts, so nothing happens at all for view-only users.
+(By implementing the above, a Viewer or any non-scheduling role will see the calendar but cannot modify it; a Staff Coordinator can assign staff on existing shifts but not add new ones; a Scheduling Manager or Facility Admin has full control; and so on.)
