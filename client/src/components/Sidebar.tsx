@@ -158,7 +158,7 @@ const navigationItems: NavItem[] = [
         href: "/admin/impersonation",
         icon: <Shield className="w-4 h-4" />,
       },
-      { label: "User Management", href: "/admin/users", icon: <Users className="w-4 h-4" /> },
+      { label: "Facility Users", href: "/admin/users", icon: <Users className="w-4 h-4" /> },
       {
         label: "Facility Management",
         href: "/facility-management",
