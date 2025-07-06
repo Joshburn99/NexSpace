@@ -9829,11 +9829,12 @@ export function registerRoutes(app: Express): Server {
         ]
       };
 
-      // Sample facility users
+      // Enhanced facility users - at least one for each major facility
       const facilityUsersData = [
+        // General Hospital (ID: 1)
         {
           username: "admin.sarah",
-          email: "sarah.admin@facility1.com",
+          email: "sarah.admin@generalhospital.com",
           password: "hashed_password_1",
           firstName: "Sarah",
           lastName: "Henderson",
@@ -9847,7 +9848,7 @@ export function registerRoutes(app: Express): Server {
         },
         {
           username: "coord.mike",
-          email: "mike.scheduling@facility1.com",
+          email: "mike.scheduling@generalhospital.com",
           password: "hashed_password_2",
           firstName: "Mike",
           lastName: "Rodriguez",
@@ -9859,9 +9860,10 @@ export function registerRoutes(app: Express): Server {
           permissions: rolePermissions.scheduling_coordinator,
           isActive: true
         },
+        // Sunset Nursing Home (ID: 2)
         {
           username: "hr.jennifer",
-          email: "jennifer.hr@facility2.com",
+          email: "jennifer.hr@sunsetnursing.com",
           password: "hashed_password_3",
           firstName: "Jennifer",
           lastName: "Chen",
@@ -9874,6 +9876,109 @@ export function registerRoutes(app: Express): Server {
           isActive: true
         },
         {
+          username: "director.emily",
+          email: "emily.nursing@sunsetnursing.com",
+          password: "hashed_password_10",
+          firstName: "Emily",
+          lastName: "Davis",
+          role: "director_of_nursing",
+          primaryFacilityId: 2,
+          associatedFacilityIds: [2],
+          title: "Director of Nursing",
+          department: "Nursing",
+          permissions: rolePermissions.director_of_nursing,
+          isActive: true
+        },
+        // Care Medical Center (ID: 3)
+        {
+          username: "admin.robert",
+          email: "robert.admin@caremedical.com",
+          password: "hashed_password_11",
+          firstName: "Robert",
+          lastName: "Martinez",
+          role: "facility_admin",
+          primaryFacilityId: 3,
+          associatedFacilityIds: [3],
+          title: "Chief Administrator",
+          department: "Administration",
+          permissions: rolePermissions.facility_admin,
+          isActive: true
+        },
+        {
+          username: "billing.maria",
+          email: "maria.billing@caremedical.com",
+          password: "hashed_password_12",
+          firstName: "Maria",
+          lastName: "Garcia",
+          role: "billing",
+          primaryFacilityId: 3,
+          associatedFacilityIds: [3],
+          title: "Billing Manager",
+          department: "Finance",
+          permissions: rolePermissions.billing,
+          isActive: true
+        },
+        // Chicago General Hospital (ID: 4)
+        {
+          username: "supervisor.james",
+          email: "james.supervisor@chicagogeneral.com",
+          password: "hashed_password_13",
+          firstName: "James",
+          lastName: "Johnson",
+          role: "supervisor",
+          primaryFacilityId: 4,
+          associatedFacilityIds: [4],
+          title: "Nursing Supervisor",
+          department: "Nursing",
+          permissions: rolePermissions.supervisor,
+          isActive: true
+        },
+        {
+          username: "coord.anna",
+          email: "anna.scheduling@chicagogeneral.com",
+          password: "hashed_password_14",
+          firstName: "Anna",
+          lastName: "Smith",
+          role: "scheduling_coordinator",
+          primaryFacilityId: 4,
+          associatedFacilityIds: [4],
+          title: "Shift Coordinator",
+          department: "Operations",
+          permissions: rolePermissions.scheduling_coordinator,
+          isActive: true
+        },
+        // Springfield Care Center (ID: 5)
+        {
+          username: "hr.michael",
+          email: "michael.hr@springfieldcare.com",
+          password: "hashed_password_15",
+          firstName: "Michael",
+          lastName: "Brown",
+          role: "hr_manager",
+          primaryFacilityId: 5,
+          associatedFacilityIds: [5],
+          title: "Human Resources Director",
+          department: "Human Resources",
+          permissions: rolePermissions.hr_manager,
+          isActive: true
+        },
+        // Metro Community Clinic (ID: 6)
+        {
+          username: "admin.linda",
+          email: "linda.admin@metroclinic.com",
+          password: "hashed_password_16",
+          firstName: "Linda",
+          lastName: "Williams",
+          role: "facility_admin",
+          primaryFacilityId: 6,
+          associatedFacilityIds: [6],
+          title: "Clinic Administrator",
+          department: "Administration",
+          permissions: rolePermissions.facility_admin,
+          isActive: true
+        },
+        // Corporate and Regional roles
+        {
           username: "corp.david",
           email: "david.corporate@nexspace.com",
           password: "hashed_password_4",
@@ -9881,7 +9986,7 @@ export function registerRoutes(app: Express): Server {
           lastName: "Wilson",
           role: "corporate",
           primaryFacilityId: 1,
-          associatedFacilityIds: [1, 2, 3, 4],
+          associatedFacilityIds: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
           title: "Corporate Operations Manager",
           department: "Corporate",
           permissions: rolePermissions.corporate,

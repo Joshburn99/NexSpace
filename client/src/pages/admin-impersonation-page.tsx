@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useStaff } from "@/contexts/StaffContext";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Select,
   SelectContent,
@@ -20,10 +22,14 @@ import {
   LogOut,
   Users,
   Eye,
-  AlertTriangle
+  AlertTriangle,
+  Building,
+  UserCheck,
+  Home,
+  ArrowLeft
 } from "lucide-react";
 import { User as SelectUser } from "@shared/schema";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 
 export default function AdminImpersonationPage() {
   const { user, startImpersonation, quitImpersonation, impersonatedUser, originalUser } = useAuth();
@@ -31,6 +37,13 @@ export default function AdminImpersonationPage() {
   const [, navigate] = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [facilitySearchTerm, setFacilitySearchTerm] = useState("");
+  const [facilityRoleFilter, setFacilityRoleFilter] = useState<string>("all");
+
+  // Fetch facility users
+  const { data: facilityUsers = [], isLoading: isLoadingFacilityUsers } = useQuery({
+    queryKey: ["/api/facility-users"],
+  });
 
   // Convert staff members to User type for impersonation
   const staffAsUsers: SelectUser[] = staff.map(s => ({
@@ -105,28 +118,44 @@ export default function AdminImpersonationPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            User Impersonation
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Impersonate users to test functionality and provide support
-          </p>
+      <div>
+        <div className="flex items-center gap-4 mb-4">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="gap-2">
+              <Home className="h-4 w-4" />
+              Dashboard
+            </Button>
+          </Link>
+          <Link href="/admin/users">
+            <Button variant="ghost" size="sm" className="gap-2">
+              <UserCheck className="h-4 w-4" />
+              Facility Users
+            </Button>
+          </Link>
         </div>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              User Impersonation
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">
+              Impersonate staff members and facility users to test functionality and provide support
+            </p>
+          </div>
         
-        {impersonatedUser && (
-          <div className="flex items-center gap-4">
-            <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-3 py-1">
-              <Eye className="h-4 w-4 mr-2" />
-              Impersonating: {impersonatedUser.username}
+          {impersonatedUser && (
+            <div className="flex items-center gap-4">
+              <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-3 py-1">
+                <Eye className="h-4 w-4 mr-2" />
+                Impersonating: {impersonatedUser.username}
             </Badge>
             <Button onClick={handleQuitImpersonation} variant="outline" className="bg-red-50 hover:bg-red-100">
               <LogOut className="h-4 w-4 mr-2" />
               Quit Impersonation
             </Button>
-          </div>
-        )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Current Status */}
@@ -148,39 +177,53 @@ export default function AdminImpersonationPage() {
         </Card>
       )}
 
-      {/* Search and Filter */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-            Available Users
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-4 mb-6">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search by username, email, or name..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="clinician">Clinician</SelectItem>
-                <SelectItem value="employee">Employee</SelectItem>
-                <SelectItem value="contractor">Contractor</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+      {/* Tabbed Interface for Staff and Facility Users */}
+      <Tabs defaultValue="staff" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="staff" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Staff Members
+          </TabsTrigger>
+          <TabsTrigger value="facility-users" className="flex items-center gap-2">
+            <Building className="h-4 w-4" />
+            Facility Users
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Staff Members Tab */}
+        <TabsContent value="staff">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                Staff Members ({filteredUsers.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-4 mb-6">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by username, email, or name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={roleFilter} onValueChange={setRoleFilter}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filter by role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                    <SelectItem value="manager">Manager</SelectItem>
+                    <SelectItem value="clinician">Clinician</SelectItem>
+                    <SelectItem value="employee">Employee</SelectItem>
+                    <SelectItem value="contractor">Contractor</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
           {/* Users List */}
           <div className="space-y-3">
@@ -245,9 +288,144 @@ export default function AdminImpersonationPage() {
                 </div>
               ))
             )}
-          </div>
-        </CardContent>
-      </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Facility Users Tab */}
+        <TabsContent value="facility-users">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building className="h-5 w-5" />
+                Facility Users ({facilityUsers.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-4 mb-6">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search facility users..."
+                    value={facilitySearchTerm}
+                    onChange={(e) => setFacilitySearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+                <Select value={facilityRoleFilter} onValueChange={setFacilityRoleFilter}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filter by role" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    <SelectItem value="facility_admin">Facility Admin</SelectItem>
+                    <SelectItem value="scheduling_coordinator">Scheduling Coordinator</SelectItem>
+                    <SelectItem value="hr_manager">HR Manager</SelectItem>
+                    <SelectItem value="corporate">Corporate</SelectItem>
+                    <SelectItem value="regional_director">Regional Director</SelectItem>
+                    <SelectItem value="billing">Billing</SelectItem>
+                    <SelectItem value="supervisor">Supervisor</SelectItem>
+                    <SelectItem value="director_of_nursing">Director of Nursing</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Facility Users List */}
+              <div className="space-y-3">
+                {isLoadingFacilityUsers ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Loading facility users...
+                  </div>
+                ) : facilityUsers.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No facility users found. Use "Setup Sample Data" in the Facility Users page to create sample users.
+                  </div>
+                ) : (
+                  facilityUsers
+                    .filter((user: any) => {
+                      const searchMatch = facilitySearchTerm === "" || 
+                        user.firstName?.toLowerCase().includes(facilitySearchTerm.toLowerCase()) ||
+                        user.lastName?.toLowerCase().includes(facilitySearchTerm.toLowerCase()) ||
+                        user.email?.toLowerCase().includes(facilitySearchTerm.toLowerCase()) ||
+                        user.username?.toLowerCase().includes(facilitySearchTerm.toLowerCase());
+                      
+                      const roleMatch = facilityRoleFilter === "all" || user.role === facilityRoleFilter;
+                      
+                      return searchMatch && roleMatch;
+                    })
+                    .map((facilityUser: any) => (
+                      <div
+                        key={facilityUser.id}
+                        className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <Avatar className="h-10 w-10">
+                            <AvatarFallback className="bg-green-600 text-white">
+                              {facilityUser.firstName?.[0]}{facilityUser.lastName?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h3 className="font-medium text-gray-900 dark:text-white">
+                                {facilityUser.firstName} {facilityUser.lastName}
+                              </h3>
+                              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                {facilityUser.role?.replace('_', ' ')}
+                              </Badge>
+                            </div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                              @{facilityUser.username} • {facilityUser.email}
+                            </div>
+                            <div className="text-xs text-gray-400 dark:text-gray-500">
+                              {facilityUser.title} • {facilityUser.department}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {!facilityUser.isActive && (
+                            <Badge variant="outline" className="text-red-600 border-red-200">
+                              Inactive
+                            </Badge>
+                          )}
+                          
+                          <Button
+                            onClick={() => {
+                              // Convert facility user to user format for impersonation
+                              const userForImpersonation = {
+                                id: facilityUser.id,
+                                username: facilityUser.username,
+                                email: facilityUser.email,
+                                firstName: facilityUser.firstName,
+                                lastName: facilityUser.lastName,
+                                role: facilityUser.role,
+                                isActive: facilityUser.isActive,
+                                facilityId: facilityUser.primaryFacilityId,
+                                avatar: null,
+                                password: '',
+                                createdAt: new Date(),
+                                updatedAt: new Date()
+                              };
+                              handleImpersonate(userForImpersonation);
+                            }}
+                            disabled={!facilityUser.isActive}
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 disabled:opacity-50"
+                          >
+                            <Building className="h-4 w-4 mr-2" />
+                            Impersonate
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Security Notice */}
       <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
