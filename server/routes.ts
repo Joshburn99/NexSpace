@@ -9425,21 +9425,21 @@ export function registerRoutes(app: Express): Server {
             .leftJoin(users, eq(teamMembers.userId, users.id))
             .where(eq(teamMembers.teamId, team.id));
 
-          // Get facility user members
+          // Get facility user members from the actual database table structure
           const facilityMembers = await db
             .select({
-              id: facilityUserTeams.id,
-              userId: facilityUserTeams.facilityUserId,
-              role: facilityUserTeams.role,
-              joinedAt: facilityUserTeams.assignedAt,
-              firstName: facilityUsers.firstName,
-              lastName: facilityUsers.lastName,
-              email: facilityUsers.email,
+              id: sql<number>`fut.id`,
+              userId: sql<number>`fut.facility_user_id`,
+              role: sql<string>`fut.role`,
+              joinedAt: sql<Date>`fut.created_at`,
+              firstName: users.firstName,
+              lastName: users.lastName,
+              email: users.email,
               userType: sql<string>`'facility'`.as('userType')
             })
-            .from(facilityUserTeams)
-            .leftJoin(facilityUsers, eq(facilityUserTeams.facilityUserId, facilityUsers.id))
-            .where(eq(facilityUserTeams.teamId, team.id));
+            .from(sql`facility_user_teams fut`)
+            .leftJoin(users, sql`fut.facility_user_id = ${users.id}`)
+            .where(sql`fut.team_id = ${team.id}`);
 
           // Combine both types of members
           const members = [...regularMembers, ...facilityMembers];
@@ -9681,37 +9681,43 @@ export function registerRoutes(app: Express): Server {
 
   // ===== FACILITY USER MANAGEMENT API =====
   
-  // Get all facility users
+  // Get all facility users from users table
   app.get("/api/facility-users", requireAuth, async (req, res) => {
     try {
-      const users = await db.select({
-        id: facilityUsers.id,
-        username: facilityUsers.username,
-        email: facilityUsers.email,
-        firstName: facilityUsers.firstName,
-        lastName: facilityUsers.lastName,
-        role: facilityUsers.role,
-        avatar: facilityUsers.avatar,
-        isActive: facilityUsers.isActive,
-        primaryFacilityId: facilityUsers.primaryFacilityId,
-        associatedFacilityIds: facilityUsers.associatedFacilityIds,
-        phone: facilityUsers.phone,
-        title: facilityUsers.title,
-        department: facilityUsers.department,
-        permissions: facilityUsers.permissions,
-        lastLogin: facilityUsers.lastLogin,
-        loginCount: facilityUsers.loginCount,
-        twoFactorEnabled: facilityUsers.twoFactorEnabled,
-        notes: facilityUsers.notes,
-        createdAt: facilityUsers.createdAt,
-        updatedAt: facilityUsers.updatedAt,
+      const facilityUserRoles = [
+        'facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing', 
+        'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin'
+      ];
+      
+      const facilityUsersData = await db.select({
+        id: users.id,
+        username: users.username,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        avatar: users.avatar,
+        isActive: users.isActive,
+        primaryFacilityId: users.facilityId,
+        associatedFacilityIds: users.associatedFacilities,
+        phone: sql<string>`null`.as('phone'),
+        title: sql<string>`null`.as('title'),
+        department: sql<string>`null`.as('department'),
+        permissions: sql<any>`null`.as('permissions'),
+        lastLogin: sql<Date>`null`.as('lastLogin'),
+        loginCount: sql<number>`0`.as('loginCount'),
+        twoFactorEnabled: sql<boolean>`false`.as('twoFactorEnabled'),
+        notes: sql<string>`null`.as('notes'),
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
         facilityName: facilities.name,
       })
-      .from(facilityUsers)
-      .leftJoin(facilities, eq(facilityUsers.primaryFacilityId, facilities.id))
-      .orderBy(facilityUsers.lastName, facilityUsers.firstName);
+      .from(users)
+      .leftJoin(facilities, eq(users.facilityId, facilities.id))
+      .where(sql`${users.role} = ANY(${facilityUserRoles})`)
+      .orderBy(users.lastName, users.firstName);
 
-      res.json(users);
+      res.json(facilityUsersData);
     } catch (error) {
       console.error("Error fetching facility users:", error);
       res.status(500).json({ message: "Failed to fetch facility users" });
