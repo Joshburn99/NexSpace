@@ -95,6 +95,28 @@ export default function AdminImpersonationPage() {
     }
   };
 
+  const handleImpersonateFacilityUser = (targetUser: any) => {
+    // Convert facility user to impersonation format
+    const impersonationUser = {
+      id: targetUser.id,
+      username: targetUser.username,
+      email: targetUser.email,
+      firstName: targetUser.firstName,
+      lastName: targetUser.lastName,
+      role: targetUser.role,
+      avatar: targetUser.avatar,
+      isActive: targetUser.isActive,
+      facilityId: targetUser.primaryFacilityId,
+      createdAt: targetUser.createdAt,
+      updatedAt: targetUser.updatedAt,
+      userType: 'facility_user' // Mark as facility user
+    };
+    
+    startImpersonation(impersonationUser);
+    // Navigate to facility dashboard
+    navigate('/dashboard');
+  };
+
   const handleQuitImpersonation = () => {
     quitImpersonation();
   };
@@ -147,7 +169,7 @@ export default function AdminImpersonationPage() {
             <div className="flex items-center gap-4">
               <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-3 py-1">
                 <Eye className="h-4 w-4 mr-2" />
-                Impersonating: {impersonatedUser.username}
+                Viewing as: {impersonatedUser.firstName} {impersonatedUser.lastName} ({impersonatedUser.username})
             </Badge>
             <Button onClick={handleQuitImpersonation} variant="outline" className="bg-red-50 hover:bg-red-100">
               <LogOut className="h-4 w-4 mr-2" />
@@ -392,24 +414,7 @@ export default function AdminImpersonationPage() {
                           )}
                           
                           <Button
-                            onClick={() => {
-                              // Convert facility user to user format for impersonation
-                              const userForImpersonation = {
-                                id: facilityUser.id,
-                                username: facilityUser.username,
-                                email: facilityUser.email,
-                                firstName: facilityUser.firstName,
-                                lastName: facilityUser.lastName,
-                                role: facilityUser.role,
-                                isActive: facilityUser.isActive,
-                                facilityId: facilityUser.primaryFacilityId,
-                                avatar: null,
-                                password: '',
-                                createdAt: new Date(),
-                                updatedAt: new Date()
-                              };
-                              handleImpersonate(userForImpersonation);
-                            }}
+                            onClick={() => handleImpersonateFacilityUser(facilityUser)}
                             disabled={!facilityUser.isActive}
                             size="sm"
                             className="bg-green-600 hover:bg-green-700 disabled:opacity-50"

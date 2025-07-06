@@ -74,7 +74,7 @@ const teamSchema = z.object({
 });
 
 const teamMemberSchema = z.object({
-  userId: z.number({ required_error: "Please select a user" }),
+  userId: z.string({ required_error: "Please select a user" }),
   role: z.string().min(1, "Role is required"),
 });
 
@@ -105,6 +105,11 @@ export default function AdminTeamsPage() {
     queryKey: ["/api/users"],
   });
 
+  // Fetch facility users for team member selection
+  const { data: facilityUsers = [] } = useQuery({
+    queryKey: ["/api/facility-users"],
+  });
+
   // Fetch facilities for team assignment
   const { data: facilities = [] } = useQuery({
     queryKey: ["/api/facilities"],
@@ -123,10 +128,18 @@ export default function AdminTeamsPage() {
     },
   });
 
-  // Add team member mutation
+  // Add team member mutation  
   const addMemberMutation = useMutation({
-    mutationFn: ({ teamId, ...data }: TeamMemberForm & { teamId: number }) =>
-      apiRequest("POST", `/api/teams/${teamId}/members`, data),
+    mutationFn: ({ teamId, userId, role }: { teamId: number; userId: string; role: string }) => {
+      // Parse user ID to determine if it's a regular user or facility user
+      const [userType, actualUserId] = userId.split('-');
+      const memberData = {
+        userId: parseInt(actualUserId),
+        userType: userType, // 'user' or 'facility'
+        role: role
+      };
+      return apiRequest("POST", `/api/teams/${teamId}/members`, memberData);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/teams"] });
       setShowMemberModal(false);
@@ -576,9 +589,16 @@ export default function AdminTeamsPage() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        {/* Regular Users */}
                         {(users as User[]).map((user: User) => (
-                          <SelectItem key={user.id} value={user.id.toString()}>
-                            {user.firstName} {user.lastName} ({user.email})
+                          <SelectItem key={`user-${user.id}`} value={`user-${user.id}`}>
+                            {user.firstName} {user.lastName} ({user.email}) - Staff
+                          </SelectItem>
+                        ))}
+                        {/* Facility Users */}
+                        {(facilityUsers as any[]).map((facilityUser: any) => (
+                          <SelectItem key={`facility-${facilityUser.id}`} value={`facility-${facilityUser.id}`}>
+                            {facilityUser.firstName} {facilityUser.lastName} ({facilityUser.email}) - {facilityUser.role?.replace('_', ' ')}
                           </SelectItem>
                         ))}
                       </SelectContent>

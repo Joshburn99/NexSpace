@@ -191,11 +191,11 @@ export default function AdminUserManagementPage() {
 
   const updateUserPermissions = useMutation({
     mutationFn: async ({ userId, permissions }: { userId: number; permissions: string[] }) => {
-      const response = await apiRequest("PATCH", `/api/admin/users/${userId}/permissions`, { permissions });
+      const response = await apiRequest("PATCH", `/api/facility-users/${userId}/permissions`, { permissions });
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/facility-users"] });
       setIsPermissionsDialogOpen(false);
       setEditingPermissions(null);
     },
@@ -204,7 +204,7 @@ export default function AdminUserManagementPage() {
   const handleEditPermissions = (user: any) => {
     setEditingPermissions({
       ...user,
-      permissions: (rolePermissions as any)[user.role] || []
+      permissions: user.permissions || (rolePermissions as any)[user.role] || []
     });
     setIsPermissionsDialogOpen(true);
   };

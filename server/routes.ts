@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { createEnhancedFacilitiesRoutes } from "./enhanced-facilities-routes";
+import { sql } from "drizzle-orm";
 
 
 // Remove in-memory storage - using database as single source of truth
@@ -9408,8 +9409,8 @@ export function registerRoutes(app: Express): Server {
       // Get detailed member and facility data for each team
       const teamsWithDetails = await Promise.all(
         teamsFromDB.map(async (team) => {
-          // Get team members with user details
-          const members = await db
+          // Get team members with user details (regular users)
+          const regularMembers = await db
             .select({
               id: teamMembers.id,
               userId: teamMembers.userId,
@@ -9417,11 +9418,31 @@ export function registerRoutes(app: Express): Server {
               joinedAt: teamMembers.joinedAt,
               firstName: users.firstName,
               lastName: users.lastName,
-              email: users.email
+              email: users.email,
+              userType: sql<string>`'user'`.as('userType')
             })
             .from(teamMembers)
             .leftJoin(users, eq(teamMembers.userId, users.id))
             .where(eq(teamMembers.teamId, team.id));
+
+          // Get facility user members
+          const facilityMembers = await db
+            .select({
+              id: facilityUserTeams.id,
+              userId: facilityUserTeams.facilityUserId,
+              role: facilityUserTeams.role,
+              joinedAt: facilityUserTeams.assignedAt,
+              firstName: facilityUsers.firstName,
+              lastName: facilityUsers.lastName,
+              email: facilityUsers.email,
+              userType: sql<string>`'facility'`.as('userType')
+            })
+            .from(facilityUserTeams)
+            .leftJoin(facilityUsers, eq(facilityUserTeams.facilityUserId, facilityUsers.id))
+            .where(eq(facilityUserTeams.teamId, team.id));
+
+          // Combine both types of members
+          const members = [...regularMembers, ...facilityMembers];
             
           // Get team facilities with facility details
           const teamFacilitiesData = await db
@@ -9478,14 +9499,56 @@ export function registerRoutes(app: Express): Server {
       }
 
       const teamId = parseInt(req.params.teamId);
-      const validatedData = insertTeamMemberSchema.parse({
-        ...req.body,
-        teamId
-      });
-      
-      const [member] = await db.insert(teamMembers).values(validatedData).returning();
-      
-      res.json(member);
+      const { userId, userType, role } = req.body;
+
+      // Handle facility users vs regular users
+      if (userType === 'facility') {
+        // For facility users, create a facility-user team association
+        const [facilityUserTeam] = await db.insert(facilityUserTeams).values({
+          facilityUserId: userId,
+          teamId: teamId,
+          role: role,
+          assignedById: req.user?.id || 1,
+          isActive: true,
+        }).returning();
+
+        // Also create record in facility user associations for compatibility
+        const facilityUser = await db.select().from(facilityUsers).where(eq(facilityUsers.id, userId)).limit(1);
+        if (facilityUser.length > 0) {
+          const user = facilityUser[0];
+          await db.insert(facilityUserFacilityAssociations).values({
+            userId: userId,
+            facilityId: user.primaryFacilityId,
+            isPrimary: true,
+            assignedById: req.user?.id || 1,
+            isActive: true,
+            facilitySpecificPermissions: user.permissions,
+          }).onConflictDoNothing();
+        }
+
+        res.json({
+          id: facilityUserTeam.id,
+          userId: userId,
+          teamId: teamId,
+          role: role,
+          userType: 'facility',
+          joinedAt: facilityUserTeam.assignedAt
+        });
+      } else {
+        // For regular users, use the standard team members table
+        const validatedData = insertTeamMemberSchema.parse({
+          userId,
+          teamId,
+          role
+        });
+        
+        const [member] = await db.insert(teamMembers).values(validatedData).returning();
+        
+        res.json({
+          ...member,
+          userType: 'user'
+        });
+      }
     } catch (error) {
       console.error("Error adding team member:", error);
       res.status(500).json({ message: "Failed to add team member" });
@@ -10112,6 +10175,62 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error creating sample facility users:", error);
       res.status(500).json({ message: "Failed to create sample facility users" });
+    }
+  });
+
+  // Update facility user permissions
+  app.patch("/api/facility-users/:id/permissions", requireAuth, async (req, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      const { permissions } = req.body;
+
+      if (!permissions || !Array.isArray(permissions)) {
+        return res.status(400).json({ message: "Permissions array is required" });
+      }
+
+      // Update the user's permissions
+      const [updatedUser] = await db.update(facilityUsers)
+        .set({ 
+          permissions: permissions,
+          updatedAt: new Date() 
+        })
+        .where(eq(facilityUsers.id, userId))
+        .returning({
+          id: facilityUsers.id,
+          username: facilityUsers.username,
+          email: facilityUsers.email,
+          firstName: facilityUsers.firstName,
+          lastName: facilityUsers.lastName,
+          role: facilityUsers.role,
+          permissions: facilityUsers.permissions,
+          updatedAt: facilityUsers.updatedAt
+        });
+
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // Log the permissions update
+      await db.insert(facilityUserActivityLog).values({
+        userId: userId,
+        facilityId: updatedUser.primaryFacilityId || 1,
+        action: "permissions_updated",
+        details: { 
+          updatedBy: req.user?.id || 1, 
+          newPermissions: permissions,
+          permissionCount: permissions.length 
+        },
+        ipAddress: req.ip,
+        userAgent: req.get('User-Agent'),
+      });
+
+      res.json({
+        message: "Permissions updated successfully",
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error updating user permissions:", error);
+      res.status(500).json({ message: "Failed to update user permissions" });
     }
   });
 
