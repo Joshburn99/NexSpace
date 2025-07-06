@@ -4,6 +4,7 @@ import { ImpersonationIndicator } from "./ImpersonationIndicator";
 import { TopBar } from "./TopBar";
 import { TopLine } from "./TopLine";
 import { RoleBasedSidebar } from "./RoleBasedSidebar";
+import { FacilityUserSidebar } from "./FacilityUserSidebar";
 import { useAuth } from "@/hooks/use-auth";
 
 interface LayoutProps {
@@ -18,6 +19,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   // Show TopLine for employees and contractors, role-based sidebar for all roles
   const showTopLine = currentUser?.role === 'employee' || currentUser?.role === 'contractor';
   const showAdminLayout = currentUser?.role === 'admin' || currentUser?.role === 'super_admin';
+  const isFacilityUser = currentUser?.role && [
+    'facility_administrator', 'scheduling_coordinator', 'hr_manager', 'corporate', 
+    'regional_director', 'billing', 'supervisor', 'director_of_nursing'
+  ].includes(currentUser.role);
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -34,6 +39,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <>
           <div className="flex flex-1">
             <Sidebar expanded={sidebarExpanded} onToggle={() => setSidebarExpanded(!sidebarExpanded)} />
+            <main className="flex-1 overflow-auto">{children}</main>
+          </div>
+        </>
+      ) : isFacilityUser ? (
+        <>
+          <TopBar />
+          <div className="flex flex-1">
+            <FacilityUserSidebar />
             <main className="flex-1 overflow-auto">{children}</main>
           </div>
         </>

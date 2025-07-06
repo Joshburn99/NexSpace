@@ -13,6 +13,23 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 6, 2025 - Dynamic Role-Based UI System for Facility Users
+- **Permission-Based Navigation**: Implemented comprehensive permission system with 23 distinct facility permissions mapped to 8 specific healthcare management roles
+- **Role-Specific Dashboards**: Created dynamic dashboard that adapts content based on user permissions (Facility Admin sees all features, Billing users only see financial sections, etc.)
+- **Custom Sidebar Navigation**: Built FacilityUserSidebar component that only shows navigation items the user has permission to access
+- **Permission Guard Components**: Created PermissionGuard and ConditionalButton components for fine-grained UI control based on permissions
+- **Enhanced Layout System**: Updated Layout component to automatically detect facility users and render appropriate permission-based UI
+- **Comprehensive Role Mappings**: Defined detailed permission sets for each role:
+  - Facility Administrator: Full access (all 23 permissions)
+  - Scheduling Coordinator: Schedule management and staff viewing
+  - HR Manager: Staff and compliance management
+  - Billing: Financial and invoice management only
+  - Supervisor: View-only schedule and staff access
+  - Director of Nursing: Schedule, staff, and compliance management
+  - Viewer: Read-only access to basic information
+- **Dynamic Content Rendering**: Dashboard metrics, priority tasks, and action buttons dynamically appear/hide based on user permissions
+- **Security Integration**: Both frontend and backend enforce permission-based access controls for data integrity
+
 ### July 4, 2025 - Comprehensive Facility User Management System
 - **Updated Role Structure**: Replaced generic facility user roles with specific healthcare management roles:
   - Facility Admin, Scheduling Coordinator, HR Manager, Corporate, Regional Director, Billing, Supervisor, Director of Nursing

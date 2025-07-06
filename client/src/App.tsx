@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { SessionProvider } from "@/contexts/SessionContext";
 import { ProtectedRoute } from "./lib/protected-route";
+import { FacilityPermissionsProvider } from "@/hooks/use-facility-permissions";
 import Layout from "@/components/Layout";
 import { ShiftProvider } from "@/contexts/ShiftContext";
 import { TimeClockProvider } from "@/contexts/TimeClockContext";
@@ -48,6 +49,7 @@ import EnhancedJobPostingPage from "@/pages/enhanced-job-posting-page";
 import WorkflowAutomationPage from "@/pages/workflow-automation-page";
 import ClinicianDashboardWrapper from "@/pages/clinician-dashboard-wrapper";
 import EmployeeDashboardWrapper from "@/pages/employee-dashboard-wrapper";
+import FacilityUserDashboard from "@/pages/FacilityUserDashboard";
 import ContractorDashboardWrapper from "@/pages/contractor-dashboard-wrapper";
 import FloatPoolAnalyticsPage from "@/pages/float-pool-analytics-page";
 import FacilityRecommendationsPage from "@/pages/facility-recommendations-page";
@@ -81,6 +83,7 @@ function AppContent() {
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
       <ProtectedRoute path="/dashboard" component={HomePage} />
+      <ProtectedRoute path="/facility-dashboard" component={FacilityUserDashboard} />
       <ProtectedRoute path="/workforce" component={EnhancedStaffPage} />
       <ProtectedRoute path="/billing" component={InvoicesPage} />
       <ProtectedRoute path="/jobs" component={EnhancedJobBoard} />
@@ -155,8 +158,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <SessionProvider>
-          <NotificationProvider>
-            <ShiftProvider>
+          <FacilityPermissionsProvider>
+            <NotificationProvider>
+              <ShiftProvider>
               <TimeClockProvider>
                 <StaffProvider>
                   <TeamProvider>
@@ -191,6 +195,7 @@ function App() {
             </TimeClockProvider>
           </ShiftProvider>
         </NotificationProvider>
+          </FacilityPermissionsProvider>
         </SessionProvider>
       </AuthProvider>
     </QueryClientProvider>
