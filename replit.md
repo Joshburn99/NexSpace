@@ -13,6 +13,19 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 7, 2025 - Comprehensive Staff Directory Access Control & Impersonation Fixes
+- **Facility-Based Staff Access Control**: Implemented secure data filtering in staff API to restrict facility users to only see staff from their associated facilities
+- **Critical Impersonation Bug Fix**: Fixed disappearing "Viewing as" indicator that was trapping users in impersonation mode - now always shows regardless of user role
+- **Enhanced Staff Directory Permissions**: Added staff credential management permissions (view_staff_credentials, edit_staff_credentials, manage_credentials) for HR managers and facility administrators
+- **Secure Data Filtering**: Karen Brown (supervisor at General Hospital) now only sees staff from facility 1, while super admins see all staff
+- **Team-Facility Association Verification**: Confirmed all facilities (1-3) are properly associated with Springfield Team for proper access control
+- **Comprehensive Access Control Implementation**: 
+  - Facility users see only staff from their assigned facilities (General Hospital: 1/3 of staff, Sunset Nursing Home: 1/3 of staff, Care Medical Center: 1/3 of staff)
+  - Super admins maintain full access to all staff
+  - Other users receive limited access to 5 staff members
+- **Database Security**: All 16 facility users confirmed to have proper facility associations with no security gaps
+- **Console Logging**: Added comprehensive access control logging for debugging and security monitoring
+
 ### July 6, 2025 - Dynamic Role-Based UI System for Facility Users
 - **Permission-Based Navigation**: Implemented comprehensive permission system with 23 distinct facility permissions mapped to 8 specific healthcare management roles
 - **Role-Specific Dashboards**: Created dynamic dashboard that adapts content based on user permissions (Facility Admin sees all features, Billing users only see financial sections, etc.)

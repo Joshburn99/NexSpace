@@ -26,6 +26,9 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
+      {/* Always show impersonation indicator when impersonating */}
+      {impersonatedUser && <ImpersonationIndicator />}
+      
       {showTopLine ? (
         <>
           <TopBar />
