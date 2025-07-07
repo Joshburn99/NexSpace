@@ -41,11 +41,11 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     description: 'View and manage shift schedules'
   },
   {
-    label: 'Staff',
-    href: '/staff',
+    label: 'Staff Directory',
+    href: '/staff-directory',
     icon: Users,
     permissions: ['view_staff'],
-    description: 'Manage staff members and profiles'
+    description: 'View and manage staff members'
   },
   {
     label: 'Open Shifts',

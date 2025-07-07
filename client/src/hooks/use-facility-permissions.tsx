@@ -13,7 +13,8 @@ export type FacilityPermission =
   | 'create_staff'
   | 'edit_staff'
   | 'deactivate_staff'
-  | 'manage_credentials'
+  | 'view_staff_credentials'
+  | 'manage_staff_credentials'
   | 'view_facility_profile'
   | 'edit_facility_profile'
   | 'view_billing'
@@ -33,7 +34,7 @@ export type FacilityPermission =
 const ROLE_PERMISSIONS: Record<string, FacilityPermission[]> = {
   facility_administrator: [
     'view_schedules', 'create_shifts', 'edit_shifts', 'delete_shifts', 'assign_staff', 'approve_shift_requests',
-    'view_staff', 'create_staff', 'edit_staff', 'deactivate_staff', 'manage_credentials',
+    'view_staff', 'create_staff', 'edit_staff', 'deactivate_staff', 'view_staff_credentials', 'manage_staff_credentials',
     'view_facility_profile', 'edit_facility_profile',
     'view_billing', 'manage_billing', 'edit_rates', 'approve_invoices',
     'view_reports', 'view_analytics', 'export_data',
@@ -45,7 +46,7 @@ const ROLE_PERMISSIONS: Record<string, FacilityPermission[]> = {
     'view_staff', 'view_reports', 'view_analytics'
   ],
   hr_manager: [
-    'view_staff', 'create_staff', 'edit_staff', 'deactivate_staff', 'manage_credentials',
+    'view_staff', 'create_staff', 'edit_staff', 'deactivate_staff', 'view_staff_credentials', 'manage_staff_credentials',
     'manage_compliance', 'upload_documents', 'view_reports', 'export_data'
   ],
   corporate: [
@@ -65,7 +66,7 @@ const ROLE_PERMISSIONS: Record<string, FacilityPermission[]> = {
   ],
   director_of_nursing: [
     'view_schedules', 'create_shifts', 'edit_shifts', 'assign_staff', 'approve_shift_requests',
-    'view_staff', 'create_staff', 'edit_staff', 'manage_credentials',
+    'view_staff', 'create_staff', 'edit_staff', 'view_staff_credentials', 'manage_staff_credentials',
     'view_reports', 'view_analytics', 'manage_compliance'
   ],
   viewer: [

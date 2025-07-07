@@ -35,6 +35,7 @@ import CredentialsPage from "@/pages/credentials-page";
 import OpenShiftsPage from "@/pages/shifts-open-page";
 import ShiftRequestsPage from "@/pages/shift-requests-page";
 import EnhancedStaffPage from "@/pages/enhanced-staff-page";
+import StaffDirectory from "@/pages/StaffDirectory";
 import TimeClockPage from "@/pages/time-clock-page";
 import InvoicesPage from "@/pages/invoices-page";
 import EnhancedReferralPage from "@/pages/enhanced-referral-page";
@@ -102,6 +103,7 @@ function AppContent() {
       <ProtectedRoute path="/shift-requests" component={ShiftRequestsPage} />
       <ProtectedRoute path="/time-clock" component={TimeClockPage} />
       <ProtectedRoute path="/staff" component={EnhancedStaffPage} />
+      <ProtectedRoute path="/staff-directory" component={StaffDirectory} />
       <ProtectedRoute path="/staff/contractors" component={EnhancedStaffPage} />
       <ProtectedRoute path="/referrals" component={EnhancedReferralPage} />
       <ProtectedRoute path="/staff/referrals" component={EnhancedReferralPage} />
