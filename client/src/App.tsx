@@ -114,6 +114,7 @@ function AppContent() {
       <ProtectedRoute path="/analytics/attendance" component={AttendancePage} />
       <ProtectedRoute path="/analytics/agency-usage" component={AgencyUsagePage} />
       <ProtectedRoute path="/analytics/compliance" component={CompliancePage} />
+      <ProtectedRoute path="/compliance" component={CompliancePage} />
       <ProtectedRoute path="/messages" component={EnhancedMessagingPage} />
       <ProtectedRoute path="/messaging" component={EnhancedMessagingPage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />

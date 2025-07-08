@@ -113,6 +113,72 @@ function StaffCard({ staff }: StaffCardProps) {
             {staff.department}
           </Badge>
         </div>
+
+        <PermissionGuard permission="view_staff_credentials">
+          <div className="flex items-center gap-2 pt-3 border-t">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline" className="w-full">
+                  <Shield className="h-4 w-4 mr-2" />
+                  View Credentials
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Staff Credentials - {staff.firstName} {staff.lastName}</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 mt-4">
+                  {staff.certifications && staff.certifications.length > 0 ? (
+                    <div className="space-y-3">
+                      {staff.certifications.map((cert, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div>
+                            <p className="font-medium">{cert}</p>
+                            <p className="text-sm text-gray-600">Active</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="default">Valid</Badge>
+                            {hasPermission('edit_staff_credentials') && (
+                              <Button size="sm" variant="ghost">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                      {staff.licenseExpiry && (
+                        <div className="flex items-center justify-between p-4 border rounded-lg bg-blue-50">
+                          <div>
+                            <p className="font-medium">{staff.specialty} License</p>
+                            <p className="text-sm text-gray-600">
+                              Expires: {new Date(staff.licenseExpiry).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="default">Valid</Badge>
+                            {hasPermission('edit_staff_credentials') && (
+                              <Button size="sm" variant="ghost">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-center text-gray-500 py-8">No credentials on file</p>
+                  )}
+                  {hasPermission('upload_documents') && (
+                    <Button className="w-full mt-4">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Credential
+                    </Button>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </PermissionGuard>
       </CardContent>
     </Card>
   );

@@ -59,7 +59,7 @@ const getDashboardMetrics = (permissions: string[]) => {
     });
   }
   
-  if (permissions.includes('manage_compliance')) {
+  if (permissions.includes('view_compliance') || permissions.includes('manage_compliance')) {
     metrics.push({
       title: 'Compliance Rate',
       value: '87%',
@@ -67,7 +67,7 @@ const getDashboardMetrics = (permissions: string[]) => {
       icon: Shield,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50',
-      permission: 'manage_compliance'
+      permission: 'view_compliance'
     });
   }
   
@@ -91,16 +91,16 @@ const getPriorityTasks = (permissions: string[]) => {
     });
   }
   
-  if (permissions.includes('manage_compliance')) {
+  if (permissions.includes('view_compliance') || permissions.includes('manage_compliance')) {
     tasks.push({
       title: 'Expiring Credentials',
       description: '12 staff members have credentials expiring within 30 days',
       priority: 'HIGH',
       count: 12,
       icon: Clock,
-      permission: 'manage_compliance',
-      actionText: 'Manage Credentials',
-      actionPermission: 'manage_credentials'
+      permission: 'view_compliance',
+      actionText: 'Review Credentials',
+      actionPermission: 'view_compliance'
     });
   }
   

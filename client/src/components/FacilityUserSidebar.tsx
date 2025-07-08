@@ -86,7 +86,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     label: 'Compliance',
     href: '/compliance',
     icon: Shield,
-    permissions: ['manage_compliance'],
+    permissions: ['view_compliance', 'manage_compliance'],
     description: 'Manage compliance and credentials'
   },
   {
