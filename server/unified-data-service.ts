@@ -60,7 +60,7 @@ export class UnifiedDataService {
    */
   async getFacilityUsersWithAssociations() {
     try {
-      // Get all facility users from the facility_users table
+      // Get all facility users with facility and team information
       const facilityUsersData = await db
         .select({
           id: facilityUsers.id,
@@ -80,11 +80,34 @@ export class UnifiedDataService {
           title: facilityUsers.title,
           department: facilityUsers.department,
           permissions: facilityUsers.permissions,
+          facilityName: facilities.name,
         })
         .from(facilityUsers)
+        .leftJoin(facilities, eq(facilityUsers.primaryFacilityId, facilities.id))
         .where(eq(facilityUsers.isActive, true));
 
-      return facilityUsersData.map(user => ({
+      // Get team information for users who are team members
+      const usersWithTeams = await Promise.all(
+        facilityUsersData.map(async (user) => {
+          // Check if user is a member of any teams
+          const teamMemberships = await db
+            .select({
+              teamId: facilityUserTeamMemberships.teamId,
+              teamName: teams.name,
+              role: facilityUserTeamMemberships.role,
+            })
+            .from(facilityUserTeamMemberships)
+            .innerJoin(teams, eq(facilityUserTeamMemberships.teamId, teams.id))
+            .where(eq(facilityUserTeamMemberships.facilityUserId, user.id));
+
+          return {
+            ...user,
+            teamMemberships,
+          };
+        })
+      );
+
+      return usersWithTeams.map(user => ({
         id: user.id,
         firstName: user.firstName,
         lastName: user.lastName,
@@ -97,6 +120,8 @@ export class UnifiedDataService {
         isActive: user.isActive,
         avatar: user.avatar,
         facilityId: user.facilityId,
+        facilityName: user.facilityName,
+        teamMemberships: user.teamMemberships,
         availabilityStatus: user.availabilityStatus,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,

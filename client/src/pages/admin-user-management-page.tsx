@@ -425,9 +425,11 @@ export default function AdminUserManagementPage() {
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {user.associatedFacilityIds && user.associatedFacilityIds.length > 1 
-                          ? `Team (${user.associatedFacilityIds.length} facilities)`
-                          : user.facilityName || `Facility ${user.primaryFacilityId}`
+                        {user.teamMemberships && user.teamMemberships.length > 0
+                          ? user.teamMemberships.map((tm: any) => tm.teamName).join(', ')
+                          : user.associatedFacilityIds && user.associatedFacilityIds.length > 1 
+                            ? `Multiple Facilities (${user.associatedFacilityIds.length})`
+                            : user.facilityName || `Facility ${user.primaryFacilityId || user.facilityId}`
                         }
                       </div>
                     </TableCell>
