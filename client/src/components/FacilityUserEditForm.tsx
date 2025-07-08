@@ -21,6 +21,9 @@ interface FacilityUser {
   facilityId?: number;
   isActive: boolean;
   status: string;
+  title?: string;
+  department?: string;
+  permissions?: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -36,10 +39,14 @@ export function FacilityUserEditForm({ user, onSave, onCancel }: FacilityUserEdi
     firstName: user.firstName,
     lastName: user.lastName,
     email: user.email,
+    phone: user.phone || '',
     role: user.role,
     specialty: user.specialty || '',
     isActive: user.isActive,
-    facilityId: user.facilityId || ''
+    facilityId: user.facilityId || '',
+    title: user.title || '',
+    department: user.department || '',
+    permissions: user.permissions || []
   });
 
   const roleOptions = [
@@ -109,6 +116,38 @@ export function FacilityUserEditForm({ user, onSave, onCancel }: FacilityUserEdi
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="phone">Phone Number</Label>
+            <Input
+              id="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+              placeholder="(555) 123-4567"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="title">Job Title</Label>
+              <Input
+                id="title"
+                value={formData.title}
+                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="e.g., Scheduling Coordinator"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="department">Department</Label>
+              <Input
+                id="department"
+                value={formData.department}
+                onChange={(e) => setFormData(prev => ({ ...prev, department: e.target.value }))}
+                placeholder="e.g., Administration"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

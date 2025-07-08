@@ -57,7 +57,7 @@ import {
   facilityUserRoleTemplates,
   facilityUserActivityLog,
   facilityUserFacilityAssociations,
-  facilityUserTeams,
+  facilityUserTeamMemberships,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, inArray } from "drizzle-orm";
@@ -2640,25 +2640,86 @@ export function registerRoutes(app: Express): Server {
       }
 
       const teamId = parseInt(req.params.teamId);
-      const { userId } = req.body;
+      const { userId, userType, role } = req.body;
 
-      console.log(`[TEAMS] Adding user ${userId} to team ${teamId}`);
+      console.log(`[TEAMS] Adding user ${userId} to team ${teamId} with role ${role}`);
 
-      // Add user to team
-      const teamMember = await db.insert(facilityUserTeams)
-        .values({
-          facilityUserId: userId,
-          teamId: teamId,
-          role: 'member',
-          createdAt: new Date(),
-          updatedAt: new Date()
-        })
-        .returning();
+      if (userType === 'facility') {
+        // For facility users, create association in facility_user_team_memberships table
+        const [facilityUserTeam] = await db.insert(facilityUserTeamMemberships)
+          .values({
+            facilityUserId: userId,
+            teamId: teamId,
+            role: role || 'member',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+          .returning();
 
-      res.json({ message: "User added to team successfully", teamMember: teamMember[0] });
+        res.json({ message: "Facility user added to team successfully", teamMember: facilityUserTeam });
+      } else {
+        // For regular users, use team_members table
+        const [teamMember] = await db.insert(teamMembers)
+          .values({
+            userId: userId,
+            teamId: teamId,
+            role: role || 'member',
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+          .returning();
+
+        res.json({ message: "User added to team successfully", teamMember: teamMember });
+      }
     } catch (error) {
       console.error("Error adding user to team:", error);
       res.status(500).json({ message: "Failed to add user to team" });
+    }
+  });
+
+  // Remove team member (handles both facility users and regular users)
+  app.delete("/api/teams/:teamId/members/:memberId", requireAuth, async (req: any, res) => {
+    try {
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Super admin required" });
+      }
+
+      const teamId = parseInt(req.params.teamId);
+      const memberId = parseInt(req.params.memberId);
+
+      console.log(`[TEAMS] Removing member ${memberId} from team ${teamId}`);
+
+      // Try to remove from facility_user_team_memberships first
+      const facilityUserRemoval = await db.delete(facilityUserTeamMemberships)
+        .where(and(
+          eq(facilityUserTeamMemberships.facilityUserId, memberId),
+          eq(facilityUserTeamMemberships.teamId, teamId)
+        ))
+        .returning();
+
+      if (facilityUserRemoval.length > 0) {
+        console.log(`[TEAMS] Removed facility user ${memberId} from team ${teamId}`);
+        res.json({ message: "Member removed from team successfully" });
+        return;
+      }
+
+      // If not found in facility users, try regular team members
+      const regularUserRemoval = await db.delete(teamMembers)
+        .where(and(
+          eq(teamMembers.userId, memberId),
+          eq(teamMembers.teamId, teamId)
+        ))
+        .returning();
+
+      if (regularUserRemoval.length > 0) {
+        console.log(`[TEAMS] Removed regular user ${memberId} from team ${teamId}`);
+        res.json({ message: "Member removed from team successfully" });
+      } else {
+        res.status(404).json({ message: "Team member not found" });
+      }
+    } catch (error) {
+      console.error("Error removing team member:", error);
+      res.status(500).json({ message: "Failed to remove team member" });
     }
   });
 
@@ -9680,12 +9741,12 @@ export function registerRoutes(app: Express): Server {
       // Handle facility users vs regular users
       if (userType === 'facility') {
         // For facility users, create a facility-user team association
-        const [facilityUserTeam] = await db.insert(facilityUserTeams).values({
+        const [facilityUserTeam] = await db.insert(facilityUserTeamMemberships).values({
           facilityUserId: userId,
           teamId: teamId,
           role: role,
-          assignedById: req.user?.id || 1,
-          isActive: true,
+          createdAt: new Date(),
+          updatedAt: new Date(),
         }).returning();
 
         // Also create record in facility user associations for compatibility

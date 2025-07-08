@@ -262,20 +262,12 @@ export const facilityUserFacilityAssociations = pgTable("facility_user_facility_
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Teams table for managing facility user groups
-export const facilityUserTeams = pgTable("facility_user_teams", {
+// Junction table for facility user team membership  
+export const facilityUserTeamMemberships = pgTable("facility_user_team_memberships", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  facilityId: integer("facility_id").notNull(),
-  teamLeadId: integer("team_lead_id"), // Team lead user ID
-  isActive: boolean("is_active").default(true),
-  
-  // Team settings
-  canManageUsers: boolean("can_manage_users").default(false),
-  maxMembers: integer("max_members"),
-  
-  createdById: integer("created_by_id").notNull(),
+  facilityUserId: integer("facility_user_id").notNull(),
+  teamId: integer("team_id").notNull(),
+  role: text("role").default("member"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -1139,7 +1131,7 @@ export const insertFacilityUserFacilityAssociationSchema = createInsertSchema(fa
   updatedAt: true,
 });
 
-export const insertFacilityUserTeamSchema = createInsertSchema(facilityUserTeams).omit({
+export const insertFacilityUserTeamMembershipSchema = createInsertSchema(facilityUserTeamMemberships).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
@@ -1155,5 +1147,5 @@ export type InsertFacilityUserActivityLog = z.infer<typeof insertFacilityUserAct
 export type FacilityUserActivityLog = typeof facilityUserActivityLog.$inferSelect;
 export type InsertFacilityUserFacilityAssociation = z.infer<typeof insertFacilityUserFacilityAssociationSchema>;
 export type FacilityUserFacilityAssociation = typeof facilityUserFacilityAssociations.$inferSelect;
-export type InsertFacilityUserTeam = z.infer<typeof insertFacilityUserTeamSchema>;
-export type FacilityUserTeam = typeof facilityUserTeams.$inferSelect;
+export type InsertFacilityUserTeamMembership = z.infer<typeof insertFacilityUserTeamMembershipSchema>;
+export type FacilityUserTeamMembership = typeof facilityUserTeamMemberships.$inferSelect;

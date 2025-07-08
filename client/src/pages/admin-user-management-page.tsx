@@ -400,7 +400,7 @@ export default function AdminUserManagementPage() {
                   <TableHead>Title/Department</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead>Primary Facility</TableHead>
+                  <TableHead>Facility/Team</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -425,7 +425,10 @@ export default function AdminUserManagementPage() {
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        {user.facilityName || `Facility ${user.primaryFacilityId}`}
+                        {user.associatedFacilityIds && user.associatedFacilityIds.length > 1 
+                          ? `Team (${user.associatedFacilityIds.length} facilities)`
+                          : user.facilityName || `Facility ${user.primaryFacilityId}`
+                        }
                       </div>
                     </TableCell>
                     <TableCell>
