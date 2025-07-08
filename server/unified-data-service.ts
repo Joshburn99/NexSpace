@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, facilities, shifts, messages, credentials, staff } from "@shared/schema";
+import { users, facilities, shifts, messages, credentials, staff, facilityUsers } from "@shared/schema";
 import { eq, sql, and, inArray } from "drizzle-orm";
 import type { WebSocketServer } from "ws";
 
@@ -60,20 +60,29 @@ export class UnifiedDataService {
    */
   async getFacilityUsersWithAssociations() {
     try {
-      const facilityUserRoles = [
-        'facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing',
-        'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin'
-      ];
-
+      // Get all facility users from the facility_users table
       const facilityUsersData = await db
-        .select()
-        .from(users)
-        .where(
-          and(
-            eq(users.isActive, true),
-            inArray(users.role, facilityUserRoles)
-          )
-        );
+        .select({
+          id: facilityUsers.id,
+          firstName: facilityUsers.firstName,
+          lastName: facilityUsers.lastName,
+          email: facilityUsers.email,
+          role: facilityUsers.role,
+          specialty: sql<string>`null`.as('specialty'),
+          associatedFacilities: facilityUsers.associatedFacilityIds,
+          isActive: facilityUsers.isActive,
+          avatar: facilityUsers.avatar,
+          facilityId: facilityUsers.primaryFacilityId,
+          availabilityStatus: sql<string>`'available'`.as('availabilityStatus'),
+          createdAt: facilityUsers.createdAt,
+          updatedAt: facilityUsers.updatedAt,
+          phone: facilityUsers.phone,
+          title: facilityUsers.title,
+          department: facilityUsers.department,
+          permissions: facilityUsers.permissions,
+        })
+        .from(facilityUsers)
+        .where(eq(facilityUsers.isActive, true));
 
       return facilityUsersData.map(user => ({
         id: user.id,
@@ -91,6 +100,10 @@ export class UnifiedDataService {
         availabilityStatus: user.availabilityStatus,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
+        phone: user.phone,
+        title: user.title,
+        department: user.department,
+        permissions: user.permissions,
       }));
     } catch (error) {
       console.error("Error fetching facility users data:", error);

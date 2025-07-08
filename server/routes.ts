@@ -60,7 +60,7 @@ import {
   facilityUserTeams,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, sql, and } from "drizzle-orm";
+import { eq, sql, and, inArray } from "drizzle-orm";
 import { recommendationEngine } from "./recommendation-engine";
 import type { RecommendationCriteria } from "./recommendation-engine";
 import { UnifiedDataService } from "./unified-data-service";
@@ -2602,19 +2602,23 @@ export function registerRoutes(app: Express): Server {
 
       console.log(`[FACILITY USERS] Super admin updating facility user ${userId}:`, updateData);
 
-      // Update the user in the database
-      const updatedUser = await db.update(users)
+      // Update the facility user in the facility_users table
+      const updatedUser = await db.update(facilityUsers)
         .set({
           firstName: updateData.firstName,
           lastName: updateData.lastName,
           email: updateData.email,
           role: updateData.role,
-          specialty: updateData.specialty,
           isActive: updateData.isActive,
-          facilityId: updateData.facilityId,
+          primaryFacilityId: updateData.facilityId,
+          associatedFacilityIds: updateData.associatedFacilities || [updateData.facilityId],
+          phone: updateData.phone,
+          title: updateData.title,
+          department: updateData.department,
+          permissions: updateData.permissions,
           updatedAt: new Date()
         })
-        .where(eq(users.id, userId))
+        .where(eq(facilityUsers.id, userId))
         .returning();
 
       if (updatedUser.length === 0) {
@@ -9595,25 +9599,21 @@ export function registerRoutes(app: Express): Server {
           // Facility users are automatically team members if their facility is part of the team
           const facilityMembers = await db
             .select({
-              id: users.id,
-              userId: users.id,
+              id: facilityUsers.id,
+              userId: facilityUsers.id,
               role: sql<string>`'facility_member'`.as('role'),
-              joinedAt: users.createdAt,
-              firstName: users.firstName,
-              lastName: users.lastName,
-              email: users.email,
+              joinedAt: facilityUsers.createdAt,
+              firstName: facilityUsers.firstName,
+              lastName: facilityUsers.lastName,
+              email: facilityUsers.email,
               userType: sql<string>`'facility'`.as('userType')
             })
-            .from(users)
-            .innerJoin(teamFacilities, eq(users.facilityId, teamFacilities.facilityId))
+            .from(facilityUsers)
+            .innerJoin(teamFacilities, eq(facilityUsers.primaryFacilityId, teamFacilities.facilityId))
             .where(
               and(
                 eq(teamFacilities.teamId, team.id),
-                eq(users.isActive, true),
-                inArray(users.role, [
-                  'facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing',
-                  'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin'
-                ])
+                eq(facilityUsers.isActive, true)
               )
             );
 
