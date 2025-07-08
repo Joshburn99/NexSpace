@@ -2544,28 +2544,153 @@ export function registerRoutes(app: Express): Server {
         }
       }));
 
-      // Filter out superusers from staff list for regular views
-      const filteredStaffData = dbStaffData.filter(staff => {
-        // Exclude superusers (Josh Burnett, Brian Nangle, etc.) from regular staff views
-        const superuserEmails = ['joshburn@nexspace.com', 'brian.nangle@nexspace.com'];
-        return !superuserEmails.includes(staff.email);
-      });
-
-      // For impersonation/admin views, show all users including superusers
-      const showAllUsers = req.query.includeAdmins === 'true' || req.user?.role === 'super_admin';
-      
-      // Map database staff to include proper status and impersonation-ready format
-      const mappedStaffData = (showAllUsers ? dbStaffData : filteredStaffData).map(staff => ({
-        ...staffData.find(s => s.id === staff.id) || staff,
-        status: "active", // Ensure all staff are marked as active for impersonation
-        isActive: true,
-        canImpersonate: true
-      }));
-      
-      res.json(mappedStaffData);
+      res.json(staffData);
     } catch (error) {
-      console.error("Error fetching staff:", error);
+      console.error("Error fetching staff data:", error);
       res.status(500).json({ message: "Failed to fetch staff data" });
+    }
+  });
+
+  // Facility Users API - Separate from staff
+  app.get("/api/facility-users", requireAuth, async (req: any, res) => {
+    try {
+      // Only super admins can access facility users management
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Super admin required" });
+      }
+
+      console.log(`[FACILITY USERS] Super admin ${req.user.firstName} ${req.user.lastName} accessing facility users`);
+      
+      // Get facility users data from unified service
+      const facilityUsersData = await unifiedDataService.getFacilityUsersWithAssociations();
+      
+      // Map to frontend format
+      const facilityUsersFormatted = facilityUsersData.map((user, index) => ({
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        specialty: user.specialty,
+        associatedFacilities: user.associatedFacilities || [],
+        avatar: user.avatar,
+        facilityId: user.facilityId,
+        isActive: user.isActive,
+        phone: `(555) ${String(123 + index).padStart(3, '0')}-${String(4567 + index).padStart(4, '0')}`,
+        status: user.isActive ? "active" : "inactive",
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }));
+
+      res.json(facilityUsersFormatted);
+    } catch (error) {
+      console.error("Error fetching facility users:", error);
+      res.status(500).json({ message: "Failed to fetch facility users" });
+    }
+  });
+
+  // Update facility user endpoint
+  app.patch("/api/facility-users/:id", requireAuth, async (req: any, res) => {
+    try {
+      // Only super admins can edit facility users
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Super admin required" });
+      }
+
+      const userId = parseInt(req.params.id);
+      const updateData = req.body;
+
+      console.log(`[FACILITY USERS] Super admin updating facility user ${userId}:`, updateData);
+
+      // Update the user in the database
+      const updatedUser = await db.update(users)
+        .set({
+          firstName: updateData.firstName,
+          lastName: updateData.lastName,
+          email: updateData.email,
+          role: updateData.role,
+          specialty: updateData.specialty,
+          isActive: updateData.isActive,
+          facilityId: updateData.facilityId,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId))
+        .returning();
+
+      if (updatedUser.length === 0) {
+        return res.status(404).json({ message: "Facility user not found" });
+      }
+
+      res.json({ message: "Facility user updated successfully", user: updatedUser[0] });
+    } catch (error) {
+      console.error("Error updating facility user:", error);
+      res.status(500).json({ message: "Failed to update facility user" });
+    }
+  });
+
+  // Team management API - Associate facility users with teams
+  app.post("/api/teams/:teamId/members", requireAuth, async (req: any, res) => {
+    try {
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Super admin required" });
+      }
+
+      const teamId = parseInt(req.params.teamId);
+      const { userId } = req.body;
+
+      console.log(`[TEAMS] Adding user ${userId} to team ${teamId}`);
+
+      // Add user to team
+      const teamMember = await db.insert(facilityUserTeams)
+        .values({
+          facilityUserId: userId,
+          teamId: teamId,
+          role: 'member',
+          createdAt: new Date(),
+          updatedAt: new Date()
+        })
+        .returning();
+
+      res.json({ message: "User added to team successfully", teamMember: teamMember[0] });
+    } catch (error) {
+      console.error("Error adding user to team:", error);
+      res.status(500).json({ message: "Failed to add user to team" });
+    }
+  });
+
+  // Get facility association counts for facility management
+  app.get("/api/facilities/:facilityId/counts", requireAuth, async (req: any, res) => {
+    try {
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Super admin required" });
+      }
+
+      const facilityId = parseInt(req.params.facilityId);
+      
+      // Count staff associated with this facility (from staff table)
+      const staffCount = await db.select({ count: sql<number>`count(*)` })
+        .from(staff)
+        .where(and(
+          eq(staff.isActive, true),
+          sql`${staff.location} LIKE '%${facilityId === 1 ? 'Portland' : facilityId === 2 ? 'Beaverton' : 'Hillsboro'}%'`
+        ));
+
+      // Count facility users associated with this facility
+      const facilityUserCount = await db.select({ count: sql<number>`count(*)` })
+        .from(users)
+        .where(and(
+          eq(users.facilityId, facilityId),
+          eq(users.isActive, true)
+        ));
+
+      res.json({
+        facilityId,
+        staffCount: staffCount[0]?.count || 0,
+        facilityUserCount: facilityUserCount[0]?.count || 0
+      });
+    } catch (error) {
+      console.error("Error fetching facility counts:", error);
+      res.status(500).json({ message: "Failed to fetch facility counts" });
     }
   });
 

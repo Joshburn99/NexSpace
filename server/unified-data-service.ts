@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, facilities, shifts, messages, credentials } from "@shared/schema";
+import { users, facilities, shifts, messages, credentials, staff } from "@shared/schema";
 import { eq, sql, and } from "drizzle-orm";
 import type { WebSocketServer } from "ws";
 
@@ -15,11 +15,57 @@ export class UnifiedDataService {
   }
 
   /**
-   * Staff Management - Single Source of Truth
+   * Staff Management - Single Source of Truth (Actual Staff Only)
    */
   async getStaffWithAssociations() {
     try {
       const staffData = await db
+        .select({
+          id: staff.id,
+          firstName: staff.name,
+          lastName: staff.name,
+          email: staff.email,
+          role: staff.employmentType,
+          specialty: staff.specialty,
+          department: staff.department,
+          isActive: staff.isActive,
+          avatar: staff.profilePhoto,
+          location: staff.location,
+          phone: staff.phone,
+          hourlyRate: staff.hourlyRate,
+          availabilityStatus: staff.availabilityStatus,
+          createdAt: staff.createdAt,
+          updatedAt: staff.updatedAt,
+        })
+        .from(staff)
+        .where(eq(staff.isActive, true));
+
+      return staffData.map(staffMember => {
+        const nameParts = staffMember.firstName ? staffMember.firstName.split(' ') : ['Unknown', 'Staff'];
+        return {
+          ...staffMember,
+          firstName: nameParts[0] || 'Unknown',
+          lastName: nameParts.slice(1).join(' ') || 'Staff',
+          associatedFacilities: [], // Will be populated from separate table when implemented
+        };
+      });
+    } catch (error) {
+      console.error("Error fetching staff data:", error);
+      throw new Error("Failed to fetch staff data");
+    }
+  }
+
+  /**
+   * Facility Users Management - Single Source of Truth (Facility Users Only)
+   */
+  async getFacilityUsersWithAssociations() {
+    try {
+      const facilityUserRoles = [
+        'facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing',
+        'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin'
+      ];
+
+      const facilityUsersData = await db
         .select({
           id: users.id,
           firstName: users.firstName,
@@ -36,17 +82,22 @@ export class UnifiedDataService {
           updatedAt: users.updatedAt,
         })
         .from(users)
-        .where(eq(users.isActive, true));
+        .where(
+          and(
+            eq(users.isActive, true),
+            sql`${users.role} = ANY(${facilityUserRoles})`
+          )
+        );
 
-      return staffData.map(staff => ({
-        ...staff,
-        associatedFacilities: Array.isArray(staff.associatedFacilities) 
-          ? staff.associatedFacilities 
+      return facilityUsersData.map(user => ({
+        ...user,
+        associatedFacilities: Array.isArray(user.associatedFacilities) 
+          ? user.associatedFacilities 
           : [],
       }));
     } catch (error) {
-      console.error("Error fetching staff data:", error);
-      throw new Error("Failed to fetch staff data");
+      console.error("Error fetching facility users data:", error);
+      throw new Error("Failed to fetch facility users data");
     }
   }
 

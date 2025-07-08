@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,9 +8,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Plus, Edit, UserMinus, UserPlus, Shield, Clock, Mail, Phone, MapPin, Calendar } from 'lucide-react';
+import { Search, Plus, Edit, UserMinus, UserPlus, Shield, Clock, Mail, Phone, MapPin, Calendar, Users, Building2 } from 'lucide-react';
 import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
 import { PermissionGuard } from '@/components/PermissionGuard';
+import { useToast } from '@/hooks/use-toast';
+import { apiRequest } from '@/lib/queryClient';
+import { FacilityUserCard } from '@/components/FacilityUserCard';
+import { FacilityUserEditForm } from '@/components/FacilityUserEditForm';
 
 interface Staff {
   id: number;
@@ -29,6 +33,91 @@ interface Staff {
   avatar?: string;
 }
 
+interface FacilityUser {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  role: string;
+  specialty?: string;
+  associatedFacilities: number[];
+  avatar?: string;
+  facilityId?: number;
+  isActive: boolean;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface StaffCardProps {
+  staff: Staff;
+}
+
+function StaffCard({ staff }: StaffCardProps) {
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center space-x-3">
+            <Avatar className="h-12 w-12">
+              <AvatarImage src={staff.avatar} />
+              <AvatarFallback>
+                {staff.firstName[0]}{staff.lastName[0]}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <CardTitle className="text-lg">
+                {staff.firstName} {staff.lastName}
+              </CardTitle>
+              <CardDescription className="flex items-center gap-1">
+                <Users className="h-3 w-3" />
+                {staff.specialty} - {staff.department}
+              </CardDescription>
+            </div>
+          </div>
+          <Badge 
+            variant={staff.isActive ? "default" : "secondary"}
+            className={staff.isActive ? "bg-green-100 text-green-800" : ""}
+          >
+            {staff.isActive ? "Active" : "Inactive"}
+          </Badge>
+        </div>
+      </CardHeader>
+      
+      <CardContent className="space-y-3">
+        <div className="space-y-2 text-sm">
+          <div className="flex items-center text-gray-600">
+            <Mail className="h-4 w-4 mr-2 text-gray-400" />
+            {staff.email}
+          </div>
+          
+          {staff.phone && (
+            <div className="flex items-center text-gray-600">
+              <Phone className="h-4 w-4 mr-2 text-gray-400" />
+              {staff.phone}
+            </div>
+          )}
+          
+          <div className="flex items-center text-gray-600">
+            <Calendar className="h-4 w-4 mr-2 text-gray-400" />
+            {staff.employmentType.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 pt-2">
+          <Badge variant="outline">
+            {staff.specialty}
+          </Badge>
+          <Badge variant="outline">
+            {staff.department}
+          </Badge>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 interface StaffCredential {
   id: number;
   staffId: number;
@@ -43,45 +132,76 @@ interface StaffCredential {
 
 export default function StaffDirectory() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDepartment, setSelectedDepartment] = useState('all');
-  const [selectedSpecialty, setSelectedSpecialty] = useState('all');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
-  const [showAddStaff, setShowAddStaff] = useState(false);
-  const [showCredentials, setShowCredentials] = useState(false);
+  const [filterSpecialty, setFilterSpecialty] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [editingFacilityUser, setEditingFacilityUser] = useState<FacilityUser | null>(null);
+  const { permissions, hasPermission } = useFacilityPermissions();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const { hasPermission } = useFacilityPermissions();
-
-  // Fetch staff data
-  const { data: staff = [], isLoading } = useQuery({
+  // Separate queries for staff and facility users
+  const { data: staff = [], isLoading: staffLoading } = useQuery<Staff[]>({
     queryKey: ['/api/staff'],
     enabled: hasPermission('view_staff'),
   });
 
-  // Fetch credentials data
-  const { data: credentials = [] } = useQuery({
-    queryKey: ['/api/staff/credentials'],
-    enabled: hasPermission('view_staff_credentials'),
+  const { data: facilityUsers = [], isLoading: facilityUsersLoading } = useQuery<FacilityUser[]>({
+    queryKey: ['/api/facility-users'],
   });
 
-  // Filter staff based on search and filters
-  const filteredStaff = staff.filter((member: Staff) => {
-    const matchesSearch = `${member.firstName} ${member.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         member.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = selectedDepartment === 'all' || member.department === selectedDepartment;
-    const matchesSpecialty = selectedSpecialty === 'all' || member.specialty === selectedSpecialty;
-    const matchesStatus = selectedStatus === 'all' || 
-                         (selectedStatus === 'active' && member.isActive) ||
-                         (selectedStatus === 'inactive' && !member.isActive);
+  // Update facility user mutation
+  const updateFacilityUser = useMutation({
+    mutationFn: async (userData: Partial<FacilityUser>) => {
+      return apiRequest('PATCH', `/api/facility-users/${userData.id}`, userData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/facility-users'] });
+      setEditingFacilityUser(null);
+      toast({
+        title: "Success",
+        description: "Facility user updated successfully",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update facility user",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Filter functions
+  const filteredStaff = staff.filter(member => {
+    const matchesSearch = 
+      member.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.email.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesSearch && matchesDepartment && matchesSpecialty && matchesStatus;
+    const matchesSpecialty = filterSpecialty === 'all' || member.specialty === filterSpecialty;
+    const matchesStatus = filterStatus === 'all' || 
+      (filterStatus === 'active' && member.isActive) ||
+      (filterStatus === 'inactive' && !member.isActive);
+    
+    return matchesSearch && matchesSpecialty && matchesStatus;
   });
 
-  // Get unique departments and specialties for filters
-  const departments = [...new Set(staff.map((member: Staff) => member.department))];
-  const specialties = [...new Set(staff.map((member: Staff) => member.specialty))];
+  const filteredFacilityUsers = facilityUsers.filter(user => {
+    const matchesSearch = 
+      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = filterStatus === 'all' || 
+      (filterStatus === 'active' && user.isActive) ||
+      (filterStatus === 'inactive' && !user.isActive);
+    
+    return matchesSearch && matchesStatus;
+  });
 
-  // Check if user has permission to view staff directory at all
+  const specialties = [...new Set(staff.map(s => s.specialty))];
+
+  // Check if user has permission to view staff directory
   if (!hasPermission('view_staff')) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -100,12 +220,12 @@ export default function StaffDirectory() {
     );
   }
 
-  if (isLoading) {
+  if (staffLoading || facilityUsersLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading staff directory...</p>
+          <p className="mt-4 text-gray-600">Loading directory...</p>
         </div>
       </div>
     );
@@ -116,323 +236,147 @@ export default function StaffDirectory() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Staff Directory</h1>
-          <p className="text-gray-600">Manage your facility's workforce</p>
+          <h1 className="text-3xl font-bold tracking-tight">Staff Directory</h1>
+          <p className="text-muted-foreground">
+            Manage healthcare staff and facility users
+          </p>
         </div>
-        <div className="flex items-center gap-3">
-          <PermissionGuard requiredPermissions={['view_staff_credentials']}>
-            <Button
-              variant="outline"
-              onClick={() => setShowCredentials(true)}
-              className="flex items-center gap-2"
-            >
-              <Shield className="h-4 w-4" />
-              Credentials
-            </Button>
-          </PermissionGuard>
-          <PermissionGuard requiredPermissions={['create_staff']}>
-            <Button
-              onClick={() => setShowAddStaff(true)}
-              className="flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add Staff
-            </Button>
-          </PermissionGuard>
-        </div>
+        
+        <PermissionGuard requiredPermission="manage_staff">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Staff Member
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Staff Member</DialogTitle>
+              </DialogHeader>
+              <p className="text-muted-foreground">Staff creation form coming soon...</p>
+            </DialogContent>
+          </Dialog>
+        </PermissionGuard>
       </div>
 
       {/* Search and Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Search & Filter</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search staff..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-              <SelectTrigger>
-                <SelectValue placeholder="Department" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Departments</SelectItem>
-                {departments.map((dept) => (
-                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
-              <SelectTrigger>
-                <SelectValue placeholder="Specialty" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Specialties</SelectItem>
-                {specialties.map((spec) => (
-                  <SelectItem key={spec} value={spec}>{spec}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-              <SelectTrigger>
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button 
-              variant="outline" 
-              onClick={() => {
-                setSearchTerm('');
-                setSelectedDepartment('all');
-                setSelectedSpecialty('all');
-                setSelectedStatus('all');
-              }}
-            >
-              Clear Filters
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Staff Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredStaff.map((member: Staff) => (
-          <Card key={member.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12">
-                    <AvatarImage src={member.avatar} />
-                    <AvatarFallback>
-                      {member.firstName.charAt(0)}{member.lastName.charAt(0)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-lg">
-                      {member.firstName} {member.lastName}
-                    </CardTitle>
-                    <CardDescription>{member.specialty}</CardDescription>
-                  </div>
-                </div>
-                <Badge variant={member.isActive ? "default" : "secondary"}>
-                  {member.isActive ? "Active" : "Inactive"}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Mail className="h-4 w-4" />
-                  {member.email}
-                </div>
-                {member.phone && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Phone className="h-4 w-4" />
-                    {member.phone}
-                  </div>
-                )}
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <MapPin className="h-4 w-4" />
-                  {member.department}
-                </div>
-                {member.lastShift && (
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Clock className="h-4 w-4" />
-                    Last shift: {new Date(member.lastShift).toLocaleDateString()}
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setSelectedStaff(member)}
-                  className="flex-1"
-                >
-                  View Profile
-                </Button>
-                <PermissionGuard requiredPermissions={['edit_staff']}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-1"
-                  >
-                    <Edit className="h-3 w-3" />
-                    Edit
-                  </Button>
-                </PermissionGuard>
-                <PermissionGuard requiredPermissions={['deactivate_staff']}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center gap-1"
-                  >
-                    {member.isActive ? (
-                      <UserMinus className="h-3 w-3" />
-                    ) : (
-                      <UserPlus className="h-3 w-3" />
-                    )}
-                  </Button>
-                </PermissionGuard>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search staff members and facility users..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        
+        <Select value={filterSpecialty} onValueChange={setFilterSpecialty}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Filter by specialty" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Specialties</SelectItem>
+            {specialties.map(specialty => (
+              <SelectItem key={specialty} value={specialty}>
+                {specialty}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        
+        <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      {filteredStaff.length === 0 && (
-        <Card>
-          <CardContent className="py-12">
-            <div className="text-center">
-              <Search className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">No staff found</h3>
-              <p className="text-gray-600">Try adjusting your search or filters</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Tabs for Staff vs Facility Users */}
+      <Tabs defaultValue="all-staff" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="all-staff" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            All Staff ({staff.length})
+          </TabsTrigger>
+          <TabsTrigger value="facility-users" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            Facility Users ({facilityUsers.length})
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Staff Profile Modal */}
-      <Dialog open={!!selectedStaff} onOpenChange={() => setSelectedStaff(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Staff Profile</DialogTitle>
-          </DialogHeader>
-          {selectedStaff && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-20 w-20">
-                  <AvatarImage src={selectedStaff.avatar} />
-                  <AvatarFallback className="text-lg">
-                    {selectedStaff.firstName.charAt(0)}{selectedStaff.lastName.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h2 className="text-xl font-bold">
-                    {selectedStaff.firstName} {selectedStaff.lastName}
-                  </h2>
-                  <p className="text-gray-600">{selectedStaff.specialty}</p>
-                  <Badge variant={selectedStaff.isActive ? "default" : "secondary"}>
-                    {selectedStaff.isActive ? "Active" : "Inactive"}
-                  </Badge>
-                </div>
-              </div>
+        <TabsContent value="all-staff" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Healthcare employees and contractors ({filteredStaff.length} shown)
+            </p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredStaff.map((member) => (
+              <StaffCard key={member.id} staff={member} />
+            ))}
+          </div>
 
-              <Tabs defaultValue="details" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="details">Details</TabsTrigger>
-                  <TabsTrigger value="credentials">Credentials</TabsTrigger>
-                  <TabsTrigger value="schedule">Schedule</TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="details" className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Email</label>
-                      <p className="text-sm text-gray-900">{selectedStaff.email}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Phone</label>
-                      <p className="text-sm text-gray-900">{selectedStaff.phone || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Department</label>
-                      <p className="text-sm text-gray-900">{selectedStaff.department}</p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-700">Employment Type</label>
-                      <p className="text-sm text-gray-900">{selectedStaff.employmentType}</p>
-                    </div>
-                    {selectedStaff.hireDate && (
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Hire Date</label>
-                        <p className="text-sm text-gray-900">
-                          {new Date(selectedStaff.hireDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="credentials">
-                  <PermissionGuard
-                    requiredPermissions={['view_staff_credentials']}
-                    fallback={
-                      <div className="text-center py-8">
-                        <Shield className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                        <p className="text-gray-600">You don't have permission to view credentials</p>
-                      </div>
-                    }
-                  >
-                    <div className="space-y-4">
-                      {credentials
-                        .filter((cred: StaffCredential) => cred.staffId === selectedStaff.id)
-                        .map((credential: StaffCredential) => (
-                          <div key={credential.id} className="border rounded-lg p-4">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-medium">{credential.type}</h4>
-                              <Badge variant={credential.status === 'active' ? 'default' : 'destructive'}>
-                                {credential.status}
-                              </Badge>
-                            </div>
-                            <p className="text-sm text-gray-600 mt-1">
-                              {credential.number} • Issued by {credential.issuedBy}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Expires: {new Date(credential.expiryDate).toLocaleDateString()}
-                            </p>
-                          </div>
-                        ))}
-                    </div>
-                  </PermissionGuard>
-                </TabsContent>
-
-                <TabsContent value="schedule">
-                  <div className="text-center py-8">
-                    <Calendar className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                    <p className="text-gray-600">Schedule information coming soon</p>
-                  </div>
-                </TabsContent>
-              </Tabs>
+          {filteredStaff.length === 0 && (
+            <div className="text-center py-12">
+              <Users className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-2 text-sm font-semibold">No staff members found</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Try adjusting your search or filter criteria.
+              </p>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+        </TabsContent>
 
-      {/* Add Staff Modal */}
-      <Dialog open={showAddStaff} onOpenChange={setShowAddStaff}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Staff Member</DialogTitle>
-          </DialogHeader>
-          <div className="text-center py-8">
-            <Plus className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <p className="text-gray-600">Add staff functionality coming soon</p>
+        <TabsContent value="facility-users" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Facility management users ({filteredFacilityUsers.length} shown)
+            </p>
           </div>
-        </DialogContent>
-      </Dialog>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredFacilityUsers.map((user) => (
+              <FacilityUserCard 
+                key={user.id} 
+                user={user} 
+                onEdit={setEditingFacilityUser}
+              />
+            ))}
+          </div>
 
-      {/* Credentials Modal */}
-      <Dialog open={showCredentials} onOpenChange={setShowCredentials}>
-        <DialogContent className="max-w-4xl">
+          {filteredFacilityUsers.length === 0 && (
+            <div className="text-center py-12">
+              <Building2 className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-2 text-sm font-semibold">No facility users found</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Try adjusting your search or filter criteria.
+              </p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Facility User Edit Dialog */}
+      <Dialog open={!!editingFacilityUser} onOpenChange={() => setEditingFacilityUser(null)}>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Staff Credentials Overview</DialogTitle>
+            <DialogTitle>Edit Facility User</DialogTitle>
           </DialogHeader>
-          <div className="text-center py-8">
-            <Shield className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <p className="text-gray-600">Credentials management coming soon</p>
-          </div>
+          {editingFacilityUser && (
+            <FacilityUserEditForm 
+              user={editingFacilityUser}
+              onSave={(userData) => updateFacilityUser.mutate(userData)}
+              onCancel={() => setEditingFacilityUser(null)}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>
