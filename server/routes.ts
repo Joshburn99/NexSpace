@@ -9658,22 +9658,23 @@ export function registerRoutes(app: Express): Server {
 
           // Get facility user members based on facility associations
           // Facility users are automatically team members if their facility is part of the team
+          // Get facility user team members through facilityUserTeamMemberships table
           const facilityMembers = await db
             .select({
-              id: facilityUsers.id,
+              id: facilityUserTeamMemberships.id,
               userId: facilityUsers.id,
-              role: sql<string>`'facility_member'`.as('role'),
-              joinedAt: facilityUsers.createdAt,
+              role: facilityUserTeamMemberships.role,
+              joinedAt: facilityUserTeamMemberships.createdAt,
               firstName: facilityUsers.firstName,
               lastName: facilityUsers.lastName,
               email: facilityUsers.email,
               userType: sql<string>`'facility'`.as('userType')
             })
-            .from(facilityUsers)
-            .innerJoin(teamFacilities, eq(facilityUsers.primaryFacilityId, teamFacilities.facilityId))
+            .from(facilityUserTeamMemberships)
+            .innerJoin(facilityUsers, eq(facilityUserTeamMemberships.facilityUserId, facilityUsers.id))
             .where(
               and(
-                eq(teamFacilities.teamId, team.id),
+                eq(facilityUserTeamMemberships.teamId, team.id),
                 eq(facilityUsers.isActive, true)
               )
             );
