@@ -229,7 +229,13 @@ export default function AdminTeamsPage() {
 
   const onAddFacility = (data: TeamFacilityForm) => {
     if (selectedTeam) {
-      addFacilityMutation.mutate({ ...data, teamId: selectedTeam.id });
+      // Convert facilityId to number since it comes as string from the form
+      const facilityData = {
+        ...data,
+        facilityId: typeof data.facilityId === 'string' ? parseInt(data.facilityId) : data.facilityId,
+        teamId: selectedTeam.id
+      };
+      addFacilityMutation.mutate(facilityData);
     }
   };
 
@@ -506,7 +512,7 @@ export default function AdminTeamsPage() {
                           size="sm"
                           className="text-destructive hover:text-destructive"
                           onClick={() => {
-                            removeMemberMutation.mutate({ teamId: selectedTeam.id, memberId: member.id });
+                            removeMemberMutation.mutate({ teamId: selectedTeam.id, memberId: member.userId });
                           }}
                           disabled={removeMemberMutation.isPending}
                         >
@@ -658,7 +664,7 @@ export default function AdminTeamsPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Facility</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value?.toString()}>
+                    <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select facility" />
