@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, facilities, shifts, messages, credentials, staff, facilityUsers } from "@shared/schema";
+import { users, facilities, shifts, messages, credentials, staff, facilityUsers, teams, facilityUserTeamMemberships } from "@shared/schema";
 import { eq, sql, and, inArray } from "drizzle-orm";
 import type { WebSocketServer } from "ws";
 
