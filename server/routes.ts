@@ -9591,21 +9591,31 @@ export function registerRoutes(app: Express): Server {
             .leftJoin(users, eq(teamMembers.userId, users.id))
             .where(eq(teamMembers.teamId, team.id));
 
-          // Get facility user members from the actual database table structure
+          // Get facility user members based on facility associations
+          // Facility users are automatically team members if their facility is part of the team
           const facilityMembers = await db
             .select({
-              id: sql<number>`fut.id`,
-              userId: sql<number>`fut.facility_user_id`,
-              role: sql<string>`fut.role`,
-              joinedAt: sql<Date>`fut.created_at`,
+              id: users.id,
+              userId: users.id,
+              role: sql<string>`'facility_member'`.as('role'),
+              joinedAt: users.createdAt,
               firstName: users.firstName,
               lastName: users.lastName,
               email: users.email,
               userType: sql<string>`'facility'`.as('userType')
             })
-            .from(sql`facility_user_teams fut`)
-            .leftJoin(users, sql`fut.facility_user_id = ${users.id}`)
-            .where(sql`fut.team_id = ${team.id}`);
+            .from(users)
+            .innerJoin(teamFacilities, eq(users.facilityId, teamFacilities.facilityId))
+            .where(
+              and(
+                eq(teamFacilities.teamId, team.id),
+                eq(users.isActive, true),
+                inArray(users.role, [
+                  'facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing',
+                  'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin'
+                ])
+              )
+            );
 
           // Combine both types of members
           const members = [...regularMembers, ...facilityMembers];

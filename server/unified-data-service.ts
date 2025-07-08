@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { users, facilities, shifts, messages, credentials, staff } from "@shared/schema";
-import { eq, sql, and } from "drizzle-orm";
+import { eq, sql, and, inArray } from "drizzle-orm";
 import type { WebSocketServer } from "ws";
 
 /**
@@ -66,34 +66,31 @@ export class UnifiedDataService {
       ];
 
       const facilityUsersData = await db
-        .select({
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          email: users.email,
-          role: users.role,
-          specialty: users.specialty,
-          associatedFacilities: users.associatedFacilities,
-          isActive: users.isActive,
-          avatar: users.avatar,
-          facilityId: users.facilityId,
-          availabilityStatus: users.availabilityStatus,
-          createdAt: users.createdAt,
-          updatedAt: users.updatedAt,
-        })
+        .select()
         .from(users)
         .where(
           and(
             eq(users.isActive, true),
-            sql`${users.role} = ANY(${facilityUserRoles})`
+            inArray(users.role, facilityUserRoles)
           )
         );
 
       return facilityUsersData.map(user => ({
-        ...user,
+        id: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        role: user.role,
+        specialty: user.specialty,
         associatedFacilities: Array.isArray(user.associatedFacilities) 
           ? user.associatedFacilities 
-          : [],
+          : (user.facilityId ? [user.facilityId] : []),
+        isActive: user.isActive,
+        avatar: user.avatar,
+        facilityId: user.facilityId,
+        availabilityStatus: user.availabilityStatus,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
       }));
     } catch (error) {
       console.error("Error fetching facility users data:", error);
