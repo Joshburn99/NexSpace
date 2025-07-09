@@ -1,0 +1,38 @@
+The above error occurred in the <EnhancedStaffPageContent> component:
+
+    at EnhancedStaffPageContent (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/pages/enhanced-staff-page.tsx:88:21)
+    at ErrorBoundary (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/components/ErrorBoundary.tsx:10:5)
+    at EnhancedStaffPage
+    at Route (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=1cd1e226:323:16)
+    at ProtectedRoute (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/lib/protected-route.tsx:22:3)
+    at Switch (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=1cd1e226:379:17)
+    at main
+    at div
+    at div
+    at Layout (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/components/Layout.tsx:26:19)
+    at AppContent (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/App.tsx?v=SRQ-zQBAgZ-GHYm9JSZ6O:99:22)
+    at Provider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-OXZDJRWN.js?v=1cd1e226:38:15)
+    at TooltipProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=1cd1e226:64:5)
+    at DashboardProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/DashboardContext.tsx:22:37)
+    at InvoiceProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/InvoiceContext.tsx:406:35)
+    at InsightsProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/InsightsContext.tsx:384:36)
+    at CredentialsProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/CredentialsContext.tsx:315:39)
+    at ProfileProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/ProfileContext.tsx:109:35)
+    at JobProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/JobContext.tsx:87:31)
+    at PTOProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/PTOContext.tsx:99:31)
+    at CredentialVerificationProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/CredentialVerificationContext.tsx:145:50)
+    at EnhancedCredentialProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/EnhancedCredentialContext.tsx:98:46)
+    at MessagingProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/MessagingContext.tsx:62:37)
+    at MessageProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/MessageContext.tsx:107:35)
+    at TeamProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/TeamContext.tsx:77:32)
+    at StaffProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/StaffContext.tsx:21:33)
+    at TimeClockProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/TimeClockContext.tsx:21:37)
+    at ShiftProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/ShiftContext.tsx:265:33)
+    at NotificationProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/NotificationContext.tsx:54:40)
+    at FacilityPermissionsProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/hooks/use-facility-permissions.tsx:137:47)
+    at SessionProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/contexts/SessionContext.tsx:26:35)
+    at AuthProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/src/hooks/use-auth.tsx:24:32)
+    at QueryClientProvider (https://b36089c2-4d20-4204-acc2-5bb53be8bb2b-00-3qij2ltdykg10.riker.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=1cd1e226:2805:3)
+    at App
+
+React will try to recreate this component tree from scratch using the error boundary you provided, ErrorBoundary.

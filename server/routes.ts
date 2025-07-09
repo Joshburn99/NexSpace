@@ -2435,7 +2435,24 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/staff", requireAuth, async (req: any, res) => {
     try {
       // Get staff data directly from database to include associatedFacilities
-      let dbStaffData = await db.select().from(staff).where(eq(staff.isActive, true));
+      let dbStaffData = await db.select({
+        id: staff.id,
+        name: staff.name,
+        email: staff.email,
+        phone: staff.phone,
+        specialty: staff.specialty,
+        department: staff.department,
+        employmentType: staff.employmentType,
+        profilePhoto: staff.profilePhoto,
+        associatedFacilities: staff.associatedFacilities,
+        isActive: staff.isActive,
+        hourlyRate: staff.hourlyRate,
+        location: staff.location,
+        bio: staff.bio,
+        certifications: staff.certifications,
+        createdAt: staff.createdAt,
+        updatedAt: staff.updatedAt,
+      }).from(staff).where(eq(staff.isActive, true));
       
       // Format staff data for consistency with frontend expectations
       dbStaffData = dbStaffData.map(staffMember => {
