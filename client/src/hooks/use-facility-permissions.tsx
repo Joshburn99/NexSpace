@@ -29,6 +29,7 @@ export type FacilityPermission =
   | 'manage_compliance'
   | 'upload_documents'
   | 'manage_facility_users'
+  | 'manage_facility_settings'
   | 'manage_permissions'
   | 'view_audit_logs';
 
@@ -37,7 +38,7 @@ const ROLE_PERMISSIONS: Record<string, FacilityPermission[]> = {
   facility_administrator: [
     'view_schedules', 'create_shifts', 'edit_shifts', 'delete_shifts', 'assign_staff', 'approve_shift_requests',
     'view_staff', 'create_staff', 'edit_staff', 'deactivate_staff', 'view_staff_credentials', 'edit_staff_credentials', 'manage_credentials',
-    'view_facility_profile', 'edit_facility_profile',
+    'view_facility_profile', 'edit_facility_profile', 'manage_facility_settings',
     'view_billing', 'manage_billing', 'edit_rates', 'approve_invoices',
     'view_reports', 'view_analytics', 'export_data',
     'view_compliance', 'manage_compliance', 'upload_documents',

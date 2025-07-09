@@ -74,6 +74,10 @@ import AdvancedSchedulingPage from "@/pages/advanced-scheduling-page";
 import FacilitySchedulePage from "@/pages/facility-schedule-page";
 import WorkerOpenShiftsPage from "@/pages/worker-open-shifts-page";
 import WorkerMyRequestsPage from "@/pages/worker-my-requests-page";
+import FacilityProfilePage from "@/pages/FacilityProfilePage";
+import FacilitySettingsPage from "@/pages/FacilitySettingsPage";
+import FacilityUsersManagementPage from "@/pages/FacilityUsersManagementPage";
+import FacilityAuditLogsPage from "@/pages/FacilityAuditLogsPage";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -137,6 +141,10 @@ function AppContent() {
       <ProtectedRoute path="/admin/audit" component={AdminAuditLogsPage} />
       <ProtectedRoute path="/admin/database" component={AdminDatabaseConsolePage} />
       <ProtectedRoute path="/facility-management" component={FacilityManagementPage} />
+      <ProtectedRoute path="/facility-profile" component={FacilityProfilePage} />
+      <ProtectedRoute path="/facility-settings" component={FacilitySettingsPage} />
+      <ProtectedRoute path="/facility-users" component={FacilityUsersManagementPage} />
+      <ProtectedRoute path="/facility-audit-logs" component={FacilityAuditLogsPage} />
       <ProtectedRoute path="/job-posting" component={EnhancedJobPostingPage} />
       <ProtectedRoute path="/workflow-automation" component={WorkflowAutomationPage} />
       <ProtectedRoute path="/clinician-dashboard" component={ClinicianDashboardWrapper} />

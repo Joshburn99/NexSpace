@@ -13,6 +13,17 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 9, 2025 - Administrative Permissions and Facility Management Pages
+- **Administrative Pages Implementation**: Created comprehensive facility management pages restricted to administrative users
+  - Facility Profile Page: View/edit facility information (requires view_facility_profile/edit_facility_profile permissions)
+  - Facility Settings Page: Configure advanced operations and automation (requires manage_facility_settings permission)
+  - Facility Users Management: Add/edit/manage facility users and their permissions (requires manage_facility_users permission)
+  - Facility Audit Logs: View activity history for the facility (requires view_audit_logs permission)
+- **Permission System Enhancement**: Added manage_facility_settings permission to control access to advanced facility configuration
+- **Navigation Updates**: Updated FacilityUserSidebar to include administrative pages only for users with appropriate permissions
+- **Security Implementation**: All administrative pages check permissions before rendering and restrict functionality based on user role
+- **Facility Administrator Role**: Only facility administrators have full access to all management features including user management, settings configuration, and audit logs
+
 ### July 7, 2025 - Comprehensive Staff Directory Access Control & Impersonation Fixes
 - **Facility-Based Staff Access Control**: Implemented secure data filtering in staff API to restrict facility users to only see staff from their associated facilities
 - **Critical Impersonation Bug Fix**: Fixed disappearing "Viewing as" indicator that was trapping users in impersonation mode - now always shows regardless of user role

@@ -90,25 +90,32 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     description: 'Manage compliance and credentials'
   },
   {
-    label: 'Facility Settings',
-    href: '/facility-settings',
+    label: 'Facility Profile',
+    href: '/facility-profile',
     icon: Building,
     permissions: ['view_facility_profile'],
-    description: 'Configure facility settings'
+    description: 'View facility information'
   },
   {
-    label: 'User Management',
-    href: '/admin/users',
+    label: 'Facility Settings',
+    href: '/facility-settings',
+    icon: Settings,
+    permissions: ['manage_facility_settings'],
+    description: 'Configure facility operations'
+  },
+  {
+    label: 'Facility Users',
+    href: '/facility-users',
     icon: UserCheck,
     permissions: ['manage_facility_users'],
     description: 'Manage facility users and roles'
   },
   {
-    label: 'System Settings',
-    href: '/settings',
-    icon: Settings,
-    permissions: ['edit_facility_profile'],
-    description: 'System configuration'
+    label: 'Audit Logs',
+    href: '/facility-audit-logs',
+    icon: Shield,
+    permissions: ['view_audit_logs'],
+    description: 'View activity history'
   }
 ];
 
