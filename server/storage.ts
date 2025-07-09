@@ -24,6 +24,7 @@ import {
   timesheetEntries,
   payrollSyncLogs,
   payments,
+  facilityUsers,
   type User,
   type InsertUser,
   type Facility,
@@ -305,8 +306,33 @@ export class DatabaseStorage implements IStorage {
 
   // User methods
   async getUser(id: number): Promise<User | undefined> {
+    // First try to find in users table
     const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user || undefined;
+    if (user) return user;
+    
+    // If not found, try facility_users table
+    const [facilityUser] = await db.select().from(facilityUsers).where(eq(facilityUsers.id, id));
+    if (facilityUser) {
+      // Convert facility user to user format for compatibility
+      return {
+        id: facilityUser.id,
+        username: facilityUser.email, // Use email as username for compatibility
+        email: facilityUser.email,
+        firstName: facilityUser.firstName,
+        lastName: facilityUser.lastName,
+        role: facilityUser.role,
+        isActive: facilityUser.isActive,
+        facilityId: facilityUser.facilityId,
+        avatar: facilityUser.avatar,
+        createdAt: facilityUser.createdAt,
+        updatedAt: facilityUser.updatedAt,
+        password: '', // Not needed for facility users
+        userType: 'facility_user',
+        permissions: facilityUser.permissions
+      } as any;
+    }
+    
+    return undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
