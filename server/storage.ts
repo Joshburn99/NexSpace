@@ -306,33 +306,50 @@ export class DatabaseStorage implements IStorage {
 
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    // First try to find in users table
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    if (user) return user;
+    console.log(`[STORAGE] getUser called with id: ${id}`);
     
-    // If not found, try facility_users table
-    const [facilityUser] = await db.select().from(facilityUsers).where(eq(facilityUsers.id, id));
-    if (facilityUser) {
-      // Convert facility user to user format for compatibility
-      return {
-        id: facilityUser.id,
-        username: facilityUser.email, // Use email as username for compatibility
-        email: facilityUser.email,
-        firstName: facilityUser.firstName,
-        lastName: facilityUser.lastName,
-        role: facilityUser.role,
-        isActive: facilityUser.isActive,
-        facilityId: facilityUser.facilityId,
-        avatar: facilityUser.avatar,
-        createdAt: facilityUser.createdAt,
-        updatedAt: facilityUser.updatedAt,
-        password: '', // Not needed for facility users
-        userType: 'facility_user',
-        permissions: facilityUser.permissions
-      } as any;
+    try {
+      // First try to find in users table
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      if (user) {
+        console.log(`[STORAGE] Found user in users table:`, user);
+        return user;
+      }
+      
+      // If not found, try facility_users table
+      console.log(`[STORAGE] User not found in users table, checking facility_users table`);
+      const [facilityUser] = await db.select().from(facilityUsers).where(eq(facilityUsers.id, id));
+      if (facilityUser) {
+        console.log(`[STORAGE] Found facility user:`, facilityUser);
+        
+        // Convert facility user to user format for compatibility
+        const convertedUser = {
+          id: facilityUser.id,
+          username: facilityUser.email, // Use email as username for compatibility
+          email: facilityUser.email,
+          firstName: facilityUser.firstName,
+          lastName: facilityUser.lastName,
+          role: facilityUser.role,
+          isActive: facilityUser.isActive,
+          facilityId: facilityUser.facilityId,
+          avatar: facilityUser.avatar,
+          createdAt: facilityUser.createdAt,
+          updatedAt: facilityUser.updatedAt,
+          password: '', // Not needed for facility users
+          userType: 'facility_user',
+          permissions: facilityUser.permissions
+        } as any;
+        
+        console.log(`[STORAGE] Converted facility user to user format:`, convertedUser);
+        return convertedUser;
+      }
+      
+      console.log(`[STORAGE] User not found in either table`);
+      return undefined;
+    } catch (error) {
+      console.error(`[STORAGE] Error in getUser:`, error);
+      throw error;
     }
-    
-    return undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
