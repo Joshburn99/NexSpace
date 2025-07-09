@@ -114,7 +114,7 @@ function StaffCard({ staff }: StaffCardProps) {
           </Badge>
         </div>
 
-        <PermissionGuard permission="view_staff_credentials">
+        <PermissionGuard requiredPermissions={['view_staff_credentials' as any]}>
           <div className="flex items-center gap-2 pt-3 border-t">
             <Dialog>
               <DialogTrigger asChild>
@@ -138,7 +138,7 @@ function StaffCard({ staff }: StaffCardProps) {
                           </div>
                           <div className="flex items-center gap-2">
                             <Badge variant="default">Valid</Badge>
-                            {hasPermission('edit_staff_credentials') && (
+                            {hasPermission('edit_staff_credentials' as any) && (
                               <Button size="sm" variant="ghost">
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -156,7 +156,7 @@ function StaffCard({ staff }: StaffCardProps) {
                           </div>
                           <div className="flex items-center gap-2">
                             <Badge variant="default">Valid</Badge>
-                            {hasPermission('edit_staff_credentials') && (
+                            {hasPermission('edit_staff_credentials' as any) && (
                               <Button size="sm" variant="ghost">
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -168,7 +168,7 @@ function StaffCard({ staff }: StaffCardProps) {
                   ) : (
                     <p className="text-center text-gray-500 py-8">No credentials on file</p>
                   )}
-                  {hasPermission('upload_documents') && (
+                  {hasPermission('upload_documents' as any) && (
                     <Button className="w-full mt-4">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Credential
@@ -201,14 +201,14 @@ export default function StaffDirectory() {
   const [filterSpecialty, setFilterSpecialty] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [editingFacilityUser, setEditingFacilityUser] = useState<FacilityUser | null>(null);
-  const { permissions, hasPermission } = useFacilityPermissions();
+  const { hasPermission } = useFacilityPermissions();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Separate queries for staff and facility users
   const { data: staff = [], isLoading: staffLoading } = useQuery<Staff[]>({
     queryKey: ['/api/staff'],
-    enabled: hasPermission('view_staff'),
+    enabled: hasPermission('view_staff' as any),
   });
 
   const { data: facilityUsers = [], isLoading: facilityUsersLoading } = useQuery<FacilityUser[]>({
@@ -268,7 +268,7 @@ export default function StaffDirectory() {
   const specialties = [...new Set(staff.map(s => s.specialty))];
 
   // Check if user has permission to view staff directory
-  if (!hasPermission('view_staff')) {
+  if (!hasPermission('view_staff' as any)) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Card className="w-full max-w-md">

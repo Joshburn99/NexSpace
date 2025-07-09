@@ -3,6 +3,8 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { exec } from "child_process";
 import { createEnhancedStaffProfiles } from "./enhanced-staff-data";
+import { generateComprehensiveSampleData } from "./sample-data-generator";
+import { setupFacilityUserRoleTemplates } from "./facility-user-roles-setup";
 
 const app = express();
 app.use(express.json());
@@ -59,7 +61,9 @@ function killPort5000() {
   
   // Initialize enhanced staff profiles on startup
   try {
+    await setupFacilityUserRoleTemplates();
     await createEnhancedStaffProfiles();
+    await generateComprehensiveSampleData();
   } catch (error) {
     log(`Enhanced staff profiles initialization error: ${error}`);
   }

@@ -99,6 +99,19 @@ export function setupAuth(app: Express) {
 
     try {
       const user = await storage.getUser(id);
+      
+      // If this is a facility user, fetch their permissions
+      if (user && user.role !== 'super_admin') {
+        try {
+          const roleTemplate = await storage.getFacilityUserRoleTemplate(user.role);
+          if (roleTemplate && roleTemplate.permissions) {
+            (user as any).permissions = roleTemplate.permissions;
+          }
+        } catch (error) {
+          console.error("Error fetching user permissions during deserialization:", error);
+        }
+      }
+      
       done(null, user);
     } catch (error) {
       console.error("Database deserialization error:", error);
