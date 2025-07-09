@@ -58,6 +58,7 @@ import {
   facilityUserActivityLog,
   facilityUserFacilityAssociations,
   facilityUserTeamMemberships,
+  staff,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, sql, and, inArray } from "drizzle-orm";
@@ -7717,7 +7718,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Staff Facility Association API - Using Unified Data Service
+  // Staff Facility Association API - Direct Database Implementation
   app.post("/api/staff/:staffId/facilities", requireAuth, async (req, res) => {
     try {
       const { staffId } = req.params;
@@ -7729,23 +7730,37 @@ export function registerRoutes(app: Express): Server {
       console.log(`Adding facility ${facilityIdNum} to staff ${staffIdNum}`);
       
       // Get current staff data from database
-      const staffData = await unifiedDataService.getStaffWithAssociations();
-      const staff = staffData.find(s => s.id === staffIdNum);
+      const staffData = await db
+        .select({
+          id: staff.id,
+          associatedFacilities: staff.associatedFacilities
+        })
+        .from(staff)
+        .where(eq(staff.id, staffIdNum))
+        .limit(1);
       
-      if (!staff) {
+      if (!staffData.length) {
         return res.status(404).json({ message: "Staff member not found" });
       }
       
+      const currentStaff = staffData[0];
+      
       // Add facility if not already associated
-      const currentAssociations = staff.associatedFacilities || [];
+      const currentAssociations = currentStaff.associatedFacilities || [];
       let updatedAssociations = [...currentAssociations];
       
       if (!updatedAssociations.includes(facilityIdNum)) {
         updatedAssociations.push(facilityIdNum);
       }
       
-      // Update in database using unified service
-      const updatedStaff = await unifiedDataService.updateStaffFacilities(staffIdNum, updatedAssociations);
+      // Update in database
+      await db
+        .update(staff)
+        .set({ 
+          associatedFacilities: updatedAssociations,
+          updatedAt: new Date()
+        })
+        .where(eq(staff.id, staffIdNum));
       
       console.log(`Updated associations for staff ${staffIdNum}:`, updatedAssociations);
       
@@ -7771,19 +7786,33 @@ export function registerRoutes(app: Express): Server {
       console.log(`Removing facility ${facilityIdNum} from staff ${staffIdNum}`);
       
       // Get current staff data from database
-      const staffData = await unifiedDataService.getStaffWithAssociations();
-      const staff = staffData.find(s => s.id === staffIdNum);
+      const staffData = await db
+        .select({
+          id: staff.id,
+          associatedFacilities: staff.associatedFacilities
+        })
+        .from(staff)
+        .where(eq(staff.id, staffIdNum))
+        .limit(1);
       
-      if (!staff) {
+      if (!staffData.length) {
         return res.status(404).json({ message: "Staff member not found" });
       }
       
+      const currentStaff = staffData[0];
+      
       // Remove facility from associations
-      const currentAssociations = staff.associatedFacilities || [];
+      const currentAssociations = currentStaff.associatedFacilities || [];
       const updatedAssociations = currentAssociations.filter(id => id !== facilityIdNum);
       
-      // Update in database using unified service
-      await unifiedDataService.updateStaffFacilities(staffIdNum, updatedAssociations);
+      // Update in database
+      await db
+        .update(staff)
+        .set({ 
+          associatedFacilities: updatedAssociations,
+          updatedAt: new Date()
+        })
+        .where(eq(staff.id, staffIdNum));
       
       console.log(`Updated associations for staff ${staffIdNum}:`, updatedAssociations);
       
