@@ -719,6 +719,7 @@ export const staff = pgTable("staff", {
   // Contact and financial information
   directDepositInfo: jsonb("direct_deposit_info"), // { bankName: string, routingNumber: string, accountNumber: string, accountType: 'checking'|'savings' } - encrypted
   emergencyContact: jsonb("emergency_contact"), // { name: string, phone: string, relationship: string, email?: string }
+  associatedFacilities: jsonb("associated_facilities").default('[]'), // Array of facility IDs for workers
 });
 
 // Payroll Integration Tables

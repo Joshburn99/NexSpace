@@ -2434,8 +2434,21 @@ export function registerRoutes(app: Express): Server {
   // Staff profile endpoints
   app.get("/api/staff", requireAuth, async (req: any, res) => {
     try {
-      // Get staff data from unified service (single source of truth)
-      let dbStaffData = await unifiedDataService.getStaffWithAssociations();
+      // Get staff data directly from database to include associatedFacilities
+      let dbStaffData = await db.select().from(staff).where(eq(staff.isActive, true));
+      
+      // Format staff data for consistency with frontend expectations
+      dbStaffData = dbStaffData.map(staffMember => {
+        const nameParts = staffMember.name ? staffMember.name.split(' ') : ['Unknown', 'Staff'];
+        return {
+          ...staffMember,
+          firstName: nameParts[0] || 'Unknown',
+          lastName: nameParts.slice(1).join(' ') || 'Staff',
+          role: staffMember.employmentType || 'unknown',
+          associatedFacilities: Array.isArray(staffMember.associatedFacilities) ? staffMember.associatedFacilities : [],
+          avatar: staffMember.profilePhoto,
+        };
+      });
       
       // Implement facility-based access control for facility users
       const facilityUserRoles = [
@@ -7729,12 +7742,9 @@ export function registerRoutes(app: Express): Server {
       
       console.log(`Adding facility ${facilityIdNum} to staff ${staffIdNum}`);
       
-      // Get current staff data from database
+      // Get current staff data from database - select all columns to avoid query issues
       const staffData = await db
-        .select({
-          id: staff.id,
-          associatedFacilities: staff.associatedFacilities
-        })
+        .select()
         .from(staff)
         .where(eq(staff.id, staffIdNum))
         .limit(1);
@@ -7746,7 +7756,9 @@ export function registerRoutes(app: Express): Server {
       const currentStaff = staffData[0];
       
       // Add facility if not already associated
-      const currentAssociations = currentStaff.associatedFacilities || [];
+      const currentAssociations = Array.isArray(currentStaff.associatedFacilities) 
+        ? currentStaff.associatedFacilities 
+        : [];
       let updatedAssociations = [...currentAssociations];
       
       if (!updatedAssociations.includes(facilityIdNum)) {
@@ -7785,12 +7797,9 @@ export function registerRoutes(app: Express): Server {
       
       console.log(`Removing facility ${facilityIdNum} from staff ${staffIdNum}`);
       
-      // Get current staff data from database
+      // Get current staff data from database - select all columns to avoid query issues
       const staffData = await db
-        .select({
-          id: staff.id,
-          associatedFacilities: staff.associatedFacilities
-        })
+        .select()
         .from(staff)
         .where(eq(staff.id, staffIdNum))
         .limit(1);
@@ -7802,7 +7811,9 @@ export function registerRoutes(app: Express): Server {
       const currentStaff = staffData[0];
       
       // Remove facility from associations
-      const currentAssociations = currentStaff.associatedFacilities || [];
+      const currentAssociations = Array.isArray(currentStaff.associatedFacilities) 
+        ? currentStaff.associatedFacilities 
+        : [];
       const updatedAssociations = currentAssociations.filter(id => id !== facilityIdNum);
       
       // Update in database

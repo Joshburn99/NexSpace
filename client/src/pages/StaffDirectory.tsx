@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
 import { FacilityUserCard } from '@/components/FacilityUserCard';
 import { FacilityUserEditForm } from '@/components/FacilityUserEditForm';
+import { StaffFacilityAssociationDialog } from '@/components/StaffFacilityAssociationDialog';
 
 interface Staff {
   id: number;
@@ -67,66 +68,9 @@ interface StaffCardProps {
 
 function StaffCard({ staff, facilities }: StaffCardProps) {
   const { hasPermission } = useFacilityPermissions();
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-  
-  const [selectedFacilityId, setSelectedFacilityId] = useState<string>('');
-  
-  // Add facility association mutation
-  const addFacilityAssociation = useMutation({
-    mutationFn: async (facilityId: number) => {
-      return apiRequest('POST', `/api/staff/${staff.id}/facilities`, { facilityId });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/staff'] });
-      toast({
-        title: "Success",
-        description: "Facility association added successfully",
-      });
-      setSelectedFacilityId('');
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add facility association",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Remove facility association mutation
-  const removeFacilityAssociation = useMutation({
-    mutationFn: async (facilityId: number) => {
-      return apiRequest('DELETE', `/api/staff/${staff.id}/facilities/${facilityId}`);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/staff'] });
-      toast({
-        title: "Success",
-        description: "Facility association removed successfully",
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to remove facility association",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleAddFacility = () => {
-    if (selectedFacilityId) {
-      addFacilityAssociation.mutate(parseInt(selectedFacilityId));
-    }
-  };
-
-  const handleRemoveFacility = (facilityId: number) => {
-    removeFacilityAssociation.mutate(facilityId);
-  };
+  const [showFacilityDialog, setShowFacilityDialog] = useState(false);
 
   const associatedFacilities = staff.associatedFacilities || [];
-  const availableFacilities = facilities.filter(f => !associatedFacilities.includes(f.id));
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -189,9 +133,22 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
 
         {/* Facility Associations */}
         <div className="space-y-2 pt-3 border-t">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-gray-400" />
-            <span className="text-sm font-medium">Facility Associations</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-gray-400" />
+              <span className="text-sm font-medium">Facility Associations</span>
+            </div>
+            {hasPermission('edit_staff' as any) && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setShowFacilityDialog(true)}
+                className="h-7 px-2 text-xs"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Manage
+              </Button>
+            )}
           </div>
           
           {associatedFacilities.length > 0 ? (
@@ -200,49 +157,14 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
                 const facility = facilities.find(f => f.id === facilityId);
                 if (!facility) return null;
                 return (
-                  <div key={facilityId} className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded text-xs">
-                    <span>{facility.name}</span>
-                    {hasPermission('edit_staff' as any) && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="h-4 w-4 p-0 hover:bg-red-100"
-                        onClick={() => handleRemoveFacility(facilityId)}
-                      >
-                        ×
-                      </Button>
-                    )}
-                  </div>
+                  <Badge key={facilityId} variant="secondary" className="text-xs">
+                    {facility.name}
+                  </Badge>
                 );
               })}
             </div>
           ) : (
             <p className="text-xs text-gray-500">No facility associations</p>
-          )}
-          
-          {hasPermission('edit_staff' as any) && availableFacilities.length > 0 && (
-            <div className="flex gap-2 mt-2">
-              <Select value={selectedFacilityId} onValueChange={setSelectedFacilityId}>
-                <SelectTrigger className="h-8 text-xs">
-                  <SelectValue placeholder="Add facility..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableFacilities.map(facility => (
-                    <SelectItem key={facility.id} value={facility.id.toString()}>
-                      {facility.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                size="sm"
-                onClick={handleAddFacility}
-                disabled={!selectedFacilityId || addFacilityAssociation.isPending}
-                className="h-8 px-3"
-              >
-                <Plus className="h-3 w-3" />
-              </Button>
-            </div>
           )}
         </div>
 
@@ -313,6 +235,14 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
           </div>
         </PermissionGuard>
       </CardContent>
+      
+      {/* Facility Association Dialog */}
+      <StaffFacilityAssociationDialog
+        isOpen={showFacilityDialog}
+        onClose={() => setShowFacilityDialog(false)}
+        staff={staff}
+        facilities={facilities}
+      />
     </Card>
   );
 }
