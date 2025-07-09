@@ -36,7 +36,7 @@ export type FacilityPermission =
 
 // Role-based permission mappings
 const ROLE_PERMISSIONS: Record<string, FacilityPermission[]> = {
-  facility_administrator: [
+  facility_admin: [
     'view_schedules', 'create_shifts', 'edit_shifts', 'delete_shifts', 'assign_staff', 'approve_shift_requests',
     'view_staff', 'create_staff', 'edit_staff', 'deactivate_staff', 'view_staff_credentials', 'edit_staff_credentials', 'manage_credentials',
     'view_facility_profile', 'edit_facility_profile', 'manage_facility_settings',
@@ -101,6 +101,14 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
     const userPermissions = (user as any).permissions || [];
     const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
     
+    // Debug logging for permissions
+    console.log('Permissions debug:', {
+      userRole: user.role,
+      userPermissions,
+      rolePermissions,
+      availableRoles: Object.keys(ROLE_PERMISSIONS)
+    });
+    
     // Combine role-based and explicit permissions, removing duplicates
     const allPermissions = [...rolePermissions, ...userPermissions];
     const uniquePermissions: FacilityPermission[] = [];
@@ -111,6 +119,7 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
       }
     }
     
+    console.log('Final permissions for user:', uniquePermissions);
     return uniquePermissions;
   };
 
