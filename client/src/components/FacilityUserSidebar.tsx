@@ -142,11 +142,17 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
 
 export function FacilityUserSidebar() {
   const [location] = useLocation();
-  const { hasAnyPermission } = useFacilityPermissions();
+  const { hasAnyPermission, getUserPermissions } = useFacilityPermissions();
 
-  const accessibleItems = SIDEBAR_ITEMS.filter(item => 
-    hasAnyPermission(item.permissions as any[])
-  );
+  const accessibleItems = SIDEBAR_ITEMS.filter(item => {
+    const hasAccess = hasAnyPermission(item.permissions as any[]);
+    console.log(`Sidebar item ${item.label}:`, {
+      required: item.permissions,
+      hasAccess,
+      userPermissions: getUserPermissions()
+    });
+    return hasAccess;
+  });
 
   return (
     <div className="bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 w-64 min-h-screen">

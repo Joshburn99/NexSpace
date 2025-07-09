@@ -97,7 +97,7 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
       return Object.values(ROLE_PERMISSIONS).flat();
     }
     
-    // Get permissions from user's role or explicit permissions
+    // Get permissions from user's role and explicit permissions
     const userPermissions = (user as any).permissions || [];
     const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
     
@@ -109,13 +109,21 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
       availableRoles: Object.keys(ROLE_PERMISSIONS)
     });
     
-    // Combine role-based and explicit permissions, removing duplicates
-    const allPermissions = [...rolePermissions, ...userPermissions];
-    const uniquePermissions: FacilityPermission[] = [];
+    // For facility_admin, always include all role-based permissions regardless of explicit permissions
+    let allPermissions: string[] = [];
+    if (user.role === 'facility_admin') {
+      // Facility admins get all their role permissions plus any additional explicit permissions
+      allPermissions = [...rolePermissions, ...userPermissions];
+    } else {
+      // Other roles use explicit permissions if available, otherwise fall back to role permissions
+      allPermissions = userPermissions.length > 0 ? [...rolePermissions, ...userPermissions] : rolePermissions;
+    }
     
+    // Remove duplicates
+    const uniquePermissions: FacilityPermission[] = [];
     for (const permission of allPermissions) {
-      if (!uniquePermissions.includes(permission)) {
-        uniquePermissions.push(permission);
+      if (!uniquePermissions.includes(permission as FacilityPermission)) {
+        uniquePermissions.push(permission as FacilityPermission);
       }
     }
     
