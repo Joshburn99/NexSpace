@@ -123,8 +123,24 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+  app.post("/api/login", passport.authenticate("local"), async (req, res) => {
+    const user = req.user;
+    
+    // If this is a facility user, fetch their permissions
+    if (user && user.role !== 'super_admin') {
+      try {
+        // Get permissions from the role template
+        const roleTemplate = await storage.getFacilityUserRoleTemplate(user.role);
+        if (roleTemplate && roleTemplate.permissions) {
+          // Add permissions to user object
+          (user as any).permissions = roleTemplate.permissions;
+        }
+      } catch (error) {
+        console.error("Error fetching user permissions:", error);
+      }
+    }
+    
+    res.status(200).json(user);
   });
 
   app.post("/api/forgot-password", async (req, res) => {

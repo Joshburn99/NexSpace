@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -138,6 +139,7 @@ const mockShiftRequests: ShiftRequest[] = [
 
 export default function ShiftRequestsPage() {
   const { user } = useAuth();
+  const { hasPermission } = useFacilityPermissions();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [requests, setRequests] = useState(mockShiftRequests);
   const [selectedTab, setSelectedTab] = useState("pending");
@@ -222,13 +224,14 @@ export default function ShiftRequestsPage() {
               </p>
             </div>
 
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button>
-                  <Settings className="w-4 h-4 mr-2" />
-                  Auto-Assignment Settings
-                </Button>
-              </DialogTrigger>
+            {hasPermission('manage_facility_settings' as any) && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Settings className="w-4 h-4 mr-2" />
+                    Auto-Assignment Settings
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-4xl">
                 <DialogHeader>
                   <DialogTitle>Auto-Assignment Settings</DialogTitle>
@@ -461,6 +464,7 @@ export default function ShiftRequestsPage() {
                 </div>
               </DialogContent>
             </Dialog>
+            )}
           </div>
         </header>
 
@@ -594,22 +598,26 @@ export default function ShiftRequestsPage() {
                                 className={cn("w-4 h-4", request.isFavorite && "fill-current")}
                               />
                             </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handleApproveRequest(request.id)}
-                              className="bg-green-600 hover:bg-green-700"
-                            >
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              Approve
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => handleDenyRequest(request.id)}
-                            >
-                              <XCircle className="w-4 h-4 mr-1" />
-                              Deny
-                            </Button>
+                            {hasPermission('approve_shift_requests' as any) && (
+                              <>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleApproveRequest(request.id)}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDenyRequest(request.id)}
+                                >
+                                  <XCircle className="w-4 h-4 mr-1" />
+                                  Deny
+                                </Button>
+                              </>
+                            )}
                           </div>
                         )}
                       </div>

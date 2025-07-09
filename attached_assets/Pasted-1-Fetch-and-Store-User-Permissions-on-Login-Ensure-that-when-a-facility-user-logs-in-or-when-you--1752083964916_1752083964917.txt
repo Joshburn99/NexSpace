@@ -1,0 +1,133 @@
+1. Fetch and Store User Permissions on Login:
+Ensure that when a facility user logs in (or when you impersonate one via the super admin account), the frontend knows exactly what permissions that user has. If not already done, update the authentication/impersonation response to include the user’s permissions or role details. You might fetch the facility_user_role_templates.permissions array for that user’s role. This can be stored in the auth context (e.g., useAuth). For example, augment the user object with a list of permission strings (like ["view_schedules", "create_shifts", ...]). Having this list available on the client will make conditional rendering much easier.
+If the app currently only uses a broad role (like FACILITY_MANAGER) to infer permissions (via a static map
+GitHub
+), you might need to extend it. You can either expand the ROLE_PERMISSIONS mapping to include each facility sub-role (facility_admin, hr_manager, etc.) and their permissions, or directly use the permissions array from the database for the logged-in user. The latter is more dynamic. For now, set up the data flow so the front-end knows the exact permissions set for the impersonated facility user.
+2. Update Navigation (Sidebar) to Show/Hide Sections by Permission:
+Go through the sidebar menu (Sidebar.tsx) and refine the visibility of each item based on permissions:
+Scheduling/Calendar: Only display the Scheduling menu group if the user has view_schedules. Within it, ensure Shift Requests is only shown if approve_shift_requests. If using roles, you might add facility_admin and scheduling_manager roles to the roles array for that item, but a more robust solution is checking permissions directly (e.g., if (hasPermission(user.role, 'shifts.view')) or a custom permission check hook).
+Workforce/Staff: Currently, all facility users see Workforce
+GitHub
+. Change this so it only renders if view_staff permission is present. In the children, Credentials should perhaps only show if the user can view or manage credentials (you can require view_staff_credentials or view_compliance for that item, since HR and Admin have those).
+Insights/Analytics: Only show if view_analytics or view_reports is true. You might keep it as is for now (since most managers have analytics) but exclude pure read-only viewers (who lack view_analytics). If the user only has view_reports but not analytics, you could still show a Reports item (perhaps move “Overtime Report” or others under a Reports section).
+Billing: Wrap the entire Billing menu in a check for view_billing. E.g., { hasPermission(user.role, 'invoices.view') && <BillingMenuItems /> }. This will hide billing for those not allowed.
+Messages: If you decide everyone can view messages, you can leave it. Otherwise, conditionally hide it for unauthorized roles. For instance, a true “read-only” viewer might be excluded if desired.
+Admin/Facility Management: The Admin section in the sidebar is currently for super/client admin. For facility-level admins, if you want them to manage facility users or settings from the same UI, you have two options:
+Use a separate section – e.g., show a “Facility Settings” menu item for facility admins that links to facility-specific management pages.
+Leverage the existing Admin section – e.g., allow facility admins to see Facility Users and Facility Management items. This would require adding UserRole.FACILITY_ADMIN to those menu items’ roles array or using a permission check. For example, show Facility Users if manage_facility_users is true, Facility Management if manage_facility_settings is true, etc.
+Implementing these navigation rules will ensure users only navigate to what they should. Use the permission list from step 1 for these checks (you can write utility functions like hasPerm('permission_name') that checks the logged-in user’s permissions array). After this step, test by impersonating various roles to see that the menu reflects the expected options. 3. Implement Page-Level Access Guards:
+In addition to hiding nav links, each page or route should verify that the user has permission to be there. This is a backup in case someone navigates directly via URL. For example:
+On the Calendar page (advanced-scheduling-page.tsx or similar), at the top of the component, check if (!hasPerm('view_schedules')) redirect or show an “Access Denied.” Similarly, a Shift Requests page should require approve_shift_requests or it shouldn’t load.
+You can create a higher-order component or hook for this, e.g., useRequirePermission('perm') that uses useAuth to get user perms and either returns children or redirects.
+Page-level checks are especially important for sensitive pages like Billing, Facility Settings, User Management, etc. Even if the menu is hidden, a determined user might guess a URL; this guard prevents them from seeing anything.
+Also add backend route guards (if not already) for each API endpoint (e.g., creating a shift, editing a staff member) to enforce these same permissions on the server side. This wasn’t directly asked, but since you noted permissions are enforced both front and back, double-check that controllers validate the user’s permission before performing actions like creating a shift or updating billing.
+4. Conditional Rendering of Buttons and Controls in UI:
+Audit each page’s UI elements (as we mapped in the earlier section) and add conditional rendering or disabling based on permissions:
+Calendar Page: You have partially done this:
+The “Quick Shift” button is already wrapped in canCreateShifts check
+GitHub
+ – good. Also consider an “Add Shift” button for month/day views if needed.
+Ensure the onDoubleClick to create shift only works if can create (you might wrap the <div ... onDoubleClick={...} such that it calls handleCreateShift only if allowed, or leave the toast approach).
+Dragging shifts and staff is handled via draggable attributes tied to canEditShifts and canAssignStaff
+GitHub
+GitHub
+ – this is good. You might add visual cues (like the opacity you have for staff list) for shifts too if not draggable.
+If implementing a Delete Shift feature, only render a delete icon/button if canDeleteShifts (e.g., in the shift modal or as a small “x” on the shift card).
+For “Edit Shift” modal button, you already wrap it with canEditShifts
+GitHub
+. Do similarly if you add an “Duplicate” or other actions – consider if those require create permission (e.g., duplicating a shift might be akin to creating one).
+Shift Requests Page: Render approve/deny buttons only if approve_shift_requests is true. If you show the list of requests to others (probably you wouldn’t, but if so, they should see them as read-only with no action buttons).
+Staff Directory: On the staff list page, add permission checks for management features:
+Show “Add Staff” button only if create_staff.
+If you have an inline list of staff with actions (edit/delete icons), filter those actions: e.g., show edit icon if edit_staff, show deactivate toggle if deactivate_staff.
+In the staff Profile view component, similarly, wrap editable fields or action buttons in permission checks. For instance, if viewing a staff member’s profile:
+Only show an “Edit” or “Save Changes” button if edit_staff.
+Only show a “Deactivate” or status toggle if deactivate_staff.
+Only show the Credentials sub-section if view_staff_credentials (or if the viewing user has either view or manage credentials permission).
+If manage_staff_credentials, allow editing that credentials sub-section (e.g., an “Upload new credential” or “Verify” button).
+If you haven’t yet built the staff detail page, keep these rules in mind when you do.
+Compliance/Credentials Pages:
+On a Credentials overview page (if present), show full details only to those with view_staff_credentials. If an unauthorized user somehow navigates there, use the page guard to prevent it entirely.
+On the Compliance page, if manage_compliance, include interactive elements (checkboxes, input fields, etc. for updating compliance items). If not, display stats or status info without inputs.
+Wherever there is an “Upload Document” button (staff credential upload or facility document upload), wrap it in a check for upload_documents. E.g., {hasPerm('upload_documents') && <Button>Upload Document</Button>}.
+Facility Profile/Settings:
+On a Facility Profile page, if edit_facility_profile, enable an edit mode or show an “Edit Profile” button. Otherwise, do not render that button.
+If you have a Facility Settings form (with things like time zone, scheduling rules), show it only if manage_facility_settings. If not, either hide that section entirely or display the settings in read-only mode for those with view but not manage (though in your roles, typically one either has full manage or just view profile).
+On a Facility Users management page, only show the page if manage_facility_users. Within it:
+List facility users (for facility admins, listing roles like schedulers, etc.).
+If manage_permissions, allow editing their roles. This could be a dropdown of roles or checkboxes for permissions next to each user. Only render those inputs for someone with permission.
+Allow inviting new users only if manage_facility_users (likely yes if they’re on the page).
+Billing Pages:
+On the Invoices page, if manage_billing, allow actions like creating a new invoice or editing invoice lines. If not, the user can only view invoices.
+If you have an invoice detail view, wrap the “Approve Invoice” button in an approve_invoices check. Similarly, if there’s a “Pay” or “Mark as Paid” action (since you have INVOICES_PAY in code, though not in the template), gate it appropriately.
+On a Rates page, if edit_rates, make the fields editable or show an edit button; if not, just display the rates.
+On any Billing settings (like net terms or billing contacts), only allow changes if manage_billing.
+Reports/Analytics:
+If you have a general Reports page listing various reports, you might filter which reports are shown based on permission. For simplicity, if a user can view any reports, you might show the same page but the data inside each report might naturally be empty if they lack underlying data access. However, consider hiding clearly irrelevant reports. For example, if a user has no financial permissions, perhaps omit an “Financial Summary Report” option.
+For Analytics dashboards, since those are protected by view_analytics mostly, you might not need fine-grained hides beyond what the nav does. Just ensure the pages themselves check permission. If you have separate pages (like Shift Analytics, Compliance Analytics), make sure those pages require the appropriate combination of permissions (view_analytics + maybe view_compliance for the compliance page, etc.).
+On any analytics charts, if the user isn’t supposed to see certain data, filter it server-side as well by their scope.
+If providing an Export button on a report, wrap it with export_data permission. E.g., only show “Export to CSV” if allowed.
+Messaging:
+In the Messages or chat page, if you differentiate permissions: only show the “New Message” or “Reply” input if messages_send permission. If the user only has view (or none), you could display messages but hide the input box.
+If a user has no messaging access at all and you still show the page, display a friendly note like “You don’t have permission to send messages” or simply an empty state.
+(This may not need much change if by default all facility users can message. But consider viewer role; you might decide whether to quietly include/exclude them.)
+As you implement these, leverage the existing hasPermission utility or create a similar one that checks the user’s permission list. For example, your code uses hasPermission(user.role, "create_shifts") to set canCreateShifts
+GitHub
+GitHub
+. After step 1, you might instead have something like: const { permissions } = useAuth(); const canCreateShifts = permissions.includes("create_shifts"); – whichever approach, use it consistently across components. 5. Revise Backend Endpoints (if needed) for Permissions:
+This is more about syncing UI with backend:
+Ensure all API endpoints that correspond to these UI actions check the user’s permissions on the server. For instance, the endpoint that creates a new shift should verify the user has create_shifts; the endpoint to assign a staff to a shift should require assign_staff; updating a staff profile requires edit_staff, etc. This prevents someone from using developer tools or a crafted request to do things their UI doesn’t allow.
+If you have not implemented these checks, add them using the user’s role or permission list on the server side. Your server/routes.ts or associated controllers can pull the user (from JWT or session) and validate permissions accordingly
+GitHub
+.
+This step doesn’t change the UI per se, but it’s critical for enforcement. Since you indicated both front and back enforcement, double-check it now.
+Also consider data scoping: e.g., a Department Head might fetch /shifts but the backend could filter to only their department’s shifts if view_all_shifts is false. Align these rules with what we did in the UI.
+6. Sync the Enhanced Calendar with Backend Data & Logic:
+Currently, the calendar uses mock data and local state for shifts. To fully integrate it:
+Hook up the calendar component to fetch actual shift data from the server (e.g., via an API call to /shifts or similar) based on the current facility and date range. This likely involves an effect on page load or when current week changes.
+When fetching, apply the permission logic:
+If the user doesn’t have view_all_shifts (if that’s a rule you enforce), the backend query should return only shifts relevant to them (or the frontend could filter after fetching all and showing partial – but backend filtering is more secure).
+If using approve_shift_requests, consider whether to fetch open shifts or pending requests count to show on the UI (for example, you might show a badge with number of pending requests on the Shift Requests menu).
+Update the drag-and-drop and create/update functions to call the backend:
+E.g., on creating a shift (if permitted), call the API to create it in the database, then refresh or update state with the new shift (so the change persists beyond the local state).
+On assigning staff to a shift, call an endpoint to assign (or update the shift’s assigned staff). The code currently just updates local state and shows a toast
+GitHub
+ – you’ll want to mirror this server-side so it actually assigns in DB.
+On editing a shift’s time or details (dragging to move or an Edit modal if you add one), send the update to server as well.
+On removing staff from a shift (the “Remove” button in modal
+GitHub
+), likewise call a backend update to remove that assignment.
+On deleting a shift (if implemented), call delete API then remove from UI.
+Ensure the backend also respects permissions for these actions. For example, even if the UI hides the “Delete” button for unauthorized users, someone might attempt the API – so the server should check delete_shifts before actually deleting.
+Calendar UI improvements while syncing: This is a good time to also refine the UI:
+Make sure the Department filter works (perhaps populate it dynamically from facility’s departments via API).
+Possibly allow filtering by staff or shift status if that helps (not strictly asked, but a common feature: e.g., filter to only see open shifts).
+Ensure the week/day/month toggle is functional (the code has state for it). For month view, you might show a high-level view (maybe date boxes with shift counts or something). This can be improved iteratively.
+Consider adding a legend or helper text explaining any icons or colors, so new users (like a Viewer) can interpret the schedule easily.
+Think about performance: if a facility has a lot of shifts, you may need to load data in slices (week by week) and perhaps optimize rendering. Using virtualization or canvas for calendar can be complex; initially, keep it simple but be mindful of potential large data sets.
+7. Adjust Staff and Other Pages to Fetch Real Data:
+Similar to the calendar, make sure other pages are not using placeholder data. If the Staff Directory is not yet connected to backend:
+Fetch the list of staff for the facility from the server on page load. Only users with view_staff will do this (due to your page guard). The backend should return only staff of that facility.
+Populate the staff list UI with real names, roles, etc.
+For each staff, determine what actions to show based on permissions (as done above). Then, wire those actions:
+Hook up the Add Staff form to a backend endpoint that creates a user (or sends an invite).
+Hook up the Edit Staff to an update endpoint.
+Hook up Deactivate to an endpoint that sets the staff’s active flag false.
+For credentials: fetch credential info (maybe as part of staff details or separate endpoint). Show credentials and allow upload via an endpoint when manage_staff_credentials.
+For compliance: if you have a facility compliance endpoint (like to list required docs or compliance tasks), fetch those for users with view_compliance. Provide update actions (mark complete, upload doc) to those with manage rights.
+Billing pages: if not already functional, connect invoice/rate pages to backend data:
+Load invoices from server for that facility (for roles with view_billing).
+Load rates from server (the billRates/payRates fields in facility, or however structured) for roles with view_rates.
+Hook up approve invoice button to a backend update (changing invoice status).
+Hook up rate editing to an endpoint that updates the facility’s rate info.
+Reports/Analytics: Implement endpoints or use existing ones to retrieve data for reports. E.g., an endpoint for overtime report data, staffing levels, etc. When the user opens an analytics page, fetch the relevant data. If you use a library or predefined queries, tailor the response to the facility (and potentially the user’s scope).
+This can get complex, but start with basic ones (maybe number of shifts this week, count of open shifts, count of staff active, etc.) to display as an analytics dashboard for those who can view it.
+Messaging: If messaging is not yet functional, set up the basic backend for it:
+Perhaps using something like a messages table or integrating with a service. At minimum, create API routes for fetching messages and sending a message.
+The UI should poll or use websockets for new messages (the badge count indicates unread messages, which could be fetched on interval or via push).
+Only allow sending if messages_send is permitted. This is enforced on UI already by hiding input, but also enforce server-side by checking sender’s role.
+Ensure messages are scoped (facility users should message within their facility or team; depending on your design, maybe cross-facility messaging is allowed for corporate roles).
+For each feature you connect, test with different roles by impersonating:
+E.g., impersonate a Scheduling Manager and verify you can create shifts but not edit staff.
+Impersonate an HR Manager and verify you can manage staff but the calendar link is hidden/blocked.
+Impersonate a Viewer and verify you see pages but nothing is editable and no forbidden buttons appear.

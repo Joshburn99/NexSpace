@@ -6629,6 +6629,20 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "User not found" });
       }
 
+      // If this is a facility user, fetch their permissions
+      if (targetUser.role !== 'super_admin') {
+        try {
+          // Get permissions from the role template
+          const roleTemplate = await storage.getFacilityUserRoleTemplate(targetUser.role);
+          if (roleTemplate && roleTemplate.permissions) {
+            // Add permissions to user object
+            (targetUser as any).permissions = roleTemplate.permissions;
+          }
+        } catch (error) {
+          console.error("Error fetching user permissions:", error);
+        }
+      }
+
       res.json({ 
         success: true, 
         impersonatedUser: targetUser,

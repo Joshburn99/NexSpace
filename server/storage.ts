@@ -179,6 +179,7 @@ export interface IStorage {
   // Permission methods
   getUserPermissions(role: string): Promise<string[]>;
   hasPermission(role: string, permission: string): Promise<boolean>;
+  getFacilityUserRoleTemplate(role: string): Promise<any | undefined>;
 
   // Dashboard analytics
   getFacilityStats(facilityId: number): Promise<{
@@ -839,6 +840,20 @@ export class DatabaseStorage implements IStorage {
   async hasPermission(role: string, permission: string): Promise<boolean> {
     const userPermissions = await this.getUserPermissions(role);
     return userPermissions.includes(permission);
+  }
+
+  async getFacilityUserRoleTemplate(role: string): Promise<any | undefined> {
+    const { facilityUserRoleTemplates } = await import("@shared/schema");
+    const [template] = await db
+      .select()
+      .from(facilityUserRoleTemplates)
+      .where(
+        and(
+          eq(facilityUserRoleTemplates.role, role),
+          eq(facilityUserRoleTemplates.isActive, true)
+        )
+      );
+    return template || undefined;
   }
 
   // Dashboard analytics

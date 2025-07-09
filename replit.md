@@ -13,6 +13,23 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 9, 2025 - Facility User Permission System Implementation
+- **Backend Permission Integration**: Enhanced authentication system to fetch and include permissions for facility users during login
+  - Updated auth.ts to populate permissions array for facility users from database role templates
+  - Added getFacilityUserRoleTemplate storage method to retrieve role-based permissions
+  - Impersonation endpoints now properly include permissions for facility users
+- **Frontend Permission Handling**: Updated useAuth and useFacilityPermissions hooks for dynamic permission checking
+  - FacilityPermissionsProvider now reads permissions from user object (backend-provided) with role-based fallback
+  - Permission checks work consistently for both regular login and impersonation scenarios
+- **Shift Requests Page Permission Controls**: Implemented granular permission controls on shift management features
+  - Approve/Deny buttons only visible to users with 'approve_shift_requests' permission
+  - Auto-Assignment Settings restricted to users with 'manage_facility_settings' permission
+  - Ensures facility users only see and can perform actions they're authorized for
+- **Complete Permission Flow**: Permissions now flow from database → backend auth → frontend user object → UI components
+  - Database stores role templates with specific permissions per facility user role
+  - Backend fetches and includes permissions in user session data
+  - Frontend components dynamically render based on user's actual permissions
+
 ### July 9, 2025 - Billing & Finance Permissions System Implementation
 - **Comprehensive Billing System**: Built complete billing and finance management system with role-based access control
   - Billing Dashboard: Main financial overview with invoice summaries, outstanding amounts, and approval workflows
