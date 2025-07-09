@@ -168,6 +168,14 @@ function EnhancedStaffPageContent() {
     queryKey: ["/api/staff"],
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    select: (data) => {
+      // Ensure data is always an array
+      if (Array.isArray(data)) {
+        return data;
+      }
+      console.error('Staff API returned non-array data:', data);
+      return [];
+    },
   });
 
   // Handle profile URL parameter with error handling
@@ -242,8 +250,14 @@ function EnhancedStaffPageContent() {
   });
 
   // Filter staff members with comprehensive null safety and exclude superusers
-  const filteredStaff = (staffMembers || []).filter((staff) => {
-    if (!staff) return false;
+  const filteredStaff = React.useMemo(() => {
+    if (!Array.isArray(staffMembers)) {
+      console.error('staffMembers is not an array:', staffMembers);
+      return [];
+    }
+    
+    return staffMembers.filter((staff) => {
+      if (!staff) return false;
     
     try {
       // Exclude superusers by email (server already filters most, but double-check)
@@ -269,7 +283,8 @@ function EnhancedStaffPageContent() {
       console.error('Error filtering staff member:', error, staff);
       return false;
     }
-  });
+    });
+  }, [staffMembers, searchTerm, selectedWorkerType, selectedSpecialty, selectedStatus]);
 
   // Get unique values for filters with null safety
   const specialties = Array.from(new Set((staffMembers || []).map((s) => s?.specialty).filter(Boolean)));

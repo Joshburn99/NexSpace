@@ -2558,10 +2558,11 @@ export function registerRoutes(app: Express): Server {
         }
       }));
 
+      console.log(`[STAFF API] Returning ${staffData.length} staff members`);
       res.json(staffData);
     } catch (error) {
       console.error("Error fetching staff data:", error);
-      res.status(500).json({ message: "Failed to fetch staff data" });
+      res.status(500).json({ message: "Failed to fetch staff data", error: error.message });
     }
   });
 
