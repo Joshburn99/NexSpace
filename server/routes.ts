@@ -10495,5 +10495,274 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // ==================== BILLING API ROUTES ====================
+  
+  // Get invoices for a facility
+  app.get("/api/billing/invoices/:facilityId?", requireAuth, async (req, res) => {
+    try {
+      const facilityId = req.params.facilityId ? parseInt(req.params.facilityId) : req.user.primaryFacilityId;
+      
+      // Sample invoice data for development
+      const sampleInvoices = [
+        {
+          id: 1,
+          facilityId: facilityId,
+          invoiceNumber: "INV-2025-001",
+          amount: 12500.00,
+          description: "Monthly staffing services - ICU and Emergency Department",
+          dueDate: "2025-08-15",
+          status: "pending",
+          createdAt: "2025-07-15T10:00:00Z",
+          facilityName: "General Hospital",
+          lineItems: [
+            { description: "RN Coverage - ICU", quantity: 160, rate: 65.00, amount: 10400.00 },
+            { description: "LPN Coverage - Emergency", quantity: 80, rate: 45.00, amount: 3600.00 }
+          ]
+        },
+        {
+          id: 2,
+          facilityId: facilityId,
+          invoiceNumber: "INV-2025-002",
+          amount: 8750.00,
+          description: "Weekend premium staffing - Medical/Surgical",
+          dueDate: "2025-08-20",
+          status: "approved",
+          createdAt: "2025-07-18T14:30:00Z",
+          facilityName: "General Hospital",
+          lineItems: [
+            { description: "RN Coverage - Med/Surg", quantity: 120, rate: 55.00, amount: 6600.00 },
+            { description: "CNA Coverage - Med/Surg", quantity: 96, rate: 22.50, amount: 2160.00 }
+          ]
+        },
+        {
+          id: 3,
+          facilityId: facilityId,
+          invoiceNumber: "INV-2025-003",
+          amount: 15300.00,
+          description: "Emergency coverage - Multiple departments",
+          dueDate: "2025-07-25",
+          status: "overdue",
+          createdAt: "2025-06-25T09:15:00Z",
+          facilityName: "General Hospital",
+          lineItems: [
+            { description: "RN Coverage - Emergency", quantity: 200, rate: 70.00, amount: 14000.00 },
+            { description: "CST Coverage - OR", quantity: 40, rate: 32.50, amount: 1300.00 }
+          ]
+        }
+      ];
+
+      res.json(sampleInvoices);
+    } catch (error) {
+      console.error("Error fetching invoices:", error);
+      res.status(500).json({ message: "Failed to fetch invoices" });
+    }
+  });
+
+  // Create new invoice
+  app.post("/api/billing/invoices", requireAuth, async (req, res) => {
+    try {
+      const invoiceData = req.body;
+      
+      // In a real implementation, you would save to database
+      const newInvoice = {
+        id: Date.now(),
+        ...invoiceData,
+        createdAt: new Date().toISOString(),
+        facilityName: "General Hospital"
+      };
+
+      res.status(201).json(newInvoice);
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+      res.status(500).json({ message: "Failed to create invoice" });
+    }
+  });
+
+  // Update invoice
+  app.patch("/api/billing/invoices/:id", requireAuth, async (req, res) => {
+    try {
+      const invoiceId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      // In a real implementation, you would update the database
+      const updatedInvoice = {
+        id: invoiceId,
+        ...updateData,
+        updatedAt: new Date().toISOString()
+      };
+
+      res.json(updatedInvoice);
+    } catch (error) {
+      console.error("Error updating invoice:", error);
+      res.status(500).json({ message: "Failed to update invoice" });
+    }
+  });
+
+  // Approve invoice
+  app.patch("/api/billing/invoices/:id/approve", requireAuth, async (req, res) => {
+    try {
+      const invoiceId = parseInt(req.params.id);
+      
+      // In a real implementation, you would update the database
+      const approvedInvoice = {
+        id: invoiceId,
+        status: "approved",
+        approvedBy: req.user.id,
+        approvedAt: new Date().toISOString()
+      };
+
+      res.json(approvedInvoice);
+    } catch (error) {
+      console.error("Error approving invoice:", error);
+      res.status(500).json({ message: "Failed to approve invoice" });
+    }
+  });
+
+  // Get billing rates for a facility
+  app.get("/api/billing/rates/:facilityId?", requireAuth, async (req, res) => {
+    try {
+      const facilityId = req.params.facilityId ? parseInt(req.params.facilityId) : req.user.primaryFacilityId;
+      
+      // Sample billing rates data for development
+      const sampleRates = [
+        {
+          id: 1,
+          facilityId: facilityId,
+          specialty: "Registered Nurse",
+          position: "Staff Nurse",
+          payRate: 45.00,
+          billRate: 65.00,
+          contractType: "full_time",
+          effectiveDate: "2025-01-01",
+          department: "ICU",
+          shiftType: "day",
+          experienceLevel: "intermediate",
+          overtimeMultiplier: 1.5,
+          holidayMultiplier: 2.0,
+          weekendMultiplier: 1.2,
+          createdAt: "2025-01-01T00:00:00Z",
+          updatedAt: "2025-01-01T00:00:00Z"
+        },
+        {
+          id: 2,
+          facilityId: facilityId,
+          specialty: "Licensed Practical Nurse",
+          position: "LPN",
+          payRate: 32.00,
+          billRate: 45.00,
+          contractType: "full_time",
+          effectiveDate: "2025-01-01",
+          department: "Medical/Surgical",
+          shiftType: "day",
+          experienceLevel: "intermediate",
+          overtimeMultiplier: 1.5,
+          holidayMultiplier: 2.0,
+          weekendMultiplier: 1.2,
+          createdAt: "2025-01-01T00:00:00Z",
+          updatedAt: "2025-01-01T00:00:00Z"
+        },
+        {
+          id: 3,
+          facilityId: facilityId,
+          specialty: "Certified Nursing Assistant",
+          position: "CNA",
+          payRate: 18.00,
+          billRate: 28.00,
+          contractType: "part_time",
+          effectiveDate: "2025-01-01",
+          department: "Medical/Surgical",
+          shiftType: "day",
+          experienceLevel: "entry",
+          overtimeMultiplier: 1.5,
+          holidayMultiplier: 2.0,
+          weekendMultiplier: 1.2,
+          createdAt: "2025-01-01T00:00:00Z",
+          updatedAt: "2025-01-01T00:00:00Z"
+        },
+        {
+          id: 4,
+          facilityId: facilityId,
+          specialty: "Certified Surgical Technologist",
+          position: "CST",
+          payRate: 28.00,
+          billRate: 42.00,
+          contractType: "contract",
+          effectiveDate: "2025-01-01",
+          department: "Operating Room",
+          shiftType: "day",
+          experienceLevel: "senior",
+          overtimeMultiplier: 1.5,
+          holidayMultiplier: 2.0,
+          weekendMultiplier: 1.2,
+          createdAt: "2025-01-01T00:00:00Z",
+          updatedAt: "2025-01-01T00:00:00Z"
+        },
+        {
+          id: 5,
+          facilityId: facilityId,
+          specialty: "Registered Nurse",
+          position: "Charge Nurse",
+          payRate: 55.00,
+          billRate: 78.00,
+          contractType: "full_time",
+          effectiveDate: "2025-01-01",
+          department: "Emergency",
+          shiftType: "night",
+          experienceLevel: "expert",
+          overtimeMultiplier: 1.5,
+          holidayMultiplier: 2.0,
+          weekendMultiplier: 1.2,
+          createdAt: "2025-01-01T00:00:00Z",
+          updatedAt: "2025-01-01T00:00:00Z"
+        }
+      ];
+
+      res.json(sampleRates);
+    } catch (error) {
+      console.error("Error fetching billing rates:", error);
+      res.status(500).json({ message: "Failed to fetch billing rates" });
+    }
+  });
+
+  // Create new billing rate
+  app.post("/api/billing/rates", requireAuth, async (req, res) => {
+    try {
+      const rateData = req.body;
+      
+      // In a real implementation, you would save to database
+      const newRate = {
+        id: Date.now(),
+        ...rateData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      res.status(201).json(newRate);
+    } catch (error) {
+      console.error("Error creating billing rate:", error);
+      res.status(500).json({ message: "Failed to create billing rate" });
+    }
+  });
+
+  // Update billing rate
+  app.patch("/api/billing/rates/:id", requireAuth, async (req, res) => {
+    try {
+      const rateId = parseInt(req.params.id);
+      const updateData = req.body;
+      
+      // In a real implementation, you would update the database
+      const updatedRate = {
+        id: rateId,
+        ...updateData,
+        updatedAt: new Date().toISOString()
+      };
+
+      res.json(updatedRate);
+    } catch (error) {
+      console.error("Error updating billing rate:", error);
+      res.status(500).json({ message: "Failed to update billing rate" });
+    }
+  });
+
   return httpServer;
 }

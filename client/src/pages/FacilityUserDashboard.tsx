@@ -49,10 +49,20 @@ const getDashboardMetrics = (permissions: string[]) => {
   
   if (permissions.includes('view_billing')) {
     metrics.push({
+      title: 'Outstanding Invoices',
+      value: '$36,550',
+      change: '3 overdue invoices',
+      icon: DollarSign,
+      color: 'text-red-600',
+      bgColor: 'bg-red-50',
+      permission: 'view_billing'
+    });
+    
+    metrics.push({
       title: 'Monthly Revenue',
       value: '$2,840',
       change: '+12% vs target',
-      icon: DollarSign,
+      icon: TrendingUp,
       color: 'text-green-600',
       bgColor: 'bg-green-50',
       permission: 'view_billing'
@@ -106,13 +116,26 @@ const getPriorityTasks = (permissions: string[]) => {
   
   if (permissions.includes('view_billing')) {
     tasks.push({
+      title: 'Overdue Invoices',
+      description: '3 invoices are past due date - requires immediate attention',
+      priority: 'CRITICAL',
+      count: 3,
+      icon: DollarSign,
+      permission: 'view_billing',
+      actionText: 'Review Invoices',
+      actionPermission: 'view_billing'
+    });
+  }
+  
+  if (permissions.includes('approve_invoices')) {
+    tasks.push({
       title: 'Pending Invoice Approvals',
       description: '8 contractor invoices awaiting approval',
       priority: 'HIGH',
       count: 8,
-      icon: DollarSign,
-      permission: 'view_billing',
-      actionText: 'Review Invoices',
+      icon: CheckCircle,
+      permission: 'approve_invoices',
+      actionText: 'Approve Invoices',
       actionPermission: 'approve_invoices'
     });
   }

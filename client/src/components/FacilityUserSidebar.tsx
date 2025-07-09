@@ -62,11 +62,32 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     description: 'View shift requests and time-off'
   },
   {
-    label: 'Billing',
-    href: '/billing',
+    label: 'Billing Dashboard',
+    href: '/billing-dashboard',
     icon: DollarSign,
     permissions: ['view_billing'],
     description: 'Manage invoices and billing'
+  },
+  {
+    label: 'Billing Rates',
+    href: '/billing-rates',
+    icon: TrendingUp,
+    permissions: ['view_rates'],
+    description: 'View and manage billing rates'
+  },
+  {
+    label: 'Professional Invoices',
+    href: '/invoices',
+    icon: FileText,
+    permissions: ['view_billing'],
+    description: 'Professional staff invoices'
+  },
+  {
+    label: 'Vendor Invoices',
+    href: '/vendor-invoices',
+    icon: FileText,
+    permissions: ['view_billing'],
+    description: 'Vendor and contractor invoices'
   },
   {
     label: 'Reports',

@@ -78,6 +78,8 @@ import FacilityProfilePage from "@/pages/FacilityProfilePage";
 import FacilitySettingsPage from "@/pages/FacilitySettingsPage";
 import FacilityUsersManagementPage from "@/pages/FacilityUsersManagementPage";
 import FacilityAuditLogsPage from "@/pages/FacilityAuditLogsPage";
+import BillingDashboard from "@/pages/BillingDashboard";
+import RatesManagementPage from "@/pages/RatesManagementPage";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -91,6 +93,8 @@ function AppContent() {
       <ProtectedRoute path="/facility-dashboard" component={FacilityUserDashboard} />
       <ProtectedRoute path="/workforce" component={EnhancedStaffPage} />
       <ProtectedRoute path="/billing" component={InvoicesPage} />
+      <ProtectedRoute path="/billing-dashboard" component={BillingDashboard} />
+      <ProtectedRoute path="/billing-rates" component={RatesManagementPage} />
       <ProtectedRoute path="/jobs" component={EnhancedJobBoard} />
       <ProtectedRoute path="/jobs/post" component={EnhancedJobPostingPage} />
       <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />

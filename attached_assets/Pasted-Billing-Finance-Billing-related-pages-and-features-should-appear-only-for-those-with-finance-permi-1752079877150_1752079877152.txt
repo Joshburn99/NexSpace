@@ -1,0 +1,23 @@
+Billing & Finance
+Billing-related pages and features should appear only for those with finance permissions:
+View Billing (view_billing): Grants read access to billing information – such as invoices, billing history, payroll info, etc. Users with this permission should have the Billing section visible in the UI. For example, a Billing Manager, Facility Admin, or Viewer (who has view_billing) can navigate to billing pages to see invoice lists or financial summaries. If a user lacks this (e.g., Scheduling or HR roles), hide the Billing menu entirely so they aren’t distracted by irrelevant info. (Currently, the sidebar’s Billing menu is open to all
+GitHub
+ – you should gate it by view_billing so that only the appropriate roles see it.)
+Manage Billing (manage_billing): Allows performing actions on billing data – such as creating or editing invoices, adjusting billing settings, etc. If a user has this (Billing Manager or Facility Admin), the billing pages should present interactive controls:
+e.g., an “Add Invoice” or “Edit Billing Info” button, the ability to modify invoice line items or billing contacts.
+If the user only has view rights, then these pages are read-only (no edit buttons, forms disabled).
+Ensure forms that update billing (like changing a billing address or adding a charge) are only shown if manage_billing is true.
+View Rates (view_rates): Allows seeing billing and pay rates (for various staff positions or contract types). If a user has this, include a “Rates” page or section in the UI, showing tables of pay rates and bill rates. For example, a Billing Manager or Facility Admin can view the rate schedule for RNs, CNAs, etc. If a role lacks view_rates (like Scheduling Manager, Viewer), do not show this information in the UI.
+Edit Rates (edit_rates): Allows modifying those pay/bill rates. Only Billing Managers or admins would have it. In the UI, if edit_rates is true, make the rates table editable (perhaps with an inline edit or an “Edit Rates” button). If false, display the rates as static text. UKG and other systems often restrict rate changes to authorized finance roles similarly.
+Approve Invoices (approve_invoices): Allows final approval of invoices (maybe when an invoice is generated from timesheets or shifts, a manager needs to approve it for billing). Users with this permission should have an option to approve or reject invoices. For instance:
+On an invoice details page, show an “Approve” button if the invoice is pending and the user has approve_invoices.
+Perhaps an “Invoices Pending Approval” indicator or filter that is visible for those users.
+If the user lacks this (e.g., a Viewer can view invoices but not approve), hide or disable the approval controls.
+Financial UI flow: On the Billing dashboard, you might show summary stats (outstanding invoices, total billed, etc.). Only users with financial permissions see this dashboard. Also consider:
+Professional vs. Vendor Invoices: The sidebar has both listed
+GitHub
+ – if these are different sub-pages, ensure they follow the same permission rules. Likely both are under view_billing, but if you had finer separation (like maybe vendor invoices only for corporate roles), handle accordingly.
+Integration with scheduling: Some scheduling platforms link shifts to billing (for example, cost of shifts, overtime costs). If your Enhanced Calendar might display cost info, only show financial details to those with billing access. For instance, an hourly rate might be visible on a shift (as in your mock data
+GitHub
+); if that is sensitive, consider hiding the dollar amounts from roles that shouldn’t see financial info (maybe non-billing roles). However, since many managers do see rates, this is optional based on your data sensitivity policy.
+By segregating billing features, a Billing Manager will have a dedicated view of invoices and rates to manage, a Facility Admin will also see those along with everything else, and a Viewer can peek at financial info (read-only). But a Scheduling Manager or HR Manager won’t even have billing sections cluttering their UI.

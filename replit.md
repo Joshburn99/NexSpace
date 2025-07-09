@@ -13,6 +13,30 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 9, 2025 - Billing & Finance Permissions System Implementation
+- **Comprehensive Billing System**: Built complete billing and finance management system with role-based access control
+  - Billing Dashboard: Main financial overview with invoice summaries, outstanding amounts, and approval workflows
+  - Rates Management Page: Detailed pay/bill rate configuration with specialty-specific pricing and contract types
+  - Professional/Vendor Invoice Pages: Separate invoice management for different contractor types
+- **Financial Permissions Framework**: Implemented granular billing permissions system
+  - view_billing: Read access to invoices, billing history, and financial summaries
+  - manage_billing: Create/edit invoices, modify billing settings, and manage billing contacts
+  - view_rates: Access to pay/bill rate schedules and financial rate information
+  - edit_rates: Modify billing rates, pay rates, and specialty-specific pricing
+  - approve_invoices: Final approval authority for pending invoices and billing submissions
+- **Role-Based Financial Access**: Updated facility user roles with appropriate billing permissions
+  - Facility Administrator: Full billing access (all 5 billing permissions)
+  - Billing Manager: Complete billing workflow access including rates and approvals
+  - Other roles: Limited or no billing access to prevent unauthorized financial visibility
+- **Dynamic UI Implementation**: Navigation and dashboard content adapts based on billing permissions
+  - Billing sections hidden from non-financial roles (scheduling, HR, supervisors)
+  - Financial metrics and tasks only visible to users with billing permissions
+  - Rate information segregated from roles without view_rates permission
+- **Backend API Integration**: Complete billing API endpoints with authentication and sample data
+  - Invoice CRUD operations with approval workflows
+  - Billing rates management with facility-specific data
+  - Permission-based data filtering for secure financial information access
+
 ### July 9, 2025 - Administrative Permissions and Facility Management Pages
 - **Administrative Pages Implementation**: Created comprehensive facility management pages restricted to administrative users
   - Facility Profile Page: View/edit facility information (requires view_facility_profile/edit_facility_profile permissions)
