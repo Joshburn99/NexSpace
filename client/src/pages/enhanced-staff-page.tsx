@@ -140,10 +140,10 @@ interface StaffPost {
 }
 
 const workerTypeLabels = {
-  full_time: "Full-time Employee",
-  part_time: "Part-time Employee", 
-  contract: "Contract Worker",
-  per_diem: "Per Diem",
+  "Full-time Employee": "Full-time Employee",
+  "Part-time Employee": "Part-time Employee", 
+  "Contract Worker": "Contract Worker",
+  "Per Diem": "Per Diem",
 };
 
 const statusColors = {
@@ -156,28 +156,21 @@ const statusColors = {
 // Employment type color functions
 const getEmploymentTypeColor = (employmentType: string) => {
   switch (employmentType) {
-    case 'full_time':
+    case 'Full-time Employee':
       return 'bg-green-500 text-white';
-    case 'part_time':
+    case 'Part-time Employee':
       return 'bg-blue-500 text-white';
-    case 'contract':
+    case 'Contract Worker':
       return 'bg-purple-500 text-white';
+    case 'Per Diem':
+      return 'bg-orange-500 text-white';
     default:
       return 'bg-gray-500 text-white';
   }
 };
 
 const formatEmploymentType = (employmentType: string) => {
-  switch (employmentType) {
-    case 'full_time':
-      return 'Full-time';
-    case 'part_time':
-      return 'Part-time';
-    case 'contract':
-      return 'Contract';
-    default:
-      return 'Staff';
-  }
+  return employmentType || 'Staff';
 };
 
 function EnhancedStaffPageContent() {

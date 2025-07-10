@@ -2450,6 +2450,7 @@ export function registerRoutes(app: Express): Server {
         location: staff.location,
         bio: staff.bio,
         certifications: staff.certifications,
+        reliabilityScore: staff.reliabilityScore,
         createdAt: staff.createdAt,
         updatedAt: staff.updatedAt,
       }).from(staff).where(eq(staff.isActive, true));
@@ -2516,6 +2517,7 @@ export function registerRoutes(app: Express): Server {
         email: staff.email,
         role: staff.role === "internal_employee" ? "employee" : staff.role,
         specialty: staff.specialty,
+        employmentType: staff.employmentType || "Full-time Employee", // Use actual employment type from database
         associatedFacilities: staff.associatedFacilities || [],
         avatar: staff.avatar,
         // Extended profile data
@@ -2539,6 +2541,7 @@ export function registerRoutes(app: Express): Server {
         portfolioUrl: "",
         yearsExperience: 8,
         rating: 4.8,
+        reliabilityScore: staff.reliabilityScore || 4.8, // Use actual reliability score from database
         totalShifts: 156,
         workerType: staff.role === "internal_employee" ? "internal_employee" : "contractor_1099",
         status: "active",
