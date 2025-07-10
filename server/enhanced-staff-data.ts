@@ -394,6 +394,11 @@ export async function createEnhancedStaffProfiles() {
                    staffMember.specialty === "LPN" ? "35.00" : 
                    staffMember.specialty === "CNA" ? "28.00" : "42.00",
         associatedFacilities: JSON.stringify([staffMember.facilityId]),
+        reliabilityScore: (Math.random() * 1.5 + 3.5).toFixed(1), // Random score between 3.5 and 5.0
+        totalWorkedShifts: Math.floor(Math.random() * 200) + 50, // Random between 50-250 shifts
+        certifications: staffMember.specialty === "RN" ? ["RN", "BLS", "ACLS"] : 
+                       staffMember.specialty === "LPN" ? ["LPN", "BLS"] : 
+                       staffMember.specialty === "CNA" ? ["CNA", "BLS"] : ["BLS"],
         createdAt: new Date(),
         updatedAt: new Date()
       }).onConflictDoNothing();

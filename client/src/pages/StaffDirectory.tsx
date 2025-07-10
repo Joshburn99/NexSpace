@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Link, useLocation } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Plus, Edit, UserMinus, UserPlus, Shield, Clock, Mail, Phone, MapPin, Calendar, Users, Building2 } from 'lucide-react';
+import { Search, Plus, Edit, UserMinus, UserPlus, Shield, Clock, Mail, Phone, MapPin, Calendar, Users, Building2, MessageSquare, Star } from 'lucide-react';
 import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { useToast } from '@/hooks/use-toast';
@@ -19,20 +20,27 @@ import { StaffFacilityAssociationDialog } from '@/components/StaffFacilityAssoci
 
 interface Staff {
   id: number;
-  firstName: string;
-  lastName: string;
+  name: string;
   email: string;
   phone?: string;
   specialty: string;
   employmentType: string;
   isActive: boolean;
   department: string;
-  hireDate?: string;
-  lastShift?: string;
+  location?: string;
+  reliabilityScore?: number;
+  hourlyRate?: number;
+  profilePhoto?: string;
+  bio?: string;
   certifications?: string[];
-  licenseExpiry?: string;
-  avatar?: string;
+  totalWorkedShifts?: number;
   associatedFacilities?: number[];
+  
+  // Additional profile fields for the second screenshot
+  experience?: string;
+  rating?: number;
+  totalShifts?: number;
+  languages?: string[];
 }
 
 interface FacilityUser {
@@ -252,9 +260,12 @@ export default function StaffDirectory() {
   const [filterSpecialty, setFilterSpecialty] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   const [editingFacilityUser, setEditingFacilityUser] = useState<FacilityUser | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
   const { hasPermission } = useFacilityPermissions();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, navigate] = useLocation();
 
   // Fetch facilities
   const { data: facilities = [], isLoading: facilitiesLoading } = useQuery<Facility[]>({
@@ -296,8 +307,7 @@ export default function StaffDirectory() {
   // Filter functions
   const filteredStaff = staff.filter(member => {
     const matchesSearch = 
-      member.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.email?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesSpecialty = filterSpecialty === 'all' || member.specialty === filterSpecialty;
@@ -307,6 +317,46 @@ export default function StaffDirectory() {
 
     return matchesSearch && matchesSpecialty && matchesStatus;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredStaff.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedStaff = filteredStaff.slice(startIndex, endIndex);
+
+  // Employment type colors
+  const getEmploymentTypeColor = (type: string) => {
+    switch (type) {
+      case 'full_time':
+        return 'bg-green-100 text-green-800';
+      case 'part_time':
+        return 'bg-blue-100 text-blue-800';
+      case 'contract':
+        return 'bg-purple-100 text-purple-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Format employment type for display
+  const formatEmploymentType = (type: string) => {
+    switch (type) {
+      case 'full_time':
+        return 'Full-time';
+      case 'part_time':
+        return 'Part-time';
+      case 'contract':
+        return 'Contract';
+      default:
+        return type;
+    }
+  };
+
+  // Handle message button click
+  const handleMessageClick = (staffMember: Staff) => {
+    // Navigate to messages page with staff member preselected
+    navigate(`/messages?recipient=${staffMember.id}&name=${encodeURIComponent(staffMember.name)}`);
+  };
 
   const filteredFacilityUsers = facilityUsers.filter(user => {
     const matchesSearch = 
@@ -428,19 +478,286 @@ export default function StaffDirectory() {
             </CardContent>
           </Card>
 
-          {/* Staff Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredStaff.length > 0 ? (
-              filteredStaff.map((member) => (
-                <StaffCard key={member.id} staff={member} facilities={facilities} />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-8">
-                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">No staff members found matching your criteria</p>
+          {/* Staff List */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Staff Members ({filteredStaff.length})</CardTitle>
+                <Select value={itemsPerPage.toString()} onValueChange={(value) => {
+                  setItemsPerPage(Number(value));
+                  setCurrentPage(1);
+                }}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="25">25 per page</SelectItem>
+                    <SelectItem value="50">50 per page</SelectItem>
+                    <SelectItem value="100">100 per page</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            )}
-          </div>
+            </CardHeader>
+            <CardContent>
+              {paginatedStaff.length > 0 ? (
+                <div className="space-y-4">
+                  {paginatedStaff.map((member) => (
+                    <div key={member.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                      <div className="flex items-center space-x-4">
+                        {/* Avatar */}
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={member.profilePhoto} />
+                          <AvatarFallback>
+                            {member.name?.split(' ').map(n => n[0]).join('')}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        {/* Name and Specialty */}
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2">
+                            <h3 className="font-semibold text-lg">{member.name}</h3>
+                          </div>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="text-sm text-gray-600">{member.specialty}</span>
+                            <span className="text-gray-400">•</span>
+                            <span className="text-sm text-gray-600">{member.department}</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Location */}
+                      <div className="hidden md:flex items-center space-x-2">
+                        <MapPin className="h-4 w-4 text-gray-400" />
+                        <span className="text-sm text-gray-600">{member.location || 'Portland, OR'}</span>
+                      </div>
+                      
+                      {/* Employment Type Badge */}
+                      <div className="flex items-center space-x-2">
+                        <Badge className={getEmploymentTypeColor(member.employmentType)}>
+                          {formatEmploymentType(member.employmentType)}
+                        </Badge>
+                      </div>
+                      
+                      {/* Reliability Score */}
+                      <div className="flex items-center space-x-2">
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+                          <Star className="h-3 w-3 mr-1" />
+                          {member.reliabilityScore ? `${member.reliabilityScore}/5` : '4.8/5'}
+                        </Badge>
+                      </div>
+                      
+                      {/* Actions */}
+                      <div className="flex items-center space-x-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleMessageClick(member)}
+                          className="flex items-center space-x-1"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          <span>Message</span>
+                        </Button>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button size="sm" variant="ghost">
+                              <Users className="h-4 w-4" />
+                              <span className="ml-1">View Profile</span>
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-4xl">
+                            <DialogHeader>
+                              <DialogTitle className="flex items-center space-x-4">
+                                <Avatar className="h-16 w-16">
+                                  <AvatarImage src={member.profilePhoto} />
+                                  <AvatarFallback>
+                                    {member.name?.split(' ').map(n => n[0]).join('')}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                  <h2 className="text-2xl font-bold">{member.name}</h2>
+                                  <p className="text-gray-600">{member.specialty}</p>
+                                </div>
+                                <Button size="sm" variant="outline" className="ml-auto">
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit
+                                </Button>
+                              </DialogTitle>
+                            </DialogHeader>
+                            
+                            <div className="mt-6">
+                              <Tabs defaultValue="overview" className="w-full">
+                                <TabsList className="grid w-full grid-cols-5">
+                                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                                  <TabsTrigger value="experience">Experience</TabsTrigger>
+                                  <TabsTrigger value="documents">Documents</TabsTrigger>
+                                  <TabsTrigger value="activity">Activity</TabsTrigger>
+                                  <TabsTrigger value="settings">Settings</TabsTrigger>
+                                </TabsList>
+                                
+                                <TabsContent value="overview" className="space-y-6">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* Contact Information */}
+                                    <div className="space-y-4">
+                                      <h3 className="font-semibold text-lg">Contact Information</h3>
+                                      <div className="space-y-3">
+                                        <div className="flex items-center space-x-3">
+                                          <Mail className="h-4 w-4 text-gray-400" />
+                                          <span>{member.email}</span>
+                                        </div>
+                                        <div className="flex items-center space-x-3">
+                                          <Phone className="h-4 w-4 text-gray-400" />
+                                          <span>{member.phone || '(555) 123-4567'}</span>
+                                        </div>
+                                        <div className="flex items-center space-x-3">
+                                          <MapPin className="h-4 w-4 text-gray-400" />
+                                          <span>{member.location || 'Portland, OR'}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Bio */}
+                                    <div className="space-y-4">
+                                      <h3 className="font-semibold text-lg">Bio</h3>
+                                      <p className="text-gray-600">
+                                        {member.bio || `Experienced ${member.specialty} with expertise in patient care.`}
+                                      </p>
+                                      <div className="space-y-2">
+                                        <h4 className="font-medium">Links</h4>
+                                        <div className="text-sm text-gray-500">No links available</div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Professional Details */}
+                                  <div className="space-y-4">
+                                    <h3 className="font-semibold text-lg">Professional Details</h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-500">Experience:</label>
+                                        <p className="text-lg">{member.experience || '8 years'}</p>
+                                      </div>
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-500">Hourly Rate:</label>
+                                        <p className="text-lg">${member.hourlyRate || '42'}/hour</p>
+                                      </div>
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-500">Rating:</label>
+                                        <div className="flex items-center space-x-1">
+                                          <Star className="h-4 w-4 text-yellow-400" />
+                                          <span className="text-lg">{member.rating || member.reliabilityScore || '4.8'}/5</span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <label className="text-sm font-medium text-gray-500">Total Shifts:</label>
+                                        <p className="text-lg">{member.totalShifts || member.totalWorkedShifts || '156'}</p>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Certifications */}
+                                  <div className="space-y-4">
+                                    <h3 className="font-semibold text-lg">Certifications</h3>
+                                    <div className="flex flex-wrap gap-2">
+                                      {member.certifications?.length ? (
+                                        member.certifications.map((cert, idx) => (
+                                          <Badge key={idx} variant="outline" className="px-3 py-1">
+                                            <Shield className="h-3 w-3 mr-1" />
+                                            {cert}
+                                          </Badge>
+                                        ))
+                                      ) : (
+                                        <>
+                                          <Badge variant="outline" className="px-3 py-1">
+                                            <Shield className="h-3 w-3 mr-1" />
+                                            LPN
+                                          </Badge>
+                                          <Badge variant="outline" className="px-3 py-1">
+                                            <Shield className="h-3 w-3 mr-1" />
+                                            BLS
+                                          </Badge>
+                                        </>
+                                      )}
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Skills */}
+                                  <div className="space-y-4">
+                                    <h3 className="font-semibold text-lg">Skills</h3>
+                                    <div className="text-gray-600">
+                                      Skills information not available
+                                    </div>
+                                  </div>
+                                </TabsContent>
+                                
+                                <TabsContent value="experience" className="space-y-6">
+                                  <div className="text-center text-gray-500 py-8">
+                                    Experience details coming soon
+                                  </div>
+                                </TabsContent>
+                                
+                                <TabsContent value="documents" className="space-y-6">
+                                  <div className="text-center text-gray-500 py-8">
+                                    Document management coming soon
+                                  </div>
+                                </TabsContent>
+                                
+                                <TabsContent value="activity" className="space-y-6">
+                                  <div className="text-center text-gray-500 py-8">
+                                    Activity history coming soon
+                                  </div>
+                                </TabsContent>
+                                
+                                <TabsContent value="settings" className="space-y-6">
+                                  <div className="text-center text-gray-500 py-8">
+                                    Settings coming soon
+                                  </div>
+                                </TabsContent>
+                              </Tabs>
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">No staff members found matching your criteria</p>
+                </div>
+              )}
+              
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                  <div className="text-sm text-gray-600">
+                    Showing {startIndex + 1} to {Math.min(endIndex, filteredStaff.length)} of {filteredStaff.length} results
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm text-gray-600">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="facility-users" className="space-y-6">
