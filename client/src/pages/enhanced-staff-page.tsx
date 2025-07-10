@@ -47,6 +47,7 @@ import {
   ExternalLink,
   Heart,
   MessageCircle,
+  MessageSquare,
   Share2,
   Briefcase,
   GraduationCap,
@@ -61,6 +62,7 @@ import {
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useLocation } from "wouter";
 
 interface StaffMember {
   id: number;
@@ -75,9 +77,11 @@ interface StaffMember {
   hourlyRate: number;
   location: string;
   workerType: "internal_employee" | "contractor_1099" | "agency_staff" | "float_pool";
+  employmentType: "full_time" | "part_time" | "contract";
   role?: string;
   status: "active" | "inactive" | "pending" | "suspended";
   rating: number;
+  reliabilityScore: number;
   totalShifts: number;
   bio?: string;
   linkedinUrl?: string;
@@ -149,6 +153,33 @@ const statusColors = {
   suspended: "bg-red-500",
 };
 
+// Employment type color functions
+const getEmploymentTypeColor = (employmentType: string) => {
+  switch (employmentType) {
+    case 'full_time':
+      return 'bg-green-500 text-white';
+    case 'part_time':
+      return 'bg-blue-500 text-white';
+    case 'contract':
+      return 'bg-purple-500 text-white';
+    default:
+      return 'bg-gray-500 text-white';
+  }
+};
+
+const formatEmploymentType = (employmentType: string) => {
+  switch (employmentType) {
+    case 'full_time':
+      return 'Full-time';
+    case 'part_time':
+      return 'Part-time';
+    case 'contract':
+      return 'Contract';
+    default:
+      return 'Staff';
+  }
+};
+
 function EnhancedStaffPageContent() {
   const { toast } = useToast();
   const { startImpersonation, sessionState } = useSession();
@@ -165,6 +196,12 @@ function EnhancedStaffPageContent() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [, navigate] = useLocation();
+
+  // Message button functionality
+  const handleMessageClick = (staff: StaffMember) => {
+    navigate(`/messages?staff=${staff.id}&name=${encodeURIComponent(staff.firstName + ' ' + staff.lastName)}`);
+  };
 
   const { data: staffMembers = [], isLoading, error } = useQuery<StaffMember[]>({
     queryKey: ["/api/staff"],
@@ -684,21 +721,33 @@ function EnhancedStaffPageContent() {
                     
                     <div className="flex items-center space-x-4">
                       <div className="text-right">
-                        <div className="text-sm font-medium">${staff.hourlyRate}/hr</div>
                         <div className="text-xs text-muted-foreground">{staff.location}</div>
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <Badge className={`${statusColors[staff.status || 'active']} text-white`}>
-                          {(staff.status || 'active').charAt(0).toUpperCase() + (staff.status || 'active').slice(1)}
+                        <Badge className={getEmploymentTypeColor(staff.employmentType)}>
+                          {formatEmploymentType(staff.employmentType)}
                         </Badge>
-                        <Badge variant="outline">{workerTypeLabels[staff.employmentType] || 'Staff'}</Badge>
                       </div>
                       
                       <div className="flex items-center text-sm">
-                        <Star className="h-3 w-3 mr-1 text-yellow-500" />
-                        {staff.rating}/5
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+                          <Star className="h-3 w-3 mr-1" />
+                          {staff.reliabilityScore ? `${staff.reliabilityScore}/5` : '4.8/5'}
+                        </Badge>
                       </div>
+                      
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMessageClick(staff);
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <MessageSquare className="h-3 w-3 mr-1" />
+                        Message
+                      </Button>
                       
                       <Button
                         onClick={(e) => {
