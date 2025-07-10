@@ -28,6 +28,10 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
   - Enables direct database editing of staff information from frontend popups
 - **UI Cleanup**: Removed "Impersonate" button from Staff Management page as requested
   - Streamlined staff member interaction to focus on messaging and profile editing
+- **Staff Specialty Consolidation**: Removed duplicate staff specialties caused by abbreviations
+  - Consolidated abbreviated forms (RN, LPN, CNA, CST, RT, PT, OT, PharmTech, LabTech, RadTech) to full professional titles
+  - Reduced total unique specialties from 49 to 39 for cleaner data consistency
+  - Updated 30 staff records with standardized specialty names
 
 ### July 9, 2025 - Facility User Permission System Implementation
 - **Backend Permission Integration**: Enhanced authentication system to fetch and include permissions for facility users during login
