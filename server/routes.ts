@@ -332,6 +332,15 @@ export function registerRoutes(app: Express): Server {
   // Shifts API with example data showing various statuses
   app.get("/api/shifts", requireAuth, async (req: any, res) => {
     try {
+      // Get user's facility associations if facility user
+      const user = req.user;
+      const isFacilityUser = user.role && user.role.includes('facility_');
+      let userAssociatedFacilities: number[] = [];
+      
+      if (isFacilityUser && user.associatedFacilities) {
+        userAssociatedFacilities = user.associatedFacilities;
+      }
+      
       // Get staff data from unified service to ensure consistency
       const dbStaffData = await unifiedDataService.getStaffWithAssociations();
       
@@ -1060,7 +1069,16 @@ export function registerRoutes(app: Express): Server {
         return updatedShift;
       }));
       
-      res.json(allShifts);
+      // Filter shifts for facility users to only show their associated facilities
+      let filteredShifts = allShifts;
+      if (isFacilityUser && userAssociatedFacilities.length > 0) {
+        filteredShifts = allShifts.filter(shift => 
+          userAssociatedFacilities.includes(shift.facilityId)
+        );
+        console.log(`[FACILITY FILTER] Filtered shifts for facility user. Original: ${allShifts.length}, Filtered: ${filteredShifts.length}, Facilities: [${userAssociatedFacilities.join(', ')}]`);
+      }
+      
+      res.json(filteredShifts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch shifts" });
     }

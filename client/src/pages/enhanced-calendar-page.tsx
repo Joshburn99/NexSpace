@@ -152,9 +152,14 @@ const getStatusIconSVG = (status: string) => {
 };
 
 export default function EnhancedCalendarPage() {
-  const { user } = useAuth();
+  const { user, impersonatedUser } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Determine current user and their facility access
+  const currentUser = impersonatedUser || user;
+  const isFacilityUser = currentUser?.role?.includes('facility_');
+  const userAssociatedFacilities = currentUser?.associatedFacilities || [];
   
   // Helper function to calculate hours between two times
   const calculateHoursBetween = (startTime: string, endTime: string): number => {
@@ -206,17 +211,23 @@ export default function EnhancedCalendarPage() {
   });
 
   
-  // Advanced filters state
-  const [filters, setFilters] = useState<CalendarFilter>({
-    facilities: [],
-    teams: [],
-    workers: [],
-    specialties: [],
-    statuses: [],
-    dateRange: {
-      start: format(new Date(), "yyyy-MM-dd"),
-      end: format(addDays(new Date(), 30), "yyyy-MM-dd")
-    }
+  // Advanced filters state with facility user filtering
+  const [filters, setFilters] = useState<CalendarFilter>(() => {
+    // Auto-filter by facility for facility users
+    const initialFilters: CalendarFilter = {
+      facilities: isFacilityUser && userAssociatedFacilities.length > 0 
+        ? userAssociatedFacilities.map(String) 
+        : [],
+      teams: [],
+      workers: [],
+      specialties: [],
+      statuses: [],
+      dateRange: {
+        start: format(new Date(), "yyyy-MM-dd"),
+        end: format(addDays(new Date(), 30), "yyyy-MM-dd")
+      }
+    };
+    return initialFilters;
   });
 
   // Fetch shifts with filters
