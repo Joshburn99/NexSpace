@@ -62,7 +62,8 @@ function killPort5000() {
   // Initialize enhanced staff profiles on startup
   try {
     await setupFacilityUserRoleTemplates();
-    await createEnhancedStaffProfiles();
+    // Temporarily disable enhanced staff data creation until schema is fixed
+    // await createEnhancedStaffProfiles();
     // Temporarily disable sample data generation to prevent database errors
     // await generateComprehensiveSampleData();
   } catch (error) {
