@@ -13,6 +13,22 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 10, 2025 - Staff Management Enhancement & Database Integration
+- **Facility Association Bug Fix**: Resolved critical database column error preventing staff facility associations from being edited
+  - Fixed "current_location" column reference issue in staff facility association API endpoints
+  - Updated database queries to select only existing columns to prevent query failures
+- **Employment Type Database Migration**: Successfully updated all staff employment types to proper format
+  - Migrated from "full_time"/"part_time"/"contract" to "Full-time Employee"/"Part-time Employee"/"Contract Worker"/"Per Diem"
+  - Updated frontend color coding system to match new employment type values
+  - Added reliabilityScore field mapping from database to API responses
+- **Comprehensive Staff Editing API**: Built complete staff profile editing system
+  - Created PATCH `/api/staff/:id` endpoint supporting all staff table fields
+  - Handles basic info, licensing, credentials, contact info, facility associations, performance metrics
+  - Supports scheduling preferences, compliance information, and emergency contacts
+  - Enables direct database editing of staff information from frontend popups
+- **UI Cleanup**: Removed "Impersonate" button from Staff Management page as requested
+  - Streamlined staff member interaction to focus on messaging and profile editing
+
 ### July 9, 2025 - Facility User Permission System Implementation
 - **Backend Permission Integration**: Enhanced authentication system to fetch and include permissions for facility users during login
   - Updated auth.ts to populate permissions array for facility users from database role templates

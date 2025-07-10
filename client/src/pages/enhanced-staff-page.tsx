@@ -741,18 +741,6 @@ function EnhancedStaffPageContent() {
                         <MessageSquare className="h-3 w-3 mr-1" />
                         Message
                       </Button>
-                      
-                      <Button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          startImpersonation(staff.id);
-                        }}
-                        variant="outline"
-                        size="sm"
-                      >
-                        <Users className="h-3 w-3 mr-1" />
-                        Impersonate
-                      </Button>
                     </div>
                   </div>
                 ))}
