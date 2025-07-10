@@ -242,7 +242,11 @@ function EnhancedStaffPageContent() {
   // Facility association mutations
   const addFacilityAssociation = useMutation({
     mutationFn: async ({ staffId, facilityId }: { staffId: number; facilityId: number }) => {
-      return apiRequest("POST", `/api/staff/${staffId}/facilities`, { facilityId });
+      const response = await apiRequest("POST", `/api/staff/${staffId}/facilities`, { facilityId });
+      if (!response.ok) {
+        throw new Error("Failed to add facility association");
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
@@ -252,10 +256,11 @@ function EnhancedStaffPageContent() {
         description: "Facility association added successfully",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Error adding facility association:", error);
       toast({
         title: "Error",
-        description: "Failed to add facility association",
+        description: error.message || "Failed to add facility association",
         variant: "destructive",
       });
     },
@@ -263,7 +268,11 @@ function EnhancedStaffPageContent() {
 
   const removeFacilityAssociation = useMutation({
     mutationFn: async ({ staffId, facilityId }: { staffId: number; facilityId: number }) => {
-      return apiRequest("DELETE", `/api/staff/${staffId}/facilities/${facilityId}`);
+      const response = await apiRequest("DELETE", `/api/staff/${staffId}/facilities/${facilityId}`);
+      if (!response.ok) {
+        throw new Error("Failed to remove facility association");
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
@@ -272,10 +281,11 @@ function EnhancedStaffPageContent() {
         description: "Facility association removed successfully",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error("Error removing facility association:", error);
       toast({
         title: "Error",
-        description: "Failed to remove facility association",
+        description: error.message || "Failed to remove facility association",
         variant: "destructive",
       });
     },
@@ -1385,6 +1395,7 @@ function EnhancedStaffPageContent() {
                           onClick={() => setShowFacilitySearch(true)} 
                           size="sm"
                           className="flex items-center gap-2"
+                          disabled={addFacilityAssociation.isPending}
                         >
                           <Plus className="h-4 w-4" />
                           Add Facility
@@ -1393,9 +1404,9 @@ function EnhancedStaffPageContent() {
 
                       {/* Current Facility Associations */}
                       <div className="space-y-2">
-                        {(selectedStaff as any).associatedFacilities?.length > 0 ? (
-                          (selectedStaff as any).associatedFacilities.map((facilityId: number) => {
-                            const facility = (facilitiesData as any)?.find((f: any) => f.id === facilityId);
+                        {selectedStaff.associatedFacilities?.length > 0 ? (
+                          selectedStaff.associatedFacilities.map((facilityId: number) => {
+                            const facility = facilitiesData?.find((f: any) => f.id === facilityId);
                             return (
                               <div key={facilityId} className="flex items-center justify-between p-3 border rounded-lg">
                                 <div className="flex items-center gap-3">
@@ -1412,6 +1423,7 @@ function EnhancedStaffPageContent() {
                                   size="sm"
                                   onClick={() => removeFacilityAssociation.mutate({ staffId: selectedStaff.id, facilityId })}
                                   className="text-red-600 hover:text-red-700"
+                                  disabled={removeFacilityAssociation.isPending}
                                 >
                                   <X className="h-4 w-4" />
                                 </Button>
@@ -1460,24 +1472,24 @@ function EnhancedStaffPageContent() {
 
               {/* Facility List */}
               <div className="max-h-96 overflow-y-auto space-y-2">
-                {(facilitiesData as any)?.filter((facility: any) => {
+                {facilitiesData?.filter((facility: any) => {
                   const searchLower = facilitySearchTerm.toLowerCase();
                   return !searchLower || 
                     facility.name?.toLowerCase().includes(searchLower) ||
                     facility.address?.toLowerCase().includes(searchLower) ||
                     facility.type?.toLowerCase().includes(searchLower);
                 }).map((facility: any) => {
-                  const isAlreadyAssociated = (selectedStaff as any).associatedFacilities?.includes(facility.id);
+                  const isAlreadyAssociated = selectedStaff.associatedFacilities?.includes(facility.id);
                   return (
                     <div 
                       key={facility.id} 
-                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                      className={`p-4 border rounded-lg transition-colors ${
                         isAlreadyAssociated 
                           ? 'bg-muted border-muted opacity-50' 
-                          : 'hover:bg-muted/50 border-border'
+                          : 'hover:bg-muted/50 border-border cursor-pointer'
                       }`}
                       onClick={() => {
-                        if (!isAlreadyAssociated) {
+                        if (!isAlreadyAssociated && !addFacilityAssociation.isPending) {
                           addFacilityAssociation.mutate({ 
                             staffId: selectedStaff.id, 
                             facilityId: facility.id 
@@ -1513,8 +1525,19 @@ function EnhancedStaffPageContent() {
                           </div>
                         </div>
                         {!isAlreadyAssociated && (
-                          <Button size="sm" variant="outline">
-                            Add
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            disabled={addFacilityAssociation.isPending}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addFacilityAssociation.mutate({ 
+                                staffId: selectedStaff.id, 
+                                facilityId: facility.id 
+                              });
+                            }}
+                          >
+                            {addFacilityAssociation.isPending ? "Adding..." : "Add"}
                           </Button>
                         )}
                       </div>
@@ -1522,7 +1545,7 @@ function EnhancedStaffPageContent() {
                   );
                 })}
                 
-                {(facilitiesData as any)?.length === 0 && (
+                {facilitiesData?.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
                     <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p>No facilities available</p>
