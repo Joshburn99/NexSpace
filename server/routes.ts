@@ -7763,9 +7763,13 @@ export function registerRoutes(app: Express): Server {
       
       console.log(`Adding facility ${facilityIdNum} to staff ${staffIdNum}`);
       
-      // Get current staff data from database - select all columns to avoid query issues
+      // Get current staff data from database - select specific columns to avoid issues with missing columns
       const staffData = await db
-        .select()
+        .select({
+          id: staff.id,
+          name: staff.name,
+          associatedFacilities: staff.associatedFacilities
+        })
         .from(staff)
         .where(eq(staff.id, staffIdNum))
         .limit(1);
@@ -7818,9 +7822,13 @@ export function registerRoutes(app: Express): Server {
       
       console.log(`Removing facility ${facilityIdNum} from staff ${staffIdNum}`);
       
-      // Get current staff data from database - select all columns to avoid query issues
+      // Get current staff data from database - select specific columns to avoid issues with missing columns
       const staffData = await db
-        .select()
+        .select({
+          id: staff.id,
+          name: staff.name,
+          associatedFacilities: staff.associatedFacilities
+        })
         .from(staff)
         .where(eq(staff.id, staffIdNum))
         .limit(1);
@@ -7857,6 +7865,104 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error removing facility association:", error);
       res.status(500).json({ message: "Failed to remove facility association" });
+    }
+  });
+
+  // Comprehensive Staff Profile Editing API
+  app.patch("/api/staff/:id", requireAuth, async (req: any, res) => {
+    try {
+      const staffId = parseInt(req.params.id);
+      const updates = req.body;
+      
+      console.log(`[STAFF UPDATE] Updating staff ${staffId} with:`, updates);
+      
+      // Validate staff exists
+      const existingStaff = await db
+        .select({ id: staff.id, name: staff.name })
+        .from(staff)
+        .where(eq(staff.id, staffId))
+        .limit(1);
+      
+      if (!existingStaff.length) {
+        return res.status(404).json({ message: "Staff member not found" });
+      }
+      
+      // Prepare update object with only defined fields
+      const updateData: any = {
+        updatedAt: new Date()
+      };
+      
+      // Basic information
+      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.email !== undefined) updateData.email = updates.email;
+      if (updates.phone !== undefined) updateData.phone = updates.phone;
+      if (updates.specialty !== undefined) updateData.specialty = updates.specialty;
+      if (updates.department !== undefined) updateData.department = updates.department;
+      if (updates.employmentType !== undefined) updateData.employmentType = updates.employmentType;
+      if (updates.location !== undefined) updateData.location = updates.location;
+      if (updates.bio !== undefined) updateData.bio = updates.bio;
+      if (updates.hourlyRate !== undefined) updateData.hourlyRate = updates.hourlyRate;
+      if (updates.profilePhoto !== undefined) updateData.profilePhoto = updates.profilePhoto;
+      if (updates.reliabilityScore !== undefined) updateData.reliabilityScore = updates.reliabilityScore;
+      if (updates.isActive !== undefined) updateData.isActive = updates.isActive;
+      if (updates.availabilityStatus !== undefined) updateData.availabilityStatus = updates.availabilityStatus;
+      
+      // Licensing and credentials
+      if (updates.licenseNumber !== undefined) updateData.licenseNumber = updates.licenseNumber;
+      if (updates.licenseExpiry !== undefined) updateData.licenseExpiry = new Date(updates.licenseExpiry);
+      if (updates.certifications !== undefined) updateData.certifications = updates.certifications;
+      if (updates.languages !== undefined) updateData.languages = updates.languages;
+      
+      // Contact and address information
+      if (updates.homeAddress !== undefined) updateData.homeAddress = updates.homeAddress;
+      if (updates.homeZipCode !== undefined) updateData.homeZipCode = updates.homeZipCode;
+      if (updates.emergencyContact !== undefined) updateData.emergencyContact = updates.emergencyContact;
+      
+      // Facility associations
+      if (updates.associatedFacilities !== undefined) {
+        updateData.associatedFacilities = Array.isArray(updates.associatedFacilities) 
+          ? updates.associatedFacilities 
+          : [];
+      }
+      
+      // Performance metrics
+      if (updates.totalWorkedShifts !== undefined) updateData.totalWorkedShifts = updates.totalWorkedShifts;
+      if (updates.lateArrivalCount !== undefined) updateData.lateArrivalCount = updates.lateArrivalCount;
+      if (updates.noCallNoShowCount !== undefined) updateData.noCallNoShowCount = updates.noCallNoShowCount;
+      if (updates.lastWorkDate !== undefined) updateData.lastWorkDate = new Date(updates.lastWorkDate);
+      
+      // Scheduling preferences
+      if (updates.preferredShiftTypes !== undefined) updateData.preferredShiftTypes = updates.preferredShiftTypes;
+      if (updates.weeklyAvailability !== undefined) updateData.weeklyAvailability = updates.weeklyAvailability;
+      
+      // Compliance information
+      if (updates.backgroundCheckDate !== undefined) updateData.backgroundCheckDate = new Date(updates.backgroundCheckDate);
+      if (updates.drugTestDate !== undefined) updateData.drugTestDate = new Date(updates.drugTestDate);
+      if (updates.covidVaccinationStatus !== undefined) updateData.covidVaccinationStatus = updates.covidVaccinationStatus;
+      if (updates.requiredCredentialsStatus !== undefined) updateData.requiredCredentialsStatus = updates.requiredCredentialsStatus;
+      
+      // Perform the update
+      await db
+        .update(staff)
+        .set(updateData)
+        .where(eq(staff.id, staffId));
+      
+      // Fetch and return updated staff data
+      const updatedStaff = await db
+        .select()
+        .from(staff)
+        .where(eq(staff.id, staffId))
+        .limit(1);
+      
+      console.log(`[STAFF UPDATE] Successfully updated staff ${staffId}`);
+      
+      res.json({ 
+        message: "Staff profile updated successfully",
+        staff: updatedStaff[0]
+      });
+    } catch (error) {
+      console.error("Error updating staff profile:", error);
+      res.status(500).json({ message: "Failed to update staff profile" });
     }
   });
 
