@@ -136,10 +136,10 @@ interface StaffPost {
 }
 
 const workerTypeLabels = {
-  internal_employee: "Internal Employee",
-  contractor_1099: "1099 Contractor",
-  agency_staff: "Agency Staff",
-  float_pool: "Float Pool",
+  full_time: "Full-time Employee",
+  part_time: "Part-time Employee", 
+  contract: "Contract Worker",
+  per_diem: "Per Diem",
 };
 
 const statusColors = {
@@ -162,6 +162,8 @@ function EnhancedStaffPageContent() {
   const [activeTab, setActiveTab] = useState("overview");
   const [showFacilitySearch, setShowFacilitySearch] = useState(false);
   const [facilitySearchTerm, setFacilitySearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { data: staffMembers = [], isLoading, error } = useQuery<StaffMember[]>({
@@ -274,7 +276,7 @@ function EnhancedStaffPageContent() {
         (staff.specialty || "").toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesWorkerType =
-        selectedWorkerType === "all" || staff.workerType === selectedWorkerType;
+        selectedWorkerType === "all" || staff.employmentType === selectedWorkerType;
       const matchesSpecialty = selectedSpecialty === "all" || staff.specialty === selectedSpecialty;
       const matchesStatus = selectedStatus === "all" || staff.status === selectedStatus;
 
@@ -285,6 +287,12 @@ function EnhancedStaffPageContent() {
     }
     });
   }, [staffMembers, searchTerm, selectedWorkerType, selectedSpecialty, selectedStatus]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredStaff.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedStaff = filteredStaff.slice(startIndex, endIndex);
 
   // Get unique values for filters with null safety
   const specialties = Array.from(new Set((staffMembers || []).map((s) => s?.specialty).filter(Boolean)));
@@ -628,88 +636,127 @@ function EnhancedStaffPageContent() {
     </CardContent>
   </Card>
 
-    {/* Staff Grid */}
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {filteredStaff.map((staff) => (
-        <Card
-          key={staff.id}
-          className="cursor-pointer hover:shadow-lg transition-shadow"
-          onClick={() => setSelectedStaff(staff)}
-        >
-          <CardHeader className="pb-2">
-            <div className="flex items-center space-x-3">
-              <Avatar className="h-12 w-12">
-                <AvatarImage src={staff.profileImage} />
-                <AvatarFallback>
-                  {staff.firstName?.[0] || ""}
-                  {staff.lastName?.[0] || ""}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <h3 className="font-medium truncate">
-                  {staff.firstName} {staff.lastName}
-                </h3>
-                <p className="text-sm text-muted-foreground truncate">
-                  {staff.specialty?.replace("_", " ") || "N/A"}
-                </p>
+          {/* Staff List */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>Staff Members ({filteredStaff.length})</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(parseInt(value))}>
+                    <SelectTrigger className="w-24">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-muted-foreground">per page</span>
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Badge className={`${statusColors[staff.status || 'active']} text-white`}>
-                {(staff.status || 'active').charAt(0).toUpperCase() + (staff.status || 'active').slice(1)}
-              </Badge>
-              <Badge variant="outline">{workerTypeLabels[staff.workerType] || 'Staff'}</Badge>
-            </div>
-
-            <div className="flex items-center text-sm text-muted-foreground">
-              <MapPin className="h-3 w-3 mr-1" />
-              {staff.location}
-            </div>
-
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center">
-                <Star className="h-3 w-3 mr-1 text-yellow-500" />
-                {staff.rating}/5
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {paginatedStaff.map((staff) => (
+                  <div
+                    key={staff.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                    onClick={() => setSelectedStaff(staff)}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={staff.profileImage} />
+                        <AvatarFallback>
+                          {staff.firstName?.[0] || ""}
+                          {staff.lastName?.[0] || ""}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium">
+                          {staff.firstName} {staff.lastName}
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          {staff.specialty?.replace("_", " ") || "N/A"} • {staff.department || "N/A"}
+                        </p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-4">
+                      <div className="text-right">
+                        <div className="text-sm font-medium">${staff.hourlyRate}/hr</div>
+                        <div className="text-xs text-muted-foreground">{staff.location}</div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Badge className={`${statusColors[staff.status || 'active']} text-white`}>
+                          {(staff.status || 'active').charAt(0).toUpperCase() + (staff.status || 'active').slice(1)}
+                        </Badge>
+                        <Badge variant="outline">{workerTypeLabels[staff.employmentType] || 'Staff'}</Badge>
+                      </div>
+                      
+                      <div className="flex items-center text-sm">
+                        <Star className="h-3 w-3 mr-1 text-yellow-500" />
+                        {staff.rating}/5
+                      </div>
+                      
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startImpersonation(staff.id);
+                        }}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Users className="h-3 w-3 mr-1" />
+                        Impersonate
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <div className="flex items-center">
-                <DollarSign className="h-3 w-3 mr-1" />${staff.hourlyRate}/hr
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-1">
-              {(staff.certifications || []).slice(0, 2).map((cert, i) => (
-                <Badge key={i} variant="secondary" className="text-xs">
-                  {cert}
-                </Badge>
-              ))}
-              {(staff.certifications || []).length > 2 && (
-                <Badge variant="secondary" className="text-xs">
-                  +{(staff.certifications || []).length - 2} more
-                </Badge>
+              
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between pt-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {startIndex + 1} to {Math.min(endIndex, filteredStaff.length)} of {filteredStaff.length} staff
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(page)}
+                          className="w-8 h-8 p-0"
+                        >
+                          {page}
+                        </Button>
+                      ))}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
               )}
-            </div>
-            
-            {/* Impersonation Button */}
-            <div className="pt-2 border-t">
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  startImpersonation(staff.id);
-                }}
-                variant="outline"
-                size="sm"
-                className="w-full text-xs"
-              >
-                <Users className="h-3 w-3 mr-1" />
-                Impersonate User
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+            </CardContent>
+          </Card>
   </TabsContent>
 
   <TabsContent value="feed" className="space-y-6">
@@ -863,9 +910,9 @@ function EnhancedStaffPageContent() {
                 <div className="flex items-center gap-2">
                   <Briefcase className="h-4 w-4 text-purple-500" />
                   <div>
-                    <p className="text-sm font-medium">1099 Contractors</p>
+                    <p className="text-sm font-medium">Contract Workers</p>
                     <p className="text-2xl font-bold">
-                      {staffMembers.filter((s) => s.workerType === "contractor_1099").length}
+                      {staffMembers.filter((s) => s.employmentType === "contract").length}
                     </p>
                   </div>
                 </div>

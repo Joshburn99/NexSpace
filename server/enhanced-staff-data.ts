@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users } from "@shared/schema";
+import { staff } from "@shared/schema";
 
 export async function createEnhancedStaffProfiles() {
   // Create comprehensive staff database with all specialties from current schedule
@@ -369,17 +369,31 @@ export async function createEnhancedStaffProfiles() {
     console.log('Creating enhanced staff profiles...');
     
     for (const staffMember of enhancedStaff) {
-      await db.insert(users).values({
-        firstName: staffMember.firstName,
-        lastName: staffMember.lastName,
-        username: staffMember.username,
+      // Map internal_employee to full_time, contractor_1099 to contract
+      const employmentType = staffMember.role === "internal_employee" ? "full_time" : 
+                            staffMember.role === "contractor_1099" ? "contract" : "full_time";
+      
+      await db.insert(staff).values({
+        name: `${staffMember.firstName} ${staffMember.lastName}`,
         email: staffMember.email,
-        password: staffMember.password,
-        role: staffMember.role as any,
-        facilityId: staffMember.facilityId,
-        isActive: staffMember.isActive,
+        phone: `(555) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
         specialty: staffMember.specialty,
-        avatar: staffMember.avatar,
+        department: staffMember.specialty === "RN" ? "Nursing" : 
+                   staffMember.specialty === "LPN" ? "Nursing" : 
+                   staffMember.specialty === "CNA" ? "Nursing" :
+                   staffMember.specialty === "CST" ? "Surgery" :
+                   staffMember.specialty === "PharmTech" ? "Pharmacy" :
+                   staffMember.specialty === "LabTech" ? "Laboratory" :
+                   staffMember.specialty === "RadTech" ? "Radiology" : "General",
+        employmentType: employmentType,
+        isActive: staffMember.isActive,
+        profilePhoto: staffMember.avatar,
+        bio: `Experienced ${staffMember.specialty} with expertise in patient care.`,
+        location: "Portland, OR",
+        hourlyRate: staffMember.specialty === "RN" ? "48.00" : 
+                   staffMember.specialty === "LPN" ? "35.00" : 
+                   staffMember.specialty === "CNA" ? "28.00" : "42.00",
+        associatedFacilities: JSON.stringify([staffMember.facilityId]),
         createdAt: new Date(),
         updatedAt: new Date()
       }).onConflictDoNothing();
