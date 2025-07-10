@@ -334,11 +334,22 @@ export function registerRoutes(app: Express): Server {
     try {
       // Get user's facility associations if facility user
       const user = req.user;
-      const isFacilityUser = user.role && user.role.includes('facility_');
+      const isFacilityUser = user.role && user.role !== 'super_admin';
       let userAssociatedFacilities: number[] = [];
       
       if (isFacilityUser && user.associatedFacilities) {
         userAssociatedFacilities = user.associatedFacilities;
+      } else if (isFacilityUser) {
+        // If no associatedFacilities in user object, try to fetch from facility_users table
+        try {
+          const facilityUser = await storage.getFacilityUserByEmail(user.email);
+          if (facilityUser && facilityUser.associated_facility_ids) {
+            userAssociatedFacilities = facilityUser.associated_facility_ids;
+            console.log(`[FACILITY FILTER] Found facilities for ${user.email}:`, userAssociatedFacilities);
+          }
+        } catch (error) {
+          console.error(`[FACILITY FILTER] Error fetching facility associations for ${user.email}:`, error);
+        }
       }
       
       // Get staff data from unified service to ensure consistency
@@ -10960,6 +10971,200 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error updating billing rate:", error);
       res.status(500).json({ message: "Failed to update billing rate" });
+    }
+  });
+
+  // Shift Requests API
+  app.get("/api/shift-requests", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      const shiftRequests = [
+        {
+          id: 1,
+          title: "ICU Night Shift",
+          date: "2025-07-15",
+          startTime: "19:00",
+          endTime: "07:00",
+          department: "ICU",
+          specialty: "Registered Nurse",
+          facilityName: "Test Squad Skilled Nursing",
+          facilityId: 19,
+          rate: 48.0,
+          urgency: "high",
+          status: "pending",
+          requestedBy: {
+            id: 45,
+            name: "Sarah Johnson",
+            email: "sarah.johnson@nexspace.com",
+            specialty: "RN"
+          },
+          requestedAt: "2025-07-10T10:30:00Z",
+          description: "Urgent coverage needed for ICU night shift due to staff shortage."
+        },
+        {
+          id: 2,
+          title: "Emergency Day Shift",
+          date: "2025-07-16",
+          startTime: "07:00",
+          endTime: "19:00",
+          department: "Emergency",
+          specialty: "Registered Nurse",
+          facilityName: "Test Squad Skilled Nursing",
+          facilityId: 19,
+          rate: 52.0,
+          urgency: "critical",
+          status: "approved",
+          requestedBy: {
+            id: 46,
+            name: "Michael Chen",
+            email: "michael.chen@nexspace.com",
+            specialty: "RN"
+          },
+          requestedAt: "2025-07-09T14:15:00Z",
+          description: "Emergency department day shift coverage."
+        }
+      ];
+      
+      res.json(shiftRequests);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch shift requests" });
+    }
+  });
+
+  app.post("/api/shift-requests/:id/approve", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      res.json({ success: true, message: `Shift request ${id} approved` });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to approve shift request" });
+    }
+  });
+
+  app.post("/api/shift-requests/:id/deny", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      res.json({ success: true, message: `Shift request ${id} denied` });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to deny shift request" });
+    }
+  });
+
+  // Messages API
+  app.get("/api/messages", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      const messages = [
+        {
+          id: 1,
+          subject: "Shift Schedule Update",
+          content: "Your schedule for next week has been updated. Please review the changes in your dashboard.",
+          senderId: 1,
+          senderName: "NexSpace Team",
+          senderRole: "nexspace_team",
+          recipientId: user.id,
+          recipientName: `${user.firstName} ${user.lastName}`,
+          recipientRole: user.role,
+          sentAt: "2025-07-10T09:00:00Z",
+          isRead: false,
+          isUrgent: false,
+          facilityId: 19,
+          facilityName: "Test Squad Skilled Nursing"
+        },
+        {
+          id: 2,
+          subject: "Credential Expiration Reminder",
+          content: "Your nursing license expires in 30 days. Please update your credentials to avoid any scheduling interruptions.",
+          senderId: 2,
+          senderName: "Compliance Team",
+          senderRole: "nexspace_team",
+          recipientId: user.id,
+          recipientName: `${user.firstName} ${user.lastName}`,
+          recipientRole: user.role,
+          sentAt: "2025-07-09T16:30:00Z",
+          isRead: true,
+          isUrgent: true,
+          facilityId: 19,
+          facilityName: "Test Squad Skilled Nursing"
+        }
+      ];
+      
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch messages" });
+    }
+  });
+
+  app.get("/api/contacts", requireAuth, async (req: any, res) => {
+    try {
+      const contacts = [
+        {
+          id: 1,
+          name: "NexSpace Support",
+          role: "nexspace_team",
+          isOnline: true
+        },
+        {
+          id: 2,
+          name: "Compliance Team",
+          role: "nexspace_team", 
+          isOnline: true
+        },
+        {
+          id: 45,
+          name: "Sarah Johnson",
+          role: "staff",
+          specialty: "RN",
+          facilityId: 19,
+          facilityName: "Test Squad Skilled Nursing",
+          isOnline: false
+        },
+        {
+          id: 46,
+          name: "Michael Chen",
+          role: "staff",
+          specialty: "RN",
+          facilityId: 19,
+          facilityName: "Test Squad Skilled Nursing",
+          isOnline: true
+        }
+      ];
+      
+      res.json(contacts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch contacts" });
+    }
+  });
+
+  app.post("/api/messages", requireAuth, async (req: any, res) => {
+    try {
+      const { recipientId, subject, content, isUrgent } = req.body;
+      const user = req.user;
+      
+      const newMessage = {
+        id: Date.now(),
+        subject,
+        content,
+        senderId: user.id,
+        senderName: `${user.firstName} ${user.lastName}`,
+        senderRole: user.role,
+        recipientId,
+        sentAt: new Date().toISOString(),
+        isRead: false,
+        isUrgent: isUrgent || false
+      };
+      
+      res.json(newMessage);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to send message" });
+    }
+  });
+
+  app.patch("/api/messages/:id/read", requireAuth, async (req: any, res) => {
+    try {
+      const { id } = req.params;
+      res.json({ success: true, message: `Message ${id} marked as read` });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to mark message as read" });
     }
   });
 

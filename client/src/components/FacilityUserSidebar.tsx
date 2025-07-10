@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
@@ -14,15 +14,20 @@ import {
   Home,
   Clock,
   Building,
-  TrendingUp
+  TrendingUp,
+  ChevronDown,
+  ChevronRight,
+  MessageCircle,
+  MessageSquare
 } from 'lucide-react';
 
 interface SidebarItem {
   label: string;
-  href: string;
+  href?: string;
   icon: React.ComponentType<{ className?: string }>;
   permissions: string[];
   description?: string;
+  children?: SidebarItem[];
 }
 
 const SIDEBAR_ITEMS: SidebarItem[] = [
@@ -48,60 +53,76 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     description: 'View and manage staff members'
   },
   {
-    label: 'Open Shifts',
-    href: '/open-shifts',
-    icon: Clock,
-    permissions: ['view_schedules'],
-    description: 'View and fill open shifts'
-  },
-  {
-    label: 'My Requests',
-    href: '/my-requests',
+    label: 'Shift Requests',
+    href: '/shift-requests',
     icon: FileText,
     permissions: ['view_schedules'],
-    description: 'View shift requests and time-off'
+    description: 'View and manage shift requests'
   },
   {
-    label: 'Billing Dashboard',
-    href: '/billing-dashboard',
+    label: 'Messages',
+    href: '/messages',
+    icon: MessageSquare,
+    permissions: [],
+    description: 'Communicate with staff and NexSpace team'
+  },
+  {
+    label: 'Billing',
     icon: DollarSign,
     permissions: ['view_billing'],
-    description: 'Manage invoices and billing'
-  },
-  {
-    label: 'Billing Rates',
-    href: '/billing-rates',
-    icon: TrendingUp,
-    permissions: ['view_rates'],
-    description: 'View and manage billing rates'
-  },
-  {
-    label: 'Professional Invoices',
-    href: '/invoices',
-    icon: FileText,
-    permissions: ['view_billing'],
-    description: 'Professional staff invoices'
-  },
-  {
-    label: 'Vendor Invoices',
-    href: '/vendor-invoices',
-    icon: FileText,
-    permissions: ['view_billing'],
-    description: 'Vendor and contractor invoices'
+    description: 'Financial management and invoicing',
+    children: [
+      {
+        label: 'Dashboard',
+        href: '/billing-dashboard',
+        icon: DollarSign,
+        permissions: ['view_billing'],
+        description: 'Billing overview and metrics'
+      },
+      {
+        label: 'Rates',
+        href: '/billing-rates',
+        icon: TrendingUp,
+        permissions: ['view_rates'],
+        description: 'View and manage billing rates'
+      },
+      {
+        label: 'Professional Invoices',
+        href: '/invoices',
+        icon: FileText,
+        permissions: ['view_billing'],
+        description: 'Professional staff invoices'
+      },
+      {
+        label: 'Vendor Invoices',
+        href: '/vendor-invoices',
+        icon: FileText,
+        permissions: ['view_billing'],
+        description: 'Vendor and contractor invoices'
+      }
+    ]
   },
   {
     label: 'Reports',
-    href: '/reports',
     icon: BarChart3,
     permissions: ['view_reports'],
-    description: 'View operational reports'
-  },
-  {
-    label: 'Analytics',
-    href: '/analytics',
-    icon: TrendingUp,
-    permissions: ['view_analytics'],
-    description: 'Advanced analytics and insights'
+    description: 'Analytics and reporting',
+    children: [
+      {
+        label: 'Reports Dashboard',
+        href: '/reports',
+        icon: BarChart3,
+        permissions: ['view_reports'],
+        description: 'View facility reports and metrics'
+      },
+      {
+        label: 'Analytics',
+        href: '/analytics',
+        icon: TrendingUp,
+        permissions: ['view_analytics'],
+        description: 'Advanced analytics and insights'
+      }
+    ]
   },
   {
     label: 'Compliance',
@@ -143,6 +164,15 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
 export function FacilityUserSidebar() {
   const [location] = useLocation();
   const { hasAnyPermission, getUserPermissions } = useFacilityPermissions();
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  const toggleExpanded = (itemLabel: string) => {
+    setExpandedItems(prev => 
+      prev.includes(itemLabel) 
+        ? prev.filter(label => label !== itemLabel)
+        : [...prev, itemLabel]
+    );
+  };
 
   const accessibleItems = SIDEBAR_ITEMS.filter(item => {
     const hasAccess = hasAnyPermission(item.permissions as any[]);
@@ -153,6 +183,65 @@ export function FacilityUserSidebar() {
     });
     return hasAccess;
   });
+
+  const renderSidebarItem = (item: SidebarItem, level = 0) => {
+    const Icon = item.icon;
+    const isExpanded = expandedItems.includes(item.label);
+    const isActive = item.href && (location === item.href || location.startsWith(item.href + '/'));
+    const hasChildren = item.children && item.children.length > 0;
+
+    if (hasChildren) {
+      return (
+        <div key={item.label}>
+          <button
+            onClick={() => toggleExpanded(item.label)}
+            className={cn(
+              "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors group",
+              "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+            )}
+          >
+            <div className="flex items-center">
+              <Icon className="mr-3 h-5 w-5 flex-shrink-0 text-gray-400 dark:text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300" />
+              <span className="truncate">{item.label}</span>
+            </div>
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </button>
+          {isExpanded && (
+            <div className="ml-6 mt-1 space-y-1">
+              {item.children?.filter(child => hasAnyPermission(child.permissions as any[])).map(child => 
+                renderSidebarItem(child, level + 1)
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <Link
+        key={item.label}
+        href={item.href!}
+        className={cn(
+          "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors group",
+          isActive
+            ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200"
+            : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+        )}
+      >
+        <Icon className={cn(
+          "mr-3 h-5 w-5 flex-shrink-0",
+          isActive
+            ? "text-blue-600 dark:text-blue-300"
+            : "text-gray-400 dark:text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300"
+        )} />
+        <span className="truncate">{item.label}</span>
+      </Link>
+    );
+  };
 
   return (
     <div className="bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 w-64 min-h-screen">
@@ -168,31 +257,7 @@ export function FacilityUserSidebar() {
         </div>
         
         <nav className="space-y-1">
-          {accessibleItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = location === item.href || location.startsWith(item.href + '/');
-            
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors group",
-                  isActive
-                    ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
-                )}
-              >
-                <Icon className={cn(
-                  "mr-3 h-5 w-5 flex-shrink-0",
-                  isActive
-                    ? "text-blue-600 dark:text-blue-300"
-                    : "text-gray-400 dark:text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300"
-                )} />
-                <span className="truncate">{item.label}</span>
-              </Link>
-            );
-          })}
+          {accessibleItems.map(item => renderSidebarItem(item))}
         </nav>
         
         {/* Role-specific help text */}

@@ -80,6 +80,8 @@ import FacilityUsersManagementPage from "@/pages/FacilityUsersManagementPage";
 import FacilityAuditLogsPage from "@/pages/FacilityAuditLogsPage";
 import BillingDashboard from "@/pages/BillingDashboard";
 import RatesManagementPage from "@/pages/RatesManagementPage";
+import ReportsPage from "@/pages/reports-page";
+import MessagesPage from "@/pages/messages-page";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -124,8 +126,9 @@ function AppContent() {
       <ProtectedRoute path="/analytics/agency-usage" component={AgencyUsagePage} />
       <ProtectedRoute path="/analytics/compliance" component={CompliancePage} />
       <ProtectedRoute path="/compliance" component={CompliancePage} />
-      <ProtectedRoute path="/messages" component={EnhancedMessagingPage} />
+      <ProtectedRoute path="/messages" component={MessagesPage} />
       <ProtectedRoute path="/messaging" component={EnhancedMessagingPage} />
+      <ProtectedRoute path="/reports" component={ReportsPage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
       <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />
       <ProtectedRoute path="/profile" component={SettingsPage} />

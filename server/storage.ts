@@ -856,6 +856,15 @@ export class DatabaseStorage implements IStorage {
     return template || undefined;
   }
 
+  async getFacilityUserByEmail(email: string): Promise<any | undefined> {
+    const { facilityUsers } = await import("@shared/schema");
+    const [facilityUser] = await db
+      .select()
+      .from(facilityUsers)
+      .where(eq(facilityUsers.email, email));
+    return facilityUser || undefined;
+  }
+
   // Dashboard analytics
   async getFacilityStats(facilityId: number): Promise<{
     activeStaff: number;

@@ -100,12 +100,18 @@ export function setupAuth(app: Express) {
     try {
       const user = await storage.getUser(id);
       
-      // If this is a facility user, fetch their permissions
+      // If this is a facility user, fetch their permissions and facility associations
       if (user && user.role !== 'super_admin') {
         try {
           const roleTemplate = await storage.getFacilityUserRoleTemplate(user.role);
           if (roleTemplate && roleTemplate.permissions) {
             (user as any).permissions = roleTemplate.permissions;
+          }
+          
+          // Get facility user data to include associated facilities
+          const facilityUser = await storage.getFacilityUserByEmail(user.email);
+          if (facilityUser && facilityUser.associated_facility_ids) {
+            (user as any).associatedFacilities = facilityUser.associated_facility_ids;
           }
         } catch (error) {
           console.error("Error fetching user permissions during deserialization:", error);
@@ -139,7 +145,7 @@ export function setupAuth(app: Express) {
   app.post("/api/login", passport.authenticate("local"), async (req, res) => {
     const user = req.user;
     
-    // If this is a facility user, fetch their permissions
+    // If this is a facility user, fetch their permissions and facility associations
     if (user && user.role !== 'super_admin') {
       try {
         // Get permissions from the role template
@@ -147,6 +153,12 @@ export function setupAuth(app: Express) {
         if (roleTemplate && roleTemplate.permissions) {
           // Add permissions to user object
           (user as any).permissions = roleTemplate.permissions;
+        }
+        
+        // Get facility user data to include associated facilities
+        const facilityUser = await storage.getFacilityUserByEmail(user.email);
+        if (facilityUser && facilityUser.associated_facility_ids) {
+          (user as any).associatedFacilities = facilityUser.associated_facility_ids;
         }
       } catch (error) {
         console.error("Error fetching user permissions:", error);
