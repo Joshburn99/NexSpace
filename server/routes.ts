@@ -866,8 +866,7 @@ export function registerRoutes(app: Express): Server {
           title: "OR Morning Team",
           date: "2025-06-25",
           startTime: "06:00",
-          endTime:```text
-"14:00",
+          endTime: "14:00",
           department: "Operating Room",
           specialty: "RN",
           status: "filled",
@@ -1542,3 +1541,6 @@ export function registerRoutes(app: Express): Server {
       res.status(500).json({ message: "Failed to assign worker to shift" });
     }
   });
+
+  return app;
+}
