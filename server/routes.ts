@@ -8131,7 +8131,19 @@ export function registerRoutes(app: Express): Server {
         return shifts.slice(0, 5000); // Return recent shifts for performance
       };
 
-      const shifts = generateShifts();
+      let shifts = generateShifts();
+      
+      // Filter shifts by user's associated facilities
+      if (effectiveUser?.role !== 'super_admin') {
+        const userFacilities = (effectiveUser as any).associatedFacilities || [];
+        console.log(`[SHIFTS API] Filtering shifts for facilities:`, userFacilities);
+        
+        if (userFacilities && userFacilities.length > 0) {
+          shifts = shifts.filter(shift => userFacilities.includes(shift.facilityId));
+        }
+      }
+      
+      console.log(`[SHIFTS API] Returning ${shifts.length} shifts for user ${effectiveUser?.email}`);
       res.json(shifts);
     } catch (error) {
       console.error("Error fetching shifts:", error);
