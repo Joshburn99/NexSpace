@@ -106,7 +106,9 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
       userRole: user.role,
       userPermissions,
       rolePermissions,
-      availableRoles: Object.keys(ROLE_PERMISSIONS)
+      availableRoles: Object.keys(ROLE_PERMISSIONS),
+      hasUserPermissions: userPermissions && userPermissions.length > 0,
+      userPermissionsLength: userPermissions?.length || 0
     });
     
     // If user has explicit permissions from backend (login/impersonation), use those

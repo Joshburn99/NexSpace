@@ -6583,90 +6583,50 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Staff API endpoint
-  app.get("/api/staff", async (req, res) => {
+  // Staff API endpoint with facility filtering
+  app.get("/api/staff", requireAuth, async (req, res) => {
     try {
-      const staff = [
-        {
-          id: 1,
-          firstName: "Sarah",
-          lastName: "Johnson",
-          email: "sarah.johnson@portlandgeneral.com",
-          role: "Registered Nurse",
-          specialty: "Emergency Medicine",
-          facilityId: 1,
-          facilityName: "Portland General Hospital",
-          status: "active",
-          shiftPreference: "day",
-          availabilityStatus: "available"
-        },
-        {
-          id: 2,
-          firstName: "Emily",
-          lastName: "Rodriguez",
-          email: "emily.rodriguez@portlandgeneral.com",
-          role: "Licensed Practical Nurse",
-          specialty: "Intensive Care",
-          facilityId: 1,
-          facilityName: "Portland General Hospital",
-          status: "active",
-          shiftPreference: "night",
-          availabilityStatus: "available"
-        },
-        {
-          id: 3,
-          firstName: "Mike",
-          lastName: "Davis",
-          email: "mike.davis@contractor.com",
-          role: "Physical Therapist",
-          specialty: "Orthopedic Rehabilitation",
-          facilityId: null,
-          facilityName: null,
-          status: "active",
-          shiftPreference: "day",
-          availabilityStatus: "available"
-        },
-        {
-          id: 4,
-          firstName: "Lisa",
-          lastName: "Chen",
-          email: "lisa.chen@maplegove.com",
-          role: "Certified Nursing Assistant",
-          specialty: "Memory Care",
-          facilityId: 2,
-          facilityName: "Maple Grove Memory Care",
-          status: "active",
-          shiftPreference: "evening",
-          availabilityStatus: "busy"
-        },
-        {
-          id: 5,
-          firstName: "David",
-          lastName: "Kim",
-          email: "david.kim@freelance.com",
-          role: "Respiratory Therapist",
-          specialty: "Pulmonary Care",
-          facilityId: null,
-          facilityName: null,
-          status: "active",
-          shiftPreference: "night",
-          availabilityStatus: "available"
-        },
-        {
-          id: 6,
-          firstName: "Jennifer",
-          lastName: "Walsh",
-          email: "jennifer.walsh@maplegove.com",
-          role: "Occupational Therapist",
-          specialty: "Geriatric Care",
-          facilityId: 2,
-          facilityName: "Maple Grove Memory Care",
-          status: "active",
-          shiftPreference: "day",
-          availabilityStatus: "available"
+      const currentUser = req.user;
+      
+      // Get the effective user (original or impersonated)
+      const impersonatedUserId = (req.session as any).impersonatedUserId;
+      let effectiveUser = currentUser;
+      
+      if (impersonatedUserId) {
+        effectiveUser = await storage.getUser(impersonatedUserId);
+        if (effectiveUser && effectiveUser.role !== 'super_admin') {
+          const facilityUser = await storage.getFacilityUserByEmail(effectiveUser.email);
+          if (facilityUser) {
+            (effectiveUser as any).associatedFacilities = facilityUser.associated_facility_ids;
+          }
         }
-      ];
-      res.json(staff);
+      }
+      
+      console.log(`[STAFF API] Fetching staff for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`);
+      
+      // Get staff from database
+      const allStaff = await db.select().from(staff);
+      
+      // Filter staff based on user's facility associations
+      let filteredStaff = allStaff;
+      
+      if (effectiveUser?.role !== 'super_admin') {
+        const userFacilities = (effectiveUser as any).associatedFacilities || [];
+        console.log(`[STAFF API] Filtering staff for facilities:`, userFacilities);
+        
+        if (userFacilities && userFacilities.length > 0) {
+          filteredStaff = allStaff.filter(staffMember => {
+            const staffFacilities = staffMember.associated_facilities || [];
+            const hasOverlap = userFacilities.some((facilityId: number) => 
+              staffFacilities.includes(facilityId)
+            );
+            return hasOverlap;
+          });
+        }
+      }
+      
+      console.log(`[STAFF API] Returning ${filteredStaff.length} staff members`);
+      res.json(filteredStaff);
     } catch (error) {
       console.error("Error fetching staff:", error);
       res.status(500).json({ message: "Failed to fetch staff" });
@@ -8068,9 +8028,27 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Shifts API
+  // Shifts API with facility filtering
   app.get("/api/shifts", requireAuth, async (req, res) => {
     try {
+      const currentUser = req.user;
+      
+      // Get the effective user (original or impersonated)
+      const impersonatedUserId = (req.session as any).impersonatedUserId;
+      let effectiveUser = currentUser;
+      
+      if (impersonatedUserId) {
+        effectiveUser = await storage.getUser(impersonatedUserId);
+        if (effectiveUser && effectiveUser.role !== 'super_admin') {
+          const facilityUser = await storage.getFacilityUserByEmail(effectiveUser.email);
+          if (facilityUser) {
+            (effectiveUser as any).associatedFacilities = facilityUser.associated_facility_ids;
+          }
+        }
+      }
+      
+      console.log(`[SHIFTS API] Fetching shifts for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`);
+      
       // Generate comprehensive 12-month shift data for 100-bed skilled nursing facility
       const generateShifts = () => {
         const shifts = [];
@@ -8124,6 +8102,11 @@ export function registerRoutes(app: Express): Server {
             const premiumMultiplier = 1 + Math.random() * 0.7; // 100-170% of base rate
             const rate = Math.round(baseRate * premiumMultiplier);
 
+            // Only generate shifts for user's associated facilities
+            const userFacilities = (effectiveUser as any).associatedFacilities || [1];
+            const targetFacilityId = userFacilities.includes(19) ? 19 : (userFacilities[0] || 1);
+            const targetFacilityName = targetFacilityId === 19 ? "Test Squad Skilled Nursing" : "Sunrise Manor Skilled Nursing";
+            
             shifts.push({
               id: id++,
               title: `${department} ${shiftTime.type} Shift`,
@@ -8133,8 +8116,8 @@ export function registerRoutes(app: Express): Server {
               department,
               specialty,
               status,
-              facilityId: 1,
-              facilityName: "Sunrise Manor Skilled Nursing",
+              facilityId: targetFacilityId,
+              facilityName: targetFacilityName,
               rate,
               urgency,
               description: `${department} coverage needed, ${specialty} position`,

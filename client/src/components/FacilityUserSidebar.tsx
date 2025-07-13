@@ -176,10 +176,11 @@ export function FacilityUserSidebar() {
 
   const accessibleItems = SIDEBAR_ITEMS.filter(item => {
     const hasAccess = hasAnyPermission(item.permissions as any[]);
-    console.log(`Sidebar item ${item.label}:`, {
+    console.log(`[SIDEBAR] Checking item ${item.label}:`, {
       required: item.permissions,
       hasAccess,
-      userPermissions: getUserPermissions()
+      userPermissions: getUserPermissions(),
+      userPermissionsCount: getUserPermissions().length
     });
     return hasAccess;
   });
