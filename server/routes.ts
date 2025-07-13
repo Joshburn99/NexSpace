@@ -6693,14 +6693,30 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "User not found" });
       }
 
-      // If this is a facility user, fetch their permissions
+      // If this is a facility user, fetch their permissions and facility associations
       if (targetUser.role !== 'super_admin') {
         try {
-          // Get permissions from the role template
-          const roleTemplate = await storage.getFacilityUserRoleTemplate(targetUser.role);
-          if (roleTemplate && roleTemplate.permissions) {
-            // Add permissions to user object
-            (targetUser as any).permissions = roleTemplate.permissions;
+          // Get facility user data to include both individual permissions and associated facilities
+          const facilityUser = await storage.getFacilityUserByEmail(targetUser.email);
+          if (facilityUser) {
+            // Use individual permissions from the database if available
+            if (facilityUser.permissions && facilityUser.permissions.length > 0) {
+              (targetUser as any).permissions = facilityUser.permissions;
+              console.log(`[IMPERSONATION] Set individual permissions for ${targetUser.email}:`, facilityUser.permissions);
+            } else {
+              // Fallback to role template permissions
+              const roleTemplate = await storage.getFacilityUserRoleTemplate(targetUser.role);
+              if (roleTemplate && roleTemplate.permissions) {
+                (targetUser as any).permissions = roleTemplate.permissions;
+                console.log(`[IMPERSONATION] Set role template permissions for ${targetUser.email}:`, roleTemplate.permissions);
+              }
+            }
+            
+            // Set associated facilities
+            if (facilityUser.associated_facility_ids) {
+              (targetUser as any).associatedFacilities = facilityUser.associated_facility_ids;
+              console.log(`[IMPERSONATION] Set associatedFacilities for ${targetUser.email}:`, facilityUser.associated_facility_ids);
+            }
           }
         } catch (error) {
           console.error("Error fetching user permissions:", error);

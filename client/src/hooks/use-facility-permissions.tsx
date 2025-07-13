@@ -102,33 +102,22 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
     const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
     
     // Debug logging for permissions
-    console.log('Permissions debug:', {
+    console.log(`[PERMISSIONS] getUserPermissions debug for ${user.email}:`, {
       userRole: user.role,
       userPermissions,
       rolePermissions,
       availableRoles: Object.keys(ROLE_PERMISSIONS)
     });
     
-    // For facility_admin, always include all role-based permissions regardless of explicit permissions
-    let allPermissions: string[] = [];
-    if (user.role === 'facility_admin') {
-      // Facility admins get all their role permissions plus any additional explicit permissions
-      allPermissions = [...rolePermissions, ...userPermissions];
-    } else {
-      // Other roles use explicit permissions if available, otherwise fall back to role permissions
-      allPermissions = userPermissions.length > 0 ? [...rolePermissions, ...userPermissions] : rolePermissions;
+    // If user has explicit permissions from backend (login/impersonation), use those
+    if (userPermissions && userPermissions.length > 0) {
+      console.log(`[PERMISSIONS] Using explicit permissions for ${user.email}:`, userPermissions);
+      return userPermissions as FacilityPermission[];
     }
     
-    // Remove duplicates
-    const uniquePermissions: FacilityPermission[] = [];
-    for (const permission of allPermissions) {
-      if (!uniquePermissions.includes(permission as FacilityPermission)) {
-        uniquePermissions.push(permission as FacilityPermission);
-      }
-    }
-    
-    console.log('Final permissions for user:', uniquePermissions);
-    return uniquePermissions;
+    // Otherwise fallback to role-based permissions
+    console.log(`[PERMISSIONS] Using role-based permissions for ${user.role}:`, rolePermissions);
+    return rolePermissions as FacilityPermission[];
   };
 
   const hasPermission = (permission: FacilityPermission): boolean => {
