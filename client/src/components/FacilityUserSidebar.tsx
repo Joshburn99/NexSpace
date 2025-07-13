@@ -35,14 +35,14 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     label: 'Dashboard',
     href: '/dashboard',
     icon: Home,
-    permissions: ['view_schedules', 'view_staff', 'view_reports'],
+    permissions: ['view_schedule', 'view_staff', 'view_reports'],
     description: 'Overview of facility operations'
   },
   {
     label: 'Schedule',
     href: '/schedule',
     icon: Calendar,
-    permissions: ['view_schedules'],
+    permissions: ['view_schedule'],
     description: 'View and manage shift schedules'
   },
   {
@@ -56,7 +56,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     label: 'Shift Requests',
     href: '/shift-requests',
     icon: FileText,
-    permissions: ['view_schedules'],
+    permissions: ['view_schedule'],
     description: 'View and manage shift requests'
   },
   {
@@ -175,6 +175,9 @@ export function FacilityUserSidebar() {
   };
 
   const accessibleItems = SIDEBAR_ITEMS.filter(item => {
+    // Messages tab should always be visible
+    if (item.label === 'Messages') return true;
+    
     const hasAccess = hasAnyPermission(item.permissions as any[]);
     console.log(`[SIDEBAR] Checking item ${item.label}:`, {
       required: item.permissions,

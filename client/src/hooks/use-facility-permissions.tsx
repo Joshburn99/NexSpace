@@ -99,11 +99,13 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
     
     // Get permissions from user's role and explicit permissions
     const userPermissions = (user as any).permissions || [];
-    const rolePermissions = ROLE_PERMISSIONS[user.role] || [];
+    const facilityRole = (user as any).facilityRole || user.role;
+    const rolePermissions = ROLE_PERMISSIONS[facilityRole] || ROLE_PERMISSIONS[user.role] || [];
     
     // Debug logging for permissions
     console.log(`[PERMISSIONS] getUserPermissions debug for ${user.email}:`, {
       userRole: user.role,
+      facilityRole,
       userPermissions,
       rolePermissions,
       availableRoles: Object.keys(ROLE_PERMISSIONS),

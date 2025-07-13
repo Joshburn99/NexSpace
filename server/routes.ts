@@ -6677,6 +6677,10 @@ export function registerRoutes(app: Express): Server {
               (targetUser as any).associatedFacilities = facilityUser.associated_facility_ids;
               console.log(`[IMPERSONATION] Set associatedFacilities for ${targetUser.email}:`, facilityUser.associated_facility_ids);
             }
+            
+            // Include facility user role for proper permission handling
+            (targetUser as any).facilityRole = facilityUser.role;
+            console.log(`[IMPERSONATION] Set facility role for ${targetUser.email}:`, facilityUser.role);
           }
         } catch (error) {
           console.error("Error fetching user permissions:", error);
