@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
+import { CanAccess } from './PermissionWrapper';
 import {
   Calendar,
   Users,
@@ -174,19 +175,38 @@ export function FacilityUserSidebar() {
     );
   };
 
-  const accessibleItems = SIDEBAR_ITEMS.filter(item => {
-    // Messages tab should always be visible
-    if (item.label === 'Messages') return true;
-    
-    const hasAccess = hasAnyPermission(item.permissions as any[]);
-    console.log(`[SIDEBAR] Checking item ${item.label}:`, {
-      required: item.permissions,
-      hasAccess,
-      userPermissions: getUserPermissions(),
-      userPermissionsCount: getUserPermissions().length
-    });
-    return hasAccess;
-  });
+  // Filter sidebar items based on permissions using permission wrapper logic
+  const filterSidebarItems = (items: SidebarItem[]): SidebarItem[] => {
+    return items.filter(item => {
+      // Messages tab should always be visible
+      if (item.label === 'Messages') return true;
+      
+      // Check if user has any of the required permissions
+      const hasAccess = item.permissions.length === 0 || hasAnyPermission(item.permissions as any[]);
+      
+      console.log(`[SIDEBAR] Permission check for ${item.label}:`, {
+        required: item.permissions,
+        hasAccess,
+        userPermissions: getUserPermissions(),
+        userPermissionsCount: getUserPermissions().length
+      });
+      
+      // If item has children, filter them recursively
+      if (item.children) {
+        const accessibleChildren = filterSidebarItems(item.children);
+        // Only show parent if it has accessible children or user has direct access
+        return hasAccess || accessibleChildren.length > 0;
+      }
+      
+      return hasAccess;
+    }).map(item => ({
+      ...item,
+      // Filter children if they exist
+      children: item.children ? filterSidebarItems(item.children) : undefined
+    }));
+  };
+
+  const accessibleItems = filterSidebarItems(SIDEBAR_ITEMS);
 
   const renderSidebarItem = (item: SidebarItem, level = 0) => {
     const Icon = item.icon;
@@ -216,7 +236,7 @@ export function FacilityUserSidebar() {
           </button>
           {isExpanded && (
             <div className="ml-6 mt-1 space-y-1">
-              {item.children?.filter(child => hasAnyPermission(child.permissions as any[])).map(child => 
+              {item.children?.map(child => 
                 renderSidebarItem(child, level + 1)
               )}
             </div>

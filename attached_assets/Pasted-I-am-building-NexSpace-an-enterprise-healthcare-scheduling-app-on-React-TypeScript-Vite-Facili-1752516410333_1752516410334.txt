@@ -1,0 +1,66 @@
+I am building NexSpace, an enterprise healthcare scheduling app on React + TypeScript + Vite. Facility users have granular permissions stored in the database (facility_user_role_templates and facility_users). I want the Facility User UI to dynamically show or hide sidebar tabs, action buttons, and dashboard widgets based on each user’s permissions.
+Please read carefully and refactor the UI accordingly:
+
+1. Sidebar Navigation Tabs
+The sidebar menu should be generated from a list of routes/tabs filtered by the user’s permissions.
+
+For example, “User Management” and “Billing” tabs are visible only to those with manage_facility_users or view_billing permissions.
+
+Hide tabs for which the user lacks permissions.
+
+2. Action Buttons and Controls
+Buttons like “Post Shift”, “Add User”, “Approve Timesheet”, etc. should only render if the user has the matching permission (e.g., create_shifts for “Post Shift”).
+
+Do not just disable—completely hide buttons/actions the user should not see.
+
+Use this logic for all pages and in-page controls (e.g., “Edit Facility”, “Invite User”, “Export Data”).
+
+3. Dashboard Widgets/Panels
+Only show widgets relevant to the user’s role/permissions (e.g., “Billing Summary” only if view_billing).
+
+Admins should see all widgets; limited users only see relevant ones.
+
+4. Conditional Content Within Pages
+For in-page sections (like “Payroll Info”, “Analytics”, etc.), wrap in permission checks so only users with the proper permissions can view/act.
+
+Example: On the Enhanced Calendar, hide “Add Shift” or shift edit features if the user lacks create_shifts or edit_shifts.
+
+5. Permission Data Handling
+Fetch the user’s permissions array or object at login (from facility_users or role_templates).
+
+Store permissions in React Context/global state so all components can access.
+
+Provide a helper function or custom hook: hasPermission('permission_key') for easy checks in any component.
+
+6. Reusable Permission Wrapper
+Create a reusable component (e.g., <CanAccess permission="create_shifts">...</CanAccess>) that checks the current user’s permissions and renders children only if allowed.
+
+Use this everywhere (sidebar, buttons, widgets, content).
+
+7. UI Consistency and Testing
+Make sure the UI does not look broken or empty if a user lacks certain permissions (reflow layout as needed).
+
+Test as several different roles (admin, billing, scheduler, coordinator, viewer) to ensure the UI adapts correctly.
+
+Hide anything not permitted, do not rely on disabling or placeholder text unless necessary.
+
+8. Backend/Frontend Sync
+Note: All permission checks on the frontend are for UX only. The backend must still enforce permissions on every API route for security.
+
+References:
+
+The current permission structure is in the facility_user_role_templates table.
+
+All role/permission logic should be data-driven and easy to update as roles grow.
+
+Use top healthcare scheduling platforms (e.g., UKG, OnShift) for UI inspiration.
+
+Deliverables:
+
+Refactor sidebar, buttons, widgets, and content to follow these permission-based rules.
+
+Provide at least one example for each: sidebar, action button, dashboard widget, and in-page section using the permission wrapper/component.
+
+Ensure code is reusable, maintainable, and thoroughly documented with comments on permission checks.
+
+If you need more details about the role/permission model, let me know and I can provide sample data or screenshots.

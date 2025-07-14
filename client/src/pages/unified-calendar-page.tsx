@@ -7,6 +7,9 @@ import { useShifts } from '@/contexts/ShiftContext';
 import { useDashboard } from '@/contexts/DashboardContext';
 import { useAuth } from '@/hooks/use-auth';
 import { useStaff } from '@/contexts/StaffContext';
+import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
+import { CanAccess } from '@/components/PermissionWrapper';
+import { PermissionButton } from '@/components/PermissionButton';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,7 +45,10 @@ export default function UnifiedCalendarPage() {
   const [requestNote, setRequestNote] = useState('');
 
   const currentUser = impersonatedUser || user;
-  const canPostShifts = currentUser?.role === 'manager' || currentUser?.role === 'admin';
+  const { hasPermission } = useFacilityPermissions();
+  const canPostShifts = hasPermission('create_shifts');
+  const canEditShifts = hasPermission('edit_shifts');
+  const canViewSchedule = hasPermission('view_schedule');
   
   // Get current user's specialty from staff data
   const staffMember = currentUser ? getStaffById(currentUser.id) : null;
@@ -138,7 +144,7 @@ export default function UnifiedCalendarPage() {
   };
 
   const handleDateClick = (info: any) => {
-    if (canPostShifts) {
+    if (hasPermission('create_shifts')) {
       setSelectedDate(info.dateStr);
       setIsCreateShiftOpen(true);
     }
@@ -150,15 +156,14 @@ export default function UnifiedCalendarPage() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
           {canPostShifts ? 'Schedule Management' : 'My Schedule'}
         </h1>
-        {canPostShifts && (
-          <Button 
-            className="bg-blue-600 hover:bg-blue-700"
-            onClick={() => setIsCreateShiftOpen(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Shift
-          </Button>
-        )}
+        <PermissionButton 
+          permission="create_shifts"
+          className="bg-blue-600 hover:bg-blue-700"
+          onClick={() => setIsCreateShiftOpen(true)}
+        >
+          <Plus className="h-4 w-4 mr-2" />
+          New Shift
+        </PermissionButton>
       </div>
 
       {/* Dashboard Summary Cards */}

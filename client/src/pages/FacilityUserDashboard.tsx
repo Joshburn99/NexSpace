@@ -1,7 +1,9 @@
 import React from 'react';
 import { useAuth } from '@/hooks/use-auth';
 import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
-import { PermissionGuard, ConditionalButton } from '@/components/PermissionGuard';
+import { CanAccess } from '@/components/PermissionWrapper';
+import { PermissionButton } from '@/components/PermissionButton';
+import { PermissionDashboard, PriorityTasks } from '@/components/PermissionDashboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -206,96 +208,18 @@ export default function FacilityUserDashboard() {
         </div>
       </div>
 
-      {/* Metrics Grid */}
-      {dashboardMetrics.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {dashboardMetrics.map((metric, index) => {
-            const IconComponent = metric.icon;
-            return (
-              <PermissionGuard key={index} permission={metric.permission as any}>
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                          {metric.title}
-                        </p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                          {metric.value}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {metric.change}
-                        </p>
-                      </div>
-                      <div className={`p-3 rounded-lg ${metric.bgColor}`}>
-                        <IconComponent className={`h-6 w-6 ${metric.color}`} />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </PermissionGuard>
-            );
-          })}
-        </div>
-      )}
+      {/* Permission-Based Dashboard Widgets */}
+      <PermissionDashboard />
 
       {/* Priority Tasks */}
-      <PermissionGuard permissions={['view_schedules', 'manage_compliance', 'view_billing']}>
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-red-500" />
-              Priority Tasks
-              <Badge variant="outline" className="ml-auto">
-                {priorityTasks.length} items
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {priorityTasks.map((task, index) => {
-                const IconComponent = task.icon;
-                return (
-                  <PermissionGuard key={index} permission={task.permission as any}>
-                    <div className={`border-l-4 p-4 rounded-lg ${getPriorityColor(task.priority)}`}>
-                      <div className="flex items-start justify-between">
-                        <div className="flex gap-3">
-                          <IconComponent className="h-5 w-5 mt-0.5" />
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-semibold">{task.title}</h3>
-                              <Badge variant="outline" className="text-xs">
-                                {task.priority}
-                              </Badge>
-                              <Badge variant="secondary" className="text-xs">
-                                {task.count}
-                              </Badge>
-                            </div>
-                            <p className="text-sm mt-1 opacity-80">
-                              {task.description}
-                            </p>
-                          </div>
-                        </div>
-                        
-                        <ConditionalButton permission={task.actionPermission as any}>
-                          <Button size="sm" variant="outline">
-                            {task.actionText}
-                          </Button>
-                        </ConditionalButton>
-                      </div>
-                    </div>
-                  </PermissionGuard>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      </PermissionGuard>
+      <CanAccess permissions={['view_schedule', 'manage_compliance', 'view_billing']}>
+        <PriorityTasks />
+      </CanAccess>
 
       {/* Role-Specific Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Scheduling Section */}
-        <PermissionGuard permission="view_schedules">
+        <CanAccess permission="view_schedule">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -312,12 +236,10 @@ export default function FacilityUserDashboard() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="outline">2/3 filled</Badge>
-                    <ConditionalButton permission="assign_staff">
-                      <Button size="sm" variant="outline">
-                        <Edit className="h-3 w-3 mr-1" />
-                        Assign
-                      </Button>
-                    </ConditionalButton>
+                    <PermissionButton permission="assign_staff" size="sm" variant="outline">
+                      <Edit className="h-3 w-3 mr-1" />
+                      Assign
+                    </PermissionButton>
                   </div>
                 </div>
                 
@@ -328,28 +250,24 @@ export default function FacilityUserDashboard() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge variant="destructive">0/2 filled</Badge>
-                    <ConditionalButton permission="assign_staff">
-                      <Button size="sm" variant="outline">
-                        <AlertTriangle className="h-3 w-3 mr-1" />
-                        Urgent
-                      </Button>
-                    </ConditionalButton>
+                    <PermissionButton permission="assign_staff" size="sm" variant="outline">
+                      <AlertTriangle className="h-3 w-3 mr-1" />
+                      Urgent
+                    </PermissionButton>
                   </div>
                 </div>
               </div>
               
-              <ConditionalButton permission="view_schedules">
-                <Button variant="outline" className="w-full mt-4">
-                  <Eye className="h-4 w-4 mr-2" />
-                  View Full Schedule
-                </Button>
-              </ConditionalButton>
+              <PermissionButton permission="view_schedule" variant="outline" className="w-full mt-4">
+                <Eye className="h-4 w-4 mr-2" />
+                View Full Schedule
+              </PermissionButton>
             </CardContent>
           </Card>
-        </PermissionGuard>
+        </CanAccess>
 
         {/* Staff Overview */}
-        <PermissionGuard permission="view_staff">
+        <CanAccess permission="view_staff">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -380,15 +298,13 @@ export default function FacilityUserDashboard() {
                 </div>
               </div>
               
-              <ConditionalButton permission="view_staff">
-                <Button variant="outline" className="w-full mt-4">
-                  <Users className="h-4 w-4 mr-2" />
-                  Manage Staff
-                </Button>
-              </ConditionalButton>
+              <PermissionButton permission="view_staff" variant="outline" className="w-full mt-4">
+                <Users className="h-4 w-4 mr-2" />
+                Manage Staff
+              </PermissionButton>
             </CardContent>
           </Card>
-        </PermissionGuard>
+        </CanAccess>
       </div>
 
       {/* Access Notice for Limited Users */}
