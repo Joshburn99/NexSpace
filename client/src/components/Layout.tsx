@@ -20,7 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const showTopLine = currentUser?.role === 'employee' || currentUser?.role === 'contractor';
   const showAdminLayout = currentUser?.role === 'admin' || currentUser?.role === 'super_admin';
   const isFacilityUser = currentUser?.role && [
-    'facility_administrator', 'scheduling_coordinator', 'hr_manager', 'corporate', 
+    'facility_admin', 'facility_administrator', 'scheduling_coordinator', 'hr_manager', 'corporate', 
     'regional_director', 'billing', 'supervisor', 'director_of_nursing'
   ].includes(currentUser.role);
 
