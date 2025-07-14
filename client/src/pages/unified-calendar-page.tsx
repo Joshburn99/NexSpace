@@ -48,7 +48,7 @@ export default function UnifiedCalendarPage() {
   const { hasPermission } = useFacilityPermissions();
   const canPostShifts = hasPermission('create_shifts');
   const canEditShifts = hasPermission('edit_shifts');
-  const canViewSchedule = hasPermission('view_schedule');
+  const canViewSchedule = hasPermission('view_schedules');
   
   // Get current user's specialty from staff data
   const staffMember = currentUser ? getStaffById(currentUser.id) : null;

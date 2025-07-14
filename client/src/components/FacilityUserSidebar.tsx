@@ -36,14 +36,14 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     label: 'Dashboard',
     href: '/dashboard',
     icon: Home,
-    permissions: ['view_schedule', 'view_staff', 'view_reports'],
+    permissions: ['view_schedules', 'view_staff', 'view_reports'],
     description: 'Overview of facility operations'
   },
   {
     label: 'Schedule',
     href: '/schedule',
     icon: Calendar,
-    permissions: ['view_schedule'],
+    permissions: ['view_schedules'],
     description: 'View and manage shift schedules'
   },
   {
@@ -57,7 +57,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     label: 'Shift Requests',
     href: '/shift-requests',
     icon: FileText,
-    permissions: ['view_schedule'],
+    permissions: ['view_schedules'],
     description: 'View and manage shift requests'
   },
   {
@@ -129,7 +129,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     label: 'Compliance',
     href: '/compliance',
     icon: Shield,
-    permissions: ['view_compliance', 'manage_compliance'],
+    permissions: ['view_compliance'],
     description: 'Manage compliance and credentials'
   },
   {

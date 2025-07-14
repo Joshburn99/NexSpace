@@ -212,14 +212,14 @@ export default function FacilityUserDashboard() {
       <PermissionDashboard />
 
       {/* Priority Tasks */}
-      <CanAccess permissions={['view_schedule', 'manage_compliance', 'view_billing']}>
+      <CanAccess permissions={['view_schedules', 'manage_compliance', 'view_billing']}>
         <PriorityTasks />
       </CanAccess>
 
       {/* Role-Specific Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Scheduling Section */}
-        <CanAccess permission="view_schedule">
+        <CanAccess permission="view_schedules">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -258,7 +258,7 @@ export default function FacilityUserDashboard() {
                 </div>
               </div>
               
-              <PermissionButton permission="view_schedule" variant="outline" className="w-full mt-4">
+              <PermissionButton permission="view_schedules" variant="outline" className="w-full mt-4">
                 <Eye className="h-4 w-4 mr-2" />
                 View Full Schedule
               </PermissionButton>
