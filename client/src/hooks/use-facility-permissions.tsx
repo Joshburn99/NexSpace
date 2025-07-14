@@ -110,7 +110,8 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
       rolePermissions,
       availableRoles: Object.keys(ROLE_PERMISSIONS),
       hasUserPermissions: userPermissions && userPermissions.length > 0,
-      userPermissionsLength: userPermissions?.length || 0
+      userPermissionsLength: userPermissions?.length || 0,
+      finalPermissions: userPermissions && userPermissions.length > 0 ? userPermissions : rolePermissions
     });
     
     // If user has explicit permissions from backend (login/impersonation), use those
@@ -131,7 +132,17 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
     if (user.role === 'super_admin') return true;
     
     const userPermissions = getUserPermissions();
-    return userPermissions.includes(permission);
+    const hasAccess = userPermissions.includes(permission);
+    
+    console.log(`[PERMISSIONS] hasPermission check for ${permission}:`, {
+      userEmail: user.email,
+      userRole: user.role,
+      userPermissions,
+      hasAccess,
+      permissionExists: userPermissions.includes(permission)
+    });
+    
+    return hasAccess;
   };
 
   const hasAnyPermission = (permissions: FacilityPermission[]): boolean => {
