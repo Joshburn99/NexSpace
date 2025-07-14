@@ -34,7 +34,15 @@ export type FacilityPermission =
   | 'manage_permissions'
   | 'view_audit_logs'
   | 'view_job_openings'
-  | 'manage_job_openings';
+  | 'manage_job_openings'
+  | 'view_workflow_automation'
+  | 'manage_workflow_automation'
+  | 'view_referral_system'
+  | 'manage_referral_system'
+  | 'view_attendance_reports'
+  | 'view_overtime_reports'
+  | 'view_float_pool_savings'
+  | 'view_agency_usage';
 
 // Role-based permission mappings
 const ROLE_PERMISSIONS: Record<string, FacilityPermission[]> = {
@@ -46,7 +54,10 @@ const ROLE_PERMISSIONS: Record<string, FacilityPermission[]> = {
     'view_reports', 'view_analytics', 'export_data',
     'view_compliance', 'manage_compliance', 'upload_documents',
     'manage_facility_users', 'manage_permissions', 'view_audit_logs',
-    'view_job_openings', 'manage_job_openings'
+    'view_job_openings', 'manage_job_openings',
+    'view_workflow_automation', 'manage_workflow_automation',
+    'view_referral_system', 'manage_referral_system',
+    'view_attendance_reports', 'view_overtime_reports', 'view_float_pool_savings', 'view_agency_usage'
   ],
   scheduling_coordinator: [
     'view_schedules', 'create_shifts', 'edit_shifts', 'assign_staff', 'approve_shift_requests',
@@ -55,7 +66,9 @@ const ROLE_PERMISSIONS: Record<string, FacilityPermission[]> = {
   hr_manager: [
     'view_staff', 'create_staff', 'edit_staff', 'deactivate_staff', 'view_staff_credentials', 'edit_staff_credentials', 'manage_credentials',
     'view_compliance', 'manage_compliance', 'upload_documents', 'view_reports', 'export_data',
-    'view_job_openings', 'manage_job_openings'
+    'view_job_openings', 'manage_job_openings',
+    'view_referral_system', 'manage_referral_system',
+    'view_attendance_reports', 'view_overtime_reports'
   ],
   corporate: [
     'view_schedules', 'create_shifts', 'edit_shifts', 'assign_staff',
@@ -75,7 +88,9 @@ const ROLE_PERMISSIONS: Record<string, FacilityPermission[]> = {
   director_of_nursing: [
     'view_schedules', 'create_shifts', 'edit_shifts', 'assign_staff', 'approve_shift_requests',
     'view_staff', 'create_staff', 'edit_staff', 'view_staff_credentials', 'edit_staff_credentials', 'manage_credentials',
-    'view_reports', 'view_analytics', 'view_compliance', 'manage_compliance'
+    'view_reports', 'view_analytics', 'view_compliance', 'manage_compliance',
+    'view_referral_system', 'manage_referral_system',
+    'view_attendance_reports', 'view_overtime_reports', 'view_float_pool_savings'
   ],
   viewer: [
     'view_schedules', 'view_staff', 'view_facility_profile', 'view_billing', 'view_reports'

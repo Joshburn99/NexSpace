@@ -39,20 +39,17 @@ import StaffDirectory from "@/pages/StaffDirectory";
 import TimeClockPage from "@/pages/time-clock-page";
 import InvoicesPage from "@/pages/invoices-page";
 import EnhancedReferralPage from "@/pages/enhanced-referral-page";
-import OvertimeReportPage from "@/pages/overtime-report-page";
-import AttendancePage from "@/pages/attendance-page";
-import AgencyUsagePage from "@/pages/agency-usage-page";
 import CompliancePage from "@/pages/compliance-page";
 import SettingsPage from "@/pages/settings-page";
 import AdminImpersonationPage from "@/pages/admin-impersonation-page";
 import FacilityManagementPage from "@/pages/facility-management-page";
 import EnhancedJobPostingPage from "@/pages/enhanced-job-posting-page";
-import WorkflowAutomationPage from "@/pages/workflow-automation-page";
+
 import ClinicianDashboardWrapper from "@/pages/clinician-dashboard-wrapper";
 import EmployeeDashboardWrapper from "@/pages/employee-dashboard-wrapper";
 import FacilityUserDashboard from "@/pages/FacilityUserDashboard";
 import ContractorDashboardWrapper from "@/pages/contractor-dashboard-wrapper";
-import FloatPoolAnalyticsPage from "@/pages/float-pool-analytics-page";
+
 import FacilityRecommendationsPage from "@/pages/facility-recommendations-page";
 import VendorInvoicesPage from "@/pages/vendor-invoices-page";
 import AdminUserManagementPage from "@/pages/admin-user-management-page";
@@ -84,6 +81,12 @@ import ReportsPage from "@/pages/reports-page";
 import MessagesPage from "@/pages/messages-page";
 import JobPostingsPage from "@/pages/JobPostingsPage";
 import CreateJobPostingPage from "@/pages/CreateJobPostingPage";
+import ReferralSystemPage from "@/pages/ReferralSystemPage";
+import WorkflowAutomationPage from "@/pages/WorkflowAutomationPage";
+import AttendancePage from "@/pages/AttendancePage";
+import OvertimeReportPage from "@/pages/OvertimeReportPage";
+import FloatPoolAnalyticsPage from "@/pages/FloatPoolAnalyticsPage";
+import AgencyUsagePage from "@/pages/AgencyUsagePage";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -157,8 +160,13 @@ function AppContent() {
       <ProtectedRoute path="/facility-audit-logs" component={FacilityAuditLogsPage} />
       <ProtectedRoute path="/job-postings" component={JobPostingsPage} />
       <ProtectedRoute path="/create-job-posting" component={CreateJobPostingPage} />
-      <ProtectedRoute path="/job-posting" component={EnhancedJobPostingPage} />
+      <ProtectedRoute path="/referral-system" component={ReferralSystemPage} />
       <ProtectedRoute path="/workflow-automation" component={WorkflowAutomationPage} />
+      <ProtectedRoute path="/attendance" component={AttendancePage} />
+      <ProtectedRoute path="/overtime-report" component={OvertimeReportPage} />
+      <ProtectedRoute path="/float-pool-analytics" component={FloatPoolAnalyticsPage} />
+      <ProtectedRoute path="/agency-usage" component={AgencyUsagePage} />
+      <ProtectedRoute path="/job-posting" component={EnhancedJobPostingPage} />
       <ProtectedRoute path="/clinician-dashboard" component={ClinicianDashboardWrapper} />
       <ProtectedRoute path="/employee-dashboard" component={EmployeeDashboardWrapper} />
       <ProtectedRoute path="/contractor-dashboard" component={ContractorDashboardWrapper} />

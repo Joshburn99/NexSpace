@@ -159,8 +159,50 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
         icon: TrendingUp,
         permissions: ['view_analytics'],
         description: 'Advanced analytics and insights'
+      },
+      {
+        label: 'Attendance',
+        href: '/attendance',
+        icon: UserCheck,
+        permissions: ['view_attendance_reports'],
+        description: 'Staff attendance tracking and reports'
+      },
+      {
+        label: 'Overtime Report',
+        href: '/overtime-report',
+        icon: Clock,
+        permissions: ['view_overtime_reports'],
+        description: 'Overtime hours and cost analysis'
+      },
+      {
+        label: 'Float Pool Savings',
+        href: '/float-pool-analytics',
+        icon: TrendingUp,
+        permissions: ['view_float_pool_savings'],
+        description: 'Float pool cost savings analysis'
+      },
+      {
+        label: 'Agency Usage',
+        href: '/agency-usage',
+        icon: Building,
+        permissions: ['view_agency_usage'],
+        description: 'Agency staffing usage and costs'
       }
     ]
+  },
+  {
+    label: 'Workflow Automation',
+    href: '/workflow-automation',
+    icon: Settings,
+    permissions: ['view_workflow_automation'],
+    description: 'Automated workflow management'
+  },
+  {
+    label: 'Referral System',
+    href: '/referral-system',
+    icon: Users,
+    permissions: ['view_referral_system'],
+    description: 'Staff and facility referral management'
   },
   {
     label: 'Compliance',

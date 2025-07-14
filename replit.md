@@ -13,6 +13,28 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 14, 2025 - Enhanced Facility User Interface & Comprehensive Permissions System
+- **Sidebar Reorganization**: Restructured facility user sidebar with logical groupings and dropdown menus
+  - Schedule dropdown: Calendar View, Shift Requests, Shift Templates
+  - Job Board section: View Postings, Create Posting tabs with proper permissions
+  - Facility dropdown: Profile, Settings, Users grouped together
+  - Enhanced Reports section: Added Attendance, Overtime Report, Float Pool Savings, Agency Usage tabs
+- **New Permission System**: Added 8 new facility permissions for enhanced functionality
+  - Workflow automation permissions (view/manage_workflow_automation)
+  - Referral system permissions (view/manage_referral_system)
+  - Advanced reporting permissions (view_attendance_reports, view_overtime_reports, view_float_pool_savings, view_agency_usage)
+- **Referral System Implementation**: Built comprehensive referral management system
+  - Staff and facility referral tracking with bonus calculations
+  - Status workflow (pending → contacted → interviewed → hired/declined)
+  - Earnings tracking and referral performance metrics
+  - Permission-based access control for referral management
+- **Role Permission Updates**: Enhanced facility user roles with new permissions
+  - Facility Admin: Full access to all new features including workflow automation
+  - HR Manager: Referral system access and attendance/overtime reporting
+  - Director of Nursing: Referral system and operational reporting capabilities
+- **Job Board Permissions**: Fixed job board visibility in impersonation mode with proper permission checks
+- **FacilityId Context Fix**: Resolved facility profile and settings loading issues by properly implementing facilityId in useFacilityPermissions hook
+
 ### July 14, 2025 - Comprehensive Permission-Based UI System Implementation
 - **Permission Infrastructure**: Created complete permission-based UI system with reusable components for enterprise-level access control
   - PermissionWrapper (CanAccess): Conditional rendering component that shows/hides content based on user permissions
