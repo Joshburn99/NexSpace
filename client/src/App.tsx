@@ -82,6 +82,8 @@ import BillingDashboard from "@/pages/BillingDashboard";
 import RatesManagementPage from "@/pages/RatesManagementPage";
 import ReportsPage from "@/pages/reports-page";
 import MessagesPage from "@/pages/messages-page";
+import JobPostingsPage from "@/pages/JobPostingsPage";
+import CreateJobPostingPage from "@/pages/CreateJobPostingPage";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -153,6 +155,8 @@ function AppContent() {
       <ProtectedRoute path="/facility-settings" component={FacilitySettingsPage} />
       <ProtectedRoute path="/facility-users" component={FacilityUsersManagementPage} />
       <ProtectedRoute path="/facility-audit-logs" component={FacilityAuditLogsPage} />
+      <ProtectedRoute path="/job-postings" component={JobPostingsPage} />
+      <ProtectedRoute path="/create-job-posting" component={CreateJobPostingPage} />
       <ProtectedRoute path="/job-posting" component={EnhancedJobPostingPage} />
       <ProtectedRoute path="/workflow-automation" component={WorkflowAutomationPage} />
       <ProtectedRoute path="/clinician-dashboard" component={ClinicianDashboardWrapper} />

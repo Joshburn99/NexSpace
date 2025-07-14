@@ -41,10 +41,32 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   },
   {
     label: 'Schedule',
-    href: '/schedule',
     icon: Calendar,
     permissions: ['view_schedules'],
-    description: 'View and manage shift schedules'
+    description: 'Schedule management and planning',
+    children: [
+      {
+        label: 'Calendar View',
+        href: '/schedule',
+        icon: Calendar,
+        permissions: ['view_schedules'],
+        description: 'View and manage shift schedules'
+      },
+      {
+        label: 'Shift Requests',
+        href: '/shift-requests',
+        icon: FileText,
+        permissions: ['view_schedules'],
+        description: 'View and manage shift requests'
+      },
+      {
+        label: 'Shift Templates',
+        href: '/shift-templates',
+        icon: Clock,
+        permissions: ['view_schedules'],
+        description: 'Create and manage shift templates'
+      }
+    ]
   },
   {
     label: 'Staff Directory',
@@ -54,11 +76,26 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     description: 'View and manage staff members'
   },
   {
-    label: 'Shift Requests',
-    href: '/shift-requests',
-    icon: FileText,
-    permissions: ['view_schedules'],
-    description: 'View and manage shift requests'
+    label: 'Job Board',
+    icon: Building,
+    permissions: ['view_job_openings'],
+    description: 'Job postings and recruitment',
+    children: [
+      {
+        label: 'View Postings',
+        href: '/job-postings',
+        icon: FileText,
+        permissions: ['view_job_openings'],
+        description: 'View current job postings'
+      },
+      {
+        label: 'Create Posting',
+        href: '/create-job-posting',
+        icon: Users,
+        permissions: ['manage_job_openings'],
+        description: 'Create new job postings'
+      }
+    ]
   },
   {
     label: 'Messages',
@@ -133,25 +170,33 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     description: 'Manage compliance and credentials'
   },
   {
-    label: 'Facility Profile',
-    href: '/facility-profile',
+    label: 'Facility',
     icon: Building,
     permissions: ['view_facility_profile'],
-    description: 'View facility information'
-  },
-  {
-    label: 'Facility Settings',
-    href: '/facility-settings',
-    icon: Settings,
-    permissions: ['manage_facility_settings'],
-    description: 'Configure facility operations'
-  },
-  {
-    label: 'Facility Users',
-    href: '/facility-users',
-    icon: UserCheck,
-    permissions: ['manage_facility_users'],
-    description: 'Manage facility users and roles'
+    description: 'Facility management and settings',
+    children: [
+      {
+        label: 'Facility Profile',
+        href: '/facility-profile',
+        icon: Building,
+        permissions: ['view_facility_profile'],
+        description: 'View facility information'
+      },
+      {
+        label: 'Facility Settings',
+        href: '/facility-settings',
+        icon: Settings,
+        permissions: ['manage_facility_settings'],
+        description: 'Configure facility operations'
+      },
+      {
+        label: 'Facility Users',
+        href: '/facility-users',
+        icon: UserCheck,
+        permissions: ['manage_facility_users'],
+        description: 'Manage facility users and roles'
+      }
+    ]
   },
   {
     label: 'Audit Logs',

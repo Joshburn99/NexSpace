@@ -32,7 +32,9 @@ export type FacilityPermission =
   | 'manage_facility_users'
   | 'manage_facility_settings'
   | 'manage_permissions'
-  | 'view_audit_logs';
+  | 'view_audit_logs'
+  | 'view_job_openings'
+  | 'manage_job_openings';
 
 // Role-based permission mappings
 const ROLE_PERMISSIONS: Record<string, FacilityPermission[]> = {
@@ -43,7 +45,8 @@ const ROLE_PERMISSIONS: Record<string, FacilityPermission[]> = {
     'view_billing', 'manage_billing', 'view_rates', 'edit_rates', 'approve_invoices',
     'view_reports', 'view_analytics', 'export_data',
     'view_compliance', 'manage_compliance', 'upload_documents',
-    'manage_facility_users', 'manage_permissions', 'view_audit_logs'
+    'manage_facility_users', 'manage_permissions', 'view_audit_logs',
+    'view_job_openings', 'manage_job_openings'
   ],
   scheduling_coordinator: [
     'view_schedules', 'create_shifts', 'edit_shifts', 'assign_staff', 'approve_shift_requests',
@@ -51,7 +54,8 @@ const ROLE_PERMISSIONS: Record<string, FacilityPermission[]> = {
   ],
   hr_manager: [
     'view_staff', 'create_staff', 'edit_staff', 'deactivate_staff', 'view_staff_credentials', 'edit_staff_credentials', 'manage_credentials',
-    'view_compliance', 'manage_compliance', 'upload_documents', 'view_reports', 'export_data'
+    'view_compliance', 'manage_compliance', 'upload_documents', 'view_reports', 'export_data',
+    'view_job_openings', 'manage_job_openings'
   ],
   corporate: [
     'view_schedules', 'create_shifts', 'edit_shifts', 'assign_staff',
@@ -84,12 +88,26 @@ interface FacilityPermissionsContextType {
   hasAllPermissions: (permissions: FacilityPermission[]) => boolean;
   getUserPermissions: () => FacilityPermission[];
   canAccessPage: (page: string) => boolean;
+  facilityId: number | null;
 }
 
 const FacilityPermissionsContext = createContext<FacilityPermissionsContextType | null>(null);
 
 export function FacilityPermissionsProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
+  
+  const getFacilityId = (): number | null => {
+    if (!user) return null;
+    
+    // Check if user has associated facilities (for facility users)
+    const associatedFacilities = (user as any).associatedFacilities;
+    if (associatedFacilities && associatedFacilities.length > 0) {
+      return associatedFacilities[0]; // Use first associated facility
+    }
+    
+    // Fallback to user's facilityId
+    return user.facilityId || null;
+  };
   
   const getUserPermissions = (): FacilityPermission[] => {
     if (!user || user.role === 'super_admin') {
@@ -178,7 +196,8 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
       hasAnyPermission,
       hasAllPermissions,
       getUserPermissions,
-      canAccessPage
+      canAccessPage,
+      facilityId: getFacilityId()
     }}>
       {children}
     </FacilityPermissionsContext.Provider>
