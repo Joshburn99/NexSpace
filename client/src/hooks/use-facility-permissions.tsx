@@ -179,6 +179,9 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
   };
 
   const hasAnyPermission = (permissions: FacilityPermission[]): boolean => {
+    if (!permissions || permissions.length === 0) {
+      return false;
+    }
     return permissions.some(permission => hasPermission(permission));
   };
 

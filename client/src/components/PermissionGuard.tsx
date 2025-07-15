@@ -18,6 +18,11 @@ export function PermissionGuard({
 }: PermissionGuardProps) {
   const { hasPermission, hasAnyPermission } = useFacilityPermissions();
 
+  // Safety check for undefined or empty permissions
+  if (!requiredPermissions || requiredPermissions.length === 0) {
+    return <>{children}</>;
+  }
+
   const hasAccess = requireAll
     ? requiredPermissions.every(permission => hasPermission(permission))
     : hasAnyPermission(requiredPermissions);

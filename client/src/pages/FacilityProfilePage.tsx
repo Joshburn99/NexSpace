@@ -173,7 +173,7 @@ export default function FacilityProfilePage() {
           <h1 className="text-3xl font-bold">Facility Profile</h1>
           <p className="text-gray-600 mt-2">View and manage facility information</p>
         </div>
-        <PermissionGuard permission="edit_facility_profile">
+        <PermissionGuard requiredPermissions={["edit_facility_profile"]}>
           {!isEditing ? (
             <Button onClick={handleEdit}>
               <Edit className="h-4 w-4 mr-2" />
@@ -541,7 +541,7 @@ export default function FacilityProfilePage() {
         </TabsContent>
       </Tabs>
 
-      <PermissionGuard permission="manage_facility_settings">
+      <PermissionGuard requiredPermissions={["manage_facility_settings"]}>
         <Card className="mt-6">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
