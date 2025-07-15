@@ -165,7 +165,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const startImpersonation = async (userToImpersonate: SelectUser) => {
     if (!effectiveUser) return;
     
-    console.log('Starting impersonation:', userToImpersonate);
+    console.log('[IMPERSONATION] Starting impersonation:', userToImpersonate);
     
     try {
       // Call backend to properly start impersonation and get enhanced user data
@@ -174,8 +174,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       const impersonationData = await response.json();
       
+      console.log('[IMPERSONATION] Backend response:', impersonationData);
+      
       if (impersonationData.success && impersonationData.impersonatedUser) {
         const enhancedUser = impersonationData.impersonatedUser;
+        
+        console.log('[IMPERSONATION] Enhanced user data:', enhancedUser);
+        console.log('[IMPERSONATION] Associated facilities:', enhancedUser.associatedFacilities);
         
         setOriginalUser(effectiveUser);
         setCurrentUser(enhancedUser);
@@ -185,6 +190,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         // Force query client to update the user data with enhanced data
         queryClient.setQueryData(["/api/user"], enhancedUser);
+      } else {
+        console.error('[IMPERSONATION] No success or impersonated user in response:', impersonationData);
       }
     } catch (error) {
       console.error("Failed to start impersonation:", error);
