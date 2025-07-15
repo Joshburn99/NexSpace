@@ -74,8 +74,8 @@ export default function AdminImpersonationPage() {
     return matchesSearch && matchesRole && isNotCurrentUser;
   });
 
-  const handleImpersonate = (targetUser: SelectUser) => {
-    startImpersonation(targetUser);
+  const handleImpersonate = async (targetUser: SelectUser) => {
+    await startImpersonation(targetUser);
     // Navigate to appropriate dashboard based on role
     switch (targetUser.role) {
       case 'clinician':
@@ -95,7 +95,7 @@ export default function AdminImpersonationPage() {
     }
   };
 
-  const handleImpersonateFacilityUser = (targetUser: any) => {
+  const handleImpersonateFacilityUser = async (targetUser: any) => {
     // Convert facility user to impersonation format
     const impersonationUser = {
       id: targetUser.id,
@@ -112,7 +112,7 @@ export default function AdminImpersonationPage() {
       userType: 'facility_user' // Mark as facility user
     };
     
-    startImpersonation(impersonationUser);
+    await startImpersonation(impersonationUser);
     // Navigate to facility dashboard
     navigate('/dashboard');
   };

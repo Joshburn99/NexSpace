@@ -17,7 +17,7 @@ type AuthContextType = {
     Error,
     { username: string }
   >;
-  startImpersonation: (user: SelectUser) => void;
+  startImpersonation: (user: SelectUser) => Promise<void>;
   quitImpersonation: () => void;
   impersonatedUser: SelectUser | null;
   originalUser: SelectUser | null;
@@ -162,18 +162,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   // Impersonation functions
-  const startImpersonation = (userToImpersonate: SelectUser) => {
+  const startImpersonation = async (userToImpersonate: SelectUser) => {
     if (!effectiveUser) return;
     
     console.log('Starting impersonation:', userToImpersonate);
-    setOriginalUser(effectiveUser);
-    setCurrentUser(userToImpersonate);
-    setImpersonatedUser(userToImpersonate);
-    localStorage.setItem('originalUserId', effectiveUser.id.toString());
-    localStorage.setItem('impersonateUserId', userToImpersonate.id.toString());
     
-    // Force query client to update the user data
-    queryClient.setQueryData(["/api/user"], userToImpersonate);
+    try {
+      // Call backend to properly start impersonation and get enhanced user data
+      const response = await apiRequest("POST", "/api/impersonate", { 
+        userId: userToImpersonate.id 
+      });
+      const impersonationData = await response.json();
+      
+      if (impersonationData.success && impersonationData.impersonatedUser) {
+        const enhancedUser = impersonationData.impersonatedUser;
+        
+        setOriginalUser(effectiveUser);
+        setCurrentUser(enhancedUser);
+        setImpersonatedUser(enhancedUser);
+        localStorage.setItem('originalUserId', effectiveUser.id.toString());
+        localStorage.setItem('impersonateUserId', enhancedUser.id.toString());
+        
+        // Force query client to update the user data with enhanced data
+        queryClient.setQueryData(["/api/user"], enhancedUser);
+      }
+    } catch (error) {
+      console.error("Failed to start impersonation:", error);
+      toast({
+        title: "Impersonation failed",
+        description: "Unable to start impersonation. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const quitImpersonation = () => {
