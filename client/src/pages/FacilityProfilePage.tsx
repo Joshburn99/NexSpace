@@ -44,9 +44,23 @@ export default function FacilityProfilePage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: facility, isLoading } = useQuery<Facility>({
+  // Debug logging
+  console.log('[FACILITY_PROFILE] Component state:', {
+    facilityId,
+    hasPermission: hasPermission('view_facility_profile'),
+    permissions
+  });
+
+  const { data: facility, isLoading, error } = useQuery<Facility>({
     queryKey: ['/api/facilities', facilityId],
     enabled: !!facilityId && hasPermission('view_facility_profile'),
+  });
+
+  console.log('[FACILITY_PROFILE] Query state:', {
+    facility,
+    isLoading,
+    error,
+    enabled: !!facilityId && hasPermission('view_facility_profile')
   });
 
   const updateFacility = useMutation({
@@ -82,12 +96,40 @@ export default function FacilityProfilePage() {
     );
   }
 
+  if (!facilityId) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-gray-600">No facility ID available. Please ensure you are properly logged in.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="container mx-auto p-6">
         <Card>
           <CardContent className="p-6">
             <p className="text-gray-600">Loading facility profile...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error('[FACILITY_PROFILE] Error fetching facility:', error);
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="p-6">
+            <p className="text-red-600">Error loading facility profile. Please try again.</p>
+            <p className="text-sm text-gray-500 mt-2">
+              {error instanceof Error ? error.message : 'Unknown error'}
+            </p>
           </CardContent>
         </Card>
       </div>
