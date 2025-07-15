@@ -60,7 +60,8 @@ export default function FacilityProfilePage() {
     facility,
     isLoading,
     error,
-    enabled: !!facilityId && hasPermission('view_facility_profile')
+    enabled: !!facilityId && hasPermission('view_facility_profile'),
+    queryKey: ['/api/facilities', facilityId]
   });
 
   const updateFacility = useMutation({

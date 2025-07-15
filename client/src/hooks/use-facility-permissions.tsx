@@ -116,11 +116,12 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
     
     // Debug logging to understand what data we have
     console.log('[FACILITY_PERMISSIONS] getFacilityId debug:', {
-      user,
+      userEmail: user.email,
       userRole: user.role,
       facilityId: user.facilityId,
       associatedFacilities: (user as any).associatedFacilities,
-      availableProps: Object.keys(user)
+      availableProps: Object.keys(user),
+      hasAssociatedFacilities: !!(user as any).associatedFacilities && (user as any).associatedFacilities.length > 0
     });
     
     // Check if user has associated facilities (for facility users)
