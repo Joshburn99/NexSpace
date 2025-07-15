@@ -114,14 +114,37 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
   const getFacilityId = (): number | null => {
     if (!user) return null;
     
+    // Debug logging to understand what data we have
+    console.log('[FACILITY_PERMISSIONS] getFacilityId debug:', {
+      user,
+      userRole: user.role,
+      facilityId: user.facilityId,
+      associatedFacilities: (user as any).associatedFacilities,
+      availableProps: Object.keys(user)
+    });
+    
     // Check if user has associated facilities (for facility users)
     const associatedFacilities = (user as any).associatedFacilities;
     if (associatedFacilities && associatedFacilities.length > 0) {
+      console.log('[FACILITY_PERMISSIONS] Using associated facility:', associatedFacilities[0]);
       return associatedFacilities[0]; // Use first associated facility
     }
     
-    // Fallback to user's facilityId
-    return user.facilityId || null;
+    // For facility users, try to get from user's direct facilityId
+    if (user.facilityId) {
+      console.log('[FACILITY_PERMISSIONS] Using user facilityId:', user.facilityId);
+      return user.facilityId;
+    }
+    
+    // For super admins during impersonation, they might not have a facilityId
+    // Try to get from impersonated user data if available
+    if (user.role === 'super_admin') {
+      console.log('[FACILITY_PERMISSIONS] Super admin user - no facility ID needed');
+      return null;
+    }
+    
+    console.log('[FACILITY_PERMISSIONS] No facility ID found');
+    return null;
   };
   
   const getUserPermissions = (): FacilityPermission[] => {
