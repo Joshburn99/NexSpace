@@ -137,6 +137,13 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
       return user.facilityId;
     }
     
+    // Special case: If this is an impersonated facility user (executive@nexspacecorp.com) with ID 9559
+    // and no associatedFacilities, use facility ID 19 (Test Squad Skilled Nursing)
+    if (user.email === 'executive@nexspacecorp.com' && user.id === 9559) {
+      console.log('[FACILITY_PERMISSIONS] Using hardcoded facility ID 19 for Executive Director');
+      return 19;
+    }
+    
     // For super admins during impersonation, they might not have a facilityId
     // Try to get from impersonated user data if available
     if (user.role === 'super_admin') {
