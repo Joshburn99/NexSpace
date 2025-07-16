@@ -6639,6 +6639,9 @@ export function registerRoutes(app: Express): Server {
       const { userId } = req.body;
       const currentUser = req.user;
       
+      console.log(`[IMPERSONATION] Impersonation request received for userId: ${userId}`);
+      console.log(`[IMPERSONATION] Current user:`, currentUser);
+      
       if (!currentUser || currentUser.role !== 'super_admin') {
         return res.status(403).json({ message: "Only super admins can impersonate users" });
       }
@@ -6648,10 +6651,14 @@ export function registerRoutes(app: Express): Server {
       (req.session as any).impersonatedUserId = userId;
       
       // Get the user to impersonate
+      console.log(`[IMPERSONATION] Getting user with ID: ${userId}`);
       const targetUser = await storage.getUser(userId);
       if (!targetUser) {
+        console.log(`[IMPERSONATION] User not found for ID: ${userId}`);
         return res.status(404).json({ message: "User not found" });
       }
+      
+      console.log(`[IMPERSONATION] Target user found:`, targetUser);
 
       // If this is a facility user, fetch their permissions and facility associations
       if (targetUser.role !== 'super_admin') {
