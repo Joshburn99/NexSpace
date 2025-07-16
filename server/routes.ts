@@ -6728,6 +6728,12 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/stop-impersonation", requireAuth, async (req, res) => {
     try {
+      console.log(`[IMPERSONATION] Stop impersonation request received`);
+      console.log(`[IMPERSONATION] Session before stop:`, { 
+        hasOriginalUser: !!(req.session as any).originalUser,
+        hasImpersonatedUserId: !!(req.session as any).impersonatedUserId
+      });
+      
       if (!(req.session as any).originalUser) {
         return res.status(400).json({ message: "No active impersonation session" });
       }
@@ -6736,6 +6742,7 @@ export function registerRoutes(app: Express): Server {
       delete (req.session as any).originalUser;
       delete (req.session as any).impersonatedUserId;
 
+      console.log(`[IMPERSONATION] Impersonation stopped successfully`);
       res.json({ 
         success: true, 
         restoredUser: originalUser 
