@@ -118,6 +118,7 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
     console.log('[FACILITY_PERMISSIONS] getFacilityId debug:', {
       userEmail: user.email,
       userRole: user.role,
+      userId: user.id,
       facilityId: user.facilityId,
       associatedFacilities: (user as any).associatedFacilities,
       availableProps: Object.keys(user),
