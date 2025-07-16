@@ -6656,7 +6656,9 @@ export function registerRoutes(app: Express): Server {
       // If this is a facility user, fetch their permissions and facility associations
       if (targetUser.role !== 'super_admin') {
         try {
-          // Get facility user data to include both individual permissions and associated facilities
+          console.log(`[IMPERSONATION] Processing facility user: ${targetUser.email}`);
+          
+          // First try to get facility user data from facility_users table
           const facilityUser = await storage.getFacilityUserByEmail(targetUser.email);
           if (facilityUser) {
             // Use individual permissions from the database if available
@@ -6681,6 +6683,25 @@ export function registerRoutes(app: Express): Server {
             // Include facility user role for proper permission handling
             (targetUser as any).facilityRole = facilityUser.role;
             console.log(`[IMPERSONATION] Set facility role for ${targetUser.email}:`, facilityUser.role);
+          } else {
+            // If not in facility_users table, check if user has associated_facilities in users table
+            console.log(`[IMPERSONATION] User not found in facility_users, checking users table data`);
+            
+            if (targetUser.associated_facilities && targetUser.associated_facilities.length > 0) {
+              (targetUser as any).associatedFacilities = targetUser.associated_facilities;
+              console.log(`[IMPERSONATION] Set associatedFacilities from users table for ${targetUser.email}:`, targetUser.associated_facilities);
+            }
+            
+            // Get role template permissions
+            const roleTemplate = await storage.getFacilityUserRoleTemplate(targetUser.role);
+            if (roleTemplate && roleTemplate.permissions) {
+              (targetUser as any).permissions = roleTemplate.permissions;
+              console.log(`[IMPERSONATION] Set role template permissions for ${targetUser.email}:`, roleTemplate.permissions);
+            }
+            
+            // Set facility role to user's role
+            (targetUser as any).facilityRole = targetUser.role;
+            console.log(`[IMPERSONATION] Set facility role for ${targetUser.email}:`, targetUser.role);
           }
         } catch (error) {
           console.error("Error fetching user permissions:", error);
