@@ -13,6 +13,16 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 20, 2025 - Facility Association Validation for Shift Creation
+- **Frontend Facility Filtering**: Enhanced Add Shift modal to only show facilities that facility users are associated with
+- **Backend Validation**: Added comprehensive facility association validation in the new `/api/shifts` POST endpoint
+- **Permission System Audit**: Completed extensive audit and standardization of all 17 facility user permissions
+  - Updated all facility users with standardized permission names (view_schedules, create_shifts, etc.)
+  - Added missing permissions for comprehensive sidebar access across all user roles
+  - Fixed role mappings for regional_director and facility_administrator roles
+- **Security Enhancement**: Facility users can now only create shifts for facilities they are associated with, preventing unauthorized cross-facility shift creation
+- **UI Consistency**: All facility users now see proper sidebar navigation based on their permissions with no missing tabs
+
 ### July 14, 2025 - Enhanced Facility User Interface & Comprehensive Permissions System
 - **Sidebar Reorganization**: Restructured facility user sidebar with logical groupings and dropdown menus
   - Schedule dropdown: Calendar View, Shift Requests, Shift Templates

@@ -239,7 +239,18 @@ export default function EnhancedCalendarPage() {
   });
 
   // Fetch facilities for filters using centralized hook
-  const { data: facilities = [] } = useFacilities({ isActive: true });
+  const { data: allFacilities = [] } = useFacilities({ isActive: true });
+  
+  // Filter facilities based on user associations
+  const facilities = useMemo(() => {
+    if (!isFacilityUser || !userAssociatedFacilities.length) {
+      return allFacilities;
+    }
+    // For facility users, only show facilities they are associated with
+    return allFacilities.filter(facility => 
+      userAssociatedFacilities.includes(facility.id)
+    );
+  }, [allFacilities, isFacilityUser, userAssociatedFacilities]);
 
   // Fetch staff for filters
   const { data: staff = [] } = useQuery({

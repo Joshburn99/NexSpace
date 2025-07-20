@@ -8302,6 +8302,80 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Create shift endpoint - validates facility associations for facility users
+  app.post("/api/shifts", requireAuth, async (req, res) => {
+    try {
+      const shiftData = req.body;
+      const user = (req as any).user;
+      
+      if (!user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      
+      // Validate facility association for facility users
+      if (user.role !== 'super_admin') {
+        const facilityUser = await storage.getFacilityUserByEmail(user.email);
+        if (facilityUser && facilityUser.associatedFacilityIds) {
+          const associatedFacilityIds = facilityUser.associatedFacilityIds;
+          const requestedFacilityId = parseInt(shiftData.facilityId);
+          
+          if (!associatedFacilityIds.includes(requestedFacilityId)) {
+            return res.status(403).json({ 
+              message: "You can only create shifts for facilities you are associated with" 
+            });
+          }
+        }
+      }
+      
+      // Generate unique shift ID
+      const shiftId = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
+      
+      // Get facility details
+      const facilities = await storage.getFacilities({ isActive: true });
+      const facility = facilities.find(f => f.id === parseInt(shiftData.facilityId));
+      
+      // Insert shift into generated_shifts table
+      await db.insert(generatedShifts).values({
+        id: shiftId,
+        templateId: 0,
+        title: shiftData.title || "Untitled Shift",
+        date: shiftData.date || new Date().toISOString().split('T')[0],
+        startTime: shiftData.startTime || "07:00",
+        endTime: shiftData.endTime || "19:00",
+        department: shiftData.specialty || "General",
+        specialty: shiftData.specialty || "General",
+        facilityId: parseInt(shiftData.facilityId) || 1,
+        facilityName: facility?.name || "General Hospital",
+        buildingId: "main-building",
+        buildingName: "Main Building",
+        status: "open",
+        rate: parseFloat(shiftData.rate) || 45.0,
+        urgency: shiftData.urgency || "medium",
+        description: shiftData.description || "",
+        requiredWorkers: parseInt(shiftData.requiredStaff) || 1,
+        minStaff: 1,
+        maxStaff: parseInt(shiftData.requiredStaff) || 1,
+        totalHours: 8,
+        shiftType: shiftData.shiftType || "Day"
+      });
+      
+      res.json({
+        message: "Shift created successfully",
+        shiftId,
+        shift: {
+          id: shiftId,
+          ...shiftData,
+          status: "open",
+          createdAt: new Date().toISOString()
+        }
+      });
+      
+    } catch (error) {
+      console.error('Create shift error:', error);
+      res.status(500).json({ message: "Failed to create shift" });
+    }
+  });
+
   // Post shift endpoint - generates individual shifts to database
   app.post("/api/shifts/post", requireAuth, async (req, res) => {
     try {
