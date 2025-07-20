@@ -343,8 +343,8 @@ export function registerRoutes(app: Express): Server {
         // If no associatedFacilities in user object, try to fetch from facility_users table
         try {
           const facilityUser = await storage.getFacilityUserByEmail(user.email);
-          if (facilityUser && facilityUser.associated_facility_ids) {
-            userAssociatedFacilities = facilityUser.associated_facility_ids;
+          if (facilityUser && facilityUser.associatedFacilityIds) {
+            userAssociatedFacilities = facilityUser.associatedFacilityIds;
             console.log(`[FACILITY FILTER] Found facilities for ${user.email}:`, userAssociatedFacilities);
           }
         } catch (error) {
@@ -5547,13 +5547,48 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Shift Templates API
+  // Shift Templates API with facility filtering
   app.get("/api/shift-templates", requireAuth, async (req, res) => {
     try {
-      const templates = await db.select().from(shiftTemplates);
+      const currentUser = req.user;
+      
+      // Get the effective user (original or impersonated)
+      const impersonatedUserId = (req.session as any).impersonatedUserId;
+      let effectiveUser = currentUser;
+      
+      if (impersonatedUserId) {
+        effectiveUser = await storage.getUser(impersonatedUserId);
+        if (effectiveUser && effectiveUser.role !== 'super_admin') {
+          const facilityUser = await storage.getFacilityUserByEmail(effectiveUser.email);
+          if (facilityUser) {
+            (effectiveUser as any).associatedFacilities = facilityUser.associatedFacilityIds;
+          }
+        }
+      }
+      
+      console.log(`[SHIFT TEMPLATES API] Fetching templates for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`);
+      
+      // Get all templates from database
+      const allTemplates = await db.select().from(shiftTemplates);
+      
+      // Filter templates based on user's facility associations
+      let filteredTemplates = allTemplates;
+      
+      if (effectiveUser?.role !== 'super_admin') {
+        const userFacilities = (effectiveUser as any).associatedFacilities || [];
+        console.log(`[SHIFT TEMPLATES API] Filtering templates for facilities:`, userFacilities);
+        
+        if (userFacilities && userFacilities.length > 0) {
+          filteredTemplates = allTemplates.filter(template => 
+            userFacilities.includes(template.facilityId)
+          );
+        }
+      }
+      
+      console.log(`[SHIFT TEMPLATES API] Returning ${filteredTemplates.length} templates`);
       
       // Transform database response to frontend format
-      const formattedTemplates = templates.map(template => ({
+      const formattedTemplates = filteredTemplates.map(template => ({
         id: template.id,
         name: template.name,
         department: template.department,
@@ -6597,7 +6632,7 @@ export function registerRoutes(app: Express): Server {
         if (effectiveUser && effectiveUser.role !== 'super_admin') {
           const facilityUser = await storage.getFacilityUserByEmail(effectiveUser.email);
           if (facilityUser) {
-            (effectiveUser as any).associatedFacilities = facilityUser.associated_facility_ids;
+            (effectiveUser as any).associatedFacilities = facilityUser.associatedFacilityIds;
           }
         }
       }
