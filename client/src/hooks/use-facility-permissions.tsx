@@ -76,7 +76,24 @@ const ROLE_PERMISSIONS: Record<string, FacilityPermission[]> = {
   ],
   regional_director: [
     'view_schedules', 'create_shifts', 'edit_shifts', 'assign_staff',
-    'view_staff', 'view_reports', 'view_analytics'
+    'view_staff', 'view_facility_profile', 'edit_facility_profile', 
+    'view_billing', 'view_reports', 'view_analytics', 'export_data',
+    'view_compliance', 'manage_compliance',
+    'view_referral_system', 'manage_referral_system',
+    'view_attendance_reports', 'view_overtime_reports', 'view_float_pool_savings', 'view_agency_usage'
+  ],
+  facility_administrator: [
+    'view_schedules', 'create_shifts', 'edit_shifts', 'delete_shifts', 'assign_staff', 'approve_shift_requests',
+    'view_staff', 'create_staff', 'edit_staff', 'deactivate_staff', 'view_staff_credentials', 'edit_staff_credentials', 'manage_credentials',
+    'view_facility_profile', 'edit_facility_profile', 'manage_facility_settings',
+    'view_billing', 'manage_billing', 'view_rates', 'edit_rates', 'approve_invoices',
+    'view_reports', 'view_analytics', 'export_data',
+    'view_compliance', 'manage_compliance', 'upload_documents',
+    'manage_facility_users', 'view_audit_logs',
+    'view_job_openings', 'manage_job_openings',
+    'view_workflow_automation', 'manage_workflow_automation',
+    'view_referral_system', 'manage_referral_system',
+    'view_attendance_reports', 'view_overtime_reports', 'view_float_pool_savings', 'view_agency_usage'
   ],
   billing: [
     'view_billing', 'manage_billing', 'view_rates', 'edit_rates', 'approve_invoices',
