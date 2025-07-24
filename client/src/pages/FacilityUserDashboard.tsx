@@ -221,11 +221,50 @@ export default function FacilityUserDashboard() {
   const { user } = useAuth();
   const { hasPermission } = useFacilityPermissions();
 
-  // Fetch live dashboard data
+  // Fetch live dashboard data with fallback
   const { data: dashboardStats, isLoading, error } = useQuery<DashboardStats>({
     queryKey: ['/api/dashboard/stats'],
     refetchInterval: 30000, // Refresh every 30 seconds
+    retry: false, // Don't retry failed requests to prevent endless loading
   });
+
+  // Fallback data for when API fails
+  const fallbackStats: DashboardStats = {
+    activeStaff: 67,
+    openShifts: 23,
+    complianceRate: 87,
+    monthlyHours: 2840,
+    totalFacilities: 3,
+    urgentShifts: 8,
+    expiringCredentials: 5,
+    outstandingInvoices: 3,
+    monthlyRevenue: 125000,
+    recentActivity: [
+      {
+        id: 1,
+        action: "Shift assignment updated",
+        resource: "ICU Night Shift",
+        createdAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+        user: { firstName: "Sarah", lastName: "Johnson" }
+      },
+      {
+        id: 2,
+        action: "Staff credential renewed",
+        resource: "RN License",
+        createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        user: { firstName: "Mike", lastName: "Chen" }
+      }
+    ],
+    priorityTasks: [
+      { id: "1", title: "Urgent Shifts", type: "urgent", count: 8 },
+      { id: "2", title: "Expiring Credentials", type: "warning", count: 5 },
+      { id: "3", title: "Pending Invoices", type: "info", count: 3 }
+    ]
+  };
+
+  // Use fallback data if API fails, but show loading state initially
+  const stats = dashboardStats || fallbackStats;
+  const isUsingFallback = !dashboardStats && !isLoading;
 
   if (isLoading) {
     return (
@@ -240,22 +279,6 @@ export default function FacilityUserDashboard() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-6">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-red-600" />
-            <p className="text-lg font-medium text-red-600">Failed to load dashboard</p>
-            <p className="text-sm text-gray-600">Please refresh the page to try again</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  const stats = dashboardStats!;
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="p-6 space-y-6">
@@ -266,9 +289,17 @@ export default function FacilityUserDashboard() {
             <p className="text-gray-600">
               Welcome back, {user?.firstName}. Here's what's happening at your facilities.
             </p>
+            {isUsingFallback && (
+              <div className="mt-2 flex items-center gap-2 text-sm text-amber-600">
+                <AlertTriangle className="h-4 w-4" />
+                <span>Using sample data - Live data temporarily unavailable</span>
+              </div>
+            )}
           </div>
           <div className="text-right">
-            <div className="text-sm text-gray-500">Last updated</div>
+            <div className="text-sm text-gray-500">
+              {isUsingFallback ? "Sample Data" : "Live Data"}
+            </div>
             <div className="text-lg font-medium">{new Date().toLocaleTimeString()}</div>
           </div>
         </div>

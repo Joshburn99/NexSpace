@@ -269,6 +269,13 @@ export default function HomePage() {
     setLocation('/facility-dashboard');
     return null;
   }
+
+  // Redirect super admins to facility dashboard as well for consistent experience
+  if (currentUser?.role === 'super_admin') {
+    setLocation('/facility-dashboard');
+    return null;
+  }
+  
   const [selectedTab, setSelectedTab] = useState("overview");
   const [selectedBuilding, setSelectedBuilding] = useState("main");
 
