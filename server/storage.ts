@@ -1159,16 +1159,16 @@ export class DatabaseStorage implements IStorage {
   // Dashboard customization methods
   async getUserDashboardWidgets(userId: number): Promise<any> {
     try {
-      // Try to get existing user configuration from database
-      const existingConfig = await this.db
-        .select()
-        .from(schema.userDashboardWidgets)
-        .where(eq(schema.userDashboardWidgets.userId, userId))
+      // Try to get existing user configuration from users table
+      const user = await this.db
+        .select({ dashboardPreferences: schema.users.dashboardPreferences })
+        .from(schema.users)
+        .where(eq(schema.users.id, userId))
         .limit(1);
 
-      if (existingConfig.length > 0) {
+      if (user.length > 0 && user[0].dashboardPreferences) {
         console.log(`[STORAGE] Found existing dashboard config for user ${userId}`);
-        return existingConfig[0].widget_configuration;
+        return user[0].dashboardPreferences;
       }
 
       // Return default widget configuration if none exists
@@ -1226,35 +1226,16 @@ export class DatabaseStorage implements IStorage {
         widgets: widgets
       };
 
-      // Check if user already has a configuration
-      const existingConfig = await this.db
-        .select()
-        .from(schema.userDashboardWidgets)
-        .where(eq(schema.userDashboardWidgets.userId, userId))
-        .limit(1);
-
-      if (existingConfig.length > 0) {
-        // Update existing configuration
-        await this.db
-          .update(schema.userDashboardWidgets)
-          .set({
-            widget_configuration: widgetConfiguration,
-            updatedAt: new Date()
-          })
-          .where(eq(schema.userDashboardWidgets.userId, userId));
-        
-        console.log(`[STORAGE] Updated dashboard configuration for user ${userId}`);
-      } else {
-        // Insert new configuration
-        await this.db
-          .insert(schema.userDashboardWidgets)
-          .values({
-            userId: userId,
-            widget_configuration: widgetConfiguration
-          });
-        
-        console.log(`[STORAGE] Created new dashboard configuration for user ${userId}`);
-      }
+      // Update user's dashboard preferences
+      await this.db
+        .update(schema.users)
+        .set({
+          dashboardPreferences: widgetConfiguration,
+          updatedAt: new Date()
+        })
+        .where(eq(schema.users.id, userId));
+      
+      console.log(`[STORAGE] Updated dashboard preferences for user ${userId}`);
     } catch (error) {
       console.error(`[STORAGE] Error saving dashboard widgets for user ${userId}:`, error);
       throw error;

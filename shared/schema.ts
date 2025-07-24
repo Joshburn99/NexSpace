@@ -164,6 +164,7 @@ export const users = pgTable("users", {
   specialty: text("specialty"), // Worker specialty (RN, CNA, PT, etc.)
   associatedFacilities: jsonb("associated_facilities"), // Array of facility IDs for workers
   availabilityStatus: text("availability_status").default("available"), // available, unavailable, busy
+  dashboardPreferences: jsonb("dashboard_preferences"), // stores widget layout and preferences
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
