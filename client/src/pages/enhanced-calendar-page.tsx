@@ -1503,7 +1503,8 @@ export default function EnhancedCalendarPage() {
                     onChange={(e) => setShiftFormData({...shiftFormData, facilityId: e.target.value})}
                   >
                     <option value="">Select Facility</option>
-                    {facilities.map((facility) => (
+                    {/* Only show facilities the user is associated with */}
+                    {(isFacilityUser ? filteredFacilities : facilities).map((facility) => (
                       <option key={facility.id} value={facility.id.toString()}>
                         {getFacilityDisplayName(facility)}
                       </option>

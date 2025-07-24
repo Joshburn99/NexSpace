@@ -179,18 +179,61 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Dashboard API
+  // Dashboard API - Enhanced with comprehensive statistics
   app.get("/api/dashboard/stats", requireAuth, async (req: any, res) => {
     try {
-      const facilityId = req.user.facilityId;
-      if (!facilityId) {
-        return res.status(400).json({ message: "User not assigned to a facility" });
+      const facilityId = req.user?.facilityId;
+      const associatedFacilities = req.user?.associatedFacilities;
+      
+      // For facility users, use their associated facilities or single facility
+      let facilityIds: number[] = [];
+      if (req.user?.role?.includes('facility_') || req.user?.role?.includes('_admin')) {
+        if (associatedFacilities && associatedFacilities.length > 0) {
+          facilityIds = associatedFacilities;
+        } else if (facilityId) {
+          facilityIds = [facilityId];
+        }
       }
-
-      const stats = await storage.getFacilityStats(facilityId);
+      
+      // Get comprehensive dashboard stats
+      const stats = await storage.getDashboardStats(facilityIds.length > 0 ? facilityIds : undefined);
+      
       res.json(stats);
     } catch (error) {
-      res.status(500).json({ message: "Failed to fetch dashboard stats" });
+      console.error('Dashboard stats error:', error);
+      res.status(500).json({ error: 'Failed to fetch dashboard statistics' });
+    }
+  });
+
+  // Dashboard widget configuration API
+  app.get("/api/dashboard/widgets", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const widgets = await storage.getUserDashboardWidgets(userId);
+      res.json(widgets);
+    } catch (error) {
+      console.error('Dashboard widgets error:', error);
+      res.status(500).json({ error: 'Failed to fetch dashboard widgets' });
+    }
+  });
+
+  app.post("/api/dashboard/widgets", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ error: 'User not authenticated' });
+      }
+      
+      const { widgets } = req.body;
+      await storage.saveDashboardWidgets(userId, widgets);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Save dashboard widgets error:', error);
+      res.status(500).json({ error: 'Failed to save dashboard widgets' });
     }
   });
 

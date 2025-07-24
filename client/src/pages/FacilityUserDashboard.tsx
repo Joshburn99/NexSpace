@@ -1,330 +1,395 @@
 import React from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
-import { CanAccess } from '@/components/PermissionWrapper';
-import { PermissionButton } from '@/components/PermissionButton';
-import { PermissionDashboard, PriorityTasks } from '@/components/PermissionDashboard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  Calendar,
-  Users,
-  DollarSign,
-  AlertTriangle,
-  TrendingUp,
-  Clock,
-  CheckCircle,
-  XCircle,
-  Plus,
-  Eye,
-  Edit,
-  Shield,
-  BarChart3
-} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { CalendarDays, Clock, Users, AlertTriangle, CheckCircle, TrendingUp, DollarSign, FileText, Loader2, Shield, Activity, Plus, Edit, X, Building, Settings } from "lucide-react";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
+import { CanAccess } from "@/components/PermissionWrapper";
+import { PermissionButton } from "@/components/PermissionButton";
+import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "@/hooks/use-auth";
 
-// Dashboard metrics based on role permissions
-const getDashboardMetrics = (permissions: string[]) => {
-  const metrics = [];
+interface DashboardStats {
+  activeStaff: number;
+  openShifts: number;
+  complianceRate: number;
+  monthlyHours: number;
+  totalFacilities: number;
+  urgentShifts: number;
+  expiringCredentials: number;
+  outstandingInvoices: number;
+  monthlyRevenue: number;
+  recentActivity: Array<{
+    id: number;
+    action: string;
+    resource: string;
+    createdAt: string;
+    user: {
+      firstName: string;
+      lastName: string;
+    } | null;
+  }>;
+  priorityTasks: Array<{
+    id: string;
+    title: string;
+    type: 'urgent' | 'warning' | 'info';
+    count: number;
+  }>;
+}
+
+// Comprehensive stats card component
+const StatsCard: React.FC<{
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  icon: React.ElementType;
+  trend?: 'up' | 'down' | 'neutral';
+  trendValue?: string;
+  permission?: string;
+}> = ({ title, value, subtitle, icon: Icon, trend, trendValue, permission }) => {
+  const { hasPermission } = useFacilityPermissions();
   
-  if (permissions.includes('view_schedules')) {
-    metrics.push({
-      title: 'Active Staff',
-      value: '67',
-      change: '+5 from yesterday',
-      icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
-      permission: 'view_schedules'
-    });
-    
-    metrics.push({
-      title: 'Open Shifts',
-      value: '23',
-      change: '+8 urgent',
-      icon: Calendar,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50',
-      permission: 'view_schedules'
-    });
+  if (permission && !hasPermission(permission)) {
+    return null;
   }
-  
-  if (permissions.includes('view_billing')) {
-    metrics.push({
-      title: 'Outstanding Invoices',
-      value: '$36,550',
-      change: '3 overdue invoices',
-      icon: DollarSign,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50',
-      permission: 'view_billing'
-    });
-    
-    metrics.push({
-      title: 'Monthly Revenue',
-      value: '$2,840',
-      change: '+12% vs target',
-      icon: TrendingUp,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50',
-      permission: 'view_billing'
-    });
-  }
-  
-  if (permissions.includes('view_compliance') || permissions.includes('manage_compliance')) {
-    metrics.push({
-      title: 'Compliance Rate',
-      value: '87%',
-      change: '-3% this week',
-      icon: Shield,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-50',
-      permission: 'view_compliance'
-    });
-  }
-  
-  return metrics;
+
+  const getTrendColor = (trend?: 'up' | 'down' | 'neutral') => {
+    switch (trend) {
+      case 'up': return 'text-green-600';
+      case 'down': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getTrendIcon = (trend?: 'up' | 'down' | 'neutral') => {
+    switch (trend) {
+      case 'up': return TrendingUp;
+      case 'down': return TrendingUp;
+      default: return Activity;
+    }
+  };
+
+  const TrendIcon = getTrendIcon(trend);
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium text-gray-600">{title}</CardTitle>
+        <Icon className="h-4 w-4 text-gray-400" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+        {(subtitle || trendValue) && (
+          <div className="flex items-center space-x-1 text-xs">
+            {trend && <TrendIcon className={`h-3 w-3 ${getTrendColor(trend)}`} />}
+            <span className={getTrendColor(trend)}>
+              {trendValue && trendValue}
+              {subtitle && !trendValue && subtitle}
+            </span>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 };
 
-// Priority tasks based on permissions
-const getPriorityTasks = (permissions: string[]) => {
-  const tasks = [];
-  
-  if (permissions.includes('view_schedules')) {
-    tasks.push({
-      title: 'Urgent Shifts Unfilled',
-      description: '7 critical shifts need immediate coverage for next 24 hours',
-      priority: 'CRITICAL',
-      count: 7,
-      icon: AlertTriangle,
-      permission: 'view_schedules',
-      actionText: 'View Shifts',
-      actionPermission: 'view_schedules'
-    });
+// Priority tasks component
+const PriorityTasksList: React.FC<{ tasks: DashboardStats['priorityTasks'] }> = ({ tasks }) => {
+  const getTaskBadgeColor = (type: 'urgent' | 'warning' | 'info') => {
+    switch (type) {
+      case 'urgent': return 'bg-red-100 text-red-800';
+      case 'warning': return 'bg-yellow-100 text-yellow-800';
+      case 'info': return 'bg-blue-100 text-blue-800';
+    }
+  };
+
+  if (tasks.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <CheckCircle className="h-5 w-5 text-green-600" />
+            Priority Tasks
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-center py-8 text-gray-500">
+            <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-600" />
+            <p className="text-lg font-medium">All caught up!</p>
+            <p className="text-sm">No urgent tasks require attention at this time.</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
   }
-  
-  if (permissions.includes('view_compliance') || permissions.includes('manage_compliance')) {
-    tasks.push({
-      title: 'Expiring Credentials',
-      description: '12 staff members have credentials expiring within 30 days',
-      priority: 'HIGH',
-      count: 12,
-      icon: Clock,
-      permission: 'view_compliance',
-      actionText: 'Review Credentials',
-      actionPermission: 'view_compliance'
-    });
-  }
-  
-  if (permissions.includes('view_billing')) {
-    tasks.push({
-      title: 'Overdue Invoices',
-      description: '3 invoices are past due date - requires immediate attention',
-      priority: 'CRITICAL',
-      count: 3,
-      icon: DollarSign,
-      permission: 'view_billing',
-      actionText: 'Review Invoices',
-      actionPermission: 'view_billing'
-    });
-  }
-  
-  if (permissions.includes('approve_invoices')) {
-    tasks.push({
-      title: 'Pending Invoice Approvals',
-      description: '8 contractor invoices awaiting approval',
-      priority: 'HIGH',
-      count: 8,
-      icon: CheckCircle,
-      permission: 'approve_invoices',
-      actionText: 'Approve Invoices',
-      actionPermission: 'approve_invoices'
-    });
-  }
-  
-  if (permissions.includes('manage_compliance')) {
-    tasks.push({
-      title: 'Compliance Alert',
-      description: 'ICU unit below minimum staffing ratio - immediate attention required',
-      priority: 'CRITICAL',
-      count: 1,
-      icon: Shield,
-      permission: 'manage_compliance',
-      actionText: 'View Details',
-      actionPermission: 'manage_compliance'
-    });
-  }
-  
-  return tasks;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <AlertTriangle className="h-5 w-5 text-amber-600" />
+          Priority Tasks
+          <Badge variant="secondary">{tasks.length}</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {tasks.map((task) => (
+          <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-medium">{task.title}</span>
+                <Badge className={getTaskBadgeColor(task.type)}>
+                  {task.type.toUpperCase()}
+                </Badge>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-gray-900">{task.count}</div>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
 };
 
-export default function FacilityUserDashboard() {
-  const { user } = useAuth();
-  const { getUserPermissions, hasPermission } = useFacilityPermissions();
-  
-  const userPermissions = getUserPermissions();
-  const dashboardMetrics = getDashboardMetrics(userPermissions);
-  const priorityTasks = getPriorityTasks(userPermissions);
-  
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'CRITICAL': return 'border-red-500 text-red-700 bg-red-50';
-      case 'HIGH': return 'border-orange-500 text-orange-700 bg-orange-50';
-      default: return 'border-blue-500 text-blue-700 bg-blue-50';
+// Recent activity component
+const RecentActivity: React.FC<{ activities: DashboardStats['recentActivity'] }> = ({ activities }) => {
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    return date.toLocaleDateString();
+  };
+
+  const getActionIcon = (action: string) => {
+    switch (action.toLowerCase()) {
+      case 'create': return <Plus className="h-3 w-3" />;
+      case 'update': return <Edit className="h-3 w-3" />;
+      case 'delete': return <X className="h-3 w-3" />;
+      default: return <Activity className="h-3 w-3" />;
     }
   };
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Dashboard Overview
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Welcome back, {user?.firstName} {user?.lastName}
-          </p>
-          <Badge variant="outline" className="mt-2">
-            {user?.role?.replace('_', ' ').toUpperCase()}
-          </Badge>
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+          <Activity className="h-5 w-5 text-blue-600" />
+          Recent Activity
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {activities.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <Activity className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+            <p>No recent activity</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {activities.map((activity) => (
+              <div key={activity.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded">
+                <div className="flex-shrink-0 p-1 bg-gray-100 rounded">
+                  {getActionIcon(activity.action)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {activity.action} {activity.resource}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    by {activity.user?.firstName} {activity.user?.lastName}
+                  </p>
+                </div>
+                <div className="text-xs text-gray-400">
+                  {formatTimestamp(activity.createdAt)}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+// Main dashboard component
+export default function FacilityUserDashboard() {
+  const { user } = useAuth();
+  const { hasPermission } = useFacilityPermissions();
+
+  // Fetch live dashboard data
+  const { data: dashboardStats, isLoading, error } = useQuery<DashboardStats>({
+    queryKey: ['/api/dashboard/stats'],
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4" />
+            <p className="text-lg font-medium">Loading dashboard...</p>
+          </div>
         </div>
-        
-        {/* Quick Actions */}
-        <div className="flex gap-2">
-          <ConditionalButton permission="create_shifts">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Post Shift
-            </Button>
-          </ConditionalButton>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6">
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <AlertTriangle className="h-12 w-12 mx-auto mb-4 text-red-600" />
+            <p className="text-lg font-medium text-red-600">Failed to load dashboard</p>
+            <p className="text-sm text-gray-600">Please refresh the page to try again</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const stats = dashboardStats!;
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-6 space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600">
+              Welcome back, {user?.firstName}. Here's what's happening at your facilities.
+            </p>
+          </div>
+          <div className="text-right">
+            <div className="text-sm text-gray-500">Last updated</div>
+            <div className="text-lg font-medium">{new Date().toLocaleTimeString()}</div>
+          </div>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <StatsCard
+            title="Active Staff"
+            value={stats.activeStaff}
+            icon={Users}
+            trend="neutral"
+            permission="view_schedules"
+          />
           
-          <ConditionalButton permission="create_staff">
-            <Button variant="outline" className="gap-2">
-              <Users className="h-4 w-4" />
-              Add Staff
-            </Button>
-          </ConditionalButton>
+          <CanAccess permissions={['view_schedules']}>
+            <StatsCard
+              title="Open Shifts"
+              value={stats.openShifts}
+              subtitle={stats.urgentShifts > 0 ? `${stats.urgentShifts} urgent` : 'No urgent shifts'}
+              icon={CalendarDays}
+              trend={stats.urgentShifts > 0 ? 'down' : 'neutral'}
+            />
+          </CanAccess>
+
+          <CanAccess permissions={['view_compliance', 'manage_compliance']}>
+            <StatsCard
+              title="Compliance Rate"
+              value={`${stats.complianceRate}%`}
+              subtitle={stats.expiringCredentials > 0 ? `${stats.expiringCredentials} expiring` : 'All current'}
+              icon={Shield}
+              trend={stats.complianceRate >= 90 ? 'up' : stats.complianceRate >= 80 ? 'neutral' : 'down'}
+            />
+          </CanAccess>
+
+          <CanAccess permissions={['view_billing']}>
+            <StatsCard
+              title="Monthly Revenue"
+              value={`$${stats.monthlyRevenue.toLocaleString()}`}
+              subtitle={stats.outstandingInvoices > 0 ? `${stats.outstandingInvoices} pending` : 'All current'}
+              icon={DollarSign}
+              trend="up"
+            />
+          </CanAccess>
         </div>
-      </div>
 
-      {/* Permission-Based Dashboard Widgets */}
-      <PermissionDashboard />
+        {/* Secondary Stats Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <StatsCard
+            title="Monthly Hours"
+            value={stats.monthlyHours.toLocaleString()}
+            icon={Clock}
+            trend="neutral"
+            permission="view_schedules"
+          />
+          
+          <StatsCard
+            title="Total Facilities"
+            value={stats.totalFacilities}
+            icon={Building}
+            trend="neutral"
+          />
 
-      {/* Priority Tasks */}
-      <CanAccess permissions={['view_schedules', 'manage_compliance', 'view_billing']}>
-        <PriorityTasks />
-      </CanAccess>
+          <CanAccess permissions={['view_billing']}>
+            <StatsCard
+              title="Outstanding Invoices"
+              value={stats.outstandingInvoices}
+              icon={FileText}
+              trend={stats.outstandingInvoices > 0 ? 'down' : 'neutral'}
+            />
+          </CanAccess>
+        </div>
 
-      {/* Role-Specific Sections */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Scheduling Section */}
-        <CanAccess permission="view_schedules">
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Priority Tasks */}
+          <PriorityTasksList tasks={stats.priorityTasks} />
+
+          {/* Recent Activity */}
+          <RecentActivity activities={stats.recentActivity} />
+        </div>
+
+        {/* Quick Actions */}
+        <CanAccess permissions={['create_shifts', 'view_schedules', 'manage_facility_settings']}>
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5" />
-                Today's Schedule
-              </CardTitle>
+              <CardTitle className="text-lg font-semibold">Quick Actions</CardTitle>
+              <CardDescription>Common tasks and shortcuts</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded">
-                  <div>
-                    <p className="font-medium">ICU Day Shift</p>
-                    <p className="text-sm text-gray-600">7:00 AM - 7:00 PM</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline">2/3 filled</Badge>
-                    <PermissionButton permission="assign_staff" size="sm" variant="outline">
-                      <Edit className="h-3 w-3 mr-1" />
-                      Assign
-                    </PermissionButton>
-                  </div>
-                </div>
-                
-                <div className="flex justify-between items-center p-3 bg-red-50 dark:bg-red-900/20 rounded">
-                  <div>
-                    <p className="font-medium">Emergency Department</p>
-                    <p className="text-sm text-gray-600">11:00 PM - 7:00 AM</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="destructive">0/2 filled</Badge>
-                    <PermissionButton permission="assign_staff" size="sm" variant="outline">
-                      <AlertTriangle className="h-3 w-3 mr-1" />
-                      Urgent
-                    </PermissionButton>
-                  </div>
-                </div>
-              </div>
-              
-              <PermissionButton permission="view_schedules" variant="outline" className="w-full mt-4">
-                <Eye className="h-4 w-4 mr-2" />
-                View Full Schedule
-              </PermissionButton>
-            </CardContent>
-          </Card>
-        </CanAccess>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <PermissionButton
+                  permissions={['create_shifts']}
+                  variant="outline"
+                  className="h-20 flex flex-col items-center justify-center space-y-2"
+                >
+                  <Plus className="h-5 w-5" />
+                  <span>Add Shift</span>
+                </PermissionButton>
 
-        {/* Staff Overview */}
-        <CanAccess permission="view_staff">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Staff Overview
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Active Staff</span>
-                  <span className="font-semibold">67</span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Available Now</span>
-                  <span className="font-semibold text-green-600">23</span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">On Shift</span>
-                  <span className="font-semibold text-blue-600">44</span>
-                </div>
-                
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Credentials Expiring</span>
-                  <span className="font-semibold text-orange-600">12</span>
-                </div>
+                <PermissionButton
+                  permissions={['view_schedules']}
+                  variant="outline"
+                  className="h-20 flex flex-col items-center justify-center space-y-2"
+                >
+                  <CalendarDays className="h-5 w-5" />
+                  <span>View Calendar</span>
+                </PermissionButton>
+
+                <PermissionButton
+                  permissions={['manage_facility_settings']}
+                  variant="outline"
+                  className="h-20 flex flex-col items-center justify-center space-y-2"
+                >
+                  <Settings className="h-5 w-5" />
+                  <span>Settings</span>
+                </PermissionButton>
               </div>
-              
-              <PermissionButton permission="view_staff" variant="outline" className="w-full mt-4">
-                <Users className="h-4 w-4 mr-2" />
-                Manage Staff
-              </PermissionButton>
             </CardContent>
           </Card>
         </CanAccess>
       </div>
-
-      {/* Access Notice for Limited Users */}
-      {userPermissions.length <= 3 && (
-        <Card className="border-blue-200 bg-blue-50 dark:bg-blue-900/20">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Shield className="h-5 w-5 text-blue-600" />
-              <div>
-                <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                  Limited Access Account
-                </p>
-                <p className="text-xs text-blue-600 dark:text-blue-300">
-                  Your dashboard shows features available to your role. Contact your administrator to request additional permissions.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

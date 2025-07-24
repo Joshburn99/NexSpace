@@ -181,7 +181,20 @@ export interface IStorage {
   hasPermission(role: string, permission: string): Promise<boolean>;
   getFacilityUserRoleTemplate(role: string): Promise<any | undefined>;
 
-  // Dashboard analytics
+  // Dashboard analytics - Enhanced
+  getDashboardStats(facilityIds?: number[]): Promise<{
+    activeStaff: number;
+    openShifts: number;
+    complianceRate: number;
+    monthlyHours: number;
+    totalFacilities: number;
+    urgentShifts: number;
+    expiringCredentials: number;
+    outstandingInvoices: number;
+    monthlyRevenue: number;
+    recentActivity: any[];
+    priorityTasks: any[];
+  }>;
   getFacilityStats(facilityId: number): Promise<{
     activeStaff: number;
     openShifts: number;
@@ -189,6 +202,10 @@ export interface IStorage {
     monthlyHours: number;
   }>;
   getRecentActivity(facilityId: number, limit?: number): Promise<AuditLog[]>;
+  
+  // Dashboard customization
+  getUserDashboardWidgets(userId: number): Promise<any>;
+  saveDashboardWidgets(userId: number, widgets: any): Promise<void>;
 
   // Payroll system methods
   createPayrollProvider(provider: InsertPayrollProvider): Promise<PayrollProvider>;
@@ -942,6 +959,222 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
 
     return result;
+  }
+
+  // Enhanced dashboard analytics with facility filtering
+  async getDashboardStats(facilityIds?: number[]): Promise<{
+    activeStaff: number;
+    openShifts: number;
+    complianceRate: number;
+    monthlyHours: number;
+    totalFacilities: number;
+    urgentShifts: number;
+    expiringCredentials: number;
+    outstandingInvoices: number;
+    monthlyRevenue: number;
+    recentActivity: any[];
+    priorityTasks: any[];
+  }> {
+    // Build facility filter condition
+    const facilityCondition = facilityIds?.length 
+      ? or(...facilityIds.map(id => eq(facilities.id, id)))
+      : undefined;
+
+    // Active staff count from staff table with facility association filtering
+    let activeStaffQuery = db
+      .select({ count: count() })
+      .from(staff)
+      .where(eq(staff.isActive, true));
+    
+    if (facilityIds?.length) {
+      // Filter staff by associated facilities
+      activeStaffQuery = activeStaffQuery.where(
+        sql`${staff.associatedFacilities} && ${facilityIds}`
+      );
+    }
+    
+    const [activeStaffResult] = await activeStaffQuery;
+
+    // Open shifts count
+    let openShiftsQuery = db
+      .select({ count: count() })
+      .from(shifts)
+      .where(eq(shifts.status, "open"));
+    
+    if (facilityIds?.length) {
+      openShiftsQuery = openShiftsQuery.where(
+        or(...facilityIds.map(id => eq(shifts.facilityId, id)))
+      );
+    }
+    
+    const [openShiftsResult] = await openShiftsQuery;
+
+    // Urgent shifts (those posted in last 24 hours or marked urgent)
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    let urgentShiftsQuery = db
+      .select({ count: count() })
+      .from(shifts)
+      .where(
+        and(
+          eq(shifts.status, "open"),
+          or(
+            gte(shifts.createdAt, yesterday),
+            eq(shifts.urgency, "urgent")
+          )
+        )
+      );
+    
+    if (facilityIds?.length) {
+      urgentShiftsQuery = urgentShiftsQuery.where(
+        or(...facilityIds.map(id => eq(shifts.facilityId, id)))
+      );
+    }
+    
+    const [urgentShiftsResult] = await urgentShiftsQuery;
+
+    // Expiring credentials (next 30 days)
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+    
+    const [expiringCredentialsResult] = await db
+      .select({ count: count() })
+      .from(credentials)
+      .where(
+        and(
+          eq(credentials.status, "active"),
+          lte(credentials.expirationDate, thirtyDaysFromNow)
+        )
+      );
+
+    // Outstanding invoices
+    const [outstandingInvoicesResult] = await db
+      .select({ count: count() })
+      .from(invoices)
+      .where(eq(invoices.status, "pending"));
+
+    // Monthly revenue calculation
+    const firstOfMonth = new Date();
+    firstOfMonth.setDate(1);
+    firstOfMonth.setHours(0, 0, 0, 0);
+
+    const [monthlyRevenueResult] = await db
+      .select({
+        totalRevenue: sql<number>`COALESCE(SUM(${invoices.amount}), 0)`,
+      })
+      .from(invoices)
+      .where(
+        and(
+          eq(invoices.status, "paid"),
+          gte(invoices.paidAt, firstOfMonth)
+        )
+      );
+
+    // Monthly hours calculation
+    const [monthlyHoursResult] = await db
+      .select({
+        totalHours: sql<number>`COALESCE(SUM(${timeClockEntries.totalHours}), 0)`,
+      })
+      .from(timeClockEntries)
+      .where(gte(timeClockEntries.clockIn, firstOfMonth));
+
+    // Compliance rate calculation
+    const [totalCredentials] = await db
+      .select({ count: count() })
+      .from(credentials);
+
+    const [activeCredentials] = await db
+      .select({ count: count() })
+      .from(credentials)
+      .where(eq(credentials.status, "active"));
+
+    const complianceRate = totalCredentials.count > 0 
+      ? (activeCredentials.count / totalCredentials.count) * 100 
+      : 100;
+
+    // Recent activity
+    const recentActivity = await db
+      .select({
+        id: auditLogs.id,
+        action: auditLogs.action,
+        resource: auditLogs.resource,
+        createdAt: auditLogs.createdAt,
+        user: {
+          firstName: users.firstName,
+          lastName: users.lastName
+        }
+      })
+      .from(auditLogs)
+      .leftJoin(users, eq(auditLogs.userId, users.id))
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(5);
+
+    // Priority tasks
+    const priorityTasks = [
+      ...(urgentShiftsResult.count > 0 ? [{
+        id: 'urgent-shifts',
+        title: `${urgentShiftsResult.count} Urgent Shifts Need Attention`,
+        type: 'urgent',
+        count: urgentShiftsResult.count
+      }] : []),
+      ...(expiringCredentialsResult.count > 0 ? [{
+        id: 'expiring-credentials',
+        title: `${expiringCredentialsResult.count} Credentials Expiring Soon`,
+        type: 'warning',
+        count: expiringCredentialsResult.count
+      }] : []),
+      ...(outstandingInvoicesResult.count > 0 ? [{
+        id: 'outstanding-invoices',
+        title: `${outstandingInvoicesResult.count} Invoices Pending Review`,
+        type: 'info',
+        count: outstandingInvoicesResult.count
+      }] : [])
+    ];
+
+    // Total facilities count
+    let facilitiesQuery = db.select({ count: count() }).from(facilities);
+    if (facilityIds?.length) {
+      facilitiesQuery = facilitiesQuery.where(
+        or(...facilityIds.map(id => eq(facilities.id, id)))
+      );
+    }
+    const [totalFacilitiesResult] = await facilitiesQuery;
+
+    return {
+      activeStaff: activeStaffResult.count,
+      openShifts: openShiftsResult.count,
+      complianceRate: Math.round(complianceRate * 10) / 10,
+      monthlyHours: Number(monthlyHoursResult.totalHours) || 0,
+      totalFacilities: totalFacilitiesResult.count,
+      urgentShifts: urgentShiftsResult.count,
+      expiringCredentials: expiringCredentialsResult.count,
+      outstandingInvoices: outstandingInvoicesResult.count,
+      monthlyRevenue: Number(monthlyRevenueResult.totalRevenue) || 0,
+      recentActivity,
+      priorityTasks
+    };
+  }
+
+  // Dashboard customization methods
+  async getUserDashboardWidgets(userId: number): Promise<any> {
+    // For now, return default widget configuration
+    // In a real implementation, this would be stored in a database table
+    return {
+      layout: 'grid',
+      widgets: [
+        { id: 'stats-overview', position: { x: 0, y: 0, w: 12, h: 2 }, visible: true },
+        { id: 'recent-activity', position: { x: 0, y: 2, w: 6, h: 4 }, visible: true },
+        { id: 'priority-tasks', position: { x: 6, y: 2, w: 6, h: 4 }, visible: true },
+        { id: 'quick-actions', position: { x: 0, y: 6, w: 12, h: 2 }, visible: true }
+      ]
+    };
+  }
+
+  async saveDashboardWidgets(userId: number, widgets: any): Promise<void> {
+    // For now, this is a no-op
+    // In a real implementation, this would save to a user_dashboard_widgets table
+    console.log(`Saving dashboard widgets for user ${userId}:`, widgets);
   }
 
   // Payroll Provider methods
