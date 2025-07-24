@@ -365,6 +365,15 @@ export const rolePermissions = pgTable("role_permissions", {
   permissionId: integer("permission_id").notNull(),
 });
 
+// User dashboard widget configurations
+export const userDashboardWidgets = pgTable("user_dashboard_widgets", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  widget_configuration: jsonb("widget_configuration").notNull(), // stores widget states and layout
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Jobs table
 export const jobs = pgTable("jobs", {
   id: serial("id").primaryKey(),

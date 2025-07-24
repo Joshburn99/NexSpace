@@ -1158,55 +1158,107 @@ export class DatabaseStorage implements IStorage {
 
   // Dashboard customization methods
   async getUserDashboardWidgets(userId: number): Promise<any> {
-    // Return expanded widget configuration with comprehensive options
-    const defaultWidgets = [
-      // Core Stats Widgets
-      { id: 'active-staff', title: 'Active Staff', visible: true, category: 'stats' },
-      { id: 'open-shifts', title: 'Open Shifts', visible: true, category: 'stats' },
-      { id: 'compliance-rate', title: 'Compliance Rate', visible: true, category: 'stats' },
-      { id: 'monthly-revenue', title: 'Monthly Revenue', visible: false, category: 'stats' },
-      { id: 'monthly-hours', title: 'Monthly Hours', visible: false, category: 'stats' },
-      { id: 'total-facilities', title: 'Total Facilities', visible: false, category: 'stats' },
-      { id: 'outstanding-invoices', title: 'Outstanding Invoices', visible: false, category: 'stats' },
-      { id: 'urgent-shifts', title: 'Urgent Shifts', visible: false, category: 'stats' },
-      { id: 'expiring-credentials', title: 'Expiring Credentials', visible: false, category: 'stats' },
-      
-      // Activity & Communication Widgets
-      { id: 'priority-tasks', title: 'Priority Tasks', visible: true, category: 'activity' },
-      { id: 'recent-activity', title: 'Recent Activity', visible: true, category: 'activity' },
-      { id: 'notifications', title: 'Notifications', visible: false, category: 'activity' },
-      { id: 'message-center', title: 'Message Center', visible: false, category: 'activity' },
-      
-      // Analytics & Reporting Widgets
-      { id: 'performance-trends', title: 'Performance Trends', visible: false, category: 'analytics' },
-      { id: 'capacity-planning', title: 'Capacity Planning', visible: false, category: 'analytics' },
-      { id: 'financial-summary', title: 'Financial Summary', visible: false, category: 'analytics' },
-      { id: 'schedule-overview', title: 'Schedule Overview', visible: false, category: 'analytics' },
-      
-      // Operations Widgets
-      { id: 'facility-map', title: 'Facility Map', visible: false, category: 'operations' },
-      { id: 'quick-actions', title: 'Quick Actions', visible: false, category: 'operations' },
-      { id: 'staff-availability', title: 'Staff Availability', visible: false, category: 'operations' },
-      { id: 'shift-coverage', title: 'Shift Coverage', visible: false, category: 'operations' }
-    ];
+    try {
+      // Try to get existing user configuration from database
+      const existingConfig = await this.db
+        .select()
+        .from(schema.userDashboardWidgets)
+        .where(eq(schema.userDashboardWidgets.userId, userId))
+        .limit(1);
 
-    console.log(`[STORAGE] Getting dashboard widgets for user ${userId} - returning ${defaultWidgets.length} total widgets`);
-    return {
-      layout: 'grid',
-      widgets: defaultWidgets
-    };
+      if (existingConfig.length > 0) {
+        console.log(`[STORAGE] Found existing dashboard config for user ${userId}`);
+        return existingConfig[0].widget_configuration;
+      }
+
+      // Return default widget configuration if none exists
+      const defaultWidgets = [
+        // Core Stats Widgets
+        { id: 'active-staff', title: 'Active Staff', visible: true, category: 'stats' },
+        { id: 'open-shifts', title: 'Open Shifts', visible: true, category: 'stats' },
+        { id: 'compliance-rate', title: 'Compliance Rate', visible: true, category: 'stats' },
+        { id: 'monthly-revenue', title: 'Monthly Revenue', visible: false, category: 'stats' },
+        { id: 'monthly-hours', title: 'Monthly Hours', visible: false, category: 'stats' },
+        { id: 'total-facilities', title: 'Total Facilities', visible: false, category: 'stats' },
+        { id: 'outstanding-invoices', title: 'Outstanding Invoices', visible: false, category: 'stats' },
+        { id: 'urgent-shifts', title: 'Urgent Shifts', visible: false, category: 'stats' },
+        { id: 'expiring-credentials', title: 'Expiring Credentials', visible: false, category: 'stats' },
+        
+        // Activity & Communication Widgets
+        { id: 'priority-tasks', title: 'Priority Tasks', visible: true, category: 'activity' },
+        { id: 'recent-activity', title: 'Recent Activity', visible: true, category: 'activity' },
+        { id: 'notifications', title: 'Notifications', visible: false, category: 'activity' },
+        { id: 'message-center', title: 'Message Center', visible: false, category: 'activity' },
+        
+        // Analytics & Reporting Widgets
+        { id: 'performance-trends', title: 'Performance Trends', visible: false, category: 'analytics' },
+        { id: 'capacity-planning', title: 'Capacity Planning', visible: false, category: 'analytics' },
+        { id: 'financial-summary', title: 'Financial Summary', visible: false, category: 'analytics' },
+        { id: 'schedule-overview', title: 'Schedule Overview', visible: false, category: 'analytics' },
+        
+        // Operations Widgets
+        { id: 'facility-map', title: 'Facility Map', visible: false, category: 'operations' },
+        { id: 'quick-actions', title: 'Quick Actions', visible: false, category: 'operations' },
+        { id: 'staff-availability', title: 'Staff Availability', visible: false, category: 'operations' },
+        { id: 'shift-coverage', title: 'Shift Coverage', visible: false, category: 'operations' }
+      ];
+
+      console.log(`[STORAGE] Returning default dashboard config for user ${userId} - ${defaultWidgets.length} total widgets`);
+      return {
+        layout: 'grid',
+        widgets: defaultWidgets
+      };
+    } catch (error) {
+      console.error(`[STORAGE] Error getting dashboard widgets for user ${userId}:`, error);
+      throw error;
+    }
   }
 
   async saveDashboardWidgets(userId: number, widgets: any): Promise<void> {
-    // Log widget save operation for debugging
-    console.log(`[STORAGE] Saving dashboard widgets for user ${userId}:`, {
-      widgetCount: widgets?.length || 0,
-      visibleWidgets: widgets?.filter((w: any) => w.visible)?.length || 0
-    });
-    
-    // In a real implementation, this would save to a user_dashboard_widgets table
-    // For now, we simulate successful save
-    return Promise.resolve();
+    try {
+      console.log(`[STORAGE] Saving dashboard widgets for user ${userId}:`, {
+        widgetCount: widgets?.length || 0,
+        visibleWidgets: widgets?.filter((w: any) => w.visible)?.length || 0
+      });
+
+      const widgetConfiguration = {
+        layout: 'grid',
+        widgets: widgets
+      };
+
+      // Check if user already has a configuration
+      const existingConfig = await this.db
+        .select()
+        .from(schema.userDashboardWidgets)
+        .where(eq(schema.userDashboardWidgets.userId, userId))
+        .limit(1);
+
+      if (existingConfig.length > 0) {
+        // Update existing configuration
+        await this.db
+          .update(schema.userDashboardWidgets)
+          .set({
+            widget_configuration: widgetConfiguration,
+            updatedAt: new Date()
+          })
+          .where(eq(schema.userDashboardWidgets.userId, userId));
+        
+        console.log(`[STORAGE] Updated dashboard configuration for user ${userId}`);
+      } else {
+        // Insert new configuration
+        await this.db
+          .insert(schema.userDashboardWidgets)
+          .values({
+            userId: userId,
+            widget_configuration: widgetConfiguration
+          });
+        
+        console.log(`[STORAGE] Created new dashboard configuration for user ${userId}`);
+      }
+    } catch (error) {
+      console.error(`[STORAGE] Error saving dashboard widgets for user ${userId}:`, error);
+      throw error;
+    }
   }
 
   // Payroll Provider methods
