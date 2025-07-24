@@ -251,8 +251,12 @@ export function registerRoutes(app: Express): Server {
       }
       
       const { widgets } = req.body;
+      console.log(`[ROUTES] Saving dashboard widgets for user ${userId}:`, {
+        widgetCount: widgets?.length || 0,
+        visibleWidgets: widgets?.filter((w: any) => w.visible)?.length || 0
+      });
       await storage.saveDashboardWidgets(userId, widgets);
-      res.json({ success: true });
+      res.json({ success: true, message: 'Dashboard layout saved successfully' });
     } catch (error) {
       console.error('Save dashboard widgets error:', error);
       res.status(500).json({ error: 'Failed to save dashboard widgets' });

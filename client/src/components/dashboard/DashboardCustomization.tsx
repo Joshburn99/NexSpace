@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { Settings, Layout, BarChart3, Clock, Users, DollarSign, AlertTriangle, FileText, Building, Activity } from 'lucide-react';
+import { Settings, Layout, BarChart3, Clock, Users, DollarSign, AlertTriangle, FileText, Building, Activity, Calendar, TrendingUp, Shield, Bell, MessageSquare, MapPin, Target, PieChart } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 
@@ -13,7 +13,7 @@ interface WidgetConfig {
   title: string;
   description: string;
   icon: React.ComponentType<any>;
-  category: 'stats' | 'activity' | 'tasks' | 'analytics';
+  category: 'stats' | 'activity' | 'analytics' | 'operations';
   permissions?: string[];
   visible: boolean;
   position?: { x: number; y: number; w: number; h: number };
@@ -25,6 +25,7 @@ interface DashboardLayout {
 }
 
 const availableWidgets: WidgetConfig[] = [
+  // Core Stats Widgets
   {
     id: 'active-staff',
     title: 'Active Staff',
@@ -49,7 +50,7 @@ const availableWidgets: WidgetConfig[] = [
     id: 'compliance-rate',
     title: 'Compliance Rate',
     description: 'Staff compliance percentage',
-    icon: BarChart3,
+    icon: Shield,
     category: 'stats',
     permissions: ['view_compliance'],
     visible: true,
@@ -62,7 +63,7 @@ const availableWidgets: WidgetConfig[] = [
     icon: DollarSign,
     category: 'stats',
     permissions: ['view_billing'],
-    visible: true,
+    visible: false,
     position: { x: 9, y: 0, w: 3, h: 2 }
   },
   {
@@ -72,7 +73,7 @@ const availableWidgets: WidgetConfig[] = [
     icon: Clock,
     category: 'stats',
     permissions: ['view_schedules'],
-    visible: true,
+    visible: false,
     position: { x: 0, y: 2, w: 4, h: 2 }
   },
   {
@@ -81,7 +82,7 @@ const availableWidgets: WidgetConfig[] = [
     description: 'Number of associated facilities',
     icon: Building,
     category: 'stats',
-    visible: true,
+    visible: false,
     position: { x: 4, y: 2, w: 4, h: 2 }
   },
   {
@@ -91,26 +92,8 @@ const availableWidgets: WidgetConfig[] = [
     icon: FileText,
     category: 'stats',
     permissions: ['view_billing'],
-    visible: true,
+    visible: false,
     position: { x: 8, y: 2, w: 4, h: 2 }
-  },
-  {
-    id: 'priority-tasks',
-    title: 'Priority Tasks',
-    description: 'Important tasks requiring attention',
-    icon: AlertTriangle,
-    category: 'tasks',
-    visible: true,
-    position: { x: 0, y: 4, w: 6, h: 4 }
-  },
-  {
-    id: 'recent-activity',
-    title: 'Recent Activity',
-    description: 'Latest system activities and updates',
-    icon: Activity,
-    category: 'activity',
-    visible: true,
-    position: { x: 6, y: 4, w: 6, h: 4 }
   },
   {
     id: 'urgent-shifts',
@@ -126,20 +109,133 @@ const availableWidgets: WidgetConfig[] = [
     id: 'expiring-credentials',
     title: 'Expiring Credentials',
     description: 'Staff credentials expiring soon',
-    icon: FileText,
+    icon: Shield,
     category: 'stats',
     permissions: ['view_staff_credentials'],
     visible: false,
     position: { x: 4, y: 8, w: 4, h: 2 }
   },
+  
+  // Activity & Communication Widgets
   {
-    id: 'quick-stats',
-    title: 'Quick Stats Overview',
-    description: 'Condensed view of key metrics',
-    icon: BarChart3,
-    category: 'analytics',
+    id: 'priority-tasks',
+    title: 'Priority Tasks',
+    description: 'Important tasks requiring attention',
+    icon: AlertTriangle,
+    category: 'activity',
+    visible: true,
+    position: { x: 0, y: 4, w: 6, h: 4 }
+  },
+  {
+    id: 'recent-activity',
+    title: 'Recent Activity',
+    description: 'Latest system activities and updates',
+    icon: Activity,
+    category: 'activity',
+    visible: true,
+    position: { x: 6, y: 4, w: 6, h: 4 }
+  },
+  {
+    id: 'notifications',
+    title: 'Notifications',
+    description: 'System alerts and important updates',
+    icon: Bell,
+    category: 'activity',
     visible: false,
-    position: { x: 8, y: 8, w: 4, h: 2 }
+    position: { x: 0, y: 10, w: 6, h: 3 }
+  },
+  {
+    id: 'message-center',
+    title: 'Message Center',
+    description: 'Recent messages and communications',
+    icon: MessageSquare,
+    category: 'activity',
+    visible: false,
+    position: { x: 6, y: 10, w: 6, h: 3 }
+  },
+  
+  // Analytics & Reporting Widgets
+  {
+    id: 'performance-trends',
+    title: 'Performance Trends',
+    description: 'Staff and facility performance analytics',
+    icon: TrendingUp,
+    category: 'analytics',
+    permissions: ['view_analytics'],
+    visible: false,
+    position: { x: 0, y: 14, w: 8, h: 4 }
+  },
+  {
+    id: 'capacity-planning',
+    title: 'Capacity Planning',
+    description: 'Staffing capacity and demand forecasting',
+    icon: Target,
+    category: 'analytics',
+    permissions: ['view_analytics'],
+    visible: false,
+    position: { x: 8, y: 14, w: 4, h: 4 }
+  },
+  {
+    id: 'financial-summary',
+    title: 'Financial Summary',
+    description: 'Revenue, costs, and financial metrics',
+    icon: PieChart,
+    category: 'analytics',
+    permissions: ['view_billing'],
+    visible: false,
+    position: { x: 0, y: 18, w: 6, h: 4 }
+  },
+  {
+    id: 'schedule-overview',
+    title: 'Schedule Overview',
+    description: 'Weekly and monthly schedule summaries',
+    icon: Calendar,
+    category: 'analytics',
+    permissions: ['view_schedules'],
+    visible: false,
+    position: { x: 6, y: 18, w: 6, h: 4 }
+  },
+  
+  // Location & Operations Widgets
+  {
+    id: 'facility-map',
+    title: 'Facility Map',
+    description: 'Geographic view of all facilities',
+    icon: MapPin,
+    category: 'operations',
+    visible: false,
+    position: { x: 0, y: 22, w: 12, h: 6 }
+  },
+  {
+    id: 'quick-actions',
+    title: 'Quick Actions',
+    description: 'Shortcuts to common tasks',
+    icon: Settings,
+    category: 'operations',
+    visible: false,
+    position: { x: 0, y: 28, w: 12, h: 2 }
+  },
+  
+  // Additional Operational Widgets
+  {
+    id: 'staff-availability',
+    title: 'Staff Availability',
+    description: 'Real-time staff availability status',
+    icon: Users,
+    category: 'operations',
+    permissions: ['view_staff'],
+    visible: false,
+    position: { x: 0, y: 30, w: 6, h: 3 }
+  },
+  {
+    id: 'shift-coverage',
+    title: 'Shift Coverage',
+    description: 'Coverage percentage by department',
+    icon: BarChart3,
+    category: 'operations',
+    permissions: ['view_schedules'],
+    visible: false,
+    position: { x: 6, y: 30, w: 6, h: 3 }
   }
 ];
 
@@ -149,19 +245,38 @@ interface DashboardCustomizationProps {
 
 export function DashboardCustomization({ onLayoutChange }: DashboardCustomizationProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [widgetStates, setWidgetStates] = useState<Record<string, boolean>>({});
   const queryClient = useQueryClient();
+
+  // Initialize widget states from default configuration
+  React.useEffect(() => {
+    const initialStates: Record<string, boolean> = {};
+    availableWidgets.forEach(widget => {
+      initialStates[widget.id] = widget.visible;
+    });
+    setWidgetStates(initialStates);
+  }, []);
 
   // Fetch current widget configuration
   const { data: currentLayout, isLoading } = useQuery<DashboardLayout>({
     queryKey: ['/api/dashboard/widgets'],
-    retry: false
+    retry: false,
+    onSuccess: (data) => {
+      if (data?.widgets) {
+        const states: Record<string, boolean> = {};
+        data.widgets.forEach((widget: any) => {
+          states[widget.id] = widget.visible;
+        });
+        setWidgetStates(states);
+      }
+    }
   });
 
   // Save widget configuration
   const saveLayoutMutation = useMutation({
     mutationFn: (widgets: WidgetConfig[]) => 
       apiRequest('/api/dashboard/widgets', 'POST', { widgets }),
-    onSuccess: () => {
+    onSuccess: (_, widgets) => {
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/widgets'] });
       setIsOpen(false);
       if (onLayoutChange) {
@@ -171,11 +286,15 @@ export function DashboardCustomization({ onLayoutChange }: DashboardCustomizatio
   });
 
   const handleWidgetToggle = (widgetId: string, visible: boolean) => {
-    const updatedWidgets = availableWidgets.map(widget => 
-      widget.id === widgetId ? { ...widget, visible } : widget
-    );
+    const newStates = { ...widgetStates, [widgetId]: visible };
+    setWidgetStates(newStates);
     
     // Apply changes immediately for preview
+    const updatedWidgets = availableWidgets.map(widget => ({
+      ...widget,
+      visible: newStates[widget.id] ?? widget.visible
+    }));
+    
     const layout = { layout: 'grid', widgets: updatedWidgets };
     if (onLayoutChange) {
       onLayoutChange(layout);
@@ -183,20 +302,28 @@ export function DashboardCustomization({ onLayoutChange }: DashboardCustomizatio
   };
 
   const handleSaveLayout = () => {
-    const visibleWidgets = availableWidgets.filter(widget => widget.visible);
+    const updatedWidgets = availableWidgets.map(widget => ({
+      ...widget,
+      visible: widgetStates[widget.id] ?? widget.visible
+    }));
+    const visibleWidgets = updatedWidgets.filter(widget => widget.visible);
     saveLayoutMutation.mutate(visibleWidgets);
   };
 
   const handleResetToDefault = () => {
+    const defaultStates: Record<string, boolean> = {};
+    const defaultVisibleIds = ['active-staff', 'open-shifts', 'compliance-rate', 'priority-tasks', 'recent-activity'];
+    
+    availableWidgets.forEach(widget => {
+      defaultStates[widget.id] = defaultVisibleIds.includes(widget.id);
+    });
+    
+    setWidgetStates(defaultStates);
+    
     const defaultWidgets = availableWidgets.map(widget => ({
       ...widget,
-      visible: ['active-staff', 'open-shifts', 'compliance-rate', 'priority-tasks', 'recent-activity'].includes(widget.id)
+      visible: defaultStates[widget.id]
     }));
-    
-    // Update local state
-    availableWidgets.forEach((widget, index) => {
-      availableWidgets[index] = defaultWidgets[index];
-    });
     
     const layout = { layout: 'grid', widgets: defaultWidgets };
     if (onLayoutChange) {
@@ -232,31 +359,53 @@ export function DashboardCustomization({ onLayoutChange }: DashboardCustomizatio
         </DialogHeader>
         
         <div className="space-y-6">
+          {/* Layout Options */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+              <Layout className="h-4 w-4" />
+              Dashboard Layout
+            </h3>
+            <div className="text-sm text-gray-600 mb-2">
+              Choose widgets to display. They will be automatically arranged in a responsive grid.
+            </div>
+            <div className="flex gap-2 text-sm">
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                {Object.values(widgetStates).filter(Boolean).length} widgets enabled
+              </span>
+              <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded">
+                Auto-arranged grid layout
+              </span>
+            </div>
+          </div>
+
           {/* Category Sections */}
           {Object.entries(categorizedWidgets).map(([category, widgets]) => (
             <div key={category}>
               <h3 className="text-lg font-semibold mb-3 capitalize flex items-center gap-2">
                 {category === 'stats' && <BarChart3 className="h-4 w-4" />}
                 {category === 'activity' && <Activity className="h-4 w-4" />}
-                {category === 'tasks' && <AlertTriangle className="h-4 w-4" />}
-                {category === 'analytics' && <BarChart3 className="h-4 w-4" />}
-                {category} Widgets
+                {category === 'analytics' && <TrendingUp className="h-4 w-4" />}
+                {category === 'operations' && <Settings className="h-4 w-4" />}
+                {category} Widgets ({widgets.length})
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {widgets.map((widget) => {
                   const IconComponent = widget.icon;
+                  const isSelected = widgetStates[widget.id] ?? widget.visible;
                   return (
-                    <Card key={widget.id} className={`transition-all ${widget.visible ? 'ring-2 ring-blue-500' : ''}`}>
+                    <Card key={widget.id} className={`transition-all cursor-pointer hover:shadow-md ${
+                      isSelected ? 'ring-2 ring-blue-500 bg-blue-50' : 'hover:bg-gray-50'
+                    }`}>
                       <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <IconComponent className="h-4 w-4 text-blue-600" />
+                            <IconComponent className={`h-4 w-4 ${isSelected ? 'text-blue-600' : 'text-gray-500'}`} />
                             <CardTitle className="text-sm">{widget.title}</CardTitle>
                           </div>
                           <Checkbox
                             id={widget.id}
-                            checked={widget.visible}
+                            checked={isSelected}
                             onCheckedChange={(checked) => 
                               handleWidgetToggle(widget.id, checked as boolean)
                             }
@@ -267,7 +416,7 @@ export function DashboardCustomization({ onLayoutChange }: DashboardCustomizatio
                         <p className="text-sm text-gray-600">{widget.description}</p>
                         {widget.permissions && (
                           <div className="mt-2">
-                            <span className="text-xs text-gray-500">
+                            <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
                               Requires: {widget.permissions.join(', ')}
                             </span>
                           </div>
@@ -280,6 +429,53 @@ export function DashboardCustomization({ onLayoutChange }: DashboardCustomizatio
             </div>
           ))}
           
+          {/* Quick Actions */}
+          <div className="mb-4 p-4 bg-amber-50 rounded-lg">
+            <h4 className="font-medium text-amber-800 mb-2">Quick Presets</h4>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const basicStates = Object.keys(widgetStates).reduce((acc, key) => {
+                    acc[key] = ['active-staff', 'open-shifts', 'compliance-rate'].includes(key);
+                    return acc;
+                  }, {} as Record<string, boolean>);
+                  setWidgetStates(basicStates);
+                }}
+              >
+                Essential Only
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const managerStates = Object.keys(widgetStates).reduce((acc, key) => {
+                    acc[key] = ['active-staff', 'open-shifts', 'compliance-rate', 'priority-tasks', 'recent-activity', 'urgent-shifts'].includes(key);
+                    return acc;
+                  }, {} as Record<string, boolean>);
+                  setWidgetStates(managerStates);
+                }}
+              >
+                Manager View
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  const analyticsStates = Object.keys(widgetStates).reduce((acc, key) => {
+                    const analyticsWidgets = ['active-staff', 'open-shifts', 'compliance-rate', 'performance-trends', 'capacity-planning', 'financial-summary'];
+                    acc[key] = analyticsWidgets.includes(key);
+                    return acc;
+                  }, {} as Record<string, boolean>);
+                  setWidgetStates(analyticsStates);
+                }}
+              >
+                Analytics Focus
+              </Button>
+            </div>
+          </div>
+
           {/* Action Buttons */}
           <div className="flex justify-between pt-4 border-t">
             <Button
