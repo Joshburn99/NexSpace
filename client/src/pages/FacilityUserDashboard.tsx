@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator";
 import { CalendarDays, Clock, Users, AlertTriangle, CheckCircle, TrendingUp, DollarSign, FileText, Loader2, Shield, Activity, Plus, Edit, X, Building, Settings } from "lucide-react";
 import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
 import { CanAccess } from "@/components/PermissionWrapper";
+import { DashboardCustomization } from "@/components/dashboard/DashboardCustomization";
 import { PermissionButton } from "@/components/PermissionButton";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
@@ -296,11 +297,14 @@ export default function FacilityUserDashboard() {
               </div>
             )}
           </div>
-          <div className="text-right">
-            <div className="text-sm text-gray-500">
-              {isUsingFallback ? "Sample Data" : "Live Data"}
+          <div className="flex items-center gap-4">
+            <DashboardCustomization />
+            <div className="text-right">
+              <div className="text-sm text-gray-500">
+                {isUsingFallback ? "Sample Data" : "Live Data"}
+              </div>
+              <div className="text-lg font-medium">{new Date().toLocaleTimeString()}</div>
             </div>
-            <div className="text-lg font-medium">{new Date().toLocaleTimeString()}</div>
           </div>
         </div>
 

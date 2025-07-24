@@ -179,24 +179,46 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Dashboard API - Enhanced with comprehensive statistics
+  // Dashboard API - Enhanced with comprehensive statistics and facility filtering
   app.get("/api/dashboard/stats", requireAuth, async (req: any, res) => {
     try {
-      const facilityId = req.user?.facilityId;
-      const associatedFacilities = req.user?.associatedFacilities;
+      console.log(`[ROUTES] Dashboard stats request from user ${req.user.id}, role: ${req.user.role}`);
+      console.log(`[ROUTES] User facility data:`, {
+        facilityId: req.user?.facilityId,
+        associatedFacilities: req.user?.associatedFacilities,
+        associatedFacilityIds: req.user?.associatedFacilityIds
+      });
       
-      // For facility users, use their associated facilities or single facility
-      let facilityIds: number[] = [];
-      if (req.user?.role?.includes('facility_') || req.user?.role?.includes('_admin')) {
+      // Get facility IDs for filtering based on user role
+      let facilityIds: number[] | undefined;
+      
+      if (req.user.role === 'super_admin') {
+        // Super admin sees all data (undefined = no filtering)
+        console.log(`[ROUTES] Super admin - showing all facility data`);
+      } else {
+        // For facility users, filter by their associated facilities
+        const associatedFacilities = req.user?.associatedFacilities || req.user?.associatedFacilityIds;
+        const singleFacility = req.user?.facilityId;
+        
         if (associatedFacilities && associatedFacilities.length > 0) {
           facilityIds = associatedFacilities;
-        } else if (facilityId) {
-          facilityIds = [facilityId];
+          console.log(`[ROUTES] Filtering dashboard for facility user with facilities: ${facilityIds.join(',')}`);
+        } else if (singleFacility) {
+          facilityIds = [singleFacility];
+          console.log(`[ROUTES] Filtering dashboard for facility user with single facility: ${singleFacility}`);
+        } else {
+          console.log(`[ROUTES] No associated facilities found for user ${req.user.id} - showing empty data`);
+          facilityIds = []; // Empty array means no data visible
         }
       }
       
-      // Get comprehensive dashboard stats
-      const stats = await storage.getDashboardStats(facilityIds.length > 0 ? facilityIds : undefined);
+      // Get comprehensive dashboard stats with facility filtering
+      const stats = await storage.getDashboardStats(facilityIds);
+      console.log(`[ROUTES] Retrieved dashboard stats for facilities ${facilityIds?.join(',') || 'all'}:`, {
+        activeStaff: stats.activeStaff,
+        openShifts: stats.openShifts,
+        totalFacilities: stats.totalFacilities
+      });
       
       res.json(stats);
     } catch (error) {

@@ -1158,23 +1158,38 @@ export class DatabaseStorage implements IStorage {
 
   // Dashboard customization methods
   async getUserDashboardWidgets(userId: number): Promise<any> {
-    // For now, return default widget configuration
-    // In a real implementation, this would be stored in a database table
+    // Return default widget configuration with key dashboard widgets enabled
+    const defaultWidgets = [
+      { id: 'active-staff', title: 'Active Staff', visible: true, category: 'stats' },
+      { id: 'open-shifts', title: 'Open Shifts', visible: true, category: 'stats' },
+      { id: 'compliance-rate', title: 'Compliance Rate', visible: true, category: 'stats' },
+      { id: 'monthly-revenue', title: 'Monthly Revenue', visible: false, category: 'stats' },
+      { id: 'priority-tasks', title: 'Priority Tasks', visible: true, category: 'tasks' },
+      { id: 'recent-activity', title: 'Recent Activity', visible: true, category: 'activity' },
+      { id: 'monthly-hours', title: 'Monthly Hours', visible: false, category: 'stats' },
+      { id: 'total-facilities', title: 'Total Facilities', visible: false, category: 'stats' },
+      { id: 'outstanding-invoices', title: 'Outstanding Invoices', visible: false, category: 'stats' },
+      { id: 'urgent-shifts', title: 'Urgent Shifts', visible: false, category: 'stats' },
+      { id: 'expiring-credentials', title: 'Expiring Credentials', visible: false, category: 'stats' }
+    ];
+
+    console.log(`[STORAGE] Getting dashboard widgets for user ${userId} - returning default configuration`);
     return {
       layout: 'grid',
-      widgets: [
-        { id: 'stats-overview', position: { x: 0, y: 0, w: 12, h: 2 }, visible: true },
-        { id: 'recent-activity', position: { x: 0, y: 2, w: 6, h: 4 }, visible: true },
-        { id: 'priority-tasks', position: { x: 6, y: 2, w: 6, h: 4 }, visible: true },
-        { id: 'quick-actions', position: { x: 0, y: 6, w: 12, h: 2 }, visible: true }
-      ]
+      widgets: defaultWidgets
     };
   }
 
   async saveDashboardWidgets(userId: number, widgets: any): Promise<void> {
-    // For now, this is a no-op
+    // Log widget save operation for debugging
+    console.log(`[STORAGE] Saving dashboard widgets for user ${userId}:`, {
+      widgetCount: widgets?.length || 0,
+      visibleWidgets: widgets?.filter((w: any) => w.visible)?.length || 0
+    });
+    
     // In a real implementation, this would save to a user_dashboard_widgets table
-    console.log(`Saving dashboard widgets for user ${userId}:`, widgets);
+    // For now, we simulate successful save
+    return Promise.resolve();
   }
 
   // Payroll Provider methods
