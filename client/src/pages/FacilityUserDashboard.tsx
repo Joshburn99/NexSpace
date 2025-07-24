@@ -50,7 +50,7 @@ const StatsCard: React.FC<{
 }> = ({ title, value, subtitle, icon: Icon, trend, trendValue, permission }) => {
   const { hasPermission } = useFacilityPermissions();
   
-  if (permission && !hasPermission(permission)) {
+  if (permission && !hasPermission(permission as any)) {
     return null;
   }
 

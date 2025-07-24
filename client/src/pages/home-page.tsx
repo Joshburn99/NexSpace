@@ -42,7 +42,7 @@ import {
   ClipboardList,
   Activity,
 } from "lucide-react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import EmployeeDashboardWrapper from "@/pages/employee-dashboard-wrapper";
 import ContractorDashboardWrapper from "@/pages/contractor-dashboard-wrapper";
 import ClinicianDashboardWrapper from "@/pages/clinician-dashboard-wrapper";
@@ -244,6 +244,7 @@ const recentActivity = [
 
 export default function HomePage() {
   const { user, impersonatedUser } = useAuth();
+  const [, setLocation] = useLocation();
   
   const currentUser = impersonatedUser || user;
   
@@ -258,6 +259,15 @@ export default function HomePage() {
   
   if (currentUser?.role === 'clinician') {
     return <ClinicianDashboardWrapper />;
+  }
+
+  // Redirect facility users to their specialized dashboard
+  if (currentUser?.role && [
+    'facility_admin', 'facility_administrator', 'scheduling_coordinator', 'hr_manager', 'corporate', 
+    'regional_director', 'billing', 'supervisor', 'director_of_nursing'
+  ].includes(currentUser.role)) {
+    setLocation('/facility-dashboard');
+    return null;
   }
   const [selectedTab, setSelectedTab] = useState("overview");
   const [selectedBuilding, setSelectedBuilding] = useState("main");

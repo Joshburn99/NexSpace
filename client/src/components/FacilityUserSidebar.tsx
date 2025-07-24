@@ -36,7 +36,7 @@ interface SidebarItem {
 const SIDEBAR_ITEMS: SidebarItem[] = [
   {
     label: 'Dashboard',
-    href: '/dashboard',
+    href: '/facility-dashboard',
     icon: Home,
     permissions: ['view_schedules', 'view_staff', 'view_reports'],
     description: 'Overview of facility operations'
