@@ -47,9 +47,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </>
       ) : isFacilityUser ? (
         <>
-          <TopBar />
           <div className="flex flex-1">
-            <FacilityUserSidebar />
+            <FacilityUserSidebar expanded={sidebarExpanded} onToggle={() => setSidebarExpanded(!sidebarExpanded)} />
             <main className="flex-1 overflow-auto">{children}</main>
           </div>
         </>

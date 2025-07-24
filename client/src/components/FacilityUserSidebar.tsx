@@ -19,7 +19,9 @@ import {
   ChevronDown,
   ChevronRight,
   MessageCircle,
-  MessageSquare
+  MessageSquare,
+  Menu,
+  X
 } from 'lucide-react';
 
 interface SidebarItem {
@@ -249,7 +251,12 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   }
 ];
 
-export function FacilityUserSidebar() {
+interface FacilityUserSidebarProps {
+  expanded?: boolean;
+  onToggle?: () => void;
+}
+
+export function FacilityUserSidebar({ expanded = true, onToggle }: FacilityUserSidebarProps) {
   const [location] = useLocation();
   const { hasAnyPermission, getUserPermissions } = useFacilityPermissions();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -307,21 +314,28 @@ export function FacilityUserSidebar() {
           <button
             onClick={() => toggleExpanded(item.label)}
             className={cn(
-              "w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-md transition-colors group",
-              "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+              "w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors group",
+              "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white",
+              !expanded ? "justify-center" : "justify-between"
             )}
+            title={!expanded ? item.label : undefined}
           >
-            <div className="flex items-center">
-              <Icon className="mr-3 h-5 w-5 flex-shrink-0 text-gray-400 dark:text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300" />
-              <span className="truncate">{item.label}</span>
+            <div className={cn("flex items-center", !expanded && "justify-center")}>
+              <Icon className={cn(
+                "h-5 w-5 flex-shrink-0 text-gray-400 dark:text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300",
+                expanded && "mr-3"
+              )} />
+              {expanded && <span className="truncate">{item.label}</span>}
             </div>
-            {isExpanded ? (
-              <ChevronDown className="h-4 w-4" />
-            ) : (
-              <ChevronRight className="h-4 w-4" />
+            {expanded && (
+              isExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )
             )}
           </button>
-          {isExpanded && (
+          {expanded && isExpanded && (
             <div className="ml-6 mt-1 space-y-1">
               {item.children?.map(child => 
                 renderSidebarItem(child, level + 1)
@@ -340,43 +354,67 @@ export function FacilityUserSidebar() {
           "flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors group",
           isActive
             ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200"
-            : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white"
+            : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-white",
+          !expanded && "justify-center"
         )}
+        title={!expanded ? item.label : undefined}
       >
         <Icon className={cn(
-          "mr-3 h-5 w-5 flex-shrink-0",
+          "h-5 w-5 flex-shrink-0",
+          expanded && "mr-3",
           isActive
             ? "text-blue-600 dark:text-blue-300"
             : "text-gray-400 dark:text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300"
         )} />
-        <span className="truncate">{item.label}</span>
+        {expanded && <span className="truncate">{item.label}</span>}
       </Link>
     );
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 w-64 min-h-screen">
-      <div className="p-6">
-        <div className="flex items-center space-x-2 mb-8">
+    <div className={cn(
+      "bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700 min-h-screen transition-all duration-300",
+      expanded ? "w-64" : "w-16"
+    )}>
+      <div className={cn("p-6", !expanded && "p-3")}>
+        {/* Header with toggle */}
+        <div className={cn("flex items-center mb-8", expanded ? "space-x-2" : "justify-center")}>
           <div className="h-8 w-8 bg-blue-600 rounded flex items-center justify-center">
             <span className="text-white font-bold text-sm">N</span>
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-gray-900 dark:text-white">NexSpace</h1>
-            <p className="text-xs text-gray-500 dark:text-gray-400">Facility Portal</p>
-          </div>
+          {expanded && (
+            <div>
+              <h1 className="text-lg font-bold text-gray-900 dark:text-white">NexSpace</h1>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Facility Portal</p>
+            </div>
+          )}
+          {onToggle && (
+            <button
+              onClick={onToggle}
+              className="ml-auto p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              title={expanded ? "Collapse sidebar" : "Expand sidebar"}
+            >
+              {expanded ? (
+                <ChevronRight className="h-4 w-4 text-gray-500" />
+              ) : (
+                <Menu className="h-4 w-4 text-gray-500" />
+              )}
+            </button>
+          )}
         </div>
         
         <nav className="space-y-1">
           {accessibleItems.map(item => renderSidebarItem(item))}
         </nav>
         
-        {/* Role-specific help text */}
-        <div className="mt-8 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-          <p className="text-xs text-gray-600 dark:text-gray-400">
-            Your navigation is customized based on your role permissions. Contact your administrator if you need access to additional features.
-          </p>
-        </div>
+        {/* Role-specific help text - only show when expanded */}
+        {expanded && (
+          <div className="mt-8 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <p className="text-xs text-gray-600 dark:text-gray-400">
+              Your navigation is customized based on your role permissions. Contact your administrator if you need access to additional features.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -13,6 +13,18 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 24, 2025 - Comprehensive UI Cleanup & Collapsible Sidebar Implementation
+- **UI Layout Cleanup**: Removed duplicate TopBar components causing cluttered interface during facility user impersonation
+- **Collapsible Sidebar**: Implemented smooth collapsible functionality for FacilityUserSidebar with toggle button
+- **Responsive Design**: Enhanced sidebar to work properly in both expanded (w-64) and collapsed (w-16) states
+- **Visual Polish**: Added smooth transitions, proper icon spacing, and tooltip support for collapsed mode
+- **Platform-wide Facility Filtering**: Implemented comprehensive facility association filtering across all endpoints
+  - Shifts API: Only shows shifts from user's associated facilities
+  - Staff API: Only shows staff from user's associated facilities  
+  - Shift Templates API: Only shows templates from user's associated facilities
+  - Frontend Add Shift modal: Only shows associated facilities in dropdown
+- **Backend Security**: Fixed field name inconsistencies (associatedFacilityIds vs associated_facility_ids) and added facility validation to all endpoints
+
 ### July 20, 2025 - Facility Association Validation for Shift Creation
 - **Frontend Facility Filtering**: Enhanced Add Shift modal to only show facilities that facility users are associated with
 - **Backend Validation**: Added comprehensive facility association validation in the new `/api/shifts` POST endpoint
