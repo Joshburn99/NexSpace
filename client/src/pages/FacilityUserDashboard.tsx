@@ -10,6 +10,7 @@ import { DashboardCustomization } from "@/components/dashboard/DashboardCustomiz
 import { PermissionButton } from "@/components/PermissionButton";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { Toaster } from "@/components/ui/toaster";
 
 interface DashboardStats {
   activeStaff: number;
@@ -425,6 +426,7 @@ export default function FacilityUserDashboard() {
           </Card>
         </CanAccess>
       </div>
+      <Toaster />
     </div>
   );
 }

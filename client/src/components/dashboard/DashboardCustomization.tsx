@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Settings, Layout, BarChart3, Clock, Users, DollarSign, AlertTriangle, FileText, Building, Activity, Calendar, TrendingUp, Shield, Bell, MessageSquare, MapPin, Target, PieChart } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 interface WidgetConfig {
   id: string;
@@ -247,6 +248,7 @@ export function DashboardCustomization({ onLayoutChange }: DashboardCustomizatio
   const [isOpen, setIsOpen] = useState(false);
   const [widgetStates, setWidgetStates] = useState<Record<string, boolean>>({});
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // Initialize widget states from default configuration
   React.useEffect(() => {
@@ -276,12 +278,28 @@ export function DashboardCustomization({ onLayoutChange }: DashboardCustomizatio
   const saveLayoutMutation = useMutation({
     mutationFn: (widgets: WidgetConfig[]) => 
       apiRequest('/api/dashboard/widgets', 'POST', { widgets }),
-    onSuccess: (_, widgets) => {
+    onSuccess: (response, widgets) => {
+      console.log('Dashboard widgets saved successfully:', response);
       queryClient.invalidateQueries({ queryKey: ['/api/dashboard/widgets'] });
       setIsOpen(false);
+      
+      // Show success message
+      toast({
+        title: "Dashboard Updated",
+        description: `Layout saved with ${widgets.filter(w => w.visible).length} visible widgets`,
+      });
+      
       if (onLayoutChange) {
         onLayoutChange({ layout: 'grid', widgets: widgets as WidgetConfig[] });
       }
+    },
+    onError: (error) => {
+      console.error('Failed to save dashboard widgets:', error);
+      toast({
+        title: "Save Failed",
+        description: "Could not save dashboard layout. Please try again.",
+        variant: "destructive",
+      });
     }
   });
 
@@ -302,12 +320,15 @@ export function DashboardCustomization({ onLayoutChange }: DashboardCustomizatio
   };
 
   const handleSaveLayout = () => {
+    console.log('Saving layout with widget states:', widgetStates);
     const updatedWidgets = availableWidgets.map(widget => ({
       ...widget,
       visible: widgetStates[widget.id] ?? widget.visible
     }));
-    const visibleWidgets = updatedWidgets.filter(widget => widget.visible);
-    saveLayoutMutation.mutate(visibleWidgets);
+    console.log('Updated widgets to save:', updatedWidgets.map(w => ({ id: w.id, visible: w.visible })));
+    
+    // Save all widgets (not just visible ones) to maintain state
+    saveLayoutMutation.mutate(updatedWidgets);
   };
 
   const handleResetToDefault = () => {
