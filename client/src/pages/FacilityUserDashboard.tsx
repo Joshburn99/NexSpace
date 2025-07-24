@@ -215,7 +215,6 @@ export default function FacilityUserDashboard() {
   // Load dashboard statistics
   const { data: dashboardStats, isLoading: statsLoading, error: statsError } = useQuery<DashboardStats>({
     queryKey: ['/api/dashboard/stats'],
-    queryFn: () => apiRequest('/api/dashboard/stats'),
     refetchInterval: 30000, // Refresh every 30 seconds for real-time data
   });
 
