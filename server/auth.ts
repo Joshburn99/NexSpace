@@ -158,7 +158,8 @@ export function setupAuth(app: Express) {
         // Get facility user data to include associated facilities
         const facilityUser = await storage.getFacilityUserByEmail(user.email);
         if (facilityUser && facilityUser.associated_facility_ids) {
-          (user as any).associatedFacilities = facilityUser.associated_facility_ids;
+          (user as any).associatedFacilityIds = facilityUser.associated_facility_ids;
+          (user as any).associatedFacilities = facilityUser.associated_facility_ids; // Keep both for compatibility
         }
       } catch (error) {
         console.error("Error fetching user permissions:", error);

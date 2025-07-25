@@ -67,10 +67,14 @@ import type { RecommendationCriteria } from "./recommendation-engine";
 import { UnifiedDataService } from "./unified-data-service";
 import multer from "multer";
 import OpenAI from "openai";
+import dashboardPreferencesRoutes from "./dashboard-preferences-routes";
 
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
   setupAuth(app);
+  
+  // Dashboard preferences routes
+  app.use(dashboardPreferencesRoutes);
   
   // Initialize unified data service (will be properly initialized with WebSocket later)
   let unifiedDataService: UnifiedDataService;
@@ -6785,10 +6789,11 @@ export function registerRoutes(app: Express): Server {
               }
             }
             
-            // Set associated facilities
+            // Set associated facilities - use associatedFacilityIds to match auth.ts
             if (facilityUser.associated_facility_ids) {
-              (targetUser as any).associatedFacilities = facilityUser.associated_facility_ids;
-              console.log(`[IMPERSONATION] Set associatedFacilities for ${targetUser.email}:`, facilityUser.associated_facility_ids);
+              (targetUser as any).associatedFacilityIds = facilityUser.associated_facility_ids;
+              (targetUser as any).associatedFacilities = facilityUser.associated_facility_ids; // Keep both for compatibility
+              console.log(`[IMPERSONATION] Set associatedFacilityIds for ${targetUser.email}:`, facilityUser.associated_facility_ids);
             }
             
             // Include facility user role for proper permission handling

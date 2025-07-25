@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/toaster";
 import { apiRequest } from "@/lib/queryClient";
+import { EditableDashboard } from "@/components/dashboard/EditableDashboard";
 
 interface DashboardStats {
   activeStaff: number;
@@ -211,6 +212,7 @@ const RecentActivity: React.FC<{ activities: DashboardStats['recentActivity'] }>
 // Main dashboard component
 export default function FacilityUserDashboard() {
   const { user } = useAuth();
+  const [isEditMode, setIsEditMode] = React.useState(false);
 
   // Load dashboard statistics
   const { data: dashboardStats, isLoading: statsLoading, error: statsError } = useQuery<DashboardStats>({
@@ -251,6 +253,15 @@ export default function FacilityUserDashboard() {
               </Badge>
             )}
           </div>
+          <Button
+            variant={isEditMode ? "default" : "outline"}
+            size="sm"
+            onClick={() => setIsEditMode(!isEditMode)}
+            className="gap-2"
+          >
+            <Settings className="h-4 w-4" />
+            {isEditMode ? 'Done Editing' : 'Edit Dashboard'}
+          </Button>
         </div>
 
         {/* Stats Overview - Real-time Metrics */}
@@ -374,6 +385,14 @@ export default function FacilityUserDashboard() {
           </Card>
         </CanAccess>
       </div>
+      
+      {/* Editable Dashboard Overlay */}
+      <EditableDashboard 
+        isEditMode={isEditMode} 
+        dashboardStats={dashboardStats}
+        user={user}
+      />
+      
       <Toaster />
     </div>
   );
