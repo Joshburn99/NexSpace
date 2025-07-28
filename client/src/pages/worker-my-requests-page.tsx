@@ -130,8 +130,23 @@ export default function WorkerMyRequestsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Requests</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
+          <p className="text-gray-600 dark:text-gray-400 mt-2 flex items-center gap-1">
             Your pending shift requests
+            <Tooltip>
+              <TooltipTrigger>
+                <Info className="h-3 w-3 text-gray-400" />
+              </TooltipTrigger>
+              <TooltipContent side="right" className="max-w-xs">
+                <p className="text-sm font-medium mb-1">Request Status Guide:</p>
+                <ul className="text-xs space-y-1">
+                  <li><span className="font-medium text-yellow-600">Pending:</span> Awaiting facility review</li>
+                  <li><span className="font-medium text-green-600">Approved:</span> You've been assigned to the shift</li>
+                  <li><span className="font-medium text-red-600">Declined:</span> Request was not approved</li>
+                  <li><span className="font-medium text-gray-600">Withdrawn:</span> You cancelled the request</li>
+                </ul>
+                <p className="text-xs mt-2 text-gray-500">You can withdraw pending requests at any time</p>
+              </TooltipContent>
+            </Tooltip>
           </p>
         </div>
         <Badge variant="outline" className="text-lg px-3 py-1">

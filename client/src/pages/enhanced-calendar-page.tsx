@@ -1111,7 +1111,24 @@ export default function EnhancedCalendarPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Status</Label>
+                  <Label>
+                    Status
+                    <Tooltip>
+                      <TooltipTrigger className="ml-1 inline-flex">
+                        <Info className="h-3 w-3 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent side="right" className="max-w-xs">
+                        <p className="text-sm font-medium mb-1">Shift Status Guide:</p>
+                        <ul className="text-xs space-y-1">
+                          <li><span className="font-medium">Open:</span> Available for workers to request</li>
+                          <li><span className="font-medium">Requested:</span> Workers have submitted requests</li>
+                          <li><span className="font-medium">Filled:</span> All positions have been assigned</li>
+                          <li><span className="font-medium">In Progress:</span> Shift is currently being worked</li>
+                          <li><span className="font-medium">Completed:</span> Shift has been finished</li>
+                        </ul>
+                      </TooltipContent>
+                    </Tooltip>
+                  </Label>
                   <div className="flex items-center gap-2 mt-1">
                     {(() => {
                       const statusInfo = statusConfig[selectedShift.status as keyof typeof statusConfig] || statusConfig.open;
@@ -1463,7 +1480,24 @@ export default function EnhancedCalendarPage() {
                 <div className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
                   <div className="flex items-center justify-between">
                     <div>
-                      <Label className="text-base font-semibold text-green-900 dark:text-green-100">Request This Shift</Label>
+                      <Label className="text-base font-semibold text-green-900 dark:text-green-100 flex items-center gap-1">
+                        Request This Shift
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="h-3 w-3 text-green-700 dark:text-green-300" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-xs">
+                            <p className="text-sm font-medium mb-1">How it works:</p>
+                            <ol className="text-xs space-y-1 list-decimal list-inside">
+                              <li>Click to submit your request</li>
+                              <li>Add an optional note about your availability</li>
+                              <li>Facility manager reviews all requests</li>
+                              <li>You'll be notified if approved</li>
+                              <li>Check "My Requests" to track status</li>
+                            </ol>
+                          </TooltipContent>
+                        </Tooltip>
+                      </Label>
                       <p className="text-sm text-green-700 dark:text-green-300 mt-1">
                         Submit a request to work this shift. Your request will be reviewed by the facility manager.
                       </p>

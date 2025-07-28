@@ -161,10 +161,40 @@ export default function ShiftRequestsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Shift Requests</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Review and manage shift requests from your staff
-        </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              Shift Requests
+              {requests.filter(r => r.status === 'pending').length > 0 && (
+                <Badge variant="destructive" className="ml-2">
+                  {requests.filter(r => r.status === 'pending').length} Pending
+                </Badge>
+              )}
+            </h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2 flex items-center gap-1">
+              Review and manage shift requests from your staff
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-3 w-3 text-gray-400" />
+                </TooltipTrigger>
+                <TooltipContent side="right" className="max-w-xs">
+                  <p className="text-sm font-medium mb-1">Request Management Tips:</p>
+                  <ul className="text-xs space-y-1">
+                    <li>• Review worker qualifications before approving</li>
+                    <li>• Consider reliability scores and ratings</li>
+                    <li>• Approve requests promptly to secure staff</li>
+                    <li>• Provide reasons when denying to help workers improve</li>
+                    <li>• Check for conflicts before assigning shifts</li>
+                  </ul>
+                </TooltipContent>
+              </Tooltip>
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm text-gray-500">Last updated</p>
+            <p className="text-xs text-gray-400">{new Date().toLocaleTimeString()}</p>
+          </div>
+        </div>
       </div>
 
       {/* Search and Filters */}
