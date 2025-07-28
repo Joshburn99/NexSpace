@@ -843,7 +843,7 @@ export const staff = pgTable("staff", {
   
   // License Information - single source of truth
   licenseNumber: text("license_number"),
-  licenseExpirationDate: timestamp("license_expiration_date"),
+  licenseExpirationDate: timestamp("license_expiry"),
   
   // Location Information
   homeAddress: text("home_address"),

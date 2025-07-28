@@ -46,6 +46,7 @@ import {
 import { GlobalSearch } from "./GlobalSearch";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { ImpersonationIndicator } from "./ImpersonationIndicator";
+import { EnhancedMobileNavigation } from "./enhanced-mobile-navigation";
 
 // Type for navigation items
 type NavigationItem = {
@@ -55,7 +56,7 @@ type NavigationItem = {
   items?: { label: string; href: string }[];
 };
 
-// Navigation items based on user role and permissions
+// Streamlined navigation with improved hierarchy and UX
 const getNavigationItems = (user: any): NavigationItem[] => {
   const isSuperAdmin = user?.role === "super_admin";
   const isAdmin = user?.role === "admin" || isSuperAdmin;
@@ -64,7 +65,7 @@ const getNavigationItems = (user: any): NavigationItem[] => {
     [
       "facility_admin",
       "facility_administrator",
-      "scheduling_coordinator",
+      "scheduling_coordinator", 
       "hr_manager",
       "corporate",
       "regional_director",
@@ -103,7 +104,7 @@ const getNavigationItems = (user: any): NavigationItem[] => {
         icon: Calendar,
         items: [
           { label: "Calendar", href: "/enhanced-calendar" },
-          { label: "Shift Templates", href: "/scheduling" },
+          { label: "Shift Templates", href: "/shift-templates" },
           { label: "Open Shifts", href: "/shifts-open" },
           { label: "Time Clock", href: "/time-clock" },
         ],
@@ -372,6 +373,15 @@ export function UnifiedHeader() {
           {/* Search - Hidden on small screens */}
           <div className="flex-1 max-w-md mx-4 hidden lg:block">
             <GlobalSearch />
+          </div>
+
+          {/* Mobile Navigation */}
+          <div className="lg:hidden mr-2">
+            <EnhancedMobileNavigation 
+              navigationItems={navigationItems}
+              currentUser={currentUser}
+              isImpersonating={isImpersonating}
+            />
           </div>
 
           {/* Right Side Actions */}

@@ -9,6 +9,7 @@ import { ProtectedRoute, AdminRoute, FacilityRoute } from "./lib/rbac-route-guar
 import { FacilityPermissionsProvider } from "@/hooks/use-facility-permissions";
 import { RBACProvider } from "@/hooks/use-rbac";
 import Layout from "@/components/Layout";
+import { EnhancedErrorBoundary } from "@/components/enhanced-error-boundary";
 import { ShiftProvider } from "@/contexts/ShiftContext";
 import { TimeClockProvider } from "@/contexts/TimeClockContext";
 import { CredentialsProvider } from "@/contexts/CredentialsContext";
@@ -25,6 +26,7 @@ import { EnhancedCredentialProvider } from "@/contexts/EnhancedCredentialContext
 import { CredentialVerificationProvider } from "@/contexts/CredentialVerificationContext";
 import { PTOProvider } from "@/contexts/PTOContext";
 import { MessagingProvider } from "@/contexts/MessagingContext";
+import { EnhancedDataProvider } from "@/components/enhanced-data-provider";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import JobBoard from "@/pages/job-board";
