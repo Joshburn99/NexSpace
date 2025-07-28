@@ -7,9 +7,9 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background mobile-container">
       <UnifiedHeader />
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="container mx-auto mobile-safe py-4 sm:py-6 lg:py-8">
         <div className="animate-in fade-in duration-500">
           {children}
         </div>

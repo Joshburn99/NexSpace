@@ -242,6 +242,17 @@ export function UnifiedHeader() {
             </Link>
           </div>
 
+          {/* Mobile Menu Button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden mobile-touch"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle mobile menu"
+          >
+            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex flex-1 items-center gap-1">
             {navigationItems.map((item) => (
@@ -297,25 +308,25 @@ export function UnifiedHeader() {
             ))}
           </nav>
 
-          {/* Search */}
-          <div className="flex-1 max-w-md mx-4 hidden md:block">
+          {/* Search - Hidden on small screens */}
+          <div className="flex-1 max-w-md mx-4 hidden lg:block">
             <GlobalSearch />
           </div>
 
           {/* Right Side Actions */}
-          <div className="flex items-center gap-2 sm:gap-4">
-            {/* Help Button */}
+          <div className="flex items-center gap-1 sm:gap-2 lg:gap-4">
+            {/* Help Button - Hidden on mobile */}
             <Button
               variant="ghost"
               size="icon"
-              className="relative"
+              className="relative hidden sm:flex mobile-touch"
               onClick={() => {
                 // Dispatch custom event to trigger tour
                 window.dispatchEvent(new CustomEvent('startProductTour'));
               }}
               title="Start product tour"
             >
-              <HelpCircle className="h-5 w-5" />
+              <HelpCircle className="h-4 w-4 sm:h-5 sm:w-5" />
             </Button>
 
             {/* Notifications */}
