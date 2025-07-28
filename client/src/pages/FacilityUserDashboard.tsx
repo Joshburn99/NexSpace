@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/toaster";
 import { apiRequest } from "@/lib/queryClient";
 import { EditableDashboard } from "@/components/dashboard/EditableDashboard";
+import { DraggableDashboard } from "@/components/dashboard/DraggableDashboard";
 
 interface DashboardStats {
   activeStaff: number;
@@ -336,12 +337,19 @@ export default function FacilityUserDashboard() {
 
         <Separator />
 
-        {/* Priority Tasks and Recent Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <PriorityTasksList tasks={dashboardStats?.priorityTasks || []} />
-          
-          <RecentActivity activities={dashboardStats?.recentActivity || []} />
-        </div>
+        {/* Dashboard Content - Use draggable grid in edit mode */}
+        {isEditMode ? (
+          <DraggableDashboard 
+            isEditMode={isEditMode} 
+            dashboardStats={dashboardStats}
+          />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <PriorityTasksList tasks={dashboardStats?.priorityTasks || []} />
+            
+            <RecentActivity activities={dashboardStats?.recentActivity || []} />
+          </div>
+        )}
 
         {/* Quick Actions */}
         <CanAccess permissions={['create_shifts', 'view_schedules', 'manage_facility_settings']}>
