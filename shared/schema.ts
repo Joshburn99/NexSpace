@@ -628,16 +628,41 @@ export const credentials = pgTable("credentials", {
   verifiedById: integer("verified_by_id"),
 });
 
-// Messages table
+// Conversations table - for threading messages
+export const conversations = pgTable("conversations", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull().default("direct"), // direct, group, broadcast, shift
+  subject: text("subject"),
+  shiftId: integer("shift_id"), // Optional: tie conversation to specific shift
+  facilityId: integer("facility_id"), // Optional: facility-specific conversation
+  createdById: integer("created_by_id").notNull(),
+  lastMessageAt: timestamp("last_message_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+// Conversation participants
+export const conversationParticipants = pgTable("conversation_participants", {
+  id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => conversations.id),
+  userId: integer("user_id").notNull(),
+  joinedAt: timestamp("joined_at").defaultNow(),
+  lastReadAt: timestamp("last_read_at"),
+  unreadCount: integer("unread_count").default(0),
+});
+
+// Messages table - enhanced
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
+  conversationId: integer("conversation_id").notNull().references(() => conversations.id),
   senderId: integer("sender_id").notNull(),
-  recipientId: integer("recipient_id"),
-  conversationId: text("conversation_id"),
   content: text("content").notNull(),
-  messageType: text("message_type").default("text"), // text, system, file
-  isRead: boolean("is_read").default(false),
-  shiftId: integer("shift_id"), // Optional: tie message to specific shift
+  messageType: text("message_type").default("text"), // text, system, file, image
+  priority: text("priority").default("normal"), // normal, high, urgent
+  attachmentUrl: text("attachment_url"),
+  attachmentName: text("attachment_name"),
+  attachmentSize: integer("attachment_size"),
+  isEdited: boolean("is_edited").default(false),
+  editedAt: timestamp("edited_at"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
@@ -967,9 +992,23 @@ export const insertCredentialSchema = createInsertSchema(credentials).omit({
   verifiedAt: true,
 });
 
+export const insertConversationSchema = createInsertSchema(conversations).omit({
+  id: true,
+  createdAt: true,
+  lastMessageAt: true,
+});
+
+export const insertConversationParticipantSchema = createInsertSchema(conversationParticipants).omit({
+  id: true,
+  joinedAt: true,
+  unreadCount: true,
+});
+
 export const insertMessageSchema = createInsertSchema(messages).omit({
   id: true,
   createdAt: true,
+  isEdited: true,
+  editedAt: true,
 });
 
 export const insertStaffSchema = createInsertSchema(staff).omit({
@@ -1063,6 +1102,10 @@ export type InsertWorkLog = z.infer<typeof insertWorkLogSchema>;
 export type WorkLog = typeof workLogs.$inferSelect;
 export type InsertCredential = z.infer<typeof insertCredentialSchema>;
 export type Credential = typeof credentials.$inferSelect;
+export type InsertConversation = z.infer<typeof insertConversationSchema>;
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversationParticipant = z.infer<typeof insertConversationParticipantSchema>;
+export type ConversationParticipant = typeof conversationParticipants.$inferSelect;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertStaff = z.infer<typeof insertStaffSchema>;

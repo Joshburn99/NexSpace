@@ -2127,68 +2127,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Enhanced Messaging APIs with persistence
-  app.post("/api/messages", requireAuth, async (req: any, res) => {
-    try {
-      const messageData = insertMessageSchema.parse({
-        ...req.body,
-        senderId: req.user.id
-      });
 
-      const [message] = await db.insert(messages).values(messageData).returning();
-
-      // Broadcast to WebSocket clients if available
-      const messageWithSender = {
-        ...message,
-        senderName: `${req.user.firstName} ${req.user.lastName}`
-      };
-
-      // Notify connected WebSocket clients
-      wss.clients.forEach((client: WebSocket) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({
-            type: 'new_message',
-            data: messageWithSender
-          }));
-        }
-      });
-
-      res.status(201).json(messageWithSender);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid message data", errors: error.errors });
-      } else {
-        console.error('Message creation error:', error);
-        res.status(500).json({ message: "Failed to send message" });
-      }
-    }
-  });
-
-  app.get("/api/messages/:threadId", requireAuth, async (req: any, res) => {
-    try {
-      const threadId = req.params.threadId;
-      
-      const threadMessages = await db.select({
-        id: messages.id,
-        senderId: messages.senderId,
-        recipientId: messages.recipientId,
-        conversationId: messages.conversationId,
-        content: messages.content,
-        messageType: messages.messageType,
-        isRead: messages.isRead,
-        shiftId: messages.shiftId,
-        createdAt: messages.createdAt
-      })
-      .from(messages)
-      .where(sql`${messages.conversationId} = ${threadId}`)
-      .orderBy(sql`${messages.createdAt} ASC`);
-
-      res.json(threadMessages);
-    } catch (error) {
-      console.error('Messages fetch error:', error);
-      res.status(500).json({ message: "Failed to fetch messages" });
-    }
-  });
 
   // Auto-assignment criteria helper function
   async function checkAutoAssignmentCriteria(shiftId: number, userId: number): Promise<{ shouldAutoAssign: boolean; reason?: string }> {
@@ -2374,39 +2313,190 @@ export function registerRoutes(app: Express): Server {
     }
   );
 
-  // Messages API
-  app.get("/api/messages", requireAuth, async (req: any, res) => {
+  // Conversation API
+  app.get("/api/conversations", requireAuth, async (req: any, res) => {
     try {
-      const { conversationId } = req.query;
-      let messages;
-
-      if (conversationId) {
-        messages = await storage.getConversationMessages(conversationId as string);
-      } else {
-        messages = await storage.getUserMessages(req.user.id);
-      }
-
-      res.json(messages);
+      const conversations = await storage.getUserConversations(req.user.id);
+      
+      // Enrich conversations with participant info and last message
+      const enrichedConversations = await Promise.all(
+        conversations.map(async (conv) => {
+          const participants = await storage.getConversationParticipants(conv.id);
+          const messages = await storage.getConversationMessages(conv.id, 1, 0);
+          const lastMessage = messages[0] || null;
+          
+          // Get participant user details
+          const participantDetails = await Promise.all(
+            participants.map(async (p) => {
+              const user = await storage.getUser(p.userId);
+              return user ? {
+                id: user.id,
+                name: `${user.firstName} ${user.lastName}`,
+                role: user.role,
+                avatar: null
+              } : null;
+            })
+          );
+          
+          return {
+            ...conv,
+            participants: participantDetails.filter(Boolean),
+            lastMessage,
+            unreadCount: conv.unreadCount || 0
+          };
+        })
+      );
+      
+      res.json(enrichedConversations);
     } catch (error) {
+      console.error('Failed to fetch conversations:', error);
+      res.status(500).json({ message: "Failed to fetch conversations" });
+    }
+  });
+
+  app.post("/api/conversations", requireAuth, async (req: any, res) => {
+    try {
+      const { subject, participantIds, type = 'direct' } = req.body;
+      
+      // Create conversation
+      const conversation = await storage.createConversation({
+        subject,
+        type,
+        createdById: req.user.id
+      });
+      
+      // Add creator as participant
+      await storage.addConversationParticipant({
+        conversationId: conversation.id,
+        userId: req.user.id
+      });
+      
+      // Add other participants
+      if (participantIds && participantIds.length > 0) {
+        await Promise.all(
+          participantIds.map((userId: number) =>
+            storage.addConversationParticipant({
+              conversationId: conversation.id,
+              userId
+            })
+          )
+        );
+      }
+      
+      res.status(201).json(conversation);
+    } catch (error) {
+      console.error('Failed to create conversation:', error);
+      res.status(500).json({ message: "Failed to create conversation" });
+    }
+  });
+
+  app.get("/api/conversations/:id", requireAuth, async (req: any, res) => {
+    try {
+      const conversationId = parseInt(req.params.id);
+      
+      // Check if user is a participant
+      const participants = await storage.getConversationParticipants(conversationId);
+      const isParticipant = participants.some(p => p.userId === req.user.id);
+      
+      if (!isParticipant) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const conversation = await storage.getConversation(conversationId);
+      if (!conversation) {
+        return res.status(404).json({ message: "Conversation not found" });
+      }
+      
+      res.json(conversation);
+    } catch (error) {
+      console.error('Failed to fetch conversation:', error);
+      res.status(500).json({ message: "Failed to fetch conversation" });
+    }
+  });
+
+  // Messages API
+  app.get("/api/conversations/:id/messages", requireAuth, async (req: any, res) => {
+    try {
+      const conversationId = parseInt(req.params.id);
+      const { limit = 50, offset = 0 } = req.query;
+      
+      // Check if user is a participant
+      const participants = await storage.getConversationParticipants(conversationId);
+      const isParticipant = participants.some(p => p.userId === req.user.id);
+      
+      if (!isParticipant) {
+        return res.status(403).json({ message: "Access denied" });
+      }
+      
+      const messages = await storage.getConversationMessages(
+        conversationId,
+        parseInt(limit as string),
+        parseInt(offset as string)
+      );
+      
+      // Mark messages as read
+      await storage.markMessagesAsRead(conversationId, req.user.id);
+      
+      // Enrich messages with sender info
+      const enrichedMessages = await Promise.all(
+        messages.map(async (msg) => {
+          const sender = await storage.getUser(msg.senderId);
+          return {
+            ...msg,
+            senderName: sender ? `${sender.firstName} ${sender.lastName}` : 'Unknown',
+            senderRole: sender?.role
+          };
+        })
+      );
+      
+      res.json(enrichedMessages);
+    } catch (error) {
+      console.error('Failed to fetch messages:', error);
       res.status(500).json({ message: "Failed to fetch messages" });
     }
   });
 
-  app.post("/api/messages", requireAuth, auditLog("CREATE", "message"), async (req: any, res) => {
+  app.post("/api/conversations/:id/messages", requireAuth, async (req: any, res) => {
     try {
-      const messageData = insertMessageSchema.parse({
-        ...req.body,
-        senderId: req.user.id,
-      });
-
-      const message = await storage.createMessage(messageData);
-      res.status(201).json(message);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ message: "Invalid message data", errors: error.errors });
-      } else {
-        res.status(500).json({ message: "Failed to send message" });
+      const conversationId = parseInt(req.params.id);
+      const { content, messageType = 'text' } = req.body;
+      
+      // Check if user is a participant
+      const participants = await storage.getConversationParticipants(conversationId);
+      const isParticipant = participants.some(p => p.userId === req.user.id);
+      
+      if (!isParticipant) {
+        return res.status(403).json({ message: "Access denied" });
       }
+      
+      const message = await storage.createMessage({
+        conversationId,
+        senderId: req.user.id,
+        content,
+        messageType
+      });
+      
+      // Broadcast via WebSocket
+      const enrichedMessage = {
+        ...message,
+        senderName: `${req.user.firstName} ${req.user.lastName}`,
+        senderRole: req.user.role
+      };
+      
+      wss.clients.forEach((client: WebSocket) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(JSON.stringify({
+            type: 'new_message',
+            conversationId,
+            data: enrichedMessage
+          }));
+        }
+      });
+      
+      res.status(201).json(enrichedMessage);
+    } catch (error) {
+      console.error('Failed to send message:', error);
+      res.status(500).json({ message: "Failed to send message" });
     }
   });
 
@@ -2416,6 +2506,20 @@ export function registerRoutes(app: Express): Server {
       res.json({ count });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch unread count" });
+    }
+  });
+
+  app.get("/api/messages/search", requireAuth, async (req: any, res) => {
+    try {
+      const { q } = req.query;
+      if (!q) {
+        return res.json([]);
+      }
+      
+      const messages = await storage.searchMessages(req.user.id, q as string);
+      res.json(messages);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to search messages" });
     }
   });
 
@@ -9871,30 +9975,9 @@ export function registerRoutes(app: Express): Server {
 
         // Handle different message types
         switch (message.type) {
-          case "chat":
-            // Broadcast chat message to conversation participants
-            const chatMessage = await storage.createMessage({
-              senderId: message.senderId,
-              recipientId: message.recipientId,
-              conversationId: message.conversationId,
-              content: message.content,
-              messageType: "text",
-              shiftId: message.shiftId,
-            });
-
-            // Broadcast to all connected clients in the conversation
-            wss.clients.forEach((client) => {
-              if (client.readyState === WebSocket.OPEN) {
-                client.send(
-                  JSON.stringify({
-                    type: "chat",
-                    message: chatMessage,
-                  })
-                );
-              }
-            });
-            break;
-
+          // The new conversation-based messaging is handled via REST API endpoints
+          // which already broadcast WebSocket events
+          
           case "shift_update":
             // Broadcast shift updates to facility staff
             wss.clients.forEach((client) => {

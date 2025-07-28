@@ -79,6 +79,7 @@ import BillingDashboard from "@/pages/BillingDashboard";
 import RatesManagementPage from "@/pages/RatesManagementPage";
 import ReportsPage from "@/pages/reports-page";
 import MessagesPage from "@/pages/messages-page";
+import UnifiedMessagingPage from "@/pages/unified-messaging";
 import JobPostingsPage from "@/pages/JobPostingsPage";
 import CreateJobPostingPage from "@/pages/CreateJobPostingPage";
 import ReferralSystemPage from "@/pages/ReferralSystemPage";
@@ -133,6 +134,7 @@ function AppContent() {
       <ProtectedRoute path="/compliance" component={CompliancePage} />
       <ProtectedRoute path="/messages" component={MessagesPage} />
       <ProtectedRoute path="/messaging" component={EnhancedMessagingPage} />
+      <ProtectedRoute path="/unified-messaging" component={UnifiedMessagingPage} />
       <ProtectedRoute path="/reports" component={ReportsPage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
       <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />

@@ -12,6 +12,8 @@ import {
   invoices,
   workLogs,
   credentials,
+  conversations,
+  conversationParticipants,
   messages,
   auditLogs,
   permissions,
@@ -47,6 +49,10 @@ import {
   type InsertWorkLog,
   type Credential,
   type InsertCredential,
+  type Conversation,
+  type InsertConversation,
+  type ConversationParticipant,
+  type InsertConversationParticipant,
   type Message,
   type InsertMessage,
   type AuditLog,
@@ -156,12 +162,24 @@ export interface IStorage {
     verifierId?: number
   ): Promise<Credential | undefined>;
 
+  // Conversation methods
+  createConversation(conversation: InsertConversation): Promise<Conversation>;
+  getConversation(id: number): Promise<Conversation | undefined>;
+  getUserConversations(userId: number): Promise<Conversation[]>;
+  updateConversationLastMessage(conversationId: number): Promise<void>;
+  
+  // Conversation participant methods
+  addConversationParticipant(participant: InsertConversationParticipant): Promise<ConversationParticipant>;
+  getConversationParticipants(conversationId: number): Promise<ConversationParticipant[]>;
+  updateParticipantReadStatus(conversationId: number, userId: number): Promise<void>;
+  
   // Message methods
   createMessage(message: InsertMessage): Promise<Message>;
-  getConversationMessages(conversationId: string): Promise<Message[]>;
   getUserMessages(userId: number): Promise<Message[]>;
-  markMessageAsRead(id: number): Promise<void>;
+  getConversationMessages(conversationId: number, limit?: number, offset?: number): Promise<Message[]>;
   getUnreadMessageCount(userId: number): Promise<number>;
+  markMessagesAsRead(conversationId: number, userId: number): Promise<void>;
+  searchMessages(userId: number, query: string): Promise<Message[]>;
 
   // Audit log methods
   createAuditLog(
@@ -771,37 +789,158 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Message methods
+  // Conversation methods
+  async createConversation(conversation: InsertConversation): Promise<Conversation> {
+    const [result] = await db.insert(conversations).values(conversation).returning();
+    return result;
+  }
+
+  async getConversation(id: number): Promise<Conversation | undefined> {
+    const [result] = await db.select().from(conversations).where(eq(conversations.id, id));
+    return result;
+  }
+
+  async getUserConversations(userId: number): Promise<Conversation[]> {
+    const results = await db
+      .select({
+        conversation: conversations,
+        unreadCount: conversationParticipants.unreadCount,
+      })
+      .from(conversations)
+      .innerJoin(
+        conversationParticipants,
+        and(
+          eq(conversationParticipants.conversationId, conversations.id),
+          eq(conversationParticipants.userId, userId)
+        )
+      )
+      .orderBy(desc(conversations.lastMessageAt));
+    
+    return results.map(r => ({
+      ...r.conversation,
+      unreadCount: r.unreadCount || 0
+    }));
+  }
+
+  async updateConversationLastMessage(conversationId: number): Promise<void> {
+    await db
+      .update(conversations)
+      .set({ lastMessageAt: new Date() })
+      .where(eq(conversations.id, conversationId));
+  }
+
+  // Conversation participant methods
+  async addConversationParticipant(participant: InsertConversationParticipant): Promise<ConversationParticipant> {
+    const [result] = await db.insert(conversationParticipants).values(participant).returning();
+    return result;
+  }
+
+  async getConversationParticipants(conversationId: number): Promise<ConversationParticipant[]> {
+    return await db
+      .select()
+      .from(conversationParticipants)
+      .where(eq(conversationParticipants.conversationId, conversationId));
+  }
+
+  async updateParticipantReadStatus(conversationId: number, userId: number): Promise<void> {
+    await db
+      .update(conversationParticipants)
+      .set({ 
+        lastReadAt: new Date(),
+        unreadCount: 0 
+      })
+      .where(
+        and(
+          eq(conversationParticipants.conversationId, conversationId),
+          eq(conversationParticipants.userId, userId)
+        )
+      );
+  }
+
+  // Message methods
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
     const [message] = await db.insert(messages).values(insertMessage).returning();
+    
+    // Update conversation last message time
+    await this.updateConversationLastMessage(message.conversationId);
+    
+    // Increment unread count for all participants except sender
+    await db
+      .update(conversationParticipants)
+      .set({ unreadCount: sql`${conversationParticipants.unreadCount} + 1` })
+      .where(
+        and(
+          eq(conversationParticipants.conversationId, message.conversationId),
+          sql`${conversationParticipants.userId} != ${message.senderId}`
+        )
+      );
+    
     return message;
   }
 
-  async getConversationMessages(conversationId: string): Promise<Message[]> {
+  async getUserMessages(userId: number): Promise<Message[]> {
+    // Get messages from conversations where user is a participant
+    const participantConversations = await db
+      .select({ conversationId: conversationParticipants.conversationId })
+      .from(conversationParticipants)
+      .where(eq(conversationParticipants.userId, userId));
+    
+    if (participantConversations.length === 0) return [];
+    
+    const conversationIds = participantConversations.map(p => p.conversationId);
+    
+    return await db
+      .select()
+      .from(messages)
+      .where(sql`${messages.conversationId} = ANY(${conversationIds})`)
+      .orderBy(desc(messages.createdAt))
+      .limit(100);
+  }
+
+  async getConversationMessages(conversationId: number, limit = 50, offset = 0): Promise<Message[]> {
     return await db
       .select()
       .from(messages)
       .where(eq(messages.conversationId, conversationId))
-      .orderBy(asc(messages.createdAt));
-  }
-
-  async getUserMessages(userId: number): Promise<Message[]> {
-    return await db
-      .select()
-      .from(messages)
-      .where(eq(messages.recipientId, userId))
-      .orderBy(desc(messages.createdAt));
-  }
-
-  async markMessageAsRead(id: number): Promise<void> {
-    await db.update(messages).set({ isRead: true }).where(eq(messages.id, id));
+      .orderBy(desc(messages.createdAt))
+      .limit(limit)
+      .offset(offset);
   }
 
   async getUnreadMessageCount(userId: number): Promise<number> {
     const [result] = await db
-      .select({ count: count() })
+      .select({ totalUnread: sql<number>`COALESCE(SUM(${conversationParticipants.unreadCount}), 0)` })
+      .from(conversationParticipants)
+      .where(eq(conversationParticipants.userId, userId));
+    
+    return result.totalUnread || 0;
+  }
+
+  async markMessagesAsRead(conversationId: number, userId: number): Promise<void> {
+    await this.updateParticipantReadStatus(conversationId, userId);
+  }
+
+  async searchMessages(userId: number, query: string): Promise<Message[]> {
+    const participantConversations = await db
+      .select({ conversationId: conversationParticipants.conversationId })
+      .from(conversationParticipants)
+      .where(eq(conversationParticipants.userId, userId));
+    
+    if (participantConversations.length === 0) return [];
+    
+    const conversationIds = participantConversations.map(p => p.conversationId);
+    
+    return await db
+      .select()
       .from(messages)
-      .where(and(eq(messages.recipientId, userId), eq(messages.isRead, false)));
-    return result.count;
+      .where(
+        and(
+          sql`${messages.conversationId} = ANY(${conversationIds})`,
+          ilike(messages.content, `%${query}%`)
+        )
+      )
+      .orderBy(desc(messages.createdAt))
+      .limit(50);
   }
 
   // Audit log methods

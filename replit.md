@@ -13,6 +13,26 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 28, 2025 - Unified Real-Time Messaging System Implementation
+- **Conversation-Based Messaging**: Replaced multiple conflicting messaging implementations with a unified conversation-based system
+  - Created new database schema with conversations and conversation_participants tables for proper threading support
+  - Implemented comprehensive storage interface with conversation management methods
+  - Built new unified-messaging.tsx page with real-time WebSocket updates and modern UI
+- **API Consolidation**: Removed duplicate messaging endpoints and created single source of truth
+  - POST /api/conversations - Create new conversations with multiple participants
+  - GET /api/conversations - List user conversations with unread counts
+  - POST /api/conversations/:id/messages - Send messages with WebSocket broadcasting
+  - GET /api/conversations/:id/messages - Retrieve conversation history
+- **WebSocket Integration**: Updated WebSocket infrastructure to support conversation-based messaging
+  - Removed legacy chat handler that used recipientId-based messages
+  - Integrated real-time updates using existing WebSocket manager with 'new_message' events
+  - Automatic conversation list and unread count updates on new messages
+- **UI/UX Improvements**: Modern messaging interface with conversation threading
+  - Conversation list with search, unread badges, and last message preview
+  - Real-time message updates with smooth scrolling
+  - Support for both direct and group conversations
+  - Participant selection with staff directory integration
+
 ### July 28, 2025 - Logo Integration & Executive Director Data Filtering
 - **NexSpace Logo Implementation**: Replaced text "NexSpace" with company logo in both sidebars
   - Added logo file to client/public/nexspace-logo.png for proper serving

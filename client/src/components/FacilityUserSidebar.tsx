@@ -102,7 +102,7 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
   },
   {
     label: 'Messages',
-    href: '/messages',
+    href: '/unified-messaging',
     icon: MessageSquare,
     permissions: [],
     description: 'Communicate with staff and NexSpace team'

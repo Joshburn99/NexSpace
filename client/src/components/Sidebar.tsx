@@ -144,7 +144,7 @@ const navigationItems: NavItem[] = [
   },
   {
     label: "Messages",
-    href: "/messages",
+    href: "/unified-messaging",
     icon: <MessageSquare className="w-5 h-5" />,
     badge: 3,
   },
