@@ -1,6 +1,12 @@
 import {
   users,
   facilities,
+  facilityAddresses,
+  facilityContacts,
+  facilitySettings,
+  facilityRates,
+  facilityStaffingTargets,
+  facilityDocuments,
   jobs,
   jobApplications,
   shifts,
@@ -34,6 +40,18 @@ import {
   type InsertUser,
   type Facility,
   type InsertFacility,
+  type FacilityAddress,
+  type InsertFacilityAddress,
+  type FacilityContact,
+  type InsertFacilityContact,
+  type FacilitySettings,
+  type InsertFacilitySettings,
+  type FacilityRates,
+  type InsertFacilityRates,
+  type FacilityStaffingTargets,
+  type InsertFacilityStaffingTargets,
+  type FacilityDocuments,
+  type InsertFacilityDocuments,
   type Job,
   type InsertJob,
   type JobApplication,
@@ -120,7 +138,7 @@ export interface IStorage {
   getUsersByRole(role: string): Promise<User[]>;
   getUsersByFacility(facilityId: number): Promise<User[]>;
 
-  // Facility methods
+  // Facility methods - Core facility table
   getFacility(id: number): Promise<Facility | undefined>;
   createFacility(facility: InsertFacility): Promise<Facility>;
   updateFacility(id: number, updates: Partial<InsertFacility>): Promise<Facility | undefined>;
@@ -129,6 +147,39 @@ export interface IStorage {
   getFacilitiesByState(state: string): Promise<Facility[]>;
   getFacilityByCMSId(cmsId: string): Promise<Facility | undefined>;
   getFacilitiesWithinRadius(lat: number, lng: number, radiusMiles: number): Promise<Facility[]>;
+  
+  // Facility Address methods
+  getFacilityAddress(facilityId: number): Promise<FacilityAddress | undefined>;
+  createFacilityAddress(address: InsertFacilityAddress): Promise<FacilityAddress>;
+  updateFacilityAddress(facilityId: number, updates: Partial<InsertFacilityAddress>): Promise<FacilityAddress | undefined>;
+  
+  // Facility Contact methods
+  getFacilityContacts(facilityId: number): Promise<FacilityContact[]>;
+  createFacilityContact(contact: InsertFacilityContact): Promise<FacilityContact>;
+  updateFacilityContact(id: number, updates: Partial<InsertFacilityContact>): Promise<FacilityContact | undefined>;
+  deleteFacilityContact(id: number): Promise<boolean>;
+  
+  // Facility Settings methods
+  getFacilitySettings(facilityId: number): Promise<FacilitySettings | undefined>;
+  createFacilitySettings(settings: InsertFacilitySettings): Promise<FacilitySettings>;
+  updateFacilitySettings(facilityId: number, updates: Partial<InsertFacilitySettings>): Promise<FacilitySettings | undefined>;
+  
+  // Facility Rates methods
+  getFacilityRates(facilityId: number): Promise<FacilityRates[]>;
+  createFacilityRate(rate: InsertFacilityRates): Promise<FacilityRates>;
+  updateFacilityRate(id: number, updates: Partial<InsertFacilityRates>): Promise<FacilityRates | undefined>;
+  getActiveFacilityRates(facilityId: number, specialty?: string): Promise<FacilityRates[]>;
+  
+  // Facility Staffing Targets methods
+  getFacilityStaffingTargets(facilityId: number): Promise<FacilityStaffingTargets[]>;
+  createFacilityStaffingTarget(target: InsertFacilityStaffingTargets): Promise<FacilityStaffingTargets>;
+  updateFacilityStaffingTarget(id: number, updates: Partial<InsertFacilityStaffingTargets>): Promise<FacilityStaffingTargets | undefined>;
+  
+  // Facility Documents methods
+  getFacilityDocuments(facilityId: number): Promise<FacilityDocuments[]>;
+  createFacilityDocument(document: InsertFacilityDocuments): Promise<FacilityDocuments>;
+  updateFacilityDocument(id: number, updates: Partial<InsertFacilityDocuments>): Promise<FacilityDocuments | undefined>;
+  deleteFacilityDocument(id: number): Promise<boolean>;
 
   // Job methods
   getJob(id: number): Promise<Job | undefined>;
@@ -533,32 +584,248 @@ export class DatabaseStorage implements IStorage {
   }
 
   async searchFacilities(query: string): Promise<Facility[]> {
-    return await db
-      .select()
+    const result = await db
+      .select({
+        facility: facilities,
+      })
       .from(facilities)
+      .leftJoin(facilityAddresses, eq(facilities.id, facilityAddresses.facilityId))
       .where(
         and(
           eq(facilities.isActive, true),
           or(
             ilike(facilities.name, `%${query}%`),
-            ilike(facilities.city, `%${query}%`),
-            ilike(facilities.state, `%${query}%`),
+            ilike(facilityAddresses.city, `%${query}%`),
+            ilike(facilityAddresses.state, `%${query}%`),
             eq(facilities.cmsId, query)
           )
         )
       );
+    
+    return result.map(r => r.facility);
   }
 
   async getFacilitiesByState(state: string): Promise<Facility[]> {
-    return await db
-      .select()
+    const result = await db
+      .select({
+        facility: facilities,
+      })
       .from(facilities)
-      .where(and(eq(facilities.isActive, true), eq(facilities.state, state)));
+      .innerJoin(facilityAddresses, eq(facilities.id, facilityAddresses.facilityId))
+      .where(and(
+        eq(facilities.isActive, true), 
+        eq(facilityAddresses.state, state)
+      ));
+    
+    return result.map(r => r.facility);
   }
 
   async getFacilityByCMSId(cmsId: string): Promise<Facility | undefined> {
     const [facility] = await db.select().from(facilities).where(eq(facilities.cmsId, cmsId));
     return facility || undefined;
+  }
+
+  async getFacilitiesWithinRadius(lat: number, lng: number, radiusMiles: number): Promise<Facility[]> {
+    // Using the Haversine formula for distance calculation
+    const result = await db
+      .select({
+        facility: facilities,
+        distance: sql<number>`
+          (3959 * acos(
+            cos(radians(${lat})) * 
+            cos(radians(${facilityAddresses.latitude})) * 
+            cos(radians(${facilityAddresses.longitude}) - radians(${lng})) + 
+            sin(radians(${lat})) * 
+            sin(radians(${facilityAddresses.latitude}))
+          ))
+        `,
+      })
+      .from(facilities)
+      .innerJoin(facilityAddresses, eq(facilities.id, facilityAddresses.facilityId))
+      .where(and(
+        eq(facilities.isActive, true),
+        sql`
+          (3959 * acos(
+            cos(radians(${lat})) * 
+            cos(radians(${facilityAddresses.latitude})) * 
+            cos(radians(${facilityAddresses.longitude}) - radians(${lng})) + 
+            sin(radians(${lat})) * 
+            sin(radians(${facilityAddresses.latitude}))
+          )) <= ${radiusMiles}
+        `
+      ))
+      .orderBy(sql`distance`);
+    
+    return result.map(r => r.facility);
+  }
+
+  // Facility Address methods
+  async getFacilityAddress(facilityId: number): Promise<FacilityAddress | undefined> {
+    const [address] = await db
+      .select()
+      .from(facilityAddresses)
+      .where(eq(facilityAddresses.facilityId, facilityId));
+    return address || undefined;
+  }
+
+  async createFacilityAddress(address: InsertFacilityAddress): Promise<FacilityAddress> {
+    const [newAddress] = await db.insert(facilityAddresses).values(address).returning();
+    return newAddress;
+  }
+
+  async updateFacilityAddress(facilityId: number, updates: Partial<InsertFacilityAddress>): Promise<FacilityAddress | undefined> {
+    const [updatedAddress] = await db
+      .update(facilityAddresses)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(facilityAddresses.facilityId, facilityId))
+      .returning();
+    return updatedAddress || undefined;
+  }
+
+  // Facility Contact methods
+  async getFacilityContacts(facilityId: number): Promise<FacilityContact[]> {
+    return await db
+      .select()
+      .from(facilityContacts)
+      .where(eq(facilityContacts.facilityId, facilityId))
+      .orderBy(desc(facilityContacts.isPrimary), asc(facilityContacts.contactType));
+  }
+
+  async createFacilityContact(contact: InsertFacilityContact): Promise<FacilityContact> {
+    const [newContact] = await db.insert(facilityContacts).values(contact).returning();
+    return newContact;
+  }
+
+  async updateFacilityContact(id: number, updates: Partial<InsertFacilityContact>): Promise<FacilityContact | undefined> {
+    const [updatedContact] = await db
+      .update(facilityContacts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(facilityContacts.id, id))
+      .returning();
+    return updatedContact || undefined;
+  }
+
+  async deleteFacilityContact(id: number): Promise<boolean> {
+    const result = await db.delete(facilityContacts).where(eq(facilityContacts.id, id));
+    return result.count > 0;
+  }
+
+  // Facility Settings methods
+  async getFacilitySettings(facilityId: number): Promise<FacilitySettings | undefined> {
+    const [settings] = await db
+      .select()
+      .from(facilitySettings)
+      .where(eq(facilitySettings.facilityId, facilityId));
+    return settings || undefined;
+  }
+
+  async createFacilitySettings(settings: InsertFacilitySettings): Promise<FacilitySettings> {
+    const [newSettings] = await db.insert(facilitySettings).values(settings).returning();
+    return newSettings;
+  }
+
+  async updateFacilitySettings(facilityId: number, updates: Partial<InsertFacilitySettings>): Promise<FacilitySettings | undefined> {
+    const [updatedSettings] = await db
+      .update(facilitySettings)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(facilitySettings.facilityId, facilityId))
+      .returning();
+    return updatedSettings || undefined;
+  }
+
+  // Facility Rates methods
+  async getFacilityRates(facilityId: number): Promise<FacilityRates[]> {
+    return await db
+      .select()
+      .from(facilityRates)
+      .where(eq(facilityRates.facilityId, facilityId))
+      .orderBy(desc(facilityRates.effectiveDate), asc(facilityRates.specialty));
+  }
+
+  async createFacilityRate(rate: InsertFacilityRates): Promise<FacilityRates> {
+    const [newRate] = await db.insert(facilityRates).values(rate).returning();
+    return newRate;
+  }
+
+  async updateFacilityRate(id: number, updates: Partial<InsertFacilityRates>): Promise<FacilityRates | undefined> {
+    const [updatedRate] = await db
+      .update(facilityRates)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(facilityRates.id, id))
+      .returning();
+    return updatedRate || undefined;
+  }
+
+  async getActiveFacilityRates(facilityId: number, specialty?: string): Promise<FacilityRates[]> {
+    const now = new Date();
+    let query = db
+      .select()
+      .from(facilityRates)
+      .where(and(
+        eq(facilityRates.facilityId, facilityId),
+        lte(facilityRates.effectiveDate, now),
+        or(
+          gt(facilityRates.endDate, now),
+          sql`${facilityRates.endDate} IS NULL`
+        )
+      ));
+    
+    if (specialty) {
+      query = query.where(eq(facilityRates.specialty, specialty));
+    }
+    
+    return await query.orderBy(desc(facilityRates.effectiveDate));
+  }
+
+  // Facility Staffing Targets methods
+  async getFacilityStaffingTargets(facilityId: number): Promise<FacilityStaffingTargets[]> {
+    return await db
+      .select()
+      .from(facilityStaffingTargets)
+      .where(eq(facilityStaffingTargets.facilityId, facilityId))
+      .orderBy(asc(facilityStaffingTargets.department));
+  }
+
+  async createFacilityStaffingTarget(target: InsertFacilityStaffingTargets): Promise<FacilityStaffingTargets> {
+    const [newTarget] = await db.insert(facilityStaffingTargets).values(target).returning();
+    return newTarget;
+  }
+
+  async updateFacilityStaffingTarget(id: number, updates: Partial<InsertFacilityStaffingTargets>): Promise<FacilityStaffingTargets | undefined> {
+    const [updatedTarget] = await db
+      .update(facilityStaffingTargets)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(facilityStaffingTargets.id, id))
+      .returning();
+    return updatedTarget || undefined;
+  }
+
+  // Facility Documents methods
+  async getFacilityDocuments(facilityId: number): Promise<FacilityDocuments[]> {
+    return await db
+      .select()
+      .from(facilityDocuments)
+      .where(eq(facilityDocuments.facilityId, facilityId))
+      .orderBy(desc(facilityDocuments.uploadDate), asc(facilityDocuments.documentType));
+  }
+
+  async createFacilityDocument(document: InsertFacilityDocuments): Promise<FacilityDocuments> {
+    const [newDoc] = await db.insert(facilityDocuments).values(document).returning();
+    return newDoc;
+  }
+
+  async updateFacilityDocument(id: number, updates: Partial<InsertFacilityDocuments>): Promise<FacilityDocuments | undefined> {
+    const [updatedDoc] = await db
+      .update(facilityDocuments)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(facilityDocuments.id, id))
+      .returning();
+    return updatedDoc || undefined;
+  }
+
+  async deleteFacilityDocument(id: number): Promise<boolean> {
+    const result = await db.delete(facilityDocuments).where(eq(facilityDocuments.id, id));
+    return result.count > 0;
   }
 
   // Staff methods

@@ -1,26 +1,98 @@
 import { useQuery } from "@tanstack/react-query";
 
-// Enhanced Facility Interface
+// Enhanced Facility Interface with Normalized Structure
 export interface EnhancedFacility {
   id: number;
   name: string;
   facilityType: string;
-  address: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  phone: string;
-  email: string;
   bedCount: number;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
   
-  // Enhanced operational fields
-  autoAssignmentEnabled?: boolean;
-  timezone?: string;
-  netTerms?: string;
+  // Normalized address data
+  address?: {
+    id: number;
+    facilityId: number;
+    street?: string;
+    city?: string;
+    state?: string;
+    zipCode?: string;
+    country?: string;
+  };
+  
+  // Normalized contacts
+  contacts?: Array<{
+    id: number;
+    facilityId: number;
+    contactType: string;
+    name?: string;
+    title?: string;
+    phone?: string;
+    email?: string;
+    isPrimary?: boolean;
+  }>;
+  
+  // Normalized settings
+  settings?: {
+    id: number;
+    facilityId: number;
+    autoAssignmentEnabled?: boolean;
+    timezone?: string;
+    emrSystem?: string;
+    billingCycle?: string;
+    paymentTerms?: string;
+    defaultShiftDuration?: number;
+    overtimeThreshold?: number;
+    requiresFloatPool?: boolean;
+    floatPoolRadius?: number;
+  };
+  
+  // Normalized rates
+  rates?: Array<{
+    id: number;
+    facilityId: number;
+    rateType: string;
+    specialty: string;
+    baseRate: number;
+    overtimeRate?: number;
+    holidayRate?: number;
+    effectiveDate: string;
+    endDate?: string;
+  }>;
+  
+  // Normalized staffing targets
+  staffingTargets?: Array<{
+    id: number;
+    facilityId: number;
+    department: string;
+    shiftType: string;
+    targetCount: number;
+    minCount: number;
+    maxCount?: number;
+  }>;
+  
+  // Normalized documents
+  documents?: Array<{
+    id: number;
+    facilityId: number;
+    documentType: string;
+    documentName: string;
+    documentUrl?: string;
+    expiryDate?: string;
+    status?: string;
+  }>;
+  
+  // Legacy fields for backward compatibility (deprecated)
+  phone?: string;
+  email?: string;
+  
+  // Additional operational fields from original interface
   teamId?: number;
+  netTerms?: string;
+  overallRating?: number;
+  
+  // Legacy JSON fields (these might be moved to normalized tables in future)
   billRates?: Record<string, number>;
   payRates?: Record<string, number>;
   floatPoolMargins?: Record<string, number>;
@@ -40,12 +112,6 @@ export interface EnhancedFacility {
     requireManagerApprovalForOvertime?: boolean;
     autoCalculateOvertime?: boolean;
   };
-  staffingTargets?: Record<string, {
-    targetHours: number;
-    minStaff: number;
-    maxStaff: number;
-    preferredStaffMix?: Record<string, number>;
-  }>;
   customRules?: {
     floatPoolRules?: {
       maxHoursPerWeek?: number;
@@ -73,6 +139,7 @@ export interface EnhancedFacility {
     expirationDate?: string;
     status: 'active' | 'expired' | 'pending_renewal';
   }>;
+  // Additional fields from main facilities table
   emrSystem?: string;
   contractStartDate?: string;
   billingContactName?: string;
@@ -144,15 +211,16 @@ export function getFacilityDisplayName(facility: EnhancedFacility | undefined): 
  * Helper function to get facility address string
  */
 export function getFacilityAddress(facility: EnhancedFacility | undefined): string {
-  if (!facility) return "";
-  return `${facility.address}, ${facility.city}, ${facility.state} ${facility.zipCode}`;
+  if (!facility || !facility.address) return "";
+  const addr = facility.address;
+  return `${addr.street || ''}, ${addr.city || ''}, ${addr.state || ''} ${addr.zipCode || ''}`.trim();
 }
 
 /**
  * Helper function to get facility timezone or default
  */
 export function getFacilityTimezone(facility: EnhancedFacility | undefined): string {
-  return facility?.timezone || "America/New_York";
+  return facility?.settings?.timezone || "America/New_York";
 }
 
 /**
@@ -192,7 +260,8 @@ export function getFacilityStaffingTargets(
   facility: EnhancedFacility | undefined, 
   department: string
 ) {
-  return facility?.staffingTargets?.[department];
+  if (!facility?.staffingTargets) return undefined;
+  return facility.staffingTargets.filter(target => target.department === department);
 }
 
 /**

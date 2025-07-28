@@ -302,67 +302,150 @@ export const notifications = pgTable("notifications", {
   metadata: jsonb("metadata"), // store related IDs, shift details, etc.
 });
 
-// Facilities table
+// Facilities table - Simplified core facility information
 export const facilities = pgTable("facilities", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  address: text("address"),
-  city: text("city"),
-  state: text("state"),
-  zipCode: text("zip_code"),
-  phone: text("phone"),
-  email: text("email"),
-  website: text("website"),
+  facilityType: text("facility_type").notNull(), // nursing_home, hospital, assisted_living, etc.
+  
+  // Core identifiers
   cmsId: text("cms_id").unique(),
   npiNumber: text("npi_number"),
-  facilityType: text("facility_type"), // nursing_home, hospital, assisted_living, etc.
+  
+  // Core facility info
   bedCount: integer("bed_count"),
   privateRooms: integer("private_rooms"),
   semiPrivateRooms: integer("semi_private_rooms"),
+  
+  // Ratings
   overallRating: integer("overall_rating"), // 1-5 star rating from CMS
   healthInspectionRating: integer("health_inspection_rating"),
   qualityMeasureRating: integer("quality_measure_rating"),
   staffingRating: integer("staffing_rating"),
   rnStaffingRating: integer("rn_staffing_rating"),
+  
+  // Core operational info
   ownershipType: text("ownership_type"), // for-profit, non-profit, government
   certificationDate: timestamp("certification_date"),
   participatesMedicare: boolean("participates_medicare").default(false),
   participatesMedicaid: boolean("participates_medicaid").default(false),
+  
+  // Services and languages
   specialtyServices: jsonb("specialty_services"), // array of services offered
   languagesSpoken: jsonb("languages_spoken"), // array of languages
-  adminName: text("admin_name"),
-  adminTitle: text("admin_title"),
-  medicalDirector: text("medical_director"),
+  
+  // Compliance tracking
   lastInspectionDate: timestamp("last_inspection_date"),
   deficiencyCount: integer("deficiency_count"),
   complaintsCount: integer("complaints_count"),
   finesTotal: decimal("fines_total", { precision: 10, scale: 2 }),
+  
+  // Data tracking
   autoImported: boolean("auto_imported").default(false),
   lastDataUpdate: timestamp("last_data_update"),
   dataSource: text("data_source"), // cms, manual, api_import
+  
+  // Settings
+  timezone: text("timezone").default("America/New_York"),
+  emrSystem: text("emr_system"), // EMR/PMS system name
+  isActive: boolean("is_active").default(true),
+  
+  // Team/Organization
+  teamId: integer("team_id").references(() => teams.id),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Facility Addresses table - Normalized address information
+export const facilityAddresses = pgTable("facility_addresses", {
+  id: serial("id").primaryKey(),
+  facilityId: integer("facility_id").notNull().references(() => facilities.id, { onDelete: 'cascade' }).unique(),
+  addressType: text("address_type").default("primary"), // primary, billing, mailing
+  street: text("street").notNull(),
+  street2: text("street_2"), // suite, unit, etc.
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  zipCode: text("zip_code").notNull(),
   latitude: decimal("latitude", { precision: 10, scale: 8 }),
   longitude: decimal("longitude", { precision: 11, scale: 8 }),
-  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 
-  // New Enhanced Facility Management Fields
+// Facility Contacts table - Normalized contact information
+export const facilityContacts = pgTable("facility_contacts", {
+  id: serial("id").primaryKey(),
+  facilityId: integer("facility_id").notNull().references(() => facilities.id, { onDelete: 'cascade' }),
+  contactType: text("contact_type").notNull(), // main, admin, billing, medical_director, emergency
+  name: text("name").notNull(),
+  title: text("title"),
+  phone: text("phone"),
+  email: text("email"),
+  isPrimary: boolean("is_primary").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Facility Settings table - Operational configuration
+export const facilitySettings = pgTable("facility_settings", {
+  id: serial("id").primaryKey(),
+  facilityId: integer("facility_id").notNull().references(() => facilities.id, { onDelete: 'cascade' }).unique(),
+  
+  // Auto-assignment
   autoAssignmentEnabled: boolean("auto_assignment_enabled").default(false),
-  teamId: integer("team_id"), // nullable for corporate/team grouping
-  netTerms: text("net_terms").default("Net 30"), // billing terms
-  floatPoolMargins: jsonb("float_pool_margins"), // { specialty: dollarAmount }
-  billRates: jsonb("bill_rates"), // { specialty: dollarAmount }
-  payRates: jsonb("pay_rates"), // { specialty: dollarAmount }
-  workflowAutomationConfig: jsonb("workflow_automation_config"), // workflow toggles
-  timezone: text("timezone").default("America/New_York"),
-  shiftManagementSettings: jsonb("shift_management_settings"), // overtime rules, etc.
-  billingContactName: text("billing_contact_name"),
-  billingContactEmail: text("billing_contact_email"),
-  staffingTargets: jsonb("staffing_targets"), // { department: targetHours }
-  emrSystem: text("emr_system"), // EMR/PMS system name
+  
+  // Billing
+  netTerms: text("net_terms").default("Net 30"),
   contractStartDate: timestamp("contract_start_date"),
-  payrollProviderId: integer("payroll_provider_id"), // FK to payroll_providers
-  customRules: jsonb("custom_rules"), // float pool, overtime, attendance rules
-  regulatoryDocs: jsonb("regulatory_docs"), // array of document URLs/metadata
+  payrollProviderId: integer("payroll_provider_id"),
+  
+  // Workflow automation
+  workflowAutomationConfig: jsonb("workflow_automation_config"),
+  shiftManagementSettings: jsonb("shift_management_settings"),
+  customRules: jsonb("custom_rules"),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 
+// Facility Rates table - Normalized billing/pay rates
+export const facilityRates = pgTable("facility_rates", {
+  id: serial("id").primaryKey(),
+  facilityId: integer("facility_id").notNull().references(() => facilities.id, { onDelete: 'cascade' }),
+  specialty: text("specialty").notNull(),
+  billRate: decimal("bill_rate", { precision: 10, scale: 2 }),
+  payRate: decimal("pay_rate", { precision: 10, scale: 2 }),
+  floatPoolMargin: decimal("float_pool_margin", { precision: 10, scale: 2 }),
+  effectiveDate: timestamp("effective_date").notNull().defaultNow(),
+  endDate: timestamp("end_date"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Facility Staffing Targets table - Department-specific targets
+export const facilityStaffingTargets = pgTable("facility_staffing_targets", {
+  id: serial("id").primaryKey(),
+  facilityId: integer("facility_id").notNull().references(() => facilities.id, { onDelete: 'cascade' }),
+  department: text("department").notNull(),
+  targetHours: integer("target_hours").notNull(),
+  minStaff: integer("min_staff").notNull(),
+  maxStaff: integer("max_staff").notNull(),
+  preferredStaffMix: jsonb("preferred_staff_mix"), // { specialty: count }
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Facility Documents table - Regulatory documents
+export const facilityDocuments = pgTable("facility_documents", {
+  id: serial("id").primaryKey(),
+  facilityId: integer("facility_id").notNull().references(() => facilities.id, { onDelete: 'cascade' }),
+  documentType: text("document_type").notNull(), // license, certification, policy, procedure, contract
+  name: text("name").notNull(),
+  url: text("url"),
+  uploadDate: timestamp("upload_date").notNull().defaultNow(),
+  expirationDate: timestamp("expiration_date"),
+  status: text("status").notNull().default("active"), // active, expired, pending_renewal
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -470,20 +553,7 @@ export const blockShifts = pgTable("block_shifts", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Facility settings table for configurable rates and times
-export const facilitySettings = pgTable("facility_settings", {
-  id: serial("id").primaryKey(),
-  facilityId: integer("facility_id").notNull().unique(),
-  baseRates: jsonb("base_rates"), // { "Registered Nurse": 35, "LPN": 28, ... }
-  presetTimes: jsonb("preset_times"), // [{ label: "7AM-7PM", start: "07:00", end: "19:00" }, ...]
-  allowedPremiums: jsonb("allowed_premiums"), // { min: 1.0, max: 1.7, step: 0.05 }
-  departments: text("departments").array(),
-  specialtyServices: text("specialty_services").array(),
-  autoApprovalRules: jsonb("auto_approval_rules"),
-  notificationSettings: jsonb("notification_settings"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+// Note: facilitySettings table has been moved to the normalized facility schema structure above
 
 // Time clock entries
 export const timeClockEntries = pgTable("time_clock_entries", {
@@ -1063,11 +1133,14 @@ export const facilitiesRelations = relations(facilities, ({ one, many }) => ({
   jobs: many(jobs),
   shifts: many(shifts),
   invoices: many(invoices),
-  payrollProvider: one(payrollProviders, { 
-    fields: [facilities.payrollProviderId], 
-    references: [payrollProviders.id] 
-  }),
   teamFacilities: many(teamFacilities),
+  // Normalized relations
+  address: one(facilityAddresses),
+  contacts: many(facilityContacts),
+  settings: one(facilitySettings),
+  rates: many(facilityRates),
+  staffingTargets: many(facilityStaffingTargets),
+  documents: many(facilityDocuments),
 }));
 
 export const teamsRelations = relations(teams, ({ one, many }) => ({
@@ -1413,3 +1486,57 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
+
+// Facility schemas and types
+// Note: insertFacilitySchema is already defined above with the facilities table
+
+export const insertFacilityAddressSchema = createInsertSchema(facilityAddresses).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFacilityContactSchema = createInsertSchema(facilityContacts).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFacilitySettingsSchema = createInsertSchema(facilitySettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFacilityRatesSchema = createInsertSchema(facilityRates).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFacilityStaffingTargetsSchema = createInsertSchema(facilityStaffingTargets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertFacilityDocumentsSchema = createInsertSchema(facilityDocuments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertFacility = z.infer<typeof insertFacilitySchema>;
+export type Facility = typeof facilities.$inferSelect;
+export type InsertFacilityAddress = z.infer<typeof insertFacilityAddressSchema>;
+export type FacilityAddress = typeof facilityAddresses.$inferSelect;
+export type InsertFacilityContact = z.infer<typeof insertFacilityContactSchema>;
+export type FacilityContact = typeof facilityContacts.$inferSelect;
+export type InsertFacilitySettings = z.infer<typeof insertFacilitySettingsSchema>;
+export type FacilitySettings = typeof facilitySettings.$inferSelect;
+export type InsertFacilityRates = z.infer<typeof insertFacilityRatesSchema>;
+export type FacilityRates = typeof facilityRates.$inferSelect;
+export type InsertFacilityStaffingTargets = z.infer<typeof insertFacilityStaffingTargetsSchema>;
+export type FacilityStaffingTargets = typeof facilityStaffingTargets.$inferSelect;
+export type InsertFacilityDocuments = z.infer<typeof insertFacilityDocumentsSchema>;
+export type FacilityDocuments = typeof facilityDocuments.$inferSelect;

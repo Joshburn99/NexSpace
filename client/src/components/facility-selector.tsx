@@ -62,9 +62,9 @@ export function FacilitySelector({
             <div className="flex items-center gap-2 truncate">
               <Building2 className="h-4 w-4 text-muted-foreground" />
               <span className="truncate">{getFacilityDisplayName(selectedFacility)}</span>
-              {showDetails && selectedFacility.city && (
+              {showDetails && selectedFacility.address?.city && (
                 <Badge variant="secondary" className="text-xs">
-                  {selectedFacility.city}, {selectedFacility.state}
+                  {selectedFacility.address.city}, {selectedFacility.address.state}
                 </Badge>
               )}
             </div>
@@ -95,7 +95,7 @@ export function FacilitySelector({
             {facilities.map((facility) => (
               <CommandItem
                 key={facility.id}
-                value={`${facility.name} ${facility.facilityType} ${facility.city}`}
+                value={`${facility.name} ${facility.facilityType} ${facility.address?.city || ''}`}
                 onSelect={() => handleSelect(facility)}
                 className="cursor-pointer"
               >
@@ -117,7 +117,7 @@ export function FacilitySelector({
                     <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                       <MapPin className="h-3 w-3" />
                       <span className="truncate">
-                        {facility.address}, {facility.city}, {facility.state}
+                        {facility.address ? `${facility.address.street || ''}, ${facility.address.city}, ${facility.address.state}` : 'No address'}
                       </span>
                       <Badge variant="secondary" className="ml-auto">
                         {facility.bedCount} beds

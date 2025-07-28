@@ -288,7 +288,7 @@ export default function GoogleMapsIntegration({
                     <div className="flex-1">
                       <h4 className="font-medium text-sm">{facility.name}</h4>
                       <p className="text-xs text-gray-500 mt-1">
-                        {facility.city}, {facility.state}
+                        {facility.address ? `${facility.address.city}, ${facility.address.state}` : 'No location'}
                       </p>
 
                       <div className="flex items-center gap-2 mt-2">

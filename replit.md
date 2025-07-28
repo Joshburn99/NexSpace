@@ -13,6 +13,27 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 28, 2025 - Comprehensive Facility Data Model Refactoring
+- **Normalized Facility Data Structure**: Completely refactored facility data model to eliminate redundant fields and enforce proper foreign key relationships
+  - Created 6 new normalized tables: facilityAddresses, facilityContacts, facilitySettings, facilityRates, facilityStaffingTargets, facilityDocuments
+  - Moved address fields (street, city, state, zip) from main facilities table to dedicated facilityAddresses table
+  - Moved contact information into facilityContacts table with support for multiple contact types per facility
+  - Moved operational settings and configurations to facilitySettings table
+  - Created proper normalized structure for billing/pay rates in facilityRates table with effective date tracking
+  - Normalized staffing targets by department in facilityStaffingTargets table
+  - Added facilityDocuments table for regulatory and compliance document tracking
+- **Backend Infrastructure Updates**: Updated all facility-related storage methods and API routes
+  - Enhanced IStorage interface with methods for all new normalized tables
+  - Implemented DatabaseStorage methods for complete CRUD operations on normalized facility data
+  - Updated enhanced facilities routes to use transactions for data consistency
+  - Modified GET endpoints to join and return complete facility data with all related records
+  - Refactored POST/PATCH endpoints to handle normalized data structure with proper validation
+- **Data Integrity Improvements**: Enforced referential integrity and business rules
+  - Added foreign key constraints with cascade delete for all facility relationships
+  - Implemented proper unique constraints where appropriate (e.g., one settings record per facility)
+  - Added transaction support to ensure atomic updates across multiple tables
+  - Improved data validation with structured approach for each entity type
+
 ### July 28, 2025 - Unified Design and Navigation System Implementation
 - **Unified Navigation Header**: Created comprehensive UnifiedHeader component replacing multiple sidebars and navigation systems
   - Single consistent header across all user types (super admin, facility users, employees, contractors)

@@ -2,8 +2,27 @@
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "./db";
-import { facilities, payrollProviders, teams, teamFacilities, type Facility, type InsertFacility } from "@shared/schema";
-import { eq, and, desc, asc, ilike } from "drizzle-orm";
+import { 
+  facilities, 
+  facilityAddresses,
+  facilityContacts,
+  facilitySettings,
+  facilityRates,
+  facilityStaffingTargets,
+  facilityDocuments,
+  payrollProviders, 
+  teams, 
+  teamFacilities, 
+  type Facility, 
+  type InsertFacility,
+  type InsertFacilityAddress,
+  type InsertFacilityContact,
+  type InsertFacilitySettings,
+  type InsertFacilityRates,
+  type InsertFacilityStaffingTargets,
+  type InsertFacilityDocuments
+} from "@shared/schema";
+import { eq, and, or, desc, asc, ilike, sql } from "drizzle-orm";
 import { 
   enhancedFacilitySchema, 
   enhancedFacilityUpdateSchema,
@@ -24,22 +43,43 @@ export function createEnhancedFacilitiesRoutes(
     try {
       const { state, facilityType, active, search } = req.query;
       
-      let query = db.select().from(facilities);
+      let query = db
+        .select({
+          facility: facilities,
+          address: facilityAddresses,
+          settings: facilitySettings,
+        })
+        .from(facilities)
+        .leftJoin(facilityAddresses, eq(facilities.id, facilityAddresses.facilityId))
+        .leftJoin(facilitySettings, eq(facilities.id, facilitySettings.facilityId));
       
       // Apply filters
       const conditions = [];
-      if (state) conditions.push(eq(facilities.state, state as string));
+      if (state && facilityAddresses) conditions.push(eq(facilityAddresses.state, state as string));
       if (facilityType) conditions.push(eq(facilities.facilityType, facilityType as string));
       if (active !== undefined) conditions.push(eq(facilities.isActive, active === 'true'));
       if (search) {
-        conditions.push(ilike(facilities.name, `%${search}%`));
+        conditions.push(
+          or(
+            ilike(facilities.name, `%${search}%`),
+            facilityAddresses ? ilike(facilityAddresses.city, `%${search}%`) : sql`false`
+          )
+        );
       }
       
       if (conditions.length > 0) {
         query = query.where(and(...conditions));
       }
       
-      const facilitiesData = await query.orderBy(asc(facilities.name));
+      const results = await query.orderBy(asc(facilities.name));
+      
+      // Combine the data into a single facility object with nested properties
+      const facilitiesData = results.map(result => ({
+        ...result.facility,
+        address: result.address,
+        settings: result.settings,
+      }));
+      
       res.json(facilitiesData);
     } catch (error) {
       console.error("Error fetching facilities:", error);
@@ -60,7 +100,53 @@ export function createEnhancedFacilitiesRoutes(
         return res.status(404).json({ message: "Facility not found" });
       }
 
-      res.json(facility);
+      // Fetch all related normalized data
+      const [address] = await db
+        .select()
+        .from(facilityAddresses)
+        .where(eq(facilityAddresses.facilityId, id));
+      
+      const contacts = await db
+        .select()
+        .from(facilityContacts)
+        .where(eq(facilityContacts.facilityId, id))
+        .orderBy(desc(facilityContacts.isPrimary), asc(facilityContacts.contactType));
+      
+      const [settings] = await db
+        .select()
+        .from(facilitySettings)
+        .where(eq(facilitySettings.facilityId, id));
+      
+      const rates = await db
+        .select()
+        .from(facilityRates)
+        .where(eq(facilityRates.facilityId, id))
+        .orderBy(desc(facilityRates.effectiveDate));
+      
+      const staffingTargets = await db
+        .select()
+        .from(facilityStaffingTargets)
+        .where(eq(facilityStaffingTargets.facilityId, id))
+        .orderBy(asc(facilityStaffingTargets.department));
+      
+      const documents = await db
+        .select()
+        .from(facilityDocuments)
+        .where(eq(facilityDocuments.facilityId, id))
+        .orderBy(desc(facilityDocuments.uploadDate));
+
+      // Combine all data into a comprehensive facility object
+      const facilityData = {
+        ...facility,
+        address,
+        contacts,
+        settings,
+        rates,
+        staffingTargets,
+        documents,
+      };
+
+      res.json(facilityData);
     } catch (error) {
       console.error("Error fetching facility:", error);
       res.status(500).json({ message: "Failed to fetch facility" });
@@ -76,61 +162,157 @@ export function createEnhancedFacilitiesRoutes(
       try {
         console.log("Creating facility with data:", req.body);
         
-        // Validate the enhanced facility data
-        const facilityData = enhancedFacilitySchema.parse(req.body);
+        // Extract different parts of the request
+        const { 
+          name, facilityType, operationalStatus, cmsId, npiNumber, bedCount, isActive,
+          address, contacts, settings, rates, staffingTargets, documents,
+          teamId, ...otherFields 
+        } = req.body;
         
-        // Additional business rule validations
-        const ratesValidation = validateFacilityRates(facilityData.billRates, facilityData.payRates);
-        if (!ratesValidation.valid) {
-          return res.status(400).json({ 
-            message: "Invalid rates configuration", 
-            errors: ratesValidation.errors 
-          });
-        }
+        // Start a transaction for creating facility and all related data
+        await db.transaction(async (tx) => {
+          // 1. Create the core facility record
+          const [newFacility] = await tx
+            .insert(facilities)
+            .values({
+              name,
+              facilityType,
+              operationalStatus: operationalStatus || 'active',
+              cmsId,
+              npiNumber,
+              bedCount: bedCount || 0,
+              isActive: isActive !== undefined ? isActive : true,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            })
+            .returning();
 
-        const staffingValidation = validateStaffingTargets(facilityData.staffingTargets);
-        if (!staffingValidation.valid) {
-          return res.status(400).json({ 
-            message: "Invalid staffing targets", 
-            errors: staffingValidation.errors 
-          });
-        }
+          const facilityId = newFacility.id;
 
-        if (facilityData.timezone && !validateTimezone(facilityData.timezone)) {
-          return res.status(400).json({ 
-            message: "Invalid timezone" 
-          });
-        }
-
-        // Verify payroll provider exists if specified
-        if (facilityData.payrollProviderId) {
-          const [payrollProvider] = await db
-            .select()
-            .from(payrollProviders)
-            .where(eq(payrollProviders.id, facilityData.payrollProviderId));
-          
-          if (!payrollProvider) {
-            return res.status(400).json({ 
-              message: "Invalid payroll provider ID" 
+          // 2. Create facility address if provided
+          if (address) {
+            await tx.insert(facilityAddresses).values({
+              facilityId,
+              streetAddress: address.streetAddress,
+              city: address.city,
+              state: address.state,
+              zipCode: address.zipCode,
+              country: address.country || 'USA',
+              latitude: address.latitude,
+              longitude: address.longitude,
             });
           }
-        }
 
-        const [newFacility] = await db
-          .insert(facilities)
-          .values(facilityData as any)
-          .returning();
+          // 3. Create facility contacts if provided
+          if (contacts && Array.isArray(contacts)) {
+            for (const contact of contacts) {
+              await tx.insert(facilityContacts).values({
+                facilityId,
+                contactType: contact.contactType,
+                name: contact.name,
+                title: contact.title,
+                phone: contact.phone,
+                email: contact.email,
+                isPrimary: contact.isPrimary || false,
+              });
+            }
+          }
 
-        // Handle team assignment if teamId is provided
-        if (facilityData.teamId) {
-          await db.insert(teamFacilities).values({
-            teamId: facilityData.teamId,
-            facilityId: newFacility.id
-          });
-        }
+          // 4. Create facility settings if provided
+          if (settings) {
+            await tx.insert(facilitySettings).values({
+              facilityId,
+              autoAssignmentEnabled: settings.autoAssignmentEnabled || false,
+              netTerms: settings.netTerms || 'Net 30',
+              contractStartDate: settings.contractStartDate,
+              payrollProviderId: settings.payrollProviderId,
+              workflowAutomationConfig: settings.workflowAutomationConfig,
+              shiftManagementSettings: settings.shiftManagementSettings,
+              customRules: settings.customRules,
+            });
+          }
 
-        console.log("Facility created successfully:", newFacility);
-        res.status(201).json(newFacility);
+          // 5. Create facility rates if provided
+          if (rates && Array.isArray(rates)) {
+            for (const rate of rates) {
+              await tx.insert(facilityRates).values({
+                facilityId,
+                specialty: rate.specialty,
+                billRate: rate.billRate,
+                payRate: rate.payRate,
+                floatPoolMargin: rate.floatPoolMargin,
+                effectiveDate: rate.effectiveDate || new Date(),
+                endDate: rate.endDate,
+              });
+            }
+          }
+
+          // 6. Create staffing targets if provided
+          if (staffingTargets && Array.isArray(staffingTargets)) {
+            for (const target of staffingTargets) {
+              await tx.insert(facilityStaffingTargets).values({
+                facilityId,
+                department: target.department,
+                shiftType: target.shiftType,
+                minStaff: target.minStaff,
+                idealStaff: target.idealStaff,
+                maxStaff: target.maxStaff,
+              });
+            }
+          }
+
+          // 7. Handle team assignment if teamId is provided
+          if (teamId) {
+            await tx.insert(teamFacilities).values({
+              teamId,
+              facilityId,
+            });
+          }
+
+          // 8. Fetch and return the complete facility data
+          const [createdFacility] = await tx
+            .select()
+            .from(facilities)
+            .where(eq(facilities.id, facilityId));
+          
+          const [createdAddress] = await tx
+            .select()
+            .from(facilityAddresses)
+            .where(eq(facilityAddresses.facilityId, facilityId));
+          
+          const createdContacts = await tx
+            .select()
+            .from(facilityContacts)
+            .where(eq(facilityContacts.facilityId, facilityId));
+          
+          const [createdSettings] = await tx
+            .select()
+            .from(facilitySettings)
+            .where(eq(facilitySettings.facilityId, facilityId));
+          
+          const createdRates = await tx
+            .select()
+            .from(facilityRates)
+            .where(eq(facilityRates.facilityId, facilityId));
+          
+          const createdStaffingTargets = await tx
+            .select()
+            .from(facilityStaffingTargets)
+            .where(eq(facilityStaffingTargets.facilityId, facilityId));
+          
+          const completeData = {
+            ...createdFacility,
+            address: createdAddress,
+            contacts: createdContacts,
+            settings: createdSettings,
+            rates: createdRates,
+            staffingTargets: createdStaffingTargets,
+            documents: [],
+          };
+          
+          console.log("Facility created successfully:", completeData);
+          res.status(201).json(completeData);
+        });
       } catch (error) {
         console.error("Error creating facility:", error);
         
@@ -261,78 +443,155 @@ export function createEnhancedFacilitiesRoutes(
           return res.status(404).json({ message: "Facility not found" });
         }
 
-        // Validate partial update data
-        const updateData = enhancedFacilityUpdateSchema.parse({
-          ...req.body,
-          updatedAt: new Date()
-        });
+        // Extract different parts of the request
+        const { 
+          name, facilityType, operationalStatus, cmsId, npiNumber, bedCount, isActive,
+          address, contacts, settings, rates, staffingTargets, documents,
+          ...otherFields 
+        } = req.body;
 
-        // Business rule validations for fields being updated
-        if (updateData.billRates || updateData.payRates) {
-          const billRates = updateData.billRates || existingFacility.billRates;
-          const payRates = updateData.payRates || existingFacility.payRates;
+        // Start a transaction for updating facility and all related data
+        await db.transaction(async (tx) => {
+          // 1. Update core facility fields if provided
+          const facilityUpdates: any = {};
+          if (name !== undefined) facilityUpdates.name = name;
+          if (facilityType !== undefined) facilityUpdates.facilityType = facilityType;
+          if (operationalStatus !== undefined) facilityUpdates.operationalStatus = operationalStatus;
+          if (cmsId !== undefined) facilityUpdates.cmsId = cmsId;
+          if (npiNumber !== undefined) facilityUpdates.npiNumber = npiNumber;
+          if (bedCount !== undefined) facilityUpdates.bedCount = bedCount;
+          if (isActive !== undefined) facilityUpdates.isActive = isActive;
           
-          const ratesValidation = validateFacilityRates(billRates, payRates);
-          if (!ratesValidation.valid) {
-            return res.status(400).json({ 
-              message: "Invalid rates configuration", 
-              errors: ratesValidation.errors 
-            });
+          if (Object.keys(facilityUpdates).length > 0) {
+            facilityUpdates.updatedAt = new Date();
+            await tx
+              .update(facilities)
+              .set(facilityUpdates)
+              .where(eq(facilities.id, id));
           }
-        }
 
-        if (updateData.staffingTargets) {
-          const staffingValidation = validateStaffingTargets(updateData.staffingTargets);
-          if (!staffingValidation.valid) {
-            return res.status(400).json({ 
-              message: "Invalid staffing targets", 
-              errors: staffingValidation.errors 
-            });
+          // 2. Update facility address if provided
+          if (address) {
+            const [existingAddress] = await tx
+              .select()
+              .from(facilityAddresses)
+              .where(eq(facilityAddresses.facilityId, id));
+            
+            if (existingAddress) {
+              await tx
+                .update(facilityAddresses)
+                .set({
+                  ...address,
+                  updatedAt: new Date(),
+                })
+                .where(eq(facilityAddresses.facilityId, id));
+            } else {
+              await tx.insert(facilityAddresses).values({
+                facilityId: id,
+                ...address,
+              });
+            }
           }
-        }
 
-        if (updateData.timezone && !validateTimezone(updateData.timezone)) {
-          return res.status(400).json({ message: "Invalid timezone" });
-        }
+          // 3. Update facility settings if provided
+          if (settings) {
+            const [existingSettings] = await tx
+              .select()
+              .from(facilitySettings)
+              .where(eq(facilitySettings.facilityId, id));
+            
+            if (existingSettings) {
+              await tx
+                .update(facilitySettings)
+                .set({
+                  ...settings,
+                  updatedAt: new Date(),
+                })
+                .where(eq(facilitySettings.facilityId, id));
+            } else {
+              await tx.insert(facilitySettings).values({
+                facilityId: id,
+                ...settings,
+              });
+            }
+          }
 
-        // Verify payroll provider exists if being updated
-        if (updateData.payrollProviderId) {
-          const [payrollProvider] = await db
+          // 4. Update facility rates if provided
+          if (rates && Array.isArray(rates)) {
+            // For rates, we might want to replace all existing rates
+            await tx.delete(facilityRates).where(eq(facilityRates.facilityId, id));
+            for (const rate of rates) {
+              await tx.insert(facilityRates).values({
+                facilityId: id,
+                ...rate,
+                effectiveDate: rate.effectiveDate || new Date(),
+              });
+            }
+          }
+
+          // 5. Update staffing targets if provided
+          if (staffingTargets && Array.isArray(staffingTargets)) {
+            // For staffing targets, we might want to replace all existing targets
+            await tx.delete(facilityStaffingTargets).where(eq(facilityStaffingTargets.facilityId, id));
+            for (const target of staffingTargets) {
+              await tx.insert(facilityStaffingTargets).values({
+                facilityId: id,
+                ...target,
+              });
+            }
+          }
+
+          // 6. Fetch and return the complete updated facility data
+          const [updatedFacility] = await tx
             .select()
-            .from(payrollProviders)
-            .where(eq(payrollProviders.id, updateData.payrollProviderId));
+            .from(facilities)
+            .where(eq(facilities.id, id));
           
-          if (!payrollProvider) {
-            return res.status(400).json({ message: "Invalid payroll provider ID" });
-          }
-        }
-
-        const [updatedFacility] = await db
-          .update(facilities)
-          .set(updateData as any)
-          .where(eq(facilities.id, id))
-          .returning();
-
-        // Handle team synchronization if teamId is being updated
-        if (updateData.teamId !== undefined) {
-          // Remove any existing team assignments for this facility
-          await db
-            .delete(teamFacilities)
-            .where(eq(teamFacilities.facilityId, id));
+          const [updatedAddress] = await tx
+            .select()
+            .from(facilityAddresses)
+            .where(eq(facilityAddresses.facilityId, id));
           
-          // Add new team assignment if teamId is not null
-          if (updateData.teamId !== null) {
-            await db.insert(teamFacilities).values({
-              teamId: updateData.teamId,
-              facilityId: id
-            });
-          }
-        }
-
-        console.log("Facility partially updated successfully:", updatedFacility);
-        res.json(updatedFacility);
+          const updatedContacts = await tx
+            .select()
+            .from(facilityContacts)
+            .where(eq(facilityContacts.facilityId, id));
+          
+          const [updatedSettings] = await tx
+            .select()
+            .from(facilitySettings)
+            .where(eq(facilitySettings.facilityId, id));
+          
+          const updatedRates = await tx
+            .select()
+            .from(facilityRates)
+            .where(eq(facilityRates.facilityId, id));
+          
+          const updatedStaffingTargets = await tx
+            .select()
+            .from(facilityStaffingTargets)
+            .where(eq(facilityStaffingTargets.facilityId, id));
+          
+          const updatedDocuments = await tx
+            .select()
+            .from(facilityDocuments)
+            .where(eq(facilityDocuments.facilityId, id));
+          
+          const completeData = {
+            ...updatedFacility,
+            address: updatedAddress,
+            contacts: updatedContacts,
+            settings: updatedSettings,
+            rates: updatedRates,
+            staffingTargets: updatedStaffingTargets,
+            documents: updatedDocuments,
+          };
+          
+          console.log("Facility updated successfully:", completeData);
+          res.json(completeData);
+        });
       } catch (error) {
-        console.error("Error partially updating facility:", error);
+        console.error("Error updating facility:", error);
         
         if (error instanceof z.ZodError) {
           const fieldErrors = error.errors.map(err => ({
