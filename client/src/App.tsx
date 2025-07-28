@@ -138,7 +138,7 @@ function AppContent() {
       />
       <ProtectedRoute
         path="/staff-directory"
-        component={StaffDirectory}
+        component={EnhancedStaffPage}
         requiredPermissions={["staff.view"]}
       />
       <ProtectedRoute
@@ -194,11 +194,11 @@ function AppContent() {
       <ProtectedRoute path="/profile" component={SettingsPage} />
       <ProtectedRoute path="/my-profile" component={EnhancedProfilePage} />
       <ProtectedRoute path="/user-profile" component={UserProfilePage} />
-      <ProtectedRoute path="/teams" component={EnhancedStaffPage} />
+      <ProtectedRoute path="/teams" component={AdminTeamsPage} />
       <ProtectedRoute path="/my-requests" component={WorkerMyRequestsPage} />
       <ProtectedRoute path="/my-schedule" component={MySchedulePage} />
       <ProtectedRoute path="/resources" component={CredentialsPage} />
-      <ProtectedRoute path="/my-pto" component={PTOPage} />
+
       <ProtectedRoute path="/credentials" component={CredentialsPage} />
       <ProtectedRoute path="/invoices" component={InvoicesPage} />
       <ProtectedRoute path="/vendor-invoices" component={VendorInvoicesPage} />
@@ -257,7 +257,7 @@ function AppContent() {
       <ProtectedRoute path="/reports/float-pool-savings" component={FloatPoolAnalyticsPage} />
       <ProtectedRoute path="/reports/agency-usage" component={AgencyUsagePage} />
       <ProtectedRoute path="/enhanced-facilities" component={FacilityManagementPage} />
-      <ProtectedRoute path="/time-off-management" component={PTOPage} />
+
       <ProtectedRoute path="/clinician-dashboard" component={ClinicianDashboardWrapper} />
       <ProtectedRoute path="/employee-dashboard" component={EmployeeDashboardWrapper} />
       <ProtectedRoute path="/contractor-dashboard" component={ContractorDashboardWrapper} />

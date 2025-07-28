@@ -13,6 +13,22 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 28, 2025 - Critical Bug Fixes and Database Schema Alignment
+- **Fixed Staff API Database Column Mismatch**: Resolved critical issue where staff queries were failing due to snake_case vs camelCase column naming
+  - Added mapping in getAllStaff storage method to convert snake_case database columns to camelCase TypeScript interface fields
+  - Fixed "column first_name does not exist" errors that were preventing staff data from loading
+  - Ensured consistent data format between database layer and API responses
+- **Teams Page Routing Fix**: Corrected teams page to show AdminTeamsPage instead of incorrectly showing EnhancedStaffPage
+  - Teams page now properly displays admin team management functionality
+- **Staff Directory Route Fix**: Updated staff directory route from incorrect /enhanced-staff to proper /staff-directory
+  - Staff directory now accessible at the correct URL with proper permissions
+- **Time-Off Functionality Removal**: Removed PTO/time-off functionality completely as requested
+  - Removed /my-pto and /time-off-management routes from App.tsx
+  - Time-off features no longer accessible in the platform
+- **Messaging System Organization**: Ensured messaging system uses enhanced real-time messaging component
+  - Messaging accessible at /messaging route with real-time WebSocket updates
+  - Proper conversation-based UI with participant list and message threading
+
 ### July 28, 2025 - Navigation System Overhaul and UI Enhancement
 - **Fixed Navigation Issues**: Resolved all broken links and 404 errors in the unified header navigation
   - Added missing impersonation page link at `/admin/impersonation` for super admins
