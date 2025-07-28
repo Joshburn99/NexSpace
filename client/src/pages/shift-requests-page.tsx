@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -26,7 +27,10 @@ import {
   Calendar,
   DollarSign,
   AlertCircle,
-  Loader2
+  Loader2,
+  CheckSquare,
+  XSquare,
+  UserCheck
 } from 'lucide-react';
 
 interface ShiftRequest {
@@ -58,8 +62,13 @@ export default function ShiftRequestsPage() {
   const [confirmApproveId, setConfirmApproveId] = useState<number | null>(null);
   const [confirmDenyId, setConfirmDenyId] = useState<number | null>(null);
   const [denyReason, setDenyReason] = useState('');
+  const [selectedRequests, setSelectedRequests] = useState<number[]>([]);
+  const [showBulkApproveDialog, setShowBulkApproveDialog] = useState(false);
+  const [showBulkDenyDialog, setShowBulkDenyDialog] = useState(false);
+  const [bulkDenyReason, setBulkDenyReason] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { hasPermission } = useRBAC();
 
   // Fetch shift requests
   const { data: requests = [], isLoading } = useQuery<ShiftRequest[]>({
@@ -120,6 +129,65 @@ export default function ShiftRequestsPage() {
     },
   });
 
+  // Bulk approve mutation
+  const bulkApproveMutation = useMutation({
+    mutationFn: async (requestIds: number[]) => {
+      const response = await apiRequest('POST', '/api/shift-requests/bulk-approve', { requestIds });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to bulk approve requests');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/shift-requests'] });
+      setSelectedRequests([]);
+      setShowBulkApproveDialog(false);
+      toast({
+        title: 'Bulk Approval Success',
+        description: `Successfully approved ${data.approved} shift requests.`,
+      });
+    },
+    onError: (error: any) => {
+      console.error('Bulk approval error:', error);
+      toast({
+        title: 'Bulk Approval Failed',
+        description: error.message || 'Failed to bulk approve requests. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  // Bulk deny mutation
+  const bulkDenyMutation = useMutation({
+    mutationFn: async ({ requestIds, reason }: { requestIds: number[]; reason?: string }) => {
+      const response = await apiRequest('POST', '/api/shift-requests/bulk-deny', { requestIds, reason });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to bulk deny requests');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/shift-requests'] });
+      setSelectedRequests([]);
+      setShowBulkDenyDialog(false);
+      setBulkDenyReason('');
+      toast({
+        title: 'Bulk Denial Success',
+        description: `Successfully denied ${data.denied} shift requests.`,
+      });
+    },
+    onError: (error: any) => {
+      console.error('Bulk denial error:', error);
+      toast({
+        title: 'Bulk Denial Failed',
+        description: error.message || 'Failed to bulk deny requests. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
   // Filter requests based on search and status
   const filteredRequests = requests.filter(request => {
     const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -128,6 +196,34 @@ export default function ShiftRequestsPage() {
     const matchesStatus = activeTab === 'all' || request.status === activeTab;
     return matchesSearch && matchesStatus;
   });
+
+  // Selection handlers
+  const toggleSelectAll = () => {
+    const pendingRequests = filteredRequests.filter(r => r.status === 'pending');
+    if (selectedRequests.length === pendingRequests.length) {
+      setSelectedRequests([]);
+    } else {
+      setSelectedRequests(pendingRequests.map(r => r.id));
+    }
+  };
+
+  const toggleSelectRequest = (requestId: number) => {
+    setSelectedRequests(prev => 
+      prev.includes(requestId) 
+        ? prev.filter(id => id !== requestId)
+        : [...prev, requestId]
+    );
+  };
+
+  const handleBulkApprove = () => {
+    if (selectedRequests.length === 0) return;
+    setShowBulkApproveDialog(true);
+  };
+
+  const handleBulkDeny = () => {
+    if (selectedRequests.length === 0) return;
+    setShowBulkDenyDialog(true);
+  };
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
@@ -210,6 +306,33 @@ export default function ShiftRequestsPage() {
               className="pl-10"
             />
           </div>
+          {/* Bulk actions */}
+          {activeTab === 'pending' && filteredRequests.length > 0 && hasPermission('shifts.approve_requests') && (
+            <div className="flex gap-2">
+              <PermissionAction permission="shifts.approve_requests">
+                <Button
+                  onClick={handleBulkApprove}
+                  disabled={selectedRequests.length === 0}
+                  variant="default"
+                  size="sm"
+                >
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  Bulk Approve ({selectedRequests.length})
+                </Button>
+              </PermissionAction>
+              <PermissionAction permission="shifts.approve_requests">
+                <Button
+                  onClick={handleBulkDeny}
+                  disabled={selectedRequests.length === 0}
+                  variant="destructive"
+                  size="sm"
+                >
+                  <XSquare className="h-4 w-4 mr-2" />
+                  Bulk Deny ({selectedRequests.length})
+                </Button>
+              </PermissionAction>
+            </div>
+          )}
         </div>
       </div>
 
@@ -223,6 +346,19 @@ export default function ShiftRequestsPage() {
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-4">
+          {/* Select all checkbox for pending requests */}
+          {activeTab === 'pending' && filteredRequests.length > 0 && hasPermission('shifts.approve_requests') && (
+            <div className="flex items-center space-x-2 pb-2">
+              <Checkbox
+                checked={selectedRequests.length === filteredRequests.filter(r => r.status === 'pending').length}
+                onCheckedChange={toggleSelectAll}
+              />
+              <Label className="text-sm font-medium">
+                Select All ({filteredRequests.filter(r => r.status === 'pending').length} pending requests)
+              </Label>
+            </div>
+          )}
+
           {filteredRequests.length === 0 ? (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
@@ -245,6 +381,13 @@ export default function ShiftRequestsPage() {
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
+                        {/* Add checkbox for pending requests */}
+                        {request.status === 'pending' && hasPermission('shifts.approve_requests') && (
+                          <Checkbox
+                            checked={selectedRequests.includes(request.id)}
+                            onCheckedChange={() => toggleSelectRequest(request.id)}
+                          />
+                        )}
                         <CardTitle className="text-lg">{request.title}</CardTitle>
                         <Badge variant={getUrgencyColor(request.urgency)}>
                           {request.urgency}
@@ -512,6 +655,154 @@ export default function ShiftRequestsPage() {
                 setDenyReason('');
               }}
               disabled={denyRequestMutation.isPending}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Approve Confirmation Dialog */}
+      <Dialog
+        open={showBulkApproveDialog}
+        onOpenChange={setShowBulkApproveDialog}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bulk Approve Shift Requests</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to approve {selectedRequests.length} shift requests?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 my-4">
+            <div className="flex items-start gap-2">
+              <Check className="h-4 w-4 text-green-600 mt-0.5" />
+              <p className="text-sm">All selected workers will be assigned to their requested shifts</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <Check className="h-4 w-4 text-green-600 mt-0.5" />
+              <p className="text-sm">Shift statuses will be updated to filled</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <Check className="h-4 w-4 text-green-600 mt-0.5" />
+              <p className="text-sm">Workers will receive approval notifications</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                This action will process all {selectedRequests.length} requests at once
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              onClick={() => bulkApproveMutation.mutate(selectedRequests)}
+              disabled={bulkApproveMutation.isPending}
+              className="flex-1"
+            >
+              {bulkApproveMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  Approve All ({selectedRequests.length})
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowBulkApproveDialog(false)}
+              disabled={bulkApproveMutation.isPending}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Deny Confirmation Dialog */}
+      <Dialog
+        open={showBulkDenyDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowBulkDenyDialog(false);
+            setBulkDenyReason('');
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bulk Deny Shift Requests</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to deny {selectedRequests.length} shift requests?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 my-4">
+            <div>
+              <Label htmlFor="bulk-deny-reason">
+                Reason for denial (optional)
+                <span className="text-xs text-gray-500 ml-2">
+                  This reason will be sent to all selected workers
+                </span>
+              </Label>
+              <textarea
+                id="bulk-deny-reason"
+                value={bulkDenyReason}
+                onChange={(e) => setBulkDenyReason(e.target.value)}
+                placeholder="e.g., Shifts have been filled, scheduling conflicts, etc."
+                className="w-full mt-2 p-3 border rounded-lg resize-none h-20 text-sm"
+              />
+            </div>
+
+            <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5" />
+                <div className="text-sm text-amber-700 dark:text-amber-300">
+                  <p className="font-medium mb-1">This will:</p>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>Mark all {selectedRequests.length} requests as denied</li>
+                    <li>Notify all workers via the messaging system</li>
+                    <li>Keep the shifts open for other workers</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              variant="destructive"
+              onClick={() => bulkDenyMutation.mutate({ requestIds: selectedRequests, reason: bulkDenyReason })}
+              disabled={bulkDenyMutation.isPending}
+              className="flex-1"
+            >
+              {bulkDenyMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <XSquare className="h-4 w-4 mr-2" />
+                  Deny All ({selectedRequests.length})
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowBulkDenyDialog(false);
+                setBulkDenyReason('');
+              }}
+              disabled={bulkDenyMutation.isPending}
               className="flex-1"
             >
               Cancel

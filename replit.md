@@ -13,6 +13,25 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 28, 2025 - Bulk Actions Implementation for Enhanced Management
+- **Bulk Shift Request Management**: Implemented comprehensive bulk actions for shift requests
+  - Multi-select checkboxes with "Select All" functionality for pending requests
+  - Bulk approve and bulk deny operations with confirmation dialogs
+  - Permission-based visibility (requires 'shifts.approve_requests' permission)
+  - Backend endpoints: `/api/shift-requests/bulk-approve` and `/api/shift-requests/bulk-deny`
+  - Real-time UI updates with loading states and success notifications
+- **Bulk Staff Management**: Added bulk editing capabilities for staff members
+  - Multi-select checkboxes for staff selection across pages
+  - Bulk edit dialog supporting role, specialty, and status updates
+  - Permission-based visibility (requires 'staff.edit' permission)
+  - Backend endpoint: `/api/staff/bulk-edit` with field-specific updates
+  - Confirmation dialogs with clear warnings about bulk operations
+- **Enhanced User Experience**: Improved bulk action workflows
+  - Clear visual indicators showing number of selected items
+  - Disabled states when no items selected
+  - Detailed confirmation dialogs explaining impact of bulk operations
+  - Toast notifications showing success/failure with affected item counts
+
 ### July 28, 2025 - Enterprise-Wide RBAC Security Implementation
 - **Admin Page Security Lockdown**: Implemented strict access controls on all administrative pages
   - Admin Database Console: Restricted to super_admin role only (executes SQL queries)

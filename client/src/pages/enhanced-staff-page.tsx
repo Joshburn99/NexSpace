@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -60,6 +61,7 @@ import {
   Building2,
   X,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -175,6 +177,14 @@ const formatEmploymentType = (employmentType: string) => {
   return employmentType || 'Staff';
 };
 
+// Specialties list for filtering
+const specialties = [
+  'RN', 'LPN', 'CNA', 'PT', 'OT', 'RT', 'MD', 'NP', 'PA',
+  'CST', 'PharmTech', 'LabTech', 'RadTech', 'Dietitian',
+  'Social Worker', 'Case Manager', 'Unit Secretary',
+  'Environmental Services', 'Security', 'Transport'
+];
+
 function EnhancedStaffPageContent() {
   const { toast } = useToast();
   const { startImpersonation, sessionState } = useSession();
@@ -192,6 +202,13 @@ function EnhancedStaffPageContent() {
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [, navigate] = useLocation();
+  const { hasPermission } = useRBAC();
+  
+  // Bulk action state
+  const [selectedStaffIds, setSelectedStaffIds] = useState<number[]>([]);
+  const [showBulkEditDialog, setShowBulkEditDialog] = useState(false);
+  const [bulkEditField, setBulkEditField] = useState<'role' | 'specialty' | 'status'>('role');
+  const [bulkEditValue, setBulkEditValue] = useState("");
 
   // Message button functionality
   const handleMessageClick = (staff: StaffMember) => {
@@ -425,6 +442,39 @@ function EnhancedStaffPageContent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/staff/posts"] });
+    },
+  });
+
+  // Bulk edit mutation
+  const bulkEditStaffMutation = useMutation({
+    mutationFn: async ({ staffIds, field, value }: { staffIds: number[]; field: string; value: string }) => {
+      const response = await apiRequest("POST", "/api/staff/bulk-edit", {
+        staffIds,
+        field,
+        value
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to bulk edit staff");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
+      setSelectedStaffIds([]);
+      setShowBulkEditDialog(false);
+      setBulkEditValue("");
+      toast({
+        title: "Bulk Edit Success",
+        description: `Successfully updated ${data.updated} staff members.`,
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Bulk Edit Failed",
+        description: error.message || "Failed to update staff members. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -738,8 +788,39 @@ function EnhancedStaffPageContent() {
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
-                <CardTitle>Staff Members ({filteredStaff.length})</CardTitle>
+                <div className="flex items-center gap-4">
+                  <CardTitle>Staff Members ({filteredStaff.length})</CardTitle>
+                  {/* Select all checkbox */}
+                  {hasPermission('staff.edit') && (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        checked={selectedStaffIds.length === paginatedStaff.length && paginatedStaff.length > 0}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedStaffIds(paginatedStaff.map(s => s.id));
+                          } else {
+                            setSelectedStaffIds([]);
+                          }
+                        }}
+                      />
+                      <Label className="text-sm">Select All</Label>
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
+                  {/* Bulk actions */}
+                  {selectedStaffIds.length > 0 && hasPermission('staff.edit') && (
+                    <PermissionAction permission="staff.edit">
+                      <Button
+                        onClick={() => setShowBulkEditDialog(true)}
+                        variant="outline"
+                        size="sm"
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Bulk Edit ({selectedStaffIds.length})
+                      </Button>
+                    </PermissionAction>
+                  )}
                   <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(parseInt(value))}>
                     <SelectTrigger className="w-24">
                       <SelectValue />
@@ -760,9 +841,29 @@ function EnhancedStaffPageContent() {
                   <div
                     key={staff.id}
                     className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                    onClick={() => setSelectedStaff(staff)}
+                    onClick={(e) => {
+                      // Only open profile if not clicking on checkbox or action buttons
+                      if (!(e.target as HTMLElement).closest('input[type="checkbox"]') && 
+                          !(e.target as HTMLElement).closest('button')) {
+                        setSelectedStaff(staff);
+                      }
+                    }}
                   >
                     <div className="flex items-center space-x-4">
+                      {/* Individual checkbox */}
+                      {hasPermission('staff.edit') && (
+                        <Checkbox
+                          checked={selectedStaffIds.includes(staff.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedStaffIds([...selectedStaffIds, staff.id]);
+                            } else {
+                              setSelectedStaffIds(selectedStaffIds.filter(id => id !== staff.id));
+                            }
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      )}
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={staff.profileImage} />
                         <AvatarFallback>
@@ -1610,6 +1711,124 @@ function EnhancedStaffPageContent() {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Bulk Edit Dialog */}
+      <Dialog open={showBulkEditDialog} onOpenChange={setShowBulkEditDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Bulk Edit Staff Members</DialogTitle>
+            <DialogDescription>
+              Update {selectedStaffIds.length} selected staff members
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 my-4">
+            <div>
+              <Label htmlFor="bulk-edit-field">Field to Update</Label>
+              <Select value={bulkEditField} onValueChange={(value: 'role' | 'specialty' | 'status') => setBulkEditField(value)}>
+                <SelectTrigger id="bulk-edit-field">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="role">Role</SelectItem>
+                  <SelectItem value="specialty">Specialty</SelectItem>
+                  <SelectItem value="status">Status</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="bulk-edit-value">New Value</Label>
+              {bulkEditField === 'status' ? (
+                <Select value={bulkEditValue} onValueChange={setBulkEditValue}>
+                  <SelectTrigger id="bulk-edit-value">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="suspended">Suspended</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : bulkEditField === 'specialty' ? (
+                <Select value={bulkEditValue} onValueChange={setBulkEditValue}>
+                  <SelectTrigger id="bulk-edit-value">
+                    <SelectValue placeholder="Select specialty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="RN">RN (Registered Nurse)</SelectItem>
+                    <SelectItem value="LPN">LPN (Licensed Practical Nurse)</SelectItem>
+                    <SelectItem value="CNA">CNA (Certified Nursing Assistant)</SelectItem>
+                    <SelectItem value="PT">PT (Physical Therapist)</SelectItem>
+                    <SelectItem value="OT">OT (Occupational Therapist)</SelectItem>
+                    <SelectItem value="RT">RT (Respiratory Therapist)</SelectItem>
+                    <SelectItem value="MD">MD (Medical Doctor)</SelectItem>
+                    <SelectItem value="NP">NP (Nurse Practitioner)</SelectItem>
+                    <SelectItem value="PA">PA (Physician Assistant)</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Input 
+                  id="bulk-edit-value"
+                  value={bulkEditValue}
+                  onChange={(e) => setBulkEditValue(e.target.value)}
+                  placeholder="Enter new role"
+                />
+              )}
+            </div>
+
+            <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5" />
+                <div className="text-sm text-amber-700 dark:text-amber-300">
+                  <p className="font-medium mb-1">This will update:</p>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>{selectedStaffIds.length} staff members</li>
+                    <li>All selected staff will have their {bulkEditField} changed to "{bulkEditValue || 'the selected value'}"</li>
+                    <li>This action cannot be undone</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              onClick={() => bulkEditStaffMutation.mutate({ 
+                staffIds: selectedStaffIds, 
+                field: bulkEditField, 
+                value: bulkEditValue 
+              })}
+              disabled={bulkEditStaffMutation.isPending || !bulkEditValue}
+              className="flex-1"
+            >
+              {bulkEditStaffMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                <>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Update {selectedStaffIds.length} Staff
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowBulkEditDialog(false);
+                setBulkEditValue("");
+              }}
+              disabled={bulkEditStaffMutation.isPending}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
