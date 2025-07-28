@@ -22,15 +22,15 @@ export class UnifiedDataService {
       const staffData = await db
         .select({
           id: staff.id,
-          firstName: staff.name,
-          lastName: staff.name,
+          firstName: staff.firstName,
+          lastName: staff.lastName,
           email: staff.email,
           role: staff.employmentType,
           specialty: staff.specialty,
           department: staff.department,
           isActive: staff.isActive,
           avatar: staff.profilePhoto,
-          location: staff.location,
+
           phone: staff.phone,
           hourlyRate: staff.hourlyRate,
           availabilityStatus: staff.availabilityStatus,
@@ -41,11 +41,10 @@ export class UnifiedDataService {
         .where(eq(staff.isActive, true));
 
       return staffData.map(staffMember => {
-        const nameParts = staffMember.firstName ? staffMember.firstName.split(' ') : ['Unknown', 'Staff'];
         return {
           ...staffMember,
-          firstName: nameParts[0] || 'Unknown',
-          lastName: nameParts.slice(1).join(' ') || 'Staff',
+          firstName: staffMember.firstName || 'Unknown',
+          lastName: staffMember.lastName || 'Staff',
           associatedFacilities: [], // Will be populated from separate table when implemented
         };
       });
@@ -259,7 +258,7 @@ export class UnifiedDataService {
       const conversationMessages = await db
         .select()
         .from(messages)
-        .where(eq(messages.conversationId, conversationId))
+        .where(eq(messages.conversationId, parseInt(conversationId)))
         .orderBy(messages.createdAt);
 
       return conversationMessages;

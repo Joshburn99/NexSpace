@@ -1282,7 +1282,7 @@ export default function EnhancedCalendarPage() {
                             <User className="h-5 w-5 text-primary" />
                           </div>
                           <div>
-                            <p className="font-medium">{staff.name}</p>
+                            <p className="font-medium">{staff.firstName || ''} {staff.lastName || ''}</p>
                             {staff.specialty && (
                               <p className="text-sm text-muted-foreground">{staff.specialty}</p>
                             )}

@@ -264,7 +264,7 @@ export default function UnifiedMessagingPage() {
                               value={staffMember.id.toString()}
                               disabled={selectedParticipants.includes(staffMember.id)}
                             >
-                              {staffMember.name} - {staffMember.specialty}
+                              {staffMember.firstName || ''} {staffMember.lastName || ''} - {staffMember.specialty}
                             </SelectItem>
                           ))}
                       </SelectContent>
@@ -274,7 +274,7 @@ export default function UnifiedMessagingPage() {
                         const staffMember = staff.find((s: any) => s.id === id);
                         return (
                           <div key={id} className="flex items-center justify-between bg-gray-100 rounded px-2 py-1">
-                            <span className="text-sm">{staffMember?.name}</span>
+                            <span className="text-sm">{staffMember?.firstName || ''} {staffMember?.lastName || ''}</span>
                             <Button
                               size="sm"
                               variant="ghost"

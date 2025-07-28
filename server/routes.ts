@@ -354,7 +354,7 @@ export function registerRoutes(app: Express): Server {
         .select({
           id: staff.id,
           type: sql<string>`'staff'`,
-          title: staff.name,
+          title: sql<string>`${staff.firstName} || ' ' || ${staff.lastName}`,
           subtitle: staff.specialty,
           description: sql<string>`COALESCE(${staff.department}, '')`,
           route: sql<string>`'/staff'`,
@@ -362,7 +362,7 @@ export function registerRoutes(app: Express): Server {
         .from(staff)
         .where(
           or(
-            sql`LOWER(${staff.name}) LIKE ${searchTerm}`,
+            sql`LOWER(${staff.firstName} || ' ' || ${staff.lastName}) LIKE ${searchTerm}`,
             sql`LOWER(${staff.specialty}) LIKE ${searchTerm}`,
             sql`LOWER(${staff.email}) LIKE ${searchTerm}`,
             sql`CAST(${staff.id} AS TEXT) LIKE ${searchTerm}`
@@ -2906,7 +2906,8 @@ export function registerRoutes(app: Express): Server {
       // Get staff data directly from database to include associatedFacilities
       let dbStaffData = await db.select({
         id: staff.id,
-        name: staff.name,
+        firstName: staff.firstName,
+        lastName: staff.lastName,
         email: staff.email,
         phone: staff.phone,
         specialty: staff.specialty,
@@ -2926,11 +2927,9 @@ export function registerRoutes(app: Express): Server {
       
       // Format staff data for consistency with frontend expectations
       dbStaffData = dbStaffData.map(staffMember => {
-        const nameParts = staffMember.name ? staffMember.name.split(' ') : ['Unknown', 'Staff'];
         return {
           ...staffMember,
-          firstName: nameParts[0] || 'Unknown',
-          lastName: nameParts.slice(1).join(' ') || 'Staff',
+          name: `${staffMember.firstName} ${staffMember.lastName}`, // Create full name for backward compatibility
           role: staffMember.employmentType || 'unknown',
           associatedFacilities: Array.isArray(staffMember.associatedFacilities) ? staffMember.associatedFacilities : [],
           avatar: staffMember.profilePhoto,
@@ -8365,7 +8364,8 @@ export function registerRoutes(app: Express): Server {
       const staffData = await db
         .select({
           id: staff.id,
-          name: staff.name,
+          firstName: staff.firstName,
+          lastName: staff.lastName,
           associatedFacilities: staff.associatedFacilities
         })
         .from(staff)
@@ -8424,7 +8424,8 @@ export function registerRoutes(app: Express): Server {
       const staffData = await db
         .select({
           id: staff.id,
-          name: staff.name,
+          firstName: staff.firstName,
+          lastName: staff.lastName,
           associatedFacilities: staff.associatedFacilities
         })
         .from(staff)
@@ -8476,7 +8477,7 @@ export function registerRoutes(app: Express): Server {
       
       // Validate staff exists
       const existingStaff = await db
-        .select({ id: staff.id, name: staff.name })
+        .select({ id: staff.id, firstName: staff.firstName, lastName: staff.lastName })
         .from(staff)
         .where(eq(staff.id, staffId))
         .limit(1);
@@ -8491,7 +8492,8 @@ export function registerRoutes(app: Express): Server {
       };
       
       // Basic information
-      if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.firstName !== undefined) updateData.firstName = updates.firstName;
+      if (updates.lastName !== undefined) updateData.lastName = updates.lastName;
       if (updates.email !== undefined) updateData.email = updates.email;
       if (updates.phone !== undefined) updateData.phone = updates.phone;
       if (updates.specialty !== undefined) updateData.specialty = updates.specialty;
@@ -8561,6 +8563,104 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error updating staff profile:", error);
       res.status(500).json({ message: "Failed to update staff profile" });
+    }
+  });
+
+  // New Staff-Facility Association API using normalized tables
+  app.get("/api/staff/:staffId/facility-associations", requireAuth, async (req, res) => {
+    try {
+      const staffId = parseInt(req.params.staffId);
+      const associations = await storage.getStaffFacilityAssociations(staffId);
+      res.json(associations);
+    } catch (error) {
+      console.error("Error fetching staff facility associations:", error);
+      res.status(500).json({ message: "Failed to fetch facility associations" });
+    }
+  });
+
+  app.post("/api/staff/:staffId/facility-associations", requireAuth, async (req, res) => {
+    try {
+      const staffId = parseInt(req.params.staffId);
+      const { facilityId, isPrimary, startDate } = req.body;
+      
+      const association = await storage.addStaffFacilityAssociation({
+        staffId,
+        facilityId,
+        isPrimary: isPrimary || false,
+        startDate: startDate ? new Date(startDate) : new Date(),
+        status: 'active'
+      });
+      
+      res.json(association);
+    } catch (error) {
+      console.error("Error adding staff facility association:", error);
+      res.status(500).json({ message: "Failed to add facility association" });
+    }
+  });
+
+  app.delete("/api/staff/:staffId/facility-associations/:facilityId", requireAuth, async (req, res) => {
+    try {
+      const staffId = parseInt(req.params.staffId);
+      const facilityId = parseInt(req.params.facilityId);
+      
+      await storage.removeStaffFacilityAssociation(staffId, facilityId);
+      res.json({ message: "Facility association removed successfully" });
+    } catch (error) {
+      console.error("Error removing staff facility association:", error);
+      res.status(500).json({ message: "Failed to remove facility association" });
+    }
+  });
+
+  // Staff Credentials API
+  app.get("/api/staff/:staffId/credentials", requireAuth, async (req, res) => {
+    try {
+      const staffId = parseInt(req.params.staffId);
+      const credentials = await storage.getStaffCredentials(staffId);
+      res.json(credentials);
+    } catch (error) {
+      console.error("Error fetching staff credentials:", error);
+      res.status(500).json({ message: "Failed to fetch credentials" });
+    }
+  });
+
+  app.post("/api/staff/:staffId/credentials", requireAuth, async (req, res) => {
+    try {
+      const staffId = parseInt(req.params.staffId);
+      const { credentialId, issueDate, expiryDate, credentialNumber } = req.body;
+      
+      const credential = await storage.addStaffCredential({
+        staffId,
+        credentialId,
+        issueDate: issueDate ? new Date(issueDate) : new Date(),
+        expiryDate: expiryDate ? new Date(expiryDate) : null,
+        credentialNumber,
+        isVerified: false,
+        createdAt: new Date()
+      });
+      
+      res.json(credential);
+    } catch (error) {
+      console.error("Error adding staff credential:", error);
+      res.status(500).json({ message: "Failed to add credential" });
+    }
+  });
+
+  // Get staff by facility using the new association
+  app.get("/api/facilities/:facilityId/staff", requireAuth, async (req, res) => {
+    try {
+      const facilityId = parseInt(req.params.facilityId);
+      const staffMembers = await storage.getStaffByFacility(facilityId);
+      
+      // Add full name for backward compatibility
+      const formattedStaff = staffMembers.map(member => ({
+        ...member,
+        name: `${member.firstName} ${member.lastName}`
+      }));
+      
+      res.json(formattedStaff);
+    } catch (error) {
+      console.error("Error fetching staff by facility:", error);
+      res.status(500).json({ message: "Failed to fetch staff for facility" });
     }
   });
 

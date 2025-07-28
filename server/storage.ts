@@ -19,6 +19,8 @@ import {
   permissions,
   rolePermissions,
   staff,
+  staffFacilityAssociations,
+  staffCredentials,
   payrollProviders,
   payrollConfigurations,
   payrollEmployees,
@@ -59,6 +61,10 @@ import {
   type AuditLog,
   type Staff,
   type InsertStaff,
+  type StaffFacilityAssociation,
+  type InsertStaffFacilityAssociation,
+  type StaffCredential,
+  type InsertStaffCredential,
   UserRole,
   type PayrollProvider,
   type InsertPayrollProvider,
@@ -368,6 +374,23 @@ export interface IStorage {
   
   checkShiftCoverage(userId: number, startDate: Date, endDate: Date): Promise<Shift[]>;
   calculateTimeOffAccrual(userId: number, timeOffTypeId: number, year: number): Promise<number>;
+  
+  // Staff methods
+  getAllStaff(): Promise<Staff[]>;
+  getStaffMember(id: number): Promise<Staff | undefined>;
+  getStaffByEmail(email: string): Promise<Staff | undefined>;
+  createStaffMember(staff: InsertStaff): Promise<Staff>;
+  updateStaffMember(id: number, updates: Partial<InsertStaff>): Promise<Staff | undefined>;
+  
+  // Staff-facility association methods
+  getStaffByFacility(facilityId: number): Promise<Staff[]>;
+  addStaffFacilityAssociation(association: InsertStaffFacilityAssociation): Promise<StaffFacilityAssociation>;
+  removeStaffFacilityAssociation(staffId: number, facilityId: number): Promise<void>;
+  getStaffFacilityAssociations(staffId: number): Promise<StaffFacilityAssociation[]>;
+  
+  // Staff credential methods
+  addStaffCredential(credential: InsertStaffCredential): Promise<StaffCredential>;
+  getStaffCredentials(staffId: number): Promise<Credential[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -560,6 +583,75 @@ export class DatabaseStorage implements IStorage {
       .where(eq(staff.id, id))
       .returning();
     return updatedStaff || undefined;
+  }
+
+  async getStaffByEmail(email: string): Promise<Staff | undefined> {
+    const [staffMember] = await db.select().from(staff).where(eq(staff.email, email));
+    return staffMember || undefined;
+  }
+
+  // Staff-facility association methods
+  async getStaffByFacility(facilityId: number): Promise<Staff[]> {
+    const staffMembers = await db
+      .select({
+        staff: staff,
+      })
+      .from(staff)
+      .innerJoin(staffFacilityAssociations, eq(staff.id, staffFacilityAssociations.staffId))
+      .where(
+        and(
+          eq(staffFacilityAssociations.facilityId, facilityId),
+          eq(staffFacilityAssociations.status, 'active'),
+          eq(staff.isActive, true)
+        )
+      );
+    return staffMembers.map(row => row.staff);
+  }
+
+  async addStaffFacilityAssociation(association: InsertStaffFacilityAssociation): Promise<StaffFacilityAssociation> {
+    const [newAssociation] = await db.insert(staffFacilityAssociations).values(association).returning();
+    return newAssociation;
+  }
+
+  async removeStaffFacilityAssociation(staffId: number, facilityId: number): Promise<void> {
+    await db
+      .update(staffFacilityAssociations)
+      .set({ status: 'inactive', endDate: new Date() })
+      .where(
+        and(
+          eq(staffFacilityAssociations.staffId, staffId),
+          eq(staffFacilityAssociations.facilityId, facilityId)
+        )
+      );
+  }
+
+  async getStaffFacilityAssociations(staffId: number): Promise<StaffFacilityAssociation[]> {
+    return await db
+      .select()
+      .from(staffFacilityAssociations)
+      .where(
+        and(
+          eq(staffFacilityAssociations.staffId, staffId),
+          eq(staffFacilityAssociations.status, 'active')
+        )
+      );
+  }
+
+  // Staff credential methods
+  async addStaffCredential(credential: InsertStaffCredential): Promise<StaffCredential> {
+    const [newCredential] = await db.insert(staffCredentials).values(credential).returning();
+    return newCredential;
+  }
+
+  async getStaffCredentials(staffId: number): Promise<Credential[]> {
+    const staffCreds = await db
+      .select({
+        credential: credentials,
+      })
+      .from(credentials)
+      .innerJoin(staffCredentials, eq(credentials.id, staffCredentials.credentialId))
+      .where(eq(staffCredentials.staffId, staffId));
+    return staffCreds.map(row => row.credential);
   }
 
   // Job methods

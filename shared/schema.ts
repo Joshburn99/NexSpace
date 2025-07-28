@@ -721,56 +721,96 @@ export const shiftHistory = pgTable("shift_history", {
   newStatus: text("new_status"),
 });
 
-// Staff table for enhanced profiles
+// Staff table - refactored for better consistency and normalization
 export const staff = pgTable("staff", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
+  // Basic Information - normalized name fields
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
   email: text("email").notNull().unique(),
   phone: text("phone"),
-  specialty: text("specialty").notNull(),
-  department: text("department").notNull(),
-  licenseNumber: text("license_number"),
-  licenseExpiry: timestamp("license_expiry"),
-  isActive: boolean("is_active").default(true),
-  employmentType: text("employment_type").notNull(), // full_time, part_time, contract
-  hourlyRate: decimal("hourly_rate", { precision: 6, scale: 2 }),
-  location: text("location"),
-  availabilityStatus: text("availability_status").default("available"), // available, on_assignment, unavailable
   profilePhoto: text("profile_photo"),
   bio: text("bio"),
-  certifications: text("certifications").array(),
-  languages: text("languages").array(),
-  userId: integer("user_id"),
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-  // Enhanced staff fields
-  currentLocation: jsonb("current_location"), // { lat: number, lng: number, timestamp: string, accuracy?: number }
+  
+  // Employment Information
+  specialty: text("specialty").notNull(),
+  department: text("department").notNull(),
+  employmentType: text("employment_type").notNull(), // full_time, part_time, contract, per_diem
+  hourlyRate: decimal("hourly_rate", { precision: 6, scale: 2 }),
+  
+  // Status fields
+  isActive: boolean("is_active").default(true),
   accountStatus: text("account_status").default("active"), // active, inactive, pending, suspended
-  totalWorkedShifts: integer("total_worked_shifts").default(0),
-  reliabilityScore: decimal("reliability_score", { precision: 3, scale: 2 }).default("0.00"), // 0.00 to 5.00
-  homeZipCode: text("home_zip_code"),
-  homeAddress: text("home_address"),
-
-  // Compliance and licensing fields
+  availabilityStatus: text("availability_status").default("available"), // available, on_assignment, unavailable
+  
+  // License Information - single source of truth
+  licenseNumber: text("license_number"),
   licenseExpirationDate: timestamp("license_expiration_date"),
+  
+  // Location Information
+  homeAddress: text("home_address"),
+  homeCity: text("home_city"),
+  homeState: text("home_state"),
+  homeZipCode: text("home_zip_code"),
+  currentLocation: jsonb("current_location"), // { lat: number, lng: number, timestamp: string, accuracy?: number }
+  
+  // Compliance tracking
   backgroundCheckDate: timestamp("background_check_date"),
   drugTestDate: timestamp("drug_test_date"),
   covidVaccinationStatus: jsonb("covid_vaccination_status"), // { status: 'vaccinated'|'unvaccinated'|'exempt', doses: number, lastDose: string, booster: boolean }
-  requiredCredentialsStatus: jsonb("required_credentials_status"), // { [credentialType]: { status: 'current'|'expired'|'pending', expirationDate: string } }
-
-  // Performance and attendance tracking
+  
+  // Performance metrics
+  totalWorkedShifts: integer("total_worked_shifts").default(0),
+  reliabilityScore: decimal("reliability_score", { precision: 3, scale: 2 }).default("0.00"), // 0.00 to 5.00
   lateArrivalCount: integer("late_arrival_count").default(0),
   noCallNoShowCount: integer("no_call_no_show_count").default(0),
   lastWorkDate: timestamp("last_work_date"),
-
-  // Preferences and scheduling
+  
+  // Preferences
   preferredShiftTypes: jsonb("preferred_shift_types"), // ['day', 'night', 'weekend', 'on_call']
   weeklyAvailability: jsonb("weekly_availability"), // { monday: { available: boolean, startTime: string, endTime: string }, ... }
+  languages: text("languages").array(),
+  
+  // Emergency Contact Information
+  emergencyContactName: text("emergency_contact_name"),
+  emergencyContactPhone: text("emergency_contact_phone"),
+  emergencyContactRelationship: text("emergency_contact_relationship"),
+  emergencyContactEmail: text("emergency_contact_email"),
+  
+  // Financial Information (encrypted in production)
+  directDepositBankName: text("direct_deposit_bank_name"),
+  directDepositRoutingNumber: text("direct_deposit_routing_number"),
+  directDepositAccountNumber: text("direct_deposit_account_number"),
+  directDepositAccountType: text("direct_deposit_account_type"), // checking, savings
+  
+  // Authentication link (optional - only for staff with login access)
+  userId: integer("user_id").unique(), // Reference to users table for authentication
+  
+  // Metadata
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
 
-  // Contact and financial information
-  directDepositInfo: jsonb("direct_deposit_info"), // { bankName: string, routingNumber: string, accountNumber: string, accountType: 'checking'|'savings' } - encrypted
-  emergencyContact: jsonb("emergency_contact"), // { name: string, phone: string, relationship: string, email?: string }
-  associatedFacilities: jsonb("associated_facilities").default('[]'), // Array of facility IDs for workers
+// Staff to Facility associations - normalized many-to-many relationship
+export const staffFacilityAssociations = pgTable("staff_facility_associations", {
+  id: serial("id").primaryKey(),
+  staffId: integer("staff_id").notNull().references(() => staff.id, { onDelete: 'cascade' }),
+  facilityId: integer("facility_id").notNull().references(() => facilities.id, { onDelete: 'cascade' }),
+  isPrimary: boolean("is_primary").default(false), // Primary facility for the staff member
+  startDate: timestamp("start_date").defaultNow(),
+  endDate: timestamp("end_date"), // null means currently active
+  status: text("status").default("active"), // active, inactive, suspended
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Staff to Credentials relationship - links staff to their credentials
+export const staffCredentials = pgTable("staff_credentials", {
+  id: serial("id").primaryKey(),
+  staffId: integer("staff_id").notNull().references(() => staff.id, { onDelete: 'cascade' }),
+  credentialId: integer("credential_id").notNull().references(() => credentials.id, { onDelete: 'cascade' }),
+  isPrimary: boolean("is_primary").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 // Payroll Integration Tables
@@ -1162,6 +1202,17 @@ export const insertStaffSchema = createInsertSchema(staff).omit({
   updatedAt: true,
 });
 
+export const insertStaffFacilityAssociationSchema = createInsertSchema(staffFacilityAssociations).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertStaffCredentialSchema = createInsertSchema(staffCredentials).omit({
+  id: true,
+  createdAt: true,
+});
+
 export const insertShiftRequestSchema = createInsertSchema(shiftRequests).omit({
   id: true,
   requestedAt: true,
@@ -1255,6 +1306,10 @@ export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type Message = typeof messages.$inferSelect;
 export type InsertStaff = z.infer<typeof insertStaffSchema>;
 export type Staff = typeof staff.$inferSelect;
+export type InsertStaffFacilityAssociation = z.infer<typeof insertStaffFacilityAssociationSchema>;
+export type StaffFacilityAssociation = typeof staffFacilityAssociations.$inferSelect;
+export type InsertStaffCredential = z.infer<typeof insertStaffCredentialSchema>;
+export type StaffCredential = typeof staffCredentials.$inferSelect;
 export type InsertShiftRequest = z.infer<typeof insertShiftRequestSchema>;
 export type ShiftRequest = typeof shiftRequests.$inferSelect;
 export type InsertShiftHistory = z.infer<typeof insertShiftHistorySchema>;

@@ -43,7 +43,8 @@ interface Shift {
 
 interface Staff {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   position: string;
   department: string;
   hourlyRate: number;
@@ -101,7 +102,8 @@ const mockShifts: Shift[] = [
 const mockStaff: Staff[] = [
   {
     id: "sarah-johnson",
-    name: "Sarah Johnson",
+    firstName: "Sarah",
+    lastName: "Johnson",
     position: "RN",
     department: "ICU",
     hourlyRate: 45,
@@ -111,7 +113,8 @@ const mockStaff: Staff[] = [
   },
   {
     id: "john-doe",
-    name: "John Doe",
+    firstName: "John",
+    lastName: "Doe",
     position: "CNA",
     department: "Med/Surg",
     hourlyRate: 28,
@@ -121,7 +124,8 @@ const mockStaff: Staff[] = [
   },
   {
     id: "jane-smith",
-    name: "Jane Smith",
+    firstName: "Jane",
+    lastName: "Smith",
     position: "CNA",
     department: "Med/Surg",
     hourlyRate: 26,
@@ -131,7 +135,8 @@ const mockStaff: Staff[] = [
   },
   {
     id: "mike-wilson",
-    name: "Mike Wilson",
+    firstName: "Mike",
+    lastName: "Wilson",
     position: "LPN",
     department: "Emergency",
     hourlyRate: 32,
@@ -239,7 +244,7 @@ export default function AdvancedSchedulingPage() {
 
           toast({
             title: "Staff assigned",
-            description: `${staffMember.name} assigned to ${targetShift.title}`,
+            description: `${staffMember.firstName || ''} ${staffMember.lastName || ''} assigned to ${targetShift.title}`,
           });
         }
       }
@@ -400,7 +405,7 @@ export default function AdvancedSchedulingPage() {
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium text-sm">{staff.name}</p>
+                            <p className="font-medium text-sm">{staff.firstName || ''} {staff.lastName || ''}</p>
                             <p className="text-xs text-gray-600 dark:text-gray-300">
                               {staff.position}
                             </p>
@@ -608,7 +613,7 @@ export default function AdvancedSchedulingPage() {
                           className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded"
                         >
                           <span className="text-sm">
-                            {staff.name} - {staff.position}
+                            {staff.firstName || ''} {staff.lastName || ''} - {staff.position}
                           </span>
                           {canAssignStaff && (
                             <Button

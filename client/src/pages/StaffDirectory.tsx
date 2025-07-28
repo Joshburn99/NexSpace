@@ -355,7 +355,7 @@ export default function StaffDirectory() {
   // Handle message button click
   const handleMessageClick = (staffMember: Staff) => {
     // Navigate to messages page with staff member preselected
-    navigate(`/messages?recipient=${staffMember.id}&name=${encodeURIComponent(staffMember.name)}`);
+    navigate(`/messages?recipient=${staffMember.id}&name=${encodeURIComponent(`${staffMember.firstName || ''} ${staffMember.lastName || ''}`)}`);
   };
 
   const filteredFacilityUsers = facilityUsers.filter(user => {
