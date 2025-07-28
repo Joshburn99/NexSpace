@@ -57,6 +57,8 @@ export function setupAuth(app: Express) {
           isActive: true,
           facilityId: null,
           avatar: null,
+          onboardingCompleted: true,
+          onboardingStep: 4,
           createdAt: new Date(),
           updatedAt: new Date(),
         } as any;
@@ -92,6 +94,8 @@ export function setupAuth(app: Express) {
         isActive: true,
         facilityId: null,
         avatar: null,
+        onboardingCompleted: true,
+        onboardingStep: 4,
         createdAt: new Date(),
         updatedAt: new Date(),
       } as any;
