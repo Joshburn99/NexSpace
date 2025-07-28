@@ -245,26 +245,26 @@ export default function FacilityProfilePage() {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="w-full space-y-4 md:space-y-6 p-4 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Facility Profile</h1>
-          <p className="text-gray-600 mt-2">View and manage facility information</p>
+          <h1 className="text-xl md:text-3xl font-bold">Facility Profile</h1>
+          <p className="text-sm md:text-base text-gray-600 mt-1 md:mt-2">View and manage facility information</p>
         </div>
         <PermissionGuard requiredPermissions={["edit_facility_profile"]}>
           {!isEditing ? (
-            <Button onClick={handleEdit}>
-              <Edit className="h-4 w-4 mr-2" />
+            <Button onClick={handleEdit} className="min-h-[44px] touch-manipulation">
+              <Edit className="h-4 w-4 mr-1 md:mr-2" />
               Edit Profile
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button onClick={handleSave} disabled={updateFacility.isPending}>
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
+              <Button onClick={handleSave} disabled={updateFacility.isPending} className="min-h-[44px] touch-manipulation">
+                <Save className="h-4 w-4 mr-1 md:mr-2" />
+                Save
               </Button>
-              <Button variant="outline" onClick={handleCancel}>
-                <X className="h-4 w-4 mr-2" />
+              <Button variant="outline" onClick={handleCancel} className="min-h-[44px] touch-manipulation">
+                <X className="h-4 w-4 mr-1 md:mr-2" />
                 Cancel
               </Button>
             </div>
@@ -273,15 +273,15 @@ export default function FacilityProfilePage() {
       </div>
 
       <Tabs defaultValue="basic" className="space-y-4">
-        <TabsList className="grid grid-cols-4 md:grid-cols-8 gap-2">
-          <TabsTrigger value="basic">Basic Info</TabsTrigger>
-          <TabsTrigger value="contact">Contact</TabsTrigger>
-          <TabsTrigger value="operations">Operations</TabsTrigger>
-          <TabsTrigger value="billing">Billing & Rates</TabsTrigger>
-          <TabsTrigger value="compliance">Compliance</TabsTrigger>
-          <TabsTrigger value="workflow">Workflow</TabsTrigger>
-          <TabsTrigger value="shifts">Shift Rules</TabsTrigger>
-          <TabsTrigger value="staffing">Staffing</TabsTrigger>
+        <TabsList className="w-full overflow-x-auto flex md:grid md:grid-cols-8 gap-1 md:gap-2">
+          <TabsTrigger value="basic" className="min-w-fit">Basic Info</TabsTrigger>
+          <TabsTrigger value="contact" className="min-w-fit">Contact</TabsTrigger>
+          <TabsTrigger value="operations" className="min-w-fit">Operations</TabsTrigger>
+          <TabsTrigger value="billing" className="min-w-fit">Billing & Rates</TabsTrigger>
+          <TabsTrigger value="compliance" className="min-w-fit">Compliance</TabsTrigger>
+          <TabsTrigger value="workflow" className="min-w-fit">Workflow</TabsTrigger>
+          <TabsTrigger value="shifts" className="min-w-fit">Shift Rules</TabsTrigger>
+          <TabsTrigger value="staffing" className="min-w-fit">Staffing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic">
@@ -291,26 +291,27 @@ export default function FacilityProfilePage() {
               <CardDescription>Core facility details and identification</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div>
-                  <Label>Facility Name</Label>
+                  <Label className="text-sm">Facility Name</Label>
                   {isEditing ? (
                     <Input
                       value={editedFacility.name || ''}
                       onChange={(e) => handleFieldChange('name', e.target.value)}
+                      className="min-h-[40px]"
                     />
                   ) : (
-                    <p className="text-lg font-medium">{facility.name}</p>
+                    <p className="text-base md:text-lg font-medium">{facility.name}</p>
                   )}
                 </div>
                 <div>
-                  <Label>Facility Type</Label>
+                  <Label className="text-sm">Facility Type</Label>
                   {isEditing ? (
                     <Select
                       value={editedFacility.facilityType || ''}
                       onValueChange={(value) => handleFieldChange('facilityType', value)}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="min-h-[40px]">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -322,39 +323,41 @@ export default function FacilityProfilePage() {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="text-lg font-medium">{facility.facilityType || 'Not specified'}</p>
+                    <p className="text-base md:text-lg font-medium">{facility.facilityType || 'Not specified'}</p>
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div>
-                  <Label>CMS ID</Label>
+                  <Label className="text-sm">CMS ID</Label>
                   {isEditing ? (
                     <Input
                       value={editedFacility.cmsId || ''}
                       onChange={(e) => handleFieldChange('cmsId', e.target.value)}
                       placeholder="CMS Certification Number"
+                      className="min-h-[40px]"
                     />
                   ) : (
-                    <p className="text-lg font-medium">{facility.cmsId || 'Not specified'}</p>
+                    <p className="text-base md:text-lg font-medium">{facility.cmsId || 'Not specified'}</p>
                   )}
                 </div>
                 <div>
-                  <Label>NPI Number</Label>
+                  <Label className="text-sm">NPI Number</Label>
                   {isEditing ? (
                     <Input
                       value={editedFacility.npiNumber || ''}
                       onChange={(e) => handleFieldChange('npiNumber', e.target.value)}
                       placeholder="National Provider Identifier"
+                      className="min-h-[40px]"
                     />
                   ) : (
-                    <p className="text-lg font-medium">{facility.npiNumber || 'Not specified'}</p>
+                    <p className="text-base md:text-lg font-medium">{facility.npiNumber || 'Not specified'}</p>
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
                 <div>
                   <Label>Bed Count</Label>
                   {isEditing ? (

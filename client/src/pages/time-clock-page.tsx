@@ -142,38 +142,38 @@ export default function TimeClockPage() {
   const currentEarnings = (elapsed / 3600000) * currentRate;
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="w-full space-y-4 md:space-y-6 p-4 md:p-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Time Clock</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">Time Clock</h1>
+        <p className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1">
           Track your work hours and earnings
         </p>
       </div>
 
       {/* Clock In/Out Section */}
-      <Card className="w-full max-w-2xl">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="w-6 h-6" />
+      <Card className="w-full max-w-2xl mx-auto shadow-sm">
+        <CardHeader className="p-4 md:p-6">
+          <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+            <Clock className="w-5 h-5 md:w-6 md:h-6" />
             {currentIn ? 'Currently Working' : 'Ready to Clock In'}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm">
             {currentIn ? `Started at ${new Date(currentIn).toLocaleTimeString()}` : 'Click to start your shift'}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 p-4 md:p-6">
           {!currentIn ? (
             <Button 
               onClick={clockIn} 
               size="lg" 
-              className="w-full bg-green-600 hover:bg-green-700"
+              className="w-full bg-green-600 hover:bg-green-700 min-h-[48px] touch-manipulation"
             >
               <Clock className="w-5 h-5 mr-2" />
               Clock In
             </Button>
           ) : (
             <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 <Card>
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-2">

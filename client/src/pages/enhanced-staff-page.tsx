@@ -452,34 +452,35 @@ function EnhancedStaffPageContent() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-4 md:space-y-6">
       <div>
         <div className="flex items-center gap-4 mb-4">
           <Link href="/">
             <Button variant="ghost" size="sm" className="gap-2">
               <Home className="h-4 w-4" />
-              Dashboard
+              <span className="hidden md:inline">Dashboard</span>
             </Button>
           </Link>
         </div>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold">Staff Management</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl md:text-3xl font-bold">Staff Management</h1>
+            <p className="text-sm md:text-base text-muted-foreground hidden md:block">
               Comprehensive staff profiles and social features
             </p>
           </div>
           <Dialog open={showAddStaffDialog} onOpenChange={setShowAddStaffDialog}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button className="gap-2 min-h-[44px] touch-manipulation">
                 <UserPlus className="h-4 w-4" />
-                Add Staff Member
+                <span className="hidden md:inline">Add Staff Member</span>
+                <span className="md:hidden">Add Staff</span>
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl w-[95vw] md:w-full max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Add New Staff Member</DialogTitle>
-                <DialogDescription>Create a profile for a new staff member</DialogDescription>
+                <DialogTitle className="text-lg md:text-xl">Add New Staff Member</DialogTitle>
+                <DialogDescription className="text-sm">Create a profile for a new staff member</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateStaff} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -591,19 +592,19 @@ function EnhancedStaffPageContent() {
           <TabsTrigger value="analytics">Analytics</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="directory" className="space-y-6">
-          {/* Filters */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
+        <TabsContent value="directory" className="space-y-4 md:space-y-6">
+          {/* Filters - Mobile Responsive */}
+          <Card className="shadow-sm">
+            <CardHeader className="p-4 md:p-6">
+              <CardTitle className="flex items-center gap-2 text-base md:text-lg">
+                <Filter className="h-4 w-4 md:h-5 md:w-5" />
                 Search & Filters
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div>
-                  <Label htmlFor="search">Search</Label>
+            <CardContent className="p-4 md:p-6 pt-0">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
+                <div className="md:col-span-2 lg:col-span-1">
+                  <Label htmlFor="search" className="text-sm">Search</Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -611,14 +612,14 @@ function EnhancedStaffPageContent() {
                       placeholder="Search staff..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 min-h-[40px]"
                     />
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="workerType">Worker Type</Label>
+                  <Label htmlFor="workerType" className="text-sm">Worker Type</Label>
                   <Select value={selectedWorkerType} onValueChange={setSelectedWorkerType}>
-                    <SelectTrigger>
+                    <SelectTrigger className="min-h-[40px]">
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
                     <SelectContent>

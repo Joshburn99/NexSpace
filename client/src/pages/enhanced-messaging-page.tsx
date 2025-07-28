@@ -324,31 +324,34 @@ export default function EnhancedMessagingPage() {
 
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="w-full space-y-4 md:space-y-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Messages</h1>
-          <div className="text-gray-600 dark:text-gray-400 mt-1 flex items-center">
-            <span>Communicate with facility team and NexSpace support</span>
+          <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">Messages</h1>
+          <div className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1 flex items-center flex-wrap gap-2">
+            <span className="hidden md:inline">Communicate with facility team and NexSpace support</span>
             {unreadCount > 0 && (
-              <Badge className="ml-2 bg-blue-600">{unreadCount} unread</Badge>
+              <Badge className="bg-blue-600">{unreadCount} unread</Badge>
             )}
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleNewMessage} className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="w-4 h-4 mr-2" />
-            New Message
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={handleNewMessage} className="bg-blue-600 hover:bg-blue-700 min-h-[44px] touch-manipulation">
+            <Plus className="w-4 h-4 mr-1 md:mr-2" />
+            <span className="hidden md:inline">New Message</span>
+            <span className="md:hidden">New</span>
           </Button>
           {(user?.role === 'super_admin' || user?.role === 'facility_manager') && (
-            <Button onClick={handleMassMessage} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50">
-              <Mail className="w-4 h-4 mr-2" />
-              Mass Message
+            <Button onClick={handleMassMessage} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 min-h-[44px] touch-manipulation">
+              <Mail className="w-4 h-4 mr-1 md:mr-2" />
+              <span className="hidden md:inline">Mass Message</span>
+              <span className="md:hidden">Mass</span>
             </Button>
           )}
-          <Button onClick={handleNexSpaceMessage} variant="outline" className="border-green-600 text-green-600 hover:bg-green-50">
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Message NexSpace
+          <Button onClick={handleNexSpaceMessage} variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 min-h-[44px] touch-manipulation">
+            <MessageSquare className="w-4 h-4 mr-1 md:mr-2" />
+            <span className="hidden md:inline">Message NexSpace</span>
+            <span className="md:hidden">Support</span>
           </Button>
         </div>
 
@@ -356,10 +359,10 @@ export default function EnhancedMessagingPage() {
           <DialogTrigger asChild>
             <div style={{ display: 'none' }} />
           </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md w-[95vw] md:w-full max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>Compose Message</DialogTitle>
-              <DialogDescription>
+              <DialogTitle className="text-lg md:text-xl">Compose Message</DialogTitle>
+              <DialogDescription className="text-sm">
                 {isNexSpaceMessage 
                   ? "Send a message to the NexSpace support team"
                   : isMassMessage 

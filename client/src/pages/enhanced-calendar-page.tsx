@@ -611,38 +611,40 @@ export default function EnhancedCalendarPage() {
     filters.workers.length;
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="w-full space-y-4 md:space-y-6">
+      {/* Header - Mobile Responsive */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
             Enhanced Calendar
           </h1>
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-sm md:text-base text-gray-600 dark:text-gray-300 hidden md:block">
             Advanced scheduling view with comprehensive filtering and real-time updates
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button
             onClick={() => setShowAddShiftDialog(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
+            className="bg-blue-600 hover:bg-blue-700 text-white min-h-[44px] touch-manipulation"
           >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Shift
+            <Plus className="h-4 w-4 md:mr-2" />
+            <span className="hidden md:inline">Add Shift</span>
+            <span className="md:hidden">Add</span>
           </Button>
         </div>
       </div>
 
 
-      {/* Filter Controls */}
-      <div className="flex items-center justify-between">
+      {/* Filter Controls - Mobile Responsive */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
         <div className="flex items-center gap-2">
           <Button
             variant={showFilters ? "default" : "outline"}
             onClick={() => setShowFilters(!showFilters)}
             size="sm"
+            className="min-h-[36px] touch-manipulation"
           >
-            <Filter className="h-4 w-4 mr-2" />
+            <Filter className="h-4 w-4 mr-1 md:mr-2" />
             Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
           </Button>
 
@@ -654,8 +656,10 @@ export default function EnhancedCalendarPage() {
                 calendarRef.current?.getApi().changeView("dayGridMonth");
               }}
               size="sm"
+              className="min-h-[36px] touch-manipulation px-2 md:px-3"
             >
-              Month
+              <span className="hidden md:inline">Month</span>
+              <span className="md:hidden">M</span>
             </Button>
             <Button
               variant={viewMode === "timeGridWeek" ? "default" : "outline"}
@@ -664,8 +668,10 @@ export default function EnhancedCalendarPage() {
                 calendarRef.current?.getApi().changeView("timeGridWeek");
               }}
               size="sm"
+              className="min-h-[36px] touch-manipulation px-2 md:px-3"
             >
-              Week
+              <span className="hidden md:inline">Week</span>
+              <span className="md:hidden">W</span>
             </Button>
             <Button
               variant={viewMode === "timeGridDay" ? "default" : "outline"}
@@ -674,40 +680,42 @@ export default function EnhancedCalendarPage() {
                 calendarRef.current?.getApi().changeView("timeGridDay");
               }}
               size="sm"
+              className="min-h-[36px] touch-manipulation px-2 md:px-3"
             >
-              Day
+              <span className="hidden md:inline">Day</span>
+              <span className="md:hidden">D</span>
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Advanced Filters Panel */}
+      {/* Advanced Filters Panel - Mobile Responsive */}
       {showFilters && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Filter className="h-5 w-5" />
+        <Card className="shadow-sm">
+          <CardHeader className="p-4 md:p-6">
+            <CardTitle className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+              <div className="flex items-center gap-2 text-base md:text-lg">
+                <Filter className="h-4 w-4 md:h-5 md:w-5" />
                 Advanced Filters
               </div>
-              <Button variant="ghost" size="sm" onClick={clearFilters}>
-                <X className="h-4 w-4 mr-2" />
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="self-end md:self-auto">
+                <X className="h-4 w-4 mr-1 md:mr-2" />
                 Clear All
               </Button>
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+          <CardContent className="p-4 md:p-6 pt-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4">
               {/* Search */}
-              <div>
-                <Label>Search</Label>
+              <div className="md:col-span-2 lg:col-span-1">
+                <Label className="text-sm">Search</Label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search shifts..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 min-h-[40px]"
                   />
                 </div>
               </div>
@@ -1023,30 +1031,30 @@ export default function EnhancedCalendarPage() {
         </CardContent>
       </Card>
 
-      {/* Shift Detail Modal */}
+      {/* Shift Detail Modal - Mobile Responsive */}
       <Dialog open={!!selectedShift} onOpenChange={() => setSelectedShift(null)}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl w-[95vw] md:w-full max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Shift Details</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg md:text-xl">Shift Details</DialogTitle>
+            <DialogDescription className="text-sm">
               Manage shift assignments and view staffing information
             </DialogDescription>
           </DialogHeader>
           {selectedShift && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div>
-                  <Label>Facility</Label>
+                  <Label className="text-sm">Facility</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Building className="h-4 w-4 text-muted-foreground" />
-                    <span>{getFacilityDisplayName(facilities.find(f => f.id === selectedShift.facilityId)) || selectedShift.facilityName}</span>
+                    <span className="text-sm md:text-base">{getFacilityDisplayName(facilities.find(f => f.id === selectedShift.facilityId)) || selectedShift.facilityName}</span>
                   </div>
                 </div>
                 <div>
-                  <Label>Department</Label>
+                  <Label className="text-sm">Department</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Users className="h-4 w-4 text-muted-foreground" />
-                    <span>{selectedShift.department}</span>
+                    <span className="text-sm md:text-base">{selectedShift.department}</span>
                   </div>
                 </div>
               </div>
