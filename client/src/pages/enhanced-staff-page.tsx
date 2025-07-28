@@ -145,7 +145,7 @@ interface StaffPost {
 
 const workerTypeLabels = {
   "Full-time Employee": "Full-time Employee",
-  "Part-time Employee": "Part-time Employee", 
+  "Part-time Employee": "Part-time Employee",
   "Contract Worker": "Contract Worker",
   "Per Diem": "Per Diem",
 };
@@ -160,29 +160,45 @@ const statusColors = {
 // Employment type color functions
 const getEmploymentTypeColor = (employmentType: string) => {
   switch (employmentType) {
-    case 'Full-time Employee':
-      return 'bg-green-500 text-white';
-    case 'Part-time Employee':
-      return 'bg-blue-500 text-white';
-    case 'Contract Worker':
-      return 'bg-purple-500 text-white';
-    case 'Per Diem':
-      return 'bg-orange-500 text-white';
+    case "Full-time Employee":
+      return "bg-green-500 text-white";
+    case "Part-time Employee":
+      return "bg-blue-500 text-white";
+    case "Contract Worker":
+      return "bg-purple-500 text-white";
+    case "Per Diem":
+      return "bg-orange-500 text-white";
     default:
-      return 'bg-gray-500 text-white';
+      return "bg-gray-500 text-white";
   }
 };
 
 const formatEmploymentType = (employmentType: string) => {
-  return employmentType || 'Staff';
+  return employmentType || "Staff";
 };
 
 // Specialties list for filtering
 const specialties = [
-  'RN', 'LPN', 'CNA', 'PT', 'OT', 'RT', 'MD', 'NP', 'PA',
-  'CST', 'PharmTech', 'LabTech', 'RadTech', 'Dietitian',
-  'Social Worker', 'Case Manager', 'Unit Secretary',
-  'Environmental Services', 'Security', 'Transport'
+  "RN",
+  "LPN",
+  "CNA",
+  "PT",
+  "OT",
+  "RT",
+  "MD",
+  "NP",
+  "PA",
+  "CST",
+  "PharmTech",
+  "LabTech",
+  "RadTech",
+  "Dietitian",
+  "Social Worker",
+  "Case Manager",
+  "Unit Secretary",
+  "Environmental Services",
+  "Security",
+  "Transport",
 ];
 
 function EnhancedStaffPageContent() {
@@ -203,19 +219,25 @@ function EnhancedStaffPageContent() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [, navigate] = useLocation();
   const { hasPermission } = useRBAC();
-  
+
   // Bulk action state
   const [selectedStaffIds, setSelectedStaffIds] = useState<number[]>([]);
   const [showBulkEditDialog, setShowBulkEditDialog] = useState(false);
-  const [bulkEditField, setBulkEditField] = useState<'role' | 'specialty' | 'status'>('role');
+  const [bulkEditField, setBulkEditField] = useState<"role" | "specialty" | "status">("role");
   const [bulkEditValue, setBulkEditValue] = useState("");
 
   // Message button functionality
   const handleMessageClick = (staff: StaffMember) => {
-    navigate(`/messages?staff=${staff.id}&name=${encodeURIComponent(staff.firstName + ' ' + staff.lastName)}`);
+    navigate(
+      `/messages?staff=${staff.id}&name=${encodeURIComponent(staff.firstName + " " + staff.lastName)}`
+    );
   };
 
-  const { data: staffMembers = [], isLoading, error } = useQuery<StaffMember[]>({
+  const {
+    data: staffMembers = [],
+    isLoading,
+    error,
+  } = useQuery<StaffMember[]>({
     queryKey: ["/api/staff"],
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
@@ -224,7 +246,7 @@ function EnhancedStaffPageContent() {
       if (Array.isArray(data)) {
         return data;
       }
-      console.error('Staff API returned non-array data:', data);
+      console.error("Staff API returned non-array data:", data);
       return [];
     },
   });
@@ -233,19 +255,19 @@ function EnhancedStaffPageContent() {
   useEffect(() => {
     try {
       const urlParams = new URLSearchParams(window.location.search);
-      const profileId = urlParams.get('profile');
-      
+      const profileId = urlParams.get("profile");
+
       if (profileId && Array.isArray(staffMembers) && staffMembers.length > 0) {
-        const staffMember = staffMembers.find(s => s?.id === parseInt(profileId));
+        const staffMember = staffMembers.find((s) => s?.id === parseInt(profileId));
         if (staffMember) {
           setSelectedStaff(staffMember);
           // Clean up URL parameter
           const newUrl = window.location.pathname;
-          window.history.replaceState({}, '', newUrl);
+          window.history.replaceState({}, "", newUrl);
         }
       }
     } catch (error) {
-      console.error('Error handling profile URL parameter:', error);
+      console.error("Error handling profile URL parameter:", error);
     }
   }, [staffMembers]);
 
@@ -303,37 +325,40 @@ function EnhancedStaffPageContent() {
   // Filter staff members with comprehensive null safety and exclude superusers
   const filteredStaff = React.useMemo(() => {
     if (!Array.isArray(staffMembers)) {
-      console.error('staffMembers is not an array:', staffMembers);
+      console.error("staffMembers is not an array:", staffMembers);
       return [];
     }
-    
+
     return staffMembers.filter((staff) => {
       if (!staff) return false;
-    
-    try {
-      // Exclude superusers by email (server already filters most, but double-check)
-      const superuserEmails = ['joshburn@nexspace.com', 'brian.nangle@nexspace.com'];
-      if (superuserEmails.includes(staff.email)) return false;
 
-      // Exclude by role if present 
-      if (staff?.role === "super_admin" || staff?.role === "facility_manager") return false;
+      try {
+        // Exclude superusers by email (server already filters most, but double-check)
+        const superuserEmails = ["joshburn@nexspace.com", "brian.nangle@nexspace.com"];
+        if (superuserEmails.includes(staff.email)) return false;
 
-      const matchesSearch =
-        searchTerm === "" ||
-        `${staff.firstName || ""} ${staff.lastName || ""}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (staff.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (staff.specialty || "").toLowerCase().includes(searchTerm.toLowerCase());
+        // Exclude by role if present
+        if (staff?.role === "super_admin" || staff?.role === "facility_manager") return false;
 
-      const matchesWorkerType =
-        selectedWorkerType === "all" || staff.employmentType === selectedWorkerType;
-      const matchesSpecialty = selectedSpecialty === "all" || staff.specialty === selectedSpecialty;
-      const matchesStatus = selectedStatus === "all" || staff.status === selectedStatus;
+        const matchesSearch =
+          searchTerm === "" ||
+          `${staff.firstName || ""} ${staff.lastName || ""}`
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          (staff.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (staff.specialty || "").toLowerCase().includes(searchTerm.toLowerCase());
 
-      return matchesSearch && matchesWorkerType && matchesSpecialty && matchesStatus;
-    } catch (error) {
-      console.error('Error filtering staff member:', error, staff);
-      return false;
-    }
+        const matchesWorkerType =
+          selectedWorkerType === "all" || staff.employmentType === selectedWorkerType;
+        const matchesSpecialty =
+          selectedSpecialty === "all" || staff.specialty === selectedSpecialty;
+        const matchesStatus = selectedStatus === "all" || staff.status === selectedStatus;
+
+        return matchesSearch && matchesWorkerType && matchesSpecialty && matchesStatus;
+      } catch (error) {
+        console.error("Error filtering staff member:", error, staff);
+        return false;
+      }
     });
   }, [staffMembers, searchTerm, selectedWorkerType, selectedSpecialty, selectedStatus]);
 
@@ -344,7 +369,9 @@ function EnhancedStaffPageContent() {
   const paginatedStaff = filteredStaff.slice(startIndex, endIndex);
 
   // Get unique values for filters with null safety
-  const specialties = Array.from(new Set((staffMembers || []).map((s) => s?.specialty).filter(Boolean)));
+  const specialties = Array.from(
+    new Set((staffMembers || []).map((s) => s?.specialty).filter(Boolean))
+  );
 
   const createStaffMutation = useMutation({
     mutationFn: async (staffData: any) => {
@@ -366,7 +393,8 @@ function EnhancedStaffPageContent() {
     onError: (error: any) => {
       toast({
         title: "Error Creating Staff",
-        description: error.message || "Failed to create staff member. Please check your data and try again.",
+        description:
+          error.message || "Failed to create staff member. Please check your data and try again.",
         variant: "destructive",
       });
     },
@@ -392,7 +420,8 @@ function EnhancedStaffPageContent() {
     onError: (error: any) => {
       toast({
         title: "Error Updating Profile",
-        description: error.message || "Failed to update profile. Please check your connection and try again.",
+        description:
+          error.message || "Failed to update profile. Please check your connection and try again.",
         variant: "destructive",
       });
     },
@@ -404,12 +433,12 @@ function EnhancedStaffPageContent() {
       if (file.size > 5 * 1024 * 1024) {
         throw new Error("File size must be less than 5MB");
       }
-      
+
       // Validate file type
-      if (!file.type.startsWith('image/')) {
+      if (!file.type.startsWith("image/")) {
         throw new Error("Please upload a valid image file");
       }
-      
+
       const formData = new FormData();
       formData.append("profileImage", file);
       const response = await apiRequest("POST", `/api/staff/${id}/profile-image`, formData);
@@ -429,7 +458,8 @@ function EnhancedStaffPageContent() {
     onError: (error: any) => {
       toast({
         title: "Error Uploading Image",
-        description: error.message || "Failed to upload image. Please try again with a smaller file.",
+        description:
+          error.message || "Failed to upload image. Please try again with a smaller file.",
         variant: "destructive",
       });
     },
@@ -447,11 +477,19 @@ function EnhancedStaffPageContent() {
 
   // Bulk edit mutation
   const bulkEditStaffMutation = useMutation({
-    mutationFn: async ({ staffIds, field, value }: { staffIds: number[]; field: string; value: string }) => {
+    mutationFn: async ({
+      staffIds,
+      field,
+      value,
+    }: {
+      staffIds: number[];
+      field: string;
+      value: string;
+    }) => {
       const response = await apiRequest("POST", "/api/staff/bulk-edit", {
         staffIds,
         field,
-        value
+        value,
       });
       if (!response.ok) {
         const error = await response.json();
@@ -566,11 +604,7 @@ function EnhancedStaffPageContent() {
           </div>
           <Dialog open={showAddStaffDialog} onOpenChange={setShowAddStaffDialog}>
             <DialogTrigger asChild>
-              <PermissionAction
-                permission="create_staff"
-                action="Add Staff Member"
-                fallback={null}
-              >
+              <PermissionAction permission="create_staff" action="Add Staff Member" fallback={null}>
                 <Button className="gap-2 min-h-[44px] touch-manipulation">
                   <UserPlus className="h-4 w-4" />
                   <span className="hidden md:inline">Add Staff Member</span>
@@ -581,7 +615,9 @@ function EnhancedStaffPageContent() {
             <DialogContent className="max-w-2xl w-[95vw] md:w-full max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-lg md:text-xl">Add New Staff Member</DialogTitle>
-                <DialogDescription className="text-sm">Create a profile for a new staff member</DialogDescription>
+                <DialogDescription className="text-sm">
+                  Create a profile for a new staff member
+                </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateStaff} className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -651,11 +687,13 @@ function EnhancedStaffPageContent() {
                   <Label htmlFor="certifications">Certifications (comma-separated)</Label>
                   <Input name="certifications" placeholder="BLS, ACLS, RN License" />
                 </div>
-                
+
                 {/* Facility Associations - Only visible to superusers */}
                 {sessionState?.user?.role === "super_admin" && (
                   <div>
-                    <Label htmlFor="associatedFacilities">Associated Facilities (for workers)</Label>
+                    <Label htmlFor="associatedFacilities">
+                      Associated Facilities (for workers)
+                    </Label>
                     <Select name="associatedFacilities">
                       <SelectTrigger>
                         <SelectValue placeholder="Select facilities" />
@@ -721,7 +759,9 @@ function EnhancedStaffPageContent() {
             <CardContent className="p-4 md:p-6 pt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4">
                 <div className="md:col-span-2 lg:col-span-1">
-                  <Label htmlFor="search" className="text-sm">Search</Label>
+                  <Label htmlFor="search" className="text-sm">
+                    Search
+                  </Label>
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -734,55 +774,57 @@ function EnhancedStaffPageContent() {
                   </div>
                 </div>
                 <div>
-                  <Label htmlFor="workerType" className="text-sm">Worker Type</Label>
+                  <Label htmlFor="workerType" className="text-sm">
+                    Worker Type
+                  </Label>
                   <Select value={selectedWorkerType} onValueChange={setSelectedWorkerType}>
                     <SelectTrigger className="min-h-[40px]">
                       <SelectValue placeholder="All Types" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Types</SelectItem>
-        {Object.entries(workerTypeLabels).map(([value, label]) => (
-          <SelectItem key={value} value={value}>
-            {label}
-          </SelectItem>
-        ))}
-        </SelectContent>
-        </Select>
-        </div>
-        <div>
-          <Label htmlFor="specialty">Specialty</Label>
-          <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
-            <SelectTrigger>
-              <SelectValue placeholder="All Specialties" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Specialties</SelectItem>
-              {specialties.map((specialty, idx) => (
-                <SelectItem key={`${specialty}-${idx}`} value={specialty}>
-                  {specialty?.replace("_", " ")}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label htmlFor="status">Status</Label>
-          <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-            <SelectTrigger>
-              <SelectValue placeholder="All Statuses" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="suspended">Suspended</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-    </CardContent>
-  </Card>
+                      {Object.entries(workerTypeLabels).map(([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="specialty">Specialty</Label>
+                  <Select value={selectedSpecialty} onValueChange={setSelectedSpecialty}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Specialties" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Specialties</SelectItem>
+                      {specialties.map((specialty, idx) => (
+                        <SelectItem key={`${specialty}-${idx}`} value={specialty}>
+                          {specialty?.replace("_", " ")}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="All Statuses" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Statuses</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="suspended">Suspended</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Staff List */}
           <Card>
@@ -791,13 +833,16 @@ function EnhancedStaffPageContent() {
                 <div className="flex items-center gap-4">
                   <CardTitle>Staff Members ({filteredStaff.length})</CardTitle>
                   {/* Select all checkbox */}
-                  {hasPermission('staff.edit') && (
+                  {hasPermission("staff.edit") && (
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        checked={selectedStaffIds.length === paginatedStaff.length && paginatedStaff.length > 0}
+                        checked={
+                          selectedStaffIds.length === paginatedStaff.length &&
+                          paginatedStaff.length > 0
+                        }
                         onCheckedChange={(checked) => {
                           if (checked) {
-                            setSelectedStaffIds(paginatedStaff.map(s => s.id));
+                            setSelectedStaffIds(paginatedStaff.map((s) => s.id));
                           } else {
                             setSelectedStaffIds([]);
                           }
@@ -809,7 +854,7 @@ function EnhancedStaffPageContent() {
                 </div>
                 <div className="flex items-center gap-2">
                   {/* Bulk actions */}
-                  {selectedStaffIds.length > 0 && hasPermission('staff.edit') && (
+                  {selectedStaffIds.length > 0 && hasPermission("staff.edit") && (
                     <PermissionAction permission="staff.edit">
                       <Button
                         onClick={() => setShowBulkEditDialog(true)}
@@ -821,7 +866,10 @@ function EnhancedStaffPageContent() {
                       </Button>
                     </PermissionAction>
                   )}
-                  <Select value={itemsPerPage.toString()} onValueChange={(value) => setItemsPerPage(parseInt(value))}>
+                  <Select
+                    value={itemsPerPage.toString()}
+                    onValueChange={(value) => setItemsPerPage(parseInt(value))}
+                  >
                     <SelectTrigger className="w-24">
                       <SelectValue />
                     </SelectTrigger>
@@ -843,22 +891,24 @@ function EnhancedStaffPageContent() {
                     className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
                     onClick={(e) => {
                       // Only open profile if not clicking on checkbox or action buttons
-                      if (!(e.target as HTMLElement).closest('input[type="checkbox"]') && 
-                          !(e.target as HTMLElement).closest('button')) {
+                      if (
+                        !(e.target as HTMLElement).closest('input[type="checkbox"]') &&
+                        !(e.target as HTMLElement).closest("button")
+                      ) {
                         setSelectedStaff(staff);
                       }
                     }}
                   >
                     <div className="flex items-center space-x-4">
                       {/* Individual checkbox */}
-                      {hasPermission('staff.edit') && (
+                      {hasPermission("staff.edit") && (
                         <Checkbox
                           checked={selectedStaffIds.includes(staff.id)}
                           onCheckedChange={(checked) => {
                             if (checked) {
                               setSelectedStaffIds([...selectedStaffIds, staff.id]);
                             } else {
-                              setSelectedStaffIds(selectedStaffIds.filter(id => id !== staff.id));
+                              setSelectedStaffIds(selectedStaffIds.filter((id) => id !== staff.id));
                             }
                           }}
                           onClick={(e) => e.stopPropagation()}
@@ -876,29 +926,30 @@ function EnhancedStaffPageContent() {
                           {staff.firstName} {staff.lastName}
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          {staff.specialty?.replace("_", " ") || "N/A"} • {staff.department || "N/A"}
+                          {staff.specialty?.replace("_", " ") || "N/A"} •{" "}
+                          {staff.department || "N/A"}
                         </p>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center space-x-4">
                       <div className="text-right">
                         <div className="text-xs text-muted-foreground">{staff.location}</div>
                       </div>
-                      
+
                       <div className="flex items-center space-x-2">
                         <Badge className={getEmploymentTypeColor(staff.employmentType)}>
                           {formatEmploymentType(staff.employmentType)}
                         </Badge>
                       </div>
-                      
+
                       <div className="flex items-center text-sm">
                         <Badge variant="secondary" className="bg-gray-100 text-gray-800">
                           <Star className="h-3 w-3 mr-1" />
-                          {staff.reliabilityScore ? `${staff.reliabilityScore}/5` : '4.8/5'}
+                          {staff.reliabilityScore ? `${staff.reliabilityScore}/5` : "4.8/5"}
                         </Badge>
                       </div>
-                      
+
                       <Button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -914,12 +965,13 @@ function EnhancedStaffPageContent() {
                   </div>
                 ))}
               </div>
-              
+
               {/* Pagination Controls */}
               {totalPages > 1 && (
                 <div className="flex items-center justify-between pt-4 border-t">
                   <div className="text-sm text-muted-foreground">
-                    Showing {startIndex + 1} to {Math.min(endIndex, filteredStaff.length)} of {filteredStaff.length} staff
+                    Showing {startIndex + 1} to {Math.min(endIndex, filteredStaff.length)} of{" "}
+                    {filteredStaff.length} staff
                   </div>
                   <div className="flex items-center space-x-2">
                     <Button
@@ -956,9 +1008,9 @@ function EnhancedStaffPageContent() {
               )}
             </CardContent>
           </Card>
-  </TabsContent>
+        </TabsContent>
 
-  <TabsContent value="feed" className="space-y-6">
+        <TabsContent value="feed" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-4">
               {staffPosts.map((post) => (
@@ -1032,7 +1084,7 @@ function EnhancedStaffPageContent() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {(filteredStaff || [])
-                    .filter(staff => staff && typeof staff.rating === 'number')
+                    .filter((staff) => staff && typeof staff.rating === "number")
                     .sort((a, b) => (b?.rating || 0) - (a?.rating || 0))
                     .slice(0, 5)
                     .map((staff) => (
@@ -1050,7 +1102,9 @@ function EnhancedStaffPageContent() {
                           </p>
                           <div className="flex items-center">
                             <Star className="h-3 w-3 text-yellow-500 mr-1" />
-                            <span className="text-xs text-muted-foreground">{staff?.rating || 0}/5</span>
+                            <span className="text-xs text-muted-foreground">
+                              {staff?.rating || 0}/5
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -1126,7 +1180,8 @@ function EnhancedStaffPageContent() {
                     <p className="text-2xl font-bold">
                       {staffMembers && staffMembers.length > 0
                         ? (
-                            staffMembers.reduce((sum, s) => sum + (s?.rating || 0), 0) / staffMembers.length
+                            staffMembers.reduce((sum, s) => sum + (s?.rating || 0), 0) /
+                            staffMembers.length
                           ).toFixed(1)
                         : "0.0"}
                     </p>
@@ -1380,8 +1435,11 @@ function EnhancedStaffPageContent() {
                             {cert}
                           </Badge>
                         ))}
-                        {(!selectedStaff.certifications || selectedStaff.certifications.length === 0) && (
-                          <span className="text-sm text-muted-foreground">No certifications listed</span>
+                        {(!selectedStaff.certifications ||
+                          selectedStaff.certifications.length === 0) && (
+                          <span className="text-sm text-muted-foreground">
+                            No certifications listed
+                          </span>
                         )}
                       </div>
                     </div>
@@ -1412,8 +1470,12 @@ function EnhancedStaffPageContent() {
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h4 className="font-medium">{work?.position || "Unknown Position"}</h4>
-                              <p className="text-sm text-muted-foreground">{work?.facility || "Unknown Facility"}</p>
+                              <h4 className="font-medium">
+                                {work?.position || "Unknown Position"}
+                              </h4>
+                              <p className="text-sm text-muted-foreground">
+                                {work?.facility || "Unknown Facility"}
+                              </p>
                               <p className="text-xs text-muted-foreground mt-1">
                                 {work?.startDate || "Unknown"} - {work?.endDate || "Present"}
                               </p>
@@ -1438,7 +1500,9 @@ function EnhancedStaffPageContent() {
                           <div className="flex items-start justify-between">
                             <div>
                               <h4 className="font-medium">{edu?.degree || "Unknown Degree"}</h4>
-                              <p className="text-sm text-muted-foreground">{edu?.institution || "Unknown Institution"}</p>
+                              <p className="text-sm text-muted-foreground">
+                                {edu?.institution || "Unknown Institution"}
+                              </p>
                               <p className="text-xs text-muted-foreground mt-1">
                                 Graduated {edu?.graduationYear || "Unknown"}
                                 {edu?.gpa && ` • GPA: ${edu.gpa}`}
@@ -1468,7 +1532,9 @@ function EnhancedStaffPageContent() {
                               <h4 className="font-medium">{doc?.name || "Unknown Document"}</h4>
                               <p className="text-sm text-muted-foreground">
                                 {doc?.type || "Unknown Type"} • Uploaded{" "}
-                                {doc?.uploadDate ? new Date(doc.uploadDate).toLocaleDateString() : "Unknown"}
+                                {doc?.uploadDate
+                                  ? new Date(doc.uploadDate).toLocaleDateString()
+                                  : "Unknown"}
                               </p>
                             </div>
                           </div>
@@ -1558,8 +1624,8 @@ function EnhancedStaffPageContent() {
                             Manage which facilities this worker can accept shifts from
                           </p>
                         </div>
-                        <Button 
-                          onClick={() => setShowFacilitySearch(true)} 
+                        <Button
+                          onClick={() => setShowFacilitySearch(true)}
                           size="sm"
                           className="flex items-center gap-2"
                         >
@@ -1572,13 +1638,20 @@ function EnhancedStaffPageContent() {
                       <div className="space-y-2">
                         {(selectedStaff as any).associatedFacilities?.length > 0 ? (
                           (selectedStaff as any).associatedFacilities.map((facilityId: number) => {
-                            const facility = (facilitiesData as any)?.find((f: any) => f.id === facilityId);
+                            const facility = (facilitiesData as any)?.find(
+                              (f: any) => f.id === facilityId
+                            );
                             return (
-                              <div key={facilityId} className="flex items-center justify-between p-3 border rounded-lg">
+                              <div
+                                key={facilityId}
+                                className="flex items-center justify-between p-3 border rounded-lg"
+                              >
                                 <div className="flex items-center gap-3">
                                   <Building2 className="h-4 w-4 text-blue-600" />
                                   <div>
-                                    <div className="font-medium">{facility?.name || `Facility ${facilityId}`}</div>
+                                    <div className="font-medium">
+                                      {facility?.name || `Facility ${facilityId}`}
+                                    </div>
                                     <div className="text-sm text-muted-foreground">
                                       {facility?.address || "No address available"}
                                     </div>
@@ -1587,7 +1660,12 @@ function EnhancedStaffPageContent() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => removeFacilityAssociation.mutate({ staffId: selectedStaff.id, facilityId })}
+                                  onClick={() =>
+                                    removeFacilityAssociation.mutate({
+                                      staffId: selectedStaff.id,
+                                      facilityId,
+                                    })
+                                  }
                                   className="text-red-600 hover:text-red-700"
                                 >
                                   <X className="h-4 w-4" />
@@ -1599,7 +1677,9 @@ function EnhancedStaffPageContent() {
                           <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
                             <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
                             <p>No facility associations</p>
-                            <p className="text-sm">Add facilities to allow this worker to see their shifts</p>
+                            <p className="text-sm">
+                              Add facilities to allow this worker to see their shifts
+                            </p>
                           </div>
                         )}
                       </div>
@@ -1619,10 +1699,11 @@ function EnhancedStaffPageContent() {
             <DialogHeader>
               <DialogTitle>Add Facility Association</DialogTitle>
               <DialogDescription>
-                Select facilities to associate with {selectedStaff.firstName} {selectedStaff.lastName}
+                Select facilities to associate with {selectedStaff.firstName}{" "}
+                {selectedStaff.lastName}
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4">
               {/* Search Input */}
               <div className="relative">
@@ -1637,68 +1718,72 @@ function EnhancedStaffPageContent() {
 
               {/* Facility List */}
               <div className="max-h-96 overflow-y-auto space-y-2">
-                {(facilitiesData as any)?.filter((facility: any) => {
-                  const searchLower = facilitySearchTerm.toLowerCase();
-                  return !searchLower || 
-                    facility.name?.toLowerCase().includes(searchLower) ||
-                    facility.address?.toLowerCase().includes(searchLower) ||
-                    facility.type?.toLowerCase().includes(searchLower);
-                }).map((facility: any) => {
-                  const isAlreadyAssociated = (selectedStaff as any).associatedFacilities?.includes(facility.id);
-                  return (
-                    <div 
-                      key={facility.id} 
-                      className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                        isAlreadyAssociated 
-                          ? 'bg-muted border-muted opacity-50' 
-                          : 'hover:bg-muted/50 border-border'
-                      }`}
-                      onClick={() => {
-                        if (!isAlreadyAssociated) {
-                          addFacilityAssociation.mutate({ 
-                            staffId: selectedStaff.id, 
-                            facilityId: facility.id 
-                          });
-                        }
-                      }}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 text-blue-600" />
-                            <div className="font-medium">{facility.name}</div>
-                            {isAlreadyAssociated && (
-                              <Badge variant="secondary" className="text-xs">
-                                Already Associated
-                              </Badge>
-                            )}
+                {(facilitiesData as any)
+                  ?.filter((facility: any) => {
+                    const searchLower = facilitySearchTerm.toLowerCase();
+                    return (
+                      !searchLower ||
+                      facility.name?.toLowerCase().includes(searchLower) ||
+                      facility.address?.toLowerCase().includes(searchLower) ||
+                      facility.type?.toLowerCase().includes(searchLower)
+                    );
+                  })
+                  .map((facility: any) => {
+                    const isAlreadyAssociated = (
+                      selectedStaff as any
+                    ).associatedFacilities?.includes(facility.id);
+                    return (
+                      <div
+                        key={facility.id}
+                        className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                          isAlreadyAssociated
+                            ? "bg-muted border-muted opacity-50"
+                            : "hover:bg-muted/50 border-border"
+                        }`}
+                        onClick={() => {
+                          if (!isAlreadyAssociated) {
+                            addFacilityAssociation.mutate({
+                              staffId: selectedStaff.id,
+                              facilityId: facility.id,
+                            });
+                          }
+                        }}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <Building2 className="h-4 w-4 text-blue-600" />
+                              <div className="font-medium">{facility.name}</div>
+                              {isAlreadyAssociated && (
+                                <Badge variant="secondary" className="text-xs">
+                                  Already Associated
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="text-sm text-muted-foreground mt-1">
+                              {facility.address}
+                            </div>
+                            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                              <span>Type: {facility.type || "Hospital"}</span>
+                              {facility.bedCount && <span>Beds: {facility.bedCount}</span>}
+                              {facility.rating && (
+                                <div className="flex items-center gap-1">
+                                  <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                                  <span>{facility.rating}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className="text-sm text-muted-foreground mt-1">
-                            {facility.address}
-                          </div>
-                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                            <span>Type: {facility.type || 'Hospital'}</span>
-                            {facility.bedCount && (
-                              <span>Beds: {facility.bedCount}</span>
-                            )}
-                            {facility.rating && (
-                              <div className="flex items-center gap-1">
-                                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                                <span>{facility.rating}</span>
-                              </div>
-                            )}
-                          </div>
+                          {!isAlreadyAssociated && (
+                            <Button size="sm" variant="outline">
+                              Add
+                            </Button>
+                          )}
                         </div>
-                        {!isAlreadyAssociated && (
-                          <Button size="sm" variant="outline">
-                            Add
-                          </Button>
-                        )}
                       </div>
-                    </div>
-                  );
-                })}
-                
+                    );
+                  })}
+
                 {(facilitiesData as any)?.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
                     <Building2 className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -1721,11 +1806,14 @@ function EnhancedStaffPageContent() {
               Update {selectedStaffIds.length} selected staff members
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 my-4">
             <div>
               <Label htmlFor="bulk-edit-field">Field to Update</Label>
-              <Select value={bulkEditField} onValueChange={(value: 'role' | 'specialty' | 'status') => setBulkEditField(value)}>
+              <Select
+                value={bulkEditField}
+                onValueChange={(value: "role" | "specialty" | "status") => setBulkEditField(value)}
+              >
                 <SelectTrigger id="bulk-edit-field">
                   <SelectValue />
                 </SelectTrigger>
@@ -1739,7 +1827,7 @@ function EnhancedStaffPageContent() {
 
             <div>
               <Label htmlFor="bulk-edit-value">New Value</Label>
-              {bulkEditField === 'status' ? (
+              {bulkEditField === "status" ? (
                 <Select value={bulkEditValue} onValueChange={setBulkEditValue}>
                   <SelectTrigger id="bulk-edit-value">
                     <SelectValue placeholder="Select status" />
@@ -1751,7 +1839,7 @@ function EnhancedStaffPageContent() {
                     <SelectItem value="suspended">Suspended</SelectItem>
                   </SelectContent>
                 </Select>
-              ) : bulkEditField === 'specialty' ? (
+              ) : bulkEditField === "specialty" ? (
                 <Select value={bulkEditValue} onValueChange={setBulkEditValue}>
                   <SelectTrigger id="bulk-edit-value">
                     <SelectValue placeholder="Select specialty" />
@@ -1769,7 +1857,7 @@ function EnhancedStaffPageContent() {
                   </SelectContent>
                 </Select>
               ) : (
-                <Input 
+                <Input
                   id="bulk-edit-value"
                   value={bulkEditValue}
                   onChange={(e) => setBulkEditValue(e.target.value)}
@@ -1785,7 +1873,10 @@ function EnhancedStaffPageContent() {
                   <p className="font-medium mb-1">This will update:</p>
                   <ul className="list-disc list-inside space-y-1 text-xs">
                     <li>{selectedStaffIds.length} staff members</li>
-                    <li>All selected staff will have their {bulkEditField} changed to "{bulkEditValue || 'the selected value'}"</li>
+                    <li>
+                      All selected staff will have their {bulkEditField} changed to "
+                      {bulkEditValue || "the selected value"}"
+                    </li>
                     <li>This action cannot be undone</li>
                   </ul>
                 </div>
@@ -1795,11 +1886,13 @@ function EnhancedStaffPageContent() {
 
           <div className="flex gap-3">
             <Button
-              onClick={() => bulkEditStaffMutation.mutate({ 
-                staffIds: selectedStaffIds, 
-                field: bulkEditField, 
-                value: bulkEditValue 
-              })}
+              onClick={() =>
+                bulkEditStaffMutation.mutate({
+                  staffIds: selectedStaffIds,
+                  field: bulkEditField,
+                  value: bulkEditValue,
+                })
+              }
               disabled={bulkEditStaffMutation.isPending || !bulkEditValue}
               className="flex-1"
             >
@@ -1845,7 +1938,7 @@ export default function EnhancedStaffPage() {
         </div>
       }
       onError={(error, errorInfo) => {
-        console.error('EnhancedStaffPage Error:', error, errorInfo);
+        console.error("EnhancedStaffPage Error:", error, errorInfo);
       }}
     >
       <EnhancedStaffPageContent />

@@ -1,20 +1,26 @@
-import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Calendar, Clock, Users, MapPin, Search } from 'lucide-react';
+import React, { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Calendar, Clock, Users, MapPin, Search } from "lucide-react";
 
 // Import our TypeScript interfaces and utilities
-import type { Shift, Facility, User, ShiftFilters } from '../types';
-import { 
-  mockShifts, 
-  mockFacilities, 
+import type { Shift, Facility, User, ShiftFilters } from "../types";
+import {
+  mockShifts,
+  mockFacilities,
   mockUsers,
   getShiftsWithDetails,
-  getDashboardData 
-} from '../data';
+  getDashboardData,
+} from "../data";
 import {
   getShiftsForDate,
   isShiftFilled,
@@ -22,16 +28,16 @@ import {
   getShiftStaffingRatio,
   getUnderStaffedShifts,
   formatShiftTime,
-  sortShiftsByDateTime
-} from '../utils/shiftUtils';
-import { getUserFullName } from '../utils/userUtils';
-import { getFacilityById } from '../utils/facilityUtils';
+  sortShiftsByDateTime,
+} from "../utils/shiftUtils";
+import { getUserFullName } from "../utils/userUtils";
+import { getFacilityById } from "../utils/facilityUtils";
 
 const ShiftDashboard: React.FC = () => {
   // State for filters and search
   const [filters, setFilters] = useState<ShiftFilters>({});
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
 
   // Get enhanced shifts data using our utilities
   const shiftsWithDetails = useMemo(() => getShiftsWithDetails(), []);
@@ -43,22 +49,23 @@ const ShiftDashboard: React.FC = () => {
 
     // Apply filters
     if (filters.facilityId) {
-      filtered = filtered.filter(shift => shift.facilityId === filters.facilityId);
+      filtered = filtered.filter((shift) => shift.facilityId === filters.facilityId);
     }
     if (filters.specialty) {
-      filtered = filtered.filter(shift => shift.specialty === filters.specialty);
+      filtered = filtered.filter((shift) => shift.specialty === filters.specialty);
     }
     if (filters.status) {
-      filtered = filtered.filter(shift => shift.status === filters.status);
+      filtered = filtered.filter((shift) => shift.status === filters.status);
     }
 
     // Apply search
     if (searchTerm) {
       const lowerSearch = searchTerm.toLowerCase();
-      filtered = filtered.filter(shift =>
-        shift.title.toLowerCase().includes(lowerSearch) ||
-        shift.specialty.toLowerCase().includes(lowerSearch) ||
-        (shift.description && shift.description.toLowerCase().includes(lowerSearch))
+      filtered = filtered.filter(
+        (shift) =>
+          shift.title.toLowerCase().includes(lowerSearch) ||
+          shift.specialty.toLowerCase().includes(lowerSearch) ||
+          (shift.description && shift.description.toLowerCase().includes(lowerSearch))
       );
     }
 
@@ -66,33 +73,27 @@ const ShiftDashboard: React.FC = () => {
   }, [filters, searchTerm]);
 
   // Get shifts for selected date
-  const todayShifts = useMemo(() => 
-    getShiftsForDate(filteredShifts, selectedDate), 
+  const todayShifts = useMemo(
+    () => getShiftsForDate(filteredShifts, selectedDate),
     [filteredShifts, selectedDate]
   );
 
   // Group shifts by specialty for the selected date
-  const shiftsBySpecialty = useMemo(() => 
-    groupShiftsBySpecialty(todayShifts), 
-    [todayShifts]
-  );
+  const shiftsBySpecialty = useMemo(() => groupShiftsBySpecialty(todayShifts), [todayShifts]);
 
   // Get understaffed shifts
-  const understaffedShifts = useMemo(() => 
-    getUnderStaffedShifts(todayShifts), 
-    [todayShifts]
-  );
+  const understaffedShifts = useMemo(() => getUnderStaffedShifts(todayShifts), [todayShifts]);
 
   const handleFilterChange = (key: keyof ShiftFilters, value: string) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [key]: value || undefined
+      [key]: value || undefined,
     }));
   };
 
   const clearFilters = () => {
     setFilters({});
-    setSearchTerm('');
+    setSearchTerm("");
   };
 
   return (
@@ -125,7 +126,9 @@ const ShiftDashboard: React.FC = () => {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{dashboardData.shifts.fillRate}%</div>
+            <div className="text-2xl font-bold text-green-600">
+              {dashboardData.shifts.fillRate}%
+            </div>
           </CardContent>
         </Card>
 
@@ -154,13 +157,16 @@ const ShiftDashboard: React.FC = () => {
               />
             </div>
 
-            <Select value={filters.facilityId || ''} onValueChange={(value) => handleFilterChange('facilityId', value)}>
+            <Select
+              value={filters.facilityId || ""}
+              onValueChange={(value) => handleFilterChange("facilityId", value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="All Facilities" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="">All Facilities</SelectItem>
-                {mockFacilities.map(facility => (
+                {mockFacilities.map((facility) => (
                   <SelectItem key={facility.id} value={facility.id}>
                     {facility.name}
                   </SelectItem>
@@ -168,7 +174,10 @@ const ShiftDashboard: React.FC = () => {
               </SelectContent>
             </Select>
 
-            <Select value={filters.specialty || ''} onValueChange={(value) => handleFilterChange('specialty', value)}>
+            <Select
+              value={filters.specialty || ""}
+              onValueChange={(value) => handleFilterChange("specialty", value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="All Specialties" />
               </SelectTrigger>
@@ -185,7 +194,10 @@ const ShiftDashboard: React.FC = () => {
               </SelectContent>
             </Select>
 
-            <Select value={filters.status || ''} onValueChange={(value) => handleFilterChange('status', value)}>
+            <Select
+              value={filters.status || ""}
+              onValueChange={(value) => handleFilterChange("status", value)}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
@@ -208,7 +220,9 @@ const ShiftDashboard: React.FC = () => {
 
       {/* Date Selection */}
       <div className="flex items-center gap-4">
-        <label htmlFor="date-select" className="text-sm font-medium">View Date:</label>
+        <label htmlFor="date-select" className="text-sm font-medium">
+          View Date:
+        </label>
         <Input
           id="date-select"
           type="date"
@@ -216,9 +230,7 @@ const ShiftDashboard: React.FC = () => {
           onChange={(e) => setSelectedDate(e.target.value)}
           className="w-auto"
         />
-        <span className="text-sm text-muted-foreground">
-          {todayShifts.length} shifts found
-        </span>
+        <span className="text-sm text-muted-foreground">{todayShifts.length} shifts found</span>
       </div>
 
       {/* Understaffed Shifts Alert */}
@@ -232,13 +244,13 @@ const ShiftDashboard: React.FC = () => {
               {understaffedShifts.length} shifts need additional staff
             </p>
             <div className="space-y-1">
-              {understaffedShifts.slice(0, 3).map(shift => {
+              {understaffedShifts.slice(0, 3).map((shift) => {
                 const staffing = getShiftStaffingRatio(shift);
                 const facility = getFacilityById(mockFacilities, shift.facilityId);
                 return (
                   <div key={shift.id} className="text-sm">
-                    <strong>{shift.title}</strong> at {facility?.name} - 
-                    Staffed {staffing.ratio} ({staffing.needsStaff} needed)
+                    <strong>{shift.title}</strong> at {facility?.name} - Staffed {staffing.ratio} (
+                    {staffing.needsStaff} needed)
                   </div>
                 );
               })}
@@ -249,20 +261,20 @@ const ShiftDashboard: React.FC = () => {
 
       {/* Shifts by Specialty */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {Object.entries(shiftsBySpecialty).map(([specialty, shifts], idx) => (
-                  <Card key={`${specialty}-${idx}`}>
-                    <CardHeader>
-                      <CardTitle className="flex items-center justify-between">
+        {Object.entries(shiftsBySpecialty).map(([specialty, shifts], idx) => (
+          <Card key={`${specialty}-${idx}`}>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
                 {specialty} Shifts
                 <Badge variant="secondary">{shifts.length}</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {shifts.map(shift => {
+                {shifts.map((shift) => {
                   const staffing = getShiftStaffingRatio(shift);
                   const facility = getFacilityById(mockFacilities, shift.facilityId);
-                  const assignedWorkers = mockUsers.filter(user => 
+                  const assignedWorkers = mockUsers.filter((user) =>
                     shift.assignedWorkerIds.includes(user.id)
                   );
 
@@ -277,15 +289,13 @@ const ShiftDashboard: React.FC = () => {
                           </p>
                         </div>
                         <div className="text-right">
-                          <Badge 
+                          <Badge
                             variant={staffing.isFullyStaffed ? "default" : "destructive"}
                             className="mb-1"
                           >
                             {staffing.ratio}
                           </Badge>
-                          <p className="text-xs text-muted-foreground">
-                            {formatShiftTime(shift)}
-                          </p>
+                          <p className="text-xs text-muted-foreground">{formatShiftTime(shift)}</p>
                         </div>
                       </div>
 
@@ -293,7 +303,7 @@ const ShiftDashboard: React.FC = () => {
                         <div className="mt-2">
                           <p className="text-xs font-medium mb-1">Assigned Workers:</p>
                           <div className="flex flex-wrap gap-1">
-                            {assignedWorkers.map(worker => (
+                            {assignedWorkers.map((worker) => (
                               <Badge key={worker.id} variant="outline" className="text-xs">
                                 {getUserFullName(worker)}
                               </Badge>

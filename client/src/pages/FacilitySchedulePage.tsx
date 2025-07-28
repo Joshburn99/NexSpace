@@ -15,12 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Calendar,
@@ -34,7 +29,7 @@ import {
   Trash2,
   CheckCircle,
   AlertCircle,
-  UserCheck
+  UserCheck,
 } from "lucide-react";
 import { format, addDays, startOfWeek } from "date-fns";
 
@@ -58,7 +53,7 @@ export default function FacilitySchedulePage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
+
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedShift, setSelectedShift] = useState<FacilityShift | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -77,48 +72,61 @@ export default function FacilitySchedulePage() {
   });
 
   // Filter shifts based on criteria
-  const filteredShifts = shifts.filter(shift => {
+  const filteredShifts = shifts.filter((shift) => {
     const matchesDepartment = filterDepartment === "all" || shift.department === filterDepartment;
     const matchesStatus = filterStatus === "all" || shift.status === filterStatus;
     return matchesDepartment && matchesStatus;
   });
 
   // Get unique departments for filter
-  const departments = Array.from(new Set(shifts.map(s => s.department)));
+  const departments = Array.from(new Set(shifts.map((s) => s.department)));
   const statuses = ["open", "filled", "urgent", "cancelled"];
 
   // Group shifts by date for grid view
-  const shiftsByDate = filteredShifts.reduce((acc, shift) => {
-    if (!acc[shift.date]) {
-      acc[shift.date] = [];
-    }
-    acc[shift.date].push(shift);
-    return acc;
-  }, {} as Record<string, FacilityShift[]>);
+  const shiftsByDate = filteredShifts.reduce(
+    (acc, shift) => {
+      if (!acc[shift.date]) {
+        acc[shift.date] = [];
+      }
+      acc[shift.date].push(shift);
+      return acc;
+    },
+    {} as Record<string, FacilityShift[]>
+  );
 
   // Generate date range for grid
   const startDate = startOfWeek(selectedDate);
-  const dateRange = Array.from({ length: 7 }, (_, i) => 
+  const dateRange = Array.from({ length: 7 }, (_, i) =>
     format(addDays(startDate, i), "yyyy-MM-dd")
   );
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "open": return "bg-red-100 text-red-800 border-red-200";
-      case "filled": return "bg-green-100 text-green-800 border-green-200";
-      case "urgent": return "bg-orange-100 text-orange-800 border-orange-200";
-      case "cancelled": return "bg-gray-100 text-gray-800 border-gray-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case "open":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "filled":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "urgent":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "cancelled":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "open": return <AlertCircle className="h-3 w-3" />;
-      case "filled": return <CheckCircle className="h-3 w-3" />;
-      case "urgent": return <AlertCircle className="h-3 w-3" />;
-      case "cancelled": return <Trash2 className="h-3 w-3" />;
-      default: return <AlertCircle className="h-3 w-3" />;
+      case "open":
+        return <AlertCircle className="h-3 w-3" />;
+      case "filled":
+        return <CheckCircle className="h-3 w-3" />;
+      case "urgent":
+        return <AlertCircle className="h-3 w-3" />;
+      case "cancelled":
+        return <Trash2 className="h-3 w-3" />;
+      default:
+        return <AlertCircle className="h-3 w-3" />;
     }
   };
 
@@ -127,18 +135,13 @@ export default function FacilitySchedulePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Facility Schedule
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Facility Schedule</h1>
           <p className="text-gray-600 dark:text-gray-300">
             Manage shifts and staffing for your facility
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            onClick={() => setShowCreateModal(true)}
-            size="sm"
-          >
+          <Button onClick={() => setShowCreateModal(true)} size="sm">
             <Plus className="h-4 w-4 mr-2" />
             Create Shift
           </Button>
@@ -173,8 +176,10 @@ export default function FacilitySchedulePage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Departments</SelectItem>
-                  {departments.map(dept => (
-                    <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept} value={dept}>
+                      {dept}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -187,7 +192,7 @@ export default function FacilitySchedulePage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  {statuses.map(status => (
+                  {statuses.map((status) => (
                     <SelectItem key={status} value={status}>
                       {status.charAt(0).toUpperCase() + status.slice(1)}
                     </SelectItem>
@@ -218,7 +223,7 @@ export default function FacilitySchedulePage() {
               <div>
                 <p className="text-sm text-muted-foreground">Open Positions</p>
                 <p className="text-2xl font-bold text-red-600">
-                  {filteredShifts.filter(s => s.status === "open").length}
+                  {filteredShifts.filter((s) => s.status === "open").length}
                 </p>
               </div>
               <AlertCircle className="h-8 w-8 text-red-500" />
@@ -231,7 +236,7 @@ export default function FacilitySchedulePage() {
               <div>
                 <p className="text-sm text-muted-foreground">Filled Positions</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {filteredShifts.filter(s => s.status === "filled").length}
+                  {filteredShifts.filter((s) => s.status === "filled").length}
                 </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-500" />
@@ -259,13 +264,13 @@ export default function FacilitySchedulePage() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-7 gap-4">
-              {dateRange.map(date => (
+              {dateRange.map((date) => (
                 <div key={date} className="border rounded-lg p-3">
                   <div className="font-medium text-center mb-3">
                     {format(new Date(date), "EEE, MMM d")}
                   </div>
                   <div className="space-y-2">
-                    {(shiftsByDate[date] || []).map(shift => (
+                    {(shiftsByDate[date] || []).map((shift) => (
                       <div
                         key={shift.id}
                         className={`p-2 rounded border cursor-pointer hover:shadow-sm ${getStatusColor(shift.status)}`}
@@ -278,12 +283,8 @@ export default function FacilitySchedulePage() {
                         <div className="text-xs">
                           {shift.startTime} - {shift.endTime}
                         </div>
-                        <div className="text-xs">
-                          {shift.specialty}
-                        </div>
-                        <div className="text-xs font-medium">
-                          ${shift.rate}/hr
-                        </div>
+                        <div className="text-xs">{shift.specialty}</div>
+                        <div className="text-xs font-medium">${shift.rate}/hr</div>
                       </div>
                     ))}
                   </div>
@@ -299,18 +300,22 @@ export default function FacilitySchedulePage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {filteredShifts.map(shift => (
+              {filteredShifts.map((shift) => (
                 <div
                   key={shift.id}
                   className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 cursor-pointer"
                   onClick={() => setSelectedShift(shift)}
                 >
                   <div className="flex items-center gap-4">
-                    <div className={`px-2 py-1 rounded text-xs font-medium border ${getStatusColor(shift.status)}`}>
+                    <div
+                      className={`px-2 py-1 rounded text-xs font-medium border ${getStatusColor(shift.status)}`}
+                    >
                       {shift.status.toUpperCase()}
                     </div>
                     <div>
-                      <div className="font-medium">{shift.department} - {shift.specialty}</div>
+                      <div className="font-medium">
+                        {shift.department} - {shift.specialty}
+                      </div>
                       <div className="text-sm text-gray-500">
                         {shift.date} • {shift.startTime} - {shift.endTime}
                       </div>
@@ -353,13 +358,15 @@ export default function FacilitySchedulePage() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Date & Time</Label>
                   <div className="flex items-center gap-2 mt-1">
                     <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span>{selectedShift.date} {selectedShift.startTime} - {selectedShift.endTime}</span>
+                    <span>
+                      {selectedShift.date} {selectedShift.startTime} - {selectedShift.endTime}
+                    </span>
                   </div>
                 </div>
                 <div>

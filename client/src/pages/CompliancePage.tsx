@@ -1,15 +1,15 @@
-import React, { useState } from 'react';
-import { Layout } from '@/components/Layout';
-import { useAuth } from '@/hooks/use-auth';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
-import { PermissionGuard } from '@/components/PermissionGuard';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import React, { useState } from "react";
+import { Layout } from "@/components/Layout";
+import { useAuth } from "@/hooks/use-auth";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
+import { PermissionGuard } from "@/components/PermissionGuard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Shield,
   FileText,
@@ -27,130 +27,192 @@ import {
   Plus,
   ChevronRight,
   AlertTriangle,
-  FileCheck
-} from 'lucide-react';
-import { useQuery } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+  FileCheck,
+} from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Mock data for staff credentials
 const mockStaffCredentials = [
   {
     id: 1,
-    staffName: 'Sarah Johnson',
+    staffName: "Sarah Johnson",
     staffId: 1,
-    department: 'ICU',
+    department: "ICU",
     credentials: [
-      { type: 'RN License', expiryDate: '2025-08-15', status: 'active', documentUrl: '/docs/rn-license-sarah.pdf' },
-      { type: 'BLS Certification', expiryDate: '2025-02-28', status: 'warning', documentUrl: '/docs/bls-sarah.pdf' },
-      { type: 'ACLS Certification', expiryDate: '2024-12-31', status: 'expired', documentUrl: '/docs/acls-sarah.pdf' }
-    ]
+      {
+        type: "RN License",
+        expiryDate: "2025-08-15",
+        status: "active",
+        documentUrl: "/docs/rn-license-sarah.pdf",
+      },
+      {
+        type: "BLS Certification",
+        expiryDate: "2025-02-28",
+        status: "warning",
+        documentUrl: "/docs/bls-sarah.pdf",
+      },
+      {
+        type: "ACLS Certification",
+        expiryDate: "2024-12-31",
+        status: "expired",
+        documentUrl: "/docs/acls-sarah.pdf",
+      },
+    ],
   },
   {
     id: 2,
-    staffName: 'Michael Chen',
+    staffName: "Michael Chen",
     staffId: 2,
-    department: 'Med-Surg',
+    department: "Med-Surg",
     credentials: [
-      { type: 'LPN License', expiryDate: '2025-10-20', status: 'active', documentUrl: '/docs/lpn-license-michael.pdf' },
-      { type: 'BLS Certification', expiryDate: '2025-06-15', status: 'active', documentUrl: '/docs/bls-michael.pdf' }
-    ]
+      {
+        type: "LPN License",
+        expiryDate: "2025-10-20",
+        status: "active",
+        documentUrl: "/docs/lpn-license-michael.pdf",
+      },
+      {
+        type: "BLS Certification",
+        expiryDate: "2025-06-15",
+        status: "active",
+        documentUrl: "/docs/bls-michael.pdf",
+      },
+    ],
   },
   {
     id: 3,
-    staffName: 'Emma Rodriguez',
+    staffName: "Emma Rodriguez",
     staffId: 3,
-    department: 'Emergency',
+    department: "Emergency",
     credentials: [
-      { type: 'MD License', expiryDate: '2026-01-15', status: 'active', documentUrl: '/docs/md-license-emma.pdf' },
-      { type: 'DEA Registration', expiryDate: '2025-03-31', status: 'warning', documentUrl: '/docs/dea-emma.pdf' },
-      { type: 'Board Certification', expiryDate: '2027-05-20', status: 'active', documentUrl: '/docs/board-cert-emma.pdf' }
-    ]
-  }
+      {
+        type: "MD License",
+        expiryDate: "2026-01-15",
+        status: "active",
+        documentUrl: "/docs/md-license-emma.pdf",
+      },
+      {
+        type: "DEA Registration",
+        expiryDate: "2025-03-31",
+        status: "warning",
+        documentUrl: "/docs/dea-emma.pdf",
+      },
+      {
+        type: "Board Certification",
+        expiryDate: "2027-05-20",
+        status: "active",
+        documentUrl: "/docs/board-cert-emma.pdf",
+      },
+    ],
+  },
 ];
 
 // Mock data for facility compliance documents
 const mockFacilityDocuments = [
   {
     id: 1,
-    name: 'Emergency Preparedness Plan',
-    category: 'Policy',
-    lastUpdated: '2025-01-15',
-    nextReview: '2025-07-15',
-    status: 'active',
-    uploadedBy: 'John Doe',
-    documentUrl: '/docs/emergency-plan.pdf'
+    name: "Emergency Preparedness Plan",
+    category: "Policy",
+    lastUpdated: "2025-01-15",
+    nextReview: "2025-07-15",
+    status: "active",
+    uploadedBy: "John Doe",
+    documentUrl: "/docs/emergency-plan.pdf",
   },
   {
     id: 2,
-    name: 'Infection Control Policy',
-    category: 'Policy',
-    lastUpdated: '2024-11-20',
-    nextReview: '2025-02-20',
-    status: 'warning',
-    uploadedBy: 'Jane Smith',
-    documentUrl: '/docs/infection-control.pdf'
+    name: "Infection Control Policy",
+    category: "Policy",
+    lastUpdated: "2024-11-20",
+    nextReview: "2025-02-20",
+    status: "warning",
+    uploadedBy: "Jane Smith",
+    documentUrl: "/docs/infection-control.pdf",
   },
   {
     id: 3,
-    name: 'State License Certificate',
-    category: 'License',
-    lastUpdated: '2024-08-01',
-    nextReview: '2025-08-01',
-    status: 'active',
-    uploadedBy: 'Admin User',
-    documentUrl: '/docs/state-license.pdf'
+    name: "State License Certificate",
+    category: "License",
+    lastUpdated: "2024-08-01",
+    nextReview: "2025-08-01",
+    status: "active",
+    uploadedBy: "Admin User",
+    documentUrl: "/docs/state-license.pdf",
   },
   {
     id: 4,
-    name: 'Fire Safety Inspection Report',
-    category: 'Inspection',
-    lastUpdated: '2024-12-10',
-    nextReview: '2025-06-10',
-    status: 'active',
-    uploadedBy: 'Mike Johnson',
-    documentUrl: '/docs/fire-safety.pdf'
-  }
+    name: "Fire Safety Inspection Report",
+    category: "Inspection",
+    lastUpdated: "2024-12-10",
+    nextReview: "2025-06-10",
+    status: "active",
+    uploadedBy: "Mike Johnson",
+    documentUrl: "/docs/fire-safety.pdf",
+  },
 ];
 
 // Mock data for training compliance
 const mockTrainingCompliance = [
-  { name: 'HIPAA Training', completionRate: 92, required: 100, dueDate: '2025-03-01' },
-  { name: 'Fire Safety Training', completionRate: 78, required: 100, dueDate: '2025-02-15' },
-  { name: 'CPR Certification', completionRate: 85, required: 100, dueDate: '2025-04-30' },
-  { name: 'Infection Control', completionRate: 95, required: 100, dueDate: '2025-05-15' }
+  { name: "HIPAA Training", completionRate: 92, required: 100, dueDate: "2025-03-01" },
+  { name: "Fire Safety Training", completionRate: 78, required: 100, dueDate: "2025-02-15" },
+  { name: "CPR Certification", completionRate: 85, required: 100, dueDate: "2025-04-30" },
+  { name: "Infection Control", completionRate: 95, required: 100, dueDate: "2025-05-15" },
 ];
 
 export default function CompliancePage() {
   const { user } = useAuth();
   const { hasPermission } = useFacilityPermissions();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDepartment, setSelectedDepartment] = useState('all');
-  const [selectedCredentialStatus, setSelectedCredentialStatus] = useState('all');
-  const [selectedTab, setSelectedTab] = useState('overview');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedDepartment, setSelectedDepartment] = useState("all");
+  const [selectedCredentialStatus, setSelectedCredentialStatus] = useState("all");
+  const [selectedTab, setSelectedTab] = useState("overview");
 
   // Filter credentials based on search and filters
-  const filteredCredentials = mockStaffCredentials.filter(staff => {
+  const filteredCredentials = mockStaffCredentials.filter((staff) => {
     const matchesSearch = staff.staffName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = selectedDepartment === 'all' || staff.department === selectedDepartment;
+    const matchesDepartment =
+      selectedDepartment === "all" || staff.department === selectedDepartment;
     return matchesSearch && matchesDepartment;
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'text-green-600 bg-green-50';
-      case 'warning': return 'text-yellow-600 bg-yellow-50';
-      case 'expired': return 'text-red-600 bg-red-50';
-      default: return 'text-gray-600 bg-gray-50';
+      case "active":
+        return "text-green-600 bg-green-50";
+      case "warning":
+        return "text-yellow-600 bg-yellow-50";
+      case "expired":
+        return "text-red-600 bg-red-50";
+      default:
+        return "text-gray-600 bg-gray-50";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'active': return <CheckCircle className="h-4 w-4" />;
-      case 'warning': return <Clock className="h-4 w-4" />;
-      case 'expired': return <AlertCircle className="h-4 w-4" />;
-      default: return null;
+      case "active":
+        return <CheckCircle className="h-4 w-4" />;
+      case "warning":
+        return <Clock className="h-4 w-4" />;
+      case "expired":
+        return <AlertCircle className="h-4 w-4" />;
+      default:
+        return null;
     }
   };
 
@@ -244,7 +306,9 @@ export default function CompliancePage() {
                       <p className="text-sm text-gray-600">Immediate action required</p>
                     </div>
                   </div>
-                  <Button size="sm" variant="destructive">Review Now</Button>
+                  <Button size="sm" variant="destructive">
+                    Review Now
+                  </Button>
                 </div>
 
                 <div className="flex items-center justify-between p-4 border rounded-lg bg-yellow-50 border-yellow-200">
@@ -255,7 +319,9 @@ export default function CompliancePage() {
                       <p className="text-sm text-gray-600">Within 30 days</p>
                     </div>
                   </div>
-                  <Button size="sm" variant="outline">View List</Button>
+                  <Button size="sm" variant="outline">
+                    View List
+                  </Button>
                 </div>
 
                 <div className="flex items-center justify-between p-4 border rounded-lg">
@@ -266,7 +332,9 @@ export default function CompliancePage() {
                       <p className="text-sm text-gray-600">Policy updates required</p>
                     </div>
                   </div>
-                  <Button size="sm" variant="outline">Review Documents</Button>
+                  <Button size="sm" variant="outline">
+                    Review Documents
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -371,7 +439,10 @@ export default function CompliancePage() {
                   <CardContent>
                     <div className="space-y-3">
                       {staff.credentials.map((cred, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between p-3 border rounded-lg"
+                        >
                           <div className="flex items-center gap-3">
                             <div className={`p-2 rounded-full ${getStatusColor(cred.status)}`}>
                               {getStatusIcon(cred.status)}
@@ -435,7 +506,9 @@ export default function CompliancePage() {
                             <span>•</span>
                             <span>Updated: {new Date(doc.lastUpdated).toLocaleDateString()}</span>
                             <span>•</span>
-                            <span>Next Review: {new Date(doc.nextReview).toLocaleDateString()}</span>
+                            <span>
+                              Next Review: {new Date(doc.nextReview).toLocaleDateString()}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -479,19 +552,37 @@ export default function CompliancePage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <h4 className="font-medium">{training.name}</h4>
-                          <p className="text-sm text-gray-600">Due by {new Date(training.dueDate).toLocaleDateString()}</p>
+                          <p className="text-sm text-gray-600">
+                            Due by {new Date(training.dueDate).toLocaleDateString()}
+                          </p>
                         </div>
                         <div className="text-right">
                           <p className="text-2xl font-bold">{training.completionRate}%</p>
-                          <p className="text-sm text-gray-600">{training.required - training.completionRate * training.required / 100} staff remaining</p>
+                          <p className="text-sm text-gray-600">
+                            {training.required -
+                              (training.completionRate * training.required) / 100}{" "}
+                            staff remaining
+                          </p>
                         </div>
                       </div>
                       <div>
                         <Progress value={training.completionRate} className="h-3" />
                       </div>
                       <div className="flex justify-between items-center">
-                        <Badge variant={training.completionRate >= 90 ? "default" : training.completionRate >= 70 ? "secondary" : "destructive"}>
-                          {training.completionRate >= 90 ? "On Track" : training.completionRate >= 70 ? "Needs Attention" : "Critical"}
+                        <Badge
+                          variant={
+                            training.completionRate >= 90
+                              ? "default"
+                              : training.completionRate >= 70
+                                ? "secondary"
+                                : "destructive"
+                          }
+                        >
+                          {training.completionRate >= 90
+                            ? "On Track"
+                            : training.completionRate >= 70
+                              ? "Needs Attention"
+                              : "Critical"}
                         </Badge>
                         <PermissionGuard permission="manage_compliance">
                           <Button size="sm" variant="outline">

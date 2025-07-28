@@ -1,7 +1,7 @@
 // Comprehensive backend tests for shift template save/edit/generation workflows
-import { db } from './db';
-import { shiftTemplates, generatedShifts, facilities } from '@shared/schema';
-import { eq } from 'drizzle-orm';
+import { db } from "./db";
+import { shiftTemplates, generatedShifts, facilities } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 interface TestShiftTemplate {
   name: string;
@@ -29,55 +29,48 @@ interface TestResult {
 }
 
 export class ShiftTemplateTestSuite {
-  
   // Test 1: Create new shift template with enhanced facility integration
   async testCreateTemplate(): Promise<TestResult> {
     try {
-      console.log('🧪 Test 1: Creating new shift template...');
-      
+
       const testTemplate: TestShiftTemplate = {
         name: "Test ICU Day Shift",
         department: "ICU",
-        specialty: "Registered Nurse", 
+        specialty: "Registered Nurse",
         facilityId: 1,
         facilityName: "Portland General Hospital",
         minStaff: 2,
         maxStaff: 4,
         shiftType: "day",
         startTime: "07:00",
-        endTime: "19:00", 
+        endTime: "19:00",
         daysOfWeek: [1, 2, 3, 4, 5], // Mon-Fri
         isActive: true,
-        hourlyRate: 45.00,
+        hourlyRate: 45.0,
         daysPostedOut: 14,
-        notes: "Test template for ICU coverage"
+        notes: "Test template for ICU coverage",
       };
 
-      const [createdTemplate] = await db
-        .insert(shiftTemplates)
-        .values(testTemplate)
-        .returning();
+      const [createdTemplate] = await db.insert(shiftTemplates).values(testTemplate).returning();
 
       if (!createdTemplate || !createdTemplate.id) {
         return {
           success: false,
-          message: "Failed to create template - no ID returned"
+          message: "Failed to create template - no ID returned",
         };
       }
 
-      console.log(`✅ Template created with ID: ${createdTemplate.id}`);
       return {
         success: true,
         message: "Template created successfully",
-        data: createdTemplate
+        data: createdTemplate,
       };
-
     } catch (error) {
-      console.error('❌ Template creation failed:', error);
+      console.error("❌ Template creation failed:", error);
       return {
         success: false,
         message: "Template creation failed",
-        error: error
+        error: error,
       };
     }
   }
@@ -85,14 +78,13 @@ export class ShiftTemplateTestSuite {
   // Test 2: Update existing template
   async testUpdateTemplate(templateId: number): Promise<TestResult> {
     try {
-      console.log(`🧪 Test 2: Updating template ${templateId}...`);
-      
+
       const updates = {
         name: "Updated ICU Day Shift",
-        hourlyRate: 48.00,
+        hourlyRate: 48.0,
         maxStaff: 5,
         notes: "Updated template with enhanced facility data",
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
 
       const [updatedTemplate] = await db
@@ -104,23 +96,21 @@ export class ShiftTemplateTestSuite {
       if (!updatedTemplate) {
         return {
           success: false,
-          message: "Template not found for update"
+          message: "Template not found for update",
         };
       }
 
-      console.log(`✅ Template ${templateId} updated successfully`);
       return {
         success: true,
         message: "Template updated successfully",
-        data: updatedTemplate
+        data: updatedTemplate,
       };
-
     } catch (error) {
       console.error(`❌ Template update failed:`, error);
       return {
         success: false,
         message: "Template update failed",
-        error: error
+        error: error,
       };
     }
   }
@@ -128,8 +118,7 @@ export class ShiftTemplateTestSuite {
   // Test 3: Generate shifts from template
   async testGenerateShiftsFromTemplate(templateId: number): Promise<TestResult> {
     try {
-      console.log(`🧪 Test 3: Generating shifts from template ${templateId}...`);
-      
+
       // Get the template
       const [template] = await db
         .select()
@@ -139,7 +128,7 @@ export class ShiftTemplateTestSuite {
       if (!template) {
         return {
           success: false,
-          message: "Template not found"
+          message: "Template not found",
         };
       }
 
@@ -153,7 +142,7 @@ export class ShiftTemplateTestSuite {
 
       while (currentDate <= endDate) {
         const dayOfWeek = currentDate.getDay();
-        
+
         if (template.daysOfWeek.includes(dayOfWeek)) {
           const shiftData = {
             templateId: template.id,
@@ -162,17 +151,17 @@ export class ShiftTemplateTestSuite {
             specialty: template.specialty,
             facilityId: template.facilityId,
             facilityName: template.facilityName,
-            date: currentDate.toISOString().split('T')[0],
+            date: currentDate.toISOString().split("T")[0],
             startTime: template.startTime,
             endTime: template.endTime,
             requiredStaff: template.minStaff,
             hourlyRate: template.hourlyRate,
-            status: 'open' as const,
-            urgency: 'medium' as const,
+            status: "open" as const,
+            urgency: "medium" as const,
             description: `Generated from template: ${template.name}`,
             assignedStaffIds: [] as number[],
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
           };
 
           generatedShiftsData.push(shiftData);
@@ -191,31 +180,29 @@ export class ShiftTemplateTestSuite {
         // Update template with generated shift count
         await db
           .update(shiftTemplates)
-          .set({ 
+          .set({
             generatedShiftsCount: (template.generatedShiftsCount || 0) + insertedShifts.length,
-            updatedAt: new Date()
+            updatedAt: new Date(),
           })
           .where(eq(shiftTemplates.id, templateId));
 
-        console.log(`✅ Generated ${insertedShifts.length} shifts from template`);
         return {
           success: true,
           message: `Generated ${insertedShifts.length} shifts successfully`,
-          data: insertedShifts
+          data: insertedShifts,
         };
       } else {
         return {
           success: false,
-          message: "No shifts generated - check days of week configuration"
+          message: "No shifts generated - check days of week configuration",
         };
       }
-
     } catch (error) {
       console.error(`❌ Shift generation failed:`, error);
       return {
         success: false,
         message: "Shift generation failed",
-        error: error
+        error: error,
       };
     }
   }
@@ -223,13 +210,12 @@ export class ShiftTemplateTestSuite {
   // Test 4: Validate enhanced facility integration
   async testFacilityIntegration(): Promise<TestResult> {
     try {
-      console.log('🧪 Test 4: Testing enhanced facility integration...');
-      
+
       // Get templates with facility data
       const templatesWithFacilities = await db
         .select({
           template: shiftTemplates,
-          facility: facilities
+          facility: facilities,
         })
         .from(shiftTemplates)
         .leftJoin(facilities, eq(shiftTemplates.facilityId, facilities.id))
@@ -238,7 +224,7 @@ export class ShiftTemplateTestSuite {
       if (templatesWithFacilities.length === 0) {
         return {
           success: false,
-          message: "No templates found with facility data"
+          message: "No templates found with facility data",
         };
       }
 
@@ -247,30 +233,32 @@ export class ShiftTemplateTestSuite {
       for (const row of templatesWithFacilities) {
         if (row.facility && row.template.facilityName !== row.facility.name) {
           consistencyErrors++;
-          console.warn(`⚠️ Facility name mismatch: Template "${row.template.facilityName}" vs Facility "${row.facility.name}"`);
+          console.warn(
+            `⚠️ Facility name mismatch: Template "${row.template.facilityName}" vs Facility "${row.facility.name}"`
+          );
         }
       }
 
       if (consistencyErrors > 0) {
         return {
           success: false,
-          message: `Found ${consistencyErrors} facility data inconsistencies`
+          message: `Found ${consistencyErrors} facility data inconsistencies`,
         };
       }
 
-      console.log(`✅ Facility integration validated for ${templatesWithFacilities.length} templates`);
+        `✅ Facility integration validated for ${templatesWithFacilities.length} templates`
+      );
       return {
         success: true,
         message: "Enhanced facility integration working correctly",
-        data: templatesWithFacilities
+        data: templatesWithFacilities,
       };
-
     } catch (error) {
       console.error(`❌ Facility integration test failed:`, error);
       return {
         success: false,
         message: "Facility integration test failed",
-        error: error
+        error: error,
       };
     }
   }
@@ -278,8 +266,7 @@ export class ShiftTemplateTestSuite {
   // Test 5: Template deletion with cascading
   async testDeleteTemplate(templateId: number): Promise<TestResult> {
     try {
-      console.log(`🧪 Test 5: Deleting template ${templateId} with cascading...`);
-      
+
       // Count associated generated shifts before deletion
       const shiftsToDelete = await db
         .select()
@@ -287,9 +274,7 @@ export class ShiftTemplateTestSuite {
         .where(eq(generatedShifts.templateId, templateId));
 
       // Delete associated generated shifts first
-      await db
-        .delete(generatedShifts)
-        .where(eq(generatedShifts.templateId, templateId));
+      await db.delete(generatedShifts).where(eq(generatedShifts.templateId, templateId));
 
       // Delete the template
       const deletedTemplate = await db
@@ -300,31 +285,28 @@ export class ShiftTemplateTestSuite {
       if (deletedTemplate.length === 0) {
         return {
           success: false,
-          message: "Template not found for deletion"
+          message: "Template not found for deletion",
         };
       }
 
-      console.log(`✅ Deleted template and ${shiftsToDelete.length} associated shifts`);
       return {
         success: true,
         message: `Template and ${shiftsToDelete.length} associated shifts deleted successfully`,
-        data: { deletedTemplate: deletedTemplate[0], deletedShifts: shiftsToDelete.length }
+        data: { deletedTemplate: deletedTemplate[0], deletedShifts: shiftsToDelete.length },
       };
-
     } catch (error) {
       console.error(`❌ Template deletion failed:`, error);
       return {
         success: false,
-        message: "Template deletion failed", 
-        error: error
+        message: "Template deletion failed",
+        error: error,
       };
     }
   }
 
   // Run comprehensive test suite
   async runAllTests(): Promise<void> {
-    console.log('🚀 Starting Shift Template Test Suite...\n');
-    
+
     const results: TestResult[] = [];
     let templateId: number | null = null;
 
@@ -354,28 +336,19 @@ export class ShiftTemplateTestSuite {
     }
 
     // Summary
-    console.log('\n📊 Test Suite Summary:');
-    console.log('========================');
-    const passed = results.filter(r => r.success).length;
-    const failed = results.filter(r => !r.success).length;
-    
-    console.log(`✅ Passed: ${passed}`);
-    console.log(`❌ Failed: ${failed}`);
-    console.log(`📈 Success Rate: ${Math.round((passed / results.length) * 100)}%`);
+    const passed = results.filter((r) => r.success).length;
+    const failed = results.filter((r) => !r.success).length;
+
 
     if (failed > 0) {
-      console.log('\n❌ Failed Tests:');
       results.forEach((result, index) => {
         if (!result.success) {
-          console.log(`  Test ${index + 1}: ${result.message}`);
           if (result.error) {
-            console.log(`    Error: ${result.error.message || result.error}`);
           }
         }
       });
     }
 
-    console.log('\n🏁 Test Suite Complete\n');
   }
 }
 

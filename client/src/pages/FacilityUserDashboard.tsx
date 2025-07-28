@@ -1,9 +1,29 @@
-import React from 'react';
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { CalendarDays, Clock, Users, AlertTriangle, CheckCircle, TrendingUp, DollarSign, FileText, Loader2, Shield, Activity, Plus, Settings, Building, UserCheck, Calendar, Download, UsersIcon, FileBarChart } from "lucide-react";
+import {
+  CalendarDays,
+  Clock,
+  Users,
+  AlertTriangle,
+  CheckCircle,
+  TrendingUp,
+  DollarSign,
+  FileText,
+  Loader2,
+  Shield,
+  Activity,
+  Plus,
+  Settings,
+  Building,
+  UserCheck,
+  Calendar,
+  Download,
+  UsersIcon,
+  FileBarChart,
+} from "lucide-react";
 import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
 import { CanAccess } from "@/components/PermissionWrapper";
 import { PermissionButton } from "@/components/PermissionButton";
@@ -34,12 +54,12 @@ interface DashboardStats {
     action: string;
     resource: string;
     createdAt: string;
-    user: { firstName: string; lastName: string; };
+    user: { firstName: string; lastName: string };
   }>;
   priorityTasks: Array<{
     id: string;
     title: string;
-    type: 'urgent' | 'warning' | 'info';
+    type: "urgent" | "warning" | "info";
     count: number;
   }>;
 }
@@ -50,29 +70,35 @@ const StatsCard: React.FC<{
   value: string | number;
   subtitle?: string;
   icon: React.ElementType;
-  trend?: 'up' | 'down' | 'neutral';
+  trend?: "up" | "down" | "neutral";
   trendValue?: string;
   permission?: string;
 }> = ({ title, value, subtitle, icon: Icon, trend, trendValue, permission }) => {
   const { hasPermission } = useFacilityPermissions();
-  
+
   if (permission && !hasPermission(permission as any)) {
     return null;
   }
 
-  const getTrendColor = (trend?: 'up' | 'down' | 'neutral') => {
+  const getTrendColor = (trend?: "up" | "down" | "neutral") => {
     switch (trend) {
-      case 'up': return 'text-green-600';
-      case 'down': return 'text-red-600';
-      default: return 'text-gray-600';
+      case "up":
+        return "text-green-600";
+      case "down":
+        return "text-red-600";
+      default:
+        return "text-gray-600";
     }
   };
 
-  const getTrendIcon = (trend?: 'up' | 'down' | 'neutral') => {
+  const getTrendIcon = (trend?: "up" | "down" | "neutral") => {
     switch (trend) {
-      case 'up': return TrendingUp;
-      case 'down': return TrendingUp;
-      default: return Activity;
+      case "up":
+        return TrendingUp;
+      case "down":
+        return TrendingUp;
+      default:
+        return Activity;
     }
   };
 
@@ -101,12 +127,15 @@ const StatsCard: React.FC<{
 };
 
 // Priority tasks component
-const PriorityTasksList: React.FC<{ tasks: DashboardStats['priorityTasks'] }> = ({ tasks }) => {
-  const getTaskBadgeColor = (type: 'urgent' | 'warning' | 'info') => {
+const PriorityTasksList: React.FC<{ tasks: DashboardStats["priorityTasks"] }> = ({ tasks }) => {
+  const getTaskBadgeColor = (type: "urgent" | "warning" | "info") => {
     switch (type) {
-      case 'urgent': return 'bg-red-100 text-red-800';
-      case 'warning': return 'bg-yellow-100 text-yellow-800';
-      case 'info': return 'bg-blue-100 text-blue-800';
+      case "urgent":
+        return "bg-red-100 text-red-800";
+      case "warning":
+        return "bg-yellow-100 text-yellow-800";
+      case "info":
+        return "bg-blue-100 text-blue-800";
     }
   };
 
@@ -145,9 +174,7 @@ const PriorityTasksList: React.FC<{ tasks: DashboardStats['priorityTasks'] }> = 
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-medium">{task.title}</span>
-                <Badge className={getTaskBadgeColor(task.type)}>
-                  {task.type.toUpperCase()}
-                </Badge>
+                <Badge className={getTaskBadgeColor(task.type)}>{task.type.toUpperCase()}</Badge>
               </div>
             </div>
             <div className="text-right">
@@ -161,16 +188,20 @@ const PriorityTasksList: React.FC<{ tasks: DashboardStats['priorityTasks'] }> = 
 };
 
 // Recent activity component
-const RecentActivity: React.FC<{ activities: DashboardStats['recentActivity'] }> = ({ activities }) => {
+const RecentActivity: React.FC<{ activities: DashboardStats["recentActivity"] }> = ({
+  activities,
+}) => {
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     return date.toLocaleString();
   };
 
   const getActionIcon = (action: string) => {
-    if (action.includes('shift') || action.includes('assignment')) return <Clock className="h-3 w-3" />;
-    if (action.includes('credential') || action.includes('license')) return <Shield className="h-3 w-3" />;
-    if (action.includes('staff') || action.includes('user')) return <Users className="h-3 w-3" />;
+    if (action.includes("shift") || action.includes("assignment"))
+      return <Clock className="h-3 w-3" />;
+    if (action.includes("credential") || action.includes("license"))
+      return <Shield className="h-3 w-3" />;
+    if (action.includes("staff") || action.includes("user")) return <Users className="h-3 w-3" />;
     return <Activity className="h-3 w-3" />;
   };
 
@@ -191,7 +222,10 @@ const RecentActivity: React.FC<{ activities: DashboardStats['recentActivity'] }>
         ) : (
           <div className="space-y-3">
             {activities.map((activity) => (
-              <div key={activity.id} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded">
+              <div
+                key={activity.id}
+                className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded"
+              >
                 <div className="flex-shrink-0 p-1 bg-gray-100 rounded">
                   {getActionIcon(activity.action)}
                 </div>
@@ -203,9 +237,7 @@ const RecentActivity: React.FC<{ activities: DashboardStats['recentActivity'] }>
                     by {activity.user?.firstName} {activity.user?.lastName}
                   </p>
                 </div>
-                <div className="text-xs text-gray-400">
-                  {formatTimestamp(activity.createdAt)}
-                </div>
+                <div className="text-xs text-gray-400">{formatTimestamp(activity.createdAt)}</div>
               </div>
             ))}
           </div>
@@ -221,8 +253,12 @@ export default function FacilityUserDashboard() {
   const [isEditMode, setIsEditMode] = React.useState(false);
 
   // Load dashboard statistics
-  const { data: dashboardStats, isLoading: statsLoading, error: statsError } = useQuery<DashboardStats>({
-    queryKey: ['/api/dashboard/stats'],
+  const {
+    data: dashboardStats,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useQuery<DashboardStats>({
+    queryKey: ["/api/dashboard/stats"],
     refetchInterval: 30000, // Refresh every 30 seconds for real-time data
   });
 
@@ -240,7 +276,9 @@ export default function FacilityUserDashboard() {
         <div className="text-center">
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">Error Loading Dashboard</h2>
-          <p className="text-gray-600">Failed to load dashboard data. Please try refreshing the page.</p>
+          <p className="text-gray-600">
+            Failed to load dashboard data. Please try refreshing the page.
+          </p>
         </div>
       </div>
     );
@@ -255,7 +293,7 @@ export default function FacilityUserDashboard() {
             <h1 className="text-2xl font-bold">Dashboard</h1>
             {user && (
               <Badge variant="outline">
-                {user?.role === 'super_admin' ? 'Super Admin' : 'Facility User'}
+                {user?.role === "super_admin" ? "Super Admin" : "Facility User"}
               </Badge>
             )}
           </div>
@@ -266,7 +304,7 @@ export default function FacilityUserDashboard() {
             className="gap-2"
           >
             <Settings className="h-4 w-4" />
-            {isEditMode ? 'Done Editing' : 'Edit Dashboard'}
+            {isEditMode ? "Done Editing" : "Edit Dashboard"}
           </Button>
         </div>
 
@@ -277,8 +315,12 @@ export default function FacilityUserDashboard() {
             value={dashboardStats?.openShifts || 0}
             subtitle="need coverage"
             icon={Clock}
-            trend={dashboardStats && dashboardStats.openShifts > 5 ? 'up' : 'neutral'}
-            trendValue={dashboardStats && dashboardStats.openShifts > 5 ? `${dashboardStats.openShifts - 5} above target` : undefined}
+            trend={dashboardStats && dashboardStats.openShifts > 5 ? "up" : "neutral"}
+            trendValue={
+              dashboardStats && dashboardStats.openShifts > 5
+                ? `${dashboardStats.openShifts - 5} above target`
+                : undefined
+            }
           />
           <StatsCard
             title="Filled Shifts"
@@ -293,15 +335,17 @@ export default function FacilityUserDashboard() {
             value={dashboardStats?.floatPoolCount || 0}
             subtitle="available now"
             icon={Users}
-            trend={dashboardStats && dashboardStats.floatPoolCount < 5 ? 'down' : 'up'}
-            trendValue={dashboardStats && dashboardStats.floatPoolCount < 5 ? 'Low availability' : 'Adequate'}
+            trend={dashboardStats && dashboardStats.floatPoolCount < 5 ? "down" : "up"}
+            trendValue={
+              dashboardStats && dashboardStats.floatPoolCount < 5 ? "Low availability" : "Adequate"
+            }
           />
           <StatsCard
             title="Upcoming PTO"
             value={dashboardStats?.upcomingTimeOff || 0}
             subtitle="next 7 days"
             icon={Calendar}
-            trend={dashboardStats && dashboardStats.upcomingTimeOff > 10 ? 'up' : 'neutral'}
+            trend={dashboardStats && dashboardStats.upcomingTimeOff > 10 ? "up" : "neutral"}
           />
           <StatsCard
             title="Billing Summary"
@@ -328,15 +372,17 @@ export default function FacilityUserDashboard() {
             value={`${dashboardStats?.complianceRate || 0}%`}
             subtitle="credentials current"
             icon={Shield}
-            trend={dashboardStats && dashboardStats.complianceRate >= 90 ? 'up' : 'down'}
-            trendValue={dashboardStats && dashboardStats.complianceRate >= 90 ? 'Good' : 'Needs attention'}
+            trend={dashboardStats && dashboardStats.complianceRate >= 90 ? "up" : "down"}
+            trendValue={
+              dashboardStats && dashboardStats.complianceRate >= 90 ? "Good" : "Needs attention"
+            }
           />
           <StatsCard
             title="Urgent Shifts"
             value={dashboardStats?.urgentShifts || 0}
             subtitle="critical coverage"
             icon={AlertTriangle}
-            trend={dashboardStats && dashboardStats.urgentShifts > 0 ? 'up' : 'neutral'}
+            trend={dashboardStats && dashboardStats.urgentShifts > 0 ? "up" : "neutral"}
             permission="view_schedules"
           />
           <StatsCard
@@ -344,7 +390,7 @@ export default function FacilityUserDashboard() {
             value={dashboardStats?.expiringCredentials || 0}
             subtitle="within 30 days"
             icon={Shield}
-            trend={dashboardStats && dashboardStats.expiringCredentials > 5 ? 'up' : 'neutral'}
+            trend={dashboardStats && dashboardStats.expiringCredentials > 5 ? "up" : "neutral"}
           />
         </div>
 
@@ -352,14 +398,11 @@ export default function FacilityUserDashboard() {
 
         {/* Dashboard Content - Use draggable grid in edit mode */}
         {isEditMode ? (
-          <DraggableDashboard 
-            isEditMode={isEditMode} 
-            dashboardStats={dashboardStats}
-          />
+          <DraggableDashboard isEditMode={isEditMode} dashboardStats={dashboardStats} />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <PriorityTasksList tasks={dashboardStats?.priorityTasks || []} />
-            
+
             <RecentActivity activities={dashboardStats?.recentActivity || []} />
           </div>
         )}
@@ -374,7 +417,7 @@ export default function FacilityUserDashboard() {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              <CanAccess permissions={['create_shifts']}>
+              <CanAccess permissions={["create_shifts"]}>
                 <Link href="/calendar">
                   <Button
                     variant="outline"
@@ -386,7 +429,7 @@ export default function FacilityUserDashboard() {
                 </Link>
               </CanAccess>
 
-              <CanAccess permissions={['view_staff']}>
+              <CanAccess permissions={["view_staff"]}>
                 <Link href="/staff">
                   <Button
                     variant="outline"
@@ -398,7 +441,7 @@ export default function FacilityUserDashboard() {
                 </Link>
               </CanAccess>
 
-              <CanAccess permissions={['view_analytics']}>
+              <CanAccess permissions={["view_analytics"]}>
                 <Button
                   variant="outline"
                   className="h-20 w-full flex flex-col items-center justify-center space-y-2 hover:bg-purple-50"
@@ -411,13 +454,15 @@ export default function FacilityUserDashboard() {
                       activeStaff: dashboardStats?.activeStaff || 0,
                       complianceRate: dashboardStats?.complianceRate || 0,
                       monthlyRevenue: dashboardStats?.monthlyRevenue || 0,
-                      exportDate: new Date().toISOString()
+                      exportDate: new Date().toISOString(),
                     };
-                    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+                      type: "application/json",
+                    });
                     const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a');
+                    const a = document.createElement("a");
                     a.href = url;
-                    a.download = `analytics-export-${new Date().toISOString().split('T')[0]}.json`;
+                    a.download = `analytics-export-${new Date().toISOString().split("T")[0]}.json`;
                     a.click();
                     URL.revokeObjectURL(url);
                   }}
@@ -427,7 +472,7 @@ export default function FacilityUserDashboard() {
                 </Button>
               </CanAccess>
 
-              <CanAccess permissions={['view_schedules']}>
+              <CanAccess permissions={["view_schedules"]}>
                 <Link href="/calendar">
                   <Button
                     variant="outline"
@@ -439,7 +484,7 @@ export default function FacilityUserDashboard() {
                 </Link>
               </CanAccess>
 
-              <CanAccess permissions={['view_analytics']}>
+              <CanAccess permissions={["view_analytics"]}>
                 <Link href="/analytics">
                   <Button
                     variant="outline"
@@ -454,14 +499,10 @@ export default function FacilityUserDashboard() {
           </CardContent>
         </Card>
       </div>
-      
+
       {/* Editable Dashboard Overlay */}
-      <EditableDashboard 
-        isEditMode={isEditMode} 
-        dashboardStats={dashboardStats}
-        user={user}
-      />
-      
+      <EditableDashboard isEditMode={isEditMode} dashboardStats={dashboardStats} user={user} />
+
       <Toaster />
     </div>
   );

@@ -1,9 +1,9 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-import { ChevronRight, MoreVertical } from 'lucide-react';
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { ChevronRight, MoreVertical } from "lucide-react";
 
 interface MobileTableColumn {
   key: string;
@@ -29,7 +29,7 @@ export const MobileTable: React.FC<MobileTableProps> = ({
   onRowClick,
   className,
   loading = false,
-  emptyMessage = "No data available"
+  emptyMessage = "No data available",
 }) => {
   if (loading) {
     return (
@@ -103,13 +103,8 @@ export const MobileTable: React.FC<MobileTableProps> = ({
                   onClick={() => onRowClick?.(row)}
                 >
                   {columns.map((column) => (
-                    <td
-                      key={column.key}
-                      className={cn("px-4 py-3 text-sm", column.className)}
-                    >
-                      {column.render
-                        ? column.render(row[column.key], row)
-                        : row[column.key]}
+                    <td key={column.key} className={cn("px-4 py-3 text-sm", column.className)}>
+                      {column.render ? column.render(row[column.key], row) : row[column.key]}
                     </td>
                   ))}
                   {onRowClick && (
@@ -142,21 +137,17 @@ export const MobileTable: React.FC<MobileTableProps> = ({
                         {column.title}:
                       </span>
                       <div className="text-sm font-medium text-right max-w-[60%]">
-                        {column.render
-                          ? column.render(row[column.key], row)
-                          : row[column.key]}
+                        {column.render ? column.render(row[column.key], row) : row[column.key]}
                       </div>
                     </div>
                   ))}
-                  
+
                   {columns.length > 3 && (
                     <div className="flex justify-between items-center pt-2 border-t">
                       <span className="text-xs text-muted-foreground">
                         +{columns.length - 3} more fields
                       </span>
-                      {onRowClick && (
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                      )}
+                      {onRowClick && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
                     </div>
                   )}
                 </div>
@@ -184,7 +175,7 @@ export const MobileCardList: React.FC<MobileCardListProps> = ({
   title,
   className,
   loading = false,
-  emptyMessage = "No items available"
+  emptyMessage = "No items available",
 }) => {
   if (loading) {
     return (
@@ -213,9 +204,7 @@ export const MobileCardList: React.FC<MobileCardListProps> = ({
   return (
     <div className={cn("space-y-4", className)}>
       {title && <h2 className="text-lg sm:text-xl font-semibold">{title}</h2>}
-      <div className="grid-responsive-cards">
-        {items.map(renderCard)}
-      </div>
+      <div className="grid-responsive-cards">{items.map(renderCard)}</div>
     </div>
   );
 };
@@ -223,28 +212,23 @@ export const MobileCardList: React.FC<MobileCardListProps> = ({
 // Status badge component for mobile tables
 interface MobileStatusBadgeProps {
   status: string;
-  variant?: 'default' | 'success' | 'warning' | 'error' | 'info';
+  variant?: "default" | "success" | "warning" | "error" | "info";
 }
 
-export const MobileStatusBadge: React.FC<MobileStatusBadgeProps> = ({ 
-  status, 
-  variant = 'default' 
+export const MobileStatusBadge: React.FC<MobileStatusBadgeProps> = ({
+  status,
+  variant = "default",
 }) => {
   const variants = {
-    default: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
-    success: 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
-    warning: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
-    error: 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
-    info: 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400'
+    default: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
+    success: "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400",
+    warning: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400",
+    error: "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400",
+    info: "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400",
   };
 
   return (
-    <Badge 
-      className={cn(
-        "text-xs font-medium px-2 py-1 rounded-full",
-        variants[variant]
-      )}
-    >
+    <Badge className={cn("text-xs font-medium px-2 py-1 rounded-full", variants[variant])}>
       {status}
     </Badge>
   );

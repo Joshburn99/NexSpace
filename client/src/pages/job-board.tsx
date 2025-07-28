@@ -64,7 +64,7 @@ export default function JobBoard() {
       const res = await apiRequest("POST", `/api/jobs/${jobId}/apply`, data);
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.message || 'Failed to submit application');
+        throw new Error(error.message || "Failed to submit application");
       }
       return res.json();
     },
@@ -77,7 +77,7 @@ export default function JobBoard() {
       applicationForm.reset();
     },
     onError: (error: any) => {
-      console.error('Job application error:', error);
+      console.error("Job application error:", error);
       toast({
         title: "Application Failed",
         description: error.message || "Failed to submit your application. Please try again.",
@@ -92,7 +92,7 @@ export default function JobBoard() {
       const res = await apiRequest("POST", "/api/jobs", data);
       if (!res.ok) {
         const error = await res.json();
-        throw new Error(error.message || 'Failed to create job posting');
+        throw new Error(error.message || "Failed to create job posting");
       }
       return res.json();
     },
@@ -105,10 +105,11 @@ export default function JobBoard() {
       jobForm.reset();
     },
     onError: (error: any) => {
-      console.error('Job creation error:', error);
+      console.error("Job creation error:", error);
       toast({
         title: "Job Creation Failed",
-        description: error.message || "Failed to create job posting. Please check your data and try again.",
+        description:
+          error.message || "Failed to create job posting. Please check your data and try again.",
         variant: "destructive",
       });
     },

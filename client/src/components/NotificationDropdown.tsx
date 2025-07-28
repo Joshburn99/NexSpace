@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -7,14 +7,14 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
   DropdownMenuLabel,
-} from '@/components/ui/dropdown-menu';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
-import { format } from 'date-fns';
-import { Link, useLocation } from 'wouter';
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { format } from "date-fns";
+import { Link, useLocation } from "wouter";
 import {
   Bell,
   Check,
@@ -26,7 +26,7 @@ import {
   MessageSquare,
   AlertCircle,
   X,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface Notification {
   id: number;
@@ -42,22 +42,33 @@ interface Notification {
 
 const getNotificationIcon = (type: string) => {
   switch (type) {
-    case 'shift_request': return Calendar;
-    case 'shift_approved': return UserCheck;
-    case 'shift_denied': return UserX;
-    case 'shift_cancelled': return X;
-    case 'message_received': return MessageSquare;
-    default: return AlertCircle;
+    case "shift_request":
+      return Calendar;
+    case "shift_approved":
+      return UserCheck;
+    case "shift_denied":
+      return UserX;
+    case "shift_cancelled":
+      return X;
+    case "message_received":
+      return MessageSquare;
+    default:
+      return AlertCircle;
   }
 };
 
 const getNotificationColor = (type: string) => {
   switch (type) {
-    case 'shift_approved': return 'text-green-600';
-    case 'shift_denied': return 'text-red-600';
-    case 'shift_cancelled': return 'text-orange-600';
-    case 'message_received': return 'text-blue-600';
-    default: return 'text-gray-600';
+    case "shift_approved":
+      return "text-green-600";
+    case "shift_denied":
+      return "text-red-600";
+    case "shift_cancelled":
+      return "text-orange-600";
+    case "message_received":
+      return "text-blue-600";
+    default:
+      return "text-gray-600";
   }
 };
 
@@ -69,10 +80,10 @@ export function NotificationDropdown() {
 
   // Fetch notifications
   const { data: notifications = [], isLoading } = useQuery({
-    queryKey: ['/api/notifications'],
+    queryKey: ["/api/notifications"],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/notifications');
-      if (!response.ok) throw new Error('Failed to fetch notifications');
+      const response = await apiRequest("GET", "/api/notifications");
+      if (!response.ok) throw new Error("Failed to fetch notifications");
       return response.json();
     },
     refetchInterval: 30000, // Refetch every 30 seconds
@@ -80,10 +91,10 @@ export function NotificationDropdown() {
 
   // Fetch unread count
   const { data: unreadCountData } = useQuery({
-    queryKey: ['/api/notifications/unread-count'],
+    queryKey: ["/api/notifications/unread-count"],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/notifications/unread-count');
-      if (!response.ok) throw new Error('Failed to fetch unread count');
+      const response = await apiRequest("GET", "/api/notifications/unread-count");
+      if (!response.ok) throw new Error("Failed to fetch unread count");
       return response.json();
     },
     refetchInterval: 30000,
@@ -94,28 +105,28 @@ export function NotificationDropdown() {
   // Mark notification as read
   const markAsReadMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest('PUT', `/api/notifications/${id}/read`);
-      if (!response.ok) throw new Error('Failed to mark as read');
+      const response = await apiRequest("PUT", `/api/notifications/${id}/read`);
+      if (!response.ok) throw new Error("Failed to mark as read");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
     },
   });
 
   // Mark all as read
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('PUT', '/api/notifications/read-all');
-      if (!response.ok) throw new Error('Failed to mark all as read');
+      const response = await apiRequest("PUT", "/api/notifications/read-all");
+      if (!response.ok) throw new Error("Failed to mark all as read");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
       toast({
-        title: 'All notifications marked as read',
+        title: "All notifications marked as read",
       });
     },
   });
@@ -123,28 +134,28 @@ export function NotificationDropdown() {
   // Delete notification
   const deleteNotificationMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/notifications/${id}`);
-      if (!response.ok) throw new Error('Failed to delete notification');
+      const response = await apiRequest("DELETE", `/api/notifications/${id}`);
+      if (!response.ok) throw new Error("Failed to delete notification");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
     },
   });
 
   // Clear all notifications
   const clearAllMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest('DELETE', '/api/notifications');
-      if (!response.ok) throw new Error('Failed to clear notifications');
+      const response = await apiRequest("DELETE", "/api/notifications");
+      if (!response.ok) throw new Error("Failed to clear notifications");
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread-count'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
       toast({
-        title: 'All notifications cleared',
+        title: "All notifications cleared",
       });
     },
   });
@@ -172,16 +183,14 @@ export function NotificationDropdown() {
               variant="destructive"
               className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
             >
-              {unreadCount > 99 ? '99+' : unreadCount}
+              {unreadCount > 99 ? "99+" : unreadCount}
             </Badge>
           )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-96">
         <div className="flex items-center justify-between px-4 py-2">
-          <DropdownMenuLabel className="text-lg font-semibold">
-            Notifications
-          </DropdownMenuLabel>
+          <DropdownMenuLabel className="text-lg font-semibold">Notifications</DropdownMenuLabel>
           <div className="flex items-center gap-1">
             {unreadCount > 0 && (
               <Button
@@ -206,7 +215,7 @@ export function NotificationDropdown() {
           </div>
         </div>
         <DropdownMenuSeparator />
-        
+
         <ScrollArea className="h-96">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
@@ -222,12 +231,12 @@ export function NotificationDropdown() {
               {notifications.map((notification: Notification) => {
                 const Icon = getNotificationIcon(notification.type);
                 const colorClass = getNotificationColor(notification.type);
-                
+
                 return (
                   <DropdownMenuItem
                     key={notification.id}
                     className={`flex items-start gap-3 p-4 cursor-pointer ${
-                      !notification.isRead ? 'bg-accent/50' : ''
+                      !notification.isRead ? "bg-accent/50" : ""
                     }`}
                     onClick={() => handleNotificationClick(notification)}
                   >
@@ -249,11 +258,9 @@ export function NotificationDropdown() {
                           <X className="h-3 w-3" />
                         </Button>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {notification.message}
-                      </p>
+                      <p className="text-sm text-muted-foreground">{notification.message}</p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(notification.createdAt), 'MMM d, h:mm a')}
+                        {format(new Date(notification.createdAt), "MMM d, h:mm a")}
                       </p>
                     </div>
                     {!notification.isRead && (

@@ -60,7 +60,7 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
         assignedStaffIds: [],
         createdById: 1, // Current user ID
       });
-      
+
       // Reset form
       setFormData({
         title: "",
@@ -76,7 +76,7 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
         requiredStaff: 1,
         specialRequirements: [],
       });
-      
+
       onClose();
     } catch (error) {
       console.error("Failed to create shift:", error);
@@ -87,18 +87,18 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
 
   const addRequirement = () => {
     if (newRequirement.trim() && !formData.specialRequirements.includes(newRequirement.trim())) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
-        specialRequirements: [...prev.specialRequirements, newRequirement.trim()]
+        specialRequirements: [...prev.specialRequirements, newRequirement.trim()],
       }));
       setNewRequirement("");
     }
   };
 
   const removeRequirement = (requirement: string) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      specialRequirements: prev.specialRequirements.filter(req => req !== requirement)
+      specialRequirements: prev.specialRequirements.filter((req) => req !== requirement),
     }));
   };
 
@@ -143,7 +143,7 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
               <Input
                 id="title"
                 value={formData.title}
-                onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
                 placeholder="e.g., ICU Night Shift - RN"
                 required
               />
@@ -154,7 +154,7 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
               <Input
                 id="facilityName"
                 value={formData.facilityName}
-                onChange={(e) => setFormData(prev => ({ ...prev, facilityName: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, facilityName: e.target.value }))}
                 placeholder="e.g., Portland General Hospital"
                 required
               />
@@ -162,9 +162,9 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
 
             <div className="space-y-2">
               <Label htmlFor="department">Department</Label>
-              <Select 
-                value={formData.department} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, department: value }))}
+              <Select
+                value={formData.department}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, department: value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select department" />
@@ -183,9 +183,9 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
 
             <div className="space-y-2">
               <Label htmlFor="specialty">Specialty</Label>
-              <Select 
-                value={formData.specialty} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, specialty: value }))}
+              <Select
+                value={formData.specialty}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, specialty: value }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select specialty" />
@@ -193,7 +193,9 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
                 <SelectContent>
                   <SelectItem value="Registered Nurse">Registered Nurse</SelectItem>
                   <SelectItem value="Licensed Practical Nurse">Licensed Practical Nurse</SelectItem>
-                  <SelectItem value="Certified Nursing Assistant">Certified Nursing Assistant</SelectItem>
+                  <SelectItem value="Certified Nursing Assistant">
+                    Certified Nursing Assistant
+                  </SelectItem>
                   <SelectItem value="Nurse Practitioner">Nurse Practitioner</SelectItem>
                   <SelectItem value="Physician Assistant">Physician Assistant</SelectItem>
                 </SelectContent>
@@ -209,7 +211,7 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
                 id="startTime"
                 type="time"
                 value={formData.startTime}
-                onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, startTime: e.target.value }))}
                 required
               />
             </div>
@@ -220,7 +222,7 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
                 id="endTime"
                 type="time"
                 value={formData.endTime}
-                onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
+                onChange={(e) => setFormData((prev) => ({ ...prev, endTime: e.target.value }))}
                 required
               />
             </div>
@@ -234,23 +236,26 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
                 max="100"
                 step="0.25"
                 value={formData.rate}
-                onChange={(e) => setFormData(prev => ({ ...prev, rate: parseFloat(e.target.value) }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, rate: parseFloat(e.target.value) }))
+                }
                 required
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="premiumMultiplier">Premium</Label>
-              <Select 
-                value={formData.premiumMultiplier.toString()} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, premiumMultiplier: parseFloat(value) }))}
+              <Select
+                value={formData.premiumMultiplier.toString()}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, premiumMultiplier: parseFloat(value) }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue>
-                    {formData.premiumMultiplier === 1.0 
-                      ? "1.0x (Standard)" 
-                      : `${formData.premiumMultiplier}x (+${Math.round((formData.premiumMultiplier - 1) * 100)}%)`
-                    }
+                    {formData.premiumMultiplier === 1.0
+                      ? "1.0x (Standard)"
+                      : `${formData.premiumMultiplier}x (+${Math.round((formData.premiumMultiplier - 1) * 100)}%)`}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -270,9 +275,11 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="urgency">Urgency</Label>
-              <Select 
-                value={formData.urgency} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, urgency: value as any }))}
+              <Select
+                value={formData.urgency}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, urgency: value as any }))
+                }
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -294,7 +301,9 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
                 min="1"
                 max="10"
                 value={formData.requiredStaff}
-                onChange={(e) => setFormData(prev => ({ ...prev, requiredStaff: parseInt(e.target.value) }))}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, requiredStaff: parseInt(e.target.value) }))
+                }
                 required
               />
             </div>
@@ -306,7 +315,7 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="Additional details about the shift requirements..."
               rows={3}
             />
@@ -320,13 +329,13 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
                 value={newRequirement}
                 onChange={(e) => setNewRequirement(e.target.value)}
                 placeholder="e.g., BLS, ACLS, Critical Care Experience"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addRequirement())}
+                onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addRequirement())}
               />
               <Button type="button" onClick={addRequirement} variant="outline" size="sm">
                 <Plus className="h-4 w-4" />
               </Button>
             </div>
-            
+
             {formData.specialRequirements.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {formData.specialRequirements.map((req, index) => (
@@ -350,8 +359,8 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isSubmitting || !formData.title || !formData.facilityName}
               className="bg-blue-600 hover:bg-blue-700"
             >

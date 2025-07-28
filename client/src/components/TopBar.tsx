@@ -1,25 +1,24 @@
-import React from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { LogOut, User } from 'lucide-react';
-import { GlobalSearch } from './GlobalSearch';
-import { NotificationDropdown } from './NotificationDropdown';
+import React from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { LogOut, User } from "lucide-react";
+import { GlobalSearch } from "./GlobalSearch";
+import { NotificationDropdown } from "./NotificationDropdown";
 
 export function TopBar() {
   const { user, impersonatedUser, quitImpersonation, originalUser } = useAuth();
   const currentUser = impersonatedUser || user;
   const isImpersonating = !!impersonatedUser && !!originalUser;
-  const isContractor = currentUser?.role === 'contractor';
-  const isEmployee = currentUser?.role === 'employee';
-  
-  console.log('TopBar render:', { 
-    user, 
-    impersonatedUser, 
-    originalUser, 
+  const isContractor = currentUser?.role === "contractor";
+  const isEmployee = currentUser?.role === "employee";
+
+    user,
+    impersonatedUser,
+    originalUser,
     isImpersonating,
-    currentUser 
+    currentUser,
   });
 
   return (
@@ -30,9 +29,7 @@ export function TopBar() {
             <span className="text-white font-bold text-sm">N</span>
           </div>
           <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {isContractor ? 'Contractor Dashboard' : 
-             isEmployee ? 'Employee Dashboard' : 
-             'NexSpace'}
+            {isContractor ? "Contractor Dashboard" : isEmployee ? "Employee Dashboard" : "NexSpace"}
           </h1>
         </div>
       </div>
@@ -41,7 +38,7 @@ export function TopBar() {
       <div className="flex-1 max-w-md mx-4">
         <GlobalSearch />
       </div>
-      
+
       <div className="flex items-center space-x-4">
         {isImpersonating && (
           <div className="flex items-center space-x-2 px-3 py-1 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
@@ -60,13 +57,14 @@ export function TopBar() {
             </Button>
           </div>
         )}
-        
+
         <NotificationDropdown />
-        
+
         <div className="flex items-center space-x-3">
           <Avatar className="h-8 w-8">
             <AvatarFallback className="bg-blue-600 text-white text-sm">
-              {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
+              {currentUser?.firstName?.[0]}
+              {currentUser?.lastName?.[0]}
             </AvatarFallback>
           </Avatar>
           <div className="text-right">

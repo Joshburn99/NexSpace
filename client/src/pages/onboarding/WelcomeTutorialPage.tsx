@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
+import {
   Calendar,
   MessageSquare,
   Clock,
@@ -19,7 +19,7 @@ import {
   Sparkles,
   Bell,
   Map,
-  FileText
+  FileText,
 } from "lucide-react";
 
 interface TutorialStep {
@@ -45,7 +45,7 @@ export default function WelcomeTutorialPage() {
       icon: <Calendar className="h-5 w-5" />,
       action: "Let's find your first shift",
       completed: false,
-      points: 10
+      points: 10,
     },
     {
       id: "request-shift",
@@ -54,7 +54,7 @@ export default function WelcomeTutorialPage() {
       icon: <Target className="h-5 w-5" />,
       action: "Try requesting a shift",
       completed: false,
-      points: 20
+      points: 20,
     },
     {
       id: "complete-profile",
@@ -63,7 +63,7 @@ export default function WelcomeTutorialPage() {
       icon: <Users className="h-5 w-5" />,
       action: "Enhance your profile",
       completed: false,
-      points: 15
+      points: 15,
     },
     {
       id: "setup-notifications",
@@ -72,7 +72,7 @@ export default function WelcomeTutorialPage() {
       icon: <Bell className="h-5 w-5" />,
       action: "Configure alerts",
       completed: false,
-      points: 10
+      points: 10,
     },
     {
       id: "explore-messages",
@@ -81,13 +81,13 @@ export default function WelcomeTutorialPage() {
       icon: <MessageSquare className="h-5 w-5" />,
       action: "Open message center",
       completed: false,
-      points: 10
-    }
+      points: 10,
+    },
   ];
 
   const totalPoints = tutorialSteps.reduce((acc, step) => acc + step.points, 0);
   const earnedPoints = tutorialSteps
-    .filter(step => completedSteps.includes(step.id))
+    .filter((step) => completedSteps.includes(step.id))
     .reduce((acc, step) => acc + step.points, 0);
 
   const progressPercentage = (earnedPoints / totalPoints) * 100;
@@ -106,9 +106,7 @@ export default function WelcomeTutorialPage() {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-blue-100 rounded-full mb-4">
             <Sparkles className="h-10 w-10 text-blue-600" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
-            Welcome to NexSpace, Sarah! 🎉
-          </h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Welcome to NexSpace, Sarah! 🎉</h1>
           <p className="text-xl text-gray-600">
             Your documents are verified and you're ready to start working
           </p>
@@ -176,31 +174,43 @@ export default function WelcomeTutorialPage() {
                 </CardDescription>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-blue-600">{earnedPoints}/{totalPoints}</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {earnedPoints}/{totalPoints}
+                </p>
                 <p className="text-sm text-gray-600">points earned</p>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <Progress value={progressPercentage} className="h-3 mb-6" />
-            
+
             <div className="space-y-4">
               {tutorialSteps.map((step, index) => {
                 const isCompleted = completedSteps.includes(step.id);
                 const isCurrent = index === currentStep;
-                
+
                 return (
                   <div
                     key={step.id}
                     className={`flex items-center justify-between p-4 rounded-lg border transition-all
-                      ${isCompleted ? "bg-green-50 border-green-200" : 
-                        isCurrent ? "bg-blue-50 border-blue-200" : "bg-gray-50 border-gray-200"}`}
+                      ${
+                        isCompleted
+                          ? "bg-green-50 border-green-200"
+                          : isCurrent
+                            ? "bg-blue-50 border-blue-200"
+                            : "bg-gray-50 border-gray-200"
+                      }`}
                   >
                     <div className="flex items-center gap-4">
-                      <div className={`p-2 rounded-lg ${
-                        isCompleted ? "bg-green-100 text-green-700" :
-                        isCurrent ? "bg-blue-100 text-blue-700" : "bg-gray-100 text-gray-500"
-                      }`}>
+                      <div
+                        className={`p-2 rounded-lg ${
+                          isCompleted
+                            ? "bg-green-100 text-green-700"
+                            : isCurrent
+                              ? "bg-blue-100 text-blue-700"
+                              : "bg-gray-100 text-gray-500"
+                        }`}
+                      >
                         {isCompleted ? <CheckCircle className="h-5 w-5" /> : step.icon}
                       </div>
                       <div>
@@ -236,8 +246,9 @@ export default function WelcomeTutorialPage() {
               <Alert className="mt-6 bg-green-50 border-green-200">
                 <Award className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-800">
-                  <strong>Congratulations!</strong> You've completed onboarding and earned a 
-                  <span className="font-bold"> $50 bonus</span> that will be added to your first paycheck!
+                  <strong>Congratulations!</strong> You've completed onboarding and earned a
+                  <span className="font-bold"> $50 bonus</span> that will be added to your first
+                  paycheck!
                 </AlertDescription>
               </Alert>
             )}

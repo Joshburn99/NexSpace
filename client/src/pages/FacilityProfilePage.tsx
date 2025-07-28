@@ -1,19 +1,38 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Building2, MapPin, Phone, Mail, Clock, Edit, Save, X, Users, Shield, Settings, Loader2 } from 'lucide-react';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
-import { PermissionGuard } from '@/components/PermissionGuard';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import {
+  Building2,
+  MapPin,
+  Phone,
+  Mail,
+  Clock,
+  Edit,
+  Save,
+  X,
+  Users,
+  Shield,
+  Settings,
+  Loader2,
+} from "lucide-react";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
+import { PermissionGuard } from "@/components/PermissionGuard";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Facility {
   id: number;
@@ -25,7 +44,7 @@ interface Facility {
   phone: string;
   email: string;
   website?: string;
-  
+
   // CMS & Regulatory
   cmsId?: string;
   npiNumber?: string;
@@ -42,7 +61,7 @@ interface Facility {
   certificationDate?: string;
   participatesMedicare?: boolean;
   participatesMedicaid?: boolean;
-  
+
   // Operations
   isActive: boolean;
   timezone: string;
@@ -51,7 +70,7 @@ interface Facility {
   emrSystem?: string;
   specialtyServices?: string[];
   languagesSpoken?: string[];
-  
+
   // Billing & Rates
   netTerms?: string;
   billingContactName?: string;
@@ -59,7 +78,7 @@ interface Facility {
   floatPoolMargins?: Record<string, number>;
   billRates?: Record<string, number>;
   payRates?: Record<string, number>;
-  
+
   // Workflow & Settings
   workflowAutomationConfig?: {
     autoApproveShifts?: boolean;
@@ -77,7 +96,7 @@ interface Facility {
     requireManagerApprovalForOvertime?: boolean;
     autoCalculateOvertime?: boolean;
   };
-  
+
   // Staffing & Rules
   staffingTargets?: Record<string, any>;
   customRules?: {
@@ -86,14 +105,14 @@ interface Facility {
     attendanceRules?: any;
     requiredDocuments?: string[];
   };
-  
+
   // Compliance
   regulatoryDocs?: any[];
   lastInspectionDate?: string;
   deficiencyCount?: number;
   complaintsCount?: number;
   finesTotal?: number;
-  
+
   // Contract & Admin
   contractStartDate?: string;
   contractEndDate?: string;
@@ -101,11 +120,11 @@ interface Facility {
   adminTitle?: string;
   medicalDirector?: string;
   payrollProviderId?: number;
-  
+
   // Location
   latitude?: number;
   longitude?: number;
-  
+
   // Metadata
   autoImported?: boolean;
   lastDataUpdate?: string;
@@ -122,36 +141,38 @@ export default function FacilityProfilePage() {
   const queryClient = useQueryClient();
 
   // Debug logging
-  console.log('[FACILITY_PROFILE] Component state:', {
     facilityId,
-    hasPermission: hasPermission('view_facility_profile'),
-    permissions
+    hasPermission: hasPermission("view_facility_profile"),
+    permissions,
   });
 
-  const { data: facility, isLoading, error } = useQuery<Facility>({
-    queryKey: ['/api/facilities', facilityId],
-    enabled: !!facilityId && hasPermission('view_facility_profile'),
+  const {
+    data: facility,
+    isLoading,
+    error,
+  } = useQuery<Facility>({
+    queryKey: ["/api/facilities", facilityId],
+    enabled: !!facilityId && hasPermission("view_facility_profile"),
   });
 
-  console.log('[FACILITY_PROFILE] Query state:', {
     facility,
     isLoading,
     error,
-    enabled: !!facilityId && hasPermission('view_facility_profile'),
-    queryKey: ['/api/facilities', facilityId]
+    enabled: !!facilityId && hasPermission("view_facility_profile"),
+    queryKey: ["/api/facilities", facilityId],
   });
 
   const updateFacility = useMutation({
     mutationFn: async (data: Partial<Facility>) => {
-      const response = await apiRequest('PATCH', `/api/facilities/${facilityId}`, data);
+      const response = await apiRequest("PATCH", `/api/facilities/${facilityId}`, data);
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to update facility profile');
+        throw new Error(error.message || "Failed to update facility profile");
       }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/facilities', facilityId] });
+      queryClient.invalidateQueries({ queryKey: ["/api/facilities", facilityId] });
       setIsEditing(false);
       toast({
         title: "Success",
@@ -159,16 +180,18 @@ export default function FacilityProfilePage() {
       });
     },
     onError: (error: any) => {
-      console.error('Facility update error:', error);
+      console.error("Facility update error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to update facility profile. Please check your data and try again.",
+        description:
+          error.message ||
+          "Failed to update facility profile. Please check your data and try again.",
         variant: "destructive",
       });
     },
   });
 
-  if (!hasPermission('view_facility_profile')) {
+  if (!hasPermission("view_facility_profile")) {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -185,7 +208,9 @@ export default function FacilityProfilePage() {
       <div className="container mx-auto p-6">
         <Card>
           <CardContent className="p-6">
-            <p className="text-gray-600">No facility ID available. Please ensure you are properly logged in.</p>
+            <p className="text-gray-600">
+              No facility ID available. Please ensure you are properly logged in.
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -205,14 +230,14 @@ export default function FacilityProfilePage() {
   }
 
   if (error) {
-    console.error('[FACILITY_PROFILE] Error fetching facility:', error);
+    console.error("[FACILITY_PROFILE] Error fetching facility:", error);
     return (
       <div className="container mx-auto p-6">
         <Card>
           <CardContent className="p-6">
             <p className="text-red-600">Error loading facility profile. Please try again.</p>
             <p className="text-sm text-gray-500 mt-2">
-              {error instanceof Error ? error.message : 'Unknown error'}
+              {error instanceof Error ? error.message : "Unknown error"}
             </p>
           </CardContent>
         </Card>
@@ -247,7 +272,7 @@ export default function FacilityProfilePage() {
   };
 
   const handleFieldChange = (field: keyof Facility, value: any) => {
-    setEditedFacility(prev => ({ ...prev, [field]: value }));
+    setEditedFacility((prev) => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -255,7 +280,9 @@ export default function FacilityProfilePage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-xl md:text-3xl font-bold">Facility Profile</h1>
-          <p className="text-sm md:text-base text-gray-600 mt-1 md:mt-2">View and manage facility information</p>
+          <p className="text-sm md:text-base text-gray-600 mt-1 md:mt-2">
+            View and manage facility information
+          </p>
         </div>
         <PermissionGuard requiredPermissions={["edit_facility_profile"]}>
           {!isEditing ? (
@@ -265,7 +292,11 @@ export default function FacilityProfilePage() {
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button onClick={handleSave} disabled={updateFacility.isPending} className="min-h-[44px] touch-manipulation">
+              <Button
+                onClick={handleSave}
+                disabled={updateFacility.isPending}
+                className="min-h-[44px] touch-manipulation"
+              >
                 {updateFacility.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-1 md:mr-2 animate-spin" />
@@ -278,7 +309,11 @@ export default function FacilityProfilePage() {
                   </>
                 )}
               </Button>
-              <Button variant="outline" onClick={handleCancel} className="min-h-[44px] touch-manipulation">
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                className="min-h-[44px] touch-manipulation"
+              >
                 <X className="h-4 w-4 mr-1 md:mr-2" />
                 Cancel
               </Button>
@@ -289,14 +324,30 @@ export default function FacilityProfilePage() {
 
       <Tabs defaultValue="basic" className="space-y-4">
         <TabsList className="w-full overflow-x-auto flex md:grid md:grid-cols-8 gap-1 md:gap-2">
-          <TabsTrigger value="basic" className="min-w-fit">Basic Info</TabsTrigger>
-          <TabsTrigger value="contact" className="min-w-fit">Contact</TabsTrigger>
-          <TabsTrigger value="operations" className="min-w-fit">Operations</TabsTrigger>
-          <TabsTrigger value="billing" className="min-w-fit">Billing & Rates</TabsTrigger>
-          <TabsTrigger value="compliance" className="min-w-fit">Compliance</TabsTrigger>
-          <TabsTrigger value="workflow" className="min-w-fit">Workflow</TabsTrigger>
-          <TabsTrigger value="shifts" className="min-w-fit">Shift Rules</TabsTrigger>
-          <TabsTrigger value="staffing" className="min-w-fit">Staffing</TabsTrigger>
+          <TabsTrigger value="basic" className="min-w-fit">
+            Basic Info
+          </TabsTrigger>
+          <TabsTrigger value="contact" className="min-w-fit">
+            Contact
+          </TabsTrigger>
+          <TabsTrigger value="operations" className="min-w-fit">
+            Operations
+          </TabsTrigger>
+          <TabsTrigger value="billing" className="min-w-fit">
+            Billing & Rates
+          </TabsTrigger>
+          <TabsTrigger value="compliance" className="min-w-fit">
+            Compliance
+          </TabsTrigger>
+          <TabsTrigger value="workflow" className="min-w-fit">
+            Workflow
+          </TabsTrigger>
+          <TabsTrigger value="shifts" className="min-w-fit">
+            Shift Rules
+          </TabsTrigger>
+          <TabsTrigger value="staffing" className="min-w-fit">
+            Staffing
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic">
@@ -311,8 +362,8 @@ export default function FacilityProfilePage() {
                   <Label className="text-sm">Facility Name</Label>
                   {isEditing ? (
                     <Input
-                      value={editedFacility.name || ''}
-                      onChange={(e) => handleFieldChange('name', e.target.value)}
+                      value={editedFacility.name || ""}
+                      onChange={(e) => handleFieldChange("name", e.target.value)}
                       className="min-h-[40px]"
                     />
                   ) : (
@@ -323,8 +374,8 @@ export default function FacilityProfilePage() {
                   <Label className="text-sm">Facility Type</Label>
                   {isEditing ? (
                     <Select
-                      value={editedFacility.facilityType || ''}
-                      onValueChange={(value) => handleFieldChange('facilityType', value)}
+                      value={editedFacility.facilityType || ""}
+                      onValueChange={(value) => handleFieldChange("facilityType", value)}
                     >
                       <SelectTrigger className="min-h-[40px]">
                         <SelectValue />
@@ -338,7 +389,9 @@ export default function FacilityProfilePage() {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="text-base md:text-lg font-medium">{facility.facilityType || 'Not specified'}</p>
+                    <p className="text-base md:text-lg font-medium">
+                      {facility.facilityType || "Not specified"}
+                    </p>
                   )}
                 </div>
               </div>
@@ -348,26 +401,30 @@ export default function FacilityProfilePage() {
                   <Label className="text-sm">CMS ID</Label>
                   {isEditing ? (
                     <Input
-                      value={editedFacility.cmsId || ''}
-                      onChange={(e) => handleFieldChange('cmsId', e.target.value)}
+                      value={editedFacility.cmsId || ""}
+                      onChange={(e) => handleFieldChange("cmsId", e.target.value)}
                       placeholder="CMS Certification Number"
                       className="min-h-[40px]"
                     />
                   ) : (
-                    <p className="text-base md:text-lg font-medium">{facility.cmsId || 'Not specified'}</p>
+                    <p className="text-base md:text-lg font-medium">
+                      {facility.cmsId || "Not specified"}
+                    </p>
                   )}
                 </div>
                 <div>
                   <Label className="text-sm">NPI Number</Label>
                   {isEditing ? (
                     <Input
-                      value={editedFacility.npiNumber || ''}
-                      onChange={(e) => handleFieldChange('npiNumber', e.target.value)}
+                      value={editedFacility.npiNumber || ""}
+                      onChange={(e) => handleFieldChange("npiNumber", e.target.value)}
                       placeholder="National Provider Identifier"
                       className="min-h-[40px]"
                     />
                   ) : (
-                    <p className="text-base md:text-lg font-medium">{facility.npiNumber || 'Not specified'}</p>
+                    <p className="text-base md:text-lg font-medium">
+                      {facility.npiNumber || "Not specified"}
+                    </p>
                   )}
                 </div>
               </div>
@@ -378,8 +435,8 @@ export default function FacilityProfilePage() {
                   {isEditing ? (
                     <Input
                       type="number"
-                      value={editedFacility.bedCount || ''}
-                      onChange={(e) => handleFieldChange('bedCount', parseInt(e.target.value))}
+                      value={editedFacility.bedCount || ""}
+                      onChange={(e) => handleFieldChange("bedCount", parseInt(e.target.value))}
                     />
                   ) : (
                     <p className="text-lg font-medium">{facility.bedCount || 0}</p>
@@ -389,8 +446,8 @@ export default function FacilityProfilePage() {
                   <Label>Ownership Type</Label>
                   {isEditing ? (
                     <Select
-                      value={editedFacility.ownershipType || ''}
-                      onValueChange={(value) => handleFieldChange('ownershipType', value)}
+                      value={editedFacility.ownershipType || ""}
+                      onValueChange={(value) => handleFieldChange("ownershipType", value)}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -402,7 +459,9 @@ export default function FacilityProfilePage() {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="text-lg font-medium">{facility.ownershipType || 'Not specified'}</p>
+                    <p className="text-lg font-medium">
+                      {facility.ownershipType || "Not specified"}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -411,7 +470,7 @@ export default function FacilityProfilePage() {
                     {isEditing ? (
                       <Switch
                         checked={editedFacility.isActive !== false}
-                        onCheckedChange={(checked) => handleFieldChange('isActive', checked)}
+                        onCheckedChange={(checked) => handleFieldChange("isActive", checked)}
                       />
                     ) : (
                       <Badge variant={facility.isActive ? "default" : "secondary"}>
@@ -428,12 +487,19 @@ export default function FacilityProfilePage() {
                   {isEditing ? (
                     <Input
                       type="number"
-                      value={editedFacility.teamId || ''}
-                      onChange={(e) => handleFieldChange('teamId', e.target.value ? parseInt(e.target.value) : null)}
+                      value={editedFacility.teamId || ""}
+                      onChange={(e) =>
+                        handleFieldChange(
+                          "teamId",
+                          e.target.value ? parseInt(e.target.value) : null
+                        )
+                      }
                       placeholder="Team ID"
                     />
                   ) : (
-                    <p className="text-lg font-medium">{facility.teamId ? `Team ${facility.teamId}` : 'No team assigned'}</p>
+                    <p className="text-lg font-medium">
+                      {facility.teamId ? `Team ${facility.teamId}` : "No team assigned"}
+                    </p>
                   )}
                 </div>
                 <div className="flex items-center gap-4">
@@ -443,7 +509,9 @@ export default function FacilityProfilePage() {
                       {isEditing ? (
                         <Switch
                           checked={editedFacility.participatesMedicare || false}
-                          onCheckedChange={(checked) => handleFieldChange('participatesMedicare', checked)}
+                          onCheckedChange={(checked) =>
+                            handleFieldChange("participatesMedicare", checked)
+                          }
                         />
                       ) : (
                         <Badge variant={facility.participatesMedicare ? "default" : "secondary"}>
@@ -458,7 +526,9 @@ export default function FacilityProfilePage() {
                       {isEditing ? (
                         <Switch
                           checked={editedFacility.participatesMedicaid || false}
-                          onCheckedChange={(checked) => handleFieldChange('participatesMedicaid', checked)}
+                          onCheckedChange={(checked) =>
+                            handleFieldChange("participatesMedicaid", checked)
+                          }
                         />
                       ) : (
                         <Badge variant={facility.participatesMedicaid ? "default" : "secondary"}>
@@ -484,8 +554,8 @@ export default function FacilityProfilePage() {
                 <Label>Street Address</Label>
                 {isEditing ? (
                   <Input
-                    value={editedFacility.address || ''}
-                    onChange={(e) => handleFieldChange('address', e.target.value)}
+                    value={editedFacility.address || ""}
+                    onChange={(e) => handleFieldChange("address", e.target.value)}
                   />
                 ) : (
                   <p className="text-lg font-medium flex items-center gap-2">
@@ -500,8 +570,8 @@ export default function FacilityProfilePage() {
                   <Label>City</Label>
                   {isEditing ? (
                     <Input
-                      value={editedFacility.city || ''}
-                      onChange={(e) => handleFieldChange('city', e.target.value)}
+                      value={editedFacility.city || ""}
+                      onChange={(e) => handleFieldChange("city", e.target.value)}
                     />
                   ) : (
                     <p className="text-lg font-medium">{facility.city}</p>
@@ -511,8 +581,8 @@ export default function FacilityProfilePage() {
                   <Label>State</Label>
                   {isEditing ? (
                     <Input
-                      value={editedFacility.state || ''}
-                      onChange={(e) => handleFieldChange('state', e.target.value)}
+                      value={editedFacility.state || ""}
+                      onChange={(e) => handleFieldChange("state", e.target.value)}
                     />
                   ) : (
                     <p className="text-lg font-medium">{facility.state}</p>
@@ -522,8 +592,8 @@ export default function FacilityProfilePage() {
                   <Label>ZIP Code</Label>
                   {isEditing ? (
                     <Input
-                      value={editedFacility.zipCode || ''}
-                      onChange={(e) => handleFieldChange('zipCode', e.target.value)}
+                      value={editedFacility.zipCode || ""}
+                      onChange={(e) => handleFieldChange("zipCode", e.target.value)}
                     />
                   ) : (
                     <p className="text-lg font-medium">{facility.zipCode}</p>
@@ -536,8 +606,8 @@ export default function FacilityProfilePage() {
                   <Label>Phone</Label>
                   {isEditing ? (
                     <Input
-                      value={editedFacility.phone || ''}
-                      onChange={(e) => handleFieldChange('phone', e.target.value)}
+                      value={editedFacility.phone || ""}
+                      onChange={(e) => handleFieldChange("phone", e.target.value)}
                     />
                   ) : (
                     <p className="text-lg font-medium flex items-center gap-2">
@@ -551,8 +621,8 @@ export default function FacilityProfilePage() {
                   {isEditing ? (
                     <Input
                       type="email"
-                      value={editedFacility.email || ''}
-                      onChange={(e) => handleFieldChange('email', e.target.value)}
+                      value={editedFacility.email || ""}
+                      onChange={(e) => handleFieldChange("email", e.target.value)}
                     />
                   ) : (
                     <p className="text-lg font-medium flex items-center gap-2">
@@ -578,8 +648,8 @@ export default function FacilityProfilePage() {
                   <Label>Timezone</Label>
                   {isEditing ? (
                     <Select
-                      value={editedFacility.timezone || ''}
-                      onValueChange={(value) => handleFieldChange('timezone', value)}
+                      value={editedFacility.timezone || ""}
+                      onValueChange={(value) => handleFieldChange("timezone", value)}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -594,7 +664,7 @@ export default function FacilityProfilePage() {
                   ) : (
                     <p className="text-lg font-medium flex items-center gap-2">
                       <Clock className="h-4 w-4 text-gray-500" />
-                      {facility.timezone || 'Not set'}
+                      {facility.timezone || "Not set"}
                     </p>
                   )}
                 </div>
@@ -602,8 +672,10 @@ export default function FacilityProfilePage() {
                   <Label>EMR System</Label>
                   {isEditing ? (
                     <Select
-                      value={editedFacility.emrSystem || 'none'}
-                      onValueChange={(value) => handleFieldChange('emrSystem', value === 'none' ? null : value)}
+                      value={editedFacility.emrSystem || "none"}
+                      onValueChange={(value) =>
+                        handleFieldChange("emrSystem", value === "none" ? null : value)
+                      }
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -617,7 +689,7 @@ export default function FacilityProfilePage() {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="text-lg font-medium">{facility.emrSystem || 'Not configured'}</p>
+                    <p className="text-lg font-medium">{facility.emrSystem || "Not configured"}</p>
                   )}
                 </div>
               </div>
@@ -631,7 +703,9 @@ export default function FacilityProfilePage() {
                   {isEditing ? (
                     <Switch
                       checked={editedFacility.autoAssignmentEnabled || false}
-                      onCheckedChange={(checked) => handleFieldChange('autoAssignmentEnabled', checked)}
+                      onCheckedChange={(checked) =>
+                        handleFieldChange("autoAssignmentEnabled", checked)
+                      }
                     />
                   ) : (
                     <Badge variant={facility.autoAssignmentEnabled ? "default" : "secondary"}>
@@ -662,11 +736,13 @@ export default function FacilityProfilePage() {
                     <Label>Billing Contact Name</Label>
                     {isEditing ? (
                       <Input
-                        value={editedFacility.billingContactName || ''}
-                        onChange={(e) => handleFieldChange('billingContactName', e.target.value)}
+                        value={editedFacility.billingContactName || ""}
+                        onChange={(e) => handleFieldChange("billingContactName", e.target.value)}
                       />
                     ) : (
-                      <p className="text-lg font-medium">{facility.billingContactName || 'Not set'}</p>
+                      <p className="text-lg font-medium">
+                        {facility.billingContactName || "Not set"}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -674,11 +750,13 @@ export default function FacilityProfilePage() {
                     {isEditing ? (
                       <Input
                         type="email"
-                        value={editedFacility.billingContactEmail || ''}
-                        onChange={(e) => handleFieldChange('billingContactEmail', e.target.value)}
+                        value={editedFacility.billingContactEmail || ""}
+                        onChange={(e) => handleFieldChange("billingContactEmail", e.target.value)}
                       />
                     ) : (
-                      <p className="text-lg font-medium">{facility.billingContactEmail || 'Not set'}</p>
+                      <p className="text-lg font-medium">
+                        {facility.billingContactEmail || "Not set"}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -690,8 +768,8 @@ export default function FacilityProfilePage() {
                   <Label>Payment Terms</Label>
                   {isEditing ? (
                     <Select
-                      value={editedFacility.netTerms || 'Net 30'}
-                      onValueChange={(value) => handleFieldChange('netTerms', value)}
+                      value={editedFacility.netTerms || "Net 30"}
+                      onValueChange={(value) => handleFieldChange("netTerms", value)}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -704,7 +782,7 @@ export default function FacilityProfilePage() {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="text-lg font-medium">{facility.netTerms || 'Net 30'}</p>
+                    <p className="text-lg font-medium">{facility.netTerms || "Net 30"}</p>
                   )}
                 </div>
                 <div>
@@ -712,12 +790,14 @@ export default function FacilityProfilePage() {
                   {isEditing ? (
                     <Input
                       type="date"
-                      value={editedFacility.contractStartDate || ''}
-                      onChange={(e) => handleFieldChange('contractStartDate', e.target.value)}
+                      value={editedFacility.contractStartDate || ""}
+                      onChange={(e) => handleFieldChange("contractStartDate", e.target.value)}
                     />
                   ) : (
                     <p className="text-lg font-medium">
-                      {facility.contractStartDate ? new Date(facility.contractStartDate).toLocaleDateString() : 'Not set'}
+                      {facility.contractStartDate
+                        ? new Date(facility.contractStartDate).toLocaleDateString()
+                        : "Not set"}
                     </p>
                   )}
                 </div>
@@ -727,26 +807,26 @@ export default function FacilityProfilePage() {
               <div>
                 <h3 className="text-lg font-semibold mb-3">Float Pool Margins by Specialty</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {['RN', 'LPN', 'CNA', 'RT', 'PT', 'OT'].map((specialty) => (
+                  {["RN", "LPN", "CNA", "RT", "PT", "OT"].map((specialty) => (
                     <div key={specialty}>
                       <Label>{specialty} Margin ($)</Label>
                       {isEditing ? (
                         <Input
                           type="number"
                           step="0.01"
-                          value={editedFacility.floatPoolMargins?.[specialty] || ''}
+                          value={editedFacility.floatPoolMargins?.[specialty] || ""}
                           onChange={(e) => {
                             const value = parseFloat(e.target.value) || 0;
-                            handleFieldChange('floatPoolMargins', {
+                            handleFieldChange("floatPoolMargins", {
                               ...(editedFacility.floatPoolMargins || {}),
-                              [specialty]: value
+                              [specialty]: value,
                             });
                           }}
                           placeholder="0.00"
                         />
                       ) : (
                         <p className="text-lg font-medium">
-                          ${facility.floatPoolMargins?.[specialty]?.toFixed(2) || '0.00'}
+                          ${facility.floatPoolMargins?.[specialty]?.toFixed(2) || "0.00"}
                         </p>
                       )}
                     </div>
@@ -758,26 +838,26 @@ export default function FacilityProfilePage() {
               <div>
                 <h3 className="text-lg font-semibold mb-3">Bill Rates by Specialty</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {['RN', 'LPN', 'CNA', 'RT', 'PT', 'OT'].map((specialty) => (
+                  {["RN", "LPN", "CNA", "RT", "PT", "OT"].map((specialty) => (
                     <div key={specialty}>
                       <Label>{specialty} Bill Rate ($/hr)</Label>
                       {isEditing ? (
                         <Input
                           type="number"
                           step="0.01"
-                          value={editedFacility.billRates?.[specialty] || ''}
+                          value={editedFacility.billRates?.[specialty] || ""}
                           onChange={(e) => {
                             const value = parseFloat(e.target.value) || 0;
-                            handleFieldChange('billRates', {
+                            handleFieldChange("billRates", {
                               ...(editedFacility.billRates || {}),
-                              [specialty]: value
+                              [specialty]: value,
                             });
                           }}
                           placeholder="0.00"
                         />
                       ) : (
                         <p className="text-lg font-medium">
-                          ${facility.billRates?.[specialty]?.toFixed(2) || '0.00'}
+                          ${facility.billRates?.[specialty]?.toFixed(2) || "0.00"}
                         </p>
                       )}
                     </div>
@@ -789,26 +869,26 @@ export default function FacilityProfilePage() {
               <div>
                 <h3 className="text-lg font-semibold mb-3">Pay Rates by Specialty</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {['RN', 'LPN', 'CNA', 'RT', 'PT', 'OT'].map((specialty) => (
+                  {["RN", "LPN", "CNA", "RT", "PT", "OT"].map((specialty) => (
                     <div key={specialty}>
                       <Label>{specialty} Pay Rate ($/hr)</Label>
                       {isEditing ? (
                         <Input
                           type="number"
                           step="0.01"
-                          value={editedFacility.payRates?.[specialty] || ''}
+                          value={editedFacility.payRates?.[specialty] || ""}
                           onChange={(e) => {
                             const value = parseFloat(e.target.value) || 0;
-                            handleFieldChange('payRates', {
+                            handleFieldChange("payRates", {
                               ...(editedFacility.payRates || {}),
-                              [specialty]: value
+                              [specialty]: value,
                             });
                           }}
                           placeholder="0.00"
                         />
                       ) : (
                         <p className="text-lg font-medium">
-                          ${facility.payRates?.[specialty]?.toFixed(2) || '0.00'}
+                          ${facility.payRates?.[specialty]?.toFixed(2) || "0.00"}
                         </p>
                       )}
                     </div>
@@ -823,7 +903,9 @@ export default function FacilityProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>Compliance & Regulatory Information</CardTitle>
-              <CardDescription>Inspection history, deficiencies, and regulatory compliance</CardDescription>
+              <CardDescription>
+                Inspection history, deficiencies, and regulatory compliance
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* CMS Ratings */}
@@ -837,11 +919,15 @@ export default function FacilityProfilePage() {
                         type="number"
                         min="1"
                         max="5"
-                        value={editedFacility.overallRating || ''}
-                        onChange={(e) => handleFieldChange('overallRating', parseInt(e.target.value))}
+                        value={editedFacility.overallRating || ""}
+                        onChange={(e) =>
+                          handleFieldChange("overallRating", parseInt(e.target.value))
+                        }
                       />
                     ) : (
-                      <p className="text-lg font-medium">{facility.overallRating ? `${facility.overallRating} ⭐` : 'Not rated'}</p>
+                      <p className="text-lg font-medium">
+                        {facility.overallRating ? `${facility.overallRating} ⭐` : "Not rated"}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -851,11 +937,17 @@ export default function FacilityProfilePage() {
                         type="number"
                         min="1"
                         max="5"
-                        value={editedFacility.healthInspectionRating || ''}
-                        onChange={(e) => handleFieldChange('healthInspectionRating', parseInt(e.target.value))}
+                        value={editedFacility.healthInspectionRating || ""}
+                        onChange={(e) =>
+                          handleFieldChange("healthInspectionRating", parseInt(e.target.value))
+                        }
                       />
                     ) : (
-                      <p className="text-lg font-medium">{facility.healthInspectionRating ? `${facility.healthInspectionRating} ⭐` : 'Not rated'}</p>
+                      <p className="text-lg font-medium">
+                        {facility.healthInspectionRating
+                          ? `${facility.healthInspectionRating} ⭐`
+                          : "Not rated"}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -865,11 +957,17 @@ export default function FacilityProfilePage() {
                         type="number"
                         min="1"
                         max="5"
-                        value={editedFacility.qualityMeasureRating || ''}
-                        onChange={(e) => handleFieldChange('qualityMeasureRating', parseInt(e.target.value))}
+                        value={editedFacility.qualityMeasureRating || ""}
+                        onChange={(e) =>
+                          handleFieldChange("qualityMeasureRating", parseInt(e.target.value))
+                        }
                       />
                     ) : (
-                      <p className="text-lg font-medium">{facility.qualityMeasureRating ? `${facility.qualityMeasureRating} ⭐` : 'Not rated'}</p>
+                      <p className="text-lg font-medium">
+                        {facility.qualityMeasureRating
+                          ? `${facility.qualityMeasureRating} ⭐`
+                          : "Not rated"}
+                      </p>
                     )}
                   </div>
                   <div>
@@ -879,11 +977,15 @@ export default function FacilityProfilePage() {
                         type="number"
                         min="1"
                         max="5"
-                        value={editedFacility.staffingRating || ''}
-                        onChange={(e) => handleFieldChange('staffingRating', parseInt(e.target.value))}
+                        value={editedFacility.staffingRating || ""}
+                        onChange={(e) =>
+                          handleFieldChange("staffingRating", parseInt(e.target.value))
+                        }
                       />
                     ) : (
-                      <p className="text-lg font-medium">{facility.staffingRating ? `${facility.staffingRating} ⭐` : 'Not rated'}</p>
+                      <p className="text-lg font-medium">
+                        {facility.staffingRating ? `${facility.staffingRating} ⭐` : "Not rated"}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -898,12 +1000,14 @@ export default function FacilityProfilePage() {
                     {isEditing ? (
                       <Input
                         type="date"
-                        value={editedFacility.lastInspectionDate || ''}
-                        onChange={(e) => handleFieldChange('lastInspectionDate', e.target.value)}
+                        value={editedFacility.lastInspectionDate || ""}
+                        onChange={(e) => handleFieldChange("lastInspectionDate", e.target.value)}
                       />
                     ) : (
                       <p className="text-lg font-medium">
-                        {facility.lastInspectionDate ? new Date(facility.lastInspectionDate).toLocaleDateString() : 'Not recorded'}
+                        {facility.lastInspectionDate
+                          ? new Date(facility.lastInspectionDate).toLocaleDateString()
+                          : "Not recorded"}
                       </p>
                     )}
                   </div>
@@ -912,12 +1016,14 @@ export default function FacilityProfilePage() {
                     {isEditing ? (
                       <Input
                         type="date"
-                        value={editedFacility.certificationDate || ''}
-                        onChange={(e) => handleFieldChange('certificationDate', e.target.value)}
+                        value={editedFacility.certificationDate || ""}
+                        onChange={(e) => handleFieldChange("certificationDate", e.target.value)}
                       />
                     ) : (
                       <p className="text-lg font-medium">
-                        {facility.certificationDate ? new Date(facility.certificationDate).toLocaleDateString() : 'Not recorded'}
+                        {facility.certificationDate
+                          ? new Date(facility.certificationDate).toLocaleDateString()
+                          : "Not recorded"}
                       </p>
                     )}
                   </div>
@@ -934,8 +1040,10 @@ export default function FacilityProfilePage() {
                       <Input
                         type="number"
                         min="0"
-                        value={editedFacility.deficiencyCount || ''}
-                        onChange={(e) => handleFieldChange('deficiencyCount', parseInt(e.target.value))}
+                        value={editedFacility.deficiencyCount || ""}
+                        onChange={(e) =>
+                          handleFieldChange("deficiencyCount", parseInt(e.target.value))
+                        }
                       />
                     ) : (
                       <p className="text-lg font-medium">{facility.deficiencyCount || 0}</p>
@@ -947,8 +1055,10 @@ export default function FacilityProfilePage() {
                       <Input
                         type="number"
                         min="0"
-                        value={editedFacility.complaintsCount || ''}
-                        onChange={(e) => handleFieldChange('complaintsCount', parseInt(e.target.value))}
+                        value={editedFacility.complaintsCount || ""}
+                        onChange={(e) =>
+                          handleFieldChange("complaintsCount", parseInt(e.target.value))
+                        }
                       />
                     ) : (
                       <p className="text-lg font-medium">{facility.complaintsCount || 0}</p>
@@ -961,11 +1071,15 @@ export default function FacilityProfilePage() {
                         type="number"
                         step="0.01"
                         min="0"
-                        value={editedFacility.finesTotal || ''}
-                        onChange={(e) => handleFieldChange('finesTotal', parseFloat(e.target.value))}
+                        value={editedFacility.finesTotal || ""}
+                        onChange={(e) =>
+                          handleFieldChange("finesTotal", parseFloat(e.target.value))
+                        }
                       />
                     ) : (
-                      <p className="text-lg font-medium">${facility.finesTotal?.toFixed(2) || '0.00'}</p>
+                      <p className="text-lg font-medium">
+                        ${facility.finesTotal?.toFixed(2) || "0.00"}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -978,26 +1092,40 @@ export default function FacilityProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>Workflow Automation Configuration</CardTitle>
-              <CardDescription>Configure automated workflows and approval processes</CardDescription>
+              <CardDescription>
+                Configure automated workflows and approval processes
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Auto-Approve Shifts</Label>
-                    <p className="text-sm text-gray-600">Automatically approve shift requests that meet criteria</p>
+                    <p className="text-sm text-gray-600">
+                      Automatically approve shift requests that meet criteria
+                    </p>
                   </div>
                   {isEditing ? (
                     <Switch
                       checked={editedFacility.workflowAutomationConfig?.autoApproveShifts || false}
-                      onCheckedChange={(checked) => handleFieldChange('workflowAutomationConfig', {
-                        ...(editedFacility.workflowAutomationConfig || {}),
-                        autoApproveShifts: checked
-                      })}
+                      onCheckedChange={(checked) =>
+                        handleFieldChange("workflowAutomationConfig", {
+                          ...(editedFacility.workflowAutomationConfig || {}),
+                          autoApproveShifts: checked,
+                        })
+                      }
                     />
                   ) : (
-                    <Badge variant={facility.workflowAutomationConfig?.autoApproveShifts ? "default" : "secondary"}>
-                      {facility.workflowAutomationConfig?.autoApproveShifts ? "Enabled" : "Disabled"}
+                    <Badge
+                      variant={
+                        facility.workflowAutomationConfig?.autoApproveShifts
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {facility.workflowAutomationConfig?.autoApproveShifts
+                        ? "Enabled"
+                        : "Disabled"}
                     </Badge>
                   )}
                 </div>
@@ -1005,19 +1133,31 @@ export default function FacilityProfilePage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Auto-Notify Managers</Label>
-                    <p className="text-sm text-gray-600">Send notifications to managers for important events</p>
+                    <p className="text-sm text-gray-600">
+                      Send notifications to managers for important events
+                    </p>
                   </div>
                   {isEditing ? (
                     <Switch
                       checked={editedFacility.workflowAutomationConfig?.autoNotifyManagers || false}
-                      onCheckedChange={(checked) => handleFieldChange('workflowAutomationConfig', {
-                        ...(editedFacility.workflowAutomationConfig || {}),
-                        autoNotifyManagers: checked
-                      })}
+                      onCheckedChange={(checked) =>
+                        handleFieldChange("workflowAutomationConfig", {
+                          ...(editedFacility.workflowAutomationConfig || {}),
+                          autoNotifyManagers: checked,
+                        })
+                      }
                     />
                   ) : (
-                    <Badge variant={facility.workflowAutomationConfig?.autoNotifyManagers ? "default" : "secondary"}>
-                      {facility.workflowAutomationConfig?.autoNotifyManagers ? "Enabled" : "Disabled"}
+                    <Badge
+                      variant={
+                        facility.workflowAutomationConfig?.autoNotifyManagers
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {facility.workflowAutomationConfig?.autoNotifyManagers
+                        ? "Enabled"
+                        : "Disabled"}
                     </Badge>
                   )}
                 </div>
@@ -1025,19 +1165,33 @@ export default function FacilityProfilePage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Auto-Generate Invoices</Label>
-                    <p className="text-sm text-gray-600">Generate invoices automatically based on worked shifts</p>
+                    <p className="text-sm text-gray-600">
+                      Generate invoices automatically based on worked shifts
+                    </p>
                   </div>
                   {isEditing ? (
                     <Switch
-                      checked={editedFacility.workflowAutomationConfig?.autoGenerateInvoices || false}
-                      onCheckedChange={(checked) => handleFieldChange('workflowAutomationConfig', {
-                        ...(editedFacility.workflowAutomationConfig || {}),
-                        autoGenerateInvoices: checked
-                      })}
+                      checked={
+                        editedFacility.workflowAutomationConfig?.autoGenerateInvoices || false
+                      }
+                      onCheckedChange={(checked) =>
+                        handleFieldChange("workflowAutomationConfig", {
+                          ...(editedFacility.workflowAutomationConfig || {}),
+                          autoGenerateInvoices: checked,
+                        })
+                      }
                     />
                   ) : (
-                    <Badge variant={facility.workflowAutomationConfig?.autoGenerateInvoices ? "default" : "secondary"}>
-                      {facility.workflowAutomationConfig?.autoGenerateInvoices ? "Enabled" : "Disabled"}
+                    <Badge
+                      variant={
+                        facility.workflowAutomationConfig?.autoGenerateInvoices
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {facility.workflowAutomationConfig?.autoGenerateInvoices
+                        ? "Enabled"
+                        : "Disabled"}
                     </Badge>
                   )}
                 </div>
@@ -1045,19 +1199,33 @@ export default function FacilityProfilePage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Require Manager Approval</Label>
-                    <p className="text-sm text-gray-600">Require manager approval for all shift changes</p>
+                    <p className="text-sm text-gray-600">
+                      Require manager approval for all shift changes
+                    </p>
                   </div>
                   {isEditing ? (
                     <Switch
-                      checked={editedFacility.workflowAutomationConfig?.requireManagerApproval || false}
-                      onCheckedChange={(checked) => handleFieldChange('workflowAutomationConfig', {
-                        ...(editedFacility.workflowAutomationConfig || {}),
-                        requireManagerApproval: checked
-                      })}
+                      checked={
+                        editedFacility.workflowAutomationConfig?.requireManagerApproval || false
+                      }
+                      onCheckedChange={(checked) =>
+                        handleFieldChange("workflowAutomationConfig", {
+                          ...(editedFacility.workflowAutomationConfig || {}),
+                          requireManagerApproval: checked,
+                        })
+                      }
                     />
                   ) : (
-                    <Badge variant={facility.workflowAutomationConfig?.requireManagerApproval ? "default" : "secondary"}>
-                      {facility.workflowAutomationConfig?.requireManagerApproval ? "Enabled" : "Disabled"}
+                    <Badge
+                      variant={
+                        facility.workflowAutomationConfig?.requireManagerApproval
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {facility.workflowAutomationConfig?.requireManagerApproval
+                        ? "Enabled"
+                        : "Disabled"}
                     </Badge>
                   )}
                 </div>
@@ -1065,19 +1233,33 @@ export default function FacilityProfilePage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Enable Overtime Alerts</Label>
-                    <p className="text-sm text-gray-600">Alert managers when staff approach overtime thresholds</p>
+                    <p className="text-sm text-gray-600">
+                      Alert managers when staff approach overtime thresholds
+                    </p>
                   </div>
                   {isEditing ? (
                     <Switch
-                      checked={editedFacility.workflowAutomationConfig?.enableOvertimeAlerts || false}
-                      onCheckedChange={(checked) => handleFieldChange('workflowAutomationConfig', {
-                        ...(editedFacility.workflowAutomationConfig || {}),
-                        enableOvertimeAlerts: checked
-                      })}
+                      checked={
+                        editedFacility.workflowAutomationConfig?.enableOvertimeAlerts || false
+                      }
+                      onCheckedChange={(checked) =>
+                        handleFieldChange("workflowAutomationConfig", {
+                          ...(editedFacility.workflowAutomationConfig || {}),
+                          enableOvertimeAlerts: checked,
+                        })
+                      }
                     />
                   ) : (
-                    <Badge variant={facility.workflowAutomationConfig?.enableOvertimeAlerts ? "default" : "secondary"}>
-                      {facility.workflowAutomationConfig?.enableOvertimeAlerts ? "Enabled" : "Disabled"}
+                    <Badge
+                      variant={
+                        facility.workflowAutomationConfig?.enableOvertimeAlerts
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {facility.workflowAutomationConfig?.enableOvertimeAlerts
+                        ? "Enabled"
+                        : "Disabled"}
                     </Badge>
                   )}
                 </div>
@@ -1085,19 +1267,33 @@ export default function FacilityProfilePage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Auto-Assign by Specialty</Label>
-                    <p className="text-sm text-gray-600">Match staff to shifts based on their specialties</p>
+                    <p className="text-sm text-gray-600">
+                      Match staff to shifts based on their specialties
+                    </p>
                   </div>
                   {isEditing ? (
                     <Switch
-                      checked={editedFacility.workflowAutomationConfig?.autoAssignBySpecialty || false}
-                      onCheckedChange={(checked) => handleFieldChange('workflowAutomationConfig', {
-                        ...(editedFacility.workflowAutomationConfig || {}),
-                        autoAssignBySpecialty: checked
-                      })}
+                      checked={
+                        editedFacility.workflowAutomationConfig?.autoAssignBySpecialty || false
+                      }
+                      onCheckedChange={(checked) =>
+                        handleFieldChange("workflowAutomationConfig", {
+                          ...(editedFacility.workflowAutomationConfig || {}),
+                          autoAssignBySpecialty: checked,
+                        })
+                      }
                     />
                   ) : (
-                    <Badge variant={facility.workflowAutomationConfig?.autoAssignBySpecialty ? "default" : "secondary"}>
-                      {facility.workflowAutomationConfig?.autoAssignBySpecialty ? "Enabled" : "Disabled"}
+                    <Badge
+                      variant={
+                        facility.workflowAutomationConfig?.autoAssignBySpecialty
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {facility.workflowAutomationConfig?.autoAssignBySpecialty
+                        ? "Enabled"
+                        : "Disabled"}
                     </Badge>
                   )}
                 </div>
@@ -1119,15 +1315,19 @@ export default function FacilityProfilePage() {
                   {isEditing ? (
                     <Input
                       type="number"
-                      value={editedFacility.shiftManagementSettings?.overtimeThreshold || ''}
-                      onChange={(e) => handleFieldChange('shiftManagementSettings', {
-                        ...(editedFacility.shiftManagementSettings || {}),
-                        overtimeThreshold: parseInt(e.target.value)
-                      })}
+                      value={editedFacility.shiftManagementSettings?.overtimeThreshold || ""}
+                      onChange={(e) =>
+                        handleFieldChange("shiftManagementSettings", {
+                          ...(editedFacility.shiftManagementSettings || {}),
+                          overtimeThreshold: parseInt(e.target.value),
+                        })
+                      }
                       placeholder="40"
                     />
                   ) : (
-                    <p className="text-lg font-medium">{facility.shiftManagementSettings?.overtimeThreshold || 40} hours</p>
+                    <p className="text-lg font-medium">
+                      {facility.shiftManagementSettings?.overtimeThreshold || 40} hours
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1135,15 +1335,19 @@ export default function FacilityProfilePage() {
                   {isEditing ? (
                     <Input
                       type="number"
-                      value={editedFacility.shiftManagementSettings?.maxConsecutiveShifts || ''}
-                      onChange={(e) => handleFieldChange('shiftManagementSettings', {
-                        ...(editedFacility.shiftManagementSettings || {}),
-                        maxConsecutiveShifts: parseInt(e.target.value)
-                      })}
+                      value={editedFacility.shiftManagementSettings?.maxConsecutiveShifts || ""}
+                      onChange={(e) =>
+                        handleFieldChange("shiftManagementSettings", {
+                          ...(editedFacility.shiftManagementSettings || {}),
+                          maxConsecutiveShifts: parseInt(e.target.value),
+                        })
+                      }
                       placeholder="5"
                     />
                   ) : (
-                    <p className="text-lg font-medium">{facility.shiftManagementSettings?.maxConsecutiveShifts || 5} shifts</p>
+                    <p className="text-lg font-medium">
+                      {facility.shiftManagementSettings?.maxConsecutiveShifts || 5} shifts
+                    </p>
                   )}
                 </div>
                 <div>
@@ -1151,15 +1355,19 @@ export default function FacilityProfilePage() {
                   {isEditing ? (
                     <Input
                       type="number"
-                      value={editedFacility.shiftManagementSettings?.minHoursBetweenShifts || ''}
-                      onChange={(e) => handleFieldChange('shiftManagementSettings', {
-                        ...(editedFacility.shiftManagementSettings || {}),
-                        minHoursBetweenShifts: parseInt(e.target.value)
-                      })}
+                      value={editedFacility.shiftManagementSettings?.minHoursBetweenShifts || ""}
+                      onChange={(e) =>
+                        handleFieldChange("shiftManagementSettings", {
+                          ...(editedFacility.shiftManagementSettings || {}),
+                          minHoursBetweenShifts: parseInt(e.target.value),
+                        })
+                      }
                       placeholder="8"
                     />
                   ) : (
-                    <p className="text-lg font-medium">{facility.shiftManagementSettings?.minHoursBetweenShifts || 8} hours</p>
+                    <p className="text-lg font-medium">
+                      {facility.shiftManagementSettings?.minHoursBetweenShifts || 8} hours
+                    </p>
                   )}
                 </div>
               </div>
@@ -1168,19 +1376,33 @@ export default function FacilityProfilePage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Allow Back-to-Back Shifts</Label>
-                    <p className="text-sm text-gray-600">Allow staff to work consecutive shifts without break</p>
+                    <p className="text-sm text-gray-600">
+                      Allow staff to work consecutive shifts without break
+                    </p>
                   </div>
                   {isEditing ? (
                     <Switch
-                      checked={editedFacility.shiftManagementSettings?.allowBackToBackShifts || false}
-                      onCheckedChange={(checked) => handleFieldChange('shiftManagementSettings', {
-                        ...(editedFacility.shiftManagementSettings || {}),
-                        allowBackToBackShifts: checked
-                      })}
+                      checked={
+                        editedFacility.shiftManagementSettings?.allowBackToBackShifts || false
+                      }
+                      onCheckedChange={(checked) =>
+                        handleFieldChange("shiftManagementSettings", {
+                          ...(editedFacility.shiftManagementSettings || {}),
+                          allowBackToBackShifts: checked,
+                        })
+                      }
                     />
                   ) : (
-                    <Badge variant={facility.shiftManagementSettings?.allowBackToBackShifts ? "default" : "secondary"}>
-                      {facility.shiftManagementSettings?.allowBackToBackShifts ? "Allowed" : "Not Allowed"}
+                    <Badge
+                      variant={
+                        facility.shiftManagementSettings?.allowBackToBackShifts
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {facility.shiftManagementSettings?.allowBackToBackShifts
+                        ? "Allowed"
+                        : "Not Allowed"}
                     </Badge>
                   )}
                 </div>
@@ -1188,19 +1410,34 @@ export default function FacilityProfilePage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Require Manager Approval for Overtime</Label>
-                    <p className="text-sm text-gray-600">Manager must approve shifts that result in overtime</p>
+                    <p className="text-sm text-gray-600">
+                      Manager must approve shifts that result in overtime
+                    </p>
                   </div>
                   {isEditing ? (
                     <Switch
-                      checked={editedFacility.shiftManagementSettings?.requireManagerApprovalForOvertime || false}
-                      onCheckedChange={(checked) => handleFieldChange('shiftManagementSettings', {
-                        ...(editedFacility.shiftManagementSettings || {}),
-                        requireManagerApprovalForOvertime: checked
-                      })}
+                      checked={
+                        editedFacility.shiftManagementSettings?.requireManagerApprovalForOvertime ||
+                        false
+                      }
+                      onCheckedChange={(checked) =>
+                        handleFieldChange("shiftManagementSettings", {
+                          ...(editedFacility.shiftManagementSettings || {}),
+                          requireManagerApprovalForOvertime: checked,
+                        })
+                      }
                     />
                   ) : (
-                    <Badge variant={facility.shiftManagementSettings?.requireManagerApprovalForOvertime ? "default" : "secondary"}>
-                      {facility.shiftManagementSettings?.requireManagerApprovalForOvertime ? "Required" : "Not Required"}
+                    <Badge
+                      variant={
+                        facility.shiftManagementSettings?.requireManagerApprovalForOvertime
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {facility.shiftManagementSettings?.requireManagerApprovalForOvertime
+                        ? "Required"
+                        : "Not Required"}
                     </Badge>
                   )}
                 </div>
@@ -1208,19 +1445,33 @@ export default function FacilityProfilePage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-1">
                     <Label>Auto-Calculate Overtime</Label>
-                    <p className="text-sm text-gray-600">Automatically calculate overtime based on threshold</p>
+                    <p className="text-sm text-gray-600">
+                      Automatically calculate overtime based on threshold
+                    </p>
                   </div>
                   {isEditing ? (
                     <Switch
-                      checked={editedFacility.shiftManagementSettings?.autoCalculateOvertime || false}
-                      onCheckedChange={(checked) => handleFieldChange('shiftManagementSettings', {
-                        ...(editedFacility.shiftManagementSettings || {}),
-                        autoCalculateOvertime: checked
-                      })}
+                      checked={
+                        editedFacility.shiftManagementSettings?.autoCalculateOvertime || false
+                      }
+                      onCheckedChange={(checked) =>
+                        handleFieldChange("shiftManagementSettings", {
+                          ...(editedFacility.shiftManagementSettings || {}),
+                          autoCalculateOvertime: checked,
+                        })
+                      }
                     />
                   ) : (
-                    <Badge variant={facility.shiftManagementSettings?.autoCalculateOvertime ? "default" : "secondary"}>
-                      {facility.shiftManagementSettings?.autoCalculateOvertime ? "Enabled" : "Disabled"}
+                    <Badge
+                      variant={
+                        facility.shiftManagementSettings?.autoCalculateOvertime
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {facility.shiftManagementSettings?.autoCalculateOvertime
+                        ? "Enabled"
+                        : "Disabled"}
                     </Badge>
                   )}
                 </div>
@@ -1233,20 +1484,24 @@ export default function FacilityProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>Staffing Targets & Custom Rules</CardTitle>
-              <CardDescription>Define staffing requirements and facility-specific rules</CardDescription>
+              <CardDescription>
+                Define staffing requirements and facility-specific rules
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Staffing Targets */}
               <div>
                 <h3 className="text-lg font-semibold mb-3">Staffing Targets by Shift</h3>
-                <p className="text-sm text-gray-600 mb-4">Configure minimum staffing requirements for each shift type</p>
+                <p className="text-sm text-gray-600 mb-4">
+                  Configure minimum staffing requirements for each shift type
+                </p>
                 {isEditing ? (
                   <Textarea
                     value={JSON.stringify(editedFacility.staffingTargets || {}, null, 2)}
                     onChange={(e) => {
                       try {
                         const parsed = JSON.parse(e.target.value);
-                        handleFieldChange('staffingTargets', parsed);
+                        handleFieldChange("staffingTargets", parsed);
                       } catch (err) {
                         // Invalid JSON, ignore
                       }
@@ -1264,14 +1519,16 @@ export default function FacilityProfilePage() {
               {/* Custom Rules */}
               <div>
                 <h3 className="text-lg font-semibold mb-3">Custom Rules</h3>
-                <p className="text-sm text-gray-600 mb-4">Facility-specific rules for float pool, overtime, and attendance</p>
+                <p className="text-sm text-gray-600 mb-4">
+                  Facility-specific rules for float pool, overtime, and attendance
+                </p>
                 {isEditing ? (
                   <Textarea
                     value={JSON.stringify(editedFacility.customRules || {}, null, 2)}
                     onChange={(e) => {
                       try {
                         const parsed = JSON.parse(e.target.value);
-                        handleFieldChange('customRules', parsed);
+                        handleFieldChange("customRules", parsed);
                       } catch (err) {
                         // Invalid JSON, ignore
                       }

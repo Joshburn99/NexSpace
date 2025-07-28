@@ -24,7 +24,11 @@ interface SessionContextType {
   isLoading: boolean;
   startImpersonation: (userId: number) => Promise<void>;
   stopImpersonation: () => Promise<void>;
-  restoreSession: (username: string, password: string, impersonatedUserId?: number) => Promise<void>;
+  restoreSession: (
+    username: string,
+    password: string,
+    impersonatedUserId?: number
+  ) => Promise<void>;
   checkSession: () => void;
 }
 
@@ -32,9 +36,9 @@ const SessionContext = createContext<SessionContextType | undefined>(undefined);
 
 // Local storage keys for persistent session state
 const STORAGE_KEYS = {
-  IMPERSONATION_STATE: 'nexspace_impersonation_state',
-  ORIGINAL_USER: 'nexspace_original_user',
-  QUICK_AUTH: 'nexspace_quick_auth'
+  IMPERSONATION_STATE: "nexspace_impersonation_state",
+  ORIGINAL_USER: "nexspace_original_user",
+  QUICK_AUTH: "nexspace_quick_auth",
 };
 
 export function SessionProvider({ children }: { children: ReactNode }) {
@@ -43,11 +47,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     user: null,
     isImpersonating: false,
     originalUser: null,
-    impersonatedUserId: null
+    impersonatedUserId: null,
   });
 
   // Check session status on load
-  const { data: sessionData, isLoading, refetch } = useQuery({
+  const {
+    data: sessionData,
+    isLoading,
+    refetch,
+  } = useQuery({
     queryKey: ["/api/session-status"],
     retry: false,
     staleTime: 0,
@@ -55,20 +63,23 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   // Update session state when data changes
   useEffect(() => {
-    if (sessionData && typeof sessionData === 'object') {
+    if (sessionData && typeof sessionData === "object") {
       setSessionState({
         user: (sessionData as any).user,
         isImpersonating: (sessionData as any).isImpersonating,
         originalUser: (sessionData as any).originalUser,
-        impersonatedUserId: (sessionData as any).impersonatedUserId
+        impersonatedUserId: (sessionData as any).impersonatedUserId,
       });
 
       // Persist impersonation state for server restarts
       if ((sessionData as any).isImpersonating) {
-        localStorage.setItem(STORAGE_KEYS.IMPERSONATION_STATE, JSON.stringify({
-          impersonatedUserId: (sessionData as any).impersonatedUserId,
-          originalUser: (sessionData as any).originalUser
-        }));
+        localStorage.setItem(
+          STORAGE_KEYS.IMPERSONATION_STATE,
+          JSON.stringify({
+            impersonatedUserId: (sessionData as any).impersonatedUserId,
+            originalUser: (sessionData as any).originalUser,
+          })
+        );
       } else {
         localStorage.removeItem(STORAGE_KEYS.IMPERSONATION_STATE);
       }
@@ -81,15 +92,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       if (!sessionData && !isLoading) {
         const quickAuth = localStorage.getItem(STORAGE_KEYS.QUICK_AUTH);
         const impersonationState = localStorage.getItem(STORAGE_KEYS.IMPERSONATION_STATE);
-        
+
         if (quickAuth) {
           try {
             const authData = JSON.parse(quickAuth);
             const impersonationData = impersonationState ? JSON.parse(impersonationState) : null;
-            
+
             await restoreSession(
-              authData.username, 
-              authData.password, 
+              authData.username,
+              authData.password,
               impersonationData?.impersonatedUserId
             );
           } catch (error) {
@@ -110,21 +121,21 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const response = await fetch("/api/impersonate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId })
+        body: JSON.stringify({ userId }),
       });
       return await response.json();
     },
     onSuccess: () => {
       refetch();
       queryClient.invalidateQueries();
-    }
+    },
   });
 
   const stopImpersonationMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch("/api/stop-impersonation", {
         method: "POST",
-        headers: { "Content-Type": "application/json" }
+        headers: { "Content-Type": "application/json" },
       });
       return await response.json();
     },
@@ -132,11 +143,15 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem(STORAGE_KEYS.IMPERSONATION_STATE);
       refetch();
       queryClient.invalidateQueries();
-    }
+    },
   });
 
   const restoreSessionMutation = useMutation({
-    mutationFn: async ({ username, password, impersonatedUserId }: {
+    mutationFn: async ({
+      username,
+      password,
+      impersonatedUserId,
+    }: {
       username: string;
       password: string;
       impersonatedUserId?: number;
@@ -144,22 +159,25 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const response = await fetch("/api/restore-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password, impersonatedUserId })
+        body: JSON.stringify({ username, password, impersonatedUserId }),
       });
       return await response.json();
     },
     onSuccess: (data: any) => {
       // Store quick auth for future auto-restore (dev only)
-      if (process.env.NODE_ENV === 'development') {
-        localStorage.setItem(STORAGE_KEYS.QUICK_AUTH, JSON.stringify({
-          username: data.user?.username === 'joshburn' ? 'joshburn' : '',
-          password: data.user?.username === 'joshburn' ? 'admin123' : ''
-        }));
+      if (process.env.NODE_ENV === "development") {
+        localStorage.setItem(
+          STORAGE_KEYS.QUICK_AUTH,
+          JSON.stringify({
+            username: data.user?.username === "joshburn" ? "joshburn" : "",
+            password: data.user?.username === "joshburn" ? "admin123" : "",
+          })
+        );
       }
-      
+
       refetch();
       queryClient.invalidateQueries();
-    }
+    },
   });
 
   const startImpersonation = async (userId: number) => {
@@ -170,7 +188,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     await stopImpersonationMutation.mutateAsync();
   };
 
-  const restoreSession = async (username: string, password: string, impersonatedUserId?: number) => {
+  const restoreSession = async (
+    username: string,
+    password: string,
+    impersonatedUserId?: number
+  ) => {
     await restoreSessionMutation.mutateAsync({ username, password, impersonatedUserId });
   };
 
@@ -179,14 +201,16 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <SessionContext.Provider value={{
-      sessionState,
-      isLoading,
-      startImpersonation,
-      stopImpersonation,
-      restoreSession,
-      checkSession
-    }}>
+    <SessionContext.Provider
+      value={{
+        sessionState,
+        isLoading,
+        startImpersonation,
+        stopImpersonation,
+        restoreSession,
+        checkSession,
+      }}
+    >
       {children}
     </SessionContext.Provider>
   );
@@ -195,7 +219,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 export function useSession() {
   const context = useContext(SessionContext);
   if (context === undefined) {
-    throw new Error('useSession must be used within a SessionProvider');
+    throw new Error("useSession must be used within a SessionProvider");
   }
   return context;
 }

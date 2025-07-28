@@ -9,30 +9,33 @@ import { useRouter } from "wouter";
 export function TimeOffSection() {
   const { user } = useAuth();
   const [, navigate] = useRouter();
-  const { 
-    getEmployeeBalance, 
-    getEmployeeRequests, 
+  const {
+    getEmployeeBalance,
+    getEmployeeRequests,
     types,
     isLoadingBalances: balanceLoading,
-    isLoading: requestsLoading 
+    isLoading: requestsLoading,
   } = usePTO();
 
   // Get current year balances and requests for the logged-in user
   const balances = user ? getEmployeeBalance(user.id) : [];
   const requests = user ? getEmployeeRequests(user.id) : [];
-  
+
   // Calculate total available, used, and pending from all balance types
-  const totalBalance = balances.reduce((acc, balance) => {
-    const available = parseFloat(balance.available) || 0;
-    const used = parseFloat(balance.used) || 0;
-    const pending = parseFloat(balance.pending) || 0;
-    return {
-      available: acc.available + available,
-      used: acc.used + used,
-      pending: acc.pending + pending,
-      allocated: acc.allocated + (parseFloat(balance.allocated) || 0)
-    };
-  }, { available: 0, used: 0, pending: 0, allocated: 0 });
+  const totalBalance = balances.reduce(
+    (acc, balance) => {
+      const available = parseFloat(balance.available) || 0;
+      const used = parseFloat(balance.used) || 0;
+      const pending = parseFloat(balance.pending) || 0;
+      return {
+        available: acc.available + available,
+        used: acc.used + used,
+        pending: acc.pending + pending,
+        allocated: acc.allocated + (parseFloat(balance.allocated) || 0),
+      };
+    },
+    { available: 0, used: 0, pending: 0, allocated: 0 }
+  );
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -98,7 +101,9 @@ export function TimeOffSection() {
           {/* Balance Details */}
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-2xl font-semibold text-blue-600">{totalBalance.available.toFixed(1)}</p>
+              <p className="text-2xl font-semibold text-blue-600">
+                {totalBalance.available.toFixed(1)}
+              </p>
               <p className="text-xs text-gray-600">Available</p>
             </div>
             <div>
@@ -106,7 +111,9 @@ export function TimeOffSection() {
               <p className="text-xs text-gray-600">Used</p>
             </div>
             <div>
-              <p className="text-2xl font-semibold text-yellow-600">{totalBalance.pending.toFixed(1)}</p>
+              <p className="text-2xl font-semibold text-yellow-600">
+                {totalBalance.pending.toFixed(1)}
+              </p>
               <p className="text-xs text-gray-600">Pending</p>
             </div>
           </div>
@@ -138,7 +145,7 @@ export function TimeOffSection() {
             </div>
           )}
 
-          <Button className="w-full" onClick={() => navigate('/my-pto')}>
+          <Button className="w-full" onClick={() => navigate("/my-pto")}>
             <Calendar className="w-4 h-4 mr-2" />
             Request Time Off
           </Button>

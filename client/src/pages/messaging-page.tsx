@@ -328,13 +328,11 @@ export default function MessagingPage() {
   };
 
   const handleSendNewMessage = () => {
-    console.log("Sending new message:", newMessageData);
     setShowNewMessage(false);
     setNewMessageData({ recipient: "", subject: "", content: "", priority: "normal" });
   };
 
   const handleSendMassMessage = () => {
-    console.log("Sending mass message:", massMessageData);
     setShowMassMessage(false);
     setMassMessageData({
       selectedGroup: "",

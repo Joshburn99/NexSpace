@@ -14,13 +14,13 @@ interface EnhancedFacilityTestData {
   email: string;
   bedCount: number;
   isActive: boolean;
-  
+
   // Enhanced fields
   autoAssignmentEnabled: boolean;
   timezone: string;
   netTerms: string;
   teamId?: number;
-  
+
   // JSONB fields with proper structure
   billRates: {
     "Registered Nurse": number;
@@ -29,7 +29,7 @@ interface EnhancedFacilityTestData {
     "Physical Therapist": number;
     "Respiratory Therapist": number;
   };
-  
+
   payRates: {
     "Registered Nurse": number;
     "Licensed Practical Nurse": number;
@@ -37,13 +37,13 @@ interface EnhancedFacilityTestData {
     "Physical Therapist": number;
     "Respiratory Therapist": number;
   };
-  
+
   floatPoolMargins: {
     "Registered Nurse": number;
     "Licensed Practical Nurse": number;
     "Certified Nursing Assistant": number;
   };
-  
+
   workflowAutomationConfig: {
     autoApproveShifts: boolean;
     autoNotifyManagers: boolean;
@@ -52,7 +52,7 @@ interface EnhancedFacilityTestData {
     enableOvertimeAlerts: boolean;
     autoAssignBySpecialty: boolean;
   };
-  
+
   shiftManagementSettings: {
     overtimeThreshold: number;
     maxConsecutiveShifts: number;
@@ -61,7 +61,7 @@ interface EnhancedFacilityTestData {
     requireManagerApprovalForOvertime: boolean;
     autoCalculateOvertime: boolean;
   };
-  
+
   staffingTargets: {
     ICU: {
       targetHours: number;
@@ -82,7 +82,7 @@ interface EnhancedFacilityTestData {
       };
     };
   };
-  
+
   customRules: {
     floatPoolRules: {
       maxHoursPerWeek: number;
@@ -101,17 +101,17 @@ interface EnhancedFacilityTestData {
     };
     requiredDocuments: string[];
   };
-  
+
   regulatoryDocs: Array<{
     id: string;
     name: string;
-    type: 'license' | 'certification' | 'policy' | 'procedure' | 'contract';
+    type: "license" | "certification" | "policy" | "procedure" | "contract";
     url?: string;
     uploadDate: string;
     expirationDate?: string;
-    status: 'active' | 'expired' | 'pending_renewal';
+    status: "active" | "expired" | "pending_renewal";
   }>;
-  
+
   emrSystem: string;
   contractStartDate: Date;
   billingContactName: string;
@@ -119,8 +119,7 @@ interface EnhancedFacilityTestData {
 }
 
 export async function testEnhancedFacilitySystem() {
-  console.log("🏥 Testing Enhanced Facility Management System...");
-  
+
   try {
     // Test data with comprehensive enhanced fields
     const testFacilityData: EnhancedFacilityTestData = {
@@ -134,38 +133,38 @@ export async function testEnhancedFacilitySystem() {
       email: "admin@armc.com",
       bedCount: 250,
       isActive: true,
-      
+
       // Enhanced operational fields
       autoAssignmentEnabled: true,
       timezone: "America/Los_Angeles",
       netTerms: "Net 15",
       teamId: 1,
-      
+
       // Specialty-based billing rates
       billRates: {
         "Registered Nurse": 75,
         "Licensed Practical Nurse": 50,
         "Certified Nursing Assistant": 35,
         "Physical Therapist": 85,
-        "Respiratory Therapist": 65
+        "Respiratory Therapist": 65,
       },
-      
+
       // Specialty-based pay rates
       payRates: {
         "Registered Nurse": 48,
         "Licensed Practical Nurse": 32,
         "Certified Nursing Assistant": 22,
         "Physical Therapist": 55,
-        "Respiratory Therapist": 42
+        "Respiratory Therapist": 42,
       },
-      
+
       // Float pool profit margins by specialty
       floatPoolMargins: {
         "Registered Nurse": 15,
         "Licensed Practical Nurse": 12,
-        "Certified Nursing Assistant": 10
+        "Certified Nursing Assistant": 10,
       },
-      
+
       // Workflow automation settings
       workflowAutomationConfig: {
         autoApproveShifts: false,
@@ -173,9 +172,9 @@ export async function testEnhancedFacilitySystem() {
         autoGenerateInvoices: true,
         requireManagerApproval: true,
         enableOvertimeAlerts: true,
-        autoAssignBySpecialty: true
+        autoAssignBySpecialty: true,
       },
-      
+
       // Shift management rules
       shiftManagementSettings: {
         overtimeThreshold: 40,
@@ -183,9 +182,9 @@ export async function testEnhancedFacilitySystem() {
         minHoursBetweenShifts: 8,
         allowBackToBackShifts: false,
         requireManagerApprovalForOvertime: true,
-        autoCalculateOvertime: true
+        autoCalculateOvertime: true,
       },
-      
+
       // Department-specific staffing targets
       staffingTargets: {
         ICU: {
@@ -194,8 +193,8 @@ export async function testEnhancedFacilitySystem() {
           maxStaff: 8,
           preferredStaffMix: {
             "Registered Nurse": 75,
-            "Licensed Practical Nurse": 25
-          }
+            "Licensed Practical Nurse": 25,
+          },
         },
         Emergency: {
           targetHours: 210,
@@ -203,31 +202,31 @@ export async function testEnhancedFacilitySystem() {
           maxStaff: 12,
           preferredStaffMix: {
             "Registered Nurse": 60,
-            "Certified Nursing Assistant": 40
-          }
-        }
+            "Certified Nursing Assistant": 40,
+          },
+        },
       },
-      
+
       // Custom operational rules
       customRules: {
         floatPoolRules: {
           maxHoursPerWeek: 60,
           specialtyRestrictions: ["ICU", "Emergency"],
-          requireAdditionalTraining: true
+          requireAdditionalTraining: true,
         },
         overtimeRules: {
           maxOvertimeHours: 20,
           overtimeApprovalRequired: true,
-          overtimeRate: 1.5
+          overtimeRate: 1.5,
         },
         attendanceRules: {
           maxLateArrivals: 3,
           maxNoCallNoShows: 1,
-          probationaryPeriod: 90
+          probationaryPeriod: 90,
         },
-        requiredDocuments: ["State License", "BLS Certification", "ACLS Certification"]
+        requiredDocuments: ["State License", "BLS Certification", "ACLS Certification"],
       },
-      
+
       // Regulatory compliance documents
       regulatoryDocs: [
         {
@@ -237,7 +236,7 @@ export async function testEnhancedFacilitySystem() {
           url: "https://documents.armc.com/license-001.pdf",
           uploadDate: "2025-01-01",
           expirationDate: "2026-01-01",
-          status: "active" as const
+          status: "active" as const,
         },
         {
           id: "cert-001",
@@ -245,57 +244,45 @@ export async function testEnhancedFacilitySystem() {
           type: "certification" as const,
           uploadDate: "2024-06-01",
           expirationDate: "2027-06-01",
-          status: "active" as const
-        }
+          status: "active" as const,
+        },
       ],
-      
+
       emrSystem: "Epic",
       contractStartDate: new Date("2025-01-01"),
       billingContactName: "Sarah Johnson",
-      billingContactEmail: "billing@armc.com"
+      billingContactEmail: "billing@armc.com",
     };
 
     // Test 1: Create enhanced facility
-    console.log("\n✅ Test 1: Creating enhanced facility...");
     const [createdFacility] = await db
       .insert(facilities)
       .values(testFacilityData as any)
       .returning();
-    
-    console.log("Created facility:", {
+
       id: createdFacility.id,
       name: createdFacility.name,
       autoAssignmentEnabled: createdFacility.autoAssignmentEnabled,
       timezone: createdFacility.timezone,
-      emrSystem: createdFacility.emrSystem
+      emrSystem: createdFacility.emrSystem,
     });
 
     // Test 2: Retrieve and verify enhanced fields
-    console.log("\n✅ Test 2: Retrieving enhanced facility data...");
     const [retrievedFacility] = await db
       .select()
       .from(facilities)
       .where(eq(facilities.id, createdFacility.id));
 
     if (retrievedFacility) {
-      console.log("Retrieved facility enhanced fields:");
-      console.log("- Bill Rates:", retrievedFacility.billRates);
-      console.log("- Pay Rates:", retrievedFacility.payRates);
-      console.log("- Float Pool Margins:", retrievedFacility.floatPoolMargins);
-      console.log("- Workflow Config:", retrievedFacility.workflowAutomationConfig);
-      console.log("- Staffing Targets:", retrievedFacility.staffingTargets);
-      console.log("- Custom Rules:", retrievedFacility.customRules);
-      console.log("- Regulatory Docs Count:", retrievedFacility.regulatoryDocs?.length || 0);
     }
 
     // Test 3: Update specific enhanced fields
-    console.log("\n✅ Test 3: Updating enhanced fields...");
     const updatedBillRates = {
       "Registered Nurse": 80, // Increased rate
       "Licensed Practical Nurse": 55,
       "Certified Nursing Assistant": 40,
       "Physical Therapist": 90,
-      "Respiratory Therapist": 70
+      "Respiratory Therapist": 70,
     };
 
     const [updatedFacility] = await db
@@ -303,53 +290,35 @@ export async function testEnhancedFacilitySystem() {
       .set({
         billRates: updatedBillRates,
         autoAssignmentEnabled: false, // Changed setting
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(facilities.id, createdFacility.id))
       .returning();
 
-    console.log("Updated facility:");
-    console.log("- New RN Bill Rate:", (updatedFacility.billRates as any)?.["Registered Nurse"]);
-    console.log("- Auto Assignment:", updatedFacility.autoAssignmentEnabled);
 
     // Test 4: Query facilities with enhanced filtering
-    console.log("\n✅ Test 4: Testing enhanced facility queries...");
     const activeFacilities = await db
       .select()
       .from(facilities)
       .where(eq(facilities.isActive, true));
 
-    console.log(`Found ${activeFacilities.length} active facilities`);
 
     // Test 5: Validate JSONB field structures
-    console.log("\n✅ Test 5: Validating JSONB field structures...");
     const facilityWithJsonb = activeFacilities[0];
-    
+
     if (facilityWithJsonb?.billRates) {
       const billRates = facilityWithJsonb.billRates as any;
-      console.log("Bill rates structure validation:");
-      console.log("- Has RN rate:", typeof billRates["Registered Nurse"] === "number");
-      console.log("- Has LPN rate:", typeof billRates["Licensed Practical Nurse"] === "number");
     }
 
     if (facilityWithJsonb?.workflowAutomationConfig) {
       const workflow = facilityWithJsonb.workflowAutomationConfig as any;
-      console.log("Workflow config validation:");
-      console.log("- Has autoApproveShifts:", typeof workflow.autoApproveShifts === "boolean");
-      console.log("- Has autoNotifyManagers:", typeof workflow.autoNotifyManagers === "boolean");
     }
 
     // Test 6: Cleanup - Remove test facility
-    console.log("\n✅ Test 6: Cleaning up test data...");
-    await db
-      .delete(facilities)
-      .where(eq(facilities.id, createdFacility.id));
+    await db.delete(facilities).where(eq(facilities.id, createdFacility.id));
 
-    console.log("Test facility cleaned up successfully");
 
-    console.log("\n🎉 All Enhanced Facility Management System tests passed!");
     return true;
-    
   } catch (error) {
     console.error("❌ Enhanced Facility System test failed:", error);
     return false;
@@ -359,10 +328,10 @@ export async function testEnhancedFacilitySystem() {
 // Run the test if this file is executed directly
 if (require.main === module) {
   testEnhancedFacilitySystem()
-    .then(success => {
+    .then((success) => {
       process.exit(success ? 0 : 1);
     })
-    .catch(error => {
+    .catch((error) => {
       console.error("Test execution failed:", error);
       process.exit(1);
     });

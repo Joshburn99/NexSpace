@@ -1,30 +1,30 @@
-import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { cn } from '@/lib/utils';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Activity, 
-  Users, 
-  CalendarDays, 
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import {
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  Users,
+  CalendarDays,
   AlertTriangle,
   CheckCircle,
   DollarSign,
   Clock,
   Building,
   FileText,
-  Shield
-} from 'lucide-react';
+  Shield,
+} from "lucide-react";
 
 interface DashboardStat {
   title: string;
   value: string | number;
   subtitle?: string;
   icon: React.ElementType;
-  trend?: 'up' | 'down' | 'neutral';
+  trend?: "up" | "down" | "neutral";
   trendValue?: string;
   permission?: string;
   color?: string;
@@ -35,7 +35,7 @@ interface MobileDashboardProps {
   priorityTasks?: Array<{
     id: string;
     title: string;
-    type: 'urgent' | 'warning' | 'info';
+    type: "urgent" | "warning" | "info";
     count: number;
   }>;
   recentActivity?: Array<{
@@ -43,7 +43,7 @@ interface MobileDashboardProps {
     action: string;
     resource: string;
     createdAt: string;
-    user: { firstName: string; lastName: string; };
+    user: { firstName: string; lastName: string };
   }>;
   isLoading?: boolean;
   className?: string;
@@ -54,7 +54,7 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
   priorityTasks = [],
   recentActivity = [],
   isLoading = false,
-  className
+  className,
 }) => {
   if (isLoading) {
     return (
@@ -72,27 +72,36 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
     );
   }
 
-  const getTrendColor = (trend?: 'up' | 'down' | 'neutral') => {
+  const getTrendColor = (trend?: "up" | "down" | "neutral") => {
     switch (trend) {
-      case 'up': return 'text-green-600 dark:text-green-400';
-      case 'down': return 'text-red-600 dark:text-red-400';
-      default: return 'text-gray-600 dark:text-gray-400';
+      case "up":
+        return "text-green-600 dark:text-green-400";
+      case "down":
+        return "text-red-600 dark:text-red-400";
+      default:
+        return "text-gray-600 dark:text-gray-400";
     }
   };
 
-  const getTrendIcon = (trend?: 'up' | 'down' | 'neutral') => {
+  const getTrendIcon = (trend?: "up" | "down" | "neutral") => {
     switch (trend) {
-      case 'up': return TrendingUp;
-      case 'down': return TrendingDown;
-      default: return Activity;
+      case "up":
+        return TrendingUp;
+      case "down":
+        return TrendingDown;
+      default:
+        return Activity;
     }
   };
 
-  const getTaskTypeColor = (type: 'urgent' | 'warning' | 'info') => {
+  const getTaskTypeColor = (type: "urgent" | "warning" | "info") => {
     switch (type) {
-      case 'urgent': return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
-      case 'warning': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
-      case 'info': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400';
+      case "urgent":
+        return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400";
+      case "warning":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400";
+      case "info":
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400";
     }
   };
 
@@ -105,18 +114,23 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
           const TrendIcon = getTrendIcon(stat.trend);
 
           return (
-            <Card key={index} className="card-shadow card-border transition-all duration-200 hover:shadow-lg">
+            <Card
+              key={index}
+              className="card-shadow card-border transition-all duration-200 hover:shadow-lg"
+            >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm sm:text-base font-medium flex items-center gap-2">
-                    <Icon className={cn(
-                      "h-4 w-4 sm:h-5 sm:w-5",
-                      stat.color || "text-blue-500"
-                    )} />
+                    <Icon className={cn("h-4 w-4 sm:h-5 sm:w-5", stat.color || "text-blue-500")} />
                     <span className="truncate">{stat.title}</span>
                   </CardTitle>
                   {stat.trend && stat.trendValue && (
-                    <div className={cn("flex items-center gap-1 text-xs sm:text-sm", getTrendColor(stat.trend))}>
+                    <div
+                      className={cn(
+                        "flex items-center gap-1 text-xs sm:text-sm",
+                        getTrendColor(stat.trend)
+                      )}
+                    >
                       <TrendIcon className="h-3 w-3 sm:h-4 sm:w-4" />
                       {stat.trendValue}
                     </div>
@@ -147,7 +161,10 @@ export const MobileDashboard: React.FC<MobileDashboardProps> = ({
             </CardHeader>
             <CardContent className="space-y-3">
               {priorityTasks.map((task) => (
-                <div key={task.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                <div
+                  key={task.id}
+                  className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                >
                   <div className="flex-1">
                     <p className="text-sm sm:text-base font-medium">{task.title}</p>
                   </div>
@@ -214,7 +231,7 @@ interface MobileStatsCardProps {
   value: string | number;
   subtitle?: string;
   icon: React.ElementType;
-  trend?: 'up' | 'down' | 'neutral';
+  trend?: "up" | "down" | "neutral";
   trendValue?: string;
   color?: string;
   onClick?: () => void;
@@ -230,20 +247,23 @@ export const MobileStatsCard: React.FC<MobileStatsCardProps> = ({
   trendValue,
   color = "text-blue-500",
   onClick,
-  className
+  className,
 }) => {
-  const TrendIcon = trend === 'up' ? TrendingUp : trend === 'down' ? TrendingDown : Activity;
-  
-  const getTrendColor = (trend?: 'up' | 'down' | 'neutral') => {
+  const TrendIcon = trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Activity;
+
+  const getTrendColor = (trend?: "up" | "down" | "neutral") => {
     switch (trend) {
-      case 'up': return 'text-green-600 dark:text-green-400';
-      case 'down': return 'text-red-600 dark:text-red-400';
-      default: return 'text-gray-600 dark:text-gray-400';
+      case "up":
+        return "text-green-600 dark:text-green-400";
+      case "down":
+        return "text-red-600 dark:text-red-400";
+      default:
+        return "text-gray-600 dark:text-gray-400";
     }
   };
 
   return (
-    <Card 
+    <Card
       className={cn(
         "card-shadow card-border transition-all duration-200 hover:shadow-lg",
         onClick && "cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
@@ -267,9 +287,7 @@ export const MobileStatsCard: React.FC<MobileStatsCardProps> = ({
       </CardHeader>
       <CardContent>
         <div className="text-xl sm:text-2xl lg:text-3xl font-bold">{value}</div>
-        {subtitle && (
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">{subtitle}</p>
-        )}
+        {subtitle && <p className="text-xs sm:text-sm text-muted-foreground mt-1">{subtitle}</p>}
       </CardContent>
     </Card>
   );

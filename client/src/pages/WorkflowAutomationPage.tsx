@@ -1,25 +1,49 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Switch } from '@/components/ui/switch';
-import { Settings, Play, Pause, Plus, Edit, Trash2, Clock, Users, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import {
+  Settings,
+  Play,
+  Pause,
+  Plus,
+  Edit,
+  Trash2,
+  Clock,
+  Users,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface WorkflowAutomation {
   id: number;
   name: string;
   description: string;
-  type: 'shift_assignment' | 'notification' | 'compliance' | 'billing' | 'reporting';
+  type: "shift_assignment" | "notification" | "compliance" | "billing" | "reporting";
   trigger: string;
   conditions: string;
   actions: string;
@@ -32,7 +56,7 @@ interface WorkflowAutomation {
 }
 
 export default function WorkflowAutomationPage() {
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState("overview");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingAutomation, setEditingAutomation] = useState<WorkflowAutomation | null>(null);
   const { hasPermission } = useFacilityPermissions();
@@ -40,77 +64,77 @@ export default function WorkflowAutomationPage() {
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    type: 'shift_assignment',
-    trigger: '',
-    conditions: '',
-    actions: '',
-    isActive: true
+    name: "",
+    description: "",
+    type: "shift_assignment",
+    trigger: "",
+    conditions: "",
+    actions: "",
+    isActive: true,
   });
 
   const { data: automations, isLoading } = useQuery<WorkflowAutomation[]>({
-    queryKey: ['/api/workflow-automations'],
+    queryKey: ["/api/workflow-automations"],
     initialData: [
       {
         id: 1,
-        name: 'Auto-assign ICU Shifts',
-        description: 'Automatically assign ICU shifts to available RNs based on experience level',
-        type: 'shift_assignment',
-        trigger: 'shift_created',
+        name: "Auto-assign ICU Shifts",
+        description: "Automatically assign ICU shifts to available RNs based on experience level",
+        type: "shift_assignment",
+        trigger: "shift_created",
         conditions: 'department == "ICU" && specialty == "RN"',
-        actions: 'assign_to_available_staff(experience_level >= 2)',
+        actions: "assign_to_available_staff(experience_level >= 2)",
         isActive: true,
-        lastRun: '2025-07-14T18:00:00Z',
-        nextRun: '2025-07-15T06:00:00Z',
+        lastRun: "2025-07-14T18:00:00Z",
+        nextRun: "2025-07-15T06:00:00Z",
         runCount: 145,
-        createdAt: '2025-06-01T10:00:00Z',
-        updatedAt: '2025-07-14T18:00:00Z'
+        createdAt: "2025-06-01T10:00:00Z",
+        updatedAt: "2025-07-14T18:00:00Z",
       },
       {
         id: 2,
-        name: 'Credential Expiry Notifications',
-        description: 'Send notifications when staff credentials are expiring within 30 days',
-        type: 'notification',
-        trigger: 'daily_check',
-        conditions: 'credential_expiry_date <= (today + 30 days)',
-        actions: 'send_notification(staff_member, hr_manager)',
+        name: "Credential Expiry Notifications",
+        description: "Send notifications when staff credentials are expiring within 30 days",
+        type: "notification",
+        trigger: "daily_check",
+        conditions: "credential_expiry_date <= (today + 30 days)",
+        actions: "send_notification(staff_member, hr_manager)",
         isActive: true,
-        lastRun: '2025-07-14T06:00:00Z',
-        nextRun: '2025-07-15T06:00:00Z',
+        lastRun: "2025-07-14T06:00:00Z",
+        nextRun: "2025-07-15T06:00:00Z",
         runCount: 42,
-        createdAt: '2025-06-15T10:00:00Z',
-        updatedAt: '2025-07-14T06:00:00Z'
+        createdAt: "2025-06-15T10:00:00Z",
+        updatedAt: "2025-07-14T06:00:00Z",
       },
       {
         id: 3,
-        name: 'Overtime Alert System',
-        description: 'Alert managers when staff approach overtime thresholds',
-        type: 'compliance',
-        trigger: 'hours_logged',
-        conditions: 'weekly_hours > 35',
-        actions: 'send_alert(manager) && log_compliance_event',
+        name: "Overtime Alert System",
+        description: "Alert managers when staff approach overtime thresholds",
+        type: "compliance",
+        trigger: "hours_logged",
+        conditions: "weekly_hours > 35",
+        actions: "send_alert(manager) && log_compliance_event",
         isActive: false,
-        lastRun: '2025-07-13T14:30:00Z',
+        lastRun: "2025-07-13T14:30:00Z",
         nextRun: null,
         runCount: 28,
-        createdAt: '2025-06-20T10:00:00Z',
-        updatedAt: '2025-07-13T14:30:00Z'
-      }
-    ]
+        createdAt: "2025-06-20T10:00:00Z",
+        updatedAt: "2025-07-13T14:30:00Z",
+      },
+    ],
   });
 
   const createAutomation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('POST', '/api/workflow-automations', data);
+      const response = await apiRequest("POST", "/api/workflow-automations", data);
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to create workflow automation');
+        throw new Error(error.message || "Failed to create workflow automation");
       }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/workflow-automations'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/workflow-automations"] });
       setIsCreateModalOpen(false);
       resetForm();
       toast({
@@ -119,10 +143,12 @@ export default function WorkflowAutomationPage() {
       });
     },
     onError: (error: any) => {
-      console.error('Create automation error:', error);
+      console.error("Create automation error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to create workflow automation. Please check your connection and try again.",
+        description:
+          error.message ||
+          "Failed to create workflow automation. Please check your connection and try again.",
         variant: "destructive",
       });
     },
@@ -130,15 +156,15 @@ export default function WorkflowAutomationPage() {
 
   const updateAutomation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest('PATCH', `/api/workflow-automations/${data.id}`, data);
+      const response = await apiRequest("PATCH", `/api/workflow-automations/${data.id}`, data);
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to update workflow automation');
+        throw new Error(error.message || "Failed to update workflow automation");
       }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/workflow-automations'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/workflow-automations"] });
       setEditingAutomation(null);
       resetForm();
       toast({
@@ -147,10 +173,12 @@ export default function WorkflowAutomationPage() {
       });
     },
     onError: (error: any) => {
-      console.error('Update automation error:', error);
+      console.error("Update automation error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to update workflow automation. Please check your connection and try again.",
+        description:
+          error.message ||
+          "Failed to update workflow automation. Please check your connection and try again.",
         variant: "destructive",
       });
     },
@@ -158,25 +186,27 @@ export default function WorkflowAutomationPage() {
 
   const toggleAutomation = useMutation({
     mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
-      const response = await apiRequest('PATCH', `/api/workflow-automations/${id}`, { isActive });
+      const response = await apiRequest("PATCH", `/api/workflow-automations/${id}`, { isActive });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to update automation status');
+        throw new Error(error.message || "Failed to update automation status");
       }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/workflow-automations'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/workflow-automations"] });
       toast({
         title: "Success",
         description: "Automation status updated",
       });
     },
     onError: (error: any) => {
-      console.error('Toggle automation error:', error);
+      console.error("Toggle automation error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to update automation status. Please check your connection and try again.",
+        description:
+          error.message ||
+          "Failed to update automation status. Please check your connection and try again.",
         variant: "destructive",
       });
     },
@@ -184,13 +214,13 @@ export default function WorkflowAutomationPage() {
 
   const resetForm = () => {
     setFormData({
-      name: '',
-      description: '',
-      type: 'shift_assignment',
-      trigger: '',
-      conditions: '',
-      actions: '',
-      isActive: true
+      name: "",
+      description: "",
+      type: "shift_assignment",
+      trigger: "",
+      conditions: "",
+      actions: "",
+      isActive: true,
     });
   };
 
@@ -220,34 +250,46 @@ export default function WorkflowAutomationPage() {
       trigger: automation.trigger,
       conditions: automation.conditions,
       actions: automation.actions,
-      isActive: automation.isActive
+      isActive: automation.isActive,
     });
     setIsCreateModalOpen(true);
   };
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'shift_assignment': return 'bg-blue-100 text-blue-800';
-      case 'notification': return 'bg-yellow-100 text-yellow-800';
-      case 'compliance': return 'bg-green-100 text-green-800';
-      case 'billing': return 'bg-purple-100 text-purple-800';
-      case 'reporting': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "shift_assignment":
+        return "bg-blue-100 text-blue-800";
+      case "notification":
+        return "bg-yellow-100 text-yellow-800";
+      case "compliance":
+        return "bg-green-100 text-green-800";
+      case "billing":
+        return "bg-purple-100 text-purple-800";
+      case "reporting":
+        return "bg-orange-100 text-orange-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'shift_assignment': return Users;
-      case 'notification': return AlertCircle;
-      case 'compliance': return CheckCircle;
-      case 'billing': return Clock;
-      case 'reporting': return Settings;
-      default: return Settings;
+      case "shift_assignment":
+        return Users;
+      case "notification":
+        return AlertCircle;
+      case "compliance":
+        return CheckCircle;
+      case "billing":
+        return Clock;
+      case "reporting":
+        return Settings;
+      default:
+        return Settings;
     }
   };
 
-  if (!hasPermission('view_workflow_automation')) {
+  if (!hasPermission("view_workflow_automation")) {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -259,9 +301,12 @@ export default function WorkflowAutomationPage() {
     );
   }
 
-  const activeAutomations = automations?.filter(a => a.isActive).length || 0;
+  const activeAutomations = automations?.filter((a) => a.isActive).length || 0;
   const totalRuns = automations?.reduce((sum, a) => sum + a.runCount, 0) || 0;
-  const recentRuns = automations?.filter(a => a.lastRun && new Date(a.lastRun) > new Date(Date.now() - 24 * 60 * 60 * 1000)).length || 0;
+  const recentRuns =
+    automations?.filter(
+      (a) => a.lastRun && new Date(a.lastRun) > new Date(Date.now() - 24 * 60 * 60 * 1000)
+    ).length || 0;
 
   return (
     <div className="container mx-auto p-6">
@@ -273,14 +318,17 @@ export default function WorkflowAutomationPage() {
           </h1>
           <p className="text-gray-600 mt-2">Automate routine tasks and workflows</p>
         </div>
-        {hasPermission('manage_workflow_automation') && (
-          <Dialog open={isCreateModalOpen} onOpenChange={(open) => {
-            setIsCreateModalOpen(open);
-            if (!open) {
-              setEditingAutomation(null);
-              resetForm();
-            }
-          }}>
+        {hasPermission("manage_workflow_automation") && (
+          <Dialog
+            open={isCreateModalOpen}
+            onOpenChange={(open) => {
+              setIsCreateModalOpen(open);
+              if (!open) {
+                setEditingAutomation(null);
+                resetForm();
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
@@ -290,7 +338,7 @@ export default function WorkflowAutomationPage() {
             <DialogContent className="max-w-2xl">
               <DialogHeader>
                 <DialogTitle>
-                  {editingAutomation ? 'Edit Automation' : 'Create New Automation'}
+                  {editingAutomation ? "Edit Automation" : "Create New Automation"}
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
@@ -299,7 +347,7 @@ export default function WorkflowAutomationPage() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
                     placeholder="Enter automation name"
                   />
                 </div>
@@ -309,14 +357,19 @@ export default function WorkflowAutomationPage() {
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, description: e.target.value }))
+                    }
                     placeholder="Describe what this automation does"
                   />
                 </div>
 
                 <div>
                   <Label htmlFor="type">Type *</Label>
-                  <Select value={formData.type} onValueChange={(value) => setFormData(prev => ({ ...prev, type: value }))}>
+                  <Select
+                    value={formData.type}
+                    onValueChange={(value) => setFormData((prev) => ({ ...prev, type: value }))}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select automation type" />
                     </SelectTrigger>
@@ -335,7 +388,7 @@ export default function WorkflowAutomationPage() {
                   <Input
                     id="trigger"
                     value={formData.trigger}
-                    onChange={(e) => setFormData(prev => ({ ...prev, trigger: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, trigger: e.target.value }))}
                     placeholder="e.g., shift_created, daily_check, hours_logged"
                   />
                 </div>
@@ -345,7 +398,9 @@ export default function WorkflowAutomationPage() {
                   <Textarea
                     id="conditions"
                     value={formData.conditions}
-                    onChange={(e) => setFormData(prev => ({ ...prev, conditions: e.target.value }))}
+                    onChange={(e) =>
+                      setFormData((prev) => ({ ...prev, conditions: e.target.value }))
+                    }
                     placeholder="e.g., department == 'ICU' && specialty == 'RN'"
                   />
                 </div>
@@ -355,7 +410,7 @@ export default function WorkflowAutomationPage() {
                   <Textarea
                     id="actions"
                     value={formData.actions}
-                    onChange={(e) => setFormData(prev => ({ ...prev, actions: e.target.value }))}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, actions: e.target.value }))}
                     placeholder="e.g., assign_to_available_staff(experience_level >= 2)"
                   />
                 </div>
@@ -364,7 +419,9 @@ export default function WorkflowAutomationPage() {
                   <Switch
                     id="isActive"
                     checked={formData.isActive}
-                    onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, isActive: checked }))
+                    }
                   />
                   <Label htmlFor="isActive">Enable automation</Label>
                 </div>
@@ -373,14 +430,17 @@ export default function WorkflowAutomationPage() {
                   <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleSubmit} disabled={createAutomation.isPending || updateAutomation.isPending}>
-                    {(createAutomation.isPending || updateAutomation.isPending) ? (
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={createAutomation.isPending || updateAutomation.isPending}
+                  >
+                    {createAutomation.isPending || updateAutomation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {editingAutomation ? 'Updating...' : 'Creating...'}
+                        {editingAutomation ? "Updating..." : "Creating..."}
                       </>
                     ) : (
-                      `${editingAutomation ? 'Update' : 'Create'} Automation`
+                      `${editingAutomation ? "Update" : "Create"} Automation`
                     )}
                   </Button>
                 </div>
@@ -454,12 +514,14 @@ export default function WorkflowAutomationPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <Badge className={getTypeColor(automation.type)}>
-                          {automation.type.replace('_', ' ')}
+                          {automation.type.replace("_", " ")}
                         </Badge>
                         <Switch
                           checked={automation.isActive}
-                          onCheckedChange={(checked) => toggleAutomation.mutate({ id: automation.id, isActive: checked })}
-                          disabled={!hasPermission('manage_workflow_automation')}
+                          onCheckedChange={(checked) =>
+                            toggleAutomation.mutate({ id: automation.id, isActive: checked })
+                          }
+                          disabled={!hasPermission("manage_workflow_automation")}
                         />
                       </div>
                     </div>
@@ -485,7 +547,7 @@ export default function WorkflowAutomationPage() {
                           )}
                         </div>
                       </div>
-                      {hasPermission('manage_workflow_automation') && (
+                      {hasPermission("manage_workflow_automation") && (
                         <div className="flex gap-2 mt-4">
                           <Button
                             variant="outline"
@@ -509,8 +571,10 @@ export default function WorkflowAutomationPage() {
               <CardContent className="p-12 text-center">
                 <Settings className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No automations found</h3>
-                <p className="text-gray-600 mb-4">Create your first workflow automation to get started</p>
-                {hasPermission('manage_workflow_automation') && (
+                <p className="text-gray-600 mb-4">
+                  Create your first workflow automation to get started
+                </p>
+                {hasPermission("manage_workflow_automation") && (
                   <Button onClick={() => setIsCreateModalOpen(true)}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create Automation

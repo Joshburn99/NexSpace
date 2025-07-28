@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import { useLocation, Link } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
+import React, { useState } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useLocation, Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,7 +11,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from "@/components/ui/dropdown-menu";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -19,8 +19,8 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from '@/components/ui/navigation-menu';
-import { cn } from '@/lib/utils';
+} from "@/components/ui/navigation-menu";
+import { cn } from "@/lib/utils";
 import {
   LogOut,
   User,
@@ -41,11 +41,11 @@ import {
   Clock,
   UserCheck,
   Home,
-  HelpCircle
-} from 'lucide-react';
-import { GlobalSearch } from './GlobalSearch';
-import { NotificationDropdown } from './NotificationDropdown';
-import { ImpersonationIndicator } from './ImpersonationIndicator';
+  HelpCircle,
+} from "lucide-react";
+import { GlobalSearch } from "./GlobalSearch";
+import { NotificationDropdown } from "./NotificationDropdown";
+import { ImpersonationIndicator } from "./ImpersonationIndicator";
 
 // Type for navigation items
 type NavigationItem = {
@@ -57,145 +57,151 @@ type NavigationItem = {
 
 // Navigation items based on user role and permissions
 const getNavigationItems = (user: any): NavigationItem[] => {
-  const isSuperAdmin = user?.role === 'super_admin';
-  const isAdmin = user?.role === 'admin' || isSuperAdmin;
-  const isFacilityUser = user?.role && [
-    'facility_admin', 'facility_administrator', 'scheduling_coordinator', 
-    'hr_manager', 'corporate', 'regional_director', 'billing', 
-    'supervisor', 'director_of_nursing'
-  ].includes(user.role);
-  const isEmployee = user?.role === 'employee';
-  const isContractor = user?.role === 'contractor';
+  const isSuperAdmin = user?.role === "super_admin";
+  const isAdmin = user?.role === "admin" || isSuperAdmin;
+  const isFacilityUser =
+    user?.role &&
+    [
+      "facility_admin",
+      "facility_administrator",
+      "scheduling_coordinator",
+      "hr_manager",
+      "corporate",
+      "regional_director",
+      "billing",
+      "supervisor",
+      "director_of_nursing",
+    ].includes(user.role);
+  const isEmployee = user?.role === "employee";
+  const isContractor = user?.role === "contractor";
 
   if (isAdmin) {
     return [
-      { label: 'Dashboard', href: '/', icon: Home },
-      { label: 'Calendar', href: '/calendar', icon: Calendar },
-      { 
-        label: 'Facilities', 
+      { label: "Dashboard", href: "/", icon: Home },
+      { label: "Calendar", href: "/calendar", icon: Calendar },
+      {
+        label: "Facilities",
         icon: Building2,
         items: [
-          { label: 'All Facilities', href: '/facility-management' },
-          { label: 'Facility Profiles', href: '/enhanced-facilities' },
-          { label: 'Teams', href: '/teams' },
-        ]
+          { label: "All Facilities", href: "/facility-management" },
+          { label: "Facility Profiles", href: "/enhanced-facilities" },
+          { label: "Teams", href: "/teams" },
+        ],
       },
       {
-        label: 'Workforce',
+        label: "Workforce",
         icon: Users,
         items: [
-          { label: 'Staff Directory', href: '/enhanced-staff' },
-          { label: 'Staff Management', href: '/superuser-staff-management' },
-          { label: 'Shift Requests', href: '/shift-requests' },
-          { label: 'Time Off', href: '/time-off-management' },
-        ]
+          { label: "Staff Directory", href: "/enhanced-staff" },
+          { label: "Staff Management", href: "/superuser-staff-management" },
+          { label: "Shift Requests", href: "/shift-requests" },
+          { label: "Time Off", href: "/time-off-management" },
+        ],
       },
       {
-        label: 'Scheduling',
+        label: "Scheduling",
         icon: Calendar,
         items: [
-          { label: 'Shift Templates', href: '/shift-templates' },
-          { label: 'Job Board', href: '/job-board' },
-        ]
+          { label: "Shift Templates", href: "/shift-templates" },
+          { label: "Job Board", href: "/job-board" },
+        ],
       },
       {
-        label: 'Analytics',
+        label: "Analytics",
         icon: BarChart3,
         items: [
-          { label: 'Dashboard', href: '/analytics' },
-          { label: 'Reports', href: '/reports' },
-          { label: 'Insights', href: '/analytics/insights' },
-        ]
+          { label: "Dashboard", href: "/analytics" },
+          { label: "Reports", href: "/reports" },
+          { label: "Insights", href: "/analytics/insights" },
+        ],
       },
-      { label: 'Messages', href: '/messaging', icon: MessageSquare },
+      { label: "Messages", href: "/messaging", icon: MessageSquare },
       {
-        label: 'Admin',
+        label: "Admin",
         icon: Shield,
         items: [
-          { label: 'User Management', href: '/admin/users' },
-          { label: 'Audit Logs', href: '/admin/audit-logs' },
-          { label: 'Database Console', href: '/admin/database' },
-        ]
+          { label: "User Management", href: "/admin/users" },
+          { label: "Audit Logs", href: "/admin/audit-logs" },
+          { label: "Database Console", href: "/admin/database" },
+        ],
       },
     ];
   }
 
   if (isFacilityUser) {
-    const items: NavigationItem[] = [
-      { label: 'Dashboard', href: '/', icon: Home },
-    ];
+    const items: NavigationItem[] = [{ label: "Dashboard", href: "/", icon: Home }];
 
     // Add items based on permissions
-    if (user?.permissions?.includes('view_schedules')) {
-      items.push({ label: 'Calendar', href: '/calendar', icon: Calendar });
+    if (user?.permissions?.includes("view_schedules")) {
+      items.push({ label: "Calendar", href: "/calendar", icon: Calendar });
     }
 
     const workforceItems: { label: string; href: string }[] = [];
-    if (user?.permissions?.includes('view_staff')) {
-      workforceItems.push({ label: 'Staff Directory', href: '/enhanced-staff' });
+    if (user?.permissions?.includes("view_staff")) {
+      workforceItems.push({ label: "Staff Directory", href: "/enhanced-staff" });
     }
-    if (user?.permissions?.includes('view_shift_requests')) {
-      workforceItems.push({ label: 'Shift Requests', href: '/shift-requests' });
+    if (user?.permissions?.includes("view_shift_requests")) {
+      workforceItems.push({ label: "Shift Requests", href: "/shift-requests" });
     }
-    if (user?.permissions?.includes('view_timeoff_requests')) {
-      workforceItems.push({ label: 'Time Off', href: '/time-off-management' });
+    if (user?.permissions?.includes("view_timeoff_requests")) {
+      workforceItems.push({ label: "Time Off", href: "/time-off-management" });
     }
     if (workforceItems.length > 0) {
       items.push({
-        label: 'Workforce',
+        label: "Workforce",
         icon: Users,
-        items: workforceItems
+        items: workforceItems,
       });
     }
 
     const billingItems: { label: string; href: string }[] = [];
-    if (user?.permissions?.includes('view_billing')) {
-      billingItems.push({ label: 'Billing Dashboard', href: '/billing' });
-      billingItems.push({ label: 'Invoices', href: '/billing/professional' });
+    if (user?.permissions?.includes("view_billing")) {
+      billingItems.push({ label: "Billing Dashboard", href: "/billing" });
+      billingItems.push({ label: "Invoices", href: "/billing/professional" });
     }
-    if (user?.permissions?.includes('view_rates')) {
-      billingItems.push({ label: 'Rates', href: '/billing/rates' });
+    if (user?.permissions?.includes("view_rates")) {
+      billingItems.push({ label: "Rates", href: "/billing/rates" });
     }
     if (billingItems.length > 0) {
       items.push({
-        label: 'Billing',
+        label: "Billing",
         icon: CreditCard,
-        items: billingItems
+        items: billingItems,
       });
     }
 
     const facilityItems: { label: string; href: string }[] = [];
-    if (user?.permissions?.includes('view_facility_profile')) {
-      facilityItems.push({ label: 'Facility Profile', href: '/facility-profile' });
+    if (user?.permissions?.includes("view_facility_profile")) {
+      facilityItems.push({ label: "Facility Profile", href: "/facility-profile" });
     }
-    if (user?.permissions?.includes('manage_facility_settings')) {
-      facilityItems.push({ label: 'Settings', href: '/facility-settings' });
+    if (user?.permissions?.includes("manage_facility_settings")) {
+      facilityItems.push({ label: "Settings", href: "/facility-settings" });
     }
-    if (user?.permissions?.includes('manage_facility_users')) {
-      facilityItems.push({ label: 'Users', href: '/facility-users' });
+    if (user?.permissions?.includes("manage_facility_users")) {
+      facilityItems.push({ label: "Users", href: "/facility-users" });
     }
     if (facilityItems.length > 0) {
       items.push({
-        label: 'Facility',
+        label: "Facility",
         icon: Building2,
-        items: facilityItems
+        items: facilityItems,
       });
     }
 
-    items.push({ label: 'Messages', href: '/messaging', icon: MessageSquare });
+    items.push({ label: "Messages", href: "/messaging", icon: MessageSquare });
 
     return items;
   }
 
   if (isEmployee || isContractor) {
     return [
-      { label: 'Dashboard', href: '/', icon: Home },
-      { label: 'My Schedule', href: '/my-schedule', icon: Calendar },
-      { label: 'Time Clock', href: '/time-clock', icon: Clock },
-      { label: 'Messages', href: '/messaging', icon: MessageSquare },
-      { label: 'Job Board', href: '/job-board', icon: Briefcase },
-      { label: 'Credentials', href: '/credentials', icon: FileText },
-      { label: 'My Requests', href: '/my-requests', icon: ClipboardList },
+      { label: "Dashboard", href: "/", icon: Home },
+      { label: "My Schedule", href: "/my-schedule", icon: Calendar },
+      { label: "Time Clock", href: "/time-clock", icon: Clock },
+      { label: "Messages", href: "/messaging", icon: MessageSquare },
+      { label: "Job Board", href: "/job-board", icon: Briefcase },
+      { label: "Credentials", href: "/credentials", icon: FileText },
+      { label: "My Requests", href: "/my-requests", icon: ClipboardList },
     ];
   }
 
@@ -206,7 +212,7 @@ export function UnifiedHeader() {
   const { user, impersonatedUser, quitImpersonation, originalUser, logoutMutation } = useAuth();
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  
+
   const currentUser = impersonatedUser || user;
   const isImpersonating = !!impersonatedUser && !!originalUser;
   const navigationItems = getNavigationItems(currentUser);
@@ -216,7 +222,7 @@ export function UnifiedHeader() {
   };
 
   const isActiveRoute = (href: string) => {
-    if (href === '/') return location === '/';
+    if (href === "/") return location === "/";
     return location.startsWith(href);
   };
 
@@ -231,11 +237,7 @@ export function UnifiedHeader() {
           {/* Logo and Brand */}
           <div className="flex items-center gap-2 mr-4 lg:mr-8">
             <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-              <img 
-                src="/nexspace-logo.png" 
-                alt="NexSpace" 
-                className="h-8 w-auto"
-              />
+              <img src="/nexspace-logo.png" alt="NexSpace" className="h-8 w-auto" />
               <span className="hidden sm:block text-xl font-semibold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                 NexSpace
               </span>
@@ -255,7 +257,7 @@ export function UnifiedHeader() {
 
           {/* Desktop Navigation */}
           <nav className="hidden lg:flex flex-1 items-center gap-1">
-            {navigationItems.map((item) => (
+            {navigationItems.map((item) =>
               item.items ? (
                 <DropdownMenu key={item.label}>
                   <DropdownMenuTrigger asChild>
@@ -263,7 +265,7 @@ export function UnifiedHeader() {
                       variant="ghost"
                       className={cn(
                         "gap-2 px-3 font-medium",
-                        item.items.some(subItem => isActiveRoute(subItem.href))
+                        item.items.some((subItem) => isActiveRoute(subItem.href))
                           ? "bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400"
                           : "text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100"
                       )}
@@ -305,7 +307,7 @@ export function UnifiedHeader() {
                   </Button>
                 </Link>
               ) : null
-            ))}
+            )}
           </nav>
 
           {/* Search - Hidden on small screens */}
@@ -322,7 +324,7 @@ export function UnifiedHeader() {
               className="relative hidden sm:flex mobile-touch"
               onClick={() => {
                 // Dispatch custom event to trigger tour
-                window.dispatchEvent(new CustomEvent('startProductTour'));
+                window.dispatchEvent(new CustomEvent("startProductTour"));
               }}
               title="Start product tour"
             >
@@ -338,7 +340,8 @@ export function UnifiedHeader() {
                 <Button variant="ghost" className="relative gap-2 px-2 sm:px-3">
                   <Avatar className="h-8 w-8">
                     <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
-                      {currentUser?.firstName?.[0]}{currentUser?.lastName?.[0]}
+                      {currentUser?.firstName?.[0]}
+                      {currentUser?.lastName?.[0]}
                     </AvatarFallback>
                   </Avatar>
                   <div className="hidden sm:block text-left">
@@ -346,7 +349,9 @@ export function UnifiedHeader() {
                       {currentUser?.firstName} {currentUser?.lastName}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      {currentUser?.role?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      {currentUser?.role
+                        ?.replace(/_/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
                     </p>
                   </div>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -392,7 +397,7 @@ export function UnifiedHeader() {
           <div className="lg:hidden border-t">
             <nav className="container py-4 px-4 sm:px-6">
               <div className="space-y-1">
-                {navigationItems.map((item) => (
+                {navigationItems.map((item) =>
                   item.items ? (
                     <div key={item.label} className="space-y-1">
                       <div className="px-3 py-2 text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -435,8 +440,8 @@ export function UnifiedHeader() {
                       {item.label}
                     </Link>
                   ) : null
-                ))}
-                
+                )}
+
                 {/* Help Button in Mobile Menu */}
                 <div className="mt-4 pt-4 border-t">
                   <Button
@@ -444,7 +449,7 @@ export function UnifiedHeader() {
                     className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md w-full text-left"
                     onClick={() => {
                       setMobileMenuOpen(false);
-                      window.dispatchEvent(new CustomEvent('startProductTour'));
+                      window.dispatchEvent(new CustomEvent("startProductTour"));
                     }}
                   >
                     <HelpCircle className="h-4 w-4" />

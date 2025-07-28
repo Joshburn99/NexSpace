@@ -89,7 +89,7 @@ export default function VendorInvoicesPage() {
       const response = await apiRequest("POST", "/api/vendor-invoices", invoiceData);
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to create invoice');
+        throw new Error(error.message || "Failed to create invoice");
       }
       return response.json();
     },
@@ -102,10 +102,12 @@ export default function VendorInvoicesPage() {
       });
     },
     onError: (error: any) => {
-      console.error('Create invoice error:', error);
+      console.error("Create invoice error:", error);
       toast({
         title: "Creation Failed",
-        description: error.message || "Failed to create vendor invoice. Please check your connection and try again.",
+        description:
+          error.message ||
+          "Failed to create vendor invoice. Please check your connection and try again.",
         variant: "destructive",
       });
     },
@@ -117,7 +119,7 @@ export default function VendorInvoicesPage() {
       const response = await apiRequest("PATCH", `/api/vendor-invoices/${id}`, { status });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to update invoice status');
+        throw new Error(error.message || "Failed to update invoice status");
       }
       return response.json();
     },
@@ -130,7 +132,7 @@ export default function VendorInvoicesPage() {
       setUpdatingInvoiceId(null);
     },
     onError: (error: any) => {
-      console.error('Update invoice status error:', error);
+      console.error("Update invoice status error:", error);
       toast({
         title: "Update Failed",
         description: error.message || "Failed to update invoice status. Please try again.",

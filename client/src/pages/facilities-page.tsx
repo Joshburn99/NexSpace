@@ -4,7 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useFacilities, getFacilityDisplayName, getFacilityAddress, type EnhancedFacility } from "@/hooks/use-facility";
+import {
+  useFacilities,
+  getFacilityDisplayName,
+  getFacilityAddress,
+  type EnhancedFacility,
+} from "@/hooks/use-facility";
 import {
   Dialog,
   DialogContent,
@@ -93,7 +98,7 @@ export default function FacilitiesPage() {
     facilityType: z.string().optional(),
     bedCount: z.number().min(0).optional(),
     isActive: z.boolean(),
-    
+
     // Enhanced Fields
     autoAssignmentEnabled: z.boolean().optional(),
     teamId: z.number().optional(),
@@ -104,7 +109,7 @@ export default function FacilitiesPage() {
     emrSystem: z.string().optional(),
     contractStartDate: z.string().optional(),
     payrollProviderId: z.number().optional(),
-    
+
     // JSON Fields - simplified for form handling
     floatPoolMargins: z.string().optional(),
     billRates: z.string().optional(),
@@ -239,15 +244,19 @@ export default function FacilitiesPage() {
   const editFacilityMutation = useMutation({
     mutationFn: async (data: z.infer<typeof enhancedFacilityEditSchema>) => {
       if (!facilityToEdit) throw new Error("No facility selected for editing");
-      
+
       // Prepare JSON fields
       const payload = {
         ...data,
         floatPoolMargins: data.floatPoolMargins ? JSON.parse(data.floatPoolMargins) : null,
         billRates: data.billRates ? JSON.parse(data.billRates) : null,
         payRates: data.payRates ? JSON.parse(data.payRates) : null,
-        workflowAutomationConfig: data.workflowAutomationConfig ? JSON.parse(data.workflowAutomationConfig) : null,
-        shiftManagementSettings: data.shiftManagementSettings ? JSON.parse(data.shiftManagementSettings) : null,
+        workflowAutomationConfig: data.workflowAutomationConfig
+          ? JSON.parse(data.workflowAutomationConfig)
+          : null,
+        shiftManagementSettings: data.shiftManagementSettings
+          ? JSON.parse(data.shiftManagementSettings)
+          : null,
         staffingTargets: data.staffingTargets ? JSON.parse(data.staffingTargets) : null,
         customRules: data.customRules ? JSON.parse(data.customRules) : null,
         regulatoryDocs: data.regulatoryDocs ? JSON.parse(data.regulatoryDocs) : null,
@@ -258,27 +267,27 @@ export default function FacilitiesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || "Failed to update facility");
       }
-      
+
       return response.json();
     },
     onSuccess: (updatedFacility) => {
       queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
       queryClient.invalidateQueries({ queryKey: ["/api/enhanced-facilities"] });
-      
+
       // Handle downstream effects if facility was deactivated
       if (!updatedFacility.isActive && facilityToEdit?.isActive) {
         handleFacilityDeactivation(facilityToEdit.id);
       }
-      
+
       setIsEditDialogOpen(false);
       setFacilityToEdit(null);
       editForm.reset();
-      
+
       toast({
         title: "Success",
         description: `Facility "${updatedFacility.name}" updated successfully`,
@@ -301,19 +310,21 @@ export default function FacilitiesPage() {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
       });
-      
+
       if (response.ok) {
         queryClient.invalidateQueries({ queryKey: ["/api/shift-templates"] });
         toast({
           title: "Templates Disabled",
-          description: "All shift templates for this facility have been disabled to prevent new shift generation.",
+          description:
+            "All shift templates for this facility have been disabled to prevent new shift generation.",
         });
       }
     } catch (error) {
       console.error("Failed to disable facility templates:", error);
       toast({
         title: "Warning",
-        description: "Facility updated but some templates may still be active. Please review shift templates manually.",
+        description:
+          "Facility updated but some templates may still be active. Please review shift templates manually.",
         variant: "destructive",
       });
     }
@@ -343,14 +354,24 @@ export default function FacilitiesPage() {
       emrSystem: facility.emrSystem || "",
       contractStartDate: facility.contractStartDate || "",
       payrollProviderId: facility.payrollProviderId || undefined,
-      floatPoolMargins: facility.floatPoolMargins ? JSON.stringify(facility.floatPoolMargins, null, 2) : "",
+      floatPoolMargins: facility.floatPoolMargins
+        ? JSON.stringify(facility.floatPoolMargins, null, 2)
+        : "",
       billRates: facility.billRates ? JSON.stringify(facility.billRates, null, 2) : "",
       payRates: facility.payRates ? JSON.stringify(facility.payRates, null, 2) : "",
-      workflowAutomationConfig: facility.workflowAutomationConfig ? JSON.stringify(facility.workflowAutomationConfig, null, 2) : "",
-      shiftManagementSettings: facility.shiftManagementSettings ? JSON.stringify(facility.shiftManagementSettings, null, 2) : "",
-      staffingTargets: facility.staffingTargets ? JSON.stringify(facility.staffingTargets, null, 2) : "",
+      workflowAutomationConfig: facility.workflowAutomationConfig
+        ? JSON.stringify(facility.workflowAutomationConfig, null, 2)
+        : "",
+      shiftManagementSettings: facility.shiftManagementSettings
+        ? JSON.stringify(facility.shiftManagementSettings, null, 2)
+        : "",
+      staffingTargets: facility.staffingTargets
+        ? JSON.stringify(facility.staffingTargets, null, 2)
+        : "",
       customRules: facility.customRules ? JSON.stringify(facility.customRules, null, 2) : "",
-      regulatoryDocs: facility.regulatoryDocs ? JSON.stringify(facility.regulatoryDocs, null, 2) : "",
+      regulatoryDocs: facility.regulatoryDocs
+        ? JSON.stringify(facility.regulatoryDocs, null, 2)
+        : "",
     });
     setIsEditDialogOpen(true);
   };
@@ -847,13 +868,17 @@ export default function FacilitiesPage() {
 
                 <div className="flex justify-between items-center pt-2">
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setSelectedFacility(facility)}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedFacility(facility)}
+                    >
                       View Details
                     </Button>
                     {user?.role === "superuser" && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={() => openEditDialog(facility)}
                         className="text-blue-600 hover:text-blue-700"
                       >
@@ -1022,10 +1047,10 @@ export default function FacilitiesPage() {
                         <FormItem>
                           <FormLabel>Bed Count</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="number" 
-                              {...field} 
-                              onChange={e => field.onChange(parseInt(e.target.value) || 0)}
+                            <Input
+                              type="number"
+                              {...field}
+                              onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                             />
                           </FormControl>
                           <FormMessage />
@@ -1064,11 +1089,11 @@ export default function FacilitiesPage() {
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base">
-                              Facility Status
-                            </FormLabel>
+                            <FormLabel className="text-base">Facility Status</FormLabel>
                             <div className="text-sm text-muted-foreground">
-                              {field.value ? "Active - Can generate shifts" : "Inactive - Templates disabled"}
+                              {field.value
+                                ? "Active - Can generate shifts"
+                                : "Inactive - Templates disabled"}
                             </div>
                             {!field.value && (
                               <div className="flex items-center gap-1 text-sm text-amber-600">
@@ -1078,10 +1103,7 @@ export default function FacilitiesPage() {
                             )}
                           </div>
                           <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -1212,8 +1234,8 @@ export default function FacilitiesPage() {
                       <FormItem>
                         <FormLabel>Bill Rates (JSON)</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            {...field} 
+                          <Textarea
+                            {...field}
                             rows={4}
                             placeholder='{"RN": 75, "LPN": 55, "CNA": 35}'
                           />
@@ -1233,8 +1255,8 @@ export default function FacilitiesPage() {
                       <FormItem>
                         <FormLabel>Pay Rates (JSON)</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            {...field} 
+                          <Textarea
+                            {...field}
                             rows={4}
                             placeholder='{"RN": 45, "LPN": 32, "CNA": 22}'
                           />
@@ -1254,8 +1276,8 @@ export default function FacilitiesPage() {
                       <FormItem>
                         <FormLabel>Float Pool Margins (JSON)</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            {...field} 
+                          <Textarea
+                            {...field}
                             rows={3}
                             placeholder='{"standard": 1.15, "premium": 1.25, "holiday": 1.5}'
                           />
@@ -1278,18 +1300,13 @@ export default function FacilitiesPage() {
                       render={({ field }) => (
                         <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                           <div className="space-y-0.5">
-                            <FormLabel className="text-base">
-                              Auto Assignment
-                            </FormLabel>
+                            <FormLabel className="text-base">Auto Assignment</FormLabel>
                             <div className="text-sm text-muted-foreground">
                               Automatically assign qualified staff to open shifts
                             </div>
                           </div>
                           <FormControl>
-                            <Switch
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
                           </FormControl>
                         </FormItem>
                       )}
@@ -1327,8 +1344,8 @@ export default function FacilitiesPage() {
                       <FormItem>
                         <FormLabel>Workflow Automation Config (JSON)</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            {...field} 
+                          <Textarea
+                            {...field}
                             rows={4}
                             placeholder='{"autoApprove": true, "notificationHours": 24, "escalationThreshold": 3}'
                           />
@@ -1348,8 +1365,8 @@ export default function FacilitiesPage() {
                       <FormItem>
                         <FormLabel>Shift Management Settings (JSON)</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            {...field} 
+                          <Textarea
+                            {...field}
                             rows={4}
                             placeholder='{"maxConsecutiveDays": 5, "minRestHours": 8, "overtimeThreshold": 40}'
                           />
@@ -1369,8 +1386,8 @@ export default function FacilitiesPage() {
                       <FormItem>
                         <FormLabel>Staffing Targets (JSON)</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            {...field} 
+                          <Textarea
+                            {...field}
                             rows={4}
                             placeholder='{"ICU": {"RN": 4, "CNA": 2}, "Emergency": {"RN": 6, "LPN": 2}}'
                           />
@@ -1393,8 +1410,8 @@ export default function FacilitiesPage() {
                       <FormItem>
                         <FormLabel>Custom Rules (JSON)</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            {...field} 
+                          <Textarea
+                            {...field}
                             rows={4}
                             placeholder='{"requireCertification": true, "backgroundCheckRequired": true, "drugTestPolicy": "pre-employment"}'
                           />
@@ -1414,8 +1431,8 @@ export default function FacilitiesPage() {
                       <FormItem>
                         <FormLabel>Regulatory Documents (JSON)</FormLabel>
                         <FormControl>
-                          <Textarea 
-                            {...field} 
+                          <Textarea
+                            {...field}
                             rows={4}
                             placeholder='{"license": {"number": "FL123456", "expiry": "2024-12-31"}, "accreditation": {"type": "Joint Commission", "status": "Active"}}'
                           />
@@ -1436,10 +1453,12 @@ export default function FacilitiesPage() {
                         <FormItem>
                           <FormLabel>Team ID</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="number" 
-                              {...field} 
-                              onChange={e => field.onChange(parseInt(e.target.value) || undefined)}
+                            <Input
+                              type="number"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(parseInt(e.target.value) || undefined)
+                              }
                             />
                           </FormControl>
                           <FormMessage />
@@ -1453,10 +1472,12 @@ export default function FacilitiesPage() {
                         <FormItem>
                           <FormLabel>Payroll Provider ID</FormLabel>
                           <FormControl>
-                            <Input 
-                              type="number" 
-                              {...field} 
-                              onChange={e => field.onChange(parseInt(e.target.value) || undefined)}
+                            <Input
+                              type="number"
+                              {...field}
+                              onChange={(e) =>
+                                field.onChange(parseInt(e.target.value) || undefined)
+                              }
                             />
                           </FormControl>
                           <FormMessage />
@@ -1470,18 +1491,11 @@ export default function FacilitiesPage() {
               <Separator />
 
               <div className="flex justify-end gap-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setIsEditDialogOpen(false)}
-                >
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
                   <X className="h-4 w-4 mr-2" />
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={editFacilityMutation.isPending}
-                >
+                <Button type="submit" disabled={editFacilityMutation.isPending}>
                   {editFacilityMutation.isPending ? (
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                   ) : (

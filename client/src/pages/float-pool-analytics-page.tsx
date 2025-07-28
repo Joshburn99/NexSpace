@@ -70,7 +70,7 @@ export default function FloatPoolAnalyticsPage() {
   const [timeRange, setTimeRange] = useState("6months");
 
   // Guard against unauthorized access
-  if (user?.role === 'employee' || user?.role === 'contractor') {
+  if (user?.role === "employee" || user?.role === "contractor") {
     return null; // Hide facility data from employees and contractors
   }
 

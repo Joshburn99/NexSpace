@@ -453,10 +453,10 @@ export default function DetailedShiftAnalyticsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                      {Object.entries(specialtyStats).map(([specialty, stats]: [string, any], idx) => (
-                        <TableRow key={`${specialty}-${idx}`}>
-                          <TableCell className="font-medium">
-                            {getSpecialtyAbbreviation(specialty.replace("_", " "))}
+                  {Object.entries(specialtyStats).map(([specialty, stats]: [string, any], idx) => (
+                    <TableRow key={`${specialty}-${idx}`}>
+                      <TableCell className="font-medium">
+                        {getSpecialtyAbbreviation(specialty.replace("_", " "))}
                       </TableCell>
                       <TableCell>{stats.totalShifts}</TableCell>
                       <TableCell>{stats.avgApplicationsPerShift.toFixed(1)}</TableCell>

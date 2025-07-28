@@ -2,13 +2,39 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -129,15 +155,15 @@ export default function AdminTeamsPage() {
     },
   });
 
-  // Add team member mutation  
+  // Add team member mutation
   const addMemberMutation = useMutation({
     mutationFn: ({ teamId, userId, role }: { teamId: number; userId: string; role: string }) => {
       // Parse user ID to determine if it's a regular user or facility user
-      const [userType, actualUserId] = userId.split('-');
+      const [userType, actualUserId] = userId.split("-");
       const memberData = {
         userId: parseInt(actualUserId),
         userType: userType, // 'user' or 'facility'
-        role: role
+        role: role,
       };
       return apiRequest("POST", `/api/teams/${teamId}/members`, memberData);
     },
@@ -176,7 +202,11 @@ export default function AdminTeamsPage() {
       toast({ title: "Success", description: "Member removed from team successfully" });
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to remove member from team", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to remove member from team",
+        variant: "destructive",
+      });
     },
   });
 
@@ -189,7 +219,11 @@ export default function AdminTeamsPage() {
       toast({ title: "Success", description: "Facility removed from team successfully" });
     },
     onError: () => {
-      toast({ title: "Error", description: "Failed to remove facility from team", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Failed to remove facility from team",
+        variant: "destructive",
+      });
     },
   });
 
@@ -233,19 +267,23 @@ export default function AdminTeamsPage() {
       // Convert facilityId to number since it comes as string from the form
       const facilityData = {
         ...data,
-        facilityId: typeof data.facilityId === 'string' ? parseInt(data.facilityId) : data.facilityId,
-        teamId: selectedTeam.id
+        facilityId:
+          typeof data.facilityId === "string" ? parseInt(data.facilityId) : data.facilityId,
+        teamId: selectedTeam.id,
       };
       addFacilityMutation.mutate(facilityData);
     }
   };
 
   // Filter teams based on search term
-  const filteredTeams = (teams as Team[]).filter(team =>
-    team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    team.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    team.facilities?.some(f => f.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-    team.members?.some(m => `${m.firstName} ${m.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredTeams = (teams as Team[]).filter(
+    (team) =>
+      team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      team.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      team.facilities?.some((f) => f.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      team.members?.some((m) =>
+        `${m.firstName} ${m.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
+      )
   );
 
   if (teamsLoading) {
@@ -289,7 +327,7 @@ export default function AdminTeamsPage() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={teamForm.control}
                   name="description"
@@ -303,7 +341,7 @@ export default function AdminTeamsPage() {
                     </FormItem>
                   )}
                 />
-                
+
                 <FormField
                   control={teamForm.control}
                   name="leaderId"
@@ -329,7 +367,7 @@ export default function AdminTeamsPage() {
                     </FormItem>
                   )}
                 />
-                
+
                 <div className="flex justify-end space-x-2">
                   <Button type="button" variant="outline" onClick={() => setShowCreateModal(false)}>
                     Cancel
@@ -506,20 +544,28 @@ export default function AdminTeamsPage() {
                 {selectedTeam.members && selectedTeam.members.length > 0 ? (
                   <div className="space-y-2 max-h-60 overflow-y-auto border rounded-lg p-4">
                     {selectedTeam.members.map((member) => (
-                      <div key={member.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div
+                        key={member.id}
+                        className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                      >
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium">{member.firstName} {member.lastName}</span>
+                            <span className="font-medium">
+                              {member.firstName} {member.lastName}
+                            </span>
                             <Badge variant="outline">{member.role}</Badge>
                           </div>
                           <span className="text-sm text-muted-foreground">{member.email}</span>
                         </div>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           className="text-destructive hover:text-destructive"
                           onClick={() => {
-                            removeMemberMutation.mutate({ teamId: selectedTeam.id, memberId: member.userId });
+                            removeMemberMutation.mutate({
+                              teamId: selectedTeam.id,
+                              memberId: member.userId,
+                            });
                           }}
                           disabled={removeMemberMutation.isPending}
                         >
@@ -545,7 +591,10 @@ export default function AdminTeamsPage() {
                 {selectedTeam.facilities && selectedTeam.facilities.length > 0 ? (
                   <div className="space-y-2 max-h-60 overflow-y-auto border rounded-lg p-4">
                     {selectedTeam.facilities.map((facility) => (
-                      <div key={facility.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div
+                        key={facility.id}
+                        className="flex items-center justify-between p-3 bg-muted rounded-lg"
+                      >
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{facility.name}</span>
@@ -555,12 +604,15 @@ export default function AdminTeamsPage() {
                             {facility.city}, {facility.state}
                           </span>
                         </div>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
                           size="sm"
                           className="text-destructive hover:text-destructive"
                           onClick={() => {
-                            removeFacilityMutation.mutate({ teamId: selectedTeam.id, facilityId: facility.facilityId });
+                            removeFacilityMutation.mutate({
+                              teamId: selectedTeam.id,
+                              facilityId: facility.facilityId,
+                            });
                           }}
                           disabled={removeFacilityMutation.isPending}
                         >
@@ -610,8 +662,12 @@ export default function AdminTeamsPage() {
                         ))}
                         {/* Facility Users */}
                         {(facilityUsers as any[]).map((facilityUser: any) => (
-                          <SelectItem key={`facility-${facilityUser.id}`} value={`facility-${facilityUser.id}`}>
-                            {facilityUser.firstName} {facilityUser.lastName} ({facilityUser.email}) - {facilityUser.role?.replace('_', ' ')}
+                          <SelectItem
+                            key={`facility-${facilityUser.id}`}
+                            value={`facility-${facilityUser.id}`}
+                          >
+                            {facilityUser.firstName} {facilityUser.lastName} ({facilityUser.email})
+                            - {facilityUser.role?.replace("_", " ")}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -620,7 +676,7 @@ export default function AdminTeamsPage() {
                   </FormItem>
                 )}
               />
-              
+
               <FormField
                 control={memberForm.control}
                 name="role"
@@ -643,7 +699,7 @@ export default function AdminTeamsPage() {
                   </FormItem>
                 )}
               />
-              
+
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setShowMemberModal(false)}>
                   Cancel
@@ -671,7 +727,10 @@ export default function AdminTeamsPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Facility</FormLabel>
-                    <Select onValueChange={(value) => field.onChange(parseInt(value))} defaultValue={field.value?.toString()}>
+                    <Select
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      defaultValue={field.value?.toString()}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select facility" />
@@ -689,7 +748,7 @@ export default function AdminTeamsPage() {
                   </FormItem>
                 )}
               />
-              
+
               <div className="flex justify-end space-x-2">
                 <Button type="button" variant="outline" onClick={() => setShowFacilityModal(false)}>
                   Cancel

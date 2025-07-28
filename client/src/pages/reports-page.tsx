@@ -1,83 +1,83 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useQuery } from '@tanstack/react-query';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import React, { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   LineChart,
   Line,
   PieChart,
   Pie,
-  Cell
-} from 'recharts';
-import { 
-  Download, 
-  TrendingUp, 
-  Users, 
+  Cell,
+} from "recharts";
+import {
+  Download,
+  TrendingUp,
+  Users,
   Clock,
   DollarSign,
   Calendar,
   FileText,
-  Filter
-} from 'lucide-react';
+  Filter,
+} from "lucide-react";
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
 // Sample report data
 const shiftCompletionData = [
-  { month: 'Jan', completed: 245, total: 280 },
-  { month: 'Feb', completed: 290, total: 320 },
-  { month: 'Mar', completed: 315, total: 340 },
-  { month: 'Apr', completed: 275, total: 300 },
-  { month: 'May', completed: 340, total: 360 },
-  { month: 'Jun', completed: 320, total: 350 },
+  { month: "Jan", completed: 245, total: 280 },
+  { month: "Feb", completed: 290, total: 320 },
+  { month: "Mar", completed: 315, total: 340 },
+  { month: "Apr", completed: 275, total: 300 },
+  { month: "May", completed: 340, total: 360 },
+  { month: "Jun", completed: 320, total: 350 },
 ];
 
 const staffUtilizationData = [
-  { name: 'RN', hours: 1200, cost: 54000 },
-  { name: 'LPN', hours: 800, cost: 28000 },
-  { name: 'CNA', hours: 600, cost: 18000 },
-  { name: 'PT', hours: 400, cost: 16000 },
-  { name: 'RT', hours: 300, cost: 12000 },
+  { name: "RN", hours: 1200, cost: 54000 },
+  { name: "LPN", hours: 800, cost: 28000 },
+  { name: "CNA", hours: 600, cost: 18000 },
+  { name: "PT", hours: 400, cost: 16000 },
+  { name: "RT", hours: 300, cost: 12000 },
 ];
 
 const departmentData = [
-  { name: 'ICU', value: 35, hours: 840 },
-  { name: 'Emergency', value: 25, hours: 600 },
-  { name: 'Med-Surg', value: 20, hours: 480 },
-  { name: 'OR', value: 12, hours: 288 },
-  { name: 'Other', value: 8, hours: 192 },
+  { name: "ICU", value: 35, hours: 840 },
+  { name: "Emergency", value: 25, hours: 600 },
+  { name: "Med-Surg", value: 20, hours: 480 },
+  { name: "OR", value: 12, hours: 288 },
+  { name: "Other", value: 8, hours: 192 },
 ];
 
 export default function ReportsPage() {
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
-  const [activeTab, setActiveTab] = useState('overview');
+  const [selectedPeriod, setSelectedPeriod] = useState("month");
+  const [activeTab, setActiveTab] = useState("overview");
 
   // Sample data fetching
   const { data: reportMetrics = {}, isLoading } = useQuery({
-    queryKey: ['/api/reports/metrics'],
-    queryFn: () => Promise.resolve({
-      totalShifts: 350,
-      completedShifts: 320,
-      staffHours: 2400,
-      totalCost: 128000,
-      avgCompletionRate: 91.4,
-      staffUtilization: 87.2
-    })
+    queryKey: ["/api/reports/metrics"],
+    queryFn: () =>
+      Promise.resolve({
+        totalShifts: 350,
+        completedShifts: 320,
+        staffHours: 2400,
+        totalCost: 128000,
+        avgCompletionRate: 91.4,
+        staffUtilization: 87.2,
+      }),
   });
 
   const exportReport = (type: string) => {
     // Implement export functionality
-    console.log(`Exporting ${type} report`);
   };
 
   if (isLoading) {
@@ -111,7 +111,7 @@ export default function ReportsPage() {
             <option value="quarter">This Quarter</option>
             <option value="year">This Year</option>
           </select>
-          <Button variant="outline" onClick={() => exportReport('comprehensive')}>
+          <Button variant="outline" onClick={() => exportReport("comprehensive")}>
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>
@@ -127,9 +127,7 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{reportMetrics.totalShifts}</div>
-            <p className="text-xs text-muted-foreground">
-              +12% from last month
-            </p>
+            <p className="text-xs text-muted-foreground">+12% from last month</p>
           </CardContent>
         </Card>
 
@@ -140,9 +138,7 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{reportMetrics.avgCompletionRate}%</div>
-            <p className="text-xs text-muted-foreground">
-              +2.1% from last month
-            </p>
+            <p className="text-xs text-muted-foreground">+2.1% from last month</p>
           </CardContent>
         </Card>
 
@@ -153,9 +149,7 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{reportMetrics.staffHours}</div>
-            <p className="text-xs text-muted-foreground">
-              +8% from last month
-            </p>
+            <p className="text-xs text-muted-foreground">+8% from last month</p>
           </CardContent>
         </Card>
 
@@ -166,9 +160,7 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">${reportMetrics.totalCost?.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">
-              +5.2% from last month
-            </p>
+            <p className="text-xs text-muted-foreground">+5.2% from last month</p>
           </CardContent>
         </Card>
       </div>
@@ -267,8 +259,8 @@ export default function ReportsPage() {
                   <div className="flex items-center space-x-4">
                     <div className="flex-1">
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full" 
+                        <div
+                          className="bg-blue-600 h-2 rounded-full"
                           style={{ width: `${dept.value * 2}%` }}
                         ></div>
                       </div>
@@ -293,7 +285,7 @@ export default function ReportsPage() {
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="name" />
                   <YAxis />
-                  <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Cost']} />
+                  <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, "Cost"]} />
                   <Bar dataKey="cost" fill="#82ca9d" />
                 </BarChart>
               </ResponsiveContainer>

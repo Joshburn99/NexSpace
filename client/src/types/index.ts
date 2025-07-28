@@ -1,17 +1,30 @@
 // Core TypeScript interfaces for NexSpace healthcare scheduling platform
 
-export type UserRole = 'staff' | 'facility_admin' | 'superuser';
+export type UserRole = "staff" | "facility_admin" | "superuser";
 
-export type Specialty = 
-  | 'RN' | 'LPN' | 'CNA' | 'HCA' 
-  | 'RT' | 'PT' | 'OT' | 'ST'
-  | 'PharmTech' | 'LabTech' | 'RadTech' | 'CST'
-  | 'Dietitian' | 'SocialWorker' | 'Chaplain'
-  | 'Maintenance' | 'Housekeeping' | 'Transport';
+export type Specialty =
+  | "RN"
+  | "LPN"
+  | "CNA"
+  | "HCA"
+  | "RT"
+  | "PT"
+  | "OT"
+  | "ST"
+  | "PharmTech"
+  | "LabTech"
+  | "RadTech"
+  | "CST"
+  | "Dietitian"
+  | "SocialWorker"
+  | "Chaplain"
+  | "Maintenance"
+  | "Housekeeping"
+  | "Transport";
 
-export type ShiftStatus = 'draft' | 'open' | 'filled' | 'in_progress' | 'completed' | 'cancelled';
+export type ShiftStatus = "draft" | "open" | "filled" | "in_progress" | "completed" | "cancelled";
 
-export type AssignmentStatus = 'pending' | 'confirmed' | 'declined' | 'completed' | 'no_show';
+export type AssignmentStatus = "pending" | "confirmed" | "declined" | "completed" | "no_show";
 
 export interface User {
   id: string;
@@ -38,7 +51,7 @@ export interface Facility {
   phoneNumber: string;
   email?: string;
   bedCount: number;
-  facilityType: 'hospital' | 'nursing_home' | 'assisted_living' | 'rehab_center' | 'clinic';
+  facilityType: "hospital" | "nursing_home" | "assisted_living" | "rehab_center" | "clinic";
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;

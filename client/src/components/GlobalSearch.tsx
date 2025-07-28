@@ -1,28 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'wouter';
-import { useQuery } from '@tanstack/react-query';
-import { useDebounce } from '@/hooks/use-debounce';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import {
-  Search,
-  Users,
-  Calendar,
-  Building,
-  Briefcase,
-  ArrowRight,
-  Loader2,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useEffect, useRef } from "react";
+import { useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
+import { useDebounce } from "@/hooks/use-debounce";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Search, Users, Calendar, Building, Briefcase, ArrowRight, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface SearchResult {
   id: number;
-  type: 'staff' | 'shift' | 'facility' | 'job';
+  type: "staff" | "shift" | "facility" | "job";
   title: string;
   subtitle: string;
   description: string;
@@ -35,7 +23,7 @@ interface SearchResponse {
 
 export function GlobalSearch() {
   const [isOpen, setIsOpen] = useState(false);
-  const [query, setQuery] = useState('');
+  const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [, navigate] = useLocation();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -43,13 +31,13 @@ export function GlobalSearch() {
 
   // Search query
   const { data, isLoading } = useQuery<SearchResponse>({
-    queryKey: ['/api/search', debouncedQuery],
+    queryKey: ["/api/search", debouncedQuery],
     queryFn: async () => {
       if (!debouncedQuery || debouncedQuery.trim().length < 2) {
         return { results: [] };
       }
       const res = await fetch(`/api/search?q=${encodeURIComponent(debouncedQuery)}`);
-      if (!res.ok) throw new Error('Search failed');
+      if (!res.ok) throw new Error("Search failed");
       return res.json();
     },
     enabled: debouncedQuery.trim().length >= 2,
@@ -61,38 +49,38 @@ export function GlobalSearch() {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Open search with Cmd/Ctrl + K
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
         setIsOpen(true);
       }
 
       // Close search with Escape
-      if (e.key === 'Escape' && isOpen) {
+      if (e.key === "Escape" && isOpen) {
         setIsOpen(false);
       }
 
       // Navigate results with arrow keys
       if (isOpen && results.length > 0) {
-        if (e.key === 'ArrowDown') {
+        if (e.key === "ArrowDown") {
           e.preventDefault();
           setSelectedIndex((prev) => (prev + 1) % results.length);
-        } else if (e.key === 'ArrowUp') {
+        } else if (e.key === "ArrowUp") {
           e.preventDefault();
           setSelectedIndex((prev) => (prev - 1 + results.length) % results.length);
-        } else if (e.key === 'Enter') {
+        } else if (e.key === "Enter") {
           e.preventDefault();
           const selected = results[selectedIndex];
           if (selected) {
             navigate(selected.route);
             setIsOpen(false);
-            setQuery('');
+            setQuery("");
           }
         }
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, results, selectedIndex, navigate]);
 
   // Focus input when dialog opens
@@ -107,36 +95,36 @@ export function GlobalSearch() {
     setSelectedIndex(0);
   }, [results]);
 
-  const getIcon = (type: SearchResult['type']) => {
+  const getIcon = (type: SearchResult["type"]) => {
     switch (type) {
-      case 'staff':
+      case "staff":
         return <Users className="h-4 w-4" />;
-      case 'shift':
+      case "shift":
         return <Calendar className="h-4 w-4" />;
-      case 'facility':
+      case "facility":
         return <Building className="h-4 w-4" />;
-      case 'job':
+      case "job":
         return <Briefcase className="h-4 w-4" />;
     }
   };
 
-  const getTypeColor = (type: SearchResult['type']) => {
+  const getTypeColor = (type: SearchResult["type"]) => {
     switch (type) {
-      case 'staff':
-        return 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400';
-      case 'shift':
-        return 'bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400';
-      case 'facility':
-        return 'bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400';
-      case 'job':
-        return 'bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400';
+      case "staff":
+        return "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400";
+      case "shift":
+        return "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400";
+      case "facility":
+        return "bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400";
+      case "job":
+        return "bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400";
     }
   };
 
   const handleResultClick = (result: SearchResult) => {
     navigate(result.route);
     setIsOpen(false);
-    setQuery('');
+    setQuery("");
   };
 
   return (
@@ -157,7 +145,7 @@ export function GlobalSearch() {
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-2xl p-0 overflow-hidden">
           <DialogTitle className="sr-only">Global Search</DialogTitle>
-          
+
           {/* Search input */}
           <div className="flex items-center border-b px-4 py-3">
             <Search className="h-5 w-5 text-gray-400 mr-3" />
@@ -168,9 +156,7 @@ export function GlobalSearch() {
               placeholder="Search for staff, shifts, facilities, or jobs..."
               className="flex-1 border-0 p-0 text-base placeholder:text-gray-400 focus-visible:ring-0"
             />
-            {isLoading && (
-              <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-            )}
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-gray-400" />}
           </div>
 
           {/* Results */}
@@ -229,7 +215,9 @@ export function GlobalSearch() {
               <div className="flex flex-wrap gap-2 justify-center mt-4 text-xs">
                 <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">Staff names</span>
                 <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">Shift titles</span>
-                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">Facility names</span>
+                <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">
+                  Facility names
+                </span>
                 <span className="px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">Job postings</span>
               </div>
             </div>
@@ -247,7 +235,9 @@ export function GlobalSearch() {
                 Select
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">esc</kbd>
+                <kbd className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 rounded text-xs">
+                  esc
+                </kbd>
                 Close
               </span>
             </div>

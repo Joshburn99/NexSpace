@@ -1,15 +1,15 @@
 import { useState } from "react";
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import { useShifts } from '@/contexts/ShiftContext';
-import { useDashboard } from '@/contexts/DashboardContext';
-import { useAuth } from '@/hooks/use-auth';
-import { useStaff } from '@/contexts/StaffContext';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
-import { CanAccess } from '@/components/PermissionWrapper';
-import { PermissionButton } from '@/components/PermissionButton';
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import { useShifts } from "@/contexts/ShiftContext";
+import { useDashboard } from "@/contexts/DashboardContext";
+import { useAuth } from "@/hooks/use-auth";
+import { useStaff } from "@/contexts/StaffContext";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
+import { CanAccess } from "@/components/PermissionWrapper";
+import { PermissionButton } from "@/components/PermissionButton";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,100 +42,107 @@ export default function UnifiedCalendarPage() {
   const [isShiftDetailsOpen, setIsShiftDetailsOpen] = useState(false);
   const [isShiftRequestOpen, setIsShiftRequestOpen] = useState(false);
   const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
-  const [requestNote, setRequestNote] = useState('');
+  const [requestNote, setRequestNote] = useState("");
 
   const currentUser = impersonatedUser || user;
   const { hasPermission } = useFacilityPermissions();
-  const canPostShifts = hasPermission('create_shifts');
-  const canEditShifts = hasPermission('edit_shifts');
-  const canViewSchedule = hasPermission('view_schedules');
-  
+  const canPostShifts = hasPermission("create_shifts");
+  const canEditShifts = hasPermission("edit_shifts");
+  const canViewSchedule = hasPermission("view_schedules");
+
   // Get current user's specialty from staff data
   const staffMember = currentUser ? getStaffById(currentUser.id) : null;
   const userSpecialty = staffMember?.specialty;
 
   // Filter shifts based on user specialty (for employees/contractors)
-  const filteredOpenShifts = canPostShifts ? openShifts : 
-    openShifts.filter(shift => {
-      const shiftRequirements = shift.requirements || ['General'];
-      return !userSpecialty || shiftRequirements.includes(userSpecialty) || shiftRequirements.includes('General');
-    });
+  const filteredOpenShifts = canPostShifts
+    ? openShifts
+    : openShifts.filter((shift) => {
+        const shiftRequirements = shift.requirements || ["General"];
+        return (
+          !userSpecialty ||
+          shiftRequirements.includes(userSpecialty) ||
+          shiftRequirements.includes("General")
+        );
+      });
 
-  const filteredRequestedShifts = canPostShifts ? requestedShifts :
-    requestedShifts.filter(shift => shift.requestedBy === currentUser?.id);
+  const filteredRequestedShifts = canPostShifts
+    ? requestedShifts
+    : requestedShifts.filter((shift) => shift.requestedBy === currentUser?.id);
 
-  const filteredBookedShifts = canPostShifts ? bookedShifts :
-    bookedShifts.filter(shift => shift.assignedTo === currentUser?.id);
+  const filteredBookedShifts = canPostShifts
+    ? bookedShifts
+    : bookedShifts.filter((shift) => shift.assignedTo === currentUser?.id);
 
   // Convert shifts to FullCalendar events with better visuals
   const events = [
-    ...filteredOpenShifts.map(shift => ({
+    ...filteredOpenShifts.map((shift) => ({
       id: `open-${shift.id}`,
       title: `🟦 ${shift.title}`,
-      start: `${shift.date}T${shift.startTime || '07:00'}`,
-      end: `${shift.date}T${shift.endTime || '19:00'}`,
-      backgroundColor: '#3B82F6',
-      borderColor: '#1D4ED8',
-      textColor: '#FFFFFF',
-      classNames: ['shift-open'],
+      start: `${shift.date}T${shift.startTime || "07:00"}`,
+      end: `${shift.date}T${shift.endTime || "19:00"}`,
+      backgroundColor: "#3B82F6",
+      borderColor: "#1D4ED8",
+      textColor: "#FFFFFF",
+      classNames: ["shift-open"],
       extendedProps: {
-        type: 'open',
+        type: "open",
         shift: {
           ...shift,
           hourlyRate: shift.hourlyRate || 35,
-          department: shift.department || 'General',
-          requirements: shift.requirements || []
+          department: shift.department || "General",
+          requirements: shift.requirements || [],
         },
-      }
+      },
     })),
-    ...filteredRequestedShifts.map(shift => ({
+    ...filteredRequestedShifts.map((shift) => ({
       id: `requested-${shift.id}`,
       title: `🟨 ${shift.title}`,
-      start: `${shift.date}T${shift.startTime || '07:00'}`,
-      end: `${shift.date}T${shift.endTime || '19:00'}`,
-      backgroundColor: '#F59E0B',
-      borderColor: '#D97706',
-      textColor: '#FFFFFF',
-      classNames: ['shift-requested'],
+      start: `${shift.date}T${shift.startTime || "07:00"}`,
+      end: `${shift.date}T${shift.endTime || "19:00"}`,
+      backgroundColor: "#F59E0B",
+      borderColor: "#D97706",
+      textColor: "#FFFFFF",
+      classNames: ["shift-requested"],
       extendedProps: {
-        type: 'requested',
+        type: "requested",
         shift: {
           ...shift,
           hourlyRate: shift.hourlyRate || 35,
-          department: shift.department || 'General',
-          requirements: shift.requirements || []
+          department: shift.department || "General",
+          requirements: shift.requirements || [],
         },
-      }
+      },
     })),
-    ...filteredBookedShifts.map(shift => ({
+    ...filteredBookedShifts.map((shift) => ({
       id: `booked-${shift.id}`,
       title: `🟩 ${shift.title}`,
-      start: `${shift.date}T${shift.startTime || '07:00'}`,
-      end: `${shift.date}T${shift.endTime || '19:00'}`,
-      backgroundColor: '#10B981',
-      borderColor: '#059669',
-      textColor: '#FFFFFF',
-      classNames: ['shift-booked'],
+      start: `${shift.date}T${shift.startTime || "07:00"}`,
+      end: `${shift.date}T${shift.endTime || "19:00"}`,
+      backgroundColor: "#10B981",
+      borderColor: "#059669",
+      textColor: "#FFFFFF",
+      classNames: ["shift-booked"],
       extendedProps: {
-        type: 'booked',
+        type: "booked",
         shift: {
           ...shift,
           hourlyRate: shift.hourlyRate || 35,
-          department: shift.department || 'General',
-          requirements: shift.requirements || []
+          department: shift.department || "General",
+          requirements: shift.requirements || [],
         },
-      }
-    }))
+      },
+    })),
   ];
 
   const handleEventClick = (info: any) => {
     const shift = info.event.extendedProps.shift;
     const shiftType = info.event.extendedProps.type;
-    
+
     setSelectedShift(shift);
-    
+
     // Workers can only request open shifts
-    if (!canPostShifts && shiftType === 'open') {
+    if (!canPostShifts && shiftType === "open") {
       setIsShiftRequestOpen(true);
     } else {
       setSelectedShiftId(shift.id);
@@ -144,7 +151,7 @@ export default function UnifiedCalendarPage() {
   };
 
   const handleDateClick = (info: any) => {
-    if (hasPermission('create_shifts')) {
+    if (hasPermission("create_shifts")) {
       setSelectedDate(info.dateStr);
       setIsCreateShiftOpen(true);
     }
@@ -154,9 +161,9 @@ export default function UnifiedCalendarPage() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          {canPostShifts ? 'Schedule Management' : 'My Schedule'}
+          {canPostShifts ? "Schedule Management" : "My Schedule"}
         </h1>
-        <PermissionButton 
+        <PermissionButton
           permission="create_shifts"
           className="bg-blue-600 hover:bg-blue-700"
           onClick={() => setIsCreateShiftOpen(true)}
@@ -198,7 +205,7 @@ export default function UnifiedCalendarPage() {
                 {filteredOpenShifts.length}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {canPostShifts ? 'need coverage' : 'available for you'}
+                {canPostShifts ? "need coverage" : "available for you"}
               </p>
             </div>
           </CardContent>
@@ -217,7 +224,7 @@ export default function UnifiedCalendarPage() {
                 {filteredRequestedShifts.length}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {canPostShifts ? 'pending assignment' : 'my requests'}
+                {canPostShifts ? "pending assignment" : "my requests"}
               </p>
             </div>
           </CardContent>
@@ -227,16 +234,14 @@ export default function UnifiedCalendarPage() {
           <CardContent className="p-6">
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5 text-green-600" />
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Booked
-              </span>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Booked</span>
             </div>
             <div className="mt-2">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
                 {filteredBookedShifts.length}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400">
-                {canPostShifts ? 'fully staffed' : 'my shifts'}
+                {canPostShifts ? "fully staffed" : "my shifts"}
               </p>
             </div>
           </CardContent>
@@ -249,7 +254,9 @@ export default function UnifiedCalendarPage() {
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-blue-500 rounded"></div>
-              <span className="text-sm text-gray-600 dark:text-gray-400">🟦 Open Shifts (Click to request)</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                🟦 Open Shifts (Click to request)
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 bg-orange-500 rounded"></div>
@@ -280,9 +287,9 @@ export default function UnifiedCalendarPage() {
             dateClick={handleDateClick}
             height="auto"
             headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: 'timeGridWeek,dayGridMonth'
+              left: "prev,next today",
+              center: "title",
+              right: "timeGridWeek,dayGridMonth",
             }}
             slotMinTime="06:00:00"
             slotMaxTime="22:00:00"
@@ -292,16 +299,16 @@ export default function UnifiedCalendarPage() {
             eventClassNames={(arg) => {
               const type = arg.event.extendedProps.type;
               return [
-                'cursor-pointer',
-                'hover:opacity-80',
-                type === 'requested' ? 'hover:ring-2 hover:ring-orange-300' : ''
+                "cursor-pointer",
+                "hover:opacity-80",
+                type === "requested" ? "hover:ring-2 hover:ring-orange-300" : "",
               ];
             }}
             eventDidMount={(info) => {
               const type = info.event.extendedProps.type;
               info.el.title = `Click to view ${info.event.title} details`;
-              if (type === 'requested') {
-                info.el.style.cursor = 'pointer';
+              if (type === "requested") {
+                info.el.style.cursor = "pointer";
               }
             }}
           />
@@ -337,12 +344,12 @@ export default function UnifiedCalendarPage() {
               Request Shift
             </DialogTitle>
           </DialogHeader>
-          
+
           {selectedShift && (
             <div className="space-y-4">
               <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
                 <h3 className="font-semibold text-blue-900 mb-2">{selectedShift.title}</h3>
-                
+
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-blue-600" />
@@ -350,7 +357,9 @@ export default function UnifiedCalendarPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-blue-600" />
-                    <span>{selectedShift.startTime || '7:00 AM'} - {selectedShift.endTime || '7:00 PM'}</span>
+                    <span>
+                      {selectedShift.startTime || "7:00 AM"} - {selectedShift.endTime || "7:00 PM"}
+                    </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Building className="h-4 w-4 text-blue-600" />
@@ -358,7 +367,9 @@ export default function UnifiedCalendarPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <DollarSign className="h-4 w-4 text-green-600" />
-                    <span className="font-semibold text-green-700">${selectedShift.hourlyRate || 35}/hr</span>
+                    <span className="font-semibold text-green-700">
+                      ${selectedShift.hourlyRate || 35}/hr
+                    </span>
                   </div>
                 </div>
 
@@ -397,7 +408,7 @@ export default function UnifiedCalendarPage() {
                       // Submit shift request
                       requestShift?.(selectedShift.id);
                       setIsShiftRequestOpen(false);
-                      setRequestNote('');
+                      setRequestNote("");
                     }
                   }}
                   className="flex-1 bg-blue-600 hover:bg-blue-700"
@@ -408,7 +419,7 @@ export default function UnifiedCalendarPage() {
                   variant="outline"
                   onClick={() => {
                     setIsShiftRequestOpen(false);
-                    setRequestNote('');
+                    setRequestNote("");
                   }}
                   className="flex-1"
                 >

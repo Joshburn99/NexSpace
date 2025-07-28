@@ -1,6 +1,6 @@
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
+import React, { createContext, useContext, ReactNode, useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
 
 export interface StaffMember {
   id: number;
@@ -36,26 +36,26 @@ export interface StaffMember {
     timestamp: string;
     accuracy?: number;
   };
-  accountStatus?: 'active' | 'inactive' | 'pending' | 'suspended';
+  accountStatus?: "active" | "inactive" | "pending" | "suspended";
   totalWorkedShifts?: number;
   reliabilityScore?: number; // 0.00 to 5.00
   homeZipCode?: string;
   homeAddress?: string;
-  availabilityStatus?: 'available' | 'unavailable' | 'busy';
+  availabilityStatus?: "available" | "unavailable" | "busy";
 
   // Compliance and licensing
   licenseExpirationDate?: string;
   backgroundCheckDate?: string;
   drugTestDate?: string;
   covidVaccinationStatus?: {
-    status: 'vaccinated' | 'unvaccinated' | 'exempt';
+    status: "vaccinated" | "unvaccinated" | "exempt";
     doses: number;
     lastDose?: string;
     booster: boolean;
   };
   requiredCredentialsStatus?: {
     [credentialType: string]: {
-      status: 'current' | 'expired' | 'pending';
+      status: "current" | "expired" | "pending";
       expirationDate: string;
     };
   };
@@ -66,7 +66,7 @@ export interface StaffMember {
   lastWorkDate?: string;
 
   // Preferences and scheduling
-  preferredShiftTypes?: ('day' | 'night' | 'weekend' | 'on_call')[];
+  preferredShiftTypes?: ("day" | "night" | "weekend" | "on_call")[];
   weeklyAvailability?: {
     [day: string]: {
       available: boolean;
@@ -80,7 +80,7 @@ export interface StaffMember {
     bankName: string;
     routingNumber: string;
     accountNumber: string;
-    accountType: 'checking' | 'savings';
+    accountType: "checking" | "savings";
   };
   emergencyContact?: {
     name: string;
@@ -108,8 +108,8 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   // Fetch staff data from backend API
   const { data: staffData = [], isLoading } = useQuery({
-    queryKey: ['/api/staff'],
-    queryFn: () => fetch('/api/staff').then(res => res.json()),
+    queryKey: ["/api/staff"],
+    queryFn: () => fetch("/api/staff").then((res) => res.json()),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
@@ -117,22 +117,22 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const updateStaffMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: Partial<StaffMember> }) => {
       const response = await fetch(`/api/staff/${id}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(updates),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update profile');
+        throw new Error("Failed to update profile");
       }
 
       return response.json();
     },
     onSuccess: () => {
       // Invalidate and refetch staff data
-      queryClient.invalidateQueries({ queryKey: ['/api/staff'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
     },
   });
 
@@ -140,99 +140,99 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const sampleStaff: StaffMember[] = [
     {
       id: 1,
-      firstName: 'Alice',
-      lastName: 'Smith',
-      email: 'alice@nexspace.com',
-      role: 'employee',
-      phone: '555-0101',
-      department: 'ICU',
-      specialty: 'Registered Nurse',
+      firstName: "Alice",
+      lastName: "Smith",
+      email: "alice@nexspace.com",
+      role: "employee",
+      phone: "555-0101",
+      department: "ICU",
+      specialty: "Registered Nurse",
       compliant: true,
       activeCredentials: 8,
       expiringCredentials: 1,
     },
     {
       id: 2,
-      firstName: 'Bob',
-      lastName: 'Johnson',
-      email: 'bob@nexspace.com',
-      role: 'contractor',
-      phone: '555-0202',
-      department: 'Emergency',
-      specialty: 'Licensed Practical Nurse',
+      firstName: "Bob",
+      lastName: "Johnson",
+      email: "bob@nexspace.com",
+      role: "contractor",
+      phone: "555-0202",
+      department: "Emergency",
+      specialty: "Licensed Practical Nurse",
       compliant: true,
       activeCredentials: 4,
       expiringCredentials: 1,
     },
     {
       id: 3,
-      firstName: 'Carol',
-      lastName: 'Lee',
-      email: 'carol@nexspace.com',
-      role: 'clinician',
-      phone: '555-0303',
-      department: 'Med/Surg',
-      specialty: 'Certified Nursing Assistant',
+      firstName: "Carol",
+      lastName: "Lee",
+      email: "carol@nexspace.com",
+      role: "clinician",
+      phone: "555-0303",
+      department: "Med/Surg",
+      specialty: "Certified Nursing Assistant",
       compliant: true,
       activeCredentials: 6,
       expiringCredentials: 0,
     },
     {
       id: 4,
-      firstName: 'David',
-      lastName: 'Wilson',
-      email: 'david@nexspace.com',
-      role: 'manager',
-      phone: '555-0404',
-      department: 'Administration',
+      firstName: "David",
+      lastName: "Wilson",
+      email: "david@nexspace.com",
+      role: "manager",
+      phone: "555-0404",
+      department: "Administration",
       compliant: true,
       activeCredentials: 3,
       expiringCredentials: 0,
     },
     {
       id: 5,
-      firstName: 'Emma',
-      lastName: 'Davis',
-      email: 'emma@nexspace.com',
-      role: 'employee',
-      phone: '555-0505',
-      department: 'Pediatrics',
+      firstName: "Emma",
+      lastName: "Davis",
+      email: "emma@nexspace.com",
+      role: "employee",
+      phone: "555-0505",
+      department: "Pediatrics",
       compliant: false,
       activeCredentials: 2,
       expiringCredentials: 3,
     },
     {
       id: 6,
-      firstName: 'Frank',
-      lastName: 'Miller',
-      email: 'frank@nexspace.com',
-      role: 'contractor',
-      phone: '555-0606',
-      department: 'OR',
+      firstName: "Frank",
+      lastName: "Miller",
+      email: "frank@nexspace.com",
+      role: "contractor",
+      phone: "555-0606",
+      department: "OR",
       compliant: true,
       activeCredentials: 7,
       expiringCredentials: 0,
     },
     {
       id: 7,
-      firstName: 'Grace',
-      lastName: 'Taylor',
-      email: 'grace@nexspace.com',
-      role: 'clinician',
-      phone: '555-0707',
-      department: 'L&D',
+      firstName: "Grace",
+      lastName: "Taylor",
+      email: "grace@nexspace.com",
+      role: "clinician",
+      phone: "555-0707",
+      department: "L&D",
       compliant: true,
       activeCredentials: 5,
       expiringCredentials: 1,
     },
     {
       id: 8,
-      firstName: 'Henry',
-      lastName: 'Brown',
-      email: 'henry@nexspace.com',
-      role: 'employee',
-      phone: '555-0808',
-      department: 'Oncology',
+      firstName: "Henry",
+      lastName: "Brown",
+      email: "henry@nexspace.com",
+      role: "employee",
+      phone: "555-0808",
+      department: "Oncology",
       compliant: true,
       activeCredentials: 4,
       expiringCredentials: 0,
@@ -255,9 +255,9 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
   const updateStaff = (updated: StaffMember) => {
     // Use the mutation to persist changes to backend
-    updateStaffMutation.mutate({ 
-      id: updated.id, 
-      updates: updated 
+    updateStaffMutation.mutate({
+      id: updated.id,
+      updates: updated,
     });
   };
 
@@ -277,17 +277,13 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     isLoading,
   };
 
-  return (
-    <StaffContext.Provider value={value}>
-      {children}
-    </StaffContext.Provider>
-  );
+  return <StaffContext.Provider value={value}>{children}</StaffContext.Provider>;
 };
 
 export const useStaff = (): StaffContextType => {
   const context = useContext(StaffContext);
   if (!context) {
-    throw new Error('useStaff must be used within a StaffProvider');
+    throw new Error("useStaff must be used within a StaffProvider");
   }
   return context;
 };

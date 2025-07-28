@@ -21,7 +21,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileText, Search, ArrowLeft, Home, Clock, User, Activity, ShieldAlert } from "lucide-react";
+import {
+  FileText,
+  Search,
+  ArrowLeft,
+  Home,
+  Clock,
+  User,
+  Activity,
+  ShieldAlert,
+} from "lucide-react";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/use-auth";
 import { useRBAC } from "@/hooks/use-rbac";
@@ -79,7 +88,7 @@ export default function AdminAuditLogsPage() {
   const uniqueResources = Array.from(new Set(auditLogs.map((log) => log.resource)));
 
   // Only users with audit log permissions should have access
-  if (!hasPermission('system.view_audit_logs') && user?.role !== 'super_admin') {
+  if (!hasPermission("system.view_audit_logs") && user?.role !== "super_admin") {
     return (
       <div className="container mx-auto p-6">
         <Card>

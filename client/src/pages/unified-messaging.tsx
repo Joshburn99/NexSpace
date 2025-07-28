@@ -24,16 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  MessageSquare, 
-  Send, 
-  Plus, 
-  Search,
-  Users,
-  User,
-  Clock,
-  CheckCheck
-} from "lucide-react";
+import { MessageSquare, Send, Plus, Search, Users, User, Clock, CheckCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
@@ -82,7 +73,7 @@ export default function UnifiedMessagingPage() {
 
   // Fetch conversations
   const { data: conversations = [], isLoading: loadingConversations } = useQuery<Conversation[]>({
-    queryKey: ['/api/conversations'],
+    queryKey: ["/api/conversations"],
   });
 
   // Fetch messages for selected conversation with polling fallback
@@ -95,24 +86,24 @@ export default function UnifiedMessagingPage() {
 
   // Fetch staff for new conversation dialog
   const { data: staff = [] } = useQuery({
-    queryKey: ['/api/staff'],
+    queryKey: ["/api/staff"],
   });
 
   // Get total unread count
   const { data: unreadCountData } = useQuery({
-    queryKey: ['/api/messages/unread-count'],
+    queryKey: ["/api/messages/unread-count"],
   });
   const totalUnreadCount = unreadCountData?.count || 0;
 
   // Create conversation mutation
   const createConversationMutation = useMutation({
     mutationFn: (data: { subject: string; participantIds: number[]; type: string }) =>
-      apiRequest('/api/conversations', {
-        method: 'POST',
+      apiRequest("/api/conversations", {
+        method: "POST",
         body: JSON.stringify(data),
       }),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
       setSelectedConversation(data.id);
       setShowNewConversation(false);
       setSelectedParticipants([]);
@@ -124,14 +115,14 @@ export default function UnifiedMessagingPage() {
   const sendMessageMutation = useMutation({
     mutationFn: (data: { content: string; messageType: string }) =>
       apiRequest(`/api/conversations/${selectedConversation}/messages`, {
-        method: 'POST',
+        method: "POST",
         body: JSON.stringify(data),
       }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ 
-        queryKey: [`/api/conversations/${selectedConversation}/messages`] 
+      queryClient.invalidateQueries({
+        queryKey: [`/api/conversations/${selectedConversation}/messages`],
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
       setNewMessage("");
     },
   });
@@ -143,37 +134,37 @@ export default function UnifiedMessagingPage() {
 
   // WebSocket subscription for real-time updates
   useEffect(() => {
-    const unsubscribe = subscribe('new_message', (data) => {
+    const unsubscribe = subscribe("new_message", (data) => {
       const newMsg = data.data;
-      
+
       // Add message to local state immediately for instant UI update
       if (data.conversationId === selectedConversation) {
-        setLocalMessages(prev => {
+        setLocalMessages((prev) => {
           // Check if message already exists to avoid duplicates
-          if (prev.some(m => m.id === newMsg.id)) {
+          if (prev.some((m) => m.id === newMsg.id)) {
             return prev;
           }
           return [...prev, newMsg];
         });
       }
-      
+
       // Show toast notification for new messages (not from current user)
       if (newMsg.senderId !== user?.id) {
         toast({
           title: "New message",
-          description: `${newMsg.senderName}: ${newMsg.content.substring(0, 50)}${newMsg.content.length > 50 ? '...' : ''}`,
+          description: `${newMsg.senderName}: ${newMsg.content.substring(0, 50)}${newMsg.content.length > 50 ? "..." : ""}`,
         });
       }
-      
+
       // Refresh conversation list to update last message
-      queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/messages/unread-count'] });
-      
+      queryClient.invalidateQueries({ queryKey: ["/api/conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/unread-count"] });
+
       // Also refresh messages from server after a short delay to ensure consistency
       setTimeout(() => {
         if (data.conversationId === selectedConversation) {
-          queryClient.invalidateQueries({ 
-            queryKey: [`/api/conversations/${selectedConversation}/messages`] 
+          queryClient.invalidateQueries({
+            queryKey: [`/api/conversations/${selectedConversation}/messages`],
           });
         }
       }, 500);
@@ -189,59 +180,59 @@ export default function UnifiedMessagingPage() {
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedConversation) return;
-    
+
     sendMessageMutation.mutate({
       content: newMessage.trim(),
-      messageType: 'text'
+      messageType: "text",
     });
   };
 
   const handleCreateConversation = () => {
     if (!conversationSubject.trim() || selectedParticipants.length === 0) return;
-    
+
     createConversationMutation.mutate({
       subject: conversationSubject,
       participantIds: selectedParticipants,
-      type: selectedParticipants.length > 1 ? 'group' : 'direct'
+      type: selectedParticipants.length > 1 ? "group" : "direct",
     });
   };
 
-  const filteredConversations = conversations.filter(conv => {
+  const filteredConversations = conversations.filter((conv) => {
     if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
     return (
       conv.subject?.toLowerCase().includes(searchLower) ||
-      conv.participants.some(p => p.name.toLowerCase().includes(searchLower))
+      conv.participants.some((p) => p.name.toLowerCase().includes(searchLower))
     );
   });
 
   const getConversationTitle = (conversation: Conversation) => {
     if (conversation.subject) return conversation.subject;
-    
-    const otherParticipants = conversation.participants.filter(p => p.id !== user?.id);
+
+    const otherParticipants = conversation.participants.filter((p) => p.id !== user?.id);
     if (otherParticipants.length === 1) {
       return otherParticipants[0].name;
     } else if (otherParticipants.length > 1) {
       return `${otherParticipants[0].name} and ${otherParticipants.length - 1} others`;
     }
-    
+
     return "Unknown Conversation";
   };
 
   const getConversationAvatar = (conversation: Conversation) => {
-    const otherParticipants = conversation.participants.filter(p => p.id !== user?.id);
-    
-    if (conversation.type === 'group' || otherParticipants.length > 1) {
+    const otherParticipants = conversation.participants.filter((p) => p.id !== user?.id);
+
+    if (conversation.type === "group" || otherParticipants.length > 1) {
       return <Users className="h-5 w-5" />;
     } else if (otherParticipants.length === 1) {
       const initials = otherParticipants[0].name
-        .split(' ')
-        .map(n => n[0])
-        .join('')
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
         .toUpperCase();
       return initials;
     }
-    
+
     return "?";
   };
 
@@ -253,105 +244,111 @@ export default function UnifiedMessagingPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-semibold">Messages</h2>
-              {totalUnreadCount > 0 && (
-                <Badge variant="destructive">{totalUnreadCount}</Badge>
-              )}
+              {totalUnreadCount > 0 && <Badge variant="destructive">{totalUnreadCount}</Badge>}
             </div>
             <div className="flex items-center gap-2">
               {/* Connection Status Indicator */}
               <div className="flex items-center gap-1">
-                <div className={cn(
-                  "w-2 h-2 rounded-full",
-                  isConnected ? "bg-green-500" : "bg-red-500"
-                )} />
-                <span className="text-xs text-gray-500">
-                  {isConnected ? "Live" : "Offline"}
-                </span>
+                <div
+                  className={cn(
+                    "w-2 h-2 rounded-full",
+                    isConnected ? "bg-green-500" : "bg-red-500"
+                  )}
+                />
+                <span className="text-xs text-gray-500">{isConnected ? "Live" : "Offline"}</span>
               </div>
               <Dialog open={showNewConversation} onOpenChange={setShowNewConversation}>
-              <DialogTrigger asChild>
-                <Button size="sm">
-                  <Plus className="w-4 h-4 mr-1" />
-                  New
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Start New Conversation</DialogTitle>
-                  <DialogDescription>
-                    Create a new conversation with one or more team members.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 mt-4">
-                  <div>
-                    <label className="text-sm font-medium">Subject (Optional)</label>
-                    <Input
-                      placeholder="e.g., Schedule Discussion"
-                      value={conversationSubject}
-                      onChange={(e) => setConversationSubject(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Select Participants</label>
-                    <Select
-                      value=""
-                      onValueChange={(value) => {
-                        const id = parseInt(value);
-                        if (!selectedParticipants.includes(id)) {
-                          setSelectedParticipants([...selectedParticipants, id]);
-                        }
-                      }}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Add participants" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {staff
-                          .filter((s: any) => s.id !== user?.id)
-                          .map((staffMember: any) => (
-                            <SelectItem 
-                              key={staffMember.id} 
-                              value={staffMember.id.toString()}
-                              disabled={selectedParticipants.includes(staffMember.id)}
-                            >
-                              {staffMember.firstName || ''} {staffMember.lastName || ''} - {staffMember.specialty}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="mt-2 space-y-1">
-                      {selectedParticipants.map(id => {
-                        const staffMember = staff.find((s: any) => s.id === id);
-                        return (
-                          <div key={id} className="flex items-center justify-between bg-gray-100 rounded px-2 py-1">
-                            <span className="text-sm">{staffMember?.firstName || ''} {staffMember?.lastName || ''}</span>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => setSelectedParticipants(
-                                selectedParticipants.filter(p => p !== id)
-                              )}
-                            >
-                              ×
-                            </Button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                  <Button 
-                    onClick={handleCreateConversation}
-                    disabled={selectedParticipants.length === 0}
-                    className="w-full"
-                  >
-                    Start Conversation
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="w-4 h-4 mr-1" />
+                    New
                   </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Start New Conversation</DialogTitle>
+                    <DialogDescription>
+                      Create a new conversation with one or more team members.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 mt-4">
+                    <div>
+                      <label className="text-sm font-medium">Subject (Optional)</label>
+                      <Input
+                        placeholder="e.g., Schedule Discussion"
+                        value={conversationSubject}
+                        onChange={(e) => setConversationSubject(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Select Participants</label>
+                      <Select
+                        value=""
+                        onValueChange={(value) => {
+                          const id = parseInt(value);
+                          if (!selectedParticipants.includes(id)) {
+                            setSelectedParticipants([...selectedParticipants, id]);
+                          }
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Add participants" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {staff
+                            .filter((s: any) => s.id !== user?.id)
+                            .map((staffMember: any) => (
+                              <SelectItem
+                                key={staffMember.id}
+                                value={staffMember.id.toString()}
+                                disabled={selectedParticipants.includes(staffMember.id)}
+                              >
+                                {staffMember.firstName || ""} {staffMember.lastName || ""} -{" "}
+                                {staffMember.specialty}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
+                      <div className="mt-2 space-y-1">
+                        {selectedParticipants.map((id) => {
+                          const staffMember = staff.find((s: any) => s.id === id);
+                          return (
+                            <div
+                              key={id}
+                              className="flex items-center justify-between bg-gray-100 rounded px-2 py-1"
+                            >
+                              <span className="text-sm">
+                                {staffMember?.firstName || ""} {staffMember?.lastName || ""}
+                              </span>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() =>
+                                  setSelectedParticipants(
+                                    selectedParticipants.filter((p) => p !== id)
+                                  )
+                                }
+                              >
+                                ×
+                              </Button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleCreateConversation}
+                      disabled={selectedParticipants.length === 0}
+                      className="w-full"
+                    >
+                      Start Conversation
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
-          
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <Input
@@ -362,15 +359,13 @@ export default function UnifiedMessagingPage() {
             />
           </div>
         </div>
-        
+
         <ScrollArea className="flex-1">
           <div className="p-2">
             {loadingConversations ? (
               <div className="text-center p-4 text-gray-500">Loading...</div>
             ) : filteredConversations.length === 0 ? (
-              <div className="text-center p-4 text-gray-500">
-                No conversations found
-              </div>
+              <div className="text-center p-4 text-gray-500">No conversations found</div>
             ) : (
               filteredConversations.map((conversation) => (
                 <button
@@ -385,15 +380,11 @@ export default function UnifiedMessagingPage() {
                 >
                   <div className="flex items-start space-x-3">
                     <Avatar className="h-10 w-10">
-                      <AvatarFallback>
-                        {getConversationAvatar(conversation)}
-                      </AvatarFallback>
+                      <AvatarFallback>{getConversationAvatar(conversation)}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <p className="font-medium truncate">
-                          {getConversationTitle(conversation)}
-                        </p>
+                        <p className="font-medium truncate">{getConversationTitle(conversation)}</p>
                         {conversation.unreadCount > 0 && (
                           <Badge className="ml-2">{conversation.unreadCount}</Badge>
                         )}
@@ -404,8 +395,8 @@ export default function UnifiedMessagingPage() {
                             {conversation.lastMessage.content}
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
-                            {formatDistanceToNow(new Date(conversation.lastMessage.createdAt), { 
-                              addSuffix: true 
+                            {formatDistanceToNow(new Date(conversation.lastMessage.createdAt), {
+                              addSuffix: true,
                             })}
                           </p>
                         </>
@@ -427,22 +418,19 @@ export default function UnifiedMessagingPage() {
             <div className="flex items-center space-x-3">
               <Avatar className="h-10 w-10">
                 <AvatarFallback>
-                  {getConversationAvatar(
-                    conversations.find(c => c.id === selectedConversation)!
-                  )}
+                  {getConversationAvatar(conversations.find((c) => c.id === selectedConversation)!)}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <h3 className="font-medium">
-                  {getConversationTitle(
-                    conversations.find(c => c.id === selectedConversation)!
-                  )}
+                  {getConversationTitle(conversations.find((c) => c.id === selectedConversation)!)}
                 </h3>
                 <p className="text-sm text-gray-500">
-                  {conversations.find(c => c.id === selectedConversation)?.participants
-                    .filter(p => p.id !== user?.id)
-                    .map(p => p.role)
-                    .join(', ')}
+                  {conversations
+                    .find((c) => c.id === selectedConversation)
+                    ?.participants.filter((p) => p.id !== user?.id)
+                    .map((p) => p.role)
+                    .join(", ")}
                 </p>
               </div>
             </div>
@@ -453,40 +441,32 @@ export default function UnifiedMessagingPage() {
             {loadingMessages ? (
               <div className="text-center text-gray-500">Loading messages...</div>
             ) : localMessages.length === 0 ? (
-              <div className="text-center text-gray-500">No messages yet. Start the conversation!</div>
+              <div className="text-center text-gray-500">
+                No messages yet. Start the conversation!
+              </div>
             ) : (
               <div className="space-y-4">
                 {localMessages.map((message) => {
                   const isOwn = message.senderId === user?.id;
-                  
+
                   return (
                     <div
                       key={message.id}
-                      className={cn(
-                        "flex",
-                        isOwn ? "justify-end" : "justify-start"
-                      )}
+                      className={cn("flex", isOwn ? "justify-end" : "justify-start")}
                     >
                       <div
                         className={cn(
                           "max-w-xs lg:max-w-md px-4 py-2 rounded-lg",
-                          isOwn
-                            ? "bg-blue-500 text-white"
-                            : "bg-gray-100 text-gray-900"
+                          isOwn ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-900"
                         )}
                       >
-                        {!isOwn && (
-                          <p className="text-xs font-medium mb-1">
-                            {message.senderName}
-                          </p>
-                        )}
+                        {!isOwn && <p className="text-xs font-medium mb-1">{message.senderName}</p>}
                         <p className="text-sm">{message.content}</p>
-                        <p className={cn(
-                          "text-xs mt-1",
-                          isOwn ? "text-blue-100" : "text-gray-500"
-                        )}>
-                          {formatDistanceToNow(new Date(message.createdAt), { 
-                            addSuffix: true 
+                        <p
+                          className={cn("text-xs mt-1", isOwn ? "text-blue-100" : "text-gray-500")}
+                        >
+                          {formatDistanceToNow(new Date(message.createdAt), {
+                            addSuffix: true,
                           })}
                         </p>
                       </div>
@@ -506,13 +486,13 @@ export default function UnifiedMessagingPage() {
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
+                  if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
                     handleSendMessage();
                   }
                 }}
               />
-              <Button 
+              <Button
                 onClick={handleSendMessage}
                 disabled={!newMessage.trim() || sendMessageMutation.isPending}
               >

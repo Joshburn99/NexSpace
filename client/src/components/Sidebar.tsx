@@ -309,9 +309,9 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <img 
-          src="/nexspace-logo.png" 
-          alt="NexSpace" 
+        <img
+          src="/nexspace-logo.png"
+          alt="NexSpace"
           className={cn("object-contain", expanded ? "h-12 w-auto max-w-full" : "h-10 w-10")}
         />
         {onToggle && (
@@ -343,7 +343,9 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
           <button
             className={cn(
               "w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors mt-1",
-              isActive("/user-profile") ? "text-blue-700 bg-blue-50" : "text-gray-700 hover:bg-gray-100"
+              isActive("/user-profile")
+                ? "text-blue-700 bg-blue-50"
+                : "text-gray-700 hover:bg-gray-100"
             )}
           >
             <Users className="w-5 h-5" />

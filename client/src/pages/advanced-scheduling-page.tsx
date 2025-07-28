@@ -244,7 +244,7 @@ export default function AdvancedSchedulingPage() {
 
           toast({
             title: "Staff assigned",
-            description: `${staffMember.firstName || ''} ${staffMember.lastName || ''} assigned to ${targetShift.title}`,
+            description: `${staffMember.firstName || ""} ${staffMember.lastName || ""} assigned to ${targetShift.title}`,
           });
         }
       }
@@ -405,7 +405,9 @@ export default function AdvancedSchedulingPage() {
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-medium text-sm">{staff.firstName || ''} {staff.lastName || ''}</p>
+                            <p className="font-medium text-sm">
+                              {staff.firstName || ""} {staff.lastName || ""}
+                            </p>
                             <p className="text-xs text-gray-600 dark:text-gray-300">
                               {staff.position}
                             </p>
@@ -613,7 +615,7 @@ export default function AdvancedSchedulingPage() {
                           className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 rounded"
                         >
                           <span className="text-sm">
-                            {staff.firstName || ''} {staff.lastName || ''} - {staff.position}
+                            {staff.firstName || ""} {staff.lastName || ""} - {staff.position}
                           </span>
                           {canAssignStaff && (
                             <Button

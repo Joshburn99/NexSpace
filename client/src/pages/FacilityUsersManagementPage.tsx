@@ -1,20 +1,40 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Users, UserPlus, Edit, Shield, Mail, Phone, Calendar, AlertCircle } from 'lucide-react';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Users, UserPlus, Edit, Shield, Mail, Phone, Calendar, AlertCircle } from "lucide-react";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface FacilityUser {
   id: number;
@@ -32,69 +52,83 @@ interface FacilityUser {
 }
 
 const FACILITY_ROLES = {
-  facility_admin: 'Facility Administrator',
-  scheduling_manager: 'Scheduling Coordinator',
-  hr_manager: 'HR Manager',
-  billing_manager: 'Billing Manager',
-  supervisor: 'Supervisor',
-  director_of_nursing: 'Director of Nursing',
-  viewer: 'Viewer'
+  facility_admin: "Facility Administrator",
+  scheduling_manager: "Scheduling Coordinator",
+  hr_manager: "HR Manager",
+  billing_manager: "Billing Manager",
+  supervisor: "Supervisor",
+  director_of_nursing: "Director of Nursing",
+  viewer: "Viewer",
 };
 
 const ROLE_PERMISSIONS = {
   facility_admin: [
-    'view_schedules', 'manage_schedules', 'view_staff', 'manage_staff',
-    'view_billing', 'manage_billing', 'view_facility_profile', 'edit_facility_profile',
-    'manage_facility_settings', 'manage_facility_users', 'manage_permissions',
-    'view_audit_logs', 'view_compliance', 'manage_compliance', 'view_staff_credentials',
-    'edit_staff_credentials', 'upload_documents'
+    "view_schedules",
+    "manage_schedules",
+    "view_staff",
+    "manage_staff",
+    "view_billing",
+    "manage_billing",
+    "view_facility_profile",
+    "edit_facility_profile",
+    "manage_facility_settings",
+    "manage_facility_users",
+    "manage_permissions",
+    "view_audit_logs",
+    "view_compliance",
+    "manage_compliance",
+    "view_staff_credentials",
+    "edit_staff_credentials",
+    "upload_documents",
   ],
-  scheduling_manager: [
-    'view_schedules', 'manage_schedules', 'view_staff', 'view_facility_profile'
-  ],
+  scheduling_manager: ["view_schedules", "manage_schedules", "view_staff", "view_facility_profile"],
   hr_manager: [
-    'view_staff', 'manage_staff', 'view_compliance', 'manage_compliance',
-    'view_staff_credentials', 'edit_staff_credentials', 'upload_documents',
-    'view_facility_profile'
+    "view_staff",
+    "manage_staff",
+    "view_compliance",
+    "manage_compliance",
+    "view_staff_credentials",
+    "edit_staff_credentials",
+    "upload_documents",
+    "view_facility_profile",
   ],
-  billing_manager: [
-    'view_billing', 'manage_billing', 'generate_invoices', 'view_facility_profile'
-  ],
-  supervisor: [
-    'view_schedules', 'view_staff', 'view_facility_profile'
-  ],
+  billing_manager: ["view_billing", "manage_billing", "generate_invoices", "view_facility_profile"],
+  supervisor: ["view_schedules", "view_staff", "view_facility_profile"],
   director_of_nursing: [
-    'view_schedules', 'manage_schedules', 'view_staff', 'view_compliance',
-    'manage_compliance', 'view_staff_credentials', 'view_facility_profile'
+    "view_schedules",
+    "manage_schedules",
+    "view_staff",
+    "view_compliance",
+    "manage_compliance",
+    "view_staff_credentials",
+    "view_facility_profile",
   ],
-  viewer: [
-    'view_schedules', 'view_staff', 'view_facility_profile'
-  ]
+  viewer: ["view_schedules", "view_staff", "view_facility_profile"],
 };
 
 export default function FacilityUsersManagementPage() {
   const [showAddUser, setShowAddUser] = useState(false);
   const [editingUser, setEditingUser] = useState<FacilityUser | null>(null);
-  const [selectedRole, setSelectedRole] = useState<string>('');
+  const [selectedRole, setSelectedRole] = useState<string>("");
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const { permissions, hasPermission, facilityId } = useFacilityPermissions();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: facilityUsers = [], isLoading } = useQuery<FacilityUser[]>({
-    queryKey: ['/api/facility-users', 'facility', facilityId],
-    enabled: !!facilityId && hasPermission('manage_facility_users'),
+    queryKey: ["/api/facility-users", "facility", facilityId],
+    enabled: !!facilityId && hasPermission("manage_facility_users"),
   });
 
   const addUser = useMutation({
     mutationFn: async (userData: Partial<FacilityUser>) => {
-      return apiRequest('POST', '/api/facility-users', {
+      return apiRequest("POST", "/api/facility-users", {
         ...userData,
-        associatedFacilities: [facilityId]
+        associatedFacilities: [facilityId],
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/facility-users'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/facility-users"] });
       setShowAddUser(false);
       toast({
         title: "Success",
@@ -112,10 +146,10 @@ export default function FacilityUsersManagementPage() {
 
   const updateUser = useMutation({
     mutationFn: async (userData: Partial<FacilityUser>) => {
-      return apiRequest('PATCH', `/api/facility-users/${userData.id}`, userData);
+      return apiRequest("PATCH", `/api/facility-users/${userData.id}`, userData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/facility-users'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/facility-users"] });
       setEditingUser(null);
       toast({
         title: "Success",
@@ -131,7 +165,7 @@ export default function FacilityUsersManagementPage() {
     },
   });
 
-  if (!hasPermission('manage_facility_users')) {
+  if (!hasPermission("manage_facility_users")) {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -149,14 +183,12 @@ export default function FacilityUsersManagementPage() {
   };
 
   const handlePermissionToggle = (permission: string) => {
-    setSelectedPermissions(prev =>
-      prev.includes(permission)
-        ? prev.filter(p => p !== permission)
-        : [...prev, permission]
+    setSelectedPermissions((prev) =>
+      prev.includes(permission) ? prev.filter((p) => p !== permission) : [...prev, permission]
     );
   };
 
-  const filteredUsers = facilityUsers.filter(user => 
+  const filteredUsers = facilityUsers.filter((user) =>
     user.associatedFacilities.includes(facilityId)
   );
 
@@ -179,8 +211,8 @@ export default function FacilityUsersManagementPage() {
       <Alert className="mb-6">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
-          Users added here will have access to your facility's data based on their assigned role and permissions.
-          Only Facility Administrators can manage other users.
+          Users added here will have access to your facility's data based on their assigned role and
+          permissions. Only Facility Administrators can manage other users.
         </AlertDescription>
       </Alert>
 
@@ -208,18 +240,21 @@ export default function FacilityUsersManagementPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredUsers.map(user => (
+                {filteredUsers.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={user.avatar} />
                           <AvatarFallback>
-                            {user.firstName[0]}{user.lastName[0]}
+                            {user.firstName[0]}
+                            {user.lastName[0]}
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{user.firstName} {user.lastName}</p>
+                          <p className="font-medium">
+                            {user.firstName} {user.lastName}
+                          </p>
                           <p className="text-sm text-gray-600">{user.email}</p>
                         </div>
                       </div>
@@ -235,10 +270,10 @@ export default function FacilityUsersManagementPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+                      {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : "Never"}
                     </TableCell>
                     <TableCell className="text-right">
-                      {hasPermission('manage_permissions') && (
+                      {hasPermission("manage_permissions") && (
                         <Button
                           size="sm"
                           variant="ghost"
@@ -303,36 +338,34 @@ export default function FacilityUsersManagementPage() {
                 </SelectContent>
               </Select>
             </div>
-            {selectedRole && hasPermission('manage_permissions') && (
+            {selectedRole && hasPermission("manage_permissions") && (
               <div className="space-y-2">
                 <Label>Permissions</Label>
                 <div className="border rounded-lg p-4 max-h-64 overflow-y-auto">
                   <div className="space-y-2">
                     {Object.entries({
-                      'view_schedules': 'View Schedules',
-                      'manage_schedules': 'Manage Schedules',
-                      'view_staff': 'View Staff',
-                      'manage_staff': 'Manage Staff',
-                      'view_billing': 'View Billing',
-                      'manage_billing': 'Manage Billing',
-                      'view_compliance': 'View Compliance',
-                      'manage_compliance': 'Manage Compliance',
-                      'view_staff_credentials': 'View Staff Credentials',
-                      'edit_staff_credentials': 'Edit Staff Credentials',
-                      'upload_documents': 'Upload Documents',
-                      'view_facility_profile': 'View Facility Profile',
-                      'edit_facility_profile': 'Edit Facility Profile',
-                      'manage_facility_settings': 'Manage Facility Settings',
-                      'view_audit_logs': 'View Audit Logs'
+                      view_schedules: "View Schedules",
+                      manage_schedules: "Manage Schedules",
+                      view_staff: "View Staff",
+                      manage_staff: "Manage Staff",
+                      view_billing: "View Billing",
+                      manage_billing: "Manage Billing",
+                      view_compliance: "View Compliance",
+                      manage_compliance: "Manage Compliance",
+                      view_staff_credentials: "View Staff Credentials",
+                      edit_staff_credentials: "Edit Staff Credentials",
+                      upload_documents: "Upload Documents",
+                      view_facility_profile: "View Facility Profile",
+                      edit_facility_profile: "Edit Facility Profile",
+                      manage_facility_settings: "Manage Facility Settings",
+                      view_audit_logs: "View Audit Logs",
                     }).map(([permission, label]) => (
                       <div key={permission} className="flex items-center space-x-2">
                         <Checkbox
                           checked={selectedPermissions.includes(permission)}
                           onCheckedChange={() => handlePermissionToggle(permission)}
                         />
-                        <Label className="text-sm font-normal cursor-pointer">
-                          {label}
-                        </Label>
+                        <Label className="text-sm font-normal cursor-pointer">{label}</Label>
                       </div>
                     ))}
                   </div>
@@ -344,17 +377,19 @@ export default function FacilityUsersManagementPage() {
             <Button variant="outline" onClick={() => setShowAddUser(false)}>
               Cancel
             </Button>
-            <Button onClick={() => {
-              // Handle add user
-              addUser.mutate({
-                firstName: 'New',
-                lastName: 'User',
-                email: 'newuser@facility.com',
-                role: selectedRole,
-                permissions: selectedPermissions,
-                isActive: true
-              });
-            }}>
+            <Button
+              onClick={() => {
+                // Handle add user
+                addUser.mutate({
+                  firstName: "New",
+                  lastName: "User",
+                  email: "newuser@facility.com",
+                  role: selectedRole,
+                  permissions: selectedPermissions,
+                  isActive: true,
+                });
+              }}
+            >
               Add User
             </Button>
           </DialogFooter>
@@ -367,20 +402,21 @@ export default function FacilityUsersManagementPage() {
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>Edit User</DialogTitle>
-              <DialogDescription>
-                Update user role and permissions
-              </DialogDescription>
+              <DialogDescription>Update user role and permissions</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 mt-4">
               <div className="flex items-center gap-3">
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={editingUser.avatar} />
                   <AvatarFallback>
-                    {editingUser.firstName[0]}{editingUser.lastName[0]}
+                    {editingUser.firstName[0]}
+                    {editingUser.lastName[0]}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="font-medium">{editingUser.firstName} {editingUser.lastName}</p>
+                  <p className="font-medium">
+                    {editingUser.firstName} {editingUser.lastName}
+                  </p>
                   <p className="text-sm text-gray-600">{editingUser.email}</p>
                 </div>
               </div>
@@ -399,36 +435,34 @@ export default function FacilityUsersManagementPage() {
                   </SelectContent>
                 </Select>
               </div>
-              {hasPermission('manage_permissions') && (
+              {hasPermission("manage_permissions") && (
                 <div className="space-y-2">
                   <Label>Permissions</Label>
                   <div className="border rounded-lg p-4 max-h-64 overflow-y-auto">
                     <div className="space-y-2">
                       {Object.entries({
-                        'view_schedules': 'View Schedules',
-                        'manage_schedules': 'Manage Schedules',
-                        'view_staff': 'View Staff',
-                        'manage_staff': 'Manage Staff',
-                        'view_billing': 'View Billing',
-                        'manage_billing': 'Manage Billing',
-                        'view_compliance': 'View Compliance',
-                        'manage_compliance': 'Manage Compliance',
-                        'view_staff_credentials': 'View Staff Credentials',
-                        'edit_staff_credentials': 'Edit Staff Credentials',
-                        'upload_documents': 'Upload Documents',
-                        'view_facility_profile': 'View Facility Profile',
-                        'edit_facility_profile': 'Edit Facility Profile',
-                        'manage_facility_settings': 'Manage Facility Settings',
-                        'view_audit_logs': 'View Audit Logs'
+                        view_schedules: "View Schedules",
+                        manage_schedules: "Manage Schedules",
+                        view_staff: "View Staff",
+                        manage_staff: "Manage Staff",
+                        view_billing: "View Billing",
+                        manage_billing: "Manage Billing",
+                        view_compliance: "View Compliance",
+                        manage_compliance: "Manage Compliance",
+                        view_staff_credentials: "View Staff Credentials",
+                        edit_staff_credentials: "Edit Staff Credentials",
+                        upload_documents: "Upload Documents",
+                        view_facility_profile: "View Facility Profile",
+                        edit_facility_profile: "Edit Facility Profile",
+                        manage_facility_settings: "Manage Facility Settings",
+                        view_audit_logs: "View Audit Logs",
                       }).map(([permission, label]) => (
                         <div key={permission} className="flex items-center space-x-2">
                           <Checkbox
                             checked={selectedPermissions.includes(permission)}
                             onCheckedChange={() => handlePermissionToggle(permission)}
                           />
-                          <Label className="text-sm font-normal cursor-pointer">
-                            {label}
-                          </Label>
+                          <Label className="text-sm font-normal cursor-pointer">{label}</Label>
                         </div>
                       ))}
                     </div>
@@ -440,13 +474,15 @@ export default function FacilityUsersManagementPage() {
               <Button variant="outline" onClick={() => setEditingUser(null)}>
                 Cancel
               </Button>
-              <Button onClick={() => {
-                updateUser.mutate({
-                  id: editingUser.id,
-                  role: selectedRole,
-                  permissions: selectedPermissions
-                });
-              }}>
+              <Button
+                onClick={() => {
+                  updateUser.mutate({
+                    id: editingUser.id,
+                    role: selectedRole,
+                    permissions: selectedPermissions,
+                  });
+                }}
+              >
                 Save Changes
               </Button>
             </DialogFooter>

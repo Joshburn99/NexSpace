@@ -4,18 +4,18 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Upload, 
-  FileText, 
-  CheckCircle, 
-  Clock, 
+import {
+  Upload,
+  FileText,
+  CheckCircle,
+  Clock,
   AlertTriangle,
   Image,
   Shield,
   Stethoscope,
   Syringe,
   IdCard,
-  Award
+  Award,
 } from "lucide-react";
 import { useDropzone } from "react-dropzone";
 
@@ -40,7 +40,7 @@ export default function DocumentUploadPage() {
       status: "not_uploaded",
       required: true,
       icon: <Award className="h-5 w-5" />,
-      description: "Active nursing license from your state board"
+      description: "Active nursing license from your state board",
     },
     {
       id: "govt_id",
@@ -49,7 +49,7 @@ export default function DocumentUploadPage() {
       status: "not_uploaded",
       required: true,
       icon: <IdCard className="h-5 w-5" />,
-      description: "Driver's license or state-issued ID"
+      description: "Driver's license or state-issued ID",
     },
     {
       id: "bls",
@@ -58,7 +58,7 @@ export default function DocumentUploadPage() {
       status: "not_uploaded",
       required: true,
       icon: <Shield className="h-5 w-5" />,
-      description: "Basic Life Support certification"
+      description: "Basic Life Support certification",
     },
     {
       id: "tb_test",
@@ -67,7 +67,7 @@ export default function DocumentUploadPage() {
       status: "not_uploaded",
       required: true,
       icon: <Stethoscope className="h-5 w-5" />,
-      description: "Tuberculosis test within last 12 months"
+      description: "Tuberculosis test within last 12 months",
     },
     {
       id: "flu_shot",
@@ -76,31 +76,25 @@ export default function DocumentUploadPage() {
       status: "not_uploaded",
       required: false,
       icon: <Syringe className="h-5 w-5" />,
-      description: "Current season flu vaccination record"
-    }
+      description: "Current season flu vaccination record",
+    },
   ]);
 
-  const uploadedCount = documents.filter(d => d.status !== "not_uploaded").length;
-  const requiredCount = documents.filter(d => d.required).length;
+  const uploadedCount = documents.filter((d) => d.status !== "not_uploaded").length;
+  const requiredCount = documents.filter((d) => d.required).length;
   const progressPercentage = (uploadedCount / documents.length) * 100;
 
   const handleFileUpload = (docId: string, file: File) => {
-    setDocuments(docs => 
-      docs.map(doc => 
-        doc.id === docId 
-          ? { ...doc, status: "pending" as const, uploadedAt: new Date() }
-          : doc
+    setDocuments((docs) =>
+      docs.map((doc) =>
+        doc.id === docId ? { ...doc, status: "pending" as const, uploadedAt: new Date() } : doc
       )
     );
-    
+
     // Simulate verification after 2 seconds
     setTimeout(() => {
-      setDocuments(docs => 
-        docs.map(doc => 
-          doc.id === docId 
-            ? { ...doc, status: "verified" as const }
-            : doc
-        )
+      setDocuments((docs) =>
+        docs.map((doc) => (doc.id === docId ? { ...doc, status: "verified" as const } : doc))
       );
     }, 2000);
   };
@@ -108,15 +102,15 @@ export default function DocumentUploadPage() {
   const DocumentDropzone = ({ document }: { document: Document }) => {
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
       accept: {
-        'image/*': ['.png', '.jpg', '.jpeg'],
-        'application/pdf': ['.pdf']
+        "image/*": [".png", ".jpg", ".jpeg"],
+        "application/pdf": [".pdf"],
       },
       maxFiles: 1,
       onDrop: (acceptedFiles) => {
         if (acceptedFiles.length > 0) {
           handleFileUpload(document.id, acceptedFiles[0]);
         }
-      }
+      },
     });
 
     const getStatusBadge = () => {
@@ -128,9 +122,13 @@ export default function DocumentUploadPage() {
         case "rejected":
           return <Badge variant="destructive">Rejected</Badge>;
         default:
-          return document.required ? 
-            <Badge variant="outline" className="text-red-600">Required</Badge> : 
-            <Badge variant="outline">Optional</Badge>;
+          return document.required ? (
+            <Badge variant="outline" className="text-red-600">
+              Required
+            </Badge>
+          ) : (
+            <Badge variant="outline">Optional</Badge>
+          );
       }
     };
 
@@ -139,9 +137,11 @@ export default function DocumentUploadPage() {
         <CardContent className="p-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${
-                document.status === "verified" ? "bg-green-100 text-green-700" : "bg-gray-100"
-              }`}>
+              <div
+                className={`p-2 rounded-lg ${
+                  document.status === "verified" ? "bg-green-100 text-green-700" : "bg-gray-100"
+                }`}
+              >
                 {document.icon}
               </div>
               <div>
@@ -168,9 +168,15 @@ export default function DocumentUploadPage() {
           ) : (
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
-                {document.status === "verified" && <CheckCircle className="h-5 w-5 text-green-600" />}
-                {document.status === "pending" && <Clock className="h-5 w-5 text-yellow-600 animate-spin" />}
-                {document.status === "rejected" && <AlertTriangle className="h-5 w-5 text-red-600" />}
+                {document.status === "verified" && (
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                )}
+                {document.status === "pending" && (
+                  <Clock className="h-5 w-5 text-yellow-600 animate-spin" />
+                )}
+                {document.status === "rejected" && (
+                  <AlertTriangle className="h-5 w-5 text-red-600" />
+                )}
                 <div>
                   <p className="text-sm font-medium">
                     {document.status === "verified" && "Document verified"}
@@ -185,7 +191,9 @@ export default function DocumentUploadPage() {
                 </div>
               </div>
               {document.status === "verified" && (
-                <Button variant="ghost" size="sm">View</Button>
+                <Button variant="ghost" size="sm">
+                  View
+                </Button>
               )}
             </div>
           )}
@@ -201,16 +209,14 @@ export default function DocumentUploadPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Document Verification</h1>
           <p className="text-gray-600">Upload your credentials for quick verification</p>
-          
+
           {/* Progress */}
           <div className="mt-6">
             <div className="flex justify-between items-center mb-2">
               <span className="text-sm font-medium">
                 {uploadedCount} of {documents.length} documents uploaded
               </span>
-              <span className="text-sm text-gray-500">
-                {requiredCount} required
-              </span>
+              <span className="text-sm text-gray-500">{requiredCount} required</span>
             </div>
             <Progress value={progressPercentage} className="h-2" />
           </div>
@@ -220,14 +226,14 @@ export default function DocumentUploadPage() {
         <Alert className="mb-6 bg-blue-50 border-blue-200">
           <Shield className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-800">
-            <strong>Quick Verification Promise:</strong> Most documents are verified within 2 hours during business hours. 
-            You'll receive an email and in-app notification once complete.
+            <strong>Quick Verification Promise:</strong> Most documents are verified within 2 hours
+            during business hours. You'll receive an email and in-app notification once complete.
           </AlertDescription>
         </Alert>
 
         {/* Document Upload Cards */}
         <div className="space-y-4 mb-8">
-          {documents.map(doc => (
+          {documents.map((doc) => (
             <DocumentDropzone key={doc.id} document={doc} />
           ))}
         </div>
@@ -260,8 +266,10 @@ export default function DocumentUploadPage() {
           <Button variant="outline">Save & Continue Later</Button>
           <div className="flex gap-3">
             <Button variant="outline">Back</Button>
-            <Button 
-              disabled={documents.filter(d => d.required && d.status === "not_uploaded").length > 0}
+            <Button
+              disabled={
+                documents.filter((d) => d.required && d.status === "not_uploaded").length > 0
+              }
               className="gap-2"
             >
               Continue to Next Step

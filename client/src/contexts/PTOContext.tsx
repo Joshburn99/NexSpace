@@ -1,7 +1,7 @@
-import React, { createContext, useContext, ReactNode } from 'react';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient, apiRequest } from '@/lib/queryClient';
-import { useAuth } from '@/hooks/use-auth';
+import React, { createContext, useContext, ReactNode } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 
 export interface TimeOffType {
   id: number;
@@ -39,7 +39,7 @@ export interface TimeOffRequest {
   endDate: string;
   totalHours: string;
   reason?: string;
-  status: 'pending' | 'approved' | 'denied' | 'cancelled';
+  status: "pending" | "approved" | "denied" | "cancelled";
   requestedAt: string;
   reviewedBy?: number;
   reviewedAt?: string;
@@ -70,7 +70,11 @@ interface PTOContextType {
   getEmployeeRequests: (employeeId: number) => TimeOffRequest[];
   getPendingRequests: () => TimeOffRequest[];
   submitPTORequest: (request: CreateTimeOffRequest) => Promise<void>;
-  reviewPTORequest: (requestId: number, status: 'approved' | 'denied', reviewNotes?: string) => Promise<void>;
+  reviewPTORequest: (
+    requestId: number,
+    status: "approved" | "denied",
+    reviewNotes?: string
+  ) => Promise<void>;
   cancelPTORequest: (requestId: number) => Promise<void>;
   isLoading: boolean;
   isLoadingBalances: boolean;
@@ -82,72 +86,87 @@ const PTOContext = createContext<PTOContextType | undefined>(undefined);
 export const PTOProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const currentYear = new Date().getFullYear();
-  
+
   // Fetch time-off types
   const { data: types = [], isLoading: isLoadingTypes } = useQuery<TimeOffType[]>({
-    queryKey: ['/api/timeoff/types'],
+    queryKey: ["/api/timeoff/types"],
     enabled: !!user,
   });
-  
+
   // Fetch user's time-off balances
-  const { data: balances = [], isLoading: isLoadingBalances, refetch: refetchBalances } = useQuery<TimeOffBalance[]>({
-    queryKey: ['/api/timeoff/balance', currentYear],
-    queryFn: () => fetch(`/api/timeoff/balance?year=${currentYear}`).then(res => res.json()),
+  const {
+    data: balances = [],
+    isLoading: isLoadingBalances,
+    refetch: refetchBalances,
+  } = useQuery<TimeOffBalance[]>({
+    queryKey: ["/api/timeoff/balance", currentYear],
+    queryFn: () => fetch(`/api/timeoff/balance?year=${currentYear}`).then((res) => res.json()),
     enabled: !!user,
   });
-  
+
   // Fetch time-off requests
-  const { data: requests = [], isLoading: isLoadingRequests, refetch: refetchRequests } = useQuery<TimeOffRequest[]>({
-    queryKey: ['/api/timeoff/requests'],
+  const {
+    data: requests = [],
+    isLoading: isLoadingRequests,
+    refetch: refetchRequests,
+  } = useQuery<TimeOffRequest[]>({
+    queryKey: ["/api/timeoff/requests"],
     enabled: !!user,
   });
-  
+
   // Submit PTO request mutation
   const submitMutation = useMutation({
     mutationFn: async (requestData: CreateTimeOffRequest) => {
-      const res = await apiRequest('/api/timeoff/requests', 'POST', requestData);
+      const res = await apiRequest("/api/timeoff/requests", "POST", requestData);
       return res.json();
     },
     onSuccess: () => {
       refetchRequests();
       refetchBalances();
-      queryClient.invalidateQueries({ queryKey: ['/api/timeoff/requests'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/timeoff/balance'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/timeoff/requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/timeoff/balance"] });
     },
   });
-  
+
   // Review PTO request mutation
   const reviewMutation = useMutation({
-    mutationFn: async ({ requestId, status, reviewNotes }: { requestId: number; status: 'approved' | 'denied'; reviewNotes?: string }) => {
-      const res = await apiRequest(
-        `/api/timeoff/requests/${requestId}/review`, 
-        'POST', 
-        { status, reviewNotes }
-      );
+    mutationFn: async ({
+      requestId,
+      status,
+      reviewNotes,
+    }: {
+      requestId: number;
+      status: "approved" | "denied";
+      reviewNotes?: string;
+    }) => {
+      const res = await apiRequest(`/api/timeoff/requests/${requestId}/review`, "POST", {
+        status,
+        reviewNotes,
+      });
       return res.json();
     },
     onSuccess: () => {
       refetchRequests();
       refetchBalances();
-      queryClient.invalidateQueries({ queryKey: ['/api/timeoff/requests'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/timeoff/balance'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/timeoff/requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/timeoff/balance"] });
     },
   });
-  
+
   // Cancel PTO request mutation
   const cancelMutation = useMutation({
     mutationFn: async (requestId: number) => {
-      const res = await apiRequest(`/api/timeoff/requests/${requestId}/cancel`, 'POST');
+      const res = await apiRequest(`/api/timeoff/requests/${requestId}/cancel`, "POST");
       return res.json();
     },
     onSuccess: () => {
       refetchRequests();
       refetchBalances();
-      queryClient.invalidateQueries({ queryKey: ['/api/timeoff/requests'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/timeoff/balance'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/timeoff/requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/timeoff/balance"] });
     },
   });
-  
+
   const getEmployeeBalance = (employeeId: number): TimeOffBalance[] => {
     return balances.filter((balance: TimeOffBalance) => balance.userId === employeeId);
   };
@@ -157,17 +176,21 @@ export const PTOProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const getPendingRequests = (): TimeOffRequest[] => {
-    return requests.filter((request: TimeOffRequest) => request.status === 'pending');
+    return requests.filter((request: TimeOffRequest) => request.status === "pending");
   };
 
   const submitPTORequest = async (requestData: CreateTimeOffRequest) => {
     await submitMutation.mutateAsync(requestData);
   };
 
-  const reviewPTORequest = async (requestId: number, status: 'approved' | 'denied', reviewNotes?: string) => {
+  const reviewPTORequest = async (
+    requestId: number,
+    status: "approved" | "denied",
+    reviewNotes?: string
+  ) => {
     await reviewMutation.mutateAsync({ requestId, status, reviewNotes });
   };
-  
+
   const cancelPTORequest = async (requestId: number) => {
     await cancelMutation.mutateAsync(requestId);
   };
@@ -193,7 +216,7 @@ export const PTOProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 export const usePTO = (): PTOContextType => {
   const context = useContext(PTOContext);
   if (!context) {
-    throw new Error('usePTO must be used within a PTOProvider');
+    throw new Error("usePTO must be used within a PTOProvider");
   }
   return context;
 };

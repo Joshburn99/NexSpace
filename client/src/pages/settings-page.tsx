@@ -51,17 +51,17 @@ export default function SettingsPage() {
   // Check for Google Calendar callback
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const calendarConnected = params.get('calendar_connected');
-    const calendarError = params.get('calendar_error');
-    
-    if (calendarConnected === 'true') {
+    const calendarConnected = params.get("calendar_connected");
+    const calendarError = params.get("calendar_error");
+
+    if (calendarConnected === "true") {
       toast({
         title: "Calendar Connected",
         description: "Your Google Calendar has been successfully connected.",
       });
       // Clean up URL
       window.history.replaceState({}, document.title, window.location.pathname);
-    } else if (calendarError === 'true') {
+    } else if (calendarError === "true") {
       toast({
         title: "Connection Failed",
         description: "Failed to connect to Google Calendar. Please try again.",
@@ -78,7 +78,7 @@ export default function SettingsPage() {
       const response = await apiRequest("PATCH", `/api/user/${user!.id}`, { role: newRole });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to update user role');
+        throw new Error(error.message || "Failed to update user role");
       }
       return response.json();
     },
@@ -90,10 +90,12 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
     },
     onError: (error: any) => {
-      console.error('Role update error:', error);
+      console.error("Role update error:", error);
       toast({
         title: "Update Failed",
-        description: error.message || "Failed to update user role. Please check your connection and try again.",
+        description:
+          error.message ||
+          "Failed to update user role. Please check your connection and try again.",
         variant: "destructive",
       });
       setSelectedRole(user?.role || ""); // Reset to original role on error
@@ -153,8 +155,6 @@ export default function SettingsPage() {
       </div>
 
       <div className="space-y-6">
-
-
         {/* Account Information */}
         <Card>
           <CardHeader>

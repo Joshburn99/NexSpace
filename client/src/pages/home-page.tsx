@@ -245,37 +245,47 @@ const recentActivity = [
 export default function HomePage() {
   const { user, impersonatedUser } = useAuth();
   const [, setLocation] = useLocation();
-  
+
   const currentUser = impersonatedUser || user;
-  
+
   // Use proper routing instead of window.location to preserve state
-  if (currentUser?.role === 'employee') {
+  if (currentUser?.role === "employee") {
     return <EmployeeDashboardWrapper />;
   }
-  
-  if (currentUser?.role === 'contractor') {
+
+  if (currentUser?.role === "contractor") {
     return <ContractorDashboardWrapper />;
   }
-  
-  if (currentUser?.role === 'clinician') {
+
+  if (currentUser?.role === "clinician") {
     return <ClinicianDashboardWrapper />;
   }
 
   // Redirect facility users to their specialized dashboard
-  if (currentUser?.role && [
-    'facility_admin', 'facility_administrator', 'scheduling_coordinator', 'hr_manager', 'corporate', 
-    'regional_director', 'billing', 'supervisor', 'director_of_nursing'
-  ].includes(currentUser.role)) {
-    setLocation('/facility-dashboard');
+  if (
+    currentUser?.role &&
+    [
+      "facility_admin",
+      "facility_administrator",
+      "scheduling_coordinator",
+      "hr_manager",
+      "corporate",
+      "regional_director",
+      "billing",
+      "supervisor",
+      "director_of_nursing",
+    ].includes(currentUser.role)
+  ) {
+    setLocation("/facility-dashboard");
     return null;
   }
 
   // Redirect super admins to facility dashboard as well for consistent experience
-  if (currentUser?.role === 'super_admin') {
-    setLocation('/facility-dashboard');
+  if (currentUser?.role === "super_admin") {
+    setLocation("/facility-dashboard");
     return null;
   }
-  
+
   const [selectedTab, setSelectedTab] = useState("overview");
   const [selectedBuilding, setSelectedBuilding] = useState("main");
 

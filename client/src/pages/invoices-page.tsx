@@ -16,7 +16,15 @@ import { useInvoices } from "@/contexts/InvoiceContext";
 
 export default function InvoicesPage() {
   const { user } = useAuth();
-  const { invoices, paymentSummary, getInvoicesByStatus, getOverdueInvoices, getPendingInvoices, updateInvoiceStatus, isLoading } = useInvoices();
+  const {
+    invoices,
+    paymentSummary,
+    getInvoicesByStatus,
+    getOverdueInvoices,
+    getPendingInvoices,
+    updateInvoiceStatus,
+    isLoading,
+  } = useInvoices();
   const [statusFilter, setStatusFilter] = useState("all");
 
   const getStatusColor = (status: string) => {
@@ -51,9 +59,8 @@ export default function InvoicesPage() {
     }
   };
 
-  const filteredInvoices = statusFilter === "all" 
-    ? invoices 
-    : getInvoicesByStatus(statusFilter as any);
+  const filteredInvoices =
+    statusFilter === "all" ? invoices : getInvoicesByStatus(statusFilter as any);
 
   const pendingInvoices = getPendingInvoices();
   const overdueInvoices = getOverdueInvoices();
@@ -89,7 +96,9 @@ export default function InvoicesPage() {
           <CardContent className="p-6">
             <div className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-blue-600" />
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Invoices</span>
+              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Total Invoices
+              </span>
             </div>
             <div className="mt-2">
               <div className="text-2xl font-bold text-gray-900 dark:text-white">
@@ -176,14 +185,15 @@ export default function InvoicesPage() {
       <Card>
         <CardHeader>
           <CardTitle>Invoice List</CardTitle>
-          <CardDescription>
-            Manage and track all invoices
-          </CardDescription>
+          <CardDescription>Manage and track all invoices</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {filteredInvoices.map((invoice) => (
-              <div key={invoice.id} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <div
+                key={invoice.id}
+                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg"
+              >
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     {getStatusIcon(invoice.status)}
@@ -197,7 +207,7 @@ export default function InvoicesPage() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center gap-4">
                   <div className="text-center">
                     <Badge className={getStatusColor(invoice.status)}>
@@ -207,7 +217,7 @@ export default function InvoicesPage() {
                       {new Date(invoice.issueDate).toLocaleDateString()}
                     </p>
                   </div>
-                  
+
                   <div className="text-right">
                     <p className="font-semibold text-gray-900 dark:text-white">
                       ${invoice.totalAmount.toLocaleString()}
@@ -216,7 +226,7 @@ export default function InvoicesPage() {
                       Due: {new Date(invoice.dueDate).toLocaleDateString()}
                     </p>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">
                       <Eye className="h-4 w-4" />

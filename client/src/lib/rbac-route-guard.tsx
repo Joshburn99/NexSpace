@@ -24,7 +24,7 @@ export function RBACRouteGuard({
   requiredPermissions = [],
   requiredRole,
   fallbackPath = "/dashboard",
-  allowSuperAdmin = true
+  allowSuperAdmin = true,
 }: RBACRouteGuardProps) {
   const { user, isLoading } = useAuth();
   const { hasPermission, hasRole, hasAnyPermission } = useRBAC();
@@ -51,7 +51,7 @@ export function RBACRouteGuard({
     <Route path={path}>
       {() => {
         // Super admin bypass (if allowed)
-        if (allowSuperAdmin && user.role === 'super_admin') {
+        if (allowSuperAdmin && user.role === "super_admin") {
           return <Component />;
         }
 
@@ -62,12 +62,17 @@ export function RBACRouteGuard({
 
         // Check required permissions
         if (requiredPermissions.length > 0) {
-          const hasRequiredPermissions = requiredPermissions.every(permission => 
+          const hasRequiredPermissions = requiredPermissions.every((permission) =>
             hasPermission(permission)
           );
-          
+
           if (!hasRequiredPermissions) {
-            return <AccessDeniedPage requiredPermissions={requiredPermissions} fallbackPath={fallbackPath} />;
+            return (
+              <AccessDeniedPage
+                requiredPermissions={requiredPermissions}
+                fallbackPath={fallbackPath}
+              />
+            );
           }
         }
 
@@ -84,7 +89,7 @@ export function ProtectedRoute({
   requiredPermissions,
   requiredRole,
   fallbackPath,
-  allowSuperAdmin = true
+  allowSuperAdmin = true,
 }: RBACRouteGuardProps) {
   return (
     <RBACRouteGuard
@@ -102,7 +107,7 @@ export function ProtectedRoute({
 export function AdminRoute({
   path,
   component,
-  fallbackPath = "/dashboard"
+  fallbackPath = "/dashboard",
 }: {
   path: string;
   component: () => React.JSX.Element | null;
@@ -124,7 +129,7 @@ export function FacilityRoute({
   path,
   component,
   requiredPermissions,
-  fallbackPath = "/facility-dashboard"
+  fallbackPath = "/facility-dashboard",
 }: {
   path: string;
   component: () => React.JSX.Element | null;
@@ -132,9 +137,14 @@ export function FacilityRoute({
   fallbackPath?: string;
 }) {
   const facilityRoles: SystemRole[] = [
-    'facility_admin', 'scheduling_coordinator', 'hr_manager', 
-    'billing_manager', 'supervisor', 'director_of_nursing', 
-    'corporate', 'regional_director'
+    "facility_admin",
+    "scheduling_coordinator",
+    "hr_manager",
+    "billing_manager",
+    "supervisor",
+    "director_of_nursing",
+    "corporate",
+    "regional_director",
   ];
 
   return (
@@ -148,18 +158,23 @@ export function FacilityRoute({
         }
 
         // Check if user has any facility role or is super admin
-        if (!hasAnyRole(facilityRoles) && user.role !== 'super_admin') {
+        if (!hasAnyRole(facilityRoles) && user.role !== "super_admin") {
           return <AccessDeniedPage fallbackPath={fallbackPath} />;
         }
 
         // Check permissions if specified
         if (requiredPermissions && requiredPermissions.length > 0) {
-          const hasRequiredPermissions = requiredPermissions.every(permission =>
+          const hasRequiredPermissions = requiredPermissions.every((permission) =>
             hasPermission(permission)
           );
 
-          if (!hasRequiredPermissions && user.role !== 'super_admin') {
-            return <AccessDeniedPage requiredPermissions={requiredPermissions} fallbackPath={fallbackPath} />;
+          if (!hasRequiredPermissions && user.role !== "super_admin") {
+            return (
+              <AccessDeniedPage
+                requiredPermissions={requiredPermissions}
+                fallbackPath={fallbackPath}
+              />
+            );
           }
         }
 
@@ -174,7 +189,7 @@ export function FacilityRoute({
 export function StaffRoute({
   path,
   component,
-  fallbackPath = "/dashboard"
+  fallbackPath = "/dashboard",
 }: {
   path: string;
   component: () => React.JSX.Element | null;
@@ -194,7 +209,7 @@ export function StaffRoute({
 function AccessDeniedPage({
   requiredRole,
   requiredPermissions,
-  fallbackPath = "/dashboard"
+  fallbackPath = "/dashboard",
 }: {
   requiredRole?: SystemRole;
   requiredPermissions?: Permission[];
@@ -206,20 +221,22 @@ function AccessDeniedPage({
     <div className="flex items-center justify-center min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-md w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 text-center">
         <Shield className="h-16 w-16 text-red-500 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-          Access Denied
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Access Denied</h1>
         <div className="text-gray-600 dark:text-gray-300 mb-6">
           <p className="mb-2">You don't have permission to access this page.</p>
           {requiredRole && (
-            <p className="text-sm">Required role: <span className="font-semibold">{requiredRole}</span></p>
+            <p className="text-sm">
+              Required role: <span className="font-semibold">{requiredRole}</span>
+            </p>
           )}
           {requiredPermissions && requiredPermissions.length > 0 && (
             <div className="text-sm mt-2">
               <p>Required permissions:</p>
               <ul className="list-disc list-inside mt-1">
                 {requiredPermissions.map((permission, index) => (
-                  <li key={index} className="font-mono text-xs">{permission}</li>
+                  <li key={index} className="font-mono text-xs">
+                    {permission}
+                  </li>
                 ))}
               </ul>
             </div>
@@ -231,7 +248,7 @@ function AccessDeniedPage({
           )}
         </div>
         <button
-          onClick={() => window.location.href = fallbackPath}
+          onClick={() => (window.location.href = fallbackPath)}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
         >
           Go to Dashboard
@@ -254,7 +271,7 @@ export function useRouteAccess() {
     if (!user) return false;
 
     // Super admin bypass
-    if (allowSuperAdmin && user.role === 'super_admin') {
+    if (allowSuperAdmin && user.role === "super_admin") {
       return true;
     }
 
@@ -265,31 +282,36 @@ export function useRouteAccess() {
 
     // Check permission requirements
     if (requiredPermissions.length > 0) {
-      return requiredPermissions.every(permission => hasPermission(permission));
+      return requiredPermissions.every((permission) => hasPermission(permission));
     }
 
     return true;
   };
 
   const canAccessAdminRoutes = (): boolean => {
-    return user?.role === 'super_admin';
+    return user?.role === "super_admin";
   };
 
   const canAccessFacilityRoutes = (requiredPermissions: Permission[] = []): boolean => {
     if (!user) return false;
 
     const facilityRoles: SystemRole[] = [
-      'facility_admin', 'scheduling_coordinator', 'hr_manager',
-      'billing_manager', 'supervisor', 'director_of_nursing',
-      'corporate', 'regional_director'
+      "facility_admin",
+      "scheduling_coordinator",
+      "hr_manager",
+      "billing_manager",
+      "supervisor",
+      "director_of_nursing",
+      "corporate",
+      "regional_director",
     ];
 
-    const hasFacilityRole = hasAnyRole(facilityRoles) || user.role === 'super_admin';
-    
+    const hasFacilityRole = hasAnyRole(facilityRoles) || user.role === "super_admin";
+
     if (!hasFacilityRole) return false;
 
-    if (requiredPermissions.length > 0 && user.role !== 'super_admin') {
-      return requiredPermissions.every(permission => hasPermission(permission));
+    if (requiredPermissions.length > 0 && user.role !== "super_admin") {
+      return requiredPermissions.every((permission) => hasPermission(permission));
     }
 
     return true;
@@ -298,6 +320,6 @@ export function useRouteAccess() {
   return {
     canAccessRoute,
     canAccessAdminRoutes,
-    canAccessFacilityRoutes
+    canAccessFacilityRoutes,
   };
 }

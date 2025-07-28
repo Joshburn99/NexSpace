@@ -14,12 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Calendar,
   Clock,
@@ -31,7 +26,7 @@ import {
   AlertCircle,
   CheckCircle,
   Star,
-  User
+  User,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
@@ -66,7 +61,7 @@ export default function WorkerOpenShiftsPage() {
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/shifts/worker-open");
       return await response.json();
-    }
+    },
   });
 
   // Request shift mutation
@@ -79,55 +74,65 @@ export default function WorkerOpenShiftsPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/shifts/worker-open"] });
       toast({
         title: "Shift Requested",
-        description: "Your shift request has been submitted successfully."
+        description: "Your shift request has been submitted successfully.",
       });
       setSelectedShift(null);
     },
     onError: () => {
       toast({
-        title: "Request Failed", 
+        title: "Request Failed",
         description: "Failed to request shift. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // Filter shifts based on search and filters
   const filteredShifts = shifts.filter((shift: WorkerShift) => {
-    const matchesSearch = shift.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         shift.facilityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         shift.department.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesFacility = facilityFilter === "all" || shift.facilityId.toString() === facilityFilter;
+    const matchesSearch =
+      shift.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      shift.facilityName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      shift.department.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesFacility =
+      facilityFilter === "all" || shift.facilityId.toString() === facilityFilter;
     const matchesUrgency = urgencyFilter === "all" || shift.urgency === urgencyFilter;
-    
+
     return matchesSearch && matchesFacility && matchesUrgency;
   });
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
-      case "critical": return "bg-red-100 text-red-800 border-red-200";
-      case "high": return "bg-orange-100 text-orange-800 border-orange-200";
-      case "medium": return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "low": return "bg-green-100 text-green-800 border-green-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case "critical":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "high":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "low":
+        return "bg-green-100 text-green-800 border-green-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "open": return "bg-blue-100 text-blue-800 border-blue-200";
-      case "requested": return "bg-orange-100 text-orange-800 border-orange-200";
-      default: return "bg-gray-100 text-gray-800 border-gray-200";
+      case "open":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "requested":
+        return "bg-orange-100 text-orange-800 border-orange-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const formatTime = (time: string) => {
     try {
-      const [hours, minutes] = time.split(':');
+      const [hours, minutes] = time.split(":");
       const date = new Date();
       date.setHours(parseInt(hours), parseInt(minutes));
-      return format(date, 'h:mm a');
+      return format(date, "h:mm a");
     } catch {
       return time;
     }
@@ -135,7 +140,7 @@ export default function WorkerOpenShiftsPage() {
 
   const formatDate = (dateString: string) => {
     try {
-      return format(parseISO(dateString), 'MMM d, yyyy');
+      return format(parseISO(dateString), "MMM d, yyyy");
     } catch {
       return dateString;
     }
@@ -153,9 +158,7 @@ export default function WorkerOpenShiftsPage() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Available Shifts
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Available Shifts</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
             View and request shifts that match your specialty and facilities
           </p>
@@ -181,7 +184,7 @@ export default function WorkerOpenShiftsPage() {
                 className="pl-10"
               />
             </div>
-            
+
             <Select value={facilityFilter} onValueChange={setFacilityFilter}>
               <SelectTrigger>
                 <SelectValue placeholder="All Facilities" />
@@ -243,22 +246,24 @@ export default function WorkerOpenShiftsPage() {
                   <Calendar className="h-4 w-4 text-gray-500" />
                   <span>{formatDate(shift.date)}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-2 text-sm">
                   <Clock className="h-4 w-4 text-gray-500" />
-                  <span>{formatTime(shift.startTime)} - {formatTime(shift.endTime)}</span>
+                  <span>
+                    {formatTime(shift.startTime)} - {formatTime(shift.endTime)}
+                  </span>
                 </div>
-                
+
                 <div className="flex items-center gap-2 text-sm">
                   <MapPin className="h-4 w-4 text-gray-500" />
                   <span>{shift.department}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-2 text-sm font-medium">
                   <DollarSign className="h-4 w-4 text-green-600" />
                   <span className="text-green-600">${shift.rate}/hour</span>
                 </div>
-                
+
                 <div className="flex items-center gap-2 text-sm">
                   <Star className="h-4 w-4 text-blue-500" />
                   <span>{shift.specialty}</span>
@@ -304,7 +309,8 @@ export default function WorkerOpenShiftsPage() {
               No Available Shifts
             </h3>
             <p className="text-gray-600 dark:text-gray-400">
-              There are currently no shifts available that match your specialty and facility associations.
+              There are currently no shifts available that match your specialty and facility
+              associations.
             </p>
           </CardContent>
         </Card>
@@ -326,33 +332,35 @@ export default function WorkerOpenShiftsPage() {
                   {selectedShift.status === "open" ? "Available" : "Requested"}
                 </Badge>
               </div>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Building className="h-4 w-4 text-gray-500" />
                   <span>{selectedShift.facilityName}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-gray-500" />
                   <span>{formatDate(selectedShift.date)}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Clock className="h-4 w-4 text-gray-500" />
-                  <span>{formatTime(selectedShift.startTime)} - {formatTime(selectedShift.endTime)}</span>
+                  <span>
+                    {formatTime(selectedShift.startTime)} - {formatTime(selectedShift.endTime)}
+                  </span>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <MapPin className="h-4 w-4 text-gray-500" />
                   <span>{selectedShift.department}</span>
                 </div>
-                
+
                 <div className="flex items-center gap-2 font-medium">
                   <DollarSign className="h-4 w-4 text-green-600" />
                   <span className="text-green-600">${selectedShift.rate}/hour</span>
                 </div>
-                
+
                 <div className="flex items-center gap-2">
                   <Star className="h-4 w-4 text-blue-500" />
                   <span>{selectedShift.specialty}</span>

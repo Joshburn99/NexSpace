@@ -7,7 +7,7 @@ export type WorkLog = {
   clockIn: string;
   clockOut: string;
   breakDuration: number; // in minutes
-  rate: number;           // per hour
+  rate: number; // per hour
   earnings: number;
   notes?: string;
   supervisorName?: string;
@@ -38,80 +38,80 @@ export const TimeClockProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   // Load saved state from localStorage
   useEffect(() => {
-    const savedCurrentIn = localStorage.getItem('nexspace-current-clock-in');
-    const savedLogs = localStorage.getItem('nexspace-work-logs');
-    
+    const savedCurrentIn = localStorage.getItem("nexspace-current-clock-in");
+    const savedLogs = localStorage.getItem("nexspace-work-logs");
+
     if (savedCurrentIn) {
       setCurrentIn(savedCurrentIn);
     }
-    
+
     if (savedLogs) {
       try {
         setLogs(JSON.parse(savedLogs));
       } catch (error) {
-        console.error('Error parsing saved work logs:', error);
+        console.error("Error parsing saved work logs:", error);
       }
     } else {
       // Add some sample logs for testing scrolling functionality
       const sampleLogs: WorkLog[] = [
         {
-          id: '1',
-          userId: '3',
+          id: "1",
+          userId: "3",
           clockIn: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
           clockOut: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
           breakDuration: 30,
           rate: 25,
-          earnings: 162.50,
-          notes: 'Completed patient rounds and medication administration',
-          supervisorName: 'Dr. Sarah Johnson',
-          supervisorSignature: 'Dr. Sarah Johnson',
-          adjustedTimes: false
+          earnings: 162.5,
+          notes: "Completed patient rounds and medication administration",
+          supervisorName: "Dr. Sarah Johnson",
+          supervisorSignature: "Dr. Sarah Johnson",
+          adjustedTimes: false,
         },
         {
-          id: '2',
-          userId: '3',
+          id: "2",
+          userId: "3",
           clockIn: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
           clockOut: new Date(Date.now() - 16 * 60 * 60 * 1000).toISOString(),
           breakDuration: 45,
           rate: 25,
           earnings: 181.25,
-          notes: 'Emergency shift - handled multiple critical patients',
-          adjustedTimes: true
+          notes: "Emergency shift - handled multiple critical patients",
+          adjustedTimes: true,
         },
         {
-          id: '3',
-          userId: '3',
+          id: "3",
+          userId: "3",
           clockIn: new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString(),
           clockOut: new Date(Date.now() - 40 * 60 * 60 * 1000).toISOString(),
           breakDuration: 0,
           rate: 25,
-          earnings: 200.00,
-          supervisorName: 'Nurse Manager Lisa',
-          supervisorSignature: 'Lisa Rodriguez'
+          earnings: 200.0,
+          supervisorName: "Nurse Manager Lisa",
+          supervisorSignature: "Lisa Rodriguez",
         },
         {
-          id: '4',
-          userId: '3',
+          id: "4",
+          userId: "3",
           clockIn: new Date(Date.now() - 72 * 60 * 60 * 1000).toISOString(),
           clockOut: new Date(Date.now() - 66 * 60 * 60 * 1000).toISOString(),
           breakDuration: 15,
           rate: 25,
           earnings: 143.75,
-          notes: 'Training session with new equipment'
+          notes: "Training session with new equipment",
         },
         {
-          id: '5',
-          userId: '3',
+          id: "5",
+          userId: "3",
           clockIn: new Date(Date.now() - 96 * 60 * 60 * 1000).toISOString(),
           clockOut: new Date(Date.now() - 88 * 60 * 60 * 1000).toISOString(),
           breakDuration: 30,
           rate: 25,
-          earnings: 175.00,
-          notes: 'Weekend shift with overtime approval',
-          supervisorName: 'Head Nurse Patricia',
-          supervisorSignature: 'Patricia Williams',
-          adjustedTimes: true
-        }
+          earnings: 175.0,
+          notes: "Weekend shift with overtime approval",
+          supervisorName: "Head Nurse Patricia",
+          supervisorSignature: "Patricia Williams",
+          adjustedTimes: true,
+        },
       ];
       setLogs(sampleLogs);
     }
@@ -120,14 +120,14 @@ export const TimeClockProvider: React.FC<{ children: ReactNode }> = ({ children 
   // Save state to localStorage
   useEffect(() => {
     if (currentIn) {
-      localStorage.setItem('nexspace-current-clock-in', currentIn);
+      localStorage.setItem("nexspace-current-clock-in", currentIn);
     } else {
-      localStorage.removeItem('nexspace-current-clock-in');
+      localStorage.removeItem("nexspace-current-clock-in");
     }
   }, [currentIn]);
 
   useEffect(() => {
-    localStorage.setItem('nexspace-work-logs', JSON.stringify(logs));
+    localStorage.setItem("nexspace-work-logs", JSON.stringify(logs));
   }, [logs]);
 
   const clockIn = () => {
@@ -143,19 +143,19 @@ export const TimeClockProvider: React.FC<{ children: ReactNode }> = ({ children 
     supervisorSignature?: string;
   }) => {
     if (!currentIn || !currentUser) return;
-    
+
     const start = new Date(workLogData.clockInTime).getTime();
     const end = new Date(workLogData.clockOutTime).getTime();
     const totalHours = (end - start) / 3600000;
-    const workHours = totalHours - (workLogData.breakDuration / 60);
+    const workHours = totalHours - workLogData.breakDuration / 60;
     const rate = (currentUser as any).rate ?? 25;
     const earnings = parseFloat((workHours * rate).toFixed(2));
-    
+
     // Check if times were adjusted from original
     const originalClockIn = new Date(currentIn);
     const adjustedClockIn = new Date(workLogData.clockInTime);
     const adjustedTimes = Math.abs(originalClockIn.getTime() - adjustedClockIn.getTime()) > 60000; // 1 minute tolerance
-    
+
     const newLog: WorkLog = {
       id: Date.now().toString(),
       userId: currentUser.id.toString(),
@@ -167,10 +167,10 @@ export const TimeClockProvider: React.FC<{ children: ReactNode }> = ({ children 
       notes: workLogData.notes,
       supervisorName: workLogData.supervisorName,
       supervisorSignature: workLogData.supervisorSignature,
-      adjustedTimes
+      adjustedTimes,
     };
-    
-    setLogs(prev => [newLog, ...prev]);
+
+    setLogs((prev) => [newLog, ...prev]);
     setCurrentIn(null);
   };
 
@@ -178,18 +178,14 @@ export const TimeClockProvider: React.FC<{ children: ReactNode }> = ({ children 
     currentIn,
     logs,
     clockIn,
-    clockOut
+    clockOut,
   };
 
-  return (
-    <TimeClockContext.Provider value={value}>
-      {children}
-    </TimeClockContext.Provider>
-  );
+  return <TimeClockContext.Provider value={value}>{children}</TimeClockContext.Provider>;
 };
 
 export const useTimeClocks = () => {
   const ctx = useContext(TimeClockContext);
-  if (!ctx) throw new Error('Must be inside TimeClockProvider');
+  if (!ctx) throw new Error("Must be inside TimeClockProvider");
   return ctx;
 };

@@ -19,7 +19,6 @@ import {
 import { UserRole } from "@shared/schema";
 
 export async function seedDatabase() {
-  console.log("Seeding database with comprehensive healthcare staffing data...");
 
   try {
     // Clear existing data
@@ -736,21 +735,6 @@ export async function seedDatabase() {
 
     await db.insert(auditLogs).values(auditLogsData);
 
-    console.log("✅ Database seeded successfully with comprehensive healthcare staffing data!");
-    console.log(`📊 Created:`);
-    console.log(`   - ${insertedFacilities.length} facilities`);
-    console.log(`   - ${insertedUsers.length} users (staff, contractors, managers)`);
-    console.log(`   - ${insertedJobs.length} job postings`);
-    console.log(`   - ${insertedShifts.length} shifts`);
-    console.log(`   - ${insertedCredentials.length} professional credentials`);
-    console.log(`   - ${insertedInvoices.length} contractor invoices`);
-    console.log(`   - ${insertedWorkLogs.length} work log entries`);
-    console.log(`   - ${insertedProviders.length} payroll providers`);
-    console.log(`   - ${insertedConfigs.length} payroll configurations`);
-    console.log(`   - 0 payroll employee records (skipped for now)`);
-    console.log(`   - ${insertedTimesheets.length} timesheets`);
-    console.log(`   - 0 payments (skipped for now)`);
-    console.log(`   - Complete audit trail and activity logs`);
   } catch (error) {
     console.error("❌ Error seeding database:", error);
     throw error;

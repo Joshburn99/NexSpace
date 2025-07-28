@@ -2,38 +2,38 @@
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "./db";
-import { 
-  facilities, 
+import {
+  facilities,
   facilityAddresses,
   facilityContacts,
   facilitySettings,
   facilityRates,
   facilityStaffingTargets,
   facilityDocuments,
-  payrollProviders, 
-  teams, 
-  teamFacilities, 
-  type Facility, 
+  payrollProviders,
+  teams,
+  teamFacilities,
+  type Facility,
   type InsertFacility,
   type InsertFacilityAddress,
   type InsertFacilityContact,
   type InsertFacilitySettings,
   type InsertFacilityRates,
   type InsertFacilityStaffingTargets,
-  type InsertFacilityDocuments
+  type InsertFacilityDocuments,
 } from "@shared/schema";
 import { eq, and, or, desc, asc, ilike, sql } from "drizzle-orm";
-import { 
-  enhancedFacilitySchema, 
+import {
+  enhancedFacilitySchema,
   enhancedFacilityUpdateSchema,
   validateFacilityRates,
   validateStaffingTargets,
-  validateTimezone 
+  validateTimezone,
 } from "./enhanced-facility-validation";
 
 export function createEnhancedFacilitiesRoutes(
-  requireAuth: any, 
-  requirePermission: any, 
+  requireAuth: any,
+  requirePermission: any,
   auditLog: any
 ) {
   const router = Router();
@@ -42,7 +42,7 @@ export function createEnhancedFacilitiesRoutes(
   router.get("/", requireAuth, async (req, res) => {
     try {
       const { state, facilityType, active, search } = req.query;
-      
+
       let query = db
         .select({
           facility: facilities,
@@ -52,12 +52,12 @@ export function createEnhancedFacilitiesRoutes(
         .from(facilities)
         .leftJoin(facilityAddresses, eq(facilities.id, facilityAddresses.facilityId))
         .leftJoin(facilitySettings, eq(facilities.id, facilitySettings.facilityId));
-      
+
       // Apply filters
       const conditions = [];
       if (state && facilityAddresses) conditions.push(eq(facilityAddresses.state, state as string));
       if (facilityType) conditions.push(eq(facilities.facilityType, facilityType as string));
-      if (active !== undefined) conditions.push(eq(facilities.isActive, active === 'true'));
+      if (active !== undefined) conditions.push(eq(facilities.isActive, active === "true"));
       if (search) {
         conditions.push(
           or(
@@ -66,20 +66,20 @@ export function createEnhancedFacilitiesRoutes(
           )
         );
       }
-      
+
       if (conditions.length > 0) {
         query = query.where(and(...conditions));
       }
-      
+
       const results = await query.orderBy(asc(facilities.name));
-      
+
       // Combine the data into a single facility object with nested properties
-      const facilitiesData = results.map(result => ({
+      const facilitiesData = results.map((result) => ({
         ...result.facility,
         address: result.address,
         settings: result.settings,
       }));
-      
+
       res.json(facilitiesData);
     } catch (error) {
       console.error("Error fetching facilities:", error);
@@ -91,10 +91,7 @@ export function createEnhancedFacilitiesRoutes(
   router.get("/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      const [facility] = await db
-        .select()
-        .from(facilities)
-        .where(eq(facilities.id, id));
+      const [facility] = await db.select().from(facilities).where(eq(facilities.id, id));
 
       if (!facility) {
         return res.status(404).json({ message: "Facility not found" });
@@ -105,30 +102,30 @@ export function createEnhancedFacilitiesRoutes(
         .select()
         .from(facilityAddresses)
         .where(eq(facilityAddresses.facilityId, id));
-      
+
       const contacts = await db
         .select()
         .from(facilityContacts)
         .where(eq(facilityContacts.facilityId, id))
         .orderBy(desc(facilityContacts.isPrimary), asc(facilityContacts.contactType));
-      
+
       const [settings] = await db
         .select()
         .from(facilitySettings)
         .where(eq(facilitySettings.facilityId, id));
-      
+
       const rates = await db
         .select()
         .from(facilityRates)
         .where(eq(facilityRates.facilityId, id))
         .orderBy(desc(facilityRates.effectiveDate));
-      
+
       const staffingTargets = await db
         .select()
         .from(facilityStaffingTargets)
         .where(eq(facilityStaffingTargets.facilityId, id))
         .orderBy(asc(facilityStaffingTargets.department));
-      
+
       const documents = await db
         .select()
         .from(facilityDocuments)
@@ -154,21 +151,33 @@ export function createEnhancedFacilitiesRoutes(
   });
 
   // POST /api/facilities - Create new facility with enhanced fields
-  router.post("/", 
-    requireAuth, 
+  router.post(
+    "/",
+    requireAuth,
     requirePermission("facilities.create"),
     auditLog("CREATE", "facility"),
     async (req: any, res) => {
       try {
-        console.log("Creating facility with data:", req.body);
-        
+
         // Extract different parts of the request
-        const { 
-          name, facilityType, operationalStatus, cmsId, npiNumber, bedCount, isActive,
-          address, contacts, settings, rates, staffingTargets, documents,
-          teamId, ...otherFields 
+        const {
+          name,
+          facilityType,
+          operationalStatus,
+          cmsId,
+          npiNumber,
+          bedCount,
+          isActive,
+          address,
+          contacts,
+          settings,
+          rates,
+          staffingTargets,
+          documents,
+          teamId,
+          ...otherFields
         } = req.body;
-        
+
         // Start a transaction for creating facility and all related data
         await db.transaction(async (tx) => {
           // 1. Create the core facility record
@@ -177,7 +186,7 @@ export function createEnhancedFacilitiesRoutes(
             .values({
               name,
               facilityType,
-              operationalStatus: operationalStatus || 'active',
+              operationalStatus: operationalStatus || "active",
               cmsId,
               npiNumber,
               bedCount: bedCount || 0,
@@ -197,7 +206,7 @@ export function createEnhancedFacilitiesRoutes(
               city: address.city,
               state: address.state,
               zipCode: address.zipCode,
-              country: address.country || 'USA',
+              country: address.country || "USA",
               latitude: address.latitude,
               longitude: address.longitude,
             });
@@ -223,7 +232,7 @@ export function createEnhancedFacilitiesRoutes(
             await tx.insert(facilitySettings).values({
               facilityId,
               autoAssignmentEnabled: settings.autoAssignmentEnabled || false,
-              netTerms: settings.netTerms || 'Net 30',
+              netTerms: settings.netTerms || "Net 30",
               contractStartDate: settings.contractStartDate,
               payrollProviderId: settings.payrollProviderId,
               workflowAutomationConfig: settings.workflowAutomationConfig,
@@ -274,32 +283,32 @@ export function createEnhancedFacilitiesRoutes(
             .select()
             .from(facilities)
             .where(eq(facilities.id, facilityId));
-          
+
           const [createdAddress] = await tx
             .select()
             .from(facilityAddresses)
             .where(eq(facilityAddresses.facilityId, facilityId));
-          
+
           const createdContacts = await tx
             .select()
             .from(facilityContacts)
             .where(eq(facilityContacts.facilityId, facilityId));
-          
+
           const [createdSettings] = await tx
             .select()
             .from(facilitySettings)
             .where(eq(facilitySettings.facilityId, facilityId));
-          
+
           const createdRates = await tx
             .select()
             .from(facilityRates)
             .where(eq(facilityRates.facilityId, facilityId));
-          
+
           const createdStaffingTargets = await tx
             .select()
             .from(facilityStaffingTargets)
             .where(eq(facilityStaffingTargets.facilityId, facilityId));
-          
+
           const completeData = {
             ...createdFacility,
             address: createdAddress,
@@ -309,46 +318,42 @@ export function createEnhancedFacilitiesRoutes(
             staffingTargets: createdStaffingTargets,
             documents: [],
           };
-          
-          console.log("Facility created successfully:", completeData);
+
           res.status(201).json(completeData);
         });
       } catch (error) {
         console.error("Error creating facility:", error);
-        
+
         if (error instanceof z.ZodError) {
-          const fieldErrors = error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message
+          const fieldErrors = error.errors.map((err) => ({
+            field: err.path.join("."),
+            message: err.message,
           }));
-          
-          return res.status(400).json({ 
-            message: "Validation failed", 
+
+          return res.status(400).json({
+            message: "Validation failed",
             fieldErrors,
-            details: error.errors
+            details: error.errors,
           });
         }
-        
+
         res.status(500).json({ message: "Failed to create facility" });
       }
     }
   );
 
   // PUT /api/facilities/:id - Update facility (full replace)
-  router.put("/:id", 
-    requireAuth, 
+  router.put(
+    "/:id",
+    requireAuth,
     requirePermission("facilities.update"),
     auditLog("UPDATE", "facility"),
     async (req: any, res) => {
       try {
         const id = parseInt(req.params.id);
-        console.log(`Updating facility ${id} with data:`, req.body);
 
         // Check if facility exists
-        const [existingFacility] = await db
-          .select()
-          .from(facilities)
-          .where(eq(facilities.id, id));
+        const [existingFacility] = await db.select().from(facilities).where(eq(facilities.id, id));
 
         if (!existingFacility) {
           return res.status(404).json({ message: "Facility not found" });
@@ -358,23 +363,26 @@ export function createEnhancedFacilitiesRoutes(
         const facilityData = enhancedFacilitySchema.parse({
           ...existingFacility,
           ...req.body,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         });
 
         // Business rule validations
-        const ratesValidation = validateFacilityRates(facilityData.billRates, facilityData.payRates);
+        const ratesValidation = validateFacilityRates(
+          facilityData.billRates,
+          facilityData.payRates
+        );
         if (!ratesValidation.valid) {
-          return res.status(400).json({ 
-            message: "Invalid rates configuration", 
-            errors: ratesValidation.errors 
+          return res.status(400).json({
+            message: "Invalid rates configuration",
+            errors: ratesValidation.errors,
           });
         }
 
         const staffingValidation = validateStaffingTargets(facilityData.staffingTargets);
         if (!staffingValidation.valid) {
-          return res.status(400).json({ 
-            message: "Invalid staffing targets", 
-            errors: staffingValidation.errors 
+          return res.status(400).json({
+            message: "Invalid staffing targets",
+            errors: staffingValidation.errors,
           });
         }
 
@@ -388,7 +396,7 @@ export function createEnhancedFacilitiesRoutes(
             .select()
             .from(payrollProviders)
             .where(eq(payrollProviders.id, facilityData.payrollProviderId));
-          
+
           if (!payrollProvider) {
             return res.status(400).json({ message: "Invalid payroll provider ID" });
           }
@@ -400,54 +408,61 @@ export function createEnhancedFacilitiesRoutes(
           .where(eq(facilities.id, id))
           .returning();
 
-        console.log("Facility updated successfully:", updatedFacility);
         res.json(updatedFacility);
       } catch (error) {
         console.error("Error updating facility:", error);
-        
+
         if (error instanceof z.ZodError) {
-          const fieldErrors = error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message
+          const fieldErrors = error.errors.map((err) => ({
+            field: err.path.join("."),
+            message: err.message,
           }));
-          
-          return res.status(400).json({ 
-            message: "Validation failed", 
+
+          return res.status(400).json({
+            message: "Validation failed",
             fieldErrors,
-            details: error.errors
+            details: error.errors,
           });
         }
-        
+
         res.status(500).json({ message: "Failed to update facility" });
       }
     }
   );
 
   // PATCH /api/facilities/:id - Partial update facility
-  router.patch("/:id", 
-    requireAuth, 
+  router.patch(
+    "/:id",
+    requireAuth,
     requirePermission("facilities.update"),
     auditLog("UPDATE", "facility"),
     async (req: any, res) => {
       try {
         const id = parseInt(req.params.id);
-        console.log(`Partially updating facility ${id} with data:`, req.body);
 
         // Check if facility exists
-        const [existingFacility] = await db
-          .select()
-          .from(facilities)
-          .where(eq(facilities.id, id));
+        const [existingFacility] = await db.select().from(facilities).where(eq(facilities.id, id));
 
         if (!existingFacility) {
           return res.status(404).json({ message: "Facility not found" });
         }
 
         // Extract different parts of the request
-        const { 
-          name, facilityType, operationalStatus, cmsId, npiNumber, bedCount, isActive,
-          address, contacts, settings, rates, staffingTargets, documents,
-          ...otherFields 
+        const {
+          name,
+          facilityType,
+          operationalStatus,
+          cmsId,
+          npiNumber,
+          bedCount,
+          isActive,
+          address,
+          contacts,
+          settings,
+          rates,
+          staffingTargets,
+          documents,
+          ...otherFields
         } = req.body;
 
         // Start a transaction for updating facility and all related data
@@ -456,18 +471,16 @@ export function createEnhancedFacilitiesRoutes(
           const facilityUpdates: any = {};
           if (name !== undefined) facilityUpdates.name = name;
           if (facilityType !== undefined) facilityUpdates.facilityType = facilityType;
-          if (operationalStatus !== undefined) facilityUpdates.operationalStatus = operationalStatus;
+          if (operationalStatus !== undefined)
+            facilityUpdates.operationalStatus = operationalStatus;
           if (cmsId !== undefined) facilityUpdates.cmsId = cmsId;
           if (npiNumber !== undefined) facilityUpdates.npiNumber = npiNumber;
           if (bedCount !== undefined) facilityUpdates.bedCount = bedCount;
           if (isActive !== undefined) facilityUpdates.isActive = isActive;
-          
+
           if (Object.keys(facilityUpdates).length > 0) {
             facilityUpdates.updatedAt = new Date();
-            await tx
-              .update(facilities)
-              .set(facilityUpdates)
-              .where(eq(facilities.id, id));
+            await tx.update(facilities).set(facilityUpdates).where(eq(facilities.id, id));
           }
 
           // 2. Update facility address if provided
@@ -476,7 +489,7 @@ export function createEnhancedFacilitiesRoutes(
               .select()
               .from(facilityAddresses)
               .where(eq(facilityAddresses.facilityId, id));
-            
+
             if (existingAddress) {
               await tx
                 .update(facilityAddresses)
@@ -499,7 +512,7 @@ export function createEnhancedFacilitiesRoutes(
               .select()
               .from(facilitySettings)
               .where(eq(facilitySettings.facilityId, id));
-            
+
             if (existingSettings) {
               await tx
                 .update(facilitySettings)
@@ -532,7 +545,9 @@ export function createEnhancedFacilitiesRoutes(
           // 5. Update staffing targets if provided
           if (staffingTargets && Array.isArray(staffingTargets)) {
             // For staffing targets, we might want to replace all existing targets
-            await tx.delete(facilityStaffingTargets).where(eq(facilityStaffingTargets.facilityId, id));
+            await tx
+              .delete(facilityStaffingTargets)
+              .where(eq(facilityStaffingTargets.facilityId, id));
             for (const target of staffingTargets) {
               await tx.insert(facilityStaffingTargets).values({
                 facilityId: id,
@@ -542,41 +557,38 @@ export function createEnhancedFacilitiesRoutes(
           }
 
           // 6. Fetch and return the complete updated facility data
-          const [updatedFacility] = await tx
-            .select()
-            .from(facilities)
-            .where(eq(facilities.id, id));
-          
+          const [updatedFacility] = await tx.select().from(facilities).where(eq(facilities.id, id));
+
           const [updatedAddress] = await tx
             .select()
             .from(facilityAddresses)
             .where(eq(facilityAddresses.facilityId, id));
-          
+
           const updatedContacts = await tx
             .select()
             .from(facilityContacts)
             .where(eq(facilityContacts.facilityId, id));
-          
+
           const [updatedSettings] = await tx
             .select()
             .from(facilitySettings)
             .where(eq(facilitySettings.facilityId, id));
-          
+
           const updatedRates = await tx
             .select()
             .from(facilityRates)
             .where(eq(facilityRates.facilityId, id));
-          
+
           const updatedStaffingTargets = await tx
             .select()
             .from(facilityStaffingTargets)
             .where(eq(facilityStaffingTargets.facilityId, id));
-          
+
           const updatedDocuments = await tx
             .select()
             .from(facilityDocuments)
             .where(eq(facilityDocuments.facilityId, id));
-          
+
           const completeData = {
             ...updatedFacility,
             address: updatedAddress,
@@ -586,34 +598,34 @@ export function createEnhancedFacilitiesRoutes(
             staffingTargets: updatedStaffingTargets,
             documents: updatedDocuments,
           };
-          
-          console.log("Facility updated successfully:", completeData);
+
           res.json(completeData);
         });
       } catch (error) {
         console.error("Error updating facility:", error);
-        
+
         if (error instanceof z.ZodError) {
-          const fieldErrors = error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message
+          const fieldErrors = error.errors.map((err) => ({
+            field: err.path.join("."),
+            message: err.message,
           }));
-          
-          return res.status(400).json({ 
-            message: "Validation failed", 
+
+          return res.status(400).json({
+            message: "Validation failed",
             fieldErrors,
-            details: error.errors
+            details: error.errors,
           });
         }
-        
+
         res.status(500).json({ message: "Failed to update facility" });
       }
     }
   );
 
   // DELETE /api/facilities/:id - Soft delete facility
-  router.delete("/:id", 
-    requireAuth, 
+  router.delete(
+    "/:id",
+    requireAuth,
     requirePermission("facilities.delete"),
     auditLog("DELETE", "facility"),
     async (req: any, res) => {
@@ -639,8 +651,9 @@ export function createEnhancedFacilitiesRoutes(
   );
 
   // POST /api/facilities/:id/rates - Update facility rates
-  router.post("/:id/rates", 
-    requireAuth, 
+  router.post(
+    "/:id/rates",
+    requireAuth,
     requirePermission("facilities.update"),
     auditLog("UPDATE", "facility_rates"),
     async (req: any, res) => {
@@ -651,9 +664,9 @@ export function createEnhancedFacilitiesRoutes(
         // Validate rates
         const ratesValidation = validateFacilityRates(billRates, payRates);
         if (!ratesValidation.valid) {
-          return res.status(400).json({ 
-            message: "Invalid rates configuration", 
-            errors: ratesValidation.errors 
+          return res.status(400).json({
+            message: "Invalid rates configuration",
+            errors: ratesValidation.errors,
           });
         }
 
@@ -676,7 +689,7 @@ export function createEnhancedFacilitiesRoutes(
           message: "Rates updated successfully",
           billRates: updatedFacility.billRates,
           payRates: updatedFacility.payRates,
-          floatPoolMargins: updatedFacility.floatPoolMargins
+          floatPoolMargins: updatedFacility.floatPoolMargins,
         });
       } catch (error) {
         console.error("Error updating facility rates:", error);
@@ -686,8 +699,9 @@ export function createEnhancedFacilitiesRoutes(
   );
 
   // POST /api/facilities/:id/staffing-targets - Update staffing targets
-  router.post("/:id/staffing-targets", 
-    requireAuth, 
+  router.post(
+    "/:id/staffing-targets",
+    requireAuth,
     requirePermission("facilities.update"),
     auditLog("UPDATE", "facility_staffing"),
     async (req: any, res) => {
@@ -697,17 +711,17 @@ export function createEnhancedFacilitiesRoutes(
 
         const staffingValidation = validateStaffingTargets(staffingTargets);
         if (!staffingValidation.valid) {
-          return res.status(400).json({ 
-            message: "Invalid staffing targets", 
-            errors: staffingValidation.errors 
+          return res.status(400).json({
+            message: "Invalid staffing targets",
+            errors: staffingValidation.errors,
           });
         }
 
         const [updatedFacility] = await db
           .update(facilities)
-          .set({ 
+          .set({
             staffingTargets,
-            updatedAt: new Date() 
+            updatedAt: new Date(),
           })
           .where(eq(facilities.id, id))
           .returning();
@@ -718,7 +732,7 @@ export function createEnhancedFacilitiesRoutes(
 
         res.json({
           message: "Staffing targets updated successfully",
-          staffingTargets: updatedFacility.staffingTargets
+          staffingTargets: updatedFacility.staffingTargets,
         });
       } catch (error) {
         console.error("Error updating staffing targets:", error);
@@ -728,8 +742,9 @@ export function createEnhancedFacilitiesRoutes(
   );
 
   // POST /api/facilities/:id/workflow-config - Update workflow automation
-  router.post("/:id/workflow-config", 
-    requireAuth, 
+  router.post(
+    "/:id/workflow-config",
+    requireAuth,
     requirePermission("facilities.update"),
     auditLog("UPDATE", "facility_workflow"),
     async (req: any, res) => {
@@ -739,9 +754,9 @@ export function createEnhancedFacilitiesRoutes(
 
         const [updatedFacility] = await db
           .update(facilities)
-          .set({ 
+          .set({
             workflowAutomationConfig,
-            updatedAt: new Date() 
+            updatedAt: new Date(),
           })
           .where(eq(facilities.id, id))
           .returning();
@@ -752,7 +767,7 @@ export function createEnhancedFacilitiesRoutes(
 
         res.json({
           message: "Workflow configuration updated successfully",
-          workflowAutomationConfig: updatedFacility.workflowAutomationConfig
+          workflowAutomationConfig: updatedFacility.workflowAutomationConfig,
         });
       } catch (error) {
         console.error("Error updating workflow configuration:", error);

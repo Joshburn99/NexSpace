@@ -1,4 +1,4 @@
-import type { Facility } from '../types';
+import type { Facility } from "../types";
 
 /**
  * Get facility by ID
@@ -7,7 +7,7 @@ import type { Facility } from '../types';
  * @returns Facility object or undefined if not found
  */
 export const getFacilityById = (facilities: Facility[], id: string): Facility | undefined => {
-  return facilities.find(facility => facility.id === id);
+  return facilities.find((facility) => facility.id === id);
 };
 
 /**
@@ -17,7 +17,7 @@ export const getFacilityById = (facilities: Facility[], id: string): Facility | 
  * @returns Array of facilities matching the type
  */
 export const getFacilitiesByType = (facilities: Facility[], facilityType: string): Facility[] => {
-  return facilities.filter(facility => facility.facilityType === facilityType);
+  return facilities.filter((facility) => facility.facilityType === facilityType);
 };
 
 /**
@@ -26,7 +26,7 @@ export const getFacilitiesByType = (facilities: Facility[], facilityType: string
  * @returns Array of active facilities
  */
 export const getActiveFacilities = (facilities: Facility[]): Facility[] => {
-  return facilities.filter(facility => facility.isActive);
+  return facilities.filter((facility) => facility.isActive);
 };
 
 /**
@@ -36,8 +36,12 @@ export const getActiveFacilities = (facilities: Facility[]): Facility[] => {
  * @param maxBeds - Maximum bed count (optional)
  * @returns Array of facilities within the bed count range
  */
-export const getFacilitiesByBedCount = (facilities: Facility[], minBeds: number, maxBeds?: number): Facility[] => {
-  return facilities.filter(facility => {
+export const getFacilitiesByBedCount = (
+  facilities: Facility[],
+  minBeds: number,
+  maxBeds?: number
+): Facility[] => {
+  return facilities.filter((facility) => {
     if (maxBeds) {
       return facility.bedCount >= minBeds && facility.bedCount <= maxBeds;
     }
@@ -80,9 +84,7 @@ export const getFacilityAddress = (facility: Facility): string => {
  */
 export const searchFacilitiesByName = (facilities: Facility[], searchTerm: string): Facility[] => {
   const lowerSearchTerm = searchTerm.toLowerCase();
-  return facilities.filter(facility => 
-    facility.name.toLowerCase().includes(lowerSearchTerm)
-  );
+  return facilities.filter((facility) => facility.name.toLowerCase().includes(lowerSearchTerm));
 };
 
 /**
@@ -92,7 +94,7 @@ export const searchFacilitiesByName = (facilities: Facility[], searchTerm: strin
  * @returns Array of facilities in the specified state
  */
 export const getFacilitiesByState = (facilities: Facility[], state: string): Facility[] => {
-  return facilities.filter(facility => facility.state === state);
+  return facilities.filter((facility) => facility.state === state);
 };
 
 /**
@@ -101,12 +103,15 @@ export const getFacilitiesByState = (facilities: Facility[], state: string): Fac
  * @returns Object with facility types as keys and arrays of facilities as values
  */
 export const groupFacilitiesByType = (facilities: Facility[]): Record<string, Facility[]> => {
-  return facilities.reduce((grouped, facility) => {
-    const type = facility.facilityType;
-    if (!grouped[type]) {
-      grouped[type] = [];
-    }
-    grouped[type].push(facility);
-    return grouped;
-  }, {} as Record<string, Facility[]>);
+  return facilities.reduce(
+    (grouped, facility) => {
+      const type = facility.facilityType;
+      if (!grouped[type]) {
+        grouped[type] = [];
+      }
+      grouped[type].push(facility);
+      return grouped;
+    },
+    {} as Record<string, Facility[]>
+  );
 };

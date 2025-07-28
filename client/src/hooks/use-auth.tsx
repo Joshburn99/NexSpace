@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [originalUser, setOriginalUser] = useState<SelectUser | null>(null);
   const [impersonatedUser, setImpersonatedUser] = useState<SelectUser | null>(null);
   const [currentUser, setCurrentUser] = useState<SelectUser | null>(null);
-  
+
   const {
     data: user,
     error,
@@ -47,17 +47,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Rehydrate impersonation state on load
   useEffect(() => {
-    const origId = localStorage.getItem('originalUserId');
-    const impId = localStorage.getItem('impersonateUserId');
-    
+    const origId = localStorage.getItem("originalUserId");
+    const impId = localStorage.getItem("impersonateUserId");
+
     if (origId && impId && user) {
       // If we have stored impersonation data and a user, check if we need to restore state
       const originalUserId = parseInt(origId);
       const impersonatedUserId = parseInt(impId);
-      
+
       if (user.id === originalUserId) {
         // We're logged in as the original user, need to fetch impersonated user
-        fetchUserById(impersonatedUserId).then(impUser => {
+        fetchUserById(impersonatedUserId).then((impUser) => {
           if (impUser) {
             setOriginalUser(user);
             setCurrentUser(impUser);
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       } else if (user.id === impersonatedUserId) {
         // We're already showing as the impersonated user
-        fetchUserById(originalUserId).then(origUser => {
+        fetchUserById(originalUserId).then((origUser) => {
           if (origUser) {
             setOriginalUser(origUser);
             setCurrentUser(user);
@@ -164,34 +164,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Impersonation functions
   const startImpersonation = async (userToImpersonate: SelectUser) => {
     if (!effectiveUser) return;
-    
-    console.log('[IMPERSONATION] Starting impersonation:', userToImpersonate);
-    
+
+
     try {
       // Call backend to properly start impersonation and get enhanced user data
-      const response = await apiRequest("POST", "/api/impersonate", { 
-        userId: userToImpersonate.id 
+      const response = await apiRequest("POST", "/api/impersonate", {
+        userId: userToImpersonate.id,
       });
       const impersonationData = await response.json();
-      
-      console.log('[IMPERSONATION] Backend response:', impersonationData);
-      
+
+
       if (impersonationData.success && impersonationData.impersonatedUser) {
         const enhancedUser = impersonationData.impersonatedUser;
-        
-        console.log('[IMPERSONATION] Enhanced user data:', enhancedUser);
-        console.log('[IMPERSONATION] Associated facilities:', enhancedUser.associatedFacilities);
-        
+
+
         setOriginalUser(effectiveUser);
         setCurrentUser(enhancedUser);
         setImpersonatedUser(enhancedUser);
-        localStorage.setItem('originalUserId', effectiveUser.id.toString());
-        localStorage.setItem('impersonateUserId', enhancedUser.id.toString());
-        
+        localStorage.setItem("originalUserId", effectiveUser.id.toString());
+        localStorage.setItem("impersonateUserId", enhancedUser.id.toString());
+
         // Force query client to update the user data with enhanced data
         queryClient.setQueryData(["/api/user"], enhancedUser);
       } else {
-        console.error('[IMPERSONATION] No success or impersonated user in response:', impersonationData);
+        console.error(
+          "[IMPERSONATION] No success or impersonated user in response:",
+          impersonationData
+        );
       }
     } catch (error) {
       console.error("Failed to start impersonation:", error);
@@ -204,15 +203,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const quitImpersonation = () => {
-    const origId = localStorage.getItem('originalUserId');
+    const origId = localStorage.getItem("originalUserId");
     if (origId && originalUser) {
       setCurrentUser(originalUser);
     }
     setOriginalUser(null);
     setImpersonatedUser(null);
-    localStorage.removeItem('originalUserId');
-    localStorage.removeItem('impersonateUserId');
-    navigate('/admin/impersonation');
+    localStorage.removeItem("originalUserId");
+    localStorage.removeItem("impersonateUserId");
+    navigate("/admin/impersonation");
   };
 
   return (

@@ -7,7 +7,6 @@ import { createEnhancedFacilitiesRoutes } from "./enhanced-facilities-routes";
 import { sql } from "drizzle-orm";
 import { format } from "date-fns";
 
-
 // Remove in-memory storage - using database as single source of truth
 import { z } from "zod";
 import {
@@ -66,7 +65,7 @@ import { eq, sql, and, inArray } from "drizzle-orm";
 import { recommendationEngine } from "./recommendation-engine";
 import type { RecommendationCriteria } from "./recommendation-engine";
 import { UnifiedDataService } from "./unified-data-service";
-import { NotificationService } from './services/notification-service';
+import { NotificationService } from "./services/notification-service";
 import multer from "multer";
 import OpenAI from "openai";
 import dashboardPreferencesRoutes from "./dashboard-preferences-routes";
@@ -76,16 +75,16 @@ import { analytics } from "./analytics-tracker";
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
   setupAuth(app);
-  
+
   // Dashboard preferences routes
   app.use(dashboardPreferencesRoutes);
-  
+
   // Calendar sync routes
-  app.use('/api/calendar-sync', calendarSyncRoutes);
-  
+  app.use("/api/calendar-sync", calendarSyncRoutes);
+
   // Initialize unified data service (will be properly initialized with WebSocket later)
   let unifiedDataService: UnifiedDataService;
-  
+
   // Initialize notification service
   const notificationService = new NotificationService(storage);
 
@@ -96,7 +95,7 @@ export function registerRoutes(app: Express): Server {
       fileSize: 10 * 1024 * 1024, // 10MB limit
     },
     fileFilter: (req, file, cb) => {
-      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+      const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "application/pdf"];
       if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
       } else {
@@ -115,7 +114,7 @@ export function registerRoutes(app: Express): Server {
     if (!req.user) {
       return res.status(401).json({ message: "Authentication required" });
     }
-    if (req.user.role !== 'super_admin' && req.user.role !== UserRole.SUPER_ADMIN) {
+    if (req.user.role !== "super_admin" && req.user.role !== UserRole.SUPER_ADMIN) {
       return res.status(403).json({ message: "Super admin access required" });
     }
     next();
@@ -127,15 +126,15 @@ export function registerRoutes(app: Express): Server {
         return res.status(401).json({ message: "Authentication required" });
       }
       // Super admin always has access
-      if (req.user.role === 'super_admin' || req.user.role === UserRole.SUPER_ADMIN) {
+      if (req.user.role === "super_admin" || req.user.role === UserRole.SUPER_ADMIN) {
         return next();
       }
       const hasPermission = await storage.hasPermission(req.user.role, permission);
       if (!hasPermission) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           message: "Insufficient permissions",
           required: permission,
-          userRole: req.user.role
+          userRole: req.user.role,
         });
       }
       next();
@@ -143,26 +142,30 @@ export function registerRoutes(app: Express): Server {
   };
 
   // Facility access control
-  const requireFacilityAccess = (facilityIdParam: string = 'facilityId') => {
+  const requireFacilityAccess = (facilityIdParam: string = "facilityId") => {
     return async (req: any, res: any, next: any) => {
       if (!req.user) {
         return res.status(401).json({ message: "Authentication required" });
       }
       // Super admin can access all facilities
-      if (req.user.role === 'super_admin' || req.user.role === UserRole.SUPER_ADMIN) {
+      if (req.user.role === "super_admin" || req.user.role === UserRole.SUPER_ADMIN) {
         return next();
       }
-      const requestedFacilityId = parseInt(req.params[facilityIdParam] || req.body[facilityIdParam] || req.query[facilityIdParam]);
+      const requestedFacilityId = parseInt(
+        req.params[facilityIdParam] || req.body[facilityIdParam] || req.query[facilityIdParam]
+      );
       if (!requestedFacilityId) {
         return res.status(400).json({ message: "Facility ID required" });
       }
       const userFacilityIds = req.user.associatedFacilityIds || req.user.associatedFacilities || [];
-      const hasAccess = userFacilityIds.includes(requestedFacilityId) || req.user.facilityId === requestedFacilityId;
+      const hasAccess =
+        userFacilityIds.includes(requestedFacilityId) ||
+        req.user.facilityId === requestedFacilityId;
       if (!hasAccess) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           message: "Access denied to this facility",
           requestedFacility: requestedFacilityId,
-          userFacilities: userFacilityIds
+          userFacilities: userFacilityIds,
         });
       }
       next();
@@ -170,24 +173,26 @@ export function registerRoutes(app: Express): Server {
   };
 
   // Resource ownership validation
-  const requireResourceOwnership = (userIdParam: string = 'userId') => {
+  const requireResourceOwnership = (userIdParam: string = "userId") => {
     return (req: any, res: any, next: any) => {
       if (!req.user) {
         return res.status(401).json({ message: "Authentication required" });
       }
       // Super admin can access all resources
-      if (req.user.role === 'super_admin' || req.user.role === UserRole.SUPER_ADMIN) {
+      if (req.user.role === "super_admin" || req.user.role === UserRole.SUPER_ADMIN) {
         return next();
       }
-      const requestedUserId = parseInt(req.params[userIdParam] || req.body[userIdParam] || req.query[userIdParam]);
+      const requestedUserId = parseInt(
+        req.params[userIdParam] || req.body[userIdParam] || req.query[userIdParam]
+      );
       if (!requestedUserId) {
         return res.status(400).json({ message: "User ID required" });
       }
       if (req.user.id !== requestedUserId) {
-        return res.status(403).json({ 
+        return res.status(403).json({
           message: "Access denied - can only access your own resources",
           requestedUser: requestedUserId,
-          currentUser: req.user.id
+          currentUser: req.user.id,
         });
       }
       next();
@@ -242,26 +247,30 @@ export function registerRoutes(app: Express): Server {
   };
 
   // Mount enhanced facility routes
-  const enhancedFacilityRoutes = createEnhancedFacilitiesRoutes(requireAuth, requirePermission, auditLog);
+  const enhancedFacilityRoutes = createEnhancedFacilitiesRoutes(
+    requireAuth,
+    requirePermission,
+    auditLog
+  );
   app.use("/api/facilities", enhancedFacilityRoutes);
 
   // Security audit endpoint (development only)
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === "development") {
     app.get("/api/security/audit", requireAuth, requireSuperAdmin, async (req, res) => {
       try {
         const { securityTests } = await import("./security-audit-tests.js");
         await securityTests.runFullAudit();
-        res.json({ 
-          status: "completed", 
+        res.json({
+          status: "completed",
           message: "Security audit completed successfully",
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } catch (error) {
         console.error("Security audit failed:", error);
-        res.status(500).json({ 
-          status: "failed", 
+        res.status(500).json({
+          status: "failed",
           message: "Security audit failed",
-          error: error instanceof Error ? error.message : "Unknown error"
+          error: error instanceof Error ? error.message : "Unknown error",
         });
       }
     });
@@ -270,10 +279,10 @@ export function registerRoutes(app: Express): Server {
       try {
         const { securityTests } = await import("./security-audit-tests.js");
         await securityTests.quickCheck();
-        res.json({ 
-          status: "completed", 
+        res.json({
+          status: "completed",
           message: "Quick security check completed",
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       } catch (error) {
         console.error("Quick security check failed:", error);
@@ -287,7 +296,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const userId = parseInt(req.params.id);
       const user = await storage.getUser(userId);
-      
+
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
@@ -330,7 +339,7 @@ export function registerRoutes(app: Express): Server {
         .from(staff)
         .where(eq(staff.email, user.email))
         .limit(1);
-        
+
       if (staffMember) {
         profileData = {
           ...profileData,
@@ -349,14 +358,14 @@ export function registerRoutes(app: Express): Server {
           facilities: staffMember.associatedFacilities || [],
           credentials: staffMember.credentials || [],
         };
-      } else if (user.role !== 'super_admin') {
+      } else if (user.role !== "super_admin") {
         // For facility users, get their facility associations
         const [facilityUser] = await db
           .select()
           .from(facilityUsers)
           .where(eq(facilityUsers.email, user.email))
           .limit(1);
-          
+
         if (facilityUser) {
           profileData.facilities = facilityUser.associatedFacilityIds || [];
           profileData.primaryFacilityId = facilityUser.primaryFacilityId;
@@ -367,7 +376,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(profileData);
     } catch (error) {
-      console.error('User profile fetch error:', error);
+      console.error("User profile fetch error:", error);
       res.status(500).json({ message: "Failed to fetch user profile" });
     }
   });
@@ -380,7 +389,7 @@ export function registerRoutes(app: Express): Server {
       }
 
       const updates = req.body;
-      
+
       // Update user basic info
       if (updates.firstName || updates.lastName || updates.email) {
         await storage.updateUser(userId, {
@@ -396,7 +405,7 @@ export function registerRoutes(app: Express): Server {
         .from(staff)
         .where(eq(staff.email, req.user.email))
         .limit(1);
-        
+
       if (staffMember) {
         await db
           .update(staff)
@@ -416,43 +425,47 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: "Profile updated successfully" });
     } catch (error) {
-      console.error('User profile update error:', error);
+      console.error("User profile update error:", error);
       res.status(500).json({ message: "Failed to update user profile" });
     }
   });
 
   // Credential upload endpoint
-  app.post("/api/user/credentials/upload", requireAuth, upload.single('file'), async (req: any, res) => {
-    try {
-      const userId = req.user?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
+  app.post(
+    "/api/user/credentials/upload",
+    requireAuth,
+    upload.single("file"),
+    async (req: any, res) => {
+      try {
+        const userId = req.user?.id;
+        if (!userId) {
+          return res.status(401).json({ message: "Authentication required" });
+        }
+
+        const file = req.file;
+        if (!file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        // Here you would typically upload the file to a storage service
+        // For now, we'll just save the file info
+        const credentialData = {
+          userId,
+          fileName: file.originalname,
+          fileType: file.mimetype,
+          fileSize: file.size,
+          uploadedAt: new Date(),
+        };
+
+        // In a real implementation, save this to database
+
+        res.json({ message: "Credential uploaded successfully", data: credentialData });
+      } catch (error) {
+        console.error("Credential upload error:", error);
+        res.status(500).json({ message: "Failed to upload credential" });
       }
-
-      const file = req.file;
-      if (!file) {
-        return res.status(400).json({ message: "No file uploaded" });
-      }
-
-      // Here you would typically upload the file to a storage service
-      // For now, we'll just save the file info
-      const credentialData = {
-        userId,
-        fileName: file.originalname,
-        fileType: file.mimetype,
-        fileSize: file.size,
-        uploadedAt: new Date(),
-      };
-
-      // In a real implementation, save this to database
-      console.log('Credential uploaded:', credentialData);
-
-      res.json({ message: "Credential uploaded successfully", data: credentialData });
-    } catch (error) {
-      console.error('Credential upload error:', error);
-      res.status(500).json({ message: "Failed to upload credential" });
     }
-  });
+  );
 
   // Global Search API
   app.get("/api/search", requireAuth, requirePermission("staff.view"), async (req: any, res) => {
@@ -546,7 +559,7 @@ export function registerRoutes(app: Express): Server {
               sql`LOWER(${jobs.location}) LIKE ${searchTerm}`,
               sql`CAST(${jobs.id} AS TEXT) LIKE ${searchTerm}`
             ),
-            eq(jobs.status, 'active')
+            eq(jobs.status, "active")
           )
         )
         .limit(5);
@@ -556,73 +569,64 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ results });
     } catch (error) {
-      console.error('Search error:', error);
-      res.status(500).json({ error: 'Failed to perform search' });
+      console.error("Search error:", error);
+      res.status(500).json({ error: "Failed to perform search" });
     }
   });
 
   // Dashboard API - Enhanced with comprehensive statistics and facility filtering
-  app.get("/api/dashboard/stats", requireAuth, requirePermission("analytics.view"), async (req: any, res) => {
-    try {
-      console.log(`[ROUTES] Dashboard stats request from user ${req.user.id}, role: ${req.user.role}`);
-      console.log(`[ROUTES] User facility data:`, {
-        facilityId: req.user?.facilityId,
-        associatedFacilities: req.user?.associatedFacilities,
-        associatedFacilityIds: req.user?.associatedFacilityIds
-      });
-      
-      // Get facility IDs for filtering based on user role
-      let facilityIds: number[] | undefined;
-      
-      if (req.user.role === 'super_admin') {
-        // Super admin sees all data (undefined = no filtering)
-        console.log(`[ROUTES] Super admin - showing all facility data`);
-      } else {
-        // For facility users, filter by their associated facilities
-        // Check associatedFacilityIds first (set by impersonation), then associatedFacilities
-        const associatedFacilities = req.user?.associatedFacilityIds || req.user?.associatedFacilities;
-        const singleFacility = req.user?.facilityId;
-        
-        if (associatedFacilities && associatedFacilities.length > 0) {
-          facilityIds = associatedFacilities;
-          console.log(`[ROUTES] Filtering dashboard for facility user with facilities: ${facilityIds.join(',')}`);
-        } else if (singleFacility) {
-          facilityIds = [singleFacility];
-          console.log(`[ROUTES] Filtering dashboard for facility user with single facility: ${singleFacility}`);
+  app.get(
+    "/api/dashboard/stats",
+    requireAuth,
+    requirePermission("analytics.view"),
+    async (req: any, res) => {
+      try {
+
+        // Get facility IDs for filtering based on user role
+        let facilityIds: number[] | undefined;
+
+        if (req.user.role === "super_admin") {
+          // Super admin sees all data (undefined = no filtering)
         } else {
-          console.log(`[ROUTES] No associated facilities found for user ${req.user.id} - showing empty data`);
-          facilityIds = []; // Empty array means no data visible
+          // For facility users, filter by their associated facilities
+          // Check associatedFacilityIds first (set by impersonation), then associatedFacilities
+          const associatedFacilities =
+            req.user?.associatedFacilityIds || req.user?.associatedFacilities;
+          const singleFacility = req.user?.facilityId;
+
+          if (associatedFacilities && associatedFacilities.length > 0) {
+            facilityIds = associatedFacilities;
+          } else if (singleFacility) {
+            facilityIds = [singleFacility];
+          } else {
+            facilityIds = []; // Empty array means no data visible
+          }
         }
+
+        // Get comprehensive dashboard stats with facility filtering
+        const stats = await storage.getDashboardStats(facilityIds);
+
+        res.json(stats);
+      } catch (error) {
+        console.error("Dashboard stats error:", error);
+        res.status(500).json({ error: "Failed to fetch dashboard statistics" });
       }
-      
-      // Get comprehensive dashboard stats with facility filtering
-      const stats = await storage.getDashboardStats(facilityIds);
-      console.log(`[ROUTES] Retrieved dashboard stats for facilities ${facilityIds?.join(',') || 'all'}:`, {
-        activeStaff: stats.activeStaff,
-        openShifts: stats.openShifts,
-        totalFacilities: stats.totalFacilities
-      });
-      
-      res.json(stats);
-    } catch (error) {
-      console.error('Dashboard stats error:', error);
-      res.status(500).json({ error: 'Failed to fetch dashboard statistics' });
     }
-  });
+  );
 
   // Dashboard widget configuration API
   app.get("/api/dashboard/widgets", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({ error: 'User not authenticated' });
+        return res.status(401).json({ error: "User not authenticated" });
       }
-      
+
       const widgets = await storage.getUserDashboardWidgets(userId);
       res.json(widgets);
     } catch (error) {
-      console.error('Dashboard widgets error:', error);
-      res.status(500).json({ error: 'Failed to fetch dashboard widgets' });
+      console.error("Dashboard widgets error:", error);
+      res.status(500).json({ error: "Failed to fetch dashboard widgets" });
     }
   });
 
@@ -630,19 +634,15 @@ export function registerRoutes(app: Express): Server {
     try {
       const userId = req.user?.id;
       if (!userId) {
-        return res.status(401).json({ error: 'User not authenticated' });
+        return res.status(401).json({ error: "User not authenticated" });
       }
-      
+
       const { widgets } = req.body;
-      console.log(`[ROUTES] Saving dashboard widgets for user ${userId}:`, {
-        widgetCount: widgets?.length || 0,
-        visibleWidgets: widgets?.filter((w: any) => w.visible)?.length || 0
-      });
       await storage.saveDashboardWidgets(userId, widgets);
-      res.json({ success: true, message: 'Dashboard layout saved successfully' });
+      res.json({ success: true, message: "Dashboard layout saved successfully" });
     } catch (error) {
-      console.error('Save dashboard widgets error:', error);
-      res.status(500).json({ error: 'Failed to save dashboard widgets' });
+      console.error("Save dashboard widgets error:", error);
+      res.status(500).json({ error: "Failed to save dashboard widgets" });
     }
   });
 
@@ -786,9 +786,9 @@ export function registerRoutes(app: Express): Server {
     try {
       // Get user's facility associations if facility user
       const user = req.user;
-      const isFacilityUser = user.role && user.role !== 'super_admin';
+      const isFacilityUser = user.role && user.role !== "super_admin";
       let userAssociatedFacilities: number[] = [];
-      
+
       if (isFacilityUser && user.associatedFacilities) {
         userAssociatedFacilities = user.associatedFacilities;
       } else if (isFacilityUser) {
@@ -797,52 +797,54 @@ export function registerRoutes(app: Express): Server {
           const facilityUser = await storage.getFacilityUserByEmail(user.email);
           if (facilityUser && facilityUser.associatedFacilityIds) {
             userAssociatedFacilities = facilityUser.associatedFacilityIds;
-            console.log(`[FACILITY FILTER] Found facilities for ${user.email}:`, userAssociatedFacilities);
           }
         } catch (error) {
-          console.error(`[FACILITY FILTER] Error fetching facility associations for ${user.email}:`, error);
+          console.error(
+            `[FACILITY FILTER] Error fetching facility associations for ${user.email}:`,
+            error
+          );
         }
       }
-      
+
       // Get staff data from unified service to ensure consistency
       const dbStaffData = await unifiedDataService.getStaffWithAssociations();
-      
+
       // Filter staff to match "all staff" page logic - exclude superusers
-      const filteredStaff = dbStaffData.filter(staff => {
-        const superuserEmails = ['joshburn@nexspace.com', 'brian.nangle@nexspace.com'];
+      const filteredStaff = dbStaffData.filter((staff) => {
+        const superuserEmails = ["joshburn@nexspace.com", "brian.nangle@nexspace.com"];
         if (superuserEmails.includes(staff.email)) return false;
         if (staff?.role === "super_admin" || staff?.role === "facility_manager") return false;
         return true;
       });
 
       // Get generated shifts from database instead of global memory
-      const { shiftTemplateService } = await import('./shift-template-service');
-      
+      const { shiftTemplateService } = await import("./shift-template-service");
+
       // Auto-generate shifts from active templates if none exist in database
       const activeTemplates = await storage.getShiftTemplates();
-      const activeTemplatesList = activeTemplates.filter(t => t.isActive);
-      
+      const activeTemplatesList = activeTemplates.filter((t) => t.isActive);
+
       // Check if we need to generate shifts for any templates
       const today = new Date();
       for (const template of activeTemplatesList) {
         const daysToGenerate = template.daysPostedOut || 14; // Default to 14 days
         const endDate = new Date(today);
         endDate.setDate(today.getDate() + daysToGenerate);
-        
+
         // Generate shifts for this template if needed
         await shiftTemplateService.generateShiftsFromTemplate({
           templateId: template.id,
           startDate: today,
           endDate: endDate,
           skipExisting: true,
-          preserveAssigned: true
+          preserveAssigned: true,
         });
       }
-      
+
       // Current date for status logic
       const currentDate = new Date();
-      const currentDateStr = currentDate.toISOString().split('T')[0];
-      
+      const currentDateStr = currentDate.toISOString().split("T")[0];
+
       const exampleShifts = [
         {
           id: 1,
@@ -882,12 +884,14 @@ export function registerRoutes(app: Express): Server {
           minStaff: 1,
           maxStaff: 2,
           assignedStaffId: filteredStaff[0]?.id || 3,
-          assignedStaffName: filteredStaff[0] ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}` : "Alice Smith",
+          assignedStaffName: filteredStaff[0]
+            ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
+            : "Alice Smith",
           assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
           assignedStaffPhone: "(503) 555-0123",
           assignedStaffSpecialty: filteredStaff[0]?.specialty || "RN",
           assignedStaffRating: 4.8,
-          invoiceAmount: new Date("2025-06-19") < new Date() ? 360.00 : null,
+          invoiceAmount: new Date("2025-06-19") < new Date() ? 360.0 : null,
           invoiceStatus: new Date("2025-06-19") < new Date() ? "pending_review" : null,
           invoiceHours: new Date("2025-06-19") < new Date() ? 8 : null,
         },
@@ -1141,22 +1145,28 @@ export function registerRoutes(app: Express): Server {
           assignedStaff: [
             {
               id: filteredStaff[0]?.id || 3,
-              name: filteredStaff[0] ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}` : "Alice Smith",
+              name: filteredStaff[0]
+                ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
+                : "Alice Smith",
               email: filteredStaff[0]?.email || "alice.smith@nexspace.com",
               specialty: filteredStaff[0]?.specialty || "LPN",
-              rating: 4.6
+              rating: 4.6,
             },
             {
               id: filteredStaff[1]?.id || 4,
-              name: filteredStaff[1] ? `${filteredStaff[1].firstName} ${filteredStaff[1].lastName}` : "Bob Johnson",
+              name: filteredStaff[1]
+                ? `${filteredStaff[1].firstName} ${filteredStaff[1].lastName}`
+                : "Bob Johnson",
               email: filteredStaff[1]?.email || "bob.johnson@nexspace.com",
               specialty: filteredStaff[1]?.specialty || "RN",
-              rating: 4.8
-            }
+              rating: 4.8,
+            },
           ],
           // Keep legacy fields for backward compatibility
           assignedStaffId: filteredStaff[0]?.id || 3,
-          assignedStaffName: filteredStaff[0] ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}` : "Alice Smith",
+          assignedStaffName: filteredStaff[0]
+            ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
+            : "Alice Smith",
           assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
           assignedStaffSpecialty: filteredStaff[0]?.specialty || "LPN",
           assignedStaffRating: 4.6,
@@ -1191,7 +1201,9 @@ export function registerRoutes(app: Express): Server {
           urgency: "high",
           description: "Morning surgical team coverage",
           assignedStaffId: filteredStaff[0]?.id || 3,
-          assignedStaffName: filteredStaff[0] ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}` : "Alice Smith",
+          assignedStaffName: filteredStaff[0]
+            ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
+            : "Alice Smith",
           assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
           assignedStaffSpecialty: filteredStaff[0]?.specialty || "RN",
           assignedStaffRating: 4.8,
@@ -1211,11 +1223,13 @@ export function registerRoutes(app: Express): Server {
           urgency: "high",
           description: "Night ICU coverage",
           assignedStaffId: filteredStaff[1]?.id || 4,
-          assignedStaffName: filteredStaff[1] ? `${filteredStaff[1].firstName} ${filteredStaff[1].lastName}` : "Bob Johnson",
+          assignedStaffName: filteredStaff[1]
+            ? `${filteredStaff[1].firstName} ${filteredStaff[1].lastName}`
+            : "Bob Johnson",
           assignedStaffEmail: filteredStaff[1]?.email || "bob.johnson@nexspace.com",
           assignedStaffSpecialty: filteredStaff[1]?.specialty || "RN",
           assignedStaffRating: 4.6,
-          invoiceAmount: new Date("2025-06-18") < new Date() ? 576.00 : null,
+          invoiceAmount: new Date("2025-06-18") < new Date() ? 576.0 : null,
           invoiceStatus: new Date("2025-06-18") < new Date() ? "approved" : null,
           invoiceHours: new Date("2025-06-18") < new Date() ? 12 : null,
         },
@@ -1234,11 +1248,13 @@ export function registerRoutes(app: Express): Server {
           urgency: "critical",
           description: "Day emergency coverage",
           assignedStaffId: filteredStaff[0]?.id || 3,
-          assignedStaffName: filteredStaff[0] ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}` : "Alice Smith",
+          assignedStaffName: filteredStaff[0]
+            ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
+            : "Alice Smith",
           assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
           assignedStaffSpecialty: filteredStaff[0]?.specialty || "RN",
           assignedStaffRating: 4.8,
-          invoiceAmount: new Date("2025-06-17") < new Date() ? 600.00 : null,
+          invoiceAmount: new Date("2025-06-17") < new Date() ? 600.0 : null,
           invoiceStatus: new Date("2025-06-17") < new Date() ? "pending_review" : null,
           invoiceHours: new Date("2025-06-17") < new Date() ? 12 : null,
         },
@@ -1246,21 +1262,21 @@ export function registerRoutes(app: Express): Server {
 
       // Get staff data for assignment display
       const staffData = await unifiedDataService.getStaffWithAssociations();
-      
+
       // Get all database shifts from multiple tables
       let dbGeneratedShifts = [];
       let dbMainShifts = [];
       let formattedDbShifts = [];
-      
+
       try {
         // Get template-generated shifts
         dbGeneratedShifts = await db.select().from(generatedShifts);
-        
+
         // Get main shifts table (where new shifts are created)
         dbMainShifts = await db.select().from(shifts);
-        
+
         // Convert generated shifts to proper format
-        const formattedGeneratedShifts = dbGeneratedShifts.map(shift => ({
+        const formattedGeneratedShifts = dbGeneratedShifts.map((shift) => ({
           id: shift.id,
           title: shift.title,
           date: shift.date,
@@ -1279,11 +1295,11 @@ export function registerRoutes(app: Express): Server {
           totalPositions: shift.requiredWorkers || 1,
           minStaff: shift.minStaff || 1,
           maxStaff: shift.maxStaff || 1,
-          totalHours: shift.totalHours || 8
+          totalHours: shift.totalHours || 8,
         }));
-        
+
         // Convert main shifts to proper format
-        const formattedMainShifts = dbMainShifts.map(shift => ({
+        const formattedMainShifts = dbMainShifts.map((shift) => ({
           id: shift.id,
           title: shift.title,
           date: shift.date,
@@ -1300,90 +1316,82 @@ export function registerRoutes(app: Express): Server {
           totalPositions: shift.requiredStaff || 1,
           minStaff: 1,
           maxStaff: shift.requiredStaff || 1,
-          totalHours: 8
+          totalHours: 8,
         }));
-        
+
         formattedDbShifts = [...formattedGeneratedShifts, ...formattedMainShifts];
-        console.log(`[SHIFTS API] Loaded ${formattedMainShifts.length} main shifts, ${formattedGeneratedShifts.length} generated shifts`);
-        
       } catch (error) {
-        console.error('Error fetching database shifts:', error);
+        console.error("Error fetching database shifts:", error);
         // Continue with example shifts only if database query fails
       }
-      
+
       // Combine all shifts: example + generated + main database shifts
       const combinedShifts = [...getShiftData(), ...formattedDbShifts];
-      
-      const allShifts = await Promise.all(combinedShifts.map(async shift => {
-        // Normalize shift ID to string format for consistent assignment lookup
-        const normalizedShiftId = shift.id.toString();
-        const assignedWorkerIds = await getShiftAssignments(normalizedShiftId);
-        
-        // Get detailed staff info for assigned workers
-        const assignedStaff = assignedWorkerIds.map((workerId: number) => {
-          const staff = staffData.find((s: any) => s.id === workerId);
-          if (staff) {
-            return {
-              id: staff.id,
-              name: `${staff.firstName} ${staff.lastName}`,
-              firstName: staff.firstName,
-              lastName: staff.lastName,
-              specialty: staff.specialty,
-              rating: 4.2 + Math.random() * 0.8,
-              email: staff.email,
-              avatar: staff.avatar
-            };
+
+      const allShifts = await Promise.all(
+        combinedShifts.map(async (shift) => {
+          // Normalize shift ID to string format for consistent assignment lookup
+          const normalizedShiftId = shift.id.toString();
+          const assignedWorkerIds = await getShiftAssignments(normalizedShiftId);
+
+          // Get detailed staff info for assigned workers
+          const assignedStaff = assignedWorkerIds
+            .map((workerId: number) => {
+              const staff = staffData.find((s: any) => s.id === workerId);
+              if (staff) {
+                return {
+                  id: staff.id,
+                  name: `${staff.firstName} ${staff.lastName}`,
+                  firstName: staff.firstName,
+                  lastName: staff.lastName,
+                  specialty: staff.specialty,
+                  rating: 4.2 + Math.random() * 0.8,
+                  email: staff.email,
+                  avatar: staff.avatar,
+                };
+              }
+              return null;
+            })
+            .filter(Boolean);
+
+          // Calculate proper staffing levels
+          const totalPositions =
+            shift.totalPositions || shift.requiredWorkers || shift.required_staff || 1;
+          const filledPositions = assignedWorkerIds.length;
+
+          // Update shift with real assignment data
+          const updatedShift = {
+            ...shift,
+            assignedStaff: assignedStaff,
+            assignedStaffNames: assignedStaff.map((s: any) => s?.name),
+            filledPositions: filledPositions,
+            totalPositions: totalPositions,
+            minStaff: shift.minStaff || Math.max(1, totalPositions - 1),
+          };
+
+          // Update status based on actual assignments
+          if (filledPositions >= totalPositions) {
+            updatedShift.status = "filled";
+          } else if (filledPositions > 0) {
+            updatedShift.status = "partially_filled";
+          } else {
+            updatedShift.status = "open";
           }
-          return null;
-        }).filter(Boolean);
-        
-        // Calculate proper staffing levels
-        const totalPositions = shift.totalPositions || shift.requiredWorkers || shift.required_staff || 1;
-        const filledPositions = assignedWorkerIds.length;
-        
-        // Update shift with real assignment data
-        const updatedShift = {
-          ...shift,
-          assignedStaff: assignedStaff,
-          assignedStaffNames: assignedStaff.map((s: any) => s?.name),
-          filledPositions: filledPositions,
-          totalPositions: totalPositions,
-          minStaff: shift.minStaff || Math.max(1, totalPositions - 1)
-        };
-        
-        // Update status based on actual assignments
-        if (filledPositions >= totalPositions) {
-          updatedShift.status = "filled";
-        } else if (filledPositions > 0) {
-          updatedShift.status = "partially_filled";
-        } else {
-          updatedShift.status = "open";
-        }
-        
-        // Debug logging for assignment tracking
-        console.log(`Processing shift ${normalizedShiftId}:`, {
-          originalShiftId: shift.id,
-          normalizedShiftId,
-          assignedWorkerIds,
-          assignedStaffCount: assignedStaff.length,
-          assignedStaffNames: assignedStaff.map((s: any) => s?.name),
-          filledPositions,
-          totalPositions,
-          status: updatedShift.status
-        });
-        
-        return updatedShift;
-      }));
-      
+
+          // Debug logging for assignment tracking
+
+          return updatedShift;
+        })
+      );
+
       // Filter shifts for facility users to only show their associated facilities
       let filteredShifts = allShifts;
       if (isFacilityUser && userAssociatedFacilities.length > 0) {
-        filteredShifts = allShifts.filter(shift => 
+        filteredShifts = allShifts.filter((shift) =>
           userAssociatedFacilities.includes(shift.facilityId)
         );
-        console.log(`[FACILITY FILTER] Filtered shifts for facility user. Original: ${allShifts.length}, Filtered: ${filteredShifts.length}, Facilities: [${userAssociatedFacilities.join(', ')}]`);
       }
-      
+
       res.json(filteredShifts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch shifts" });
@@ -1393,25 +1401,26 @@ export function registerRoutes(app: Express): Server {
   // Database-backed assignment tracking using existing shift_assignments table
   const getShiftAssignments = async (shiftId: string | number) => {
     try {
-      console.log(`[ROUTES DEBUG] Getting assignments for shift ${shiftId}`);
       const assignments = await storage.getShiftAssignments(shiftId.toString());
-      console.log(`[ROUTES DEBUG] Retrieved ${assignments.length} assignments for shift ${shiftId}`);
-      return assignments.map(a => a.workerId);
+      return assignments.map((a) => a.workerId);
     } catch (error) {
       console.error(`Error fetching assignments for shift ${shiftId}:`, error);
       return [];
     }
   };
 
-  const addShiftAssignment = async (shiftId: string | number, workerId: number, assignedById: number = 1) => {
+  const addShiftAssignment = async (
+    shiftId: string | number,
+    workerId: number,
+    assignedById: number = 1
+  ) => {
     try {
       await storage.addShiftAssignment({
         shiftId: shiftId.toString(),
         workerId,
         assignedById,
-        status: 'assigned'
+        status: "assigned",
       });
-      console.log(`Added assignment: worker ${workerId} to shift ${shiftId}`);
     } catch (error) {
       console.error(`Error adding assignment:`, error);
       throw error;
@@ -1420,8 +1429,7 @@ export function registerRoutes(app: Express): Server {
 
   const removeShiftAssignment = async (shiftId: string | number, workerId: number) => {
     try {
-      await storage.updateShiftAssignmentStatus(shiftId.toString(), workerId, 'unassigned');
-      console.log(`Removed assignment: worker ${workerId} from shift ${shiftId}`);
+      await storage.updateShiftAssignmentStatus(shiftId.toString(), workerId, "unassigned");
     } catch (error) {
       console.error(`Error removing assignment:`, error);
       throw error;
@@ -1445,9 +1453,9 @@ export function registerRoutes(app: Express): Server {
         rate: 45.0,
         urgency: "high",
         description: "12-hour ICU nursing shift, ACLS certification required",
-      }
+      },
     ];
-    
+
     const templateShifts = (global as any).templateGeneratedShifts || [];
     return [...exampleShifts, ...templateShifts];
   }
@@ -1456,16 +1464,16 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/shift-requests/:shiftId", requireAuth, async (req, res) => {
     try {
       const shiftId = req.params.shiftId; // Keep as string to match stable ID format
-      
+
       // Get already assigned workers for this shift from database
       const currentAssignments = await storage.getShiftAssignments(shiftId);
-      const assignedWorkerIds = currentAssignments.map(a => a.workerId);
-      
+      const assignedWorkerIds = currentAssignments.map((a) => a.workerId);
+
       // Get the shift to determine specialty requirement and capacity
       // Check both example shifts and database-generated shifts
       const allShifts = getShiftData();
-      let targetShift = allShifts.find(s => s.id.toString() === shiftId);
-      
+      let targetShift = allShifts.find((s) => s.id.toString() === shiftId);
+
       // If not found in example shifts, check database-generated shifts
       if (!targetShift) {
         const generatedShift = await storage.getGeneratedShift(shiftId);
@@ -1476,74 +1484,95 @@ export function registerRoutes(app: Express): Server {
             requiredWorkers: generatedShift.requiredWorkers,
             totalPositions: generatedShift.requiredWorkers,
             title: generatedShift.title,
-            department: generatedShift.department
+            department: generatedShift.department,
           };
         }
       }
-      
+
       if (!targetShift) {
         return res.status(404).json({ message: "Shift not found" });
       }
-      
+
       const requiredSpecialty = targetShift?.specialty || "RN";
       const maxCapacity = targetShift?.requiredWorkers || targetShift?.totalPositions || 3;
-      
+
       // Check if shift is already at capacity
       const isAtCapacity = currentAssignments.length >= maxCapacity;
-      
+
       // Get staff data for realistic requests
       const dbStaffData = await unifiedDataService.getStaffWithAssociations();
-      
-      const filteredStaff = dbStaffData.filter(staff => {
+
+      const filteredStaff = dbStaffData.filter((staff) => {
         // Strict role validation - exclude all admin/management roles
-        const ineligibleRoles = ['super_admin', 'facility_admin', 'admin', 'facility_manager', 'manager'];
+        const ineligibleRoles = [
+          "super_admin",
+          "facility_admin",
+          "admin",
+          "facility_manager",
+          "manager",
+        ];
         if (ineligibleRoles.includes(staff.role)) return false;
-        
+
         // Strict email validation - exclude known superusers
-        const superuserEmails = ['joshburn@nexspace.com', 'josh.burnett@nexspace.com', 'brian.nangle@nexspace.com'];
+        const superuserEmails = [
+          "joshburn@nexspace.com",
+          "josh.burnett@nexspace.com",
+          "brian.nangle@nexspace.com",
+        ];
         if (superuserEmails.includes(staff.email)) return false;
-        
+
         // Filter out already assigned workers
         if (assignedWorkerIds.includes(staff.id)) return false;
-        
+
         // Strict specialty matching - only workers with exact specialty match
         if (staff.specialty !== requiredSpecialty) return false;
-        
+
         // Only include internal employees and verified contractors
-        if (!['internal_employee', 'contractor_1099'].includes(staff.role)) return false;
-        
+        if (!["internal_employee", "contractor_1099"].includes(staff.role)) return false;
+
         return true;
       });
 
       // Return available workers only if shift has remaining capacity
       let shiftRequests: any[] = [];
-      
+
       if (!isAtCapacity && filteredStaff.length > 0) {
         // Generate realistic shift requests from unassigned workers
-        shiftRequests = filteredStaff.slice(0, Math.min(6, maxCapacity - currentAssignments.length)).map((staff, index) => ({
-          id: parseInt(shiftId.toString()) * 100 + index,
-          shiftId: shiftId,
-          workerId: staff.id,
-          workerName: `${staff.firstName} ${staff.lastName}`,
-          workerEmail: staff.email,
-          specialty: staff.specialty,
-          reliabilityScore: Math.floor(85 + Math.random() * 15), // 85-100%
-          totalShiftsWorked: Math.floor(50 + Math.random() * 150), // 50-200 shifts
-          averageRating: 4.2 + Math.random() * 0.8, // 4.2-5.0 rating
-          requestedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
-          status: "pending",
-          certifications: staff.specialty === "RN" ? ["RN", "ACLS", "BLS"] : 
-                         staff.specialty === "LPN" ? ["LPN", "BLS"] : 
-                         ["CST", "BLS"],
-          hourlyRate: staff.specialty === "RN" ? 45 + Math.random() * 10 : 
-                     staff.specialty === "LPN" ? 35 + Math.random() * 8 : 
-                     40 + Math.random() * 8,
-          availability: "Available",
-          profileUrl: `/enhanced-staff?profile=${staff.id}`
-        }));
+        shiftRequests = filteredStaff
+          .slice(0, Math.min(6, maxCapacity - currentAssignments.length))
+          .map((staff, index) => ({
+            id: parseInt(shiftId.toString()) * 100 + index,
+            shiftId: shiftId,
+            workerId: staff.id,
+            workerName: `${staff.firstName} ${staff.lastName}`,
+            workerEmail: staff.email,
+            specialty: staff.specialty,
+            reliabilityScore: Math.floor(85 + Math.random() * 15), // 85-100%
+            totalShiftsWorked: Math.floor(50 + Math.random() * 150), // 50-200 shifts
+            averageRating: 4.2 + Math.random() * 0.8, // 4.2-5.0 rating
+            requestedAt: new Date(
+              Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000
+            ).toISOString(),
+            status: "pending",
+            certifications:
+              staff.specialty === "RN"
+                ? ["RN", "ACLS", "BLS"]
+                : staff.specialty === "LPN"
+                  ? ["LPN", "BLS"]
+                  : ["CST", "BLS"],
+            hourlyRate:
+              staff.specialty === "RN"
+                ? 45 + Math.random() * 10
+                : staff.specialty === "LPN"
+                  ? 35 + Math.random() * 8
+                  : 40 + Math.random() * 8,
+            availability: "Available",
+            profileUrl: `/enhanced-staff?profile=${staff.id}`,
+          }));
       }
 
-      console.log(`[SHIFT REQUESTS] Shift ${shiftId}: ${currentAssignments.length}/${maxCapacity} filled, returning ${shiftRequests.length} available workers`);
+        `[SHIFT REQUESTS] Shift ${shiftId}: ${currentAssignments.length}/${maxCapacity} filled, returning ${shiftRequests.length} available workers`
+      );
       res.json(shiftRequests);
     } catch (error) {
       console.error("Error fetching shift requests:", error);
@@ -1552,321 +1581,346 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Shift assignment endpoint
-  app.post("/api/shifts/:shiftId/assign", requireAuth, requirePermission("shifts.assign"), async (req, res) => {
-    try {
-      const shiftId = req.params.shiftId;
-      const { workerId } = req.body;
-      
-      if (!workerId) {
-        return res.status(400).json({ message: "Worker ID is required" });
-      }
-      
-      // Get shift details - prioritize generated shifts (string IDs) over regular shifts
-      let shift;
-      
-      // Try generated shift first (most common case for assignments)
-      const generatedShift = await storage.getGeneratedShift(shiftId);
-      if (generatedShift) {
-        shift = {
-          id: parseInt(generatedShift.id) || 0,
-          title: generatedShift.title,
-          specialty: generatedShift.specialty,
-          description: generatedShift.description,
-          facilityId: generatedShift.facilityId,
-          department: generatedShift.department,
-          date: generatedShift.date,
-          startTime: generatedShift.startTime,
-          endTime: generatedShift.endTime,
-          rate: generatedShift.rate,
-          status: generatedShift.status,
-          urgency: generatedShift.urgency,
-          requiredStaff: generatedShift.requiredWorkers || generatedShift.totalPositions || 3,
-          assignedStaffIds: [],
-          specialRequirements: [],
-          createdById: 1,
-          createdAt: generatedShift.createdAt,
-          updatedAt: generatedShift.updatedAt,
-          facilityName: generatedShift.facilityName,
-          premiumMultiplier: generatedShift.rate
-        };
-      } else {
-        // For regular shifts, get from the example shifts data since database shifts table doesn't have title column
-        const allShifts = getShiftData();
-        const exampleShift = allShifts.find(s => s.id.toString() === shiftId);
-        
-        if (exampleShift) {
+  app.post(
+    "/api/shifts/:shiftId/assign",
+    requireAuth,
+    requirePermission("shifts.assign"),
+    async (req, res) => {
+      try {
+        const shiftId = req.params.shiftId;
+        const { workerId } = req.body;
+
+        if (!workerId) {
+          return res.status(400).json({ message: "Worker ID is required" });
+        }
+
+        // Get shift details - prioritize generated shifts (string IDs) over regular shifts
+        let shift;
+
+        // Try generated shift first (most common case for assignments)
+        const generatedShift = await storage.getGeneratedShift(shiftId);
+        if (generatedShift) {
           shift = {
-            id: exampleShift.id,
-            title: exampleShift.title,
-            specialty: exampleShift.specialty,
-            description: exampleShift.description,
-            facilityId: exampleShift.facilityId,
-            department: exampleShift.department,
-            date: exampleShift.date,
-            startTime: exampleShift.startTime,
-            endTime: exampleShift.endTime,
-            rate: exampleShift.rate,
-            status: exampleShift.status,
-            urgency: exampleShift.urgency,
-            requiredStaff: exampleShift.requiredWorkers || exampleShift.totalPositions || 3,
+            id: parseInt(generatedShift.id) || 0,
+            title: generatedShift.title,
+            specialty: generatedShift.specialty,
+            description: generatedShift.description,
+            facilityId: generatedShift.facilityId,
+            department: generatedShift.department,
+            date: generatedShift.date,
+            startTime: generatedShift.startTime,
+            endTime: generatedShift.endTime,
+            rate: generatedShift.rate,
+            status: generatedShift.status,
+            urgency: generatedShift.urgency,
+            requiredStaff: generatedShift.requiredWorkers || generatedShift.totalPositions || 3,
             assignedStaffIds: [],
             specialRequirements: [],
             createdById: 1,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            facilityName: exampleShift.facilityName,
-            premiumMultiplier: exampleShift.rate
+            createdAt: generatedShift.createdAt,
+            updatedAt: generatedShift.updatedAt,
+            facilityName: generatedShift.facilityName,
+            premiumMultiplier: generatedShift.rate,
           };
+        } else {
+          // For regular shifts, get from the example shifts data since database shifts table doesn't have title column
+          const allShifts = getShiftData();
+          const exampleShift = allShifts.find((s) => s.id.toString() === shiftId);
+
+          if (exampleShift) {
+            shift = {
+              id: exampleShift.id,
+              title: exampleShift.title,
+              specialty: exampleShift.specialty,
+              description: exampleShift.description,
+              facilityId: exampleShift.facilityId,
+              department: exampleShift.department,
+              date: exampleShift.date,
+              startTime: exampleShift.startTime,
+              endTime: exampleShift.endTime,
+              rate: exampleShift.rate,
+              status: exampleShift.status,
+              urgency: exampleShift.urgency,
+              requiredStaff: exampleShift.requiredWorkers || exampleShift.totalPositions || 3,
+              assignedStaffIds: [],
+              specialRequirements: [],
+              createdById: 1,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+              facilityName: exampleShift.facilityName,
+              premiumMultiplier: exampleShift.rate,
+            };
+          }
         }
-      }
-      
-      if (!shift) {
-        return res.status(404).json({ message: "Shift not found" });
-      }
-      
-      // Get worker details to validate they can be assigned
-      const worker = await storage.getUser(workerId);
-      if (!worker) {
-        return res.status(404).json({ message: "Worker not found" });
-      }
-      
-      // Strict validation - prevent superusers/admins from being assigned
-      const ineligibleRoles = ['super_admin', 'facility_admin', 'admin', 'facility_manager', 'manager'];
-      const superuserEmails = ['joshburn@nexspace.com', 'josh.burnett@nexspace.com', 'brian.nangle@nexspace.com'];
-      
-      if (ineligibleRoles.includes(worker.role) || superuserEmails.includes(worker.email)) {
-        return res.status(400).json({ 
-          message: `Administrative users cannot be assigned to shifts. Only clinical staff can work shifts.` 
-        });
-      }
-      
-      // Only allow internal employees and verified contractors
-      if (!['internal_employee', 'contractor_1099'].includes(worker.role)) {
-        return res.status(400).json({ 
-          message: `Only clinical staff can be assigned to shifts` 
-        });
-      }
-      
-      // Strict specialty validation - prevent mismatched assignments
-      if (worker.specialty !== shift.specialty) {
-        return res.status(400).json({ 
-          message: `Specialty mismatch: ${worker.specialty} worker cannot be assigned to ${shift.specialty} shift` 
-        });
-      }
-      
-      // Additional validation for specific specialty restrictions
-      if (shift.specialty === 'CST' && worker.specialty !== 'CST') {
-        return res.status(400).json({ 
-          message: `Only certified surgical technicians (CST) can be assigned to OR shifts` 
-        });
-      }
-      
-      if (shift.specialty === 'RN' && !['RN', 'BSN', 'MSN'].includes(worker.specialty || '')) {
-        return res.status(400).json({ 
-          message: `Only registered nurses can be assigned to RN shifts` 
-        });
-      }
-      
-      // Get current assignments for this shift using string ID
-      const currentAssignments = await storage.getShiftAssignments(shiftId);
-      const assignedWorkerIds = currentAssignments.map(a => a.workerId);
-      
-      // Check if worker is already assigned
-      if (assignedWorkerIds.includes(workerId)) {
-        return res.status(400).json({ message: "Worker is already assigned to this shift" });
-      }
-      
-      // Get shift capacity from database - use all possible field names for required workers
-      const maxCapacity = shift.requiredStaff || 
-                          shift.requiredWorkers || 
-                          shift.totalPositions || 
-                          shift.required_staff ||
-                          generatedShift?.requiredWorkers || 
-                          generatedShift?.maxStaff || 
-                          generatedShift?.totalPositions ||
-                          3; // Default to 3 for multi-worker shifts instead of 1
-      
-      console.log(`[CAPACITY CHECK] Shift ${shiftId}: maxCapacity=${maxCapacity}, currentAssignments=${currentAssignments.length}`);
-      if (currentAssignments.length >= maxCapacity) {
-        return res.status(400).json({ 
-          message: `Shift is at full capacity (${currentAssignments.length}/${maxCapacity})` 
-        });
-      }
-      
-      // Add worker to assignments using storage interface
-      await storage.addShiftAssignment({
-        shiftId: shiftId,
-        workerId: workerId,
-        assignedById: (req as any).user?.id || 1,
-        status: 'assigned'
-      });
-      
-      // Get updated assignments and verify the assignment was successful
-      const updatedAssignments = await storage.getShiftAssignments(shiftId);
-      const assignmentConfirmed = updatedAssignments.find(a => a.workerId === workerId);
-      
-      if (!assignmentConfirmed) {
-        return res.status(500).json({ 
-          message: "Assignment failed - could not confirm in database" 
-        });
-      }
-      
-      // Broadcast real-time update to all connected clients for immediate UI sync
-      if (wss) {
-        const updateMessage = {
-          type: 'SHIFT_ASSIGNMENT_UPDATED',
+
+        if (!shift) {
+          return res.status(404).json({ message: "Shift not found" });
+        }
+
+        // Get worker details to validate they can be assigned
+        const worker = await storage.getUser(workerId);
+        if (!worker) {
+          return res.status(404).json({ message: "Worker not found" });
+        }
+
+        // Strict validation - prevent superusers/admins from being assigned
+        const ineligibleRoles = [
+          "super_admin",
+          "facility_admin",
+          "admin",
+          "facility_manager",
+          "manager",
+        ];
+        const superuserEmails = [
+          "joshburn@nexspace.com",
+          "josh.burnett@nexspace.com",
+          "brian.nangle@nexspace.com",
+        ];
+
+        if (ineligibleRoles.includes(worker.role) || superuserEmails.includes(worker.email)) {
+          return res.status(400).json({
+            message: `Administrative users cannot be assigned to shifts. Only clinical staff can work shifts.`,
+          });
+        }
+
+        // Only allow internal employees and verified contractors
+        if (!["internal_employee", "contractor_1099"].includes(worker.role)) {
+          return res.status(400).json({
+            message: `Only clinical staff can be assigned to shifts`,
+          });
+        }
+
+        // Strict specialty validation - prevent mismatched assignments
+        if (worker.specialty !== shift.specialty) {
+          return res.status(400).json({
+            message: `Specialty mismatch: ${worker.specialty} worker cannot be assigned to ${shift.specialty} shift`,
+          });
+        }
+
+        // Additional validation for specific specialty restrictions
+        if (shift.specialty === "CST" && worker.specialty !== "CST") {
+          return res.status(400).json({
+            message: `Only certified surgical technicians (CST) can be assigned to OR shifts`,
+          });
+        }
+
+        if (shift.specialty === "RN" && !["RN", "BSN", "MSN"].includes(worker.specialty || "")) {
+          return res.status(400).json({
+            message: `Only registered nurses can be assigned to RN shifts`,
+          });
+        }
+
+        // Get current assignments for this shift using string ID
+        const currentAssignments = await storage.getShiftAssignments(shiftId);
+        const assignedWorkerIds = currentAssignments.map((a) => a.workerId);
+
+        // Check if worker is already assigned
+        if (assignedWorkerIds.includes(workerId)) {
+          return res.status(400).json({ message: "Worker is already assigned to this shift" });
+        }
+
+        // Get shift capacity from database - use all possible field names for required workers
+        const maxCapacity =
+          shift.requiredStaff ||
+          shift.requiredWorkers ||
+          shift.totalPositions ||
+          shift.required_staff ||
+          generatedShift?.requiredWorkers ||
+          generatedShift?.maxStaff ||
+          generatedShift?.totalPositions ||
+          3; // Default to 3 for multi-worker shifts instead of 1
+
+          `[CAPACITY CHECK] Shift ${shiftId}: maxCapacity=${maxCapacity}, currentAssignments=${currentAssignments.length}`
+        );
+        if (currentAssignments.length >= maxCapacity) {
+          return res.status(400).json({
+            message: `Shift is at full capacity (${currentAssignments.length}/${maxCapacity})`,
+          });
+        }
+
+        // Add worker to assignments using storage interface
+        await storage.addShiftAssignment({
           shiftId: shiftId,
           workerId: workerId,
-          workerName: `${worker.firstName} ${worker.lastName}`,
-          assignments: updatedAssignments,
+          assignedById: (req as any).user?.id || 1,
+          status: "assigned",
+        });
+
+        // Get updated assignments and verify the assignment was successful
+        const updatedAssignments = await storage.getShiftAssignments(shiftId);
+        const assignmentConfirmed = updatedAssignments.find((a) => a.workerId === workerId);
+
+        if (!assignmentConfirmed) {
+          return res.status(500).json({
+            message: "Assignment failed - could not confirm in database",
+          });
+        }
+
+        // Broadcast real-time update to all connected clients for immediate UI sync
+        if (wss) {
+          const updateMessage = {
+            type: "SHIFT_ASSIGNMENT_UPDATED",
+            shiftId: shiftId,
+            workerId: workerId,
+            workerName: `${worker.firstName} ${worker.lastName}`,
+            assignments: updatedAssignments,
+            assignedWorkers: updatedAssignments.length,
+            maxCapacity: maxCapacity,
+            action: "assigned",
+          };
+
+          wss.clients.forEach((client: WebSocket) => {
+            if (client.readyState === WebSocket.OPEN) {
+              client.send(JSON.stringify(updateMessage));
+            }
+          });
+        }
+
+          `[ASSIGNMENT SUCCESS] Worker ${workerId} (${worker.firstName} ${worker.lastName}) assigned to shift ${shiftId}. Total: ${updatedAssignments.length}/${maxCapacity}`
+        );
+
+        res.json({
+          success: true,
+          message: "Worker assigned successfully",
           assignedWorkers: updatedAssignments.length,
           maxCapacity: maxCapacity,
-          action: 'assigned'
-        };
-        
-        wss.clients.forEach((client: WebSocket) => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify(updateMessage));
-          }
+          assignments: updatedAssignments,
+          workerName: `${worker.firstName} ${worker.lastName}`,
         });
+      } catch (error) {
+        console.error("Error assigning worker:", error);
+        res.status(500).json({ message: "Failed to assign worker" });
       }
-      
-      console.log(`[ASSIGNMENT SUCCESS] Worker ${workerId} (${worker.firstName} ${worker.lastName}) assigned to shift ${shiftId}. Total: ${updatedAssignments.length}/${maxCapacity}`);
-      
-      res.json({ 
-        success: true, 
-        message: "Worker assigned successfully",
-        assignedWorkers: updatedAssignments.length,
-        maxCapacity: maxCapacity,
-        assignments: updatedAssignments,
-        workerName: `${worker.firstName} ${worker.lastName}`
-      });
-    } catch (error) {
-      console.error("Error assigning worker:", error);
-      res.status(500).json({ message: "Failed to assign worker" });
     }
-  });
+  );
 
   // Shift unassignment endpoint
-  app.post("/api/shifts/:shiftId/unassign", requireAuth, requirePermission("shifts.assign"), async (req, res) => {
-    try {
-      const shiftId = req.params.shiftId;
-      const { workerId } = req.body;
-      
-      if (!workerId) {
-        return res.status(400).json({ message: "Worker ID is required" });
+  app.post(
+    "/api/shifts/:shiftId/unassign",
+    requireAuth,
+    requirePermission("shifts.assign"),
+    async (req, res) => {
+      try {
+        const shiftId = req.params.shiftId;
+        const { workerId } = req.body;
+
+        if (!workerId) {
+          return res.status(400).json({ message: "Worker ID is required" });
+        }
+
+        // Get current assignments for this shift using string ID
+        const currentAssignments = await storage.getShiftAssignments(shiftId);
+        const assignedWorkerIds = currentAssignments.map((a) => a.workerId);
+
+        // Check if worker is assigned
+        if (!assignedWorkerIds.includes(workerId)) {
+          return res.status(400).json({ message: "Worker is not assigned to this shift" });
+        }
+
+        // Update assignment status to 'unassigned' instead of deleting
+        await storage.updateShiftAssignmentStatus(shiftId, workerId, "unassigned");
+
+        // Get updated assignments (only active ones)
+        const updatedAssignments = await storage.getShiftAssignments(shiftId);
+
+          `Worker ${workerId} unassigned from shift ${shiftId}. Total assigned: ${updatedAssignments.length}`
+        );
+
+        res.json({
+          success: true,
+          message: "Worker unassigned successfully",
+          assignedWorkers: updatedAssignments.length,
+          assignments: updatedAssignments,
+        });
+      } catch (error) {
+        console.error("Error unassigning worker:", error);
+        res.status(500).json({ message: "Failed to unassign worker" });
       }
-      
-      // Get current assignments for this shift using string ID
-      const currentAssignments = await storage.getShiftAssignments(shiftId);
-      const assignedWorkerIds = currentAssignments.map(a => a.workerId);
-      
-      // Check if worker is assigned
-      if (!assignedWorkerIds.includes(workerId)) {
-        return res.status(400).json({ message: "Worker is not assigned to this shift" });
-      }
-      
-      // Update assignment status to 'unassigned' instead of deleting
-      await storage.updateShiftAssignmentStatus(shiftId, workerId, 'unassigned');
-      
-      // Get updated assignments (only active ones)
-      const updatedAssignments = await storage.getShiftAssignments(shiftId);
-      
-      console.log(`Worker ${workerId} unassigned from shift ${shiftId}. Total assigned: ${updatedAssignments.length}`);
-      
-      res.json({ 
-        success: true, 
-        message: "Worker unassigned successfully",
-        assignedWorkers: updatedAssignments.length,
-        assignments: updatedAssignments
-      });
-    } catch (error) {
-      console.error("Error unassigning worker:", error);
-      res.status(500).json({ message: "Failed to unassign worker" });
     }
-  });
+  );
 
   // Enhanced assignment endpoint with database backing and proper capacity checking
   app.post("/api/shifts/:shiftId/assign-enhanced", requireAuth, async (req, res) => {
     try {
       const shiftId = req.params.shiftId; // Keep as string to match stable ID format
       const { workerId } = req.body;
-      
+
       if (!workerId) {
         return res.status(400).json({ message: "Worker ID is required" });
       }
 
       // Get shift details to check capacity
       const allShifts = getShiftData();
-      const targetShift = allShifts.find(s => s.id.toString() === shiftId);
-      
+      const targetShift = allShifts.find((s) => s.id.toString() === shiftId);
+
       if (!targetShift) {
         return res.status(404).json({ message: "Shift not found" });
       }
 
       // Check current assignments from database
       const currentAssignments = await storage.getShiftAssignments(shiftId);
-      const assignedWorkerIds = currentAssignments.map(a => a.workerId);
-      
+      const assignedWorkerIds = currentAssignments.map((a) => a.workerId);
+
       // Check if worker is already assigned
       if (assignedWorkerIds.includes(workerId)) {
         return res.status(400).json({ message: "Worker is already assigned to this shift" });
       }
-      
+
       // Check capacity - allow assignment up to requiredWorkers limit
       const maxCapacity = targetShift.requiredWorkers || 3;
       if (currentAssignments.length >= maxCapacity) {
         return res.status(400).json({ message: "Shift is already fully staffed" });
       }
-      
+
       // Get worker details
       const dbStaffData = await unifiedDataService.getStaffWithAssociations();
-      const worker = dbStaffData.find(staff => staff.id === workerId);
-      
+      const worker = dbStaffData.find((staff) => staff.id === workerId);
+
       if (!worker) {
         return res.status(404).json({ message: "Worker not found" });
       }
-      
+
       // Add assignment to database
       await storage.addShiftAssignment({
         shiftId: shiftId,
         workerId: workerId,
         assignedById: req.user?.id || 1,
-        status: 'assigned'
+        status: "assigned",
       });
-      
+
       // Get updated assignments
       const updatedAssignments = await storage.getShiftAssignments(shiftId);
       const filledPositions = updatedAssignments.length;
-      
+
       // Broadcast update to connected clients
       wss.clients.forEach((client: WebSocket) => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({
-            type: 'SHIFT_ASSIGNMENT_UPDATE',
-            shiftId: shiftId,
-            filledPositions: filledPositions,
-            totalPositions: maxCapacity,
-            status: filledPositions >= maxCapacity ? 'filled' : 'partially_filled'
-          }));
+          client.send(
+            JSON.stringify({
+              type: "SHIFT_ASSIGNMENT_UPDATE",
+              shiftId: shiftId,
+              filledPositions: filledPositions,
+              totalPositions: maxCapacity,
+              status: filledPositions >= maxCapacity ? "filled" : "partially_filled",
+            })
+          );
         }
       });
-      
-      console.log(`Worker ${workerId} assigned to shift ${shiftId}. Total assigned: ${filledPositions}/${maxCapacity}`);
-      
+
+        `Worker ${workerId} assigned to shift ${shiftId}. Total assigned: ${filledPositions}/${maxCapacity}`
+      );
+
       res.json({
         success: true,
         message: "Worker assigned successfully",
         assignedWorkers: filledPositions,
-        totalCapacity: maxCapacity
+        totalCapacity: maxCapacity,
       });
     } catch (error) {
       console.error("Error assigning worker to shift:", error);
       res.status(500).json({ message: "Failed to assign worker to shift" });
     }
   });
-
-
 
   app.get("/api/shifts/open", requireAuth, async (req: any, res) => {
     try {
@@ -1882,17 +1936,17 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/shifts/worker-open", requireAuth, async (req: any, res) => {
     try {
       const user = req.user;
-      const currentDate = new Date().toISOString().split('T')[0];
-      
+      const currentDate = new Date().toISOString().split("T")[0];
+
       // Get user's specialty and facility associations
       const userStaff = await unifiedDataService.getStaffWithAssociations();
-      const currentUserStaff = userStaff.find(s => s.email === user.email);
-      const userSpecialty = currentUserStaff?.specialty || 'RN';
+      const currentUserStaff = userStaff.find((s) => s.email === user.email);
+      const userSpecialty = currentUserStaff?.specialty || "RN";
       const userFacilities = currentUserStaff?.associatedFacilities || [1];
-      
+
       // Get template-generated shifts if they exist
       const templateShifts = (global as any).templateGeneratedShifts || [];
-      
+
       const workerShifts = [
         {
           id: 1,
@@ -1968,32 +2022,32 @@ export function registerRoutes(app: Express): Server {
           rate: 35.0,
           urgency: "medium",
           description: "Evening respiratory therapy coverage",
-        }
+        },
       ];
 
       // Combine worker shifts with template-generated shifts
       const allWorkerShifts = [...workerShifts, ...templateShifts];
-      
+
       // Filter shifts for workers based on multiple criteria
-      let filteredShifts = allWorkerShifts.filter(shift => {
+      let filteredShifts = allWorkerShifts.filter((shift) => {
         // Only show open shifts that are not assigned and not requested
         if (shift.status !== "open") return false;
-        
+
         // Do not allow past shifts to be requested or posted
         const shiftDate = new Date(shift.date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (shiftDate < today) return false;
-        
+
         // Filter by worker specialty - match the user's specialty
         if (userSpecialty && shift.specialty !== userSpecialty) return false;
-        
+
         // Filter by facility associations - only show shifts at facilities worker is associated with
         if (userFacilities.length > 0 && !userFacilities.includes(shift.facilityId)) return false;
-        
+
         return true;
       });
-      
+
       res.json(filteredShifts);
     } catch (error) {
       console.error("Error fetching worker open shifts:", error);
@@ -2005,49 +2059,53 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/shifts/my-shifts", requireAuth, async (req: any, res) => {
     try {
       const user = req.user;
-      
+
       // Get shifts assigned to this worker - sync with Enhanced Schedule data
-      const myShifts = user.id === 3 ? [ // Alice Smith's shifts
-        {
-          id: 102,
-          title: "Emergency Night Shift", 
-          date: "2025-06-25",
-          startTime: "19:00",
-          endTime: "07:00",
-          department: "Emergency",
-          specialty: "RN",
-          status: "requested", // This shows in My Schedule but should also show in My Requests
-          facilityId: 1,
-          facilityName: "Portland General Hospital",
-          rate: 45.0,
-          urgency: "critical",
-          description: "Overnight emergency department coverage",
-          assignedStaffId: user.id,
-        }
-      ] : [
-        {
-          id: 101,
-          title: "ICU Day Shift",
-          date: "2025-06-23",
-          startTime: "07:00",
-          endTime: "19:00",
-          department: "ICU",
-          specialty: "RN",
-          status: "confirmed",
-          facilityId: 1,
-          facilityName: "Portland General Hospital",
-          rate: 42.5,
-          urgency: "high",
-          description: "12-hour ICU nursing shift, ACLS certification required",
-          assignedStaffId: user.id,
-        }
-      ];
-      
+      const myShifts =
+        user.id === 3
+          ? [
+              // Alice Smith's shifts
+              {
+                id: 102,
+                title: "Emergency Night Shift",
+                date: "2025-06-25",
+                startTime: "19:00",
+                endTime: "07:00",
+                department: "Emergency",
+                specialty: "RN",
+                status: "requested", // This shows in My Schedule but should also show in My Requests
+                facilityId: 1,
+                facilityName: "Portland General Hospital",
+                rate: 45.0,
+                urgency: "critical",
+                description: "Overnight emergency department coverage",
+                assignedStaffId: user.id,
+              },
+            ]
+          : [
+              {
+                id: 101,
+                title: "ICU Day Shift",
+                date: "2025-06-23",
+                startTime: "07:00",
+                endTime: "19:00",
+                department: "ICU",
+                specialty: "RN",
+                status: "confirmed",
+                facilityId: 1,
+                facilityName: "Portland General Hospital",
+                rate: 42.5,
+                urgency: "high",
+                description: "12-hour ICU nursing shift, ACLS certification required",
+                assignedStaffId: user.id,
+              },
+            ];
+
       // Filter by user's specialty if available
-      const filteredShifts = user.specialty 
-        ? myShifts.filter(shift => shift.specialty === user.specialty)
+      const filteredShifts = user.specialty
+        ? myShifts.filter((shift) => shift.specialty === user.specialty)
         : myShifts;
-      
+
       res.json(filteredShifts);
     } catch (error) {
       console.error("Error fetching my shifts:", error);
@@ -2062,57 +2120,58 @@ export function registerRoutes(app: Express): Server {
     auditLog("CREATE", "shift"),
     async (req: any, res) => {
       try {
-        console.log("=== SHIFT CREATION REQUEST ===");
-        console.log("Raw request body:", JSON.stringify(req.body, null, 2));
-        console.log("User info:", { id: req.user?.id, facilityId: req.user?.facilityId });
-        
+
         // Build the data object step by step with validation
         const dataToValidate = {
-          title: req.body.title || `${req.body.specialty || 'Shift'} Assignment`,
+          title: req.body.title || `${req.body.specialty || "Shift"} Assignment`,
           facilityId: req.user?.facilityId || req.body.facilityId,
-          facilityName: req.body.facilityName || 'Default Facility', // Add missing facilityName
+          facilityName: req.body.facilityName || "Default Facility", // Add missing facilityName
           department: req.body.department || req.body.specialty,
           specialty: req.body.specialty,
-          shiftType: req.body.shiftType || 'Day', // Add missing shiftType mapping
+          shiftType: req.body.shiftType || "Day", // Add missing shiftType mapping
           date: req.body.date,
           startTime: req.body.startTime,
           endTime: req.body.endTime,
           rate: String(req.body.rate), // Convert to string for decimal parsing
           premiumMultiplier: req.body.premiumMultiplier || "1.00", // Add missing premiumMultiplier
-          status: req.body.status || 'open',
-          urgency: req.body.urgency || 'medium',
-          description: req.body.description || '',
+          status: req.body.status || "open",
+          urgency: req.body.urgency || "medium",
+          description: req.body.description || "",
           requiredStaff: Number(req.body.requiredStaff) || 1,
           assignedStaffIds: req.body.assignedStaffIds || [],
           specialRequirements: req.body.specialRequirements || [],
           createdById: req.user?.id,
         };
-        
-        console.log("Prepared data for validation:");
+
         Object.entries(dataToValidate).forEach(([key, value]) => {
-          console.log(`  ${key}: ${JSON.stringify(value)} (${typeof value})`);
         });
-        
+
         // Validate each required field manually first - check against actual database schema
-        const requiredFields = ['facilityId', 'department', 'specialty', 'shiftType', 'date', 'startTime', 'endTime', 'rate', 'createdById'];
-        const missingFields = requiredFields.filter(field => !(dataToValidate as any)[field]);
-        
+        const requiredFields = [
+          "facilityId",
+          "department",
+          "specialty",
+          "shiftType",
+          "date",
+          "startTime",
+          "endTime",
+          "rate",
+          "createdById",
+        ];
+        const missingFields = requiredFields.filter((field) => !(dataToValidate as any)[field]);
+
         if (missingFields.length > 0) {
-          console.log("Missing required fields:", missingFields);
-          return res.status(400).json({ 
-            message: `Missing required fields: ${missingFields.join(', ')}`,
-            missingFields 
+          return res.status(400).json({
+            message: `Missing required fields: ${missingFields.join(", ")}`,
+            missingFields,
           });
         }
-        
-        console.log("All required fields present, attempting Zod validation...");
-        
+
+
         try {
           const shiftData = insertShiftSchema.parse(dataToValidate);
-          console.log("Zod validation passed, creating shift with data:", shiftData);
-          
+
           const shift = await storage.createShift(shiftData);
-          console.log("Shift created successfully:", shift);
           res.status(201).json(shift);
         } catch (dbError: any) {
           console.error("Database insertion error:", dbError);
@@ -2121,7 +2180,7 @@ export function registerRoutes(app: Express): Server {
             code: dbError.code,
             detail: dbError.detail,
             column: dbError.column,
-            table: dbError.table
+            table: dbError.table,
           });
           throw dbError; // Re-throw to be caught by outer catch block
         }
@@ -2130,24 +2189,24 @@ export function registerRoutes(app: Express): Server {
           console.error("=== ZOD VALIDATION ERRORS ===");
           error.errors.forEach((err, index) => {
             console.error(`Error ${index + 1}:`);
-            console.error(`  Field: ${err.path.join('.')}`);
+            console.error(`  Field: ${err.path.join(".")}`);
             console.error(`  Message: ${err.message}`);
             console.error(`  Code: ${err.code}`);
-            if ('expected' in err) console.error(`  Expected: ${err.expected}`);
-            if ('received' in err) console.error(`  Received: ${err.received}`);
+            if ("expected" in err) console.error(`  Expected: ${err.expected}`);
+            if ("received" in err) console.error(`  Received: ${err.received}`);
           });
           console.error("==============================");
-          
+
           // Create user-friendly error messages
-          const fieldErrors = error.errors.map(err => {
-            const field = err.path.join('.');
+          const fieldErrors = error.errors.map((err) => {
+            const field = err.path.join(".");
             return `${field}: ${err.message}`;
           });
-          
-          res.status(400).json({ 
-            message: `Validation failed: ${fieldErrors.join('; ')}`,
+
+          res.status(400).json({
+            message: `Validation failed: ${fieldErrors.join("; ")}`,
             fieldErrors,
-            zodErrors: error.errors 
+            zodErrors: error.errors,
           });
         } else {
           console.error("Shift creation error:", error);
@@ -2161,11 +2220,11 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/shifts/request", requireAuth, async (req: any, res) => {
     try {
       const { shiftId, userId = req.user.id } = req.body;
-      
+
       // Get shift data using correct storage method
       const shift = await storage.getShift(shiftId);
-      
-      if (!shift || shift.status !== 'open') {
+
+      if (!shift || shift.status !== "open") {
         return res.status(400).json({ message: "Shift not available for request" });
       }
 
@@ -2174,8 +2233,8 @@ export function registerRoutes(app: Express): Server {
         id: Date.now(),
         shiftId,
         userId,
-        status: 'pending',
-        requestedAt: new Date().toISOString()
+        status: "pending",
+        requestedAt: new Date().toISOString(),
       };
 
       // Create history entry
@@ -2183,11 +2242,11 @@ export function registerRoutes(app: Express): Server {
         id: Date.now() + 1,
         shiftId,
         userId,
-        action: 'requested',
+        action: "requested",
         timestamp: new Date().toISOString(),
         performedById: userId,
-        previousStatus: 'open',
-        newStatus: 'requested'
+        previousStatus: "open",
+        newStatus: "requested",
       };
 
       // Check auto-assignment criteria
@@ -2199,9 +2258,9 @@ export function registerRoutes(app: Express): Server {
         // Auto-assign the shift
         const updatedShift = {
           ...shift,
-          status: 'filled' as const,
+          status: "filled" as const,
           assignedStaffIds: [userId],
-          updatedAt: new Date().toISOString()
+          updatedAt: new Date().toISOString(),
         };
 
         // Log assignment history
@@ -2209,80 +2268,89 @@ export function registerRoutes(app: Express): Server {
           id: Date.now() + 2,
           shiftId,
           userId,
-          action: 'filled',
+          action: "filled",
           timestamp: new Date().toISOString(),
           performedById: userId,
-          previousStatus: 'requested',
-          newStatus: 'filled',
-          notes: 'Auto-assigned based on criteria'
+          previousStatus: "requested",
+          newStatus: "filled",
+          notes: "Auto-assigned based on criteria",
         };
 
         assignedShift = updatedShift;
         autoAssigned = true;
       }
 
-      const requestedShift = { ...shift, status: 'requested' as const };
+      const requestedShift = { ...shift, status: "requested" as const };
 
       res.json({
         requestedShift,
         autoAssigned,
         assignedShift,
         historyEntry,
-        shiftRequest
+        shiftRequest,
       });
     } catch (error) {
-      console.error('Shift request error:', error);
+      console.error("Shift request error:", error);
       res.status(500).json({ message: "Failed to request shift" });
     }
   });
 
-  app.post("/api/shifts/assign", requireAuth, requirePermission("shifts.assign"), async (req: any, res) => {
-    try {
-      const { shiftId, userId } = req.body;
-      
-      // Get shift and validate
-      const shift = await storage.getShift(shiftId);
-      
-      if (!shift) {
-        return res.status(404).json({ message: "Shift not found" });
+  app.post(
+    "/api/shifts/assign",
+    requireAuth,
+    requirePermission("shifts.assign"),
+    async (req: any, res) => {
+      try {
+        const { shiftId, userId } = req.body;
+
+        // Get shift and validate
+        const shift = await storage.getShift(shiftId);
+
+        if (!shift) {
+          return res.status(404).json({ message: "Shift not found" });
+        }
+
+        // Create assigned shift
+        const assignedShift = {
+          ...shift,
+          status: "filled" as const,
+          assignedStaffIds: [userId],
+          updatedAt: new Date().toISOString(),
+        };
+
+        // Create history entry
+        const historyEntry = {
+          id: Date.now(),
+          shiftId,
+          userId,
+          action: "filled",
+          timestamp: new Date().toISOString(),
+          performedById: req.user.id,
+          previousStatus: shift.status,
+          newStatus: "filled",
+        };
+
+        res.json({
+          assignedShift,
+          historyEntry,
+        });
+      } catch (error) {
+        console.error("Shift assignment error:", error);
+        res.status(500).json({ message: "Failed to assign shift" });
       }
-
-      // Create assigned shift
-      const assignedShift = {
-        ...shift,
-        status: 'filled' as const,
-        assignedStaffIds: [userId],
-        updatedAt: new Date().toISOString()
-      };
-
-      // Create history entry
-      const historyEntry = {
-        id: Date.now(),
-        shiftId,
-        userId,
-        action: 'filled',
-        timestamp: new Date().toISOString(),
-        performedById: req.user.id,
-        previousStatus: shift.status,
-        newStatus: 'filled'
-      };
-
-      res.json({
-        assignedShift,
-        historyEntry
-      });
-    } catch (error) {
-      console.error('Shift assignment error:', error);
-      res.status(500).json({ message: "Failed to assign shift" });
     }
-  });
+  );
 
   app.get("/api/shifts/history/:userId", requireAuth, async (req: any, res) => {
     try {
       const userId = parseInt(req.params.userId);
-      
+
       // Check if user can access this history
-      if (req.user.id !== userId && req.user.role !== UserRole.SUPER_ADMIN && req.user.role !== UserRole.FACILITY_MANAGER) {
+      if (
+        req.user.id !== userId &&
+        req.user.role !== UserRole.SUPER_ADMIN &&
+        req.user.role !== UserRole.FACILITY_MANAGER
+      ) {
         return res.status(403).json({ message: "Access denied" });
       }
 
@@ -2303,7 +2371,7 @@ export function registerRoutes(app: Express): Server {
           urgency: "high",
           description: "Completed ICU night coverage",
           action: "completed",
-          timestamp: "2025-06-18T07:00:00Z"
+          timestamp: "2025-06-18T07:00:00Z",
         },
         {
           id: 12,
@@ -2320,7 +2388,7 @@ export function registerRoutes(app: Express): Server {
           urgency: "medium",
           description: "Completed respiratory therapy shift",
           action: "completed",
-          timestamp: "2025-06-18T16:00:00Z"
+          timestamp: "2025-06-18T16:00:00Z",
         },
         {
           id: 13,
@@ -2337,26 +2405,27 @@ export function registerRoutes(app: Express): Server {
           urgency: "low",
           description: "Completed float pool coverage",
           action: "completed",
-          timestamp: "2025-06-16T15:00:00Z"
-        }
+          timestamp: "2025-06-16T15:00:00Z",
+        },
       ];
 
       res.json(sampleHistory);
     } catch (error) {
-      console.error('Shift history error:', error);
+      console.error("Shift history error:", error);
       res.status(500).json({ message: "Failed to fetch shift history" });
     }
   });
 
-
-
   // Auto-assignment criteria helper function
-  async function checkAutoAssignmentCriteria(shiftId: number, userId: number): Promise<{ shouldAutoAssign: boolean; reason?: string }> {
+  async function checkAutoAssignmentCriteria(
+    shiftId: number,
+    userId: number
+  ): Promise<{ shouldAutoAssign: boolean; reason?: string }> {
     try {
       // Get user and shift details
       const user = await storage.getUser(userId);
       const shift = await storage.getShift(shiftId);
-      
+
       if (!user || !shift) {
         return { shouldAutoAssign: false, reason: "User or shift not found" };
       }
@@ -2364,22 +2433,23 @@ export function registerRoutes(app: Express): Server {
       // Basic auto-assignment criteria
       const criteria = {
         userHasRequiredSpecialty: user.specialty === shift.specialty,
-        shiftIsUrgent: shift.urgency === 'critical' || shift.urgency === 'high',
-        userIsAvailable: user.availabilityStatus === 'available',
-        facilityMatch: !shift.facilityId || user.facilityId === shift.facilityId
+        shiftIsUrgent: shift.urgency === "critical" || shift.urgency === "high",
+        userIsAvailable: user.availabilityStatus === "available",
+        facilityMatch: !shift.facilityId || user.facilityId === shift.facilityId,
       };
 
-      const shouldAutoAssign = criteria.userHasRequiredSpecialty && 
-                              criteria.shiftIsUrgent && 
-                              criteria.userIsAvailable && 
-                              criteria.facilityMatch;
+      const shouldAutoAssign =
+        criteria.userHasRequiredSpecialty &&
+        criteria.shiftIsUrgent &&
+        criteria.userIsAvailable &&
+        criteria.facilityMatch;
 
-      return { 
+      return {
         shouldAutoAssign,
-        reason: shouldAutoAssign ? "Meets auto-assignment criteria" : "Does not meet all criteria"
+        reason: shouldAutoAssign ? "Meets auto-assignment criteria" : "Does not meet all criteria",
       };
     } catch (error) {
-      console.error('Auto-assignment criteria check error:', error);
+      console.error("Auto-assignment criteria check error:", error);
       return { shouldAutoAssign: false, reason: "Error checking criteria" };
     }
   }
@@ -2538,75 +2608,77 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/conversations", requireAuth, async (req: any, res) => {
     try {
       const conversations = await storage.getUserConversations(req.user.id);
-      
+
       // Enrich conversations with participant info and last message
       const enrichedConversations = await Promise.all(
         conversations.map(async (conv) => {
           const participants = await storage.getConversationParticipants(conv.id);
           const messages = await storage.getConversationMessages(conv.id, 1, 0);
           const lastMessage = messages[0] || null;
-          
+
           // Get participant user details
           const participantDetails = await Promise.all(
             participants.map(async (p) => {
               const user = await storage.getUser(p.userId);
-              return user ? {
-                id: user.id,
-                name: `${user.firstName} ${user.lastName}`,
-                role: user.role,
-                avatar: null
-              } : null;
+              return user
+                ? {
+                    id: user.id,
+                    name: `${user.firstName} ${user.lastName}`,
+                    role: user.role,
+                    avatar: null,
+                  }
+                : null;
             })
           );
-          
+
           return {
             ...conv,
             participants: participantDetails.filter(Boolean),
             lastMessage,
-            unreadCount: conv.unreadCount || 0
+            unreadCount: conv.unreadCount || 0,
           };
         })
       );
-      
+
       res.json(enrichedConversations);
     } catch (error) {
-      console.error('Failed to fetch conversations:', error);
+      console.error("Failed to fetch conversations:", error);
       res.status(500).json({ message: "Failed to fetch conversations" });
     }
   });
 
   app.post("/api/conversations", requireAuth, async (req: any, res) => {
     try {
-      const { subject, participantIds, type = 'direct' } = req.body;
-      
+      const { subject, participantIds, type = "direct" } = req.body;
+
       // Create conversation
       const conversation = await storage.createConversation({
         subject,
         type,
-        createdById: req.user.id
+        createdById: req.user.id,
       });
-      
+
       // Add creator as participant
       await storage.addConversationParticipant({
         conversationId: conversation.id,
-        userId: req.user.id
+        userId: req.user.id,
       });
-      
+
       // Add other participants
       if (participantIds && participantIds.length > 0) {
         await Promise.all(
           participantIds.map((userId: number) =>
             storage.addConversationParticipant({
               conversationId: conversation.id,
-              userId
+              userId,
             })
           )
         );
       }
-      
+
       res.status(201).json(conversation);
     } catch (error) {
-      console.error('Failed to create conversation:', error);
+      console.error("Failed to create conversation:", error);
       res.status(500).json({ message: "Failed to create conversation" });
     }
   });
@@ -2614,23 +2686,23 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/conversations/:id", requireAuth, async (req: any, res) => {
     try {
       const conversationId = parseInt(req.params.id);
-      
+
       // Check if user is a participant
       const participants = await storage.getConversationParticipants(conversationId);
-      const isParticipant = participants.some(p => p.userId === req.user.id);
-      
+      const isParticipant = participants.some((p) => p.userId === req.user.id);
+
       if (!isParticipant) {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       const conversation = await storage.getConversation(conversationId);
       if (!conversation) {
         return res.status(404).json({ message: "Conversation not found" });
       }
-      
+
       res.json(conversation);
     } catch (error) {
-      console.error('Failed to fetch conversation:', error);
+      console.error("Failed to fetch conversation:", error);
       res.status(500).json({ message: "Failed to fetch conversation" });
     }
   });
@@ -2640,39 +2712,39 @@ export function registerRoutes(app: Express): Server {
     try {
       const conversationId = parseInt(req.params.id);
       const { limit = 50, offset = 0 } = req.query;
-      
+
       // Check if user is a participant
       const participants = await storage.getConversationParticipants(conversationId);
-      const isParticipant = participants.some(p => p.userId === req.user.id);
-      
+      const isParticipant = participants.some((p) => p.userId === req.user.id);
+
       if (!isParticipant) {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       const messages = await storage.getConversationMessages(
         conversationId,
         parseInt(limit as string),
         parseInt(offset as string)
       );
-      
+
       // Mark messages as read
       await storage.markMessagesAsRead(conversationId, req.user.id);
-      
+
       // Enrich messages with sender info
       const enrichedMessages = await Promise.all(
         messages.map(async (msg) => {
           const sender = await storage.getUser(msg.senderId);
           return {
             ...msg,
-            senderName: sender ? `${sender.firstName} ${sender.lastName}` : 'Unknown',
-            senderRole: sender?.role
+            senderName: sender ? `${sender.firstName} ${sender.lastName}` : "Unknown",
+            senderRole: sender?.role,
           };
         })
       );
-      
+
       res.json(enrichedMessages);
     } catch (error) {
-      console.error('Failed to fetch messages:', error);
+      console.error("Failed to fetch messages:", error);
       res.status(500).json({ message: "Failed to fetch messages" });
     }
   });
@@ -2680,49 +2752,51 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/conversations/:id/messages", requireAuth, async (req: any, res) => {
     try {
       const conversationId = parseInt(req.params.id);
-      const { content, messageType = 'text' } = req.body;
-      
+      const { content, messageType = "text" } = req.body;
+
       // Check if user is a participant
       const participants = await storage.getConversationParticipants(conversationId);
-      const isParticipant = participants.some(p => p.userId === req.user.id);
-      
+      const isParticipant = participants.some((p) => p.userId === req.user.id);
+
       if (!isParticipant) {
         return res.status(403).json({ message: "Access denied" });
       }
-      
+
       const message = await storage.createMessage({
         conversationId,
         senderId: req.user.id,
         content,
-        messageType
+        messageType,
       });
-      
+
       // Broadcast via WebSocket to conversation participants
       const enrichedMessage = {
         ...message,
         senderName: `${req.user.firstName} ${req.user.lastName}`,
-        senderRole: req.user.role
+        senderRole: req.user.role,
       };
-      
+
       // Send to all participants in the conversation
       for (const participant of participants) {
         const userSockets = userConnections.get(participant.userId);
         if (userSockets) {
           userSockets.forEach((socket) => {
             if (socket.readyState === WebSocket.OPEN) {
-              socket.send(JSON.stringify({
-                type: 'new_message',
-                conversationId,
-                data: enrichedMessage
-              }));
+              socket.send(
+                JSON.stringify({
+                  type: "new_message",
+                  conversationId,
+                  data: enrichedMessage,
+                })
+              );
             }
           });
         }
       }
-      
+
       res.status(201).json(enrichedMessage);
     } catch (error) {
-      console.error('Failed to send message:', error);
+      console.error("Failed to send message:", error);
       res.status(500).json({ message: "Failed to send message" });
     }
   });
@@ -2742,7 +2816,7 @@ export function registerRoutes(app: Express): Server {
       if (!q) {
         return res.json([]);
       }
-      
+
       const messages = await storage.searchMessages(req.user.id, q as string);
       res.json(messages);
     } catch (error) {
@@ -2869,79 +2943,102 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/staff", requireAuth, requirePermission("staff.view"), async (req: any, res) => {
     try {
       // Get staff data directly from database to include associatedFacilities
-      let dbStaffData = await db.select({
-        id: staff.id,
-        firstName: staff.firstName,
-        lastName: staff.lastName,
-        email: staff.email,
-        phone: staff.phone,
-        specialty: staff.specialty,
-        department: staff.department,
-        employmentType: staff.employmentType,
-        profilePhoto: staff.profilePhoto,
-        associatedFacilities: staff.associatedFacilities,
-        isActive: staff.isActive,
-        hourlyRate: staff.hourlyRate,
-        location: staff.location,
-        bio: staff.bio,
-        certifications: staff.certifications,
-        reliabilityScore: staff.reliabilityScore,
-        createdAt: staff.createdAt,
-        updatedAt: staff.updatedAt,
-      }).from(staff).where(eq(staff.isActive, true));
-      
+      let dbStaffData = await db
+        .select({
+          id: staff.id,
+          firstName: staff.firstName,
+          lastName: staff.lastName,
+          email: staff.email,
+          phone: staff.phone,
+          specialty: staff.specialty,
+          department: staff.department,
+          employmentType: staff.employmentType,
+          profilePhoto: staff.profilePhoto,
+          associatedFacilities: staff.associatedFacilities,
+          isActive: staff.isActive,
+          hourlyRate: staff.hourlyRate,
+          location: staff.location,
+          bio: staff.bio,
+          certifications: staff.certifications,
+          reliabilityScore: staff.reliabilityScore,
+          createdAt: staff.createdAt,
+          updatedAt: staff.updatedAt,
+        })
+        .from(staff)
+        .where(eq(staff.isActive, true));
+
       // Format staff data for consistency with frontend expectations
-      dbStaffData = dbStaffData.map(staffMember => {
+      dbStaffData = dbStaffData.map((staffMember) => {
         return {
           ...staffMember,
           name: `${staffMember.firstName} ${staffMember.lastName}`, // Create full name for backward compatibility
-          role: staffMember.employmentType || 'unknown',
-          associatedFacilities: Array.isArray(staffMember.associatedFacilities) ? staffMember.associatedFacilities : [],
+          role: staffMember.employmentType || "unknown",
+          associatedFacilities: Array.isArray(staffMember.associatedFacilities)
+            ? staffMember.associatedFacilities
+            : [],
           avatar: staffMember.profilePhoto,
         };
       });
-      
+
       // Implement facility-based access control for facility users
       const facilityUserRoles = [
-        'facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing', 
-        'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin'
+        "facility_administrator",
+        "scheduling_coordinator",
+        "hr_manager",
+        "billing",
+        "supervisor",
+        "director_of_nursing",
+        "viewer",
+        "corporate",
+        "regional_director",
+        "facility_admin",
       ];
-      
+
       if (facilityUserRoles.includes(req.user.role) && req.user.facility_id) {
-        console.log(`[STAFF ACCESS CONTROL] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) requesting staff data for facility ${req.user.facility_id}`);
-        
+          `[STAFF ACCESS CONTROL] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) requesting staff data for facility ${req.user.facility_id}`
+        );
+
         // For facility users, only return staff associated with their facilities
         // Since staff table doesn't have facility_id, we'll filter by similar locations or other criteria
         // For now, we'll implement a basic filtering mechanism
         const userFacilityId = req.user.facility_id;
-        
+
         // Get the user's facility information
-        const userFacility = await db.select().from(facilities).where(eq(facilities.id, userFacilityId)).limit(1);
-        
+        const userFacility = await db
+          .select()
+          .from(facilities)
+          .where(eq(facilities.id, userFacilityId))
+          .limit(1);
+
         if (userFacility.length > 0) {
           const facilityName = userFacility[0].name;
-          console.log(`[STAFF ACCESS CONTROL] Filtering staff for facility: ${facilityName}`);
-          
+
           // For now, we'll create facility-specific staff assignments
           // This would normally be done through proper facility-staff associations
           const facilityStaffMapping = {
             1: dbStaffData.slice(0, Math.ceil(dbStaffData.length / 3)), // General Hospital
-            2: dbStaffData.slice(Math.ceil(dbStaffData.length / 3), Math.ceil(2 * dbStaffData.length / 3)), // Sunset Nursing Home  
-            3: dbStaffData.slice(Math.ceil(2 * dbStaffData.length / 3)) // Care Medical Center
+            2: dbStaffData.slice(
+              Math.ceil(dbStaffData.length / 3),
+              Math.ceil((2 * dbStaffData.length) / 3)
+            ), // Sunset Nursing Home
+            3: dbStaffData.slice(Math.ceil((2 * dbStaffData.length) / 3)), // Care Medical Center
           };
-          
+
           dbStaffData = facilityStaffMapping[userFacilityId] || dbStaffData.slice(0, 5);
-          console.log(`[STAFF ACCESS CONTROL] Returning ${dbStaffData.length} staff members for facility ${userFacilityId}`);
+            `[STAFF ACCESS CONTROL] Returning ${dbStaffData.length} staff members for facility ${userFacilityId}`
+          );
         }
-      } else if (req.user.role === 'super_admin') {
-        console.log(`[STAFF ACCESS CONTROL] Super admin ${req.user.firstName} ${req.user.lastName} accessing all staff data`);
+      } else if (req.user.role === "super_admin") {
+          `[STAFF ACCESS CONTROL] Super admin ${req.user.firstName} ${req.user.lastName} accessing all staff data`
+        );
         // Super admins can see all staff
       } else {
-        console.log(`[STAFF ACCESS CONTROL] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) has limited staff access`);
+          `[STAFF ACCESS CONTROL] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) has limited staff access`
+        );
         // Other users get limited access
         dbStaffData = dbStaffData.slice(0, 5);
       }
-      
+
       // Map database staff to frontend format with extended profile information
       const staffData = dbStaffData.map((staff, index) => ({
         id: staff.id,
@@ -2955,7 +3052,12 @@ export function registerRoutes(app: Express): Server {
         avatar: staff.avatar,
         // Extended profile data
         phone: index === 0 ? "(555) 123-4567" : index === 1 ? "(555) 234-5678" : "(555) 345-6789",
-        department: staff.specialty === "RN" ? "ICU" : staff.specialty === "LPN" ? "Medical/Surgical" : "Emergency",
+        department:
+          staff.specialty === "RN"
+            ? "ICU"
+            : staff.specialty === "LPN"
+              ? "Medical/Surgical"
+              : "Emergency",
         compliant: true,
         activeCredentials: 8,
         expiringCredentials: 0,
@@ -2982,36 +3084,41 @@ export function registerRoutes(app: Express): Server {
         emergencyContact: {
           name: "Emergency Contact",
           phone: "(555) 999-0000",
-          relationship: "Spouse"
+          relationship: "Spouse",
         },
-        workHistory: [{
-          facility: "Healthcare Facility",
-          position: staff.specialty + " Nurse",
-          startDate: "2020-01-01",
-          description: "Providing quality patient care"
-        }],
-        education: [{
-          institution: "Nursing School",
-          degree: "Bachelor of Science in Nursing",
-          graduationYear: 2019,
-          gpa: 3.8
-        }],
-        documents: [{
-          type: "License",
-          name: staff.specialty + " License",
-          uploadDate: "2024-01-01",
-          expirationDate: "2026-01-01",
-          verified: true
-        }],
+        workHistory: [
+          {
+            facility: "Healthcare Facility",
+            position: staff.specialty + " Nurse",
+            startDate: "2020-01-01",
+            description: "Providing quality patient care",
+          },
+        ],
+        education: [
+          {
+            institution: "Nursing School",
+            degree: "Bachelor of Science in Nursing",
+            graduationYear: 2019,
+            gpa: 3.8,
+          },
+        ],
+        documents: [
+          {
+            type: "License",
+            name: staff.specialty + " License",
+            uploadDate: "2024-01-01",
+            expirationDate: "2026-01-01",
+            verified: true,
+          },
+        ],
         socialStats: {
           profileViews: 200,
           shiftsCompleted: 150,
           ratings: 80,
-          endorsements: 20
-        }
+          endorsements: 20,
+        },
       }));
 
-      console.log(`[STAFF API] Returning ${staffData.length} staff members`);
       res.json(staffData);
     } catch (error) {
       console.error("Error fetching staff data:", error);
@@ -3023,15 +3130,16 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/facility-users", requireAuth, async (req: any, res) => {
     try {
       // Only super admins can access facility users management
-      if (req.user.role !== 'super_admin') {
+      if (req.user.role !== "super_admin") {
         return res.status(403).json({ message: "Access denied: Super admin required" });
       }
 
-      console.log(`[FACILITY USERS] Super admin ${req.user.firstName} ${req.user.lastName} accessing facility users`);
-      
+        `[FACILITY USERS] Super admin ${req.user.firstName} ${req.user.lastName} accessing facility users`
+      );
+
       // Get facility users data from unified service
       const facilityUsersData = await unifiedDataService.getFacilityUsersWithAssociations();
-      
+
       // Map to frontend format
       const facilityUsersFormatted = facilityUsersData.map((user, index) => ({
         id: user.id,
@@ -3048,13 +3156,15 @@ export function registerRoutes(app: Express): Server {
         facilityName: user.facilityName,
         teamMemberships: user.teamMemberships || [],
         isActive: user.isActive,
-        phone: user.phone || `(555) ${String(123 + index).padStart(3, '0')}-${String(4567 + index).padStart(4, '0')}`,
+        phone:
+          user.phone ||
+          `(555) ${String(123 + index).padStart(3, "0")}-${String(4567 + index).padStart(4, "0")}`,
         title: user.title,
         department: user.department,
         permissions: user.permissions,
         status: user.isActive ? "active" : "inactive",
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
+        updatedAt: user.updatedAt,
       }));
 
       res.json(facilityUsersFormatted);
@@ -3068,17 +3178,17 @@ export function registerRoutes(app: Express): Server {
   app.patch("/api/facility-users/:id", requireAuth, async (req: any, res) => {
     try {
       // Only super admins can edit facility users
-      if (req.user.role !== 'super_admin') {
+      if (req.user.role !== "super_admin") {
         return res.status(403).json({ message: "Access denied: Super admin required" });
       }
 
       const userId = parseInt(req.params.id);
       const updateData = req.body;
 
-      console.log(`[FACILITY USERS] Super admin updating facility user ${userId}:`, updateData);
 
       // Update the facility user in the facility_users table
-      const updatedUser = await db.update(facilityUsers)
+      const updatedUser = await db
+        .update(facilityUsers)
         .set({
           firstName: updateData.firstName,
           lastName: updateData.lastName,
@@ -3091,7 +3201,7 @@ export function registerRoutes(app: Express): Server {
           title: updateData.title,
           department: updateData.department,
           permissions: updateData.permissions,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(facilityUsers.id, userId))
         .returning();
@@ -3110,37 +3220,41 @@ export function registerRoutes(app: Express): Server {
   // Team management API - Associate facility users with teams
   app.post("/api/teams/:teamId/members", requireAuth, async (req: any, res) => {
     try {
-      if (req.user.role !== 'super_admin') {
+      if (req.user.role !== "super_admin") {
         return res.status(403).json({ message: "Access denied: Super admin required" });
       }
 
       const teamId = parseInt(req.params.teamId);
       const { userId, userType, role } = req.body;
 
-      console.log(`[TEAMS] Adding user ${userId} to team ${teamId} with role ${role}`);
 
-      if (userType === 'facility') {
+      if (userType === "facility") {
         // For facility users, create association in facility_user_team_memberships table
-        const [facilityUserTeam] = await db.insert(facilityUserTeamMemberships)
+        const [facilityUserTeam] = await db
+          .insert(facilityUserTeamMemberships)
           .values({
             facilityUserId: userId,
             teamId: teamId,
-            role: role || 'member',
+            role: role || "member",
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
           })
           .returning();
 
-        res.json({ message: "Facility user added to team successfully", teamMember: facilityUserTeam });
+        res.json({
+          message: "Facility user added to team successfully",
+          teamMember: facilityUserTeam,
+        });
       } else {
         // For regular users, use team_members table
-        const [teamMember] = await db.insert(teamMembers)
+        const [teamMember] = await db
+          .insert(teamMembers)
           .values({
             userId: userId,
             teamId: teamId,
-            role: role || 'member',
+            role: role || "member",
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
           })
           .returning();
 
@@ -3155,39 +3269,37 @@ export function registerRoutes(app: Express): Server {
   // Remove team member (handles both facility users and regular users)
   app.delete("/api/teams/:teamId/members/:memberId", requireAuth, async (req: any, res) => {
     try {
-      if (req.user.role !== 'super_admin') {
+      if (req.user.role !== "super_admin") {
         return res.status(403).json({ message: "Access denied: Super admin required" });
       }
 
       const teamId = parseInt(req.params.teamId);
       const memberId = parseInt(req.params.memberId);
 
-      console.log(`[TEAMS] Removing member ${memberId} from team ${teamId}`);
 
       // Try to remove from facility_user_team_memberships first
-      const facilityUserRemoval = await db.delete(facilityUserTeamMemberships)
-        .where(and(
-          eq(facilityUserTeamMemberships.facilityUserId, memberId),
-          eq(facilityUserTeamMemberships.teamId, teamId)
-        ))
+      const facilityUserRemoval = await db
+        .delete(facilityUserTeamMemberships)
+        .where(
+          and(
+            eq(facilityUserTeamMemberships.facilityUserId, memberId),
+            eq(facilityUserTeamMemberships.teamId, teamId)
+          )
+        )
         .returning();
 
       if (facilityUserRemoval.length > 0) {
-        console.log(`[TEAMS] Removed facility user ${memberId} from team ${teamId}`);
         res.json({ message: "Member removed from team successfully" });
         return;
       }
 
       // If not found in facility users, try regular team members
-      const regularUserRemoval = await db.delete(teamMembers)
-        .where(and(
-          eq(teamMembers.userId, memberId),
-          eq(teamMembers.teamId, teamId)
-        ))
+      const regularUserRemoval = await db
+        .delete(teamMembers)
+        .where(and(eq(teamMembers.userId, memberId), eq(teamMembers.teamId, teamId)))
         .returning();
 
       if (regularUserRemoval.length > 0) {
-        console.log(`[TEAMS] Removed regular user ${memberId} from team ${teamId}`);
         res.json({ message: "Member removed from team successfully" });
       } else {
         res.status(404).json({ message: "Team member not found" });
@@ -3201,32 +3313,33 @@ export function registerRoutes(app: Express): Server {
   // Get facility association counts for facility management
   app.get("/api/facilities/:facilityId/counts", requireAuth, async (req: any, res) => {
     try {
-      if (req.user.role !== 'super_admin') {
+      if (req.user.role !== "super_admin") {
         return res.status(403).json({ message: "Access denied: Super admin required" });
       }
 
       const facilityId = parseInt(req.params.facilityId);
-      
+
       // Count staff associated with this facility (from staff table)
-      const staffCount = await db.select({ count: sql<number>`count(*)` })
+      const staffCount = await db
+        .select({ count: sql<number>`count(*)` })
         .from(staff)
-        .where(and(
-          eq(staff.isActive, true),
-          sql`${staff.location} LIKE '%${facilityId === 1 ? 'Portland' : facilityId === 2 ? 'Beaverton' : 'Hillsboro'}%'`
-        ));
+        .where(
+          and(
+            eq(staff.isActive, true),
+            sql`${staff.location} LIKE '%${facilityId === 1 ? "Portland" : facilityId === 2 ? "Beaverton" : "Hillsboro"}%'`
+          )
+        );
 
       // Count facility users associated with this facility
-      const facilityUserCount = await db.select({ count: sql<number>`count(*)` })
+      const facilityUserCount = await db
+        .select({ count: sql<number>`count(*)` })
         .from(users)
-        .where(and(
-          eq(users.facilityId, facilityId),
-          eq(users.isActive, true)
-        ));
+        .where(and(eq(users.facilityId, facilityId), eq(users.isActive, true)));
 
       res.json({
         facilityId,
         staffCount: staffCount[0]?.count || 0,
-        facilityUserCount: facilityUserCount[0]?.count || 0
+        facilityUserCount: facilityUserCount[0]?.count || 0,
       });
     } catch (error) {
       console.error("Error fetching facility counts:", error);
@@ -3239,8 +3352,8 @@ export function registerRoutes(app: Express): Server {
     try {
       const staffId = parseInt(req.params.id);
       const dbStaffData = await unifiedDataService.getStaffWithAssociations();
-      const staff = dbStaffData.find(s => s.id === staffId);
-      
+      const staff = dbStaffData.find((s) => s.id === staffId);
+
       if (!staff) {
         return res.status(404).json({ message: "Staff member not found" });
       }
@@ -3281,33 +3394,39 @@ export function registerRoutes(app: Express): Server {
         emergencyContact: {
           name: "Emergency Contact",
           phone: "(555) 999-0000",
-          relationship: "Spouse"
+          relationship: "Spouse",
         },
-        workHistory: [{
-          facility: "Healthcare Facility",
-          position: staff.specialty + " Nurse",
-          startDate: "2020-01-01",
-          description: "Providing quality patient care"
-        }],
-        education: [{
-          institution: "Nursing School",
-          degree: "Bachelor of Science in Nursing",
-          graduationYear: 2019,
-          gpa: 3.8
-        }],
-        documents: [{
-          type: "License",
-          name: staff.specialty + " License",
-          uploadDate: "2024-01-01",
-          expirationDate: "2026-01-01",
-          verified: true
-        }],
+        workHistory: [
+          {
+            facility: "Healthcare Facility",
+            position: staff.specialty + " Nurse",
+            startDate: "2020-01-01",
+            description: "Providing quality patient care",
+          },
+        ],
+        education: [
+          {
+            institution: "Nursing School",
+            degree: "Bachelor of Science in Nursing",
+            graduationYear: 2019,
+            gpa: 3.8,
+          },
+        ],
+        documents: [
+          {
+            type: "License",
+            name: staff.specialty + " License",
+            uploadDate: "2024-01-01",
+            expirationDate: "2026-01-01",
+            verified: true,
+          },
+        ],
         socialStats: {
           profileViews: 200,
           shiftsCompleted: 150,
           ratings: 80,
-          endorsements: 20
-        }
+          endorsements: 20,
+        },
       };
 
       res.json(profileData);
@@ -3322,7 +3441,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const staffId = parseInt(req.params.id);
       const { content } = req.body;
-      
+
       if (!content) {
         return res.status(400).json({ message: "Message content is required" });
       }
@@ -3334,14 +3453,14 @@ export function registerRoutes(app: Express): Server {
         conversationId: `user_${(req as any).user.id}_staff_${staffId}`,
         content,
         messageType: "text",
-        isRead: false
+        isRead: false,
       };
 
       const message = await unifiedDataService.createMessage(messageData);
-      
-      res.json({ 
+
+      res.json({
         message: "Message sent successfully",
-        data: message
+        data: message,
       });
     } catch (error) {
       console.error("Error sending message:", error);
@@ -3389,33 +3508,39 @@ export function registerRoutes(app: Express): Server {
           emergencyContact: {
             name: "John Johnson",
             phone: "(555) 123-9999",
-            relationship: "Spouse"
+            relationship: "Spouse",
           },
-          workHistory: [{
-            facility: "Portland General Hospital",
-            position: "ICU Nurse",
-            startDate: "2017-01-15",
-            description: "Providing critical care nursing in intensive care unit"
-          }],
-          education: [{
-            institution: "Oregon Health & Science University",
-            degree: "Bachelor of Science in Nursing",
-            graduationYear: 2016,
-            gpa: 3.8
-          }],
-          documents: [{
-            type: "License",
-            name: "RN License",
-            uploadDate: "2024-01-15",
-            expirationDate: "2026-01-15",
-            verified: true
-          }],
+          workHistory: [
+            {
+              facility: "Portland General Hospital",
+              position: "ICU Nurse",
+              startDate: "2017-01-15",
+              description: "Providing critical care nursing in intensive care unit",
+            },
+          ],
+          education: [
+            {
+              institution: "Oregon Health & Science University",
+              degree: "Bachelor of Science in Nursing",
+              graduationYear: 2016,
+              gpa: 3.8,
+            },
+          ],
+          documents: [
+            {
+              type: "License",
+              name: "RN License",
+              uploadDate: "2024-01-15",
+              expirationDate: "2026-01-15",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 245,
             shiftsCompleted: 156,
             ratings: 89,
-            endorsements: 23
-          }
+            endorsements: 23,
+          },
         },
         {
           id: 2,
@@ -3452,34 +3577,40 @@ export function registerRoutes(app: Express): Server {
           emergencyContact: {
             name: "Lisa Chen",
             phone: "(555) 234-9999",
-            relationship: "Wife"
+            relationship: "Wife",
           },
-          workHistory: [{
-            facility: "Seattle Emergency Center",
-            position: "Emergency Nurse",
-            startDate: "2012-03-01",
-            description: "Emergency medicine and trauma care specialist"
-          }],
-          education: [{
-            institution: "University of Washington",
-            degree: "Bachelor of Science in Nursing",
-            graduationYear: 2011,
-            gpa: 3.9
-          }],
-          documents: [{
-            type: "License",
-            name: "RN License",
-            uploadDate: "2024-02-01",
-            expirationDate: "2026-02-01",
-            verified: true
-          }],
+          workHistory: [
+            {
+              facility: "Seattle Emergency Center",
+              position: "Emergency Nurse",
+              startDate: "2012-03-01",
+              description: "Emergency medicine and trauma care specialist",
+            },
+          ],
+          education: [
+            {
+              institution: "University of Washington",
+              degree: "Bachelor of Science in Nursing",
+              graduationYear: 2011,
+              gpa: 3.9,
+            },
+          ],
+          documents: [
+            {
+              type: "License",
+              name: "RN License",
+              uploadDate: "2024-02-01",
+              expirationDate: "2026-02-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 189,
             shiftsCompleted: 89,
             ratings: 67,
-            endorsements: 18
+            endorsements: 18,
           },
-          associatedFacilities: [] // Will be populated from database
+          associatedFacilities: [], // Will be populated from database
         },
         {
           id: 3,
@@ -3516,33 +3647,39 @@ export function registerRoutes(app: Express): Server {
           emergencyContact: {
             name: "Bob Smith",
             phone: "(555) 345-9999",
-            relationship: "Husband"
+            relationship: "Husband",
           },
-          workHistory: [{
-            facility: "Portland Medical Center",
-            position: "Med/Surg Nurse",
-            startDate: "2019-06-01",
-            description: "Medical surgical nursing and patient care"
-          }],
-          education: [{
-            institution: "Portland State University",
-            degree: "Bachelor of Science in Nursing",
-            graduationYear: 2019,
-            gpa: 3.7
-          }],
-          documents: [{
-            type: "License",
-            name: "RN License",
-            uploadDate: "2024-03-01",
-            expirationDate: "2026-03-01",
-            verified: true
-          }],
+          workHistory: [
+            {
+              facility: "Portland Medical Center",
+              position: "Med/Surg Nurse",
+              startDate: "2019-06-01",
+              description: "Medical surgical nursing and patient care",
+            },
+          ],
+          education: [
+            {
+              institution: "Portland State University",
+              degree: "Bachelor of Science in Nursing",
+              graduationYear: 2019,
+              gpa: 3.7,
+            },
+          ],
+          documents: [
+            {
+              type: "License",
+              name: "RN License",
+              uploadDate: "2024-03-01",
+              expirationDate: "2026-03-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 156,
             shiftsCompleted: 98,
             ratings: 45,
-            endorsements: 12
-          }
+            endorsements: 12,
+          },
         },
         {
           id: 42,
@@ -3579,33 +3716,39 @@ export function registerRoutes(app: Express): Server {
           emergencyContact: {
             name: "David Kim",
             phone: "(503) 555-9999",
-            relationship: "Brother"
+            relationship: "Brother",
           },
-          workHistory: [{
-            facility: "Portland General Hospital",
-            position: "Surgical Technologist",
-            startDate: "2018-09-15",
-            description: "Operating room procedures and sterile technique specialist"
-          }],
-          education: [{
-            institution: "Portland Community College",
-            degree: "Associate Degree in Surgical Technology",
-            graduationYear: 2018,
-            gpa: 3.9
-          }],
-          documents: [{
-            type: "Certification",
-            name: "CST Certification",
-            uploadDate: "2024-04-01",
-            expirationDate: "2026-04-01",
-            verified: true
-          }],
+          workHistory: [
+            {
+              facility: "Portland General Hospital",
+              position: "Surgical Technologist",
+              startDate: "2018-09-15",
+              description: "Operating room procedures and sterile technique specialist",
+            },
+          ],
+          education: [
+            {
+              institution: "Portland Community College",
+              degree: "Associate Degree in Surgical Technology",
+              graduationYear: 2018,
+              gpa: 3.9,
+            },
+          ],
+          documents: [
+            {
+              type: "Certification",
+              name: "CST Certification",
+              uploadDate: "2024-04-01",
+              expirationDate: "2026-04-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 87,
             shiftsCompleted: 143,
             ratings: 52,
-            endorsements: 8
-          }
+            endorsements: 8,
+          },
         },
         {
           id: 5,
@@ -3645,22 +3788,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2023-03-15",
           profileCompletion: 95,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "license",
-            name: "Physical Therapy License",
-            number: "PT-2024-789",
-            issuer: "Oregon Board of Physical Therapy",
-            issuedDate: "2024-01-01",
-            expirationDate: "2026-01-01",
-            uploadDate: "2024-01-05",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "license",
+              name: "Physical Therapy License",
+              number: "PT-2024-789",
+              issuer: "Oregon Board of Physical Therapy",
+              issuedDate: "2024-01-01",
+              expirationDate: "2026-01-01",
+              uploadDate: "2024-01-05",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 167,
             shiftsCompleted: 145,
             ratings: 89,
-            endorsements: 23
-          }
+            endorsements: 23,
+          },
         },
         {
           id: 6,
@@ -3700,22 +3845,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2022-08-20",
           profileCompletion: 100,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "certification",
-            name: "Registered Respiratory Therapist",
-            number: "RRT-2022-456",
-            issuer: "NBRC",
-            issuedDate: "2022-06-01",
-            expirationDate: "2025-06-01",
-            uploadDate: "2022-08-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "certification",
+              name: "Registered Respiratory Therapist",
+              number: "RRT-2022-456",
+              issuer: "NBRC",
+              issuedDate: "2022-06-01",
+              expirationDate: "2025-06-01",
+              uploadDate: "2022-08-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 203,
             shiftsCompleted: 198,
             ratings: 156,
-            endorsements: 34
-          }
+            endorsements: 34,
+          },
         },
         {
           id: 7,
@@ -3755,22 +3902,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2023-11-10",
           profileCompletion: 88,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "certification",
-            name: "Medical Laboratory Technician",
-            number: "MLT-2023-789",
-            issuer: "ASCP",
-            issuedDate: "2023-10-01",
-            expirationDate: "2026-10-01",
-            uploadDate: "2023-11-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "certification",
+              name: "Medical Laboratory Technician",
+              number: "MLT-2023-789",
+              issuer: "ASCP",
+              issuedDate: "2023-10-01",
+              expirationDate: "2026-10-01",
+              uploadDate: "2023-11-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 98,
             shiftsCompleted: 87,
             ratings: 67,
-            endorsements: 12
-          }
+            endorsements: 12,
+          },
         },
         {
           id: 8,
@@ -3810,22 +3959,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2024-01-15",
           profileCompletion: 92,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "certification",
-            name: "Certified Pharmacy Technician",
-            number: "CPhT-2024-123",
-            issuer: "PTCB",
-            issuedDate: "2024-01-01",
-            expirationDate: "2026-01-01",
-            uploadDate: "2024-01-10",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "certification",
+              name: "Certified Pharmacy Technician",
+              number: "CPhT-2024-123",
+              issuer: "PTCB",
+              issuedDate: "2024-01-01",
+              expirationDate: "2026-01-01",
+              uploadDate: "2024-01-10",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 134,
             shiftsCompleted: 112,
             ratings: 89,
-            endorsements: 18
-          }
+            endorsements: 18,
+          },
         },
         {
           id: 9,
@@ -3865,22 +4016,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2022-05-10",
           profileCompletion: 97,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "certification",
-            name: "Radiologic Technologist",
-            number: "RT-2022-567",
-            issuer: "ARRT",
-            issuedDate: "2022-03-01",
-            expirationDate: "2025-03-01",
-            uploadDate: "2022-05-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "certification",
+              name: "Radiologic Technologist",
+              number: "RT-2022-567",
+              issuer: "ARRT",
+              issuedDate: "2022-03-01",
+              expirationDate: "2025-03-01",
+              uploadDate: "2022-05-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 189,
             shiftsCompleted: 167,
             ratings: 134,
-            endorsements: 28
-          }
+            endorsements: 28,
+          },
         },
         {
           id: 10,
@@ -3920,22 +4073,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2023-02-20",
           profileCompletion: 100,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "license",
-            name: "Occupational Therapist License",
-            number: "OT-2023-345",
-            issuer: "Oregon Board of Occupational Therapy",
-            issuedDate: "2023-01-01",
-            expirationDate: "2025-01-01",
-            uploadDate: "2023-02-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "license",
+              name: "Occupational Therapist License",
+              number: "OT-2023-345",
+              issuer: "Oregon Board of Occupational Therapy",
+              issuedDate: "2023-01-01",
+              expirationDate: "2025-01-01",
+              uploadDate: "2023-02-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 221,
             shiftsCompleted: 142,
             ratings: 128,
-            endorsements: 41
-          }
+            endorsements: 41,
+          },
         },
         {
           id: 11,
@@ -3975,22 +4130,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2023-09-01",
           profileCompletion: 85,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "certification",
-            name: "Certified Nursing Assistant",
-            number: "CNA-2023-456",
-            issuer: "Oregon State Board of Nursing",
-            issuedDate: "2023-08-01",
-            expirationDate: "2025-08-01",
-            uploadDate: "2023-09-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "certification",
+              name: "Certified Nursing Assistant",
+              number: "CNA-2023-456",
+              issuer: "Oregon State Board of Nursing",
+              issuedDate: "2023-08-01",
+              expirationDate: "2025-08-01",
+              uploadDate: "2023-09-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 76,
             shiftsCompleted: 89,
             ratings: 71,
-            endorsements: 9
-          }
+            endorsements: 9,
+          },
         },
         {
           id: 12,
@@ -4030,22 +4187,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2022-11-15",
           profileCompletion: 94,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "license",
-            name: "Licensed Practical Nurse",
-            number: "LPN-2022-789",
-            issuer: "Washington State Nursing Commission",
-            issuedDate: "2022-10-01",
-            expirationDate: "2024-10-01",
-            uploadDate: "2022-11-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "license",
+              name: "Licensed Practical Nurse",
+              number: "LPN-2022-789",
+              issuer: "Washington State Nursing Commission",
+              issuedDate: "2022-10-01",
+              expirationDate: "2024-10-01",
+              uploadDate: "2022-11-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 145,
             shiftsCompleted: 156,
             ratings: 123,
-            endorsements: 26
-          }
+            endorsements: 26,
+          },
         },
         {
           id: 13,
@@ -4085,22 +4244,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2022-03-10",
           profileCompletion: 96,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "certification",
-            name: "Certified Surgical Technologist",
-            number: "CST-2022-123",
-            issuer: "NBSTSA",
-            issuedDate: "2022-01-01",
-            expirationDate: "2026-01-01",
-            uploadDate: "2022-03-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "certification",
+              name: "Certified Surgical Technologist",
+              number: "CST-2022-123",
+              issuer: "NBSTSA",
+              issuedDate: "2022-01-01",
+              expirationDate: "2026-01-01",
+              uploadDate: "2022-03-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 198,
             shiftsCompleted: 178,
             ratings: 156,
-            endorsements: 32
-          }
+            endorsements: 32,
+          },
         },
         {
           id: 14,
@@ -4140,22 +4301,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2021-06-01",
           profileCompletion: 100,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "license",
-            name: "Registered Nurse License",
-            number: "RN-2021-456",
-            issuer: "Washington State Nursing Commission",
-            issuedDate: "2021-05-01",
-            expirationDate: "2024-05-01",
-            uploadDate: "2021-06-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "license",
+              name: "Registered Nurse License",
+              number: "RN-2021-456",
+              issuer: "Washington State Nursing Commission",
+              issuedDate: "2021-05-01",
+              expirationDate: "2024-05-01",
+              uploadDate: "2021-06-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 287,
             shiftsCompleted: 234,
             ratings: 198,
-            endorsements: 47
-          }
+            endorsements: 47,
+          },
         },
         {
           id: 15,
@@ -4195,22 +4358,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2021-01-20",
           profileCompletion: 98,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "license",
-            name: "Registered Nurse License",
-            number: "RN-2021-789",
-            issuer: "Oregon State Board of Nursing",
-            issuedDate: "2021-01-01",
-            expirationDate: "2024-01-01",
-            uploadDate: "2021-01-15",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "license",
+              name: "Registered Nurse License",
+              number: "RN-2021-789",
+              issuer: "Oregon State Board of Nursing",
+              issuedDate: "2021-01-01",
+              expirationDate: "2024-01-01",
+              uploadDate: "2021-01-15",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 312,
             shiftsCompleted: 289,
             ratings: 245,
-            endorsements: 58
-          }
+            endorsements: 58,
+          },
         },
         {
           id: 16,
@@ -4250,22 +4415,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2023-04-10",
           profileCompletion: 89,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "certification",
-            name: "Certified Nursing Assistant",
-            number: "CNA-2023-789",
-            issuer: "Washington State Department of Health",
-            issuedDate: "2023-03-01",
-            expirationDate: "2025-03-01",
-            uploadDate: "2023-04-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "certification",
+              name: "Certified Nursing Assistant",
+              number: "CNA-2023-789",
+              issuer: "Washington State Department of Health",
+              issuedDate: "2023-03-01",
+              expirationDate: "2025-03-01",
+              uploadDate: "2023-04-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 98,
             shiftsCompleted: 124,
             ratings: 89,
-            endorsements: 15
-          }
+            endorsements: 15,
+          },
         },
         {
           id: 17,
@@ -4305,22 +4472,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2022-07-15",
           profileCompletion: 95,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "license",
-            name: "Registered Nurse License",
-            number: "RN-2022-234",
-            issuer: "Oregon State Board of Nursing",
-            issuedDate: "2022-06-01",
-            expirationDate: "2025-06-01",
-            uploadDate: "2022-07-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "license",
+              name: "Registered Nurse License",
+              number: "RN-2022-234",
+              issuer: "Oregon State Board of Nursing",
+              issuedDate: "2022-06-01",
+              expirationDate: "2025-06-01",
+              uploadDate: "2022-07-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 176,
             shiftsCompleted: 203,
             ratings: 167,
-            endorsements: 29
-          }
+            endorsements: 29,
+          },
         },
         {
           id: 18,
@@ -4360,22 +4529,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2022-09-01",
           profileCompletion: 93,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "license",
-            name: "Licensed Practical Nurse",
-            number: "LPN-2022-567",
-            issuer: "Washington State Nursing Commission",
-            issuedDate: "2022-08-01",
-            expirationDate: "2024-08-01",
-            uploadDate: "2022-09-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "license",
+              name: "Licensed Practical Nurse",
+              number: "LPN-2022-567",
+              issuer: "Washington State Nursing Commission",
+              issuedDate: "2022-08-01",
+              expirationDate: "2024-08-01",
+              uploadDate: "2022-09-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 154,
             shiftsCompleted: 167,
             ratings: 134,
-            endorsements: 31
-          }
+            endorsements: 31,
+          },
         },
         {
           id: 19,
@@ -4415,22 +4586,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2023-01-20",
           profileCompletion: 87,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "certification",
-            name: "Patient Care Technician",
-            number: "PCT-2023-123",
-            issuer: "Oregon Health Authority",
-            issuedDate: "2023-01-01",
-            expirationDate: "2025-01-01",
-            uploadDate: "2023-01-15",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "certification",
+              name: "Patient Care Technician",
+              number: "PCT-2023-123",
+              issuer: "Oregon Health Authority",
+              issuedDate: "2023-01-01",
+              expirationDate: "2025-01-01",
+              uploadDate: "2023-01-15",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 109,
             shiftsCompleted: 134,
             ratings: 112,
-            endorsements: 18
-          }
+            endorsements: 18,
+          },
         },
         {
           id: 20,
@@ -4470,22 +4643,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2024-02-01",
           profileCompletion: 84,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "certification",
-            name: "Certified Medical Assistant",
-            number: "CMA-2024-456",
-            issuer: "AAMA",
-            issuedDate: "2024-01-01",
-            expirationDate: "2029-01-01",
-            uploadDate: "2024-02-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "certification",
+              name: "Certified Medical Assistant",
+              number: "CMA-2024-456",
+              issuer: "AAMA",
+              issuedDate: "2024-01-01",
+              expirationDate: "2029-01-01",
+              uploadDate: "2024-02-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 67,
             shiftsCompleted: 78,
             ratings: 56,
-            endorsements: 11
-          }
+            endorsements: 11,
+          },
         },
         {
           id: 21,
@@ -4525,22 +4700,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2022-12-01",
           profileCompletion: 91,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "certification",
-            name: "Certified Nursing Assistant",
-            number: "CNA-2022-890",
-            issuer: "Oregon State Board of Nursing",
-            issuedDate: "2022-11-01",
-            expirationDate: "2024-11-01",
-            uploadDate: "2022-12-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "certification",
+              name: "Certified Nursing Assistant",
+              number: "CNA-2022-890",
+              issuer: "Oregon State Board of Nursing",
+              issuedDate: "2022-11-01",
+              expirationDate: "2024-11-01",
+              uploadDate: "2022-12-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 143,
             shiftsCompleted: 198,
             ratings: 167,
-            endorsements: 25
-          }
+            endorsements: 25,
+          },
         },
         {
           id: 22,
@@ -4580,22 +4757,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2021-10-15",
           profileCompletion: 96,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "license",
-            name: "Licensed Practical Nurse",
-            number: "LPN-2021-345",
-            issuer: "Washington State Nursing Commission",
-            issuedDate: "2021-09-01",
-            expirationDate: "2023-09-01",
-            uploadDate: "2021-10-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "license",
+              name: "Licensed Practical Nurse",
+              number: "LPN-2021-345",
+              issuer: "Washington State Nursing Commission",
+              issuedDate: "2021-09-01",
+              expirationDate: "2023-09-01",
+              uploadDate: "2021-10-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 201,
             shiftsCompleted: 223,
             ratings: 189,
-            endorsements: 38
-          }
+            endorsements: 38,
+          },
         },
         {
           id: 23,
@@ -4635,22 +4814,24 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2020-08-01",
           profileCompletion: 100,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "license",
-            name: "Certified Registered Nurse Anesthetist",
-            number: "CRNA-2020-123",
-            issuer: "Oregon State Board of Nursing",
-            issuedDate: "2020-07-01",
-            expirationDate: "2024-07-01",
-            uploadDate: "2020-08-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "license",
+              name: "Certified Registered Nurse Anesthetist",
+              number: "CRNA-2020-123",
+              issuer: "Oregon State Board of Nursing",
+              issuedDate: "2020-07-01",
+              expirationDate: "2024-07-01",
+              uploadDate: "2020-08-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 387,
             shiftsCompleted: 312,
             ratings: 298,
-            endorsements: 67
-          }
+            endorsements: 67,
+          },
         },
         {
           id: 24,
@@ -4690,26 +4871,28 @@ export function registerRoutes(app: Express): Server {
           joinedDate: "2021-03-10",
           profileCompletion: 97,
           backgroundCheckStatus: "approved",
-          credentials: [{
-            type: "license",
-            name: "Registered Nurse License",
-            number: "RN-2021-678",
-            issuer: "Washington State Nursing Commission",
-            issuedDate: "2021-02-01",
-            expirationDate: "2024-02-01",
-            uploadDate: "2021-03-01",
-            verified: true
-          }],
+          credentials: [
+            {
+              type: "license",
+              name: "Registered Nurse License",
+              number: "RN-2021-678",
+              issuer: "Washington State Nursing Commission",
+              issuedDate: "2021-02-01",
+              expirationDate: "2024-02-01",
+              uploadDate: "2021-03-01",
+              verified: true,
+            },
+          ],
           socialStats: {
             profileViews: 245,
             shiftsCompleted: 267,
             ratings: 223,
-            endorsements: 49
+            endorsements: 49,
           },
-          associatedFacilities: [1, 2]
-        }
+          associatedFacilities: [1, 2],
+        },
       ];
-      
+
       res.json(legacyStaffData);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch staff data" });
@@ -4729,7 +4912,7 @@ export function registerRoutes(app: Express): Server {
           timestamp: "2025-06-21T10:00:00Z",
           likes: 12,
           comments: 3,
-          attachments: []
+          attachments: [],
         },
         {
           id: 2,
@@ -4740,8 +4923,8 @@ export function registerRoutes(app: Express): Server {
           timestamp: "2025-06-20T15:30:00Z",
           likes: 8,
           comments: 1,
-          attachments: []
-        }
+          attachments: [],
+        },
       ];
       res.json(samplePosts);
     } catch (error) {
@@ -4753,20 +4936,20 @@ export function registerRoutes(app: Express): Server {
   app.patch("/api/staff/:id", requireAuth, async (req: any, res) => {
     const startTime = Date.now();
     const context = analytics.getContextFromRequest(req);
-    
+
     try {
       const staffId = parseInt(req.params.id);
-      
+
       // Only allow users to update their own profile
       if (req.user.id !== staffId) {
         // Track unauthorized update attempt
-        await analytics.trackStaff('update', staffId, context, {
-          reason: 'unauthorized_update',
+        await analytics.trackStaff("update", staffId, context, {
+          reason: "unauthorized_update",
           attemptedBy: req.user.id,
           targetStaffId: staffId,
-          success: false
+          success: false,
         });
-        
+
         return res.status(403).json({ message: "You can only update your own profile" });
       }
 
@@ -4782,7 +4965,7 @@ export function registerRoutes(app: Express): Server {
         skills,
         certifications,
         linkedIn,
-        portfolio
+        portfolio,
       } = req.body;
 
       // For now, just return success since we're using in-memory data
@@ -4801,30 +4984,30 @@ export function registerRoutes(app: Express): Server {
         certifications: certifications || [],
         linkedIn,
         portfolio,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       // Track successful staff update
-      await analytics.trackStaff('update', staffId, context, {
-        fieldsUpdated: Object.keys(req.body).filter(key => req.body[key] !== undefined),
+      await analytics.trackStaff("update", staffId, context, {
+        fieldsUpdated: Object.keys(req.body).filter((key) => req.body[key] !== undefined),
         hasSkills: skills && skills.length > 0,
         hasCertifications: certifications && certifications.length > 0,
         hasPortfolio: !!portfolio,
         hasLinkedIn: !!linkedIn,
         hourlyRate: parseFloat(hourlyRate) || 0,
         success: true,
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       });
 
       res.json(updatedProfile);
     } catch (error) {
       // Track failed staff update
-      await analytics.trackStaff('update', req.params.id, context, {
-        reason: 'update_failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        success: false
+      await analytics.trackStaff("update", req.params.id, context, {
+        reason: "update_failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+        success: false,
       });
-      
+
       console.error("Profile update error:", error);
       res.status(500).json({ message: "Failed to update profile" });
     }
@@ -4995,7 +5178,7 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/time-clock", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      
+
       // Get recent time clock entries for the user
       const entries = [
         {
@@ -5006,10 +5189,10 @@ export function registerRoutes(app: Express): Server {
           clockOutTime: "2025-06-22T19:30:00Z",
           hoursWorked: 12.5,
           status: "completed",
-          location: "ICU Unit"
-        }
+          location: "ICU Unit",
+        },
       ];
-      
+
       res.json(entries);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch time clock entries" });
@@ -5019,7 +5202,7 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/time-clock/status", requireAuth, async (req: any, res) => {
     try {
       const userId = req.user.id;
-      
+
       // Check if user has an active clock-in entry
       const activeEntry = {
         id: null,
@@ -5027,11 +5210,11 @@ export function registerRoutes(app: Express): Server {
         shiftId: null,
         canClockIn: true,
         canClockOut: false,
-        upcomingShift: null
+        upcomingShift: null,
       };
-      
+
       // Get user's shifts for today to validate clock-in eligibility
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date().toISOString().split("T")[0];
       // For demo purposes, simulate getting user's shifts for today
       const todayShifts = [
         {
@@ -5041,22 +5224,22 @@ export function registerRoutes(app: Express): Server {
           startTime: "07:00",
           endTime: "19:00",
           department: "ICU",
-          specialty: "RN"
-        }
-      ].filter(shift => shift.assignedStaffId === userId);
-      
+          specialty: "RN",
+        },
+      ].filter((shift) => shift.assignedStaffId === userId);
+
       if (todayShifts.length > 0) {
         const shift = todayShifts[0];
         const now = new Date();
         const shiftStart = new Date(`${shift.date}T${shift.startTime}`);
         const earliestClockIn = new Date(shiftStart.getTime() - 30 * 60 * 1000); // 30 minutes before
-        
+
         activeEntry.upcomingShift = shift as any;
         activeEntry.canClockIn = now >= earliestClockIn;
       } else {
         activeEntry.canClockIn = false;
       }
-      
+
       res.json(activeEntry);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch clock status" });
@@ -5067,9 +5250,9 @@ export function registerRoutes(app: Express): Server {
     try {
       const userId = req.user.id;
       const now = new Date();
-      
+
       // Validate shift assignment - only allow clock-in if user has an assigned shift today
-      const today = now.toISOString().split('T')[0];
+      const today = now.toISOString().split("T")[0];
       // For demo purposes, simulate getting user's shifts for today
       const todayShifts = [
         {
@@ -5079,30 +5262,30 @@ export function registerRoutes(app: Express): Server {
           startTime: "07:00",
           endTime: "19:00",
           department: "ICU",
-          specialty: "RN"
-        }
-      ].filter(shift => shift.assignedStaffId === userId);
-      
+          specialty: "RN",
+        },
+      ].filter((shift) => shift.assignedStaffId === userId);
+
       if (todayShifts.length === 0) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "No assigned shift found for today. Cannot clock in without a scheduled shift.",
-          canClockIn: false
+          canClockIn: false,
         });
       }
-      
+
       // Check if clock-in is within allowed time window (30 minutes before shift start)
       const shift = todayShifts[0];
       const shiftStart = new Date(`${shift.date}T${shift.startTime}`);
       const earliestClockIn = new Date(shiftStart.getTime() - 30 * 60 * 1000); // 30 minutes before
-      
+
       if (now < earliestClockIn) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: `Cannot clock in more than 30 minutes before shift start time (${shift.startTime})`,
           canClockIn: false,
-          earliestClockIn: earliestClockIn.toISOString()
+          earliestClockIn: earliestClockIn.toISOString(),
         });
       }
-      
+
       // Create time clock entry
       const entry = {
         id: Date.now(),
@@ -5110,13 +5293,13 @@ export function registerRoutes(app: Express): Server {
         shiftId: shift.id,
         clockInTime: now.toISOString(),
         location: req.body.location || shift.department,
-        status: "active"
+        status: "active",
       };
-      
+
       res.status(201).json({
         ...entry,
         message: "Successfully clocked in",
-        shift: shift
+        shift: shift,
       });
     } catch (error) {
       console.error("Clock-in error:", error);
@@ -5128,7 +5311,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const userId = req.user.id;
       const now = new Date();
-      
+
       // For demo purposes, simulate finding an active entry
       // In production, this would query the database
       const mockActiveEntry = {
@@ -5136,29 +5319,30 @@ export function registerRoutes(app: Express): Server {
         userId: userId,
         shiftId: 1,
         clockInTime: new Date(now.getTime() - 3600000).toISOString(), // 1 hour ago
-        status: "active"
+        status: "active",
       };
-      
+
       if (!mockActiveEntry) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: "No active clock-in found. Must clock in before clocking out.",
-          canClockOut: false
+          canClockOut: false,
         });
       }
-      
+
       // Calculate total hours worked
       const clockInTime = new Date(mockActiveEntry.clockInTime);
       const hoursWorked = (now.getTime() - clockInTime.getTime()) / (1000 * 60 * 60);
-      
+
       // Validate minimum shift duration (at least 1 hour)
       if (hoursWorked < 1) {
-        return res.status(400).json({ 
-          message: "Cannot clock out within 1 hour of clocking in. Minimum shift duration required.",
+        return res.status(400).json({
+          message:
+            "Cannot clock out within 1 hour of clocking in. Minimum shift duration required.",
           canClockOut: false,
-          hoursWorked: Math.round(hoursWorked * 100) / 100
+          hoursWorked: Math.round(hoursWorked * 100) / 100,
         });
       }
-      
+
       // Update time clock entry with clock-out information
       const completedEntry = {
         id: mockActiveEntry.id,
@@ -5168,12 +5352,12 @@ export function registerRoutes(app: Express): Server {
         clockOutTime: now.toISOString(),
         hoursWorked: Math.round(hoursWorked * 100) / 100, // Round to 2 decimal places
         location: req.body.location || "ICU Unit",
-        status: "completed"
+        status: "completed",
       };
-      
+
       res.json({
         ...completedEntry,
-        message: "Successfully clocked out"
+        message: "Successfully clocked out",
       });
     } catch (error) {
       console.error("Clock-out error:", error);
@@ -5812,79 +5996,82 @@ export function registerRoutes(app: Express): Server {
   // Note: Main facilities endpoint is already defined above
 
   // Deactivate all shift templates for a facility (used when facility is deactivated)
-  app.patch("/api/shift-templates/deactivate-by-facility/:facilityId", requireAuth, async (req, res) => {
-    // Check if user is superuser
-    if (req.user?.role !== "superuser") {
-      return res.status(403).json({ message: "Superuser access required" });
-    }
-    try {
-      const facilityId = parseInt(req.params.facilityId);
-      
-      if (!facilityId || isNaN(facilityId)) {
-        return res.status(400).json({ message: "Invalid facility ID" });
+  app.patch(
+    "/api/shift-templates/deactivate-by-facility/:facilityId",
+    requireAuth,
+    async (req, res) => {
+      // Check if user is superuser
+      if (req.user?.role !== "superuser") {
+        return res.status(403).json({ message: "Superuser access required" });
       }
+      try {
+        const facilityId = parseInt(req.params.facilityId);
 
-      const result = await db
-        .update(shiftTemplates)
-        .set({ 
-          isActive: false, 
-          updatedAt: new Date() 
-        })
-        .where(eq(shiftTemplates.facilityId, facilityId))
-        .returning();
+        if (!facilityId || isNaN(facilityId)) {
+          return res.status(400).json({ message: "Invalid facility ID" });
+        }
 
-      console.log(`Deactivated ${result.length} shift templates for facility ${facilityId}`);
+        const result = await db
+          .update(shiftTemplates)
+          .set({
+            isActive: false,
+            updatedAt: new Date(),
+          })
+          .where(eq(shiftTemplates.facilityId, facilityId))
+          .returning();
 
-      res.json({
-        message: `Deactivated ${result.length} shift templates for facility`,
-        deactivatedTemplates: result.length,
-        facilityId
-      });
-    } catch (error) {
-      console.error("Error deactivating facility templates:", error);
-      res.status(500).json({ 
-        message: "Failed to deactivate facility templates",
-        error: error instanceof Error ? error.message : String(error)
-      });
+
+        res.json({
+          message: `Deactivated ${result.length} shift templates for facility`,
+          deactivatedTemplates: result.length,
+          facilityId,
+        });
+      } catch (error) {
+        console.error("Error deactivating facility templates:", error);
+        res.status(500).json({
+          message: "Failed to deactivate facility templates",
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
     }
-  });
+  );
 
   // Test endpoints for template system validation
   app.get("/api/test/shift-templates", requireAuth, async (req, res) => {
     try {
-      const { runShiftTemplateTests } = await import('./test-shift-templates');
-      
+      const { runShiftTemplateTests } = await import("./test-shift-templates");
+
       // Capture console output for test results
       const originalLog = console.log;
       const originalError = console.error;
       const logs: string[] = [];
-      
+
       console.log = (...args) => {
-        logs.push(args.join(' '));
+        logs.push(args.join(" "));
         originalLog(...args);
       };
-      
+
       console.error = (...args) => {
-        logs.push('ERROR: ' + args.join(' '));
+        logs.push("ERROR: " + args.join(" "));
         originalError(...args);
       };
-      
+
       await runShiftTemplateTests();
-      
+
       // Restore console
       console.log = originalLog;
       console.error = originalError;
-      
+
       res.json({
         message: "Shift template tests completed",
         testOutput: logs,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error) {
       console.error("Test execution failed:", error);
-      res.status(500).json({ 
-        message: "Test execution failed", 
-        error: error instanceof Error ? error.message : String(error)
+      res.status(500).json({
+        message: "Test execution failed",
+        error: error instanceof Error ? error.message : String(error),
       });
     }
   });
@@ -5985,44 +6172,43 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/shift-templates", requireAuth, async (req, res) => {
     try {
       const currentUser = req.user;
-      
+
       // Get the effective user (original or impersonated)
       const impersonatedUserId = (req.session as any).impersonatedUserId;
       let effectiveUser = currentUser;
-      
+
       if (impersonatedUserId) {
         effectiveUser = await storage.getUser(impersonatedUserId);
-        if (effectiveUser && effectiveUser.role !== 'super_admin') {
+        if (effectiveUser && effectiveUser.role !== "super_admin") {
           const facilityUser = await storage.getFacilityUserByEmail(effectiveUser.email);
           if (facilityUser) {
             (effectiveUser as any).associatedFacilities = facilityUser.associatedFacilityIds;
           }
         }
       }
-      
-      console.log(`[SHIFT TEMPLATES API] Fetching templates for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`);
-      
+
+        `[SHIFT TEMPLATES API] Fetching templates for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
+      );
+
       // Get all templates from database
       const allTemplates = await db.select().from(shiftTemplates);
-      
+
       // Filter templates based on user's facility associations
       let filteredTemplates = allTemplates;
-      
-      if (effectiveUser?.role !== 'super_admin') {
+
+      if (effectiveUser?.role !== "super_admin") {
         const userFacilities = (effectiveUser as any).associatedFacilities || [];
-        console.log(`[SHIFT TEMPLATES API] Filtering templates for facilities:`, userFacilities);
-        
+
         if (userFacilities && userFacilities.length > 0) {
-          filteredTemplates = allTemplates.filter(template => 
+          filteredTemplates = allTemplates.filter((template) =>
             userFacilities.includes(template.facilityId)
           );
         }
       }
-      
-      console.log(`[SHIFT TEMPLATES API] Returning ${filteredTemplates.length} templates`);
-      
+
+
       // Transform database response to frontend format
-      const formattedTemplates = filteredTemplates.map(template => ({
+      const formattedTemplates = filteredTemplates.map((template) => ({
         id: template.id,
         name: template.name,
         department: template.department,
@@ -6043,9 +6229,9 @@ export function registerRoutes(app: Express): Server {
         notes: template.notes,
         generatedShiftsCount: template.generatedShiftsCount || 0,
         createdAt: template.createdAt,
-        updatedAt: template.updatedAt
+        updatedAt: template.updatedAt,
       }));
-      
+
       res.json(formattedTemplates);
     } catch (error) {
       console.error("Error fetching shift templates:", error);
@@ -6057,10 +6243,10 @@ export function registerRoutes(app: Express): Server {
     try {
       const templateData = insertShiftTemplateSchema.parse(req.body);
       const [template] = await db.insert(shiftTemplates).values(templateData).returning();
-      
+
       // Generate shifts based on the template's daysPostedOut setting
       await generateShiftsFromTemplate(template);
-      
+
       res.status(201).json(template);
     } catch (error) {
       console.error("Error creating shift template:", error);
@@ -6071,19 +6257,19 @@ export function registerRoutes(app: Express): Server {
   app.put("/api/shift-templates/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      console.log(`[TEMPLATE UPDATE] Updating template ${id} with data:`, req.body);
-      
+
       const updateData = insertShiftTemplateSchema.partial().parse(req.body);
-      
-      const [template] = await db.update(shiftTemplates)
+
+      const [template] = await db
+        .update(shiftTemplates)
         .set({ ...updateData, updatedAt: new Date() })
         .where(eq(shiftTemplates.id, id))
         .returning();
-      
+
       if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
-      
+
       // Transform database response to frontend format
       const formattedTemplate = {
         id: template.id,
@@ -6106,13 +6292,12 @@ export function registerRoutes(app: Express): Server {
         notes: template.notes,
         generatedShiftsCount: template.generatedShiftsCount || 0,
         createdAt: template.createdAt,
-        updatedAt: template.updatedAt
+        updatedAt: template.updatedAt,
       };
-      
+
       // Regenerate shifts with new settings
       await regenerateShiftsFromTemplate(template);
-      
-      console.log(`[TEMPLATE UPDATE] Successfully updated template ${id}`);
+
       res.json(formattedTemplate);
     } catch (error) {
       console.error("Error updating shift template:", error);
@@ -6123,13 +6308,13 @@ export function registerRoutes(app: Express): Server {
   app.delete("/api/shift-templates/:id", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
+
       // Delete associated generated shifts
       await db.delete(generatedShifts).where(eq(generatedShifts.templateId, id));
-      
+
       // Delete the template
       await db.delete(shiftTemplates).where(eq(shiftTemplates.id, id));
-      
+
       res.json({ message: "Template deleted successfully" });
     } catch (error) {
       console.error("Error deleting shift template:", error);
@@ -6141,13 +6326,13 @@ export function registerRoutes(app: Express): Server {
     try {
       const id = parseInt(req.params.id);
       const [template] = await db.select().from(shiftTemplates).where(eq(shiftTemplates.id, id));
-      
+
       if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
-      
+
       await regenerateShiftsFromTemplate(template);
-      
+
       res.json({ message: "Shifts regenerated successfully" });
     } catch (error) {
       console.error("Error regenerating shifts:", error);
@@ -6159,25 +6344,25 @@ export function registerRoutes(app: Express): Server {
     try {
       const id = parseInt(req.params.id);
       const { isActive } = req.body;
-      
-      const [template] = await db.update(shiftTemplates)
+
+      const [template] = await db
+        .update(shiftTemplates)
         .set({ isActive, updatedAt: new Date() })
         .where(eq(shiftTemplates.id, id))
         .returning();
-      
+
       if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
-      
+
       // Regenerate shifts based on new status
       if (isActive) {
         await generateShiftsFromTemplate(template);
       } else {
         // Deactivate future shifts from this template
-        await db.delete(generatedShifts)
-          .where(eq(generatedShifts.templateId, id));
+        await db.delete(generatedShifts).where(eq(generatedShifts.templateId, id));
       }
-      
+
       res.json(template);
     } catch (error) {
       console.error("Error updating template status:", error);
@@ -6189,29 +6374,33 @@ export function registerRoutes(app: Express): Server {
   async function generateShiftsFromTemplate(template: any) {
     const today = new Date();
     const daysToGenerate = template.daysPostedOut || 7;
-    
-    console.log(`[SHIFT GENERATION] Generating ${daysToGenerate} days of shifts for template ${template.name}`);
-    
-    const generatedCount = await db.select({ count: sql`count(*)` })
+
+      `[SHIFT GENERATION] Generating ${daysToGenerate} days of shifts for template ${template.name}`
+    );
+
+    const generatedCount = await db
+      .select({ count: sql`count(*)` })
       .from(generatedShifts)
       .where(eq(generatedShifts.templateId, template.id));
-    
-    console.log(`[SHIFT GENERATION] Current shifts for template ${template.id}:`, generatedCount[0]?.count || 0);
-    
+
+      `[SHIFT GENERATION] Current shifts for template ${template.id}:`,
+      generatedCount[0]?.count || 0
+    );
+
     for (let i = 0; i < daysToGenerate; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      
+
       if (template.daysOfWeek && template.daysOfWeek.includes(date.getDay())) {
         for (let staffCount = 0; staffCount < (template.minStaff || 1); staffCount++) {
-          const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
-          const shiftId = `${template.id}${dateStr}${staffCount.toString().padStart(2, '0')}`;
-          
+          const dateStr = date.toISOString().split("T")[0].replace(/-/g, "");
+          const shiftId = `${template.id}${dateStr}${staffCount.toString().padStart(2, "0")}`;
+
           const shiftData = {
             id: shiftId,
             templateId: template.id,
             title: template.name,
-            date: date.toISOString().split('T')[0],
+            date: date.toISOString().split("T")[0],
             startTime: template.startTime,
             endTime: template.endTime,
             department: template.department,
@@ -6230,12 +6419,13 @@ export function registerRoutes(app: Express): Server {
             maxStaff: template.maxStaff || 1,
             totalHours: calculateShiftHours(template.startTime, template.endTime),
             createdAt: new Date(),
-            updatedAt: new Date()
+            updatedAt: new Date(),
           };
-          
+
           try {
             await db.insert(generatedShifts).values(shiftData).onConflictDoNothing();
-            console.log(`[SHIFT GENERATION] Created shift ${shiftId} for ${date.toISOString().split('T')[0]}`);
+              `[SHIFT GENERATION] Created shift ${shiftId} for ${date.toISOString().split("T")[0]}`
+            );
           } catch (error) {
             console.error(`Error inserting shift ${shiftId}:`, error);
           }
@@ -6244,38 +6434,40 @@ export function registerRoutes(app: Express): Server {
     }
 
     // Update generated shifts count
-    const newCount = await db.select({ count: sql`count(*)` })
+    const newCount = await db
+      .select({ count: sql`count(*)` })
       .from(generatedShifts)
       .where(eq(generatedShifts.templateId, template.id));
-    
-    await db.update(shiftTemplates)
+
+    await db
+      .update(shiftTemplates)
       .set({ generatedShiftsCount: parseInt(newCount[0]?.count?.toString() || "0") })
       .where(eq(shiftTemplates.id, template.id));
-    
-    console.log(`[SHIFT GENERATION] Template ${template.id} now has ${newCount[0]?.count || 0} total shifts`);
+
+      `[SHIFT GENERATION] Template ${template.id} now has ${newCount[0]?.count || 0} total shifts`
+    );
   }
 
   function calculateShiftHours(startTime: string, endTime: string): number {
-    const [startHour, startMin] = startTime.split(':').map(Number);
-    const [endHour, endMin] = endTime.split(':').map(Number);
-    
+    const [startHour, startMin] = startTime.split(":").map(Number);
+    const [endHour, endMin] = endTime.split(":").map(Number);
+
     let hours = endHour - startHour;
     let minutes = endMin - startMin;
-    
+
     // Handle overnight shifts
     if (hours < 0) {
       hours += 24;
     }
-    
-    return hours + (minutes / 60);
+
+    return hours + minutes / 60;
   }
 
   async function regenerateShiftsFromTemplate(template: any) {
     // Delete existing future shifts from this template
-    const today = new Date().toISOString().split('T')[0];
-    await db.delete(generatedShifts)
-      .where(eq(generatedShifts.templateId, template.id));
-    
+    const today = new Date().toISOString().split("T")[0];
+    await db.delete(generatedShifts).where(eq(generatedShifts.templateId, template.id));
+
     // Generate new shifts
     await generateShiftsFromTemplate(template);
   }
@@ -6310,7 +6502,7 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/shift-requests", requireAuth, async (req: any, res) => {
     try {
       const user = req.user;
-      
+
       // Return worker's actual shift requests based on user ID
       const workerShiftRequests = [
         {
@@ -6328,7 +6520,7 @@ export function registerRoutes(app: Express): Server {
           requestedBy: 3, // Alice Smith's ID
           urgency: "critical",
           description: "Overnight emergency department coverage",
-          requestedAt: "2025-06-21T15:30:00Z"
+          requestedAt: "2025-06-21T15:30:00Z",
         },
         {
           id: 2,
@@ -6345,13 +6537,13 @@ export function registerRoutes(app: Express): Server {
           requestedBy: 3, // Alice Smith's ID
           urgency: "high",
           description: "Weekend ICU coverage",
-          requestedAt: "2025-06-20T10:15:00Z"
-        }
+          requestedAt: "2025-06-20T10:15:00Z",
+        },
       ];
-      
+
       // Filter to only show requests by this user
-      const userRequests = workerShiftRequests.filter(request => request.requestedBy === user.id);
-      
+      const userRequests = workerShiftRequests.filter((request) => request.requestedBy === user.id);
+
       res.json(userRequests);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch shift requests" });
@@ -6365,20 +6557,20 @@ export function registerRoutes(app: Express): Server {
       const now = new Date();
       const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
       const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-      
+
       // Calculate week hours from timesheet data
       const weekHours = 32; // In production, calculate from actual timesheet entries
-      
+
       // Calculate monthly earnings
       const monthlyEarnings = 3245.67; // In production, calculate from actual paystubs
-      
+
       res.json({
         weekHours,
         monthlyEarnings,
         totalShiftsThisMonth: 12,
         upcomingShiftsCount: 3,
         pendingRequests: 2,
-        credentialsExpiring: 1
+        credentialsExpiring: 1,
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch dashboard data" });
@@ -6391,31 +6583,31 @@ export function registerRoutes(app: Express): Server {
       const user = req.user;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       // Mock upcoming shifts for the employee
       const upcomingShifts = [
         {
           id: 201,
-          date: new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Tomorrow
+          date: new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().split("T")[0], // Tomorrow
           startTime: "07:00",
           endTime: "15:00",
           department: "ICU",
           specialty: "RN",
           facilityName: "Portland General Hospital",
-          status: "confirmed"
+          status: "confirmed",
         },
         {
           id: 202,
-          date: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days from now
+          date: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split("T")[0], // 3 days from now
           startTime: "15:00",
           endTime: "23:00",
           department: "Emergency",
           specialty: "RN",
           facilityName: "Portland General Hospital",
-          status: "confirmed"
-        }
+          status: "confirmed",
+        },
       ];
-      
+
       res.json(upcomingShifts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch upcoming shifts" });
@@ -6426,10 +6618,10 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/shifts/available-count", requireAuth, async (req: any, res) => {
     try {
       const user = req.user;
-      
+
       // In production, this would query shifts matching employee's specialty and facility associations
       const availableCount = 24; // Mock count
-      
+
       res.json({ count: availableCount });
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch available shifts count" });
@@ -6684,28 +6876,35 @@ export function registerRoutes(app: Express): Server {
     auditLog("CREATE", "facility"),
     async (req: any, res) => {
       try {
-        console.log("Creating facility with enhanced data:", req.body);
-        
+
         // Import enhanced validation
-        const { enhancedFacilitySchema, validateFacilityRates, validateStaffingTargets, validateTimezone } = await import("./enhanced-facility-validation");
-        
+        const {
+          enhancedFacilitySchema,
+          validateFacilityRates,
+          validateStaffingTargets,
+          validateTimezone,
+        } = await import("./enhanced-facility-validation");
+
         // Validate the enhanced facility data
         const facilityData = enhancedFacilitySchema.parse(req.body);
-        
+
         // Additional business rule validations
-        const ratesValidation = validateFacilityRates(facilityData.billRates, facilityData.payRates);
+        const ratesValidation = validateFacilityRates(
+          facilityData.billRates,
+          facilityData.payRates
+        );
         if (!ratesValidation.valid) {
-          return res.status(400).json({ 
-            message: "Invalid rates configuration", 
-            errors: ratesValidation.errors 
+          return res.status(400).json({
+            message: "Invalid rates configuration",
+            errors: ratesValidation.errors,
           });
         }
 
         const staffingValidation = validateStaffingTargets(facilityData.staffingTargets);
         if (!staffingValidation.valid) {
-          return res.status(400).json({ 
-            message: "Invalid staffing targets", 
-            errors: staffingValidation.errors 
+          return res.status(400).json({
+            message: "Invalid staffing targets",
+            errors: staffingValidation.errors,
           });
         }
 
@@ -6714,24 +6913,23 @@ export function registerRoutes(app: Express): Server {
         }
 
         const facility = await storage.createFacility(facilityData);
-        console.log("Enhanced facility created successfully:", facility);
         res.status(201).json(facility);
       } catch (error) {
         console.error("Error creating facility:", error);
-        
+
         if (error instanceof z.ZodError) {
-          const fieldErrors = error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message
+          const fieldErrors = error.errors.map((err) => ({
+            field: err.path.join("."),
+            message: err.message,
           }));
-          
-          return res.status(400).json({ 
-            message: "Validation failed", 
+
+          return res.status(400).json({
+            message: "Validation failed",
             fieldErrors,
-            details: error.errors
+            details: error.errors,
           });
         }
-        
+
         res.status(500).json({ message: "Failed to create facility" });
       }
     }
@@ -6745,7 +6943,6 @@ export function registerRoutes(app: Express): Server {
     async (req: any, res) => {
       try {
         const id = parseInt(req.params.id);
-        console.log(`Partially updating facility ${id} with data:`, req.body);
 
         // Check if facility exists
         const existingFacility = await storage.getFacility(id);
@@ -6754,24 +6951,29 @@ export function registerRoutes(app: Express): Server {
         }
 
         // Import enhanced validation
-        const { enhancedFacilityUpdateSchema, validateFacilityRates, validateStaffingTargets, validateTimezone } = await import("./enhanced-facility-validation");
-        
+        const {
+          enhancedFacilityUpdateSchema,
+          validateFacilityRates,
+          validateStaffingTargets,
+          validateTimezone,
+        } = await import("./enhanced-facility-validation");
+
         // Validate partial update data
         const updateData = enhancedFacilityUpdateSchema.parse({
           ...req.body,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         });
 
         // Business rule validations for fields being updated
         if (updateData.billRates || updateData.payRates) {
           const billRates = updateData.billRates || existingFacility.billRates;
           const payRates = updateData.payRates || existingFacility.payRates;
-          
+
           const ratesValidation = validateFacilityRates(billRates, payRates);
           if (!ratesValidation.valid) {
-            return res.status(400).json({ 
-              message: "Invalid rates configuration", 
-              errors: ratesValidation.errors 
+            return res.status(400).json({
+              message: "Invalid rates configuration",
+              errors: ratesValidation.errors,
             });
           }
         }
@@ -6779,9 +6981,9 @@ export function registerRoutes(app: Express): Server {
         if (updateData.staffingTargets) {
           const staffingValidation = validateStaffingTargets(updateData.staffingTargets);
           if (!staffingValidation.valid) {
-            return res.status(400).json({ 
-              message: "Invalid staffing targets", 
-              errors: staffingValidation.errors 
+            return res.status(400).json({
+              message: "Invalid staffing targets",
+              errors: staffingValidation.errors,
             });
           }
         }
@@ -6795,24 +6997,23 @@ export function registerRoutes(app: Express): Server {
           return res.status(404).json({ message: "Facility not found" });
         }
 
-        console.log("Facility partially updated successfully:", facility);
         res.json(facility);
       } catch (error) {
         console.error("Error updating facility:", error);
-        
+
         if (error instanceof z.ZodError) {
-          const fieldErrors = error.errors.map(err => ({
-            field: err.path.join('.'),
-            message: err.message
+          const fieldErrors = error.errors.map((err) => ({
+            field: err.path.join("."),
+            message: err.message,
           }));
-          
-          return res.status(400).json({ 
-            message: "Validation failed", 
+
+          return res.status(400).json({
+            message: "Validation failed",
             fieldErrors,
-            details: error.errors
+            details: error.errors,
           });
         }
-        
+
         res.status(500).json({ message: "Failed to update facility" });
       }
     }
@@ -6838,8 +7039,9 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Update facility rates
-  app.post("/api/facilities/:id/rates", 
-    requireAuth, 
+  app.post(
+    "/api/facilities/:id/rates",
+    requireAuth,
     requirePermission("facilities.update"),
     auditLog("UPDATE", "facility_rates"),
     async (req: any, res) => {
@@ -6853,9 +7055,9 @@ export function registerRoutes(app: Express): Server {
         // Validate rates
         const ratesValidation = validateFacilityRates(billRates, payRates);
         if (!ratesValidation.valid) {
-          return res.status(400).json({ 
-            message: "Invalid rates configuration", 
-            errors: ratesValidation.errors 
+          return res.status(400).json({
+            message: "Invalid rates configuration",
+            errors: ratesValidation.errors,
           });
         }
 
@@ -6873,7 +7075,7 @@ export function registerRoutes(app: Express): Server {
           message: "Rates updated successfully",
           billRates: facility.billRates,
           payRates: facility.payRates,
-          floatPoolMargins: facility.floatPoolMargins
+          floatPoolMargins: facility.floatPoolMargins,
         });
       } catch (error) {
         console.error("Error updating facility rates:", error);
@@ -6883,8 +7085,9 @@ export function registerRoutes(app: Express): Server {
   );
 
   // Update staffing targets
-  app.post("/api/facilities/:id/staffing-targets", 
-    requireAuth, 
+  app.post(
+    "/api/facilities/:id/staffing-targets",
+    requireAuth,
     requirePermission("facilities.update"),
     auditLog("UPDATE", "facility_staffing"),
     async (req: any, res) => {
@@ -6897,14 +7100,14 @@ export function registerRoutes(app: Express): Server {
 
         const staffingValidation = validateStaffingTargets(staffingTargets);
         if (!staffingValidation.valid) {
-          return res.status(400).json({ 
-            message: "Invalid staffing targets", 
-            errors: staffingValidation.errors 
+          return res.status(400).json({
+            message: "Invalid staffing targets",
+            errors: staffingValidation.errors,
           });
         }
 
-        const facility = await storage.updateFacility(id, { 
-          staffingTargets
+        const facility = await storage.updateFacility(id, {
+          staffingTargets,
         });
 
         if (!facility) {
@@ -6913,7 +7116,7 @@ export function registerRoutes(app: Express): Server {
 
         res.json({
           message: "Staffing targets updated successfully",
-          staffingTargets: facility.staffingTargets
+          staffingTargets: facility.staffingTargets,
         });
       } catch (error) {
         console.error("Error updating staffing targets:", error);
@@ -6923,8 +7126,9 @@ export function registerRoutes(app: Express): Server {
   );
 
   // Update workflow automation configuration
-  app.post("/api/facilities/:id/workflow-config", 
-    requireAuth, 
+  app.post(
+    "/api/facilities/:id/workflow-config",
+    requireAuth,
     requirePermission("facilities.update"),
     auditLog("UPDATE", "facility_workflow"),
     async (req: any, res) => {
@@ -6932,8 +7136,8 @@ export function registerRoutes(app: Express): Server {
         const id = parseInt(req.params.id);
         const { workflowAutomationConfig } = req.body;
 
-        const facility = await storage.updateFacility(id, { 
-          workflowAutomationConfig
+        const facility = await storage.updateFacility(id, {
+          workflowAutomationConfig,
         });
 
         if (!facility) {
@@ -6942,7 +7146,7 @@ export function registerRoutes(app: Express): Server {
 
         res.json({
           message: "Workflow configuration updated successfully",
-          workflowAutomationConfig: facility.workflowAutomationConfig
+          workflowAutomationConfig: facility.workflowAutomationConfig,
         });
       } catch (error) {
         console.error("Error updating workflow configuration:", error);
@@ -7007,11 +7211,9 @@ export function registerRoutes(app: Express): Server {
         res.json(facility);
       } catch (error) {
         console.error("Error refreshing facility data:", error);
-        res
-          .status(400)
-          .json({
-            message: error instanceof Error ? error.message : "Failed to refresh facility data",
-          });
+        res.status(400).json({
+          message: error instanceof Error ? error.message : "Failed to refresh facility data",
+        });
       }
     }
   );
@@ -7108,21 +7310,23 @@ export function registerRoutes(app: Express): Server {
     try {
       const { state, facilityType, active, search } = req.query;
       const facilitiesData = await storage.getAllFacilities();
-      
+
       // Apply filters if provided
       let filteredData = facilitiesData;
-      if (state) filteredData = filteredData.filter(f => f.state === state);
-      if (facilityType) filteredData = filteredData.filter(f => f.facilityType === facilityType);
-      if (active !== undefined) filteredData = filteredData.filter(f => f.isActive === (active === 'true'));
+      if (state) filteredData = filteredData.filter((f) => f.state === state);
+      if (facilityType) filteredData = filteredData.filter((f) => f.facilityType === facilityType);
+      if (active !== undefined)
+        filteredData = filteredData.filter((f) => f.isActive === (active === "true"));
       if (search) {
         const searchTerm = (search as string).toLowerCase();
-        filteredData = filteredData.filter(f => 
-          f.name?.toLowerCase().includes(searchTerm) ||
-          f.city?.toLowerCase().includes(searchTerm) ||
-          f.address?.toLowerCase().includes(searchTerm)
+        filteredData = filteredData.filter(
+          (f) =>
+            f.name?.toLowerCase().includes(searchTerm) ||
+            f.city?.toLowerCase().includes(searchTerm) ||
+            f.address?.toLowerCase().includes(searchTerm)
         );
       }
-      
+
       res.json(filteredData);
     } catch (error) {
       console.error("Error fetching facilities:", error);
@@ -7134,45 +7338,44 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/staff", requireAuth, async (req, res) => {
     try {
       const currentUser = req.user;
-      
+
       // Get the effective user (original or impersonated)
       const impersonatedUserId = (req.session as any).impersonatedUserId;
       let effectiveUser = currentUser;
-      
+
       if (impersonatedUserId) {
         effectiveUser = await storage.getUser(impersonatedUserId);
-        if (effectiveUser && effectiveUser.role !== 'super_admin') {
+        if (effectiveUser && effectiveUser.role !== "super_admin") {
           const facilityUser = await storage.getFacilityUserByEmail(effectiveUser.email);
           if (facilityUser) {
             (effectiveUser as any).associatedFacilities = facilityUser.associatedFacilityIds;
           }
         }
       }
-      
-      console.log(`[STAFF API] Fetching staff for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`);
-      
+
+        `[STAFF API] Fetching staff for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
+      );
+
       // Get staff from database
       const allStaff = await db.select().from(staff);
-      
+
       // Filter staff based on user's facility associations
       let filteredStaff = allStaff;
-      
-      if (effectiveUser?.role !== 'super_admin') {
+
+      if (effectiveUser?.role !== "super_admin") {
         const userFacilities = (effectiveUser as any).associatedFacilities || [];
-        console.log(`[STAFF API] Filtering staff for facilities:`, userFacilities);
-        
+
         if (userFacilities && userFacilities.length > 0) {
-          filteredStaff = allStaff.filter(staffMember => {
+          filteredStaff = allStaff.filter((staffMember) => {
             const staffFacilities = staffMember.associated_facilities || [];
-            const hasOverlap = userFacilities.some((facilityId: number) => 
+            const hasOverlap = userFacilities.some((facilityId: number) =>
               staffFacilities.includes(facilityId)
             );
             return hasOverlap;
           });
         }
       }
-      
-      console.log(`[STAFF API] Returning ${filteredStaff.length} staff members`);
+
       res.json(filteredStaff);
     } catch (error) {
       console.error("Error fetching staff:", error);
@@ -7185,88 +7388,97 @@ export function registerRoutes(app: Express): Server {
     try {
       const { userId } = req.body;
       const currentUser = req.user;
-      
-      console.log(`[IMPERSONATION] Impersonation request received for userId: ${userId}`);
-      console.log(`[IMPERSONATION] Current user:`, currentUser);
-      
-      if (!currentUser || currentUser.role !== 'super_admin') {
+
+
+      if (!currentUser || currentUser.role !== "super_admin") {
         return res.status(403).json({ message: "Only super admins can impersonate users" });
       }
 
       // Store original user info and set impersonation
       (req.session as any).originalUser = currentUser;
       (req.session as any).impersonatedUserId = userId;
-      
+
       // Get the user to impersonate
-      console.log(`[IMPERSONATION] Getting user with ID: ${userId}`);
       const targetUser = await storage.getUser(userId);
       if (!targetUser) {
-        console.log(`[IMPERSONATION] User not found for ID: ${userId}`);
         return res.status(404).json({ message: "User not found" });
       }
-      
-      console.log(`[IMPERSONATION] Target user found:`, targetUser);
+
 
       // If this is a facility user, fetch their permissions and facility associations
-      if (targetUser.role !== 'super_admin') {
+      if (targetUser.role !== "super_admin") {
         try {
-          console.log(`[IMPERSONATION] Processing facility user: ${targetUser.email}`);
-          
+
           // First try to get facility user data from facility_users table
           const facilityUser = await storage.getFacilityUserByEmail(targetUser.email);
           if (facilityUser) {
             // Use individual permissions from the database if available
             if (facilityUser.permissions && facilityUser.permissions.length > 0) {
               (targetUser as any).permissions = facilityUser.permissions;
-              console.log(`[IMPERSONATION] Set individual permissions for ${targetUser.email}:`, facilityUser.permissions);
+                `[IMPERSONATION] Set individual permissions for ${targetUser.email}:`,
+                facilityUser.permissions
+              );
             } else {
               // Fallback to role template permissions
               const roleTemplate = await storage.getFacilityUserRoleTemplate(targetUser.role);
               if (roleTemplate && roleTemplate.permissions) {
                 (targetUser as any).permissions = roleTemplate.permissions;
-                console.log(`[IMPERSONATION] Set role template permissions for ${targetUser.email}:`, roleTemplate.permissions);
+                  `[IMPERSONATION] Set role template permissions for ${targetUser.email}:`,
+                  roleTemplate.permissions
+                );
               }
             }
-            
+
             // Set associated facilities - use associatedFacilityIds to match auth.ts
             if (facilityUser.associated_facility_ids) {
               (targetUser as any).associatedFacilityIds = facilityUser.associated_facility_ids;
               (targetUser as any).associatedFacilities = facilityUser.associated_facility_ids; // Keep both for compatibility
-              console.log(`[IMPERSONATION] Set associatedFacilityIds for ${targetUser.email}:`, facilityUser.associated_facility_ids);
+                `[IMPERSONATION] Set associatedFacilityIds for ${targetUser.email}:`,
+                facilityUser.associated_facility_ids
+              );
             }
-            
+
             // Include facility user role for proper permission handling
             (targetUser as any).facilityRole = facilityUser.role;
-            console.log(`[IMPERSONATION] Set facility role for ${targetUser.email}:`, facilityUser.role);
+              `[IMPERSONATION] Set facility role for ${targetUser.email}:`,
+              facilityUser.role
+            );
           } else {
             // If not in facility_users table, check if user has associated_facilities in users table
-            console.log(`[IMPERSONATION] User not found in facility_users, checking users table data`);
-            
+              `[IMPERSONATION] User not found in facility_users, checking users table data`
+            );
+
             if (targetUser.associated_facilities && targetUser.associated_facilities.length > 0) {
               (targetUser as any).associatedFacilities = targetUser.associated_facilities;
-              console.log(`[IMPERSONATION] Set associatedFacilities from users table for ${targetUser.email}:`, targetUser.associated_facilities);
+                `[IMPERSONATION] Set associatedFacilities from users table for ${targetUser.email}:`,
+                targetUser.associated_facilities
+              );
             }
-            
+
             // Get role template permissions
             const roleTemplate = await storage.getFacilityUserRoleTemplate(targetUser.role);
             if (roleTemplate && roleTemplate.permissions) {
               (targetUser as any).permissions = roleTemplate.permissions;
-              console.log(`[IMPERSONATION] Set role template permissions for ${targetUser.email}:`, roleTemplate.permissions);
+                `[IMPERSONATION] Set role template permissions for ${targetUser.email}:`,
+                roleTemplate.permissions
+              );
             }
-            
+
             // Set facility role to user's role
             (targetUser as any).facilityRole = targetUser.role;
-            console.log(`[IMPERSONATION] Set facility role for ${targetUser.email}:`, targetUser.role);
+              `[IMPERSONATION] Set facility role for ${targetUser.email}:`,
+              targetUser.role
+            );
           }
         } catch (error) {
           console.error("Error fetching user permissions:", error);
         }
       }
 
-      res.json({ 
-        success: true, 
+      res.json({
+        success: true,
         impersonatedUser: targetUser,
-        originalUser: currentUser
+        originalUser: currentUser,
       });
     } catch (error) {
       console.error("Error starting impersonation:", error);
@@ -7276,12 +7488,10 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/stop-impersonation", requireAuth, async (req, res) => {
     try {
-      console.log(`[IMPERSONATION] Stop impersonation request received`);
-      console.log(`[IMPERSONATION] Session before stop:`, { 
         hasOriginalUser: !!(req.session as any).originalUser,
-        hasImpersonatedUserId: !!(req.session as any).impersonatedUserId
+        hasImpersonatedUserId: !!(req.session as any).impersonatedUserId,
       });
-      
+
       if (!(req.session as any).originalUser) {
         return res.status(400).json({ message: "No active impersonation session" });
       }
@@ -7290,10 +7500,9 @@ export function registerRoutes(app: Express): Server {
       delete (req.session as any).originalUser;
       delete (req.session as any).impersonatedUserId;
 
-      console.log(`[IMPERSONATION] Impersonation stopped successfully`);
-      res.json({ 
-        success: true, 
-        restoredUser: originalUser 
+      res.json({
+        success: true,
+        restoredUser: originalUser,
       });
     } catch (error) {
       console.error("Error stopping impersonation:", error);
@@ -7305,7 +7514,7 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/shift-requests/:shiftId", requireAuth, async (req, res) => {
     try {
       const shiftId = parseInt(req.params.shiftId);
-      
+
       // Mock shift requests data based on shift ID
       const mockShiftRequests = [
         {
@@ -7319,7 +7528,7 @@ export function registerRoutes(app: Express): Server {
           totalShiftsWorked: 156,
           hourlyRate: 48,
           requestedAt: "2025-06-23T10:30:00Z",
-          status: "pending"
+          status: "pending",
         },
         {
           id: 2,
@@ -7332,7 +7541,7 @@ export function registerRoutes(app: Express): Server {
           totalShiftsWorked: 142,
           hourlyRate: 42,
           requestedAt: "2025-06-23T11:15:00Z",
-          status: "pending"
+          status: "pending",
         },
         {
           id: 3,
@@ -7345,8 +7554,8 @@ export function registerRoutes(app: Express): Server {
           totalShiftsWorked: 89,
           hourlyRate: 35,
           requestedAt: "2025-06-23T09:45:00Z",
-          status: "pending"
-        }
+          status: "pending",
+        },
       ];
 
       res.json(mockShiftRequests);
@@ -7360,12 +7569,12 @@ export function registerRoutes(app: Express): Server {
     try {
       const currentUser = req.user;
       const isImpersonating = !!(req.session as any).originalUser;
-      
+
       res.json({
         user: currentUser,
         isImpersonating,
         originalUser: (req.session as any).originalUser || null,
-        impersonatedUserId: (req.session as any).impersonatedUserId || null
+        impersonatedUserId: (req.session as any).impersonatedUserId || null,
       });
     } catch (error) {
       console.error("Error getting session status:", error);
@@ -7376,7 +7585,7 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/restore-session", async (req, res) => {
     try {
       const { username, password, impersonatedUserId } = req.body;
-      
+
       // Quick re-authentication for development
       if (username === "joshburn" && password === "admin123") {
         const superUser = {
@@ -7391,24 +7600,24 @@ export function registerRoutes(app: Express): Server {
           facilityId: null,
           createdAt: new Date(),
           updatedAt: new Date(),
-          password: ""
+          password: "",
         };
 
         // Restore session
         (req.session as any).passport = { user: superUser.id };
-        
+
         // Restore impersonation if provided
         if (impersonatedUserId) {
           const targetUser = await storage.getUser(impersonatedUserId);
           if (targetUser) {
             (req.session as any).originalUser = superUser;
             (req.session as any).impersonatedUserId = impersonatedUserId;
-            
+
             return res.json({
               success: true,
               user: targetUser,
               isImpersonating: true,
-              originalUser: superUser
+              originalUser: superUser,
             });
           }
         }
@@ -7416,7 +7625,7 @@ export function registerRoutes(app: Express): Server {
         res.json({
           success: true,
           user: superUser,
-          isImpersonating: false
+          isImpersonating: false,
         });
       } else {
         res.status(401).json({ message: "Invalid credentials" });
@@ -7428,91 +7637,98 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Admin API endpoints
-  app.get("/api/admin/users", requireAuth, requirePermission("system.manage_permissions"), async (req: any, res) => {
-    try {
-      // Get all users from database
-      const allUsers = await storage.getAllUsers();
-      const facilityUsers = await storage.getAllFacilityUsers();
-      const facilities = await storage.getFacilities();
-      
-      // Map users to include role information
-      const mappedUsers = allUsers.map(user => {
-        // Check if user is a facility user to get facility associations
-        const facilityUser = facilityUsers.find(fu => fu.email === user.email);
-        let facilityName = null;
-        let facilityId = null;
-        
-        if (facilityUser && facilityUser.associatedFacilityIds?.length > 0) {
-          const facility = facilities.find(f => f.id === facilityUser.associatedFacilityIds[0]);
-          if (facility) {
-            facilityName = facility.name;
-            facilityId = facility.id;
+  app.get(
+    "/api/admin/users",
+    requireAuth,
+    requirePermission("system.manage_permissions"),
+    async (req: any, res) => {
+      try {
+        // Get all users from database
+        const allUsers = await storage.getAllUsers();
+        const facilityUsers = await storage.getAllFacilityUsers();
+        const facilities = await storage.getFacilities();
+
+        // Map users to include role information
+        const mappedUsers = allUsers.map((user) => {
+          // Check if user is a facility user to get facility associations
+          const facilityUser = facilityUsers.find((fu) => fu.email === user.email);
+          let facilityName = null;
+          let facilityId = null;
+
+          if (facilityUser && facilityUser.associatedFacilityIds?.length > 0) {
+            const facility = facilities.find((f) => f.id === facilityUser.associatedFacilityIds[0]);
+            if (facility) {
+              facilityName = facility.name;
+              facilityId = facility.id;
+            }
           }
-        }
-        
-        // Determine the system role based on user.role
-        let systemRole: SystemRole = 'viewer'; // default
-        
-        if (user.role === 'super_admin') {
-          systemRole = 'super_admin';
-        } else if (user.role === 'internal_employee') {
-          systemRole = 'staff';
-        } else if (user.role === 'contractor_1099') {
-          systemRole = 'staff';
-        } else if (facilityUser) {
-          // Map facility user roles to system roles
-          switch (facilityUser.role) {
-            case 'facility_admin':
-              systemRole = 'facility_admin';
-              break;
-            case 'scheduling_coordinator':
-              systemRole = 'scheduling_coordinator';
-              break;
-            case 'hr_manager':
-              systemRole = 'hr_manager';
-              break;
-            case 'billing':
-              systemRole = 'billing_manager';
-              break;
-            case 'supervisor':
-              systemRole = 'supervisor';
-              break;
-            case 'director_of_nursing':
-              systemRole = 'director_of_nursing';
-              break;
-            case 'corporate':
-              systemRole = 'corporate';
-              break;
-            case 'regional_director':
-              systemRole = 'regional_director';
-              break;
-            default:
-              systemRole = 'viewer';
+
+          // Determine the system role based on user.role
+          let systemRole: SystemRole = "viewer"; // default
+
+          if (user.role === "super_admin") {
+            systemRole = "super_admin";
+          } else if (user.role === "internal_employee") {
+            systemRole = "staff";
+          } else if (user.role === "contractor_1099") {
+            systemRole = "staff";
+          } else if (facilityUser) {
+            // Map facility user roles to system roles
+            switch (facilityUser.role) {
+              case "facility_admin":
+                systemRole = "facility_admin";
+                break;
+              case "scheduling_coordinator":
+                systemRole = "scheduling_coordinator";
+                break;
+              case "hr_manager":
+                systemRole = "hr_manager";
+                break;
+              case "billing":
+                systemRole = "billing_manager";
+                break;
+              case "supervisor":
+                systemRole = "supervisor";
+                break;
+              case "director_of_nursing":
+                systemRole = "director_of_nursing";
+                break;
+              case "corporate":
+                systemRole = "corporate";
+                break;
+              case "regional_director":
+                systemRole = "regional_director";
+                break;
+              default:
+                systemRole = "viewer";
+            }
           }
-        }
-        
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
-          role: systemRole,
-          facilityName,
-          facilityId,
-          createdAt: user.createdAt,
-          lastLogin: user.lastLogin,
-          status: user.status || 'active'
-        };
-      });
-      
-      res.json(mappedUsers);
-    } catch (error) {
-      console.error("Error fetching admin users:", error);
-      res.status(500).json({ message: "Failed to fetch users" });
+
+          return {
+            id: user.id,
+            email: user.email,
+            name:
+              user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email,
+            role: systemRole,
+            facilityName,
+            facilityId,
+            createdAt: user.createdAt,
+            lastLogin: user.lastLogin,
+            status: user.status || "active",
+          };
+        });
+
+        res.json(mappedUsers);
+      } catch (error) {
+        console.error("Error fetching admin users:", error);
+        res.status(500).json({ message: "Failed to fetch users" });
+      }
     }
-  });
-  
+  );
+
   // Update user role endpoint
-  app.patch("/api/admin/users/:id/role",
+  app.patch(
+    "/api/admin/users/:id/role",
     requireAuth,
     requirePermission("system.manage_permissions"),
     auditLog("UPDATE", "user_role"),
@@ -7520,62 +7736,62 @@ export function registerRoutes(app: Express): Server {
       try {
         const userId = parseInt(req.params.id);
         const { role } = req.body;
-        
+
         if (!role) {
           return res.status(400).json({ message: "Role is required" });
         }
-        
+
         // Get the user to determine if they are a facility user
         const user = await storage.getUser(userId);
         if (!user) {
           return res.status(404).json({ message: "User not found" });
         }
-        
+
         // Check if this is a facility user
         const facilityUser = await storage.getFacilityUserByEmail(user.email);
-        
+
         if (facilityUser) {
           // Map system role to facility user role
-          let facilityRole = 'viewer';
+          let facilityRole = "viewer";
           switch (role) {
-            case 'facility_admin':
-              facilityRole = 'facility_admin';
+            case "facility_admin":
+              facilityRole = "facility_admin";
               break;
-            case 'scheduling_coordinator':
-              facilityRole = 'scheduling_coordinator';
+            case "scheduling_coordinator":
+              facilityRole = "scheduling_coordinator";
               break;
-            case 'hr_manager':
-              facilityRole = 'hr_manager';
+            case "hr_manager":
+              facilityRole = "hr_manager";
               break;
-            case 'billing_manager':
-              facilityRole = 'billing';
+            case "billing_manager":
+              facilityRole = "billing";
               break;
-            case 'supervisor':
-              facilityRole = 'supervisor';
+            case "supervisor":
+              facilityRole = "supervisor";
               break;
-            case 'director_of_nursing':
-              facilityRole = 'director_of_nursing';
+            case "director_of_nursing":
+              facilityRole = "director_of_nursing";
               break;
-            case 'corporate':
-              facilityRole = 'corporate';
+            case "corporate":
+              facilityRole = "corporate";
               break;
-            case 'regional_director':
-              facilityRole = 'regional_director';
+            case "regional_director":
+              facilityRole = "regional_director";
               break;
             default:
-              facilityRole = 'viewer';
+              facilityRole = "viewer";
           }
-          
+
           // Update facility user role
           await storage.updateFacilityUserRole(facilityUser.id, facilityRole);
         } else {
           // Update regular user role
-          if (role === 'super_admin' || role === 'staff') {
-            const userRole = role === 'super_admin' ? 'super_admin' : 'internal_employee';
+          if (role === "super_admin" || role === "staff") {
+            const userRole = role === "super_admin" ? "super_admin" : "internal_employee";
             await storage.updateUserRole(userId, userRole);
           }
         }
-        
+
         res.json({ success: true, message: "Role updated successfully" });
       } catch (error) {
         console.error("Error updating user role:", error);
@@ -7599,7 +7815,7 @@ export function registerRoutes(app: Express): Server {
           facilityId: null,
           facilityName: null,
           createdAt: "2025-03-01T00:00:00Z",
-          lastLogin: "2025-06-19T12:15:00Z"
+          lastLogin: "2025-06-19T12:15:00Z",
         },
         {
           id: 5,
@@ -7611,7 +7827,7 @@ export function registerRoutes(app: Express): Server {
           facilityId: 2,
           facilityName: "Maple Grove Memory Care",
           createdAt: "2025-03-10T00:00:00Z",
-          lastLogin: "2025-06-20T14:20:00Z"
+          lastLogin: "2025-06-20T14:20:00Z",
         },
         {
           id: 6,
@@ -7623,7 +7839,7 @@ export function registerRoutes(app: Express): Server {
           facilityId: 1,
           facilityName: "Portland General Hospital",
           createdAt: "2025-04-01T00:00:00Z",
-          lastLogin: "2025-06-20T10:00:00Z"
+          lastLogin: "2025-06-20T10:00:00Z",
         },
         {
           id: 7,
@@ -7635,7 +7851,7 @@ export function registerRoutes(app: Express): Server {
           facilityId: null,
           facilityName: null,
           createdAt: "2025-06-15T00:00:00Z",
-          lastLogin: null
+          lastLogin: null,
         },
         {
           id: 8,
@@ -7647,7 +7863,7 @@ export function registerRoutes(app: Express): Server {
           facilityId: 2,
           facilityName: "Maple Grove Memory Care",
           createdAt: "2025-01-20T00:00:00Z",
-          lastLogin: "2025-05-15T08:30:00Z"
+          lastLogin: "2025-05-15T08:30:00Z",
         },
         {
           id: 42,
@@ -7659,10 +7875,10 @@ export function registerRoutes(app: Express): Server {
           facilityId: 1,
           facilityName: "Portland General Hospital",
           createdAt: "2025-04-15T00:00:00Z",
-          lastLogin: "2025-06-20T15:30:00Z"
-        }
+          lastLogin: "2025-06-20T15:30:00Z",
+        },
       ];
-      
+
       res.json(users);
     } catch (error) {
       console.error("Error fetching users:", error);
@@ -7695,13 +7911,13 @@ export function registerRoutes(app: Express): Server {
     try {
       const id = parseInt(req.params.id);
       const { permissions } = req.body;
-      
+
       // Here you would update the user's permissions in the database
       // For now, returning success response
-      res.json({ 
+      res.json({
         message: "Permissions updated successfully",
         userId: id,
-        permissions: permissions
+        permissions: permissions,
       });
     } catch (error) {
       console.error("Error updating user permissions:", error);
@@ -7709,15 +7925,20 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/admin/audit-logs", requireAuth, requirePermission("system.view_audit_logs"), async (req, res) => {
-    try {
-      const logs = await storage.getAuditLogs();
-      res.json(logs);
-    } catch (error) {
-      console.error("Error fetching audit logs:", error);
-      res.status(500).json({ message: "Failed to fetch audit logs" });
+  app.get(
+    "/api/admin/audit-logs",
+    requireAuth,
+    requirePermission("system.view_audit_logs"),
+    async (req, res) => {
+      try {
+        const logs = await storage.getAuditLogs();
+        res.json(logs);
+      } catch (error) {
+        console.error("Error fetching audit logs:", error);
+        res.status(500).json({ message: "Failed to fetch audit logs" });
+      }
     }
-  });
+  );
 
   app.post("/api/admin/database/query", requireAuth, async (req: any, res) => {
     try {
@@ -8068,7 +8289,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 38,
           joinDate: "2023-03-15",
           skills: ["Orthopedic Rehab", "Manual Therapy", "Sports Medicine"],
-          bio: "Licensed physical therapist specializing in orthopedic rehabilitation."
+          bio: "Licensed physical therapist specializing in orthopedic rehabilitation.",
         },
         {
           id: 10,
@@ -8089,7 +8310,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 34.5,
           joinDate: "2022-08-20",
           skills: ["Mechanical Ventilation", "ECMO", "Pulmonary Function"],
-          bio: "Respiratory therapist with expertise in critical care ventilation."
+          bio: "Respiratory therapist with expertise in critical care ventilation.",
         },
         {
           id: 11,
@@ -8110,7 +8331,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 29,
           joinDate: "2023-11-10",
           skills: ["Clinical Chemistry", "Hematology", "Microbiology"],
-          bio: "Medical laboratory technician with clinical chemistry expertise."
+          bio: "Medical laboratory technician with clinical chemistry expertise.",
         },
         {
           id: 12,
@@ -8131,7 +8352,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 26.5,
           joinDate: "2024-01-15",
           skills: ["Sterile Compounding", "IV Preparation", "Medication Safety"],
-          bio: "Certified pharmacy technician with sterile compounding experience."
+          bio: "Certified pharmacy technician with sterile compounding experience.",
         },
         {
           id: 13,
@@ -8152,7 +8373,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 31,
           joinDate: "2022-05-10",
           skills: ["CT Imaging", "MRI", "X-Ray", "Patient Care"],
-          bio: "Radiologic technologist specializing in CT and MRI imaging."
+          bio: "Radiologic technologist specializing in CT and MRI imaging.",
         },
         {
           id: 14,
@@ -8173,7 +8394,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 36,
           joinDate: "2023-02-20",
           skills: ["Pediatric Therapy", "Geriatric Care", "ADL Training"],
-          bio: "Occupational therapist with pediatric and geriatric expertise."
+          bio: "Occupational therapist with pediatric and geriatric expertise.",
         },
         {
           id: 15,
@@ -8194,7 +8415,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 22,
           joinDate: "2023-09-01",
           skills: ["Patient Care", "Vital Signs", "ICU Support"],
-          bio: "Certified nursing assistant with ICU and critical care experience."
+          bio: "Certified nursing assistant with ICU and critical care experience.",
         },
         {
           id: 16,
@@ -8215,7 +8436,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 28.5,
           joinDate: "2022-11-15",
           skills: ["Emergency Care", "Triage", "IV Therapy"],
-          bio: "Licensed practical nurse with emergency department expertise."
+          bio: "Licensed practical nurse with emergency department expertise.",
         },
         {
           id: 17,
@@ -8236,7 +8457,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 30,
           joinDate: "2022-03-10",
           skills: ["Sterile Technique", "Surgical Instruments", "OR Procedures"],
-          bio: "Certified surgical technologist with orthopedic and general surgery experience."
+          bio: "Certified surgical technologist with orthopedic and general surgery experience.",
         },
         {
           id: 18,
@@ -8257,7 +8478,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 44,
           joinDate: "2021-06-01",
           skills: ["Pediatric Care", "NICU", "Family Education"],
-          bio: "Pediatric registered nurse with NICU and general pediatrics experience."
+          bio: "Pediatric registered nurse with NICU and general pediatrics experience.",
         },
         {
           id: 19,
@@ -8278,7 +8499,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 46,
           joinDate: "2021-01-20",
           skills: ["Cardiac Care", "Telemetry", "Cath Lab", "IABP"],
-          bio: "Cardiac care registered nurse with telemetry and cath lab experience."
+          bio: "Cardiac care registered nurse with telemetry and cath lab experience.",
         },
         {
           id: 20,
@@ -8299,7 +8520,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 21.5,
           joinDate: "2023-04-10",
           skills: ["Wound Care", "Patient Mobility", "Vital Signs"],
-          bio: "Medical-surgical certified nursing assistant with wound care expertise."
+          bio: "Medical-surgical certified nursing assistant with wound care expertise.",
         },
         {
           id: 21,
@@ -8320,7 +8541,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 43.5,
           joinDate: "2022-07-15",
           skills: ["Neuro Assessment", "Stroke Care", "ICP Monitoring"],
-          bio: "Neurological registered nurse with stroke and brain injury expertise."
+          bio: "Neurological registered nurse with stroke and brain injury expertise.",
         },
         {
           id: 22,
@@ -8341,7 +8562,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 29,
           joinDate: "2022-09-01",
           skills: ["Chemotherapy", "Patient Education", "Pain Management"],
-          bio: "Licensed practical nurse specializing in oncology and chemotherapy administration."
+          bio: "Licensed practical nurse specializing in oncology and chemotherapy administration.",
         },
         {
           id: 23,
@@ -8362,7 +8583,7 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 24,
           joinDate: "2023-01-20",
           skills: ["Dialysis", "Vascular Access", "Patient Care"],
-          bio: "Patient care technician with dialysis and nephrology experience."
+          bio: "Patient care technician with dialysis and nephrology experience.",
         },
         {
           id: 24,
@@ -8383,8 +8604,8 @@ export function registerRoutes(app: Express): Server {
           hourlyRate: 20.5,
           joinDate: "2024-02-01",
           skills: ["Mental Health Support", "Crisis Intervention", "Documentation"],
-          bio: "Medical assistant with mental health and behavioral health experience."
-        }
+          bio: "Medical assistant with mental health and behavioral health experience.",
+        },
       ];
       res.json(staff);
     } catch (error) {
@@ -8470,56 +8691,54 @@ export function registerRoutes(app: Express): Server {
     try {
       const { staffId } = req.params;
       const { facilityId } = req.body;
-      
+
       const staffIdNum = parseInt(staffId);
       const facilityIdNum = parseInt(facilityId);
-      
-      console.log(`Adding facility ${facilityIdNum} to staff ${staffIdNum}`);
-      
+
+
       // Get current staff data from database - select specific columns to avoid issues with missing columns
       const staffData = await db
         .select({
           id: staff.id,
           firstName: staff.firstName,
           lastName: staff.lastName,
-          associatedFacilities: staff.associatedFacilities
+          associatedFacilities: staff.associatedFacilities,
         })
         .from(staff)
         .where(eq(staff.id, staffIdNum))
         .limit(1);
-      
+
       if (!staffData.length) {
         return res.status(404).json({ message: "Staff member not found" });
       }
-      
+
       const currentStaff = staffData[0];
-      
+
       // Add facility if not already associated
-      const currentAssociations = Array.isArray(currentStaff.associatedFacilities) 
-        ? currentStaff.associatedFacilities 
+      const currentAssociations = Array.isArray(currentStaff.associatedFacilities)
+        ? currentStaff.associatedFacilities
         : [];
       let updatedAssociations = [...currentAssociations];
-      
+
       if (!updatedAssociations.includes(facilityIdNum)) {
         updatedAssociations.push(facilityIdNum);
       }
-      
+
       // Update in database
       await db
         .update(staff)
-        .set({ 
+        .set({
           associatedFacilities: updatedAssociations,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(staff.id, staffIdNum));
-      
-      console.log(`Updated associations for staff ${staffIdNum}:`, updatedAssociations);
-      
-      res.json({ 
+
+
+      res.json({
         message: "Facility association added successfully",
         staffId: staffIdNum,
         facilityId: facilityIdNum,
-        associations: updatedAssociations
+        associations: updatedAssociations,
       });
     } catch (error) {
       console.error("Error adding facility association:", error);
@@ -8530,52 +8749,50 @@ export function registerRoutes(app: Express): Server {
   app.delete("/api/staff/:staffId/facilities/:facilityId", requireAuth, async (req, res) => {
     try {
       const { staffId, facilityId } = req.params;
-      
+
       const staffIdNum = parseInt(staffId);
       const facilityIdNum = parseInt(facilityId);
-      
-      console.log(`Removing facility ${facilityIdNum} from staff ${staffIdNum}`);
-      
+
+
       // Get current staff data from database - select specific columns to avoid issues with missing columns
       const staffData = await db
         .select({
           id: staff.id,
           firstName: staff.firstName,
           lastName: staff.lastName,
-          associatedFacilities: staff.associatedFacilities
+          associatedFacilities: staff.associatedFacilities,
         })
         .from(staff)
         .where(eq(staff.id, staffIdNum))
         .limit(1);
-      
+
       if (!staffData.length) {
         return res.status(404).json({ message: "Staff member not found" });
       }
-      
+
       const currentStaff = staffData[0];
-      
+
       // Remove facility from associations
-      const currentAssociations = Array.isArray(currentStaff.associatedFacilities) 
-        ? currentStaff.associatedFacilities 
+      const currentAssociations = Array.isArray(currentStaff.associatedFacilities)
+        ? currentStaff.associatedFacilities
         : [];
-      const updatedAssociations = currentAssociations.filter(id => id !== facilityIdNum);
-      
+      const updatedAssociations = currentAssociations.filter((id) => id !== facilityIdNum);
+
       // Update in database
       await db
         .update(staff)
-        .set({ 
+        .set({
           associatedFacilities: updatedAssociations,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(staff.id, staffIdNum));
-      
-      console.log(`Updated associations for staff ${staffIdNum}:`, updatedAssociations);
-      
-      res.json({ 
+
+
+      res.json({
         message: "Facility association removed successfully",
         staffId: staffIdNum,
         facilityId: facilityIdNum,
-        associations: updatedAssociations
+        associations: updatedAssociations,
       });
     } catch (error) {
       console.error("Error removing facility association:", error);
@@ -8588,25 +8805,24 @@ export function registerRoutes(app: Express): Server {
     try {
       const staffId = parseInt(req.params.id);
       const updates = req.body;
-      
-      console.log(`[STAFF UPDATE] Updating staff ${staffId} with:`, updates);
-      
+
+
       // Validate staff exists
       const existingStaff = await db
         .select({ id: staff.id, firstName: staff.firstName, lastName: staff.lastName })
         .from(staff)
         .where(eq(staff.id, staffId))
         .limit(1);
-      
+
       if (!existingStaff.length) {
         return res.status(404).json({ message: "Staff member not found" });
       }
-      
+
       // Prepare update object with only defined fields
       const updateData: any = {
-        updatedAt: new Date()
+        updatedAt: new Date(),
       };
-      
+
       // Basic information
       if (updates.firstName !== undefined) updateData.firstName = updates.firstName;
       if (updates.lastName !== undefined) updateData.lastName = updates.lastName;
@@ -8619,62 +8835,68 @@ export function registerRoutes(app: Express): Server {
       if (updates.bio !== undefined) updateData.bio = updates.bio;
       if (updates.hourlyRate !== undefined) updateData.hourlyRate = updates.hourlyRate;
       if (updates.profilePhoto !== undefined) updateData.profilePhoto = updates.profilePhoto;
-      if (updates.reliabilityScore !== undefined) updateData.reliabilityScore = updates.reliabilityScore;
+      if (updates.reliabilityScore !== undefined)
+        updateData.reliabilityScore = updates.reliabilityScore;
       if (updates.isActive !== undefined) updateData.isActive = updates.isActive;
-      if (updates.availabilityStatus !== undefined) updateData.availabilityStatus = updates.availabilityStatus;
-      
+      if (updates.availabilityStatus !== undefined)
+        updateData.availabilityStatus = updates.availabilityStatus;
+
       // Licensing and credentials
       if (updates.licenseNumber !== undefined) updateData.licenseNumber = updates.licenseNumber;
-      if (updates.licenseExpiry !== undefined) updateData.licenseExpiry = new Date(updates.licenseExpiry);
+      if (updates.licenseExpiry !== undefined)
+        updateData.licenseExpiry = new Date(updates.licenseExpiry);
       if (updates.certifications !== undefined) updateData.certifications = updates.certifications;
       if (updates.languages !== undefined) updateData.languages = updates.languages;
-      
+
       // Contact and address information
       if (updates.homeAddress !== undefined) updateData.homeAddress = updates.homeAddress;
       if (updates.homeZipCode !== undefined) updateData.homeZipCode = updates.homeZipCode;
-      if (updates.emergencyContact !== undefined) updateData.emergencyContact = updates.emergencyContact;
-      
+      if (updates.emergencyContact !== undefined)
+        updateData.emergencyContact = updates.emergencyContact;
+
       // Facility associations
       if (updates.associatedFacilities !== undefined) {
-        updateData.associatedFacilities = Array.isArray(updates.associatedFacilities) 
-          ? updates.associatedFacilities 
+        updateData.associatedFacilities = Array.isArray(updates.associatedFacilities)
+          ? updates.associatedFacilities
           : [];
       }
-      
+
       // Performance metrics
-      if (updates.totalWorkedShifts !== undefined) updateData.totalWorkedShifts = updates.totalWorkedShifts;
-      if (updates.lateArrivalCount !== undefined) updateData.lateArrivalCount = updates.lateArrivalCount;
-      if (updates.noCallNoShowCount !== undefined) updateData.noCallNoShowCount = updates.noCallNoShowCount;
-      if (updates.lastWorkDate !== undefined) updateData.lastWorkDate = new Date(updates.lastWorkDate);
-      
+      if (updates.totalWorkedShifts !== undefined)
+        updateData.totalWorkedShifts = updates.totalWorkedShifts;
+      if (updates.lateArrivalCount !== undefined)
+        updateData.lateArrivalCount = updates.lateArrivalCount;
+      if (updates.noCallNoShowCount !== undefined)
+        updateData.noCallNoShowCount = updates.noCallNoShowCount;
+      if (updates.lastWorkDate !== undefined)
+        updateData.lastWorkDate = new Date(updates.lastWorkDate);
+
       // Scheduling preferences
-      if (updates.preferredShiftTypes !== undefined) updateData.preferredShiftTypes = updates.preferredShiftTypes;
-      if (updates.weeklyAvailability !== undefined) updateData.weeklyAvailability = updates.weeklyAvailability;
-      
+      if (updates.preferredShiftTypes !== undefined)
+        updateData.preferredShiftTypes = updates.preferredShiftTypes;
+      if (updates.weeklyAvailability !== undefined)
+        updateData.weeklyAvailability = updates.weeklyAvailability;
+
       // Compliance information
-      if (updates.backgroundCheckDate !== undefined) updateData.backgroundCheckDate = new Date(updates.backgroundCheckDate);
-      if (updates.drugTestDate !== undefined) updateData.drugTestDate = new Date(updates.drugTestDate);
-      if (updates.covidVaccinationStatus !== undefined) updateData.covidVaccinationStatus = updates.covidVaccinationStatus;
-      if (updates.requiredCredentialsStatus !== undefined) updateData.requiredCredentialsStatus = updates.requiredCredentialsStatus;
-      
+      if (updates.backgroundCheckDate !== undefined)
+        updateData.backgroundCheckDate = new Date(updates.backgroundCheckDate);
+      if (updates.drugTestDate !== undefined)
+        updateData.drugTestDate = new Date(updates.drugTestDate);
+      if (updates.covidVaccinationStatus !== undefined)
+        updateData.covidVaccinationStatus = updates.covidVaccinationStatus;
+      if (updates.requiredCredentialsStatus !== undefined)
+        updateData.requiredCredentialsStatus = updates.requiredCredentialsStatus;
+
       // Perform the update
-      await db
-        .update(staff)
-        .set(updateData)
-        .where(eq(staff.id, staffId));
-      
+      await db.update(staff).set(updateData).where(eq(staff.id, staffId));
+
       // Fetch and return updated staff data
-      const updatedStaff = await db
-        .select()
-        .from(staff)
-        .where(eq(staff.id, staffId))
-        .limit(1);
-      
-      console.log(`[STAFF UPDATE] Successfully updated staff ${staffId}`);
-      
-      res.json({ 
+      const updatedStaff = await db.select().from(staff).where(eq(staff.id, staffId)).limit(1);
+
+
+      res.json({
         message: "Staff profile updated successfully",
-        staff: updatedStaff[0]
+        staff: updatedStaff[0],
       });
     } catch (error) {
       console.error("Error updating staff profile:", error);
@@ -8698,15 +8920,15 @@ export function registerRoutes(app: Express): Server {
     try {
       const staffId = parseInt(req.params.staffId);
       const { facilityId, isPrimary, startDate } = req.body;
-      
+
       const association = await storage.addStaffFacilityAssociation({
         staffId,
         facilityId,
         isPrimary: isPrimary || false,
         startDate: startDate ? new Date(startDate) : new Date(),
-        status: 'active'
+        status: "active",
       });
-      
+
       res.json(association);
     } catch (error) {
       console.error("Error adding staff facility association:", error);
@@ -8714,18 +8936,22 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete("/api/staff/:staffId/facility-associations/:facilityId", requireAuth, async (req, res) => {
-    try {
-      const staffId = parseInt(req.params.staffId);
-      const facilityId = parseInt(req.params.facilityId);
-      
-      await storage.removeStaffFacilityAssociation(staffId, facilityId);
-      res.json({ message: "Facility association removed successfully" });
-    } catch (error) {
-      console.error("Error removing staff facility association:", error);
-      res.status(500).json({ message: "Failed to remove facility association" });
+  app.delete(
+    "/api/staff/:staffId/facility-associations/:facilityId",
+    requireAuth,
+    async (req, res) => {
+      try {
+        const staffId = parseInt(req.params.staffId);
+        const facilityId = parseInt(req.params.facilityId);
+
+        await storage.removeStaffFacilityAssociation(staffId, facilityId);
+        res.json({ message: "Facility association removed successfully" });
+      } catch (error) {
+        console.error("Error removing staff facility association:", error);
+        res.status(500).json({ message: "Failed to remove facility association" });
+      }
     }
-  });
+  );
 
   // Staff Credentials API
   app.get("/api/staff/:staffId/credentials", requireAuth, async (req, res) => {
@@ -8743,7 +8969,7 @@ export function registerRoutes(app: Express): Server {
     try {
       const staffId = parseInt(req.params.staffId);
       const { credentialId, issueDate, expiryDate, credentialNumber } = req.body;
-      
+
       const credential = await storage.addStaffCredential({
         staffId,
         credentialId,
@@ -8751,9 +8977,9 @@ export function registerRoutes(app: Express): Server {
         expiryDate: expiryDate ? new Date(expiryDate) : null,
         credentialNumber,
         isVerified: false,
-        createdAt: new Date()
+        createdAt: new Date(),
       });
-      
+
       res.json(credential);
     } catch (error) {
       console.error("Error adding staff credential:", error);
@@ -8766,13 +8992,13 @@ export function registerRoutes(app: Express): Server {
     try {
       const facilityId = parseInt(req.params.facilityId);
       const staffMembers = await storage.getStaffByFacility(facilityId);
-      
+
       // Add full name for backward compatibility
-      const formattedStaff = staffMembers.map(member => ({
+      const formattedStaff = staffMembers.map((member) => ({
         ...member,
-        name: `${member.firstName} ${member.lastName}`
+        name: `${member.firstName} ${member.lastName}`,
       }));
-      
+
       res.json(formattedStaff);
     } catch (error) {
       console.error("Error fetching staff by facility:", error);
@@ -8841,23 +9067,24 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/shifts", requireAuth, async (req, res) => {
     try {
       const currentUser = req.user;
-      
+
       // Get the effective user (original or impersonated)
       const impersonatedUserId = (req.session as any).impersonatedUserId;
       let effectiveUser = currentUser;
-      
+
       if (impersonatedUserId) {
         effectiveUser = await storage.getUser(impersonatedUserId);
-        if (effectiveUser && effectiveUser.role !== 'super_admin') {
+        if (effectiveUser && effectiveUser.role !== "super_admin") {
           const facilityUser = await storage.getFacilityUserByEmail(effectiveUser.email);
           if (facilityUser) {
             (effectiveUser as any).associatedFacilities = facilityUser.associated_facility_ids;
           }
         }
       }
-      
-      console.log(`[SHIFTS API] Fetching shifts for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`);
-      
+
+        `[SHIFTS API] Fetching shifts for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
+      );
+
       // Generate comprehensive 12-month shift data for 100-bed skilled nursing facility
       const generateShifts = () => {
         const shifts = [];
@@ -8913,9 +9140,12 @@ export function registerRoutes(app: Express): Server {
 
             // Only generate shifts for user's associated facilities
             const userFacilities = (effectiveUser as any).associatedFacilities || [1];
-            const targetFacilityId = userFacilities.includes(19) ? 19 : (userFacilities[0] || 1);
-            const targetFacilityName = targetFacilityId === 19 ? "Test Squad Skilled Nursing" : "Sunrise Manor Skilled Nursing";
-            
+            const targetFacilityId = userFacilities.includes(19) ? 19 : userFacilities[0] || 1;
+            const targetFacilityName =
+              targetFacilityId === 19
+                ? "Test Squad Skilled Nursing"
+                : "Sunrise Manor Skilled Nursing";
+
             shifts.push({
               id: id++,
               title: `${department} ${shiftTime.type} Shift`,
@@ -8937,18 +9167,18 @@ export function registerRoutes(app: Express): Server {
       };
 
       let shifts = generateShifts();
-      
+
       // Filter shifts by user's associated facilities
-      if (effectiveUser?.role !== 'super_admin') {
+      if (effectiveUser?.role !== "super_admin") {
         const userFacilities = (effectiveUser as any).associatedFacilities || [];
-        console.log(`[SHIFTS API] Filtering shifts for facilities:`, userFacilities);
-        
+
         if (userFacilities && userFacilities.length > 0) {
-          shifts = shifts.filter(shift => userFacilities.includes(shift.facilityId));
+          shifts = shifts.filter((shift) => userFacilities.includes(shift.facilityId));
         }
       }
-      
-      console.log(`[SHIFTS API] Returning ${shifts.length} shifts for user ${effectiveUser?.email}`);
+
+        `[SHIFTS API] Returning ${shifts.length} shifts for user ${effectiveUser?.email}`
+      );
       res.json(shifts);
     } catch (error) {
       console.error("Error fetching shifts:", error);
@@ -8963,10 +9193,25 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/shift-templates", requireAuth, async (req, res) => {
     const startTime = Date.now();
     const context = analytics.getContextFromRequest(req);
-    
+
     try {
-      const { name, department, specialty, facilityId, facilityName, minStaff, maxStaff, shiftType, startTime: shiftStartTime, endTime, daysOfWeek, hourlyRate, daysPostedOut, notes } = req.body;
-      
+      const {
+        name,
+        department,
+        specialty,
+        facilityId,
+        facilityName,
+        minStaff,
+        maxStaff,
+        shiftType,
+        startTime: shiftStartTime,
+        endTime,
+        daysOfWeek,
+        hourlyRate,
+        daysPostedOut,
+        notes,
+      } = req.body;
+
       const newTemplate = await storage.createShiftTemplate({
         name,
         department,
@@ -8987,7 +9232,9 @@ export function registerRoutes(app: Express): Server {
       });
 
       // Track successful template creation
-      await analytics.trackTemplate('create', newTemplate.id,
+      await analytics.trackTemplate(
+        "create",
+        newTemplate.id,
         { ...context, facilityId },
         {
           templateName: name,
@@ -9002,22 +9249,22 @@ export function registerRoutes(app: Express): Server {
           hourlyRate,
           daysPostedOut: daysPostedOut || 7,
           success: true,
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         }
       );
 
       res.status(201).json(newTemplate);
     } catch (error) {
       // Track failed template creation
-      await analytics.trackTemplate('create', 'failed', context, {
-        reason: 'creation_failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
+      await analytics.trackTemplate("create", "failed", context, {
+        reason: "creation_failed",
+        error: error instanceof Error ? error.message : "Unknown error",
         templateName: req.body.name,
         facilityId: req.body.facilityId,
-        success: false
+        success: false,
       });
-      
-      console.error('Error creating shift template:', error);
+
+      console.error("Error creating shift template:", error);
       res.status(500).json({ message: "Failed to create shift template" });
     }
   });
@@ -9025,11 +9272,26 @@ export function registerRoutes(app: Express): Server {
   app.put("/api/shift-templates/:id", requireAuth, async (req, res) => {
     try {
       const templateId = parseInt(req.params.id);
-      console.log('UPDATE REQUEST - Template ID:', templateId);
-      console.log('UPDATE REQUEST - Body:', req.body);
-      
-      const { name, department, specialty, facilityId, facilityName, buildingId, buildingName, minStaff, maxStaff, shiftType, startTime, endTime, daysOfWeek, hourlyRate, daysPostedOut, notes } = req.body;
-      
+
+      const {
+        name,
+        department,
+        specialty,
+        facilityId,
+        facilityName,
+        buildingId,
+        buildingName,
+        minStaff,
+        maxStaff,
+        shiftType,
+        startTime,
+        endTime,
+        daysOfWeek,
+        hourlyRate,
+        daysPostedOut,
+        notes,
+      } = req.body;
+
       const updateData = {
         name,
         department,
@@ -9048,8 +9310,7 @@ export function registerRoutes(app: Express): Server {
         daysPostedOut,
         notes,
       };
-      
-      console.log('UPDATE DATA:', updateData);
+
 
       const updatedTemplate = await storage.updateShiftTemplate(templateId, updateData);
 
@@ -9057,8 +9318,7 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "Template not found" });
       }
 
-      console.log('UPDATED TEMPLATE FROM DB:', updatedTemplate);
-      
+
       // Transform database response to camelCase for frontend
       const transformedTemplate = {
         ...updatedTemplate,
@@ -9076,11 +9336,10 @@ export function registerRoutes(app: Express): Server {
         hourlyRate: updatedTemplate.hourlyRate,
         daysPostedOut: updatedTemplate.daysPostedOut,
       };
-      
-      console.log('TRANSFORMED UPDATED TEMPLATE:', transformedTemplate);
+
       res.json(transformedTemplate);
     } catch (error) {
-      console.error('Error updating shift template:', error);
+      console.error("Error updating shift template:", error);
       res.status(500).json({ message: "Failed to update shift template", error: error.message });
     }
   });
@@ -9088,18 +9347,18 @@ export function registerRoutes(app: Express): Server {
   app.delete("/api/shift-templates/:id", requireAuth, async (req, res) => {
     try {
       const templateId = parseInt(req.params.id);
-      
+
       const deleted = await storage.deleteShiftTemplate(templateId);
-      
+
       if (!deleted) {
         return res.status(404).json({ message: "Template not found" });
       }
 
       res.json({
-        message: "Template deleted successfully"
+        message: "Template deleted successfully",
       });
     } catch (error) {
-      console.error('Error deleting shift template:', error);
+      console.error("Error deleting shift template:", error);
       res.status(500).json({ message: "Failed to delete shift template" });
     }
   });
@@ -9108,51 +9367,51 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/shifts", requireAuth, async (req, res) => {
     const startTime = Date.now();
     const context = analytics.getContextFromRequest(req);
-    
+
     try {
       const shiftData = req.body;
       const user = (req as any).user;
-      
+
       if (!user) {
         return res.status(401).json({ message: "Authentication required" });
       }
-      
+
       // Validate facility association for facility users
-      if (user.role !== 'super_admin') {
+      if (user.role !== "super_admin") {
         const facilityUser = await storage.getFacilityUserByEmail(user.email);
         if (facilityUser && facilityUser.associatedFacilityIds) {
           const associatedFacilityIds = facilityUser.associatedFacilityIds;
           const requestedFacilityId = parseInt(shiftData.facilityId);
-          
+
           if (!associatedFacilityIds.includes(requestedFacilityId)) {
             // Track unauthorized shift creation attempt
-            await analytics.trackShift('create', 'unauthorized', context, {
+            await analytics.trackShift("create", "unauthorized", context, {
               facilityId: requestedFacilityId,
               userFacilities: associatedFacilityIds,
-              reason: 'facility_not_associated',
-              success: false
+              reason: "facility_not_associated",
+              success: false,
             });
-            
-            return res.status(403).json({ 
-              message: "You can only create shifts for facilities you are associated with" 
+
+            return res.status(403).json({
+              message: "You can only create shifts for facilities you are associated with",
             });
           }
         }
       }
-      
+
       // Generate unique shift ID
       const shiftId = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
-      
+
       // Get facility details
       const facilities = await storage.getFacilities({ isActive: true });
-      const facility = facilities.find(f => f.id === parseInt(shiftData.facilityId));
-      
+      const facility = facilities.find((f) => f.id === parseInt(shiftData.facilityId));
+
       // Insert shift into generated_shifts table
       await db.insert(generatedShifts).values({
         id: shiftId,
         templateId: 0,
         title: shiftData.title || "Untitled Shift",
-        date: shiftData.date || new Date().toISOString().split('T')[0],
+        date: shiftData.date || new Date().toISOString().split("T")[0],
         startTime: shiftData.startTime || "07:00",
         endTime: shiftData.endTime || "19:00",
         department: shiftData.specialty || "General",
@@ -9169,11 +9428,13 @@ export function registerRoutes(app: Express): Server {
         minStaff: 1,
         maxStaff: parseInt(shiftData.requiredStaff) || 1,
         totalHours: 8,
-        shiftType: shiftData.shiftType || "Day"
+        shiftType: shiftData.shiftType || "Day",
       });
-      
+
       // Track successful shift creation
-      await analytics.trackShift('create', shiftId, 
+      await analytics.trackShift(
+        "create",
+        shiftId,
         { ...context, facilityId: parseInt(shiftData.facilityId) },
         {
           title: shiftData.title,
@@ -9185,10 +9446,10 @@ export function registerRoutes(app: Express): Server {
           requiredWorkers: parseInt(shiftData.requiredStaff) || 1,
           rate: parseFloat(shiftData.rate) || 45.0,
           success: true,
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         }
       );
-      
+
       res.json({
         message: "Shift created successfully",
         shiftId,
@@ -9196,12 +9457,11 @@ export function registerRoutes(app: Express): Server {
           id: shiftId,
           ...shiftData,
           status: "open",
-          createdAt: new Date().toISOString()
-        }
+          createdAt: new Date().toISOString(),
+        },
       });
-      
     } catch (error) {
-      console.error('Create shift error:', error);
+      console.error("Create shift error:", error);
       res.status(500).json({ message: "Failed to create shift" });
     }
   });
@@ -9211,26 +9471,24 @@ export function registerRoutes(app: Express): Server {
     try {
       const requestBody = req.body;
       const userId = (req as any).user?.id;
-      
-      console.log("Post shift request body:", requestBody);
-      
+
+
       // Extract shiftData from request body (the mutation wraps it in { shiftData })
       const shiftData = requestBody.shiftData || requestBody;
-      console.log("Extracted shift data:", shiftData);
-      
+
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
       }
-      
+
       // Generate unique shift ID using timestamp and random component
       const shiftId = `${Date.now()}${Math.floor(Math.random() * 1000)}`;
-      
+
       // Insert shift into generated_shifts table
       await db.insert(generatedShifts).values({
         id: shiftId,
         templateId: shiftData.templateId || 0,
         title: shiftData.title || "Untitled Shift",
-        date: shiftData.date || new Date().toISOString().split('T')[0],
+        date: shiftData.date || new Date().toISOString().split("T")[0],
         startTime: shiftData.startTime || "07:00",
         endTime: shiftData.endTime || "19:00",
         department: shiftData.department || "General",
@@ -9246,9 +9504,9 @@ export function registerRoutes(app: Express): Server {
         requiredWorkers: shiftData.requiredWorkers || 1,
         minStaff: shiftData.minStaff || 1,
         maxStaff: shiftData.maxStaff || 1,
-        totalHours: shiftData.totalHours || 8
+        totalHours: shiftData.totalHours || 8,
       });
-      
+
       res.json({
         message: "Shift posted successfully",
         shiftId,
@@ -9256,12 +9514,11 @@ export function registerRoutes(app: Express): Server {
           id: shiftId,
           ...shiftData,
           status: "open",
-          createdAt: new Date().toISOString()
-        }
+          createdAt: new Date().toISOString(),
+        },
       });
-      
     } catch (error) {
-      console.error('Post shift error:', error);
+      console.error("Post shift error:", error);
       res.status(500).json({ message: "Failed to post shift" });
     }
   });
@@ -9271,37 +9528,39 @@ export function registerRoutes(app: Express): Server {
     try {
       const { templateId, startDate, endDate, daysInAdvance } = req.body;
       const userId = (req as any).user?.id;
-      
+
       if (!userId) {
         return res.status(401).json({ message: "Authentication required" });
       }
-      
+
       // Import the service
-      const { shiftTemplateService } = await import('./shift-template-service');
-      
+      const { shiftTemplateService } = await import("./shift-template-service");
+
       // Generate shifts using the service
       const generatedShifts = await shiftTemplateService.generateShiftsFromTemplate({
         templateId,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         skipExisting: true,
-        preserveAssigned: true
+        preserveAssigned: true,
       });
-      
-      console.log(`Generated ${generatedShifts.length} shifts from template ${templateId}`);
-      
+
+
       res.json({
         message: `Successfully created ${generatedShifts.length} shifts from template`,
         generatedShifts: generatedShifts.length,
         shifts: generatedShifts,
         templateId: templateId,
         dateRange: { startDate, endDate },
-        daysInAdvance
+        daysInAdvance,
       });
-      
     } catch (error) {
-      console.error('Create shifts from template error:', error);
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to create shifts from template" });
+      console.error("Create shifts from template error:", error);
+      res
+        .status(500)
+        .json({
+          message: error instanceof Error ? error.message : "Failed to create shifts from template",
+        });
     }
   });
 
@@ -9309,20 +9568,20 @@ export function registerRoutes(app: Express): Server {
     try {
       const templateId = parseInt(req.params.id);
       const { isActive } = req.body;
-      
+
       if (isActive) {
         // Generate new shifts when activating template
         const newShifts = 23;
         res.json({
           message: `Template activated and ${newShifts} new shifts generated`,
-          generatedShifts: newShifts
+          generatedShifts: newShifts,
         });
       } else {
         // Remove future open shifts when deactivating template
         const removedShifts = 15;
         res.json({
           message: `Template deactivated and ${removedShifts} future open shifts removed`,
-          removedShifts: removedShifts
+          removedShifts: removedShifts,
         });
       }
     } catch (error) {
@@ -9333,50 +9592,54 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/shift-templates/:id/regenerate", requireAuth, async (req, res) => {
     try {
       const templateId = parseInt(req.params.id);
-      
+
       // Import the service
-      const { shiftTemplateService } = await import('./shift-template-service');
-      
+      const { shiftTemplateService } = await import("./shift-template-service");
+
       // Get the template from database
       const templates = await storage.getShiftTemplates();
-      const template = templates.find(t => t.id === templateId);
-      
+      const template = templates.find((t) => t.id === templateId);
+
       if (!template) {
         return res.status(404).json({ message: "Template not found" });
       }
-      
+
       // Update template to trigger regeneration of future shifts
       const updatedTemplate = await shiftTemplateService.updateTemplate({
         templateId,
         updates: {}, // No actual updates, just trigger regeneration
-        regenerateFuture: true
+        regenerateFuture: true,
       });
-      
+
       // Count generated shifts for the next 30 days
       const today = new Date();
       const futureDate = new Date(today);
       futureDate.setDate(today.getDate() + 30);
-      
-      const regeneratedShifts = await db.select()
+
+      const regeneratedShifts = await db
+        .select()
         .from(generatedShifts)
         .where(
           and(
             eq(generatedShifts.templateId, templateId),
-            gte(generatedShifts.date, today.toISOString().split('T')[0]),
-            lte(generatedShifts.date, futureDate.toISOString().split('T')[0])
+            gte(generatedShifts.date, today.toISOString().split("T")[0]),
+            lte(generatedShifts.date, futureDate.toISOString().split("T")[0])
           )
         );
-      
-      console.log(`[REGENERATE] Generated ${regeneratedShifts.length} shifts for template "${template.name}" (ID: ${templateId})`);
-      
+
+        `[REGENERATE] Generated ${regeneratedShifts.length} shifts for template "${template.name}" (ID: ${templateId})`
+      );
+
       res.json({
         message: `Successfully regenerated ${regeneratedShifts.length} future shifts from template "${template.name}"`,
         regeneratedShifts: regeneratedShifts.length,
-        templateName: template.name
+        templateName: template.name,
       });
     } catch (error) {
-      console.error('Regenerate shifts error:', error);
-      res.status(500).json({ message: error instanceof Error ? error.message : "Failed to regenerate shifts" });
+      console.error("Regenerate shifts error:", error);
+      res
+        .status(500)
+        .json({ message: error instanceof Error ? error.message : "Failed to regenerate shifts" });
     }
   });
 
@@ -9395,7 +9658,7 @@ export function registerRoutes(app: Express): Server {
           status: "scheduled",
           department: "ICU",
           specialty: "Registered Nurse",
-          notes: "Primary assignment"
+          notes: "Primary assignment",
         },
         {
           id: 2,
@@ -9407,7 +9670,7 @@ export function registerRoutes(app: Express): Server {
           status: "open",
           department: "Emergency",
           specialty: "Registered Nurse",
-          notes: "Night coverage needed"
+          notes: "Night coverage needed",
         },
         {
           id: 3,
@@ -9419,8 +9682,8 @@ export function registerRoutes(app: Express): Server {
           status: "requested",
           department: "Medical-Surgical",
           specialty: "Licensed Practical Nurse",
-          notes: "Pending approval"
-        }
+          notes: "Pending approval",
+        },
       ];
       res.json(shifts);
     } catch (error) {
@@ -9437,7 +9700,7 @@ export function registerRoutes(app: Express): Server {
           budgetHours: 180,
           currentHours: 156,
           shortage: 12,
-          overage: 0
+          overage: 0,
         },
         {
           department: "Emergency",
@@ -9445,7 +9708,7 @@ export function registerRoutes(app: Express): Server {
           budgetHours: 220,
           currentHours: 198,
           shortage: 12,
-          overage: 0
+          overage: 0,
         },
         {
           department: "Medical-Surgical",
@@ -9453,7 +9716,7 @@ export function registerRoutes(app: Express): Server {
           budgetHours: 150,
           currentHours: 152,
           shortage: 0,
-          overage: 2
+          overage: 2,
         },
         {
           department: "Operating Room",
@@ -9461,8 +9724,8 @@ export function registerRoutes(app: Express): Server {
           budgetHours: 130,
           currentHours: 118,
           shortage: 2,
-          overage: 0
-        }
+          overage: 0,
+        },
       ];
       res.json(requirements);
     } catch (error) {
@@ -9477,7 +9740,7 @@ export function registerRoutes(app: Express): Server {
         id: Date.now(),
         ...shiftData,
         status: "open",
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
       res.json(newShift);
     } catch (error) {
@@ -9489,13 +9752,13 @@ export function registerRoutes(app: Express): Server {
     try {
       const shiftId = parseInt(req.params.id);
       const { staffId } = req.body;
-      
+
       res.json({
         message: "Shift successfully filled",
         shiftId,
         staffId,
         status: "filled",
-        filledAt: new Date().toISOString()
+        filledAt: new Date().toISOString(),
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to fill shift" });
@@ -9506,21 +9769,23 @@ export function registerRoutes(app: Express): Server {
   function generateShiftsFromTemplate(template: any) {
     const shifts = [];
     const today = new Date();
-    
+
     // Generate shifts for next 30 days based on template days of week
     for (let i = 0; i < 30; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      
+
       if (template.daysOfWeek.includes(date.getDay())) {
         for (let staffCount = 0; staffCount < template.minStaff; staffCount++) {
           // Create stable shift ID based on template, date, and position
-          const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
-          const shiftId = parseInt(`${template.id}${dateStr}${staffCount.toString().padStart(2, '0')}`);
+          const dateStr = date.toISOString().split("T")[0].replace(/-/g, "");
+          const shiftId = parseInt(
+            `${template.id}${dateStr}${staffCount.toString().padStart(2, "0")}`
+          );
           shifts.push({
             id: shiftId,
             templateId: template.id,
-            date: date.toISOString().split('T')[0],
+            date: date.toISOString().split("T")[0],
             startTime: template.startTime,
             endTime: template.endTime,
             department: template.department,
@@ -9528,12 +9793,12 @@ export function registerRoutes(app: Express): Server {
             facilityId: template.facilityId,
             status: "open",
             hourlyRate: template.hourlyRate,
-            createdFromTemplate: true
+            createdFromTemplate: true,
           });
         }
       }
     }
-    
+
     return shifts;
   }
 
@@ -9555,7 +9820,7 @@ export function registerRoutes(app: Express): Server {
           facilityId: null,
           facilityName: null,
           department: "Administration",
-          isActive: true
+          isActive: true,
         },
         {
           id: 2,
@@ -9567,7 +9832,7 @@ export function registerRoutes(app: Express): Server {
           facilityId: 1,
           facilityName: "Portland General Hospital",
           department: "ICU",
-          isActive: true
+          isActive: true,
         },
         {
           id: 3,
@@ -9579,7 +9844,7 @@ export function registerRoutes(app: Express): Server {
           facilityId: 1,
           facilityName: "Portland General Hospital",
           department: "Emergency",
-          isActive: true
+          isActive: true,
         },
         {
           id: 4,
@@ -9591,7 +9856,7 @@ export function registerRoutes(app: Express): Server {
           facilityId: null,
           facilityName: null,
           department: "Float Pool",
-          isActive: true
+          isActive: true,
         },
         {
           id: 5,
@@ -9603,8 +9868,8 @@ export function registerRoutes(app: Express): Server {
           facilityId: 2,
           facilityName: "Maple Grove Memory Care",
           department: "Administration",
-          isActive: true
-        }
+          isActive: true,
+        },
       ];
 
       res.json(users);
@@ -9620,7 +9885,7 @@ export function registerRoutes(app: Express): Server {
       }
 
       const { targetUserId } = req.body;
-      
+
       // Get target user from database
       const targetUser = await storage.getUser(targetUserId);
       if (!targetUser) {
@@ -9635,13 +9900,13 @@ export function registerRoutes(app: Express): Server {
       (req.session as any).user = {
         ...targetUser,
         isActive: true,
-        canImpersonate: true
+        canImpersonate: true,
       };
 
       res.json({
         message: "Impersonation started successfully",
         impersonatedUser: targetUser,
-        originalUser: (req.session as any).originalUser
+        originalUser: (req.session as any).originalUser,
       });
     } catch (error) {
       console.error("Error starting impersonation:", error);
@@ -9656,7 +9921,7 @@ export function registerRoutes(app: Express): Server {
       }
 
       const originalUser = (req.session as any).originalUser;
-      
+
       // Restore original user
       (req.session as any).user = originalUser;
       delete (req.session as any).originalUser;
@@ -9664,7 +9929,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({
         message: "Impersonation ended successfully",
-        originalUser: originalUser
+        originalUser: originalUser,
       });
     } catch (error) {
       res.status(500).json({ message: "Failed to stop impersonation" });
@@ -10283,19 +10548,20 @@ export function registerRoutes(app: Express): Server {
 
   // WebSocket setup for real-time messaging
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
-  
+
   // Initialize unified data service with WebSocket support
   unifiedDataService = new UnifiedDataService(wss);
 
   // Track authenticated WebSocket connections
   const userConnections = new Map<number, Set<WebSocket>>();
 
-  wss.on("connection", (ws: WebSocket & { userId?: number, isAlive?: boolean }, req) => {
-    console.log("WebSocket connection established");
-    
+  wss.on("connection", (ws: WebSocket & { userId?: number; isAlive?: boolean }, req) => {
+
     // Set up heartbeat to detect disconnected clients
     ws.isAlive = true;
-    ws.on('pong', () => { ws.isAlive = true; });
+    ws.on("pong", () => {
+      ws.isAlive = true;
+    });
 
     ws.on("message", async (data) => {
       try {
@@ -10305,27 +10571,28 @@ export function registerRoutes(app: Express): Server {
         switch (message.type) {
           case "authenticate":
             // Authenticate WebSocket connection with user ID
-            if (message.userId && typeof message.userId === 'number') {
+            if (message.userId && typeof message.userId === "number") {
               ws.userId = message.userId;
-              
+
               // Add to user connections map
               if (!userConnections.has(message.userId)) {
                 userConnections.set(message.userId, new Set());
               }
               userConnections.get(message.userId)!.add(ws);
-              
-              ws.send(JSON.stringify({
-                type: "authenticated",
-                userId: message.userId
-              }));
-              console.log(`WebSocket authenticated for user ${message.userId}`);
+
+              ws.send(
+                JSON.stringify({
+                  type: "authenticated",
+                  userId: message.userId,
+                })
+              );
             }
             break;
-            
+
           case "new_message":
             // This is now handled by the REST API which broadcasts properly
             break;
-            
+
           case "shift_update":
             // Broadcast shift updates to facility staff
             wss.clients.forEach((client) => {
@@ -10339,7 +10606,7 @@ export function registerRoutes(app: Express): Server {
               }
             });
             break;
-            
+
           case "ping":
             // Handle ping/pong for connection health
             ws.send(JSON.stringify({ type: "pong" }));
@@ -10351,8 +10618,7 @@ export function registerRoutes(app: Express): Server {
     });
 
     ws.on("close", () => {
-      console.log("WebSocket connection closed");
-      
+
       // Remove from user connections
       if (ws.userId && userConnections.has(ws.userId)) {
         userConnections.get(ws.userId)!.delete(ws);
@@ -10366,7 +10632,7 @@ export function registerRoutes(app: Express): Server {
       console.error("WebSocket error:", error);
     });
   });
-  
+
   // Heartbeat interval to detect stale connections
   const heartbeatInterval = setInterval(() => {
     wss.clients.forEach((ws: WebSocket & { isAlive?: boolean }) => {
@@ -10379,18 +10645,20 @@ export function registerRoutes(app: Express): Server {
   }, 30000); // 30 seconds
 
   // Clean up on server shutdown
-  wss.on('close', () => {
+  wss.on("close", () => {
     clearInterval(heartbeatInterval);
   });
 
   // Shift template routes - replaces in-memory template storage
   app.get("/api/shift-templates", requireAuth, async (req, res) => {
     try {
-      const facilityId = req.query.facilityId ? parseInt(req.query.facilityId as string) : undefined;
+      const facilityId = req.query.facilityId
+        ? parseInt(req.query.facilityId as string)
+        : undefined;
       const templates = await storage.getShiftTemplates(facilityId);
-      
+
       // Transform database fields to camelCase for frontend
-      const transformedTemplates = templates.map(template => ({
+      const transformedTemplates = templates.map((template) => ({
         ...template,
         facilityId: template.facilityId,
         facilityName: template.facilityName,
@@ -10406,8 +10674,7 @@ export function registerRoutes(app: Express): Server {
         hourlyRate: template.hourlyRate,
         daysPostedOut: template.daysPostedOut,
       }));
-      
-      console.log('Transformed templates for frontend:', transformedTemplates[0]);
+
       res.json(transformedTemplates);
     } catch (error) {
       console.error("Error fetching shift templates:", error);
@@ -10432,11 +10699,11 @@ export function registerRoutes(app: Express): Server {
     try {
       const id = parseInt(req.params.id);
       const success = await storage.deleteShiftTemplate(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: "Shift template not found" });
       }
-      
+
       res.json({ message: "Shift template deleted successfully" });
     } catch (error) {
       console.error("Error deleting shift template:", error);
@@ -10447,11 +10714,14 @@ export function registerRoutes(app: Express): Server {
   // Generated shift routes - replaces global templateGeneratedShifts
   app.get("/api/generated-shifts", requireAuth, async (req, res) => {
     try {
-      const dateRange = req.query.start && req.query.end ? {
-        start: req.query.start as string,
-        end: req.query.end as string
-      } : undefined;
-      
+      const dateRange =
+        req.query.start && req.query.end
+          ? {
+              start: req.query.start as string,
+              end: req.query.end as string,
+            }
+          : undefined;
+
       const shifts = await storage.getGeneratedShifts(dateRange);
       res.json(shifts);
     } catch (error) {
@@ -10476,11 +10746,11 @@ export function registerRoutes(app: Express): Server {
       const id = req.params.id;
       const updates = insertGeneratedShiftSchema.partial().parse(req.body);
       const shift = await storage.updateGeneratedShift(id, updates);
-      
+
       if (!shift) {
         return res.status(404).json({ message: "Generated shift not found" });
       }
-      
+
       res.json(shift);
     } catch (error) {
       console.error("Error updating generated shift:", error);
@@ -10492,11 +10762,11 @@ export function registerRoutes(app: Express): Server {
     try {
       const id = req.params.id;
       const success = await storage.deleteGeneratedShift(id);
-      
+
       if (!success) {
         return res.status(404).json({ message: "Generated shift not found" });
       }
-      
+
       res.json({ message: "Generated shift deleted successfully" });
     } catch (error) {
       console.error("Error deleting generated shift:", error);
@@ -10509,11 +10779,11 @@ export function registerRoutes(app: Express): Server {
     try {
       const sessionId = req.params.sessionId;
       const session = await storage.getUserSession(sessionId);
-      
+
       if (!session) {
         return res.status(404).json({ message: "Session not found or expired" });
       }
-      
+
       res.json(session);
     } catch (error) {
       console.error("Error fetching user session:", error);
@@ -10525,11 +10795,11 @@ export function registerRoutes(app: Express): Server {
     try {
       const sessionId = req.params.sessionId;
       const success = await storage.deleteUserSession(sessionId);
-      
+
       if (!success) {
         return res.status(404).json({ message: "Session not found" });
       }
-      
+
       res.json({ message: "Session deleted successfully" });
     } catch (error) {
       console.error("Error deleting user session:", error);
@@ -10551,7 +10821,7 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/teams", requireAuth, async (req, res) => {
     try {
       const teamsFromDB = await db.select().from(teams);
-      
+
       // Get detailed member and facility data for each team
       const teamsWithDetails = await Promise.all(
         teamsFromDB.map(async (team) => {
@@ -10565,7 +10835,7 @@ export function registerRoutes(app: Express): Server {
               firstName: users.firstName,
               lastName: users.lastName,
               email: users.email,
-              userType: sql<string>`'user'`.as('userType')
+              userType: sql<string>`'user'`.as("userType"),
             })
             .from(teamMembers)
             .leftJoin(users, eq(teamMembers.userId, users.id))
@@ -10583,20 +10853,20 @@ export function registerRoutes(app: Express): Server {
               firstName: facilityUsers.firstName,
               lastName: facilityUsers.lastName,
               email: facilityUsers.email,
-              userType: sql<string>`'facility'`.as('userType')
+              userType: sql<string>`'facility'`.as("userType"),
             })
             .from(facilityUserTeamMemberships)
-            .innerJoin(facilityUsers, eq(facilityUserTeamMemberships.facilityUserId, facilityUsers.id))
+            .innerJoin(
+              facilityUsers,
+              eq(facilityUserTeamMemberships.facilityUserId, facilityUsers.id)
+            )
             .where(
-              and(
-                eq(facilityUserTeamMemberships.teamId, team.id),
-                eq(facilityUsers.isActive, true)
-              )
+              and(eq(facilityUserTeamMemberships.teamId, team.id), eq(facilityUsers.isActive, true))
             );
 
           // Combine both types of members
           const members = [...regularMembers, ...facilityMembers];
-            
+
           // Get team facilities with facility details
           const teamFacilitiesData = await db
             .select({
@@ -10606,22 +10876,22 @@ export function registerRoutes(app: Express): Server {
               name: facilities.name,
               city: facilities.city,
               state: facilities.state,
-              facilityType: facilities.facilityType
+              facilityType: facilities.facilityType,
             })
             .from(teamFacilities)
             .leftJoin(facilities, eq(teamFacilities.facilityId, facilities.id))
             .where(eq(teamFacilities.teamId, team.id));
-            
+
           return {
             ...team,
             memberCount: members.length,
             facilityCount: teamFacilitiesData.length,
             members,
-            facilities: teamFacilitiesData
+            facilities: teamFacilitiesData,
           };
         })
       );
-      
+
       res.json(teamsWithDetails);
     } catch (error) {
       console.error("Error fetching teams:", error);
@@ -10637,7 +10907,7 @@ export function registerRoutes(app: Express): Server {
 
       const validatedData = insertTeamSchema.parse(req.body);
       const [team] = await db.insert(teams).values(validatedData).returning();
-      
+
       res.json(team);
     } catch (error) {
       console.error("Error creating team:", error);
@@ -10655,28 +10925,38 @@ export function registerRoutes(app: Express): Server {
       const { userId, userType, role } = req.body;
 
       // Handle facility users vs regular users
-      if (userType === 'facility') {
+      if (userType === "facility") {
         // For facility users, create a facility-user team association
-        const [facilityUserTeam] = await db.insert(facilityUserTeamMemberships).values({
-          facilityUserId: userId,
-          teamId: teamId,
-          role: role,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }).returning();
+        const [facilityUserTeam] = await db
+          .insert(facilityUserTeamMemberships)
+          .values({
+            facilityUserId: userId,
+            teamId: teamId,
+            role: role,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })
+          .returning();
 
         // Also create record in facility user associations for compatibility
-        const facilityUser = await db.select().from(facilityUsers).where(eq(facilityUsers.id, userId)).limit(1);
+        const facilityUser = await db
+          .select()
+          .from(facilityUsers)
+          .where(eq(facilityUsers.id, userId))
+          .limit(1);
         if (facilityUser.length > 0) {
           const user = facilityUser[0];
-          await db.insert(facilityUserFacilityAssociations).values({
-            userId: userId,
-            facilityId: user.primaryFacilityId,
-            isPrimary: true,
-            assignedById: req.user?.id || 1,
-            isActive: true,
-            facilitySpecificPermissions: user.permissions,
-          }).onConflictDoNothing();
+          await db
+            .insert(facilityUserFacilityAssociations)
+            .values({
+              userId: userId,
+              facilityId: user.primaryFacilityId,
+              isPrimary: true,
+              assignedById: req.user?.id || 1,
+              isActive: true,
+              facilitySpecificPermissions: user.permissions,
+            })
+            .onConflictDoNothing();
         }
 
         res.json({
@@ -10684,22 +10964,22 @@ export function registerRoutes(app: Express): Server {
           userId: userId,
           teamId: teamId,
           role: role,
-          userType: 'facility',
-          joinedAt: facilityUserTeam.assignedAt
+          userType: "facility",
+          joinedAt: facilityUserTeam.assignedAt,
         });
       } else {
         // For regular users, use the standard team members table
         const validatedData = insertTeamMemberSchema.parse({
           userId,
           teamId,
-          role
+          role,
         });
-        
+
         const [member] = await db.insert(teamMembers).values(validatedData).returning();
-        
+
         res.json({
           ...member,
-          userType: 'user'
+          userType: "user",
         });
       }
     } catch (error) {
@@ -10717,30 +10997,31 @@ export function registerRoutes(app: Express): Server {
       const teamId = parseInt(req.params.teamId);
       const validatedData = insertTeamFacilitySchema.parse({
         ...req.body,
-        teamId
+        teamId,
       });
-      
+
       // Check if facility is already assigned to another team
       const existingAssignment = await db
         .select()
         .from(teamFacilities)
         .where(eq(teamFacilities.facilityId, validatedData.facilityId));
-        
+
       if (existingAssignment.length > 0) {
-        return res.status(400).json({ 
-          message: "Facility is already assigned to another team. Each facility can only belong to one team." 
+        return res.status(400).json({
+          message:
+            "Facility is already assigned to another team. Each facility can only belong to one team.",
         });
       }
-      
+
       // Add facility to team_facilities table
       const [facility] = await db.insert(teamFacilities).values(validatedData).returning();
-      
+
       // Update facility's team_id for synchronization
       await db
         .update(facilities)
         .set({ teamId })
         .where(eq(facilities.id, validatedData.facilityId));
-      
+
       res.json(facility);
     } catch (error) {
       console.error("Error assigning facility to team:", error);
@@ -10756,17 +11037,17 @@ export function registerRoutes(app: Express): Server {
 
       const teamId = parseInt(req.params.teamId);
       const validatedData = insertTeamSchema.partial().parse(req.body);
-      
+
       const [updatedTeam] = await db
         .update(teams)
         .set(validatedData)
         .where(eq(teams.id, teamId))
         .returning();
-      
+
       if (!updatedTeam) {
         return res.status(404).json({ message: "Team not found" });
       }
-      
+
       res.json(updatedTeam);
     } catch (error) {
       console.error("Error updating team:", error);
@@ -10782,23 +11063,15 @@ export function registerRoutes(app: Express): Server {
 
       const teamId = parseInt(req.params.teamId);
       const facilityId = parseInt(req.params.facilityId);
-      
+
       // Remove facility from team_facilities table
       await db
         .delete(teamFacilities)
-        .where(
-          and(
-            eq(teamFacilities.teamId, teamId),
-            eq(teamFacilities.facilityId, facilityId)
-          )
-        );
-      
+        .where(and(eq(teamFacilities.teamId, teamId), eq(teamFacilities.facilityId, facilityId)));
+
       // Update facility's team_id to null for synchronization
-      await db
-        .update(facilities)
-        .set({ teamId: null })
-        .where(eq(facilities.id, facilityId));
-      
+      await db.update(facilities).set({ teamId: null }).where(eq(facilities.id, facilityId));
+
       res.json({ message: "Facility removed from team successfully" });
     } catch (error) {
       console.error("Error removing facility from team:", error);
@@ -10814,17 +11087,12 @@ export function registerRoutes(app: Express): Server {
 
       const teamId = parseInt(req.params.teamId);
       const memberId = parseInt(req.params.memberId);
-      
+
       // Remove member from team_members table
       await db
         .delete(teamMembers)
-        .where(
-          and(
-            eq(teamMembers.teamId, teamId),
-            eq(teamMembers.id, memberId)
-          )
-        );
-      
+        .where(and(eq(teamMembers.teamId, teamId), eq(teamMembers.id, memberId)));
+
       res.json({ message: "Member removed from team successfully" });
     } catch (error) {
       console.error("Error removing member from team:", error);
@@ -10833,37 +11101,40 @@ export function registerRoutes(app: Express): Server {
   });
 
   // ===== FACILITY USER MANAGEMENT API =====
-  
+
   // Get all facility users from users table
   app.get("/api/facility-users", requireAuth, async (req, res) => {
     try {
-      const facilityUsersData = await db.select({
-        id: users.id,
-        username: users.username,
-        email: users.email,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        role: users.role,
-        avatar: users.avatar,
-        isActive: users.isActive,
-        primaryFacilityId: users.facilityId,
-        associatedFacilityIds: users.associatedFacilities,
-        phone: sql<string>`null`.as('phone'),
-        title: sql<string>`null`.as('title'),
-        department: sql<string>`null`.as('department'),
-        permissions: sql<any>`null`.as('permissions'),
-        lastLogin: sql<Date>`null`.as('lastLogin'),
-        loginCount: sql<number>`0`.as('loginCount'),
-        twoFactorEnabled: sql<boolean>`false`.as('twoFactorEnabled'),
-        notes: sql<string>`null`.as('notes'),
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-        facilityName: facilities.name,
-      })
-      .from(users)
-      .leftJoin(facilities, eq(users.facilityId, facilities.id))
-      .where(sql`${users.role} IN ('facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing', 'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin')`)
-      .orderBy(users.lastName, users.firstName);
+      const facilityUsersData = await db
+        .select({
+          id: users.id,
+          username: users.username,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+          avatar: users.avatar,
+          isActive: users.isActive,
+          primaryFacilityId: users.facilityId,
+          associatedFacilityIds: users.associatedFacilities,
+          phone: sql<string>`null`.as("phone"),
+          title: sql<string>`null`.as("title"),
+          department: sql<string>`null`.as("department"),
+          permissions: sql<any>`null`.as("permissions"),
+          lastLogin: sql<Date>`null`.as("lastLogin"),
+          loginCount: sql<number>`0`.as("loginCount"),
+          twoFactorEnabled: sql<boolean>`false`.as("twoFactorEnabled"),
+          notes: sql<string>`null`.as("notes"),
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+          facilityName: facilities.name,
+        })
+        .from(users)
+        .leftJoin(facilities, eq(users.facilityId, facilities.id))
+        .where(
+          sql`${users.role} IN ('facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing', 'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin')`
+        )
+        .orderBy(users.lastName, users.firstName);
 
       res.json(facilityUsersData);
     } catch (error) {
@@ -10876,28 +11147,31 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/facility-users", requireAuth, async (req, res) => {
     try {
       const userData = insertFacilityUserSchema.parse(req.body);
-      
+
       // Hash password (in real implementation, use proper bcrypt)
       const hashedPassword = userData.password; // Placeholder for demo
-      
-      const [newUser] = await db.insert(facilityUsers).values({
-        ...userData,
-        password: hashedPassword,
-        createdById: req.user?.id,
-      }).returning({
-        id: facilityUsers.id,
-        username: facilityUsers.username,
-        email: facilityUsers.email,
-        firstName: facilityUsers.firstName,
-        lastName: facilityUsers.lastName,
-        role: facilityUsers.role,
-        isActive: facilityUsers.isActive,
-        primaryFacilityId: facilityUsers.primaryFacilityId,
-        title: facilityUsers.title,
-        department: facilityUsers.department,
-        permissions: facilityUsers.permissions,
-        createdAt: facilityUsers.createdAt,
-      });
+
+      const [newUser] = await db
+        .insert(facilityUsers)
+        .values({
+          ...userData,
+          password: hashedPassword,
+          createdById: req.user?.id,
+        })
+        .returning({
+          id: facilityUsers.id,
+          username: facilityUsers.username,
+          email: facilityUsers.email,
+          firstName: facilityUsers.firstName,
+          lastName: facilityUsers.lastName,
+          role: facilityUsers.role,
+          isActive: facilityUsers.isActive,
+          primaryFacilityId: facilityUsers.primaryFacilityId,
+          title: facilityUsers.title,
+          department: facilityUsers.department,
+          permissions: facilityUsers.permissions,
+          createdAt: facilityUsers.createdAt,
+        });
 
       // Log activity
       await db.insert(facilityUserActivityLog).values({
@@ -10906,7 +11180,7 @@ export function registerRoutes(app: Express): Server {
         action: "user_created",
         details: { createdBy: req.user?.id, role: newUser.role },
         ipAddress: req.ip,
-        userAgent: req.get('User-Agent'),
+        userAgent: req.get("User-Agent"),
       });
 
       res.status(201).json(newUser);
@@ -10921,14 +11195,15 @@ export function registerRoutes(app: Express): Server {
     try {
       const id = parseInt(req.params.id);
       const updateData = req.body;
-      
+
       // Remove sensitive fields that shouldn't be updated via this endpoint
       delete updateData.id;
       delete updateData.password;
       delete updateData.createdAt;
       delete updateData.createdById;
 
-      const [updatedUser] = await db.update(facilityUsers)
+      const [updatedUser] = await db
+        .update(facilityUsers)
         .set({
           ...updateData,
           updatedAt: new Date(),
@@ -10964,8 +11239,9 @@ export function registerRoutes(app: Express): Server {
   app.patch("/api/facility-users/:id/deactivate", requireAuth, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      
-      const [deactivatedUser] = await db.update(facilityUsers)
+
+      const [deactivatedUser] = await db
+        .update(facilityUsers)
         .set({
           isActive: false,
           updatedAt: new Date(),
@@ -10993,57 +11269,144 @@ export function registerRoutes(app: Express): Server {
       // Define role permission mappings based on your requirements
       const rolePermissions = {
         facility_admin: [
-          "view_facility_profile", "edit_facility_profile", "create_shifts", "edit_shifts", 
-          "delete_shifts", "approve_shift_requests", "onboard_staff", "offboard_staff",
-          "view_rates", "edit_rates", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
-          "premium_shift_multiplier_1_2", "premium_shift_multiplier_1_3", "premium_shift_multiplier_1_4", 
-          "premium_shift_multiplier_1_5", "premium_shift_multiplier_1_6", "view_timesheets", 
-          "export_timesheets", "approve_timesheets", "approve_payroll", "access_analytics", 
-          "access_reports", "manage_users_and_team", "manage_job_openings", "view_job_openings"
+          "view_facility_profile",
+          "edit_facility_profile",
+          "create_shifts",
+          "edit_shifts",
+          "delete_shifts",
+          "approve_shift_requests",
+          "onboard_staff",
+          "offboard_staff",
+          "view_rates",
+          "edit_rates",
+          "premium_shift_multiplier_1_0",
+          "premium_shift_multiplier_1_1",
+          "premium_shift_multiplier_1_2",
+          "premium_shift_multiplier_1_3",
+          "premium_shift_multiplier_1_4",
+          "premium_shift_multiplier_1_5",
+          "premium_shift_multiplier_1_6",
+          "view_timesheets",
+          "export_timesheets",
+          "approve_timesheets",
+          "approve_payroll",
+          "access_analytics",
+          "access_reports",
+          "manage_users_and_team",
+          "manage_job_openings",
+          "view_job_openings",
         ],
         scheduling_coordinator: [
-          "view_facility_profile", "create_shifts", "edit_shifts", "delete_shifts", 
-          "approve_shift_requests", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
-          "premium_shift_multiplier_1_2", "view_timesheets", "access_reports", 
-          "manage_job_openings", "view_job_openings"
+          "view_facility_profile",
+          "create_shifts",
+          "edit_shifts",
+          "delete_shifts",
+          "approve_shift_requests",
+          "premium_shift_multiplier_1_0",
+          "premium_shift_multiplier_1_1",
+          "premium_shift_multiplier_1_2",
+          "view_timesheets",
+          "access_reports",
+          "manage_job_openings",
+          "view_job_openings",
         ],
         hr_manager: [
-          "view_facility_profile", "onboard_staff", "offboard_staff", "view_rates", 
-          "view_timesheets", "export_timesheets", "approve_timesheets", "access_analytics", 
-          "access_reports", "manage_users_and_team", "manage_job_openings", "view_job_openings"
+          "view_facility_profile",
+          "onboard_staff",
+          "offboard_staff",
+          "view_rates",
+          "view_timesheets",
+          "export_timesheets",
+          "approve_timesheets",
+          "access_analytics",
+          "access_reports",
+          "manage_users_and_team",
+          "manage_job_openings",
+          "view_job_openings",
         ],
         corporate: [
-          "view_facility_profile", "edit_facility_profile", "view_rates", "edit_rates", 
-          "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", "premium_shift_multiplier_1_2", 
-          "premium_shift_multiplier_1_3", "premium_shift_multiplier_1_4", "premium_shift_multiplier_1_5", 
-          "premium_shift_multiplier_1_6", "view_timesheets", "export_timesheets", "approve_timesheets", 
-          "approve_payroll", "access_analytics", "access_reports", "manage_users_and_team"
+          "view_facility_profile",
+          "edit_facility_profile",
+          "view_rates",
+          "edit_rates",
+          "premium_shift_multiplier_1_0",
+          "premium_shift_multiplier_1_1",
+          "premium_shift_multiplier_1_2",
+          "premium_shift_multiplier_1_3",
+          "premium_shift_multiplier_1_4",
+          "premium_shift_multiplier_1_5",
+          "premium_shift_multiplier_1_6",
+          "view_timesheets",
+          "export_timesheets",
+          "approve_timesheets",
+          "approve_payroll",
+          "access_analytics",
+          "access_reports",
+          "manage_users_and_team",
         ],
         regional_director: [
-          "view_facility_profile", "edit_facility_profile", "approve_shift_requests", 
-          "view_rates", "edit_rates", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
-          "premium_shift_multiplier_1_2", "premium_shift_multiplier_1_3", "premium_shift_multiplier_1_4", 
-          "premium_shift_multiplier_1_5", "premium_shift_multiplier_1_6", "view_timesheets", 
-          "export_timesheets", "approve_payroll", "access_analytics", "access_reports", 
-          "manage_users_and_team"
+          "view_facility_profile",
+          "edit_facility_profile",
+          "approve_shift_requests",
+          "view_rates",
+          "edit_rates",
+          "premium_shift_multiplier_1_0",
+          "premium_shift_multiplier_1_1",
+          "premium_shift_multiplier_1_2",
+          "premium_shift_multiplier_1_3",
+          "premium_shift_multiplier_1_4",
+          "premium_shift_multiplier_1_5",
+          "premium_shift_multiplier_1_6",
+          "view_timesheets",
+          "export_timesheets",
+          "approve_payroll",
+          "access_analytics",
+          "access_reports",
+          "manage_users_and_team",
         ],
         billing: [
-          "view_facility_profile", "view_rates", "view_timesheets", "export_timesheets", 
-          "approve_timesheets", "approve_payroll", "access_reports"
+          "view_facility_profile",
+          "view_rates",
+          "view_timesheets",
+          "export_timesheets",
+          "approve_timesheets",
+          "approve_payroll",
+          "access_reports",
         ],
         supervisor: [
-          "view_facility_profile", "create_shifts", "edit_shifts", "approve_shift_requests", 
-          "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", "view_timesheets", 
-          "approve_timesheets", "access_reports", "view_job_openings"
+          "view_facility_profile",
+          "create_shifts",
+          "edit_shifts",
+          "approve_shift_requests",
+          "premium_shift_multiplier_1_0",
+          "premium_shift_multiplier_1_1",
+          "view_timesheets",
+          "approve_timesheets",
+          "access_reports",
+          "view_job_openings",
         ],
         director_of_nursing: [
-          "view_facility_profile", "edit_facility_profile", "create_shifts", "edit_shifts", 
-          "delete_shifts", "approve_shift_requests", "onboard_staff", "offboard_staff", 
-          "view_rates", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
-          "premium_shift_multiplier_1_2", "premium_shift_multiplier_1_3", "view_timesheets", 
-          "export_timesheets", "approve_timesheets", "access_analytics", "access_reports", 
-          "manage_job_openings", "view_job_openings"
-        ]
+          "view_facility_profile",
+          "edit_facility_profile",
+          "create_shifts",
+          "edit_shifts",
+          "delete_shifts",
+          "approve_shift_requests",
+          "onboard_staff",
+          "offboard_staff",
+          "view_rates",
+          "premium_shift_multiplier_1_0",
+          "premium_shift_multiplier_1_1",
+          "premium_shift_multiplier_1_2",
+          "premium_shift_multiplier_1_3",
+          "view_timesheets",
+          "export_timesheets",
+          "approve_timesheets",
+          "access_analytics",
+          "access_reports",
+          "manage_job_openings",
+          "view_job_openings",
+        ],
       };
 
       // Enhanced facility users - at least one for each major facility
@@ -11061,7 +11424,7 @@ export function registerRoutes(app: Express): Server {
           title: "Facility Administrator",
           department: "Administration",
           permissions: rolePermissions.facility_admin,
-          isActive: true
+          isActive: true,
         },
         {
           username: "coord.mike",
@@ -11075,7 +11438,7 @@ export function registerRoutes(app: Express): Server {
           title: "Scheduling Coordinator",
           department: "Operations",
           permissions: rolePermissions.scheduling_coordinator,
-          isActive: true
+          isActive: true,
         },
         // Sunset Nursing Home (ID: 2)
         {
@@ -11090,7 +11453,7 @@ export function registerRoutes(app: Express): Server {
           title: "HR Manager",
           department: "Human Resources",
           permissions: rolePermissions.hr_manager,
-          isActive: true
+          isActive: true,
         },
         {
           username: "director.emily",
@@ -11104,7 +11467,7 @@ export function registerRoutes(app: Express): Server {
           title: "Director of Nursing",
           department: "Nursing",
           permissions: rolePermissions.director_of_nursing,
-          isActive: true
+          isActive: true,
         },
         // Care Medical Center (ID: 3)
         {
@@ -11119,7 +11482,7 @@ export function registerRoutes(app: Express): Server {
           title: "Chief Administrator",
           department: "Administration",
           permissions: rolePermissions.facility_admin,
-          isActive: true
+          isActive: true,
         },
         {
           username: "billing.maria",
@@ -11133,7 +11496,7 @@ export function registerRoutes(app: Express): Server {
           title: "Billing Manager",
           department: "Finance",
           permissions: rolePermissions.billing,
-          isActive: true
+          isActive: true,
         },
         // Chicago General Hospital (ID: 4)
         {
@@ -11148,7 +11511,7 @@ export function registerRoutes(app: Express): Server {
           title: "Nursing Supervisor",
           department: "Nursing",
           permissions: rolePermissions.supervisor,
-          isActive: true
+          isActive: true,
         },
         {
           username: "coord.anna",
@@ -11162,7 +11525,7 @@ export function registerRoutes(app: Express): Server {
           title: "Shift Coordinator",
           department: "Operations",
           permissions: rolePermissions.scheduling_coordinator,
-          isActive: true
+          isActive: true,
         },
         // Springfield Care Center (ID: 5)
         {
@@ -11177,7 +11540,7 @@ export function registerRoutes(app: Express): Server {
           title: "Human Resources Director",
           department: "Human Resources",
           permissions: rolePermissions.hr_manager,
-          isActive: true
+          isActive: true,
         },
         // Metro Community Clinic (ID: 6)
         {
@@ -11192,7 +11555,7 @@ export function registerRoutes(app: Express): Server {
           title: "Clinic Administrator",
           department: "Administration",
           permissions: rolePermissions.facility_admin,
-          isActive: true
+          isActive: true,
         },
         // Corporate and Regional roles
         {
@@ -11207,7 +11570,7 @@ export function registerRoutes(app: Express): Server {
           title: "Corporate Operations Manager",
           department: "Corporate",
           permissions: rolePermissions.corporate,
-          isActive: true
+          isActive: true,
         },
         {
           username: "director.lisa",
@@ -11221,7 +11584,7 @@ export function registerRoutes(app: Express): Server {
           title: "Regional Director - West Coast",
           department: "Regional Management",
           permissions: rolePermissions.regional_director,
-          isActive: true
+          isActive: true,
         },
         {
           username: "billing.robert",
@@ -11235,7 +11598,7 @@ export function registerRoutes(app: Express): Server {
           title: "Billing Coordinator",
           department: "Finance",
           permissions: rolePermissions.billing,
-          isActive: true
+          isActive: true,
         },
         {
           username: "supervisor.maria",
@@ -11249,7 +11612,7 @@ export function registerRoutes(app: Express): Server {
           title: "Nursing Supervisor",
           department: "Nursing",
           permissions: rolePermissions.supervisor,
-          isActive: true
+          isActive: true,
         },
         {
           username: "don.amanda",
@@ -11263,8 +11626,8 @@ export function registerRoutes(app: Express): Server {
           title: "Director of Nursing",
           department: "Nursing",
           permissions: rolePermissions.director_of_nursing,
-          isActive: true
-        }
+          isActive: true,
+        },
       ];
 
       // Clear existing facility users first
@@ -11275,22 +11638,25 @@ export function registerRoutes(app: Express): Server {
       // Create facility users
       const createdUsers = [];
       for (const userData of facilityUsersData) {
-        const [newUser] = await db.insert(facilityUsers).values({
-          ...userData,
-          createdById: req.user?.id || 1,
-        }).returning({
-          id: facilityUsers.id,
-          username: facilityUsers.username,
-          email: facilityUsers.email,
-          firstName: facilityUsers.firstName,
-          lastName: facilityUsers.lastName,
-          role: facilityUsers.role,
-          primaryFacilityId: facilityUsers.primaryFacilityId,
-          title: facilityUsers.title,
-          department: facilityUsers.department,
-          permissions: facilityUsers.permissions,
-          isActive: facilityUsers.isActive,
-        });
+        const [newUser] = await db
+          .insert(facilityUsers)
+          .values({
+            ...userData,
+            createdById: req.user?.id || 1,
+          })
+          .returning({
+            id: facilityUsers.id,
+            username: facilityUsers.username,
+            email: facilityUsers.email,
+            firstName: facilityUsers.firstName,
+            lastName: facilityUsers.lastName,
+            role: facilityUsers.role,
+            primaryFacilityId: facilityUsers.primaryFacilityId,
+            title: facilityUsers.title,
+            department: facilityUsers.department,
+            permissions: facilityUsers.permissions,
+            isActive: facilityUsers.isActive,
+          });
 
         // Create facility associations
         for (const facilityId of userData.associatedFacilityIds) {
@@ -11309,13 +11675,13 @@ export function registerRoutes(app: Express): Server {
           userId: newUser.id,
           facilityId: newUser.primaryFacilityId,
           action: "user_created",
-          details: { 
-            createdBy: req.user?.id || 1, 
+          details: {
+            createdBy: req.user?.id || 1,
             role: newUser.role,
-            setupType: "sample_data"
+            setupType: "sample_data",
           },
           ipAddress: req.ip,
-          userAgent: req.get('User-Agent'),
+          userAgent: req.get("User-Agent"),
         });
 
         createdUsers.push(newUser);
@@ -11324,7 +11690,7 @@ export function registerRoutes(app: Express): Server {
       res.status(201).json({
         message: "Sample facility users created successfully",
         users: createdUsers,
-        count: createdUsers.length
+        count: createdUsers.length,
       });
     } catch (error) {
       console.error("Error creating sample facility users:", error);
@@ -11343,10 +11709,11 @@ export function registerRoutes(app: Express): Server {
       }
 
       // Update the user's permissions
-      const [updatedUser] = await db.update(facilityUsers)
-        .set({ 
+      const [updatedUser] = await db
+        .update(facilityUsers)
+        .set({
           permissions: permissions,
-          updatedAt: new Date() 
+          updatedAt: new Date(),
         })
         .where(eq(facilityUsers.id, userId))
         .returning({
@@ -11357,7 +11724,7 @@ export function registerRoutes(app: Express): Server {
           lastName: facilityUsers.lastName,
           role: facilityUsers.role,
           permissions: facilityUsers.permissions,
-          updatedAt: facilityUsers.updatedAt
+          updatedAt: facilityUsers.updatedAt,
         });
 
       if (!updatedUser) {
@@ -11369,18 +11736,18 @@ export function registerRoutes(app: Express): Server {
         userId: userId,
         facilityId: updatedUser.primaryFacilityId || 1,
         action: "permissions_updated",
-        details: { 
-          updatedBy: req.user?.id || 1, 
+        details: {
+          updatedBy: req.user?.id || 1,
           newPermissions: permissions,
-          permissionCount: permissions.length 
+          permissionCount: permissions.length,
         },
         ipAddress: req.ip,
-        userAgent: req.get('User-Agent'),
+        userAgent: req.get("User-Agent"),
       });
 
       res.json({
         message: "Permissions updated successfully",
-        user: updatedUser
+        user: updatedUser,
       });
     } catch (error) {
       console.error("Error updating user permissions:", error);
@@ -11391,7 +11758,8 @@ export function registerRoutes(app: Express): Server {
   // Get facility user role templates
   app.get("/api/facility-user-role-templates", requireAuth, async (req, res) => {
     try {
-      const templates = await db.select()
+      const templates = await db
+        .select()
         .from(facilityUserRoleTemplates)
         .where(eq(facilityUserRoleTemplates.isActive, true))
         .orderBy(facilityUserRoleTemplates.name);
@@ -11404,59 +11772,61 @@ export function registerRoutes(app: Express): Server {
   });
 
   // ==================== BILLING API ROUTES ====================
-  
+
   // Get invoices for a facility
   app.get("/api/billing/invoices/:facilityId?", requireAuth, async (req, res) => {
     try {
-      const facilityId = req.params.facilityId ? parseInt(req.params.facilityId) : req.user.primaryFacilityId;
-      
+      const facilityId = req.params.facilityId
+        ? parseInt(req.params.facilityId)
+        : req.user.primaryFacilityId;
+
       // Sample invoice data for development
       const sampleInvoices = [
         {
           id: 1,
           facilityId: facilityId,
           invoiceNumber: "INV-2025-001",
-          amount: 12500.00,
+          amount: 12500.0,
           description: "Monthly staffing services - ICU and Emergency Department",
           dueDate: "2025-08-15",
           status: "pending",
           createdAt: "2025-07-15T10:00:00Z",
           facilityName: "General Hospital",
           lineItems: [
-            { description: "RN Coverage - ICU", quantity: 160, rate: 65.00, amount: 10400.00 },
-            { description: "LPN Coverage - Emergency", quantity: 80, rate: 45.00, amount: 3600.00 }
-          ]
+            { description: "RN Coverage - ICU", quantity: 160, rate: 65.0, amount: 10400.0 },
+            { description: "LPN Coverage - Emergency", quantity: 80, rate: 45.0, amount: 3600.0 },
+          ],
         },
         {
           id: 2,
           facilityId: facilityId,
           invoiceNumber: "INV-2025-002",
-          amount: 8750.00,
+          amount: 8750.0,
           description: "Weekend premium staffing - Medical/Surgical",
           dueDate: "2025-08-20",
           status: "approved",
           createdAt: "2025-07-18T14:30:00Z",
           facilityName: "General Hospital",
           lineItems: [
-            { description: "RN Coverage - Med/Surg", quantity: 120, rate: 55.00, amount: 6600.00 },
-            { description: "CNA Coverage - Med/Surg", quantity: 96, rate: 22.50, amount: 2160.00 }
-          ]
+            { description: "RN Coverage - Med/Surg", quantity: 120, rate: 55.0, amount: 6600.0 },
+            { description: "CNA Coverage - Med/Surg", quantity: 96, rate: 22.5, amount: 2160.0 },
+          ],
         },
         {
           id: 3,
           facilityId: facilityId,
           invoiceNumber: "INV-2025-003",
-          amount: 15300.00,
+          amount: 15300.0,
           description: "Emergency coverage - Multiple departments",
           dueDate: "2025-07-25",
           status: "overdue",
           createdAt: "2025-06-25T09:15:00Z",
           facilityName: "General Hospital",
           lineItems: [
-            { description: "RN Coverage - Emergency", quantity: 200, rate: 70.00, amount: 14000.00 },
-            { description: "CST Coverage - OR", quantity: 40, rate: 32.50, amount: 1300.00 }
-          ]
-        }
+            { description: "RN Coverage - Emergency", quantity: 200, rate: 70.0, amount: 14000.0 },
+            { description: "CST Coverage - OR", quantity: 40, rate: 32.5, amount: 1300.0 },
+          ],
+        },
       ];
 
       res.json(sampleInvoices);
@@ -11470,13 +11840,13 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/billing/invoices", requireAuth, async (req, res) => {
     try {
       const invoiceData = req.body;
-      
+
       // In a real implementation, you would save to database
       const newInvoice = {
         id: Date.now(),
         ...invoiceData,
         createdAt: new Date().toISOString(),
-        facilityName: "General Hospital"
+        facilityName: "General Hospital",
       };
 
       res.status(201).json(newInvoice);
@@ -11491,12 +11861,12 @@ export function registerRoutes(app: Express): Server {
     try {
       const invoiceId = parseInt(req.params.id);
       const updateData = req.body;
-      
+
       // In a real implementation, you would update the database
       const updatedInvoice = {
         id: invoiceId,
         ...updateData,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       res.json(updatedInvoice);
@@ -11510,13 +11880,13 @@ export function registerRoutes(app: Express): Server {
   app.patch("/api/billing/invoices/:id/approve", requireAuth, async (req, res) => {
     try {
       const invoiceId = parseInt(req.params.id);
-      
+
       // In a real implementation, you would update the database
       const approvedInvoice = {
         id: invoiceId,
         status: "approved",
         approvedBy: req.user.id,
-        approvedAt: new Date().toISOString()
+        approvedAt: new Date().toISOString(),
       };
 
       res.json(approvedInvoice);
@@ -11529,8 +11899,10 @@ export function registerRoutes(app: Express): Server {
   // Get billing rates for a facility
   app.get("/api/billing/rates/:facilityId?", requireAuth, async (req, res) => {
     try {
-      const facilityId = req.params.facilityId ? parseInt(req.params.facilityId) : req.user.primaryFacilityId;
-      
+      const facilityId = req.params.facilityId
+        ? parseInt(req.params.facilityId)
+        : req.user.primaryFacilityId;
+
       // Sample billing rates data for development
       const sampleRates = [
         {
@@ -11538,8 +11910,8 @@ export function registerRoutes(app: Express): Server {
           facilityId: facilityId,
           specialty: "Registered Nurse",
           position: "Staff Nurse",
-          payRate: 45.00,
-          billRate: 65.00,
+          payRate: 45.0,
+          billRate: 65.0,
           contractType: "full_time",
           effectiveDate: "2025-01-01",
           department: "ICU",
@@ -11549,15 +11921,15 @@ export function registerRoutes(app: Express): Server {
           holidayMultiplier: 2.0,
           weekendMultiplier: 1.2,
           createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z"
+          updatedAt: "2025-01-01T00:00:00Z",
         },
         {
           id: 2,
           facilityId: facilityId,
           specialty: "Licensed Practical Nurse",
           position: "LPN",
-          payRate: 32.00,
-          billRate: 45.00,
+          payRate: 32.0,
+          billRate: 45.0,
           contractType: "full_time",
           effectiveDate: "2025-01-01",
           department: "Medical/Surgical",
@@ -11567,15 +11939,15 @@ export function registerRoutes(app: Express): Server {
           holidayMultiplier: 2.0,
           weekendMultiplier: 1.2,
           createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z"
+          updatedAt: "2025-01-01T00:00:00Z",
         },
         {
           id: 3,
           facilityId: facilityId,
           specialty: "Certified Nursing Assistant",
           position: "CNA",
-          payRate: 18.00,
-          billRate: 28.00,
+          payRate: 18.0,
+          billRate: 28.0,
           contractType: "part_time",
           effectiveDate: "2025-01-01",
           department: "Medical/Surgical",
@@ -11585,15 +11957,15 @@ export function registerRoutes(app: Express): Server {
           holidayMultiplier: 2.0,
           weekendMultiplier: 1.2,
           createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z"
+          updatedAt: "2025-01-01T00:00:00Z",
         },
         {
           id: 4,
           facilityId: facilityId,
           specialty: "Certified Surgical Technologist",
           position: "CST",
-          payRate: 28.00,
-          billRate: 42.00,
+          payRate: 28.0,
+          billRate: 42.0,
           contractType: "contract",
           effectiveDate: "2025-01-01",
           department: "Operating Room",
@@ -11603,15 +11975,15 @@ export function registerRoutes(app: Express): Server {
           holidayMultiplier: 2.0,
           weekendMultiplier: 1.2,
           createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z"
+          updatedAt: "2025-01-01T00:00:00Z",
         },
         {
           id: 5,
           facilityId: facilityId,
           specialty: "Registered Nurse",
           position: "Charge Nurse",
-          payRate: 55.00,
-          billRate: 78.00,
+          payRate: 55.0,
+          billRate: 78.0,
           contractType: "full_time",
           effectiveDate: "2025-01-01",
           department: "Emergency",
@@ -11621,8 +11993,8 @@ export function registerRoutes(app: Express): Server {
           holidayMultiplier: 2.0,
           weekendMultiplier: 1.2,
           createdAt: "2025-01-01T00:00:00Z",
-          updatedAt: "2025-01-01T00:00:00Z"
-        }
+          updatedAt: "2025-01-01T00:00:00Z",
+        },
       ];
 
       res.json(sampleRates);
@@ -11636,13 +12008,13 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/billing/rates", requireAuth, async (req, res) => {
     try {
       const rateData = req.body;
-      
+
       // In a real implementation, you would save to database
       const newRate = {
         id: Date.now(),
         ...rateData,
         createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       res.status(201).json(newRate);
@@ -11657,12 +12029,12 @@ export function registerRoutes(app: Express): Server {
     try {
       const rateId = parseInt(req.params.id);
       const updateData = req.body;
-      
+
       // In a real implementation, you would update the database
       const updatedRate = {
         id: rateId,
         ...updateData,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       res.json(updatedRate);
@@ -11676,7 +12048,7 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/shift-requests", requireAuth, async (req: any, res) => {
     try {
       const user = req.user;
-      
+
       // Base shift requests data
       const allShiftRequests = [
         {
@@ -11697,10 +12069,10 @@ export function registerRoutes(app: Express): Server {
             id: 45,
             name: "Sarah Johnson",
             email: "sarah.johnson@nexspace.com",
-            specialty: "RN"
+            specialty: "RN",
           },
           requestedAt: "2025-07-10T10:30:00Z",
-          description: "Urgent coverage needed for ICU night shift due to staff shortage."
+          description: "Urgent coverage needed for ICU night shift due to staff shortage.",
         },
         {
           id: 2,
@@ -11720,23 +12092,23 @@ export function registerRoutes(app: Express): Server {
             id: 46,
             name: "Michael Chen",
             email: "michael.chen@nexspace.com",
-            specialty: "RN"
+            specialty: "RN",
           },
           requestedAt: "2025-07-09T14:15:00Z",
-          description: "Critical emergency department coverage required."
-        }
+          description: "Critical emergency department coverage required.",
+        },
       ];
-      
+
       // For workers, only show their own requests
-      if (user.role === 'employee' || user.role === 'contractor') {
-        const workerRequests = allShiftRequests.filter(req => req.requestedBy.id === user.id);
+      if (user.role === "employee" || user.role === "contractor") {
+        const workerRequests = allShiftRequests.filter((req) => req.requestedBy.id === user.id);
         return res.json(workerRequests);
       }
-      
+
       // For facility managers and admins, show all requests
       res.json(allShiftRequests);
     } catch (error) {
-      console.error('Error fetching shift requests:', error);
+      console.error("Error fetching shift requests:", error);
       res.status(500).json({ message: "Failed to fetch shift requests" });
     }
   });
@@ -11745,50 +12117,55 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/shifts/:id/request", requireAuth, async (req: any, res) => {
     const startTime = Date.now();
     const context = analytics.getContextFromRequest(req);
-    
+
     try {
       const shiftId = parseInt(req.params.id);
       const user = req.user;
-      
+
       // Simulate creating a shift request
       const newRequest = {
         id: Date.now(),
         shiftId,
         requestedBy: user.id,
         requestedAt: new Date().toISOString(),
-        status: 'pending',
-        note: req.body.note || ''
+        status: "pending",
+        note: req.body.note || "",
       };
-      
-      console.log(`[SHIFT REQUEST] User ${user.id} requested shift ${shiftId}`);
-      
+
+
       // Create notification for facility managers
       let shift = null;
       try {
         // Get shift details to include in notification
-        shift = mainShifts.find(s => s.id === shiftId) || generatedShifts.find(s => s.id === shiftId);
+        shift =
+          mainShifts.find((s) => s.id === shiftId) || generatedShifts.find((s) => s.id === shiftId);
         if (shift) {
           await storage.createNotification({
-            type: 'shift_request',
-            title: 'New Shift Request',
+            type: "shift_request",
+            title: "New Shift Request",
             message: `${user.firstName} ${user.lastName} has requested ${shift.title} on ${shift.date}`,
-            link: '/shift-requests',
+            link: "/shift-requests",
             isRead: false,
             facilityUserId: 1, // In production, this would be determined by the shift's facility
             metadata: {
               shiftId: shiftId,
               requestedBy: user.id,
               shiftTitle: shift.title,
-              shiftDate: shift.date
-            }
+              shiftDate: shift.date,
+            },
           });
         }
       } catch (notificationError) {
-        console.error('[NOTIFICATION] Failed to create shift request notification:', notificationError);
+        console.error(
+          "[NOTIFICATION] Failed to create shift request notification:",
+          notificationError
+        );
       }
-      
+
       // Track successful shift request
-      await analytics.trackShift('request', shiftId.toString(), 
+      await analytics.trackShift(
+        "request",
+        shiftId.toString(),
         { ...context, facilityId: shift?.facilityId },
         {
           requestId: newRequest.id,
@@ -11796,28 +12173,28 @@ export function registerRoutes(app: Express): Server {
           shiftDate: shift?.date,
           shiftSpecialty: shift?.specialty,
           facilityId: shift?.facilityId,
-          requestNote: req.body.note || '',
+          requestNote: req.body.note || "",
           userRole: user.role,
           userSpecialty: user.specialty,
           success: true,
-          duration: Date.now() - startTime
+          duration: Date.now() - startTime,
         }
       );
-      
+
       res.json({
         success: true,
         message: "Shift request submitted successfully",
-        request: newRequest
+        request: newRequest,
       });
     } catch (error) {
       // Track failed shift request
-      await analytics.trackShift('request', req.params.id, context, {
-        reason: 'request_failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        success: false
+      await analytics.trackShift("request", req.params.id, context, {
+        reason: "request_failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+        success: false,
       });
-      
-      console.error('Error requesting shift:', error);
+
+      console.error("Error requesting shift:", error);
       res.status(500).json({ message: "Failed to request shift" });
     }
   });
@@ -11827,33 +12204,35 @@ export function registerRoutes(app: Express): Server {
     try {
       const requestId = parseInt(req.params.id);
       const user = req.user;
-      
-      console.log(`[SHIFT REQUEST] User ${user.id} withdrew request ${requestId}`);
-      
+
+
       // Create notification for facility managers about withdrawal
       try {
         await storage.createNotification({
-          type: 'shift_cancelled',
-          title: 'Shift Request Withdrawn',
+          type: "shift_cancelled",
+          title: "Shift Request Withdrawn",
           message: `${user.firstName} ${user.lastName} has withdrawn their shift request`,
-          link: '/shift-requests',
+          link: "/shift-requests",
           isRead: false,
           facilityUserId: 1, // In production, this would be determined by the shift's facility
           metadata: {
             requestId: requestId,
-            withdrawnBy: user.id
-          }
+            withdrawnBy: user.id,
+          },
         });
       } catch (notificationError) {
-        console.error('[NOTIFICATION] Failed to create withdrawal notification:', notificationError);
+        console.error(
+          "[NOTIFICATION] Failed to create withdrawal notification:",
+          notificationError
+        );
       }
-      
+
       res.json({
         success: true,
-        message: "Shift request withdrawn successfully"
+        message: "Shift request withdrawn successfully",
       });
     } catch (error) {
-      console.error('Error withdrawing request:', error);
+      console.error("Error withdrawing request:", error);
       res.status(500).json({ message: "Failed to withdraw request" });
     }
   });
@@ -11863,19 +12242,23 @@ export function registerRoutes(app: Express): Server {
       const requestId = parseInt(req.params.id);
       const user = req.user;
       const { shiftId, workerId } = req.body;
-      
+
       // Check permissions
-      if (user.role !== 'super_admin' && user.role !== 'admin' && 
-          user.role !== 'facility_manager' && !hasPermission(user, 'approve_shift_requests')) {
+      if (
+        user.role !== "super_admin" &&
+        user.role !== "admin" &&
+        user.role !== "facility_manager" &&
+        !hasPermission(user, "approve_shift_requests")
+      ) {
         return res.status(403).json({ message: "Not authorized to approve shift requests" });
       }
-      
+
       // Get shift details from database
       const shift = await storage.getShift(shiftId);
       if (!shift) {
         return res.status(404).json({ message: "Shift not found" });
       }
-      
+
       // Check for scheduling conflicts
       const conflictCheck = await storage.checkShiftConflicts(
         [workerId],
@@ -11884,7 +12267,7 @@ export function registerRoutes(app: Express): Server {
         shift.endTime,
         shiftId
       );
-      
+
       if (conflictCheck.hasConflicts) {
         const conflict = conflictCheck.conflicts[0];
         return res.status(409).json({
@@ -11895,49 +12278,48 @@ export function registerRoutes(app: Express): Server {
             conflictingShift: {
               title: conflict.conflictingShift.title,
               time: `${conflict.conflictingShift.startTime} - ${conflict.conflictingShift.endTime}`,
-              facility: conflict.conflictingShift.facilityName
-            }
-          }
+              facility: conflict.conflictingShift.facilityName,
+            },
+          },
         });
       }
-      
+
       // If no conflicts, assign the worker to the shift
       const currentAssigned = shift.assignedStaffIds || [];
       const updatedAssigned = [...currentAssigned, workerId];
-      
+
       await storage.assignStaffToShift(shiftId, updatedAssigned);
-      
-      console.log(`[SHIFT REQUEST] Request ${requestId} approved by ${user.id}`);
-      
+
+
       // Create notification for the worker
       try {
         await notificationService.createNotification({
           recipientId: workerId,
-          type: 'shift_approved',
-          title: 'Shift Request Approved',
+          type: "shift_approved",
+          title: "Shift Request Approved",
           message: `Your shift request for ${shift.title} on ${shift.date} has been approved! You have been assigned to the shift.`,
-          link: '/my-schedule',
+          link: "/my-schedule",
           metadata: {
             requestId: requestId,
             approvedBy: user.id,
             shiftId: shiftId,
             shiftTitle: shift.title,
             shiftDate: shift.date,
-            shiftTime: `${shift.startTime} - ${shift.endTime}`
-          }
+            shiftTime: `${shift.startTime} - ${shift.endTime}`,
+          },
         });
       } catch (notificationError) {
-        console.error('[NOTIFICATION] Failed to create approval notification:', notificationError);
+        console.error("[NOTIFICATION] Failed to create approval notification:", notificationError);
       }
-      
+
       res.json({
         success: true,
         message: "Shift request approved and worker assigned",
         shiftId: shiftId,
-        assignedWorkerId: workerId
+        assignedWorkerId: workerId,
       });
     } catch (error) {
-      console.error('Error approving request:', error);
+      console.error("Error approving request:", error);
       res.status(500).json({ message: "Failed to approve shift request" });
     }
   });
@@ -11946,42 +12328,45 @@ export function registerRoutes(app: Express): Server {
     try {
       const requestId = parseInt(req.params.id);
       const user = req.user;
-      const reason = req.body.reason || 'No reason provided';
+      const reason = req.body.reason || "No reason provided";
       const { workerId } = req.body;
-      
+
       // Check permissions
-      if (user.role !== 'super_admin' && user.role !== 'admin' && 
-          user.role !== 'facility_manager' && !hasPermission(user, 'approve_shift_requests')) {
+      if (
+        user.role !== "super_admin" &&
+        user.role !== "admin" &&
+        user.role !== "facility_manager" &&
+        !hasPermission(user, "approve_shift_requests")
+      ) {
         return res.status(403).json({ message: "Not authorized to deny shift requests" });
       }
-      
-      console.log(`[SHIFT REQUEST] Request ${requestId} denied by ${user.id}. Reason: ${reason}`);
-      
+
+
       // Create notification for the worker
       try {
         await notificationService.createNotification({
           recipientId: workerId,
-          type: 'shift_denied',
-          title: 'Shift Request Denied',
+          type: "shift_denied",
+          title: "Shift Request Denied",
           message: `Your shift request has been denied. Reason: ${reason}`,
-          link: '/my-requests',
+          link: "/my-requests",
           metadata: {
             requestId: requestId,
             deniedBy: user.id,
-            reason: reason
-          }
+            reason: reason,
+          },
         });
       } catch (notificationError) {
-        console.error('[NOTIFICATION] Failed to create denial notification:', notificationError);
+        console.error("[NOTIFICATION] Failed to create denial notification:", notificationError);
       }
-      
+
       res.json({
         success: true,
         message: "Shift request denied",
-        reason
+        reason,
       });
     } catch (error) {
-      console.error('Error denying request:', error);
+      console.error("Error denying request:", error);
       res.status(500).json({ message: "Failed to deny shift request" });
     }
   });
@@ -11994,7 +12379,8 @@ export function registerRoutes(app: Express): Server {
         {
           id: 1,
           subject: "Shift Schedule Update",
-          content: "Your schedule for next week has been updated. Please review the changes in your dashboard.",
+          content:
+            "Your schedule for next week has been updated. Please review the changes in your dashboard.",
           senderId: 1,
           senderName: "NexSpace Team",
           senderRole: "nexspace_team",
@@ -12005,12 +12391,13 @@ export function registerRoutes(app: Express): Server {
           isRead: false,
           isUrgent: false,
           facilityId: 19,
-          facilityName: "Test Squad Skilled Nursing"
+          facilityName: "Test Squad Skilled Nursing",
         },
         {
           id: 2,
           subject: "Credential Expiration Reminder",
-          content: "Your nursing license expires in 30 days. Please update your credentials to avoid any scheduling interruptions.",
+          content:
+            "Your nursing license expires in 30 days. Please update your credentials to avoid any scheduling interruptions.",
           senderId: 2,
           senderName: "Compliance Team",
           senderRole: "nexspace_team",
@@ -12021,10 +12408,10 @@ export function registerRoutes(app: Express): Server {
           isRead: true,
           isUrgent: true,
           facilityId: 19,
-          facilityName: "Test Squad Skilled Nursing"
-        }
+          facilityName: "Test Squad Skilled Nursing",
+        },
       ];
-      
+
       res.json(messages);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch messages" });
@@ -12038,13 +12425,13 @@ export function registerRoutes(app: Express): Server {
           id: 1,
           name: "NexSpace Support",
           role: "nexspace_team",
-          isOnline: true
+          isOnline: true,
         },
         {
           id: 2,
           name: "Compliance Team",
-          role: "nexspace_team", 
-          isOnline: true
+          role: "nexspace_team",
+          isOnline: true,
         },
         {
           id: 45,
@@ -12053,7 +12440,7 @@ export function registerRoutes(app: Express): Server {
           specialty: "RN",
           facilityId: 19,
           facilityName: "Test Squad Skilled Nursing",
-          isOnline: false
+          isOnline: false,
         },
         {
           id: 46,
@@ -12062,10 +12449,10 @@ export function registerRoutes(app: Express): Server {
           specialty: "RN",
           facilityId: 19,
           facilityName: "Test Squad Skilled Nursing",
-          isOnline: true
-        }
+          isOnline: true,
+        },
       ];
-      
+
       res.json(contacts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch contacts" });
@@ -12075,11 +12462,11 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/messages", requireAuth, async (req: any, res) => {
     const startTime = Date.now();
     const context = analytics.getContextFromRequest(req);
-    
+
     try {
       const { recipientId, subject, content, isUrgent } = req.body;
       const user = req.user;
-      
+
       const newMessage = {
         id: Date.now(),
         subject,
@@ -12090,50 +12477,50 @@ export function registerRoutes(app: Express): Server {
         recipientId,
         sentAt: new Date().toISOString(),
         isRead: false,
-        isUrgent: isUrgent || false
+        isUrgent: isUrgent || false,
       };
-      
+
       // Create notification for the recipient
       try {
         await notificationService.createNotification({
           recipientId: recipientId,
-          type: 'message_received',
-          title: 'New Message',
+          type: "message_received",
+          title: "New Message",
           message: `${user.firstName} ${user.lastName} sent you a message: ${subject}`,
-          link: '/messaging',
+          link: "/messaging",
           metadata: {
             messageId: newMessage.id,
             senderId: user.id,
             subject: subject,
-            isUrgent: isUrgent
-          }
+            isUrgent: isUrgent,
+          },
         });
       } catch (notificationError) {
-        console.error('[NOTIFICATION] Failed to create message notification:', notificationError);
+        console.error("[NOTIFICATION] Failed to create message notification:", notificationError);
       }
-      
+
       // Track successful message send
-      await analytics.trackMessage('send', newMessage.id, context, {
+      await analytics.trackMessage("send", newMessage.id, context, {
         recipientId,
         senderRole: user.role,
-        recipientType: 'user', // Could be enhanced to distinguish recipient types
+        recipientType: "user", // Could be enhanced to distinguish recipient types
         subject: subject.substring(0, 50), // Truncate for privacy
         isUrgent: isUrgent || false,
         messageLength: content.length,
         hasAttachments: false,
         success: true,
-        duration: Date.now() - startTime
+        duration: Date.now() - startTime,
       });
-      
+
       res.json(newMessage);
     } catch (error) {
       // Track failed message send
-      await analytics.trackMessage('send', 'failed', context, {
-        reason: 'send_failed',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        success: false
+      await analytics.trackMessage("send", "failed", context, {
+        reason: "send_failed",
+        error: error instanceof Error ? error.message : "Unknown error",
+        success: false,
       });
-      
+
       res.status(500).json({ message: "Failed to send message" });
     }
   });
@@ -12156,8 +12543,8 @@ export function registerRoutes(app: Express): Server {
       const limit = parseInt(req.query.limit) || 50;
 
       const notifications = await storage.getNotifications(
-        user.role === 'facility_user' ? null : userId,
-        user.role === 'facility_user' ? facilityUserId : null,
+        user.role === "facility_user" ? null : userId,
+        user.role === "facility_user" ? facilityUserId : null,
         limit
       );
 
@@ -12175,8 +12562,8 @@ export function registerRoutes(app: Express): Server {
       const facilityUserId = user.facilityUserId || null;
 
       const count = await storage.getUnreadNotificationCount(
-        user.role === 'facility_user' ? null : userId,
-        user.role === 'facility_user' ? facilityUserId : null
+        user.role === "facility_user" ? null : userId,
+        user.role === "facility_user" ? facilityUserId : null
       );
 
       res.json({ count });
@@ -12204,8 +12591,8 @@ export function registerRoutes(app: Express): Server {
       const facilityUserId = user.facilityUserId || null;
 
       await storage.markAllNotificationsAsRead(
-        user.role === 'facility_user' ? null : userId,
-        user.role === 'facility_user' ? facilityUserId : null
+        user.role === "facility_user" ? null : userId,
+        user.role === "facility_user" ? facilityUserId : null
       );
 
       res.json({ message: "All notifications marked as read" });
@@ -12233,8 +12620,8 @@ export function registerRoutes(app: Express): Server {
       const facilityUserId = user.facilityUserId || null;
 
       await storage.deleteAllNotifications(
-        user.role === 'facility_user' ? null : userId,
-        user.role === 'facility_user' ? facilityUserId : null
+        user.role === "facility_user" ? null : userId,
+        user.role === "facility_user" ? facilityUserId : null
       );
 
       res.json({ message: "All notifications deleted" });
@@ -12248,7 +12635,7 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/analytics/events", requireAuth, async (req: any, res) => {
     try {
       // Only super admins can view analytics
-      if (req.user.role !== 'super_admin') {
+      if (req.user.role !== "super_admin") {
         return res.status(403).json({ message: "Access denied" });
       }
 
@@ -12258,7 +12645,7 @@ export function registerRoutes(app: Express): Server {
 
       // Get recent analytics events
       const events = await storage.getRecentAnalyticsEvents(limit, offset, category);
-      
+
       // Get event counts by category
       const eventCounts = await storage.getAnalyticsEventCounts();
 
@@ -12267,7 +12654,7 @@ export function registerRoutes(app: Express): Server {
         counts: eventCounts,
         total: events.length,
         limit,
-        offset
+        offset,
       });
     } catch (error) {
       console.error("Error fetching analytics:", error);
@@ -12278,73 +12665,75 @@ export function registerRoutes(app: Express): Server {
   // Analytics summary endpoint
   app.get("/api/analytics/summary", requireAuth, async (req: any, res) => {
     try {
-      if (req.user.role !== 'super_admin') {
+      if (req.user.role !== "super_admin") {
         return res.status(403).json({ message: "Access denied: Super admin required" });
       }
-      
+
       const { startDate, endDate, facilityId } = req.query;
-      
+
       // Get total counts from database
       const [usersCount] = await db.select({ count: sql<number>`count(*)::int` }).from(users);
-      const [facilitiesCount] = await db.select({ count: sql<number>`count(*)::int` }).from(facilities);
+      const [facilitiesCount] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(facilities);
       const [shiftsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(shifts);
       const [messagesCount] = await db.select({ count: sql<number>`count(*)::int` }).from(messages);
-      
+
       // Get today's active users
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
-      
+
       const activeUsersToday = await storage.getAnalyticsEvents({
-        eventCategory: 'auth',
-        eventName: 'user_login',
+        eventCategory: "auth",
+        eventName: "user_login",
         startDate: todayStart,
-        facilityId: facilityId ? parseInt(facilityId) : undefined
+        facilityId: facilityId ? parseInt(facilityId) : undefined,
       });
-      
+
       // Get today's shifts created
       const shiftsCreatedToday = await storage.getAnalyticsEvents({
-        eventCategory: 'shifts',
-        eventName: 'shift_create',
+        eventCategory: "shifts",
+        eventName: "shift_create",
         startDate: todayStart,
-        facilityId: facilityId ? parseInt(facilityId) : undefined
+        facilityId: facilityId ? parseInt(facilityId) : undefined,
       });
-      
+
       res.json({
         totalUsers: usersCount.count,
         totalFacilities: facilitiesCount.count,
         totalShifts: shiftsCount.count,
         totalMessages: messagesCount.count,
-        activeUsersToday: [...new Set(activeUsersToday.map(e => e.userId))].length,
-        shiftsCreatedToday: shiftsCreatedToday.length
+        activeUsersToday: [...new Set(activeUsersToday.map((e) => e.userId))].length,
+        shiftsCreatedToday: shiftsCreatedToday.length,
       });
     } catch (error) {
-      console.error('Error fetching analytics summary:', error);
+      console.error("Error fetching analytics summary:", error);
       res.status(500).json({ message: "Failed to fetch analytics summary" });
     }
   });
-  
+
   // User activity over time
   app.get("/api/analytics/user-activity", requireAuth, async (req: any, res) => {
     try {
-      if (req.user.role !== 'super_admin') {
+      if (req.user.role !== "super_admin") {
         return res.status(403).json({ message: "Access denied: Super admin required" });
       }
-      
+
       const { startDate, endDate, facilityId } = req.query;
-      
+
       const loginEvents = await storage.getAnalyticsEvents({
-        eventCategory: 'auth',
-        eventName: 'user_login',
+        eventCategory: "auth",
+        eventName: "user_login",
         startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : undefined,
-        facilityId: facilityId !== 'all' ? parseInt(facilityId) : undefined
+        facilityId: facilityId !== "all" ? parseInt(facilityId) : undefined,
       });
-      
+
       // Group by date
       const activityByDate: { [date: string]: Set<number> } = {};
-      
-      loginEvents.forEach(event => {
-        const date = format(new Date(event.timestamp), 'yyyy-MM-dd');
+
+      loginEvents.forEach((event) => {
+        const date = format(new Date(event.timestamp), "yyyy-MM-dd");
         if (!activityByDate[date]) {
           activityByDate[date] = new Set();
         }
@@ -12352,129 +12741,135 @@ export function registerRoutes(app: Express): Server {
           activityByDate[date].add(event.userId);
         }
       });
-      
+
       // Convert to array format
-      const result = Object.entries(activityByDate).map(([date, users]) => ({
-        date,
-        value: users.size
-      })).sort((a, b) => a.date.localeCompare(b.date));
-      
+      const result = Object.entries(activityByDate)
+        .map(([date, users]) => ({
+          date,
+          value: users.size,
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
       res.json(result);
     } catch (error) {
-      console.error('Error fetching user activity:', error);
+      console.error("Error fetching user activity:", error);
       res.status(500).json({ message: "Failed to fetch user activity" });
     }
   });
-  
+
   // Shift analytics over time
   app.get("/api/analytics/shifts", requireAuth, async (req: any, res) => {
     try {
-      if (req.user.role !== 'super_admin') {
+      if (req.user.role !== "super_admin") {
         return res.status(403).json({ message: "Access denied: Super admin required" });
       }
-      
+
       const { startDate, endDate, facilityId } = req.query;
-      
+
       const shiftEvents = await storage.getAnalyticsEvents({
-        eventCategory: 'shifts',
-        eventName: 'shift_create',
+        eventCategory: "shifts",
+        eventName: "shift_create",
         startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : undefined,
-        facilityId: facilityId !== 'all' ? parseInt(facilityId) : undefined
+        facilityId: facilityId !== "all" ? parseInt(facilityId) : undefined,
       });
-      
+
       // Group by date
       const shiftsByDate: { [date: string]: number } = {};
-      
-      shiftEvents.forEach(event => {
-        const date = format(new Date(event.timestamp), 'yyyy-MM-dd');
+
+      shiftEvents.forEach((event) => {
+        const date = format(new Date(event.timestamp), "yyyy-MM-dd");
         shiftsByDate[date] = (shiftsByDate[date] || 0) + 1;
       });
-      
+
       // Convert to array format
-      const result = Object.entries(shiftsByDate).map(([date, count]) => ({
-        date,
-        value: count
-      })).sort((a, b) => a.date.localeCompare(b.date));
-      
+      const result = Object.entries(shiftsByDate)
+        .map(([date, count]) => ({
+          date,
+          value: count,
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
       res.json(result);
     } catch (error) {
-      console.error('Error fetching shift analytics:', error);
+      console.error("Error fetching shift analytics:", error);
       res.status(500).json({ message: "Failed to fetch shift analytics" });
     }
   });
-  
+
   // Message analytics over time
   app.get("/api/analytics/messages", requireAuth, async (req: any, res) => {
     try {
-      if (req.user.role !== 'super_admin') {
+      if (req.user.role !== "super_admin") {
         return res.status(403).json({ message: "Access denied: Super admin required" });
       }
-      
+
       const { startDate, endDate, facilityId } = req.query;
-      
+
       const messageEvents = await storage.getAnalyticsEvents({
-        eventCategory: 'messaging',
-        eventName: 'message_send',
+        eventCategory: "messaging",
+        eventName: "message_send",
         startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : undefined,
-        facilityId: facilityId !== 'all' ? parseInt(facilityId) : undefined
+        facilityId: facilityId !== "all" ? parseInt(facilityId) : undefined,
       });
-      
+
       // Group by date
       const messagesByDate: { [date: string]: number } = {};
-      
-      messageEvents.forEach(event => {
-        const date = format(new Date(event.timestamp), 'yyyy-MM-dd');
+
+      messageEvents.forEach((event) => {
+        const date = format(new Date(event.timestamp), "yyyy-MM-dd");
         messagesByDate[date] = (messagesByDate[date] || 0) + 1;
       });
-      
+
       // Convert to array format
-      const result = Object.entries(messagesByDate).map(([date, count]) => ({
-        date,
-        value: count
-      })).sort((a, b) => a.date.localeCompare(b.date));
-      
+      const result = Object.entries(messagesByDate)
+        .map(([date, count]) => ({
+          date,
+          value: count,
+        }))
+        .sort((a, b) => a.date.localeCompare(b.date));
+
       res.json(result);
     } catch (error) {
-      console.error('Error fetching message analytics:', error);
+      console.error("Error fetching message analytics:", error);
       res.status(500).json({ message: "Failed to fetch message analytics" });
     }
   });
-  
+
   // Event category breakdown
   app.get("/api/analytics/categories", requireAuth, async (req: any, res) => {
     try {
-      if (req.user.role !== 'super_admin') {
+      if (req.user.role !== "super_admin") {
         return res.status(403).json({ message: "Access denied: Super admin required" });
       }
-      
+
       const { startDate, endDate, facilityId } = req.query;
-      
+
       const events = await storage.getAnalyticsEvents({
         startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : undefined,
-        facilityId: facilityId !== 'all' ? parseInt(facilityId) : undefined
+        facilityId: facilityId !== "all" ? parseInt(facilityId) : undefined,
       });
-      
+
       // Group by category
       const categoryCount: { [category: string]: number } = {};
-      
-      events.forEach(event => {
+
+      events.forEach((event) => {
         if (event.eventCategory) {
           categoryCount[event.eventCategory] = (categoryCount[event.eventCategory] || 0) + 1;
         }
       });
-      
+
       // Convert to array format
       const result = Object.entries(categoryCount).map(([category, count]) => ({
         category,
-        count
+        count,
       }));
-      
+
       res.json(result);
     } catch (error) {
-      console.error('Error fetching category breakdown:', error);
+      console.error("Error fetching category breakdown:", error);
       res.status(500).json({ message: "Failed to fetch category breakdown" });
     }
   });
@@ -12483,20 +12878,20 @@ export function registerRoutes(app: Express): Server {
   app.patch("/api/users/:id/onboarding", requireAuth, async (req: any, res) => {
     try {
       const userId = parseInt(req.params.id);
-      
+
       // Ensure user can only update their own onboarding
       if (req.user.id !== userId) {
         return res.status(403).json({ message: "Unauthorized" });
       }
-      
+
       const { step, completed } = req.body;
-      
+
       // Update user onboarding status
       const updatedUser = await storage.updateUserOnboarding(userId, {
         onboardingStep: step,
         onboardingCompleted: completed || false,
       });
-      
+
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating onboarding:", error);
@@ -12508,14 +12903,14 @@ export function registerRoutes(app: Express): Server {
   app.patch("/api/users/:id/profile", requireAuth, async (req: any, res) => {
     try {
       const userId = parseInt(req.params.id);
-      
+
       // Ensure user can only update their own profile
       if (req.user.id !== userId) {
         return res.status(403).json({ message: "Unauthorized" });
       }
-      
+
       const { firstName, lastName, phone, department, bio } = req.body;
-      
+
       // Update user profile
       const updatedUser = await storage.updateUserProfile(userId, {
         firstName,
@@ -12524,7 +12919,7 @@ export function registerRoutes(app: Express): Server {
         department,
         bio,
       });
-      
+
       res.json(updatedUser);
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -12536,19 +12931,18 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/invites", requireAuth, async (req: any, res) => {
     try {
       const { invites } = req.body;
-      
+
       // Here you would typically send emails to the invited users
       // For now, we'll just log them and return success
-      console.log("Sending invitations to:", invites);
-      
+
       // In a real implementation, you might:
       // 1. Generate invitation tokens
       // 2. Send emails with invitation links
       // 3. Store pending invitations in database
-      
-      res.json({ 
-        message: "Invitations sent successfully", 
-        count: invites.length 
+
+      res.json({
+        message: "Invitations sent successfully",
+        count: invites.length,
       });
     } catch (error) {
       console.error("Error sending invitations:", error);
@@ -12565,41 +12959,41 @@ export function registerRoutes(app: Express): Server {
       // Create various test notifications
       const notifications = [
         {
-          type: 'shift_request',
-          title: 'New Shift Request',
-          message: 'Emily Davis has requested ICU Night Shift on 2025-07-20',
-          link: '/shift-requests',
+          type: "shift_request",
+          title: "New Shift Request",
+          message: "Emily Davis has requested ICU Night Shift on 2025-07-20",
+          link: "/shift-requests",
           isRead: false,
-          userId: user.role !== 'facility_user' ? user.id : null,
-          facilityUserId: user.role === 'facility_user' ? user.facilityUserId : null
+          userId: user.role !== "facility_user" ? user.id : null,
+          facilityUserId: user.role === "facility_user" ? user.facilityUserId : null,
         },
         {
-          type: 'shift_approved',
-          title: 'Shift Request Approved',
-          message: 'Your request for Emergency Day Shift has been approved!',
-          link: '/my-schedule',
+          type: "shift_approved",
+          title: "Shift Request Approved",
+          message: "Your request for Emergency Day Shift has been approved!",
+          link: "/my-schedule",
           isRead: false,
-          userId: user.role !== 'facility_user' ? user.id : null,
-          facilityUserId: user.role === 'facility_user' ? user.facilityUserId : null
+          userId: user.role !== "facility_user" ? user.id : null,
+          facilityUserId: user.role === "facility_user" ? user.facilityUserId : null,
         },
         {
-          type: 'message_received',
-          title: 'New Message',
-          message: 'Sarah Johnson sent you a message: Schedule Update',
-          link: '/messaging',
+          type: "message_received",
+          title: "New Message",
+          message: "Sarah Johnson sent you a message: Schedule Update",
+          link: "/messaging",
           isRead: true,
-          userId: user.role !== 'facility_user' ? user.id : null,
-          facilityUserId: user.role === 'facility_user' ? user.facilityUserId : null
+          userId: user.role !== "facility_user" ? user.id : null,
+          facilityUserId: user.role === "facility_user" ? user.facilityUserId : null,
         },
         {
-          type: 'shift_denied',
-          title: 'Shift Request Denied',
-          message: 'Your request for Surgery Day Shift was denied. Reason: Fully staffed',
-          link: '/my-requests',
+          type: "shift_denied",
+          title: "Shift Request Denied",
+          message: "Your request for Surgery Day Shift was denied. Reason: Fully staffed",
+          link: "/my-requests",
           isRead: false,
-          userId: user.role !== 'facility_user' ? user.id : null,
-          facilityUserId: user.role === 'facility_user' ? user.facilityUserId : null
-        }
+          userId: user.role !== "facility_user" ? user.id : null,
+          facilityUserId: user.role === "facility_user" ? user.facilityUserId : null,
+        },
       ];
 
       for (const notification of notifications) {
@@ -12609,7 +13003,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({
         message: "Test notifications created successfully",
-        notifications: testNotifications
+        notifications: testNotifications,
       });
     } catch (error) {
       console.error("Error creating test notifications:", error);
@@ -12618,7 +13012,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Time-Off Management API Routes
-  
+
   // Get time-off types
   app.get("/api/timeoff/types", requireAuth, async (req, res) => {
     try {
@@ -12635,9 +13029,9 @@ export function registerRoutes(app: Express): Server {
     try {
       const userId = req.user.id;
       const year = parseInt(req.query.year) || new Date().getFullYear();
-      
+
       const balances = await storage.getTimeOffBalances(userId, year);
-      
+
       // If no balances exist, create default ones
       if (balances.length === 0) {
         const types = await storage.getTimeOffTypes(true);
@@ -12646,16 +13040,16 @@ export function registerRoutes(app: Express): Server {
             userId,
             timeOffTypeId: type.id,
             year,
-            allocated: type.name === 'vacation' ? 80 : type.name === 'sick' ? 40 : 24, // Default hours
+            allocated: type.name === "vacation" ? 80 : type.name === "sick" ? 40 : 24, // Default hours
             used: 0,
             pending: 0,
-            available: type.name === 'vacation' ? 80 : type.name === 'sick' ? 40 : 24,
+            available: type.name === "vacation" ? 80 : type.name === "sick" ? 40 : 24,
           });
         }
         const newBalances = await storage.getTimeOffBalances(userId, year);
         return res.json(newBalances);
       }
-      
+
       res.json(balances);
     } catch (error) {
       console.error("Error fetching time-off balance:", error);
@@ -12668,41 +13062,41 @@ export function registerRoutes(app: Express): Server {
     try {
       const { status, startDate, endDate, userId } = req.query;
       const currentUser = req.user;
-      
+
       // Build filters based on permissions
       const filters: any = {};
-      
+
       // If user has approval permission, they can see all requests
-      if (currentUser.permissions?.includes('timeoff.approve_requests')) {
+      if (currentUser.permissions?.includes("timeoff.approve_requests")) {
         if (userId) filters.userId = parseInt(userId);
       } else {
         // Otherwise, only see their own requests
         filters.userId = currentUser.id;
       }
-      
+
       if (status) filters.status = status;
       if (startDate) filters.startDate = new Date(startDate);
       if (endDate) filters.endDate = new Date(endDate);
-      
+
       const requests = await storage.getTimeOffRequests(filters);
-      
+
       // Enrich requests with user and type information
       const enrichedRequests = await Promise.all(
         requests.map(async (request) => {
           const user = await storage.getUser(request.userId);
           const type = await storage.getTimeOffTypes();
-          const timeOffType = type.find(t => t.id === request.timeOffTypeId);
-          
+          const timeOffType = type.find((t) => t.id === request.timeOffTypeId);
+
           return {
             ...request,
-            userName: user ? `${user.firstName} ${user.lastName}` : 'Unknown',
+            userName: user ? `${user.firstName} ${user.lastName}` : "Unknown",
             userEmail: user?.email,
-            typeName: timeOffType?.displayName || 'Unknown',
-            typeColor: timeOffType?.color || '#6b7280',
+            typeName: timeOffType?.displayName || "Unknown",
+            typeColor: timeOffType?.color || "#6b7280",
           };
         })
       );
-      
+
       res.json(enrichedRequests);
     } catch (error) {
       console.error("Error fetching time-off requests:", error);
@@ -12717,39 +13111,39 @@ export function registerRoutes(app: Express): Server {
       const requestData = {
         ...req.body,
         userId,
-        status: 'pending',
+        status: "pending",
       };
-      
+
       // Validate request against balance
       const year = new Date(requestData.startDate).getFullYear();
       const balance = await storage.getTimeOffBalance(userId, requestData.timeOffTypeId, year);
-      
+
       if (!balance || parseFloat(balance.available) < parseFloat(requestData.totalHours)) {
-        return res.status(400).json({ 
-          message: "Insufficient time-off balance for this request" 
+        return res.status(400).json({
+          message: "Insufficient time-off balance for this request",
         });
       }
-      
+
       // Check for shift conflicts
       const conflictingShifts = await storage.checkShiftCoverage(
         userId,
         new Date(requestData.startDate),
         new Date(requestData.endDate)
       );
-      
+
       if (conflictingShifts.length > 0) {
-        requestData.affectedShifts = conflictingShifts.map(s => s.id);
+        requestData.affectedShifts = conflictingShifts.map((s) => s.id);
       }
-      
+
       // Create the request
       const newRequest = await storage.createTimeOffRequest(requestData);
-      
+
       // Update pending balance
       await storage.updateTimeOffBalance(balance.id, {
         pending: (parseFloat(balance.pending) + parseFloat(requestData.totalHours)).toString(),
         available: (parseFloat(balance.available) - parseFloat(requestData.totalHours)).toString(),
       });
-      
+
       res.json(newRequest);
     } catch (error) {
       console.error("Error creating time-off request:", error);
@@ -12758,102 +13152,113 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Review time-off request (approve/deny)
-  app.post("/api/timeoff/requests/:id/review", requireAuth, requirePermission('timeoff.approve_requests'), async (req: any, res) => {
-    try {
-      const requestId = parseInt(req.params.id);
-      const { status, reviewNotes } = req.body;
-      const reviewedBy = req.user.id;
-      
-      if (!['approved', 'denied'].includes(status)) {
-        return res.status(400).json({ message: "Invalid status. Must be 'approved' or 'denied'" });
-      }
-      
-      const updatedRequest = await storage.reviewTimeOffRequest(
-        requestId,
-        status,
-        reviewedBy,
-        reviewNotes
-      );
-      
-      if (!updatedRequest) {
-        return res.status(404).json({ message: "Time-off request not found" });
-      }
-      
-      // If denied, restore the pending balance
-      if (status === 'denied') {
-        const year = new Date(updatedRequest.startDate).getFullYear();
-        const balance = await storage.getTimeOffBalance(
-          updatedRequest.userId,
-          updatedRequest.timeOffTypeId,
-          year
-        );
-        
-        if (balance) {
-          await storage.updateTimeOffBalance(balance.id, {
-            pending: (parseFloat(balance.pending) - parseFloat(updatedRequest.totalHours.toString())).toString(),
-            available: (parseFloat(balance.available) + parseFloat(updatedRequest.totalHours.toString())).toString(),
-          });
+  app.post(
+    "/api/timeoff/requests/:id/review",
+    requireAuth,
+    requirePermission("timeoff.approve_requests"),
+    async (req: any, res) => {
+      try {
+        const requestId = parseInt(req.params.id);
+        const { status, reviewNotes } = req.body;
+        const reviewedBy = req.user.id;
+
+        if (!["approved", "denied"].includes(status)) {
+          return res
+            .status(400)
+            .json({ message: "Invalid status. Must be 'approved' or 'denied'" });
         }
+
+        const updatedRequest = await storage.reviewTimeOffRequest(
+          requestId,
+          status,
+          reviewedBy,
+          reviewNotes
+        );
+
+        if (!updatedRequest) {
+          return res.status(404).json({ message: "Time-off request not found" });
+        }
+
+        // If denied, restore the pending balance
+        if (status === "denied") {
+          const year = new Date(updatedRequest.startDate).getFullYear();
+          const balance = await storage.getTimeOffBalance(
+            updatedRequest.userId,
+            updatedRequest.timeOffTypeId,
+            year
+          );
+
+          if (balance) {
+            await storage.updateTimeOffBalance(balance.id, {
+              pending: (
+                parseFloat(balance.pending) - parseFloat(updatedRequest.totalHours.toString())
+              ).toString(),
+              available: (
+                parseFloat(balance.available) + parseFloat(updatedRequest.totalHours.toString())
+              ).toString(),
+            });
+          }
+        }
+
+        // Create notification for the employee
+        await storage.createNotification({
+          userId: updatedRequest.userId,
+          facilityUserId: null,
+          type: "timeoff_update",
+          title: `Time-off request ${status}`,
+          message: `Your time-off request from ${new Date(updatedRequest.startDate).toLocaleDateString()} to ${new Date(updatedRequest.endDate).toLocaleDateString()} has been ${status}.`,
+          priority: "normal",
+          metadata: { requestId, status, reviewNotes },
+        });
+
+        res.json(updatedRequest);
+      } catch (error) {
+        console.error("Error reviewing time-off request:", error);
+        res.status(500).json({ message: "Failed to review time-off request" });
       }
-      
-      // Create notification for the employee
-      await storage.createNotification({
-        userId: updatedRequest.userId,
-        facilityUserId: null,
-        type: 'timeoff_update',
-        title: `Time-off request ${status}`,
-        message: `Your time-off request from ${new Date(updatedRequest.startDate).toLocaleDateString()} to ${new Date(updatedRequest.endDate).toLocaleDateString()} has been ${status}.`,
-        priority: 'normal',
-        metadata: { requestId, status, reviewNotes },
-      });
-      
-      res.json(updatedRequest);
-    } catch (error) {
-      console.error("Error reviewing time-off request:", error);
-      res.status(500).json({ message: "Failed to review time-off request" });
     }
-  });
+  );
 
   // Cancel time-off request
   app.post("/api/timeoff/requests/:id/cancel", requireAuth, async (req: any, res) => {
     try {
       const requestId = parseInt(req.params.id);
       const userId = req.user.id;
-      
+
       // Get the request to verify ownership
       const request = await storage.getTimeOffRequest(requestId);
       if (!request) {
         return res.status(404).json({ message: "Time-off request not found" });
       }
-      
+
       if (request.userId !== userId) {
         return res.status(403).json({ message: "You can only cancel your own requests" });
       }
-      
-      if (request.status !== 'pending') {
+
+      if (request.status !== "pending") {
         return res.status(400).json({ message: "Only pending requests can be cancelled" });
       }
-      
+
       // Update request status
       const updatedRequest = await storage.updateTimeOffRequest(requestId, {
-        status: 'cancelled',
+        status: "cancelled",
       });
-      
+
       // Restore the balance
       const year = new Date(request.startDate).getFullYear();
-      const balance = await storage.getTimeOffBalance(
-        userId,
-        request.timeOffTypeId,
-        year
-      );
-      
+      const balance = await storage.getTimeOffBalance(userId, request.timeOffTypeId, year);
+
       if (balance) {
         await storage.updateTimeOffBalance(balance.id, {
-          pending: (parseFloat(balance.pending) - parseFloat(request.totalHours.toString())).toString(),
-          available: (parseFloat(balance.available) + parseFloat(request.totalHours.toString())).toString(),
+          pending: (
+            parseFloat(balance.pending) - parseFloat(request.totalHours.toString())
+          ).toString(),
+          available: (
+            parseFloat(balance.available) + parseFloat(request.totalHours.toString())
+          ).toString(),
         });
       }
-      
+
       res.json(updatedRequest);
     } catch (error) {
       console.error("Error cancelling time-off request:", error);
@@ -12864,7 +13269,9 @@ export function registerRoutes(app: Express): Server {
   // Get time-off policies for a facility
   app.get("/api/timeoff/policies", requireAuth, async (req: any, res) => {
     try {
-      const facilityId = req.query.facilityId ? parseInt(req.query.facilityId) : req.user.facilityId;
+      const facilityId = req.query.facilityId
+        ? parseInt(req.query.facilityId)
+        : req.user.facilityId;
       const policies = await storage.getTimeOffPolicies(facilityId);
       res.json(policies);
     } catch (error) {

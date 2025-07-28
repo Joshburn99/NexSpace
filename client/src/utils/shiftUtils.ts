@@ -1,4 +1,4 @@
-import type { Shift, ShiftsBySpecialty, ShiftsByDate, User, Facility } from '../types';
+import type { Shift, ShiftsBySpecialty, ShiftsByDate, User, Facility } from "../types";
 
 /**
  * Get all shifts for a specific date
@@ -7,7 +7,7 @@ import type { Shift, ShiftsBySpecialty, ShiftsByDate, User, Facility } from '../
  * @returns Array of shifts for the specified date
  */
 export const getShiftsForDate = (shifts: Shift[], date: string): Shift[] => {
-  return shifts.filter(shift => shift.date === date);
+  return shifts.filter((shift) => shift.date === date);
 };
 
 /**
@@ -65,7 +65,7 @@ export const getShiftStaffingRatio = (shift: Shift) => {
     ratio: `${assigned}/${required}`,
     percentage: required > 0 ? Math.round((assigned / required) * 100) : 0,
     isFullyStaffed: assigned >= required,
-    needsStaff: required - assigned
+    needsStaff: required - assigned,
   };
 };
 
@@ -75,7 +75,7 @@ export const getShiftStaffingRatio = (shift: Shift) => {
  * @returns Array of shifts that need additional staff
  */
 export const getUnderStaffedShifts = (shifts: Shift[]): Shift[] => {
-  return shifts.filter(shift => !isShiftFilled(shift));
+  return shifts.filter((shift) => !isShiftFilled(shift));
 };
 
 /**
@@ -85,7 +85,7 @@ export const getUnderStaffedShifts = (shifts: Shift[]): Shift[] => {
  * @returns Array of shifts with the specified status
  */
 export const getShiftsByStatus = (shifts: Shift[], status: string): Shift[] => {
-  return shifts.filter(shift => shift.status === status);
+  return shifts.filter((shift) => shift.status === status);
 };
 
 /**
@@ -95,7 +95,7 @@ export const getShiftsByStatus = (shifts: Shift[], status: string): Shift[] => {
  * @returns Array of shifts for the specified facility
  */
 export const getShiftsByFacility = (shifts: Shift[], facilityId: string): Shift[] => {
-  return shifts.filter(shift => shift.facilityId === facilityId);
+  return shifts.filter((shift) => shift.facilityId === facilityId);
 };
 
 /**
@@ -105,7 +105,7 @@ export const getShiftsByFacility = (shifts: Shift[], facilityId: string): Shift[
  * @returns Array of shifts assigned to the worker
  */
 export const getShiftsByWorker = (shifts: Shift[], workerId: string): Shift[] => {
-  return shifts.filter(shift => shift.assignedWorkerIds.includes(workerId));
+  return shifts.filter((shift) => shift.assignedWorkerIds.includes(workerId));
 };
 
 /**
@@ -115,8 +115,12 @@ export const getShiftsByWorker = (shifts: Shift[], workerId: string): Shift[] =>
  * @param endDate - End date string (YYYY-MM-DD)
  * @returns Array of shifts within the date range
  */
-export const getShiftsInDateRange = (shifts: Shift[], startDate: string, endDate: string): Shift[] => {
-  return shifts.filter(shift => {
+export const getShiftsInDateRange = (
+  shifts: Shift[],
+  startDate: string,
+  endDate: string
+): Shift[] => {
+  return shifts.filter((shift) => {
     return shift.date >= startDate && shift.date <= endDate;
   });
 };
@@ -128,21 +132,25 @@ export const getShiftsInDateRange = (shifts: Shift[], startDate: string, endDate
  * @param workerId - Worker ID to check
  * @returns True if the worker is available for the target shift
  */
-export const isWorkerAvailableForShift = (shifts: Shift[], targetShift: Shift, workerId: string): boolean => {
+export const isWorkerAvailableForShift = (
+  shifts: Shift[],
+  targetShift: Shift,
+  workerId: string
+): boolean => {
   const workerShifts = getShiftsByWorker(shifts, workerId);
-  const sameDate = workerShifts.filter(shift => shift.date === targetShift.date);
-  
+  const sameDate = workerShifts.filter((shift) => shift.date === targetShift.date);
+
   // Check for time overlaps
-  return !sameDate.some(shift => {
+  return !sameDate.some((shift) => {
     if (shift.id === targetShift.id) return false; // Skip the same shift
-    
-    const shiftStart = parseInt(shift.startTime.replace(':', ''));
-    const shiftEnd = parseInt(shift.endTime.replace(':', ''));
-    const targetStart = parseInt(targetShift.startTime.replace(':', ''));
-    const targetEnd = parseInt(targetShift.endTime.replace(':', ''));
-    
+
+    const shiftStart = parseInt(shift.startTime.replace(":", ""));
+    const shiftEnd = parseInt(shift.endTime.replace(":", ""));
+    const targetStart = parseInt(targetShift.startTime.replace(":", ""));
+    const targetEnd = parseInt(targetShift.endTime.replace(":", ""));
+
     // Check for overlap
-    return (targetStart < shiftEnd && targetEnd > shiftStart);
+    return targetStart < shiftEnd && targetEnd > shiftStart;
   });
 };
 
@@ -153,23 +161,27 @@ export const isWorkerAvailableForShift = (shifts: Shift[], targetShift: Shift, w
  * @param targetShift - Shift to find workers for
  * @returns Array of available workers
  */
-export const getAvailableWorkersForShift = (users: User[], shifts: Shift[], targetShift: Shift): User[] => {
-  return users.filter(user => {
+export const getAvailableWorkersForShift = (
+  users: User[],
+  shifts: Shift[],
+  targetShift: Shift
+): User[] => {
+  return users.filter((user) => {
     // Must be active staff with matching specialty
-    if (!user.isActive || user.role !== 'staff' || user.specialty !== targetShift.specialty) {
+    if (!user.isActive || user.role !== "staff" || user.specialty !== targetShift.specialty) {
       return false;
     }
-    
+
     // Must be associated with the facility
     if (!user.facilityIds.includes(targetShift.facilityId)) {
       return false;
     }
-    
+
     // Must not already be assigned to this shift
     if (targetShift.assignedWorkerIds.includes(user.id)) {
       return false;
     }
-    
+
     // Must be available (no conflicting shifts)
     return isWorkerAvailableForShift(shifts, targetShift, user.id);
   });
@@ -181,18 +193,18 @@ export const getAvailableWorkersForShift = (users: User[], shifts: Shift[], targ
  * @returns Duration in hours (decimal)
  */
 export const calculateShiftDuration = (shift: Shift): number => {
-  const startHour = parseInt(shift.startTime.split(':')[0]);
-  const startMinute = parseInt(shift.startTime.split(':')[1]);
-  const endHour = parseInt(shift.endTime.split(':')[0]);
-  const endMinute = parseInt(shift.endTime.split(':')[1]);
-  
-  let duration = (endHour - startHour) + (endMinute - startMinute) / 60;
-  
+  const startHour = parseInt(shift.startTime.split(":")[0]);
+  const startMinute = parseInt(shift.startTime.split(":")[1]);
+  const endHour = parseInt(shift.endTime.split(":")[0]);
+  const endMinute = parseInt(shift.endTime.split(":")[1]);
+
+  let duration = endHour - startHour + (endMinute - startMinute) / 60;
+
   // Handle overnight shifts
   if (duration < 0) {
     duration += 24;
   }
-  
+
   return Math.round(duration * 100) / 100; // Round to 2 decimal places
 };
 
@@ -203,13 +215,13 @@ export const calculateShiftDuration = (shift: Shift): number => {
  */
 export const formatShiftTime = (shift: Shift): string => {
   const formatTime = (time: string): string => {
-    const [hour, minute] = time.split(':');
+    const [hour, minute] = time.split(":");
     const hourNum = parseInt(hour);
-    const ampm = hourNum >= 12 ? 'PM' : 'AM';
+    const ampm = hourNum >= 12 ? "PM" : "AM";
     const displayHour = hourNum === 0 ? 12 : hourNum > 12 ? hourNum - 12 : hourNum;
     return `${displayHour}:${minute} ${ampm}`;
   };
-  
+
   return `${formatTime(shift.startTime)} - ${formatTime(shift.endTime)}`;
 };
 

@@ -1,13 +1,28 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { UserCheck, Clock, Calendar, TrendingUp, TrendingDown, Users, Search, Download } from 'lucide-react';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import {
+  UserCheck,
+  Clock,
+  Calendar,
+  TrendingUp,
+  TrendingDown,
+  Users,
+  Search,
+  Download,
+} from "lucide-react";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
 
 interface AttendanceRecord {
   id: number;
@@ -22,89 +37,89 @@ interface AttendanceRecord {
   scheduledEnd: string;
   hoursWorked: number;
   scheduledHours: number;
-  status: 'on_time' | 'late' | 'early' | 'absent' | 'no_show';
+  status: "on_time" | "late" | "early" | "absent" | "no_show";
   notes?: string;
 }
 
 export default function AttendancePage() {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [dateRange, setDateRange] = useState('week');
+  const [activeTab, setActiveTab] = useState("overview");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [dateRange, setDateRange] = useState("week");
   const { hasPermission } = useFacilityPermissions();
 
   const { data: attendanceData, isLoading } = useQuery<AttendanceRecord[]>({
-    queryKey: ['/api/attendance', dateRange, departmentFilter],
+    queryKey: ["/api/attendance", dateRange, departmentFilter],
     initialData: [
       {
         id: 1,
         staffId: 1,
-        staffName: 'Sarah Johnson',
-        specialty: 'Registered Nurse',
-        department: 'ICU',
-        date: '2025-07-14',
-        clockIn: '06:55',
-        clockOut: '19:10',
-        scheduledStart: '07:00',
-        scheduledEnd: '19:00',
+        staffName: "Sarah Johnson",
+        specialty: "Registered Nurse",
+        department: "ICU",
+        date: "2025-07-14",
+        clockIn: "06:55",
+        clockOut: "19:10",
+        scheduledStart: "07:00",
+        scheduledEnd: "19:00",
         hoursWorked: 12.25,
         scheduledHours: 12,
-        status: 'on_time',
-        notes: 'Stayed late to complete patient care'
+        status: "on_time",
+        notes: "Stayed late to complete patient care",
       },
       {
         id: 2,
         staffId: 2,
-        staffName: 'Michael Chen',
-        specialty: 'Licensed Practical Nurse',
-        department: 'Emergency',
-        date: '2025-07-14',
-        clockIn: '07:15',
-        clockOut: '19:30',
-        scheduledStart: '07:00',
-        scheduledEnd: '19:00',
+        staffName: "Michael Chen",
+        specialty: "Licensed Practical Nurse",
+        department: "Emergency",
+        date: "2025-07-14",
+        clockIn: "07:15",
+        clockOut: "19:30",
+        scheduledStart: "07:00",
+        scheduledEnd: "19:00",
         hoursWorked: 12.25,
         scheduledHours: 12,
-        status: 'late',
-        notes: 'Traffic delay'
+        status: "late",
+        notes: "Traffic delay",
       },
       {
         id: 3,
         staffId: 3,
-        staffName: 'Emily Rodriguez',
-        specialty: 'Certified Nursing Assistant',
-        department: 'Med-Surg',
-        date: '2025-07-14',
-        clockIn: '06:45',
-        clockOut: '18:50',
-        scheduledStart: '07:00',
-        scheduledEnd: '19:00',
+        staffName: "Emily Rodriguez",
+        specialty: "Certified Nursing Assistant",
+        department: "Med-Surg",
+        date: "2025-07-14",
+        clockIn: "06:45",
+        clockOut: "18:50",
+        scheduledStart: "07:00",
+        scheduledEnd: "19:00",
         hoursWorked: 12.08,
         scheduledHours: 12,
-        status: 'early',
-        notes: 'Early arrival for patient handoff'
+        status: "early",
+        notes: "Early arrival for patient handoff",
       },
       {
         id: 4,
         staffId: 4,
-        staffName: 'David Wilson',
-        specialty: 'Respiratory Therapist',
-        department: 'ICU',
-        date: '2025-07-14',
-        clockIn: '',
-        clockOut: '',
-        scheduledStart: '07:00',
-        scheduledEnd: '19:00',
+        staffName: "David Wilson",
+        specialty: "Respiratory Therapist",
+        department: "ICU",
+        date: "2025-07-14",
+        clockIn: "",
+        clockOut: "",
+        scheduledStart: "07:00",
+        scheduledEnd: "19:00",
         hoursWorked: 0,
         scheduledHours: 12,
-        status: 'absent',
-        notes: 'Called in sick'
-      }
-    ]
+        status: "absent",
+        notes: "Called in sick",
+      },
+    ],
   });
 
-  if (!hasPermission('view_attendance_reports')) {
+  if (!hasPermission("view_attendance_reports")) {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -116,43 +131,59 @@ export default function AttendancePage() {
     );
   }
 
-  const filteredAttendance = attendanceData?.filter(record => {
-    const matchesSearch = record.staffName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         record.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         record.department.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = departmentFilter === 'all' || record.department === departmentFilter;
-    const matchesStatus = statusFilter === 'all' || record.status === statusFilter;
-    
-    return matchesSearch && matchesDepartment && matchesStatus;
-  }) || [];
+  const filteredAttendance =
+    attendanceData?.filter((record) => {
+      const matchesSearch =
+        record.staffName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.department.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesDepartment =
+        departmentFilter === "all" || record.department === departmentFilter;
+      const matchesStatus = statusFilter === "all" || record.status === statusFilter;
+
+      return matchesSearch && matchesDepartment && matchesStatus;
+    }) || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'on_time': return 'bg-green-100 text-green-800';
-      case 'early': return 'bg-blue-100 text-blue-800';
-      case 'late': return 'bg-yellow-100 text-yellow-800';
-      case 'absent': return 'bg-red-100 text-red-800';
-      case 'no_show': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "on_time":
+        return "bg-green-100 text-green-800";
+      case "early":
+        return "bg-blue-100 text-blue-800";
+      case "late":
+        return "bg-yellow-100 text-yellow-800";
+      case "absent":
+        return "bg-red-100 text-red-800";
+      case "no_show":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'on_time': return UserCheck;
-      case 'early': return TrendingUp;
-      case 'late': return TrendingDown;
-      case 'absent': return Clock;
-      case 'no_show': return Users;
-      default: return Clock;
+      case "on_time":
+        return UserCheck;
+      case "early":
+        return TrendingUp;
+      case "late":
+        return TrendingDown;
+      case "absent":
+        return Clock;
+      case "no_show":
+        return Users;
+      default:
+        return Clock;
     }
   };
 
   const totalStaff = attendanceData?.length || 0;
-  const onTimeCount = attendanceData?.filter(r => r.status === 'on_time').length || 0;
-  const lateCount = attendanceData?.filter(r => r.status === 'late').length || 0;
-  const absentCount = attendanceData?.filter(r => r.status === 'absent').length || 0;
-  const attendanceRate = totalStaff > 0 ? ((totalStaff - absentCount) / totalStaff * 100).toFixed(1) : '0';
+  const onTimeCount = attendanceData?.filter((r) => r.status === "on_time").length || 0;
+  const lateCount = attendanceData?.filter((r) => r.status === "late").length || 0;
+  const absentCount = attendanceData?.filter((r) => r.status === "absent").length || 0;
+  const attendanceRate =
+    totalStaff > 0 ? (((totalStaff - absentCount) / totalStaff) * 100).toFixed(1) : "0";
 
   return (
     <div className="container mx-auto p-6">
@@ -211,7 +242,8 @@ export default function AttendancePage() {
               <CardContent>
                 <div className="text-2xl font-bold">{onTimeCount}</div>
                 <div className="text-xs text-muted-foreground">
-                  {totalStaff > 0 ? (onTimeCount / totalStaff * 100).toFixed(1) : 0}% punctuality rate
+                  {totalStaff > 0 ? ((onTimeCount / totalStaff) * 100).toFixed(1) : 0}% punctuality
+                  rate
                 </div>
               </CardContent>
             </Card>
@@ -223,7 +255,7 @@ export default function AttendancePage() {
               <CardContent>
                 <div className="text-2xl font-bold">{lateCount}</div>
                 <div className="text-xs text-muted-foreground">
-                  {totalStaff > 0 ? (lateCount / totalStaff * 100).toFixed(1) : 0}% late rate
+                  {totalStaff > 0 ? ((lateCount / totalStaff) * 100).toFixed(1) : 0}% late rate
                 </div>
               </CardContent>
             </Card>
@@ -235,7 +267,7 @@ export default function AttendancePage() {
               <CardContent>
                 <div className="text-2xl font-bold">{absentCount}</div>
                 <div className="text-xs text-muted-foreground">
-                  {totalStaff > 0 ? (absentCount / totalStaff * 100).toFixed(1) : 0}% absence rate
+                  {totalStaff > 0 ? ((absentCount / totalStaff) * 100).toFixed(1) : 0}% absence rate
                 </div>
               </CardContent>
             </Card>
@@ -292,16 +324,20 @@ export default function AttendancePage() {
                           <StatusIcon className="h-5 w-5" />
                           <div>
                             <div className="font-semibold">{record.staffName}</div>
-                            <div className="text-sm text-gray-600">{record.specialty} • {record.department}</div>
+                            <div className="text-sm text-gray-600">
+                              {record.specialty} • {record.department}
+                            </div>
                           </div>
                         </div>
                         <Badge className={getStatusColor(record.status)}>
-                          {record.status.replace('_', ' ')}
+                          {record.status.replace("_", " ")}
                         </Badge>
                       </div>
                       <div className="text-right">
                         <div className="text-sm font-medium">
-                          {record.clockIn ? `${record.clockIn} - ${record.clockOut || 'Active'}` : 'No Clock In'}
+                          {record.clockIn
+                            ? `${record.clockIn} - ${record.clockOut || "Active"}`
+                            : "No Clock In"}
                         </div>
                         <div className="text-xs text-gray-600">
                           Scheduled: {record.scheduledStart} - {record.scheduledEnd}
@@ -328,10 +364,9 @@ export default function AttendancePage() {
                 <UserCheck className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No attendance records found</h3>
                 <p className="text-gray-600">
-                  {searchTerm || departmentFilter !== 'all' || statusFilter !== 'all' 
-                    ? 'Try adjusting your search or filters'
-                    : 'No attendance records available for the selected period'
-                  }
+                  {searchTerm || departmentFilter !== "all" || statusFilter !== "all"
+                    ? "Try adjusting your search or filters"
+                    : "No attendance records available for the selected period"}
                 </p>
               </CardContent>
             </Card>
@@ -351,21 +386,21 @@ export default function AttendancePage() {
                     <span className="text-sm text-gray-600">85%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
+                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: "85%" }}></div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Emergency</span>
                     <span className="text-sm text-gray-600">92%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-600 h-2 rounded-full" style={{ width: '92%' }}></div>
+                    <div className="bg-green-600 h-2 rounded-full" style={{ width: "92%" }}></div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Med-Surg</span>
                     <span className="text-sm text-gray-600">78%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-yellow-600 h-2 rounded-full" style={{ width: '78%' }}></div>
+                    <div className="bg-yellow-600 h-2 rounded-full" style={{ width: "78%" }}></div>
                   </div>
                 </div>
               </CardContent>
@@ -382,21 +417,21 @@ export default function AttendancePage() {
                     <span className="text-sm text-gray-600">88%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '88%' }}></div>
+                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: "88%" }}></div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Tuesday</span>
                     <span className="text-sm text-gray-600">92%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-600 h-2 rounded-full" style={{ width: '92%' }}></div>
+                    <div className="bg-green-600 h-2 rounded-full" style={{ width: "92%" }}></div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Wednesday</span>
                     <span className="text-sm text-gray-600">85%</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-yellow-600 h-2 rounded-full" style={{ width: '85%' }}></div>
+                    <div className="bg-yellow-600 h-2 rounded-full" style={{ width: "85%" }}></div>
                   </div>
                 </div>
               </CardContent>

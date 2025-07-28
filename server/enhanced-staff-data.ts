@@ -7,7 +7,7 @@ export async function createEnhancedStaffProfiles() {
     // Registered Nurses (RN) - ICU, Emergency, Medical-Surgical, etc.
     {
       firstName: "Sarah",
-      lastName: "Johnson", 
+      lastName: "Johnson",
       username: "sarah.johnson",
       email: "sarah.johnson@nexspace.com",
       password: "hashed_password",
@@ -15,43 +15,47 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 1,
       isActive: true,
       specialty: "RN",
-      avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Michael",
       lastName: "Chen",
-      username: "michael.chen", 
+      username: "michael.chen",
       email: "michael.chen@nexspace.com",
       password: "hashed_password",
       role: "internal_employee",
       facilityId: 1,
       isActive: true,
       specialty: "RN",
-      avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Jessica",
       lastName: "Rodriguez",
       username: "jessica.rodriguez",
-      email: "jessica.rodriguez@nexspace.com", 
+      email: "jessica.rodriguez@nexspace.com",
       password: "hashed_password",
       role: "internal_employee",
       facilityId: 1,
       isActive: true,
       specialty: "RN",
-      avatar: "https://images.unsplash.com/photo-1594824375302-179c7a1c8c60?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1594824375302-179c7a1c8c60?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "David",
       lastName: "Kim",
       username: "david.kim",
       email: "david.kim@nexspace.com",
-      password: "hashed_password", 
+      password: "hashed_password",
       role: "contractor_1099",
       facilityId: 1,
       isActive: true,
       specialty: "RN",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Amanda",
@@ -59,11 +63,12 @@ export async function createEnhancedStaffProfiles() {
       username: "amanda.williams",
       email: "amanda.williams@nexspace.com",
       password: "hashed_password",
-      role: "internal_employee", 
+      role: "internal_employee",
       facilityId: 1,
       isActive: true,
       specialty: "RN",
-      avatar: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Robert",
@@ -72,10 +77,11 @@ export async function createEnhancedStaffProfiles() {
       email: "robert.garcia@nexspace.com",
       password: "hashed_password",
       role: "contractor_1099",
-      facilityId: 1, 
+      facilityId: 1,
       isActive: true,
       specialty: "RN",
-      avatar: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Lisa",
@@ -87,19 +93,21 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 2,
       isActive: true,
       specialty: "RN",
-      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "James",
       lastName: "Anderson",
-      username: "james.anderson", 
+      username: "james.anderson",
       email: "james.anderson@nexspace.com",
       password: "hashed_password",
       role: "internal_employee",
       facilityId: 2,
       isActive: true,
       specialty: "RN",
-      avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face",
     },
     // Licensed Practical Nurses (LPN)
     {
@@ -112,7 +120,8 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 1,
       isActive: true,
       specialty: "LPN",
-      avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Christopher",
@@ -123,8 +132,9 @@ export async function createEnhancedStaffProfiles() {
       role: "contractor_1099",
       facilityId: 1,
       isActive: true,
-      specialty: "LPN", 
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+      specialty: "LPN",
+      avatar:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Rachel",
@@ -136,11 +146,12 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 2,
       isActive: true,
       specialty: "LPN",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Kevin",
-      lastName: "Wilson", 
+      lastName: "Wilson",
       username: "kevin.wilson",
       email: "kevin.wilson@nexspace.com",
       password: "hashed_password",
@@ -148,7 +159,8 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 3,
       isActive: true,
       specialty: "LPN",
-      avatar: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
     },
     // Certified Surgical Technologists (CST)
     {
@@ -161,19 +173,21 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 1,
       isActive: true,
       specialty: "CST",
-      avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Brian",
       lastName: "Martinez",
       username: "brian.martinez",
-      email: "brian.martinez@nexspace.com", 
+      email: "brian.martinez@nexspace.com",
       password: "hashed_password",
       role: "internal_employee",
       facilityId: 1,
       isActive: true,
       specialty: "CST",
-      avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Nicole",
@@ -185,7 +199,8 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 2,
       isActive: true,
       specialty: "CST",
-      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
     },
     // Respiratory Therapists (RT)
     {
@@ -198,7 +213,8 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 1,
       isActive: true,
       specialty: "RT",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Emily",
@@ -210,20 +226,22 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 2,
       isActive: true,
       specialty: "RT",
-      avatar: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=150&h=150&fit=crop&crop=face",
     },
     // Physical Therapists (PT)
     {
       firstName: "Mark",
       lastName: "Johnson",
       username: "mark.johnson",
-      email: "mark.johnson@nexspace.com", 
+      email: "mark.johnson@nexspace.com",
       password: "hashed_password",
       role: "internal_employee",
       facilityId: 2,
       isActive: true,
       specialty: "PT",
-      avatar: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Stephanie",
@@ -235,7 +253,8 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 3,
       isActive: true,
       specialty: "PT",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
     },
     // Occupational Therapists (OT)
     {
@@ -248,7 +267,8 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 2,
       isActive: true,
       specialty: "OT",
-      avatar: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Ashley",
@@ -260,12 +280,13 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 3,
       isActive: true,
       specialty: "OT",
-      avatar: "https://images.unsplash.com/photo-1594824375302-179c7a1c8c60?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1594824375302-179c7a1c8c60?w=150&h=150&fit=crop&crop=face",
     },
     // Pharmacy Technicians
     {
       firstName: "Matthew",
-      lastName: "Walker", 
+      lastName: "Walker",
       username: "matthew.walker",
       email: "matthew.walker@nexspace.com",
       password: "hashed_password",
@@ -273,7 +294,8 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 1,
       isActive: true,
       specialty: "PharmTech",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Samantha",
@@ -285,7 +307,8 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 2,
       isActive: true,
       specialty: "PharmTech",
-      avatar: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150&h=150&fit=crop&crop=face",
     },
     // Laboratory Technologists
     {
@@ -298,7 +321,8 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 1,
       isActive: true,
       specialty: "LabTech",
-      avatar: "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Michelle",
@@ -310,7 +334,8 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 3,
       isActive: true,
       specialty: "LabTech",
-      avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&h=150&fit=crop&crop=face",
     },
     // Radiology Technologists
     {
@@ -323,7 +348,8 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 1,
       isActive: true,
       specialty: "RadTech",
-      avatar: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Laura",
@@ -335,7 +361,8 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 2,
       isActive: true,
       specialty: "RadTech",
-      avatar: "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1551601651-2a8555f1a136?w=150&h=150&fit=crop&crop=face",
     },
     // Certified Nursing Assistants (CNA)
     {
@@ -348,7 +375,8 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 1,
       isActive: true,
       specialty: "CNA",
-      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
+      avatar:
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face",
     },
     {
       firstName: "Rebecca",
@@ -360,52 +388,77 @@ export async function createEnhancedStaffProfiles() {
       facilityId: 3,
       isActive: true,
       specialty: "CNA",
-      avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face"
-    }
+      avatar:
+        "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face",
+    },
   ];
 
   // Insert staff members into database
   try {
-    console.log('Creating enhanced staff profiles...');
-    
+
     for (const staffMember of enhancedStaff) {
       // Map internal_employee to full_time, contractor_1099 to contract
-      const employmentType = staffMember.role === "internal_employee" ? "full_time" : 
-                            staffMember.role === "contractor_1099" ? "contract" : "full_time";
-      
-      await db.insert(staff).values({
-        name: `${staffMember.firstName} ${staffMember.lastName}`,
-        email: staffMember.email,
-        phone: `(555) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
-        specialty: staffMember.specialty,
-        department: staffMember.specialty === "RN" ? "Nursing" : 
-                   staffMember.specialty === "LPN" ? "Nursing" : 
-                   staffMember.specialty === "CNA" ? "Nursing" :
-                   staffMember.specialty === "CST" ? "Surgery" :
-                   staffMember.specialty === "PharmTech" ? "Pharmacy" :
-                   staffMember.specialty === "LabTech" ? "Laboratory" :
-                   staffMember.specialty === "RadTech" ? "Radiology" : "General",
-        employmentType: employmentType,
-        isActive: staffMember.isActive,
-        profilePhoto: staffMember.avatar,
-        bio: `Experienced ${staffMember.specialty} with expertise in patient care.`,
-        location: "Portland, OR",
-        hourlyRate: staffMember.specialty === "RN" ? "48.00" : 
-                   staffMember.specialty === "LPN" ? "35.00" : 
-                   staffMember.specialty === "CNA" ? "28.00" : "42.00",
-        associatedFacilities: JSON.stringify([staffMember.facilityId]),
-        reliabilityScore: (Math.random() * 1.5 + 3.5).toFixed(1), // Random score between 3.5 and 5.0
-        totalWorkedShifts: Math.floor(Math.random() * 200) + 50, // Random between 50-250 shifts
-        certifications: staffMember.specialty === "RN" ? ["RN", "BLS", "ACLS"] : 
-                       staffMember.specialty === "LPN" ? ["LPN", "BLS"] : 
-                       staffMember.specialty === "CNA" ? ["CNA", "BLS"] : ["BLS"],
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }).onConflictDoNothing();
+      const employmentType =
+        staffMember.role === "internal_employee"
+          ? "full_time"
+          : staffMember.role === "contractor_1099"
+            ? "contract"
+            : "full_time";
+
+      await db
+        .insert(staff)
+        .values({
+          name: `${staffMember.firstName} ${staffMember.lastName}`,
+          email: staffMember.email,
+          phone: `(555) ${Math.floor(Math.random() * 900) + 100}-${Math.floor(Math.random() * 9000) + 1000}`,
+          specialty: staffMember.specialty,
+          department:
+            staffMember.specialty === "RN"
+              ? "Nursing"
+              : staffMember.specialty === "LPN"
+                ? "Nursing"
+                : staffMember.specialty === "CNA"
+                  ? "Nursing"
+                  : staffMember.specialty === "CST"
+                    ? "Surgery"
+                    : staffMember.specialty === "PharmTech"
+                      ? "Pharmacy"
+                      : staffMember.specialty === "LabTech"
+                        ? "Laboratory"
+                        : staffMember.specialty === "RadTech"
+                          ? "Radiology"
+                          : "General",
+          employmentType: employmentType,
+          isActive: staffMember.isActive,
+          profilePhoto: staffMember.avatar,
+          bio: `Experienced ${staffMember.specialty} with expertise in patient care.`,
+          location: "Portland, OR",
+          hourlyRate:
+            staffMember.specialty === "RN"
+              ? "48.00"
+              : staffMember.specialty === "LPN"
+                ? "35.00"
+                : staffMember.specialty === "CNA"
+                  ? "28.00"
+                  : "42.00",
+          associatedFacilities: JSON.stringify([staffMember.facilityId]),
+          reliabilityScore: (Math.random() * 1.5 + 3.5).toFixed(1), // Random score between 3.5 and 5.0
+          totalWorkedShifts: Math.floor(Math.random() * 200) + 50, // Random between 50-250 shifts
+          certifications:
+            staffMember.specialty === "RN"
+              ? ["RN", "BLS", "ACLS"]
+              : staffMember.specialty === "LPN"
+                ? ["LPN", "BLS"]
+                : staffMember.specialty === "CNA"
+                  ? ["CNA", "BLS"]
+                  : ["BLS"],
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .onConflictDoNothing();
     }
-    
-    console.log(`Successfully created ${enhancedStaff.length} staff profiles`);
+
   } catch (error) {
-    console.error('Error creating staff profiles:', error);
+    console.error("Error creating staff profiles:", error);
   }
 }

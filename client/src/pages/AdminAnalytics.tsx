@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -16,14 +10,18 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
-import { CalendarIcon, TrendingUp, Users, MessageSquare, ClipboardList, Building2, Activity } from "lucide-react";
+import {
+  CalendarIcon,
+  TrendingUp,
+  Users,
+  MessageSquare,
+  ClipboardList,
+  Building2,
+  Activity,
+} from "lucide-react";
 import {
   LineChart,
   Line,
@@ -66,7 +64,7 @@ interface CategoryData {
   count: number;
 }
 
-const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
+const COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899"];
 
 export default function AdminAnalytics() {
   const { user } = useAuth();
@@ -78,7 +76,7 @@ export default function AdminAnalytics() {
   const [facilityId, setFacilityId] = useState<string>("all");
 
   // Redirect if not admin
-  if (user?.role !== 'super_admin') {
+  if (user?.role !== "super_admin") {
     setLocation("/");
     return null;
   }
@@ -167,7 +165,7 @@ export default function AdminAnalytics() {
     if (range?.from && range?.to) {
       setDateRange({
         from: range.from,
-        to: range.to
+        to: range.to,
       });
     }
   };
@@ -183,9 +181,7 @@ export default function AdminAnalytics() {
     <div className="container mx-auto py-8 space-y-6">
       <div className="flex flex-col gap-4">
         <h1 className="text-3xl font-bold">Analytics Dashboard</h1>
-        <p className="text-muted-foreground">
-          Monitor platform usage and activity metrics
-        </p>
+        <p className="text-muted-foreground">Monitor platform usage and activity metrics</p>
       </div>
 
       {/* Filters */}
@@ -232,25 +228,13 @@ export default function AdminAnalytics() {
                   />
                 </PopoverContent>
               </Popover>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setQuickDateRange(7)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setQuickDateRange(7)}>
                 Last 7 days
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setQuickDateRange(30)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setQuickDateRange(30)}>
                 Last 30 days
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setQuickDateRange(90)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setQuickDateRange(90)}>
                 Last 90 days
               </Button>
             </div>
@@ -262,11 +246,12 @@ export default function AdminAnalytics() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Facilities</SelectItem>
-                {Array.isArray(facilities) && facilities.map((facility: any) => (
-                  <SelectItem key={facility.id} value={facility.id.toString()}>
-                    {facility.name}
-                  </SelectItem>
-                ))}
+                {Array.isArray(facilities) &&
+                  facilities.map((facility: any) => (
+                    <SelectItem key={facility.id} value={facility.id.toString()}>
+                      {facility.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -430,19 +415,14 @@ export default function AdminAnalytics() {
                   cx="50%"
                   cy="50%"
                   labelLine={false}
-                  label={({ category, percent }) =>
-                    `${category} ${(percent * 100).toFixed(0)}%`
-                  }
+                  label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
                   outerRadius={80}
                   fill="#8884d8"
                   dataKey="count"
                   nameKey="category"
                 >
                   {(categoryBreakdown || []).map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                    />
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
                 <Tooltip />

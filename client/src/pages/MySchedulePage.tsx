@@ -1,16 +1,25 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, Clock, MapPin, DollarSign, User, AlertCircle, Star, Building } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  DollarSign,
+  User,
+  AlertCircle,
+  Star,
+  Building,
+} from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { format, parseISO } from "date-fns";
@@ -37,8 +46,8 @@ export default function MySchedulePage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedShift, setSelectedShift] = useState<WorkerShift | null>(null);
-  const [activeView, setActiveView] = useState('dayGridMonth');
-  const [activeTab, setActiveTab] = useState('calendar');
+  const [activeView, setActiveView] = useState("dayGridMonth");
+  const [activeTab, setActiveTab] = useState("calendar");
 
   // Fetch worker's assigned shifts from Enhanced Schedule data
   const { data: myShifts = [], isLoading } = useQuery({
@@ -46,7 +55,7 @@ export default function MySchedulePage() {
     queryFn: async () => {
       const response = await apiRequest("GET", "/api/shifts/my-shifts");
       return await response.json();
-    }
+    },
   });
 
   // Fetch shift history for worker
@@ -56,7 +65,7 @@ export default function MySchedulePage() {
       const response = await apiRequest("GET", `/api/shifts/history/${user?.id}`);
       return await response.json();
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
   });
 
   // Request shift mutation
@@ -69,54 +78,55 @@ export default function MySchedulePage() {
       queryClient.invalidateQueries({ queryKey: ["/api/shifts/my-shifts"] });
       toast({
         title: "Shift Requested",
-        description: "Your shift request has been submitted successfully."
+        description: "Your shift request has been submitted successfully.",
       });
     },
     onError: () => {
       toast({
         title: "Request Failed",
         description: "Failed to request shift. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
-    }
+    },
   });
 
   // Separate shifts by status
-  const upcomingShifts = myShifts.filter((shift: WorkerShift) => 
-    shift.status === "confirmed" && new Date(shift.date) >= new Date()
+  const upcomingShifts = myShifts.filter(
+    (shift: WorkerShift) => shift.status === "confirmed" && new Date(shift.date) >= new Date()
   );
-  
-  const requestedShifts = myShifts.filter((shift: WorkerShift) => 
-    shift.status === "requested"
-  );
-  
-  const completedShifts = [...shiftHistory, ...myShifts.filter((shift: WorkerShift) => 
-    shift.status === "completed" || new Date(shift.date) < new Date()
-  )];
+
+  const requestedShifts = myShifts.filter((shift: WorkerShift) => shift.status === "requested");
+
+  const completedShifts = [
+    ...shiftHistory,
+    ...myShifts.filter(
+      (shift: WorkerShift) => shift.status === "completed" || new Date(shift.date) < new Date()
+    ),
+  ];
 
   // Create calendar events from worker's shifts
   const calendarEvents = [
-    ...upcomingShifts.map((s: any) => ({ 
-      id: s.id.toString(), 
-      title: `${s.title} - ${s.facilityName}`, 
-      date: s.date, 
-      color: 'green',
-      extendedProps: { shift: s, status: 'confirmed' }
+    ...upcomingShifts.map((s: any) => ({
+      id: s.id.toString(),
+      title: `${s.title} - ${s.facilityName}`,
+      date: s.date,
+      color: "green",
+      extendedProps: { shift: s, status: "confirmed" },
     })),
-    ...requestedShifts.map((s: any) => ({ 
-      id: s.id.toString(), 
-      title: `Pending: ${s.title}`, 
-      date: s.date, 
-      color: 'orange',
-      extendedProps: { shift: s, status: 'requested' }
+    ...requestedShifts.map((s: any) => ({
+      id: s.id.toString(),
+      title: `Pending: ${s.title}`,
+      date: s.date,
+      color: "orange",
+      extendedProps: { shift: s, status: "requested" },
     })),
-    ...completedShifts.map(s => ({
+    ...completedShifts.map((s) => ({
       id: s.id.toString(),
       title: `Completed: ${s.title}`,
       date: s.date,
-      color: 'blue',
-      extendedProps: { shift: s, status: 'completed' }
-    }))
+      color: "blue",
+      extendedProps: { shift: s, status: "completed" },
+    })),
   ];
 
   const handleEventClick = (info: any) => {
@@ -125,10 +135,10 @@ export default function MySchedulePage() {
 
   const formatTime = (time: string) => {
     try {
-      const [hours, minutes] = time.split(':');
+      const [hours, minutes] = time.split(":");
       const date = new Date();
       date.setHours(parseInt(hours), parseInt(minutes));
-      return format(date, 'h:mm a');
+      return format(date, "h:mm a");
     } catch {
       return time;
     }
@@ -136,7 +146,7 @@ export default function MySchedulePage() {
 
   const formatDate = (dateString: string) => {
     try {
-      return format(parseISO(dateString), 'MMM d, yyyy');
+      return format(parseISO(dateString), "MMM d, yyyy");
     } catch {
       return dateString;
     }
@@ -144,14 +154,30 @@ export default function MySchedulePage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'open':
-        return <Badge variant="secondary" className="bg-gray-100 text-gray-800">Available</Badge>;
-      case 'requested':
-        return <Badge variant="default" className="bg-yellow-100 text-yellow-800">Requested</Badge>;
-      case 'booked':
-        return <Badge variant="default" className="bg-green-100 text-green-800">Scheduled</Badge>;
-      case 'history':
-        return <Badge variant="outline" className="bg-blue-100 text-blue-800">Completed</Badge>;
+      case "open":
+        return (
+          <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+            Available
+          </Badge>
+        );
+      case "requested":
+        return (
+          <Badge variant="default" className="bg-yellow-100 text-yellow-800">
+            Requested
+          </Badge>
+        );
+      case "booked":
+        return (
+          <Badge variant="default" className="bg-green-100 text-green-800">
+            Scheduled
+          </Badge>
+        );
+      case "history":
+        return (
+          <Badge variant="outline" className="bg-blue-100 text-blue-800">
+            Completed
+          </Badge>
+        );
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -159,16 +185,16 @@ export default function MySchedulePage() {
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
-      case 'critical':
-        return 'text-red-600';
-      case 'high':
-        return 'text-orange-600';
-      case 'medium':
-        return 'text-yellow-600';
-      case 'low':
-        return 'text-green-600';
+      case "critical":
+        return "text-red-600";
+      case "high":
+        return "text-orange-600";
+      case "medium":
+        return "text-yellow-600";
+      case "low":
+        return "text-green-600";
       default:
-        return 'text-gray-600';
+        return "text-gray-600";
     }
   };
 
@@ -192,22 +218,22 @@ export default function MySchedulePage() {
         </div>
         <div className="flex gap-2">
           <Button
-            variant={activeView === 'dayGridMonth' ? 'default' : 'outline'}
-            onClick={() => setActiveView('dayGridMonth')}
+            variant={activeView === "dayGridMonth" ? "default" : "outline"}
+            onClick={() => setActiveView("dayGridMonth")}
             size="sm"
           >
             Month
           </Button>
           <Button
-            variant={activeView === 'timeGridWeek' ? 'default' : 'outline'}
-            onClick={() => setActiveView('timeGridWeek')}
+            variant={activeView === "timeGridWeek" ? "default" : "outline"}
+            onClick={() => setActiveView("timeGridWeek")}
             size="sm"
           >
             Week
           </Button>
           <Button
-            variant={activeView === 'timeGridDay' ? 'default' : 'outline'}
-            onClick={() => setActiveView('timeGridDay')}
+            variant={activeView === "timeGridDay" ? "default" : "outline"}
+            onClick={() => setActiveView("timeGridDay")}
             size="sm"
           >
             Day
@@ -221,7 +247,9 @@ export default function MySchedulePage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Available Shifts</p>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                  Available Shifts
+                </p>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">{open.length}</p>
               </div>
               <Calendar className="h-8 w-8 text-gray-400" />
@@ -290,14 +318,14 @@ export default function MySchedulePage() {
               <span>Completed</span>
             </div>
           </div>
-          
+
           <FullCalendar
             plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
             initialView={activeView}
             headerToolbar={{
-              left: 'prev,next today',
-              center: 'title',
-              right: ''
+              left: "prev,next today",
+              center: "title",
+              right: "",
             }}
             events={calendarEvents}
             eventClick={handleEventClick}
@@ -319,7 +347,7 @@ export default function MySchedulePage() {
           <DialogHeader>
             <DialogTitle>{selectedShift?.title}</DialogTitle>
           </DialogHeader>
-          
+
           {selectedShift && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -340,7 +368,9 @@ export default function MySchedulePage() {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Clock className="h-4 w-4 text-gray-400" />
-                  <span>{selectedShift.startTime} - {selectedShift.endTime}</span>
+                  <span>
+                    {selectedShift.startTime} - {selectedShift.endTime}
+                  </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <DollarSign className="h-4 w-4 text-gray-400" />
@@ -350,24 +380,30 @@ export default function MySchedulePage() {
 
               <div>
                 <h4 className="font-medium text-sm mb-2">Department</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{selectedShift.department}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {selectedShift.department}
+                </p>
               </div>
 
               <div>
                 <h4 className="font-medium text-sm mb-2">Specialty</h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400">{selectedShift.specialty}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {selectedShift.specialty}
+                </p>
               </div>
 
               {selectedShift.description && (
                 <div>
                   <h4 className="font-medium text-sm mb-2">Description</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{selectedShift.description}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {selectedShift.description}
+                  </p>
                 </div>
               )}
 
-              {selectedShift.status === 'open' && (
+              {selectedShift.status === "open" && (
                 <div className="pt-4 border-t">
-                  <Button 
+                  <Button
                     onClick={() => {
                       // Request shift functionality would go here
                       toast({ title: "Shift requested successfully" });

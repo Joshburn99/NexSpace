@@ -15,20 +15,20 @@ export const requirePermission = (permission: string | Permission) => {
     }
 
     // Super admin always has access
-    if (req.user.role === 'super_admin' || req.user.role === UserRole.SUPER_ADMIN) {
+    if (req.user.role === "super_admin" || req.user.role === UserRole.SUPER_ADMIN) {
       return next();
     }
 
     // Check permission using storage layer
     const hasPermission = await storage.hasPermission(req.user.role, permission);
     if (!hasPermission) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         message: "Insufficient permissions",
         required: permission,
-        userRole: req.user.role
+        userRole: req.user.role,
       });
     }
-    
+
     next();
   };
 };
@@ -39,40 +39,43 @@ export const requireSuperAdmin = (req: any, res: any, next: any) => {
     return res.status(401).json({ message: "Authentication required" });
   }
 
-  if (req.user.role !== 'super_admin' && req.user.role !== UserRole.SUPER_ADMIN) {
+  if (req.user.role !== "super_admin" && req.user.role !== UserRole.SUPER_ADMIN) {
     return res.status(403).json({ message: "Super admin access required" });
   }
-  
+
   next();
 };
 
 // Facility access control - ensures users can only access their associated facilities
-export const requireFacilityAccess = (facilityIdParam: string = 'facilityId') => {
+export const requireFacilityAccess = (facilityIdParam: string = "facilityId") => {
   return async (req: any, res: any, next: any) => {
     if (!req.user) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
     // Super admin can access all facilities
-    if (req.user.role === 'super_admin' || req.user.role === UserRole.SUPER_ADMIN) {
+    if (req.user.role === "super_admin" || req.user.role === UserRole.SUPER_ADMIN) {
       return next();
     }
 
-    const requestedFacilityId = parseInt(req.params[facilityIdParam] || req.body[facilityIdParam] || req.query[facilityIdParam]);
-    
+    const requestedFacilityId = parseInt(
+      req.params[facilityIdParam] || req.body[facilityIdParam] || req.query[facilityIdParam]
+    );
+
     if (!requestedFacilityId) {
       return res.status(400).json({ message: "Facility ID required" });
     }
 
     // Check if user has access to this facility
     const userFacilityIds = req.user.associatedFacilityIds || req.user.associatedFacilities || [];
-    const hasAccess = userFacilityIds.includes(requestedFacilityId) || req.user.facilityId === requestedFacilityId;
+    const hasAccess =
+      userFacilityIds.includes(requestedFacilityId) || req.user.facilityId === requestedFacilityId;
 
     if (!hasAccess) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         message: "Access denied to this facility",
         requestedFacility: requestedFacilityId,
-        userFacilities: userFacilityIds
+        userFacilities: userFacilityIds,
       });
     }
 
@@ -81,28 +84,36 @@ export const requireFacilityAccess = (facilityIdParam: string = 'facilityId') =>
 };
 
 // Resource ownership validation - ensures users can only access their own data
-export const requireResourceOwnership = (userIdParam: string = 'userId', allowSuperAdmin: boolean = true) => {
+export const requireResourceOwnership = (
+  userIdParam: string = "userId",
+  allowSuperAdmin: boolean = true
+) => {
   return (req: any, res: any, next: any) => {
     if (!req.user) {
       return res.status(401).json({ message: "Authentication required" });
     }
 
     // Super admin can access all resources (if allowed)
-    if (allowSuperAdmin && (req.user.role === 'super_admin' || req.user.role === UserRole.SUPER_ADMIN)) {
+    if (
+      allowSuperAdmin &&
+      (req.user.role === "super_admin" || req.user.role === UserRole.SUPER_ADMIN)
+    ) {
       return next();
     }
 
-    const requestedUserId = parseInt(req.params[userIdParam] || req.body[userIdParam] || req.query[userIdParam]);
-    
+    const requestedUserId = parseInt(
+      req.params[userIdParam] || req.body[userIdParam] || req.query[userIdParam]
+    );
+
     if (!requestedUserId) {
       return res.status(400).json({ message: "User ID required" });
     }
 
     if (req.user.id !== requestedUserId) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         message: "Access denied - can only access your own resources",
         requestedUser: requestedUserId,
-        currentUser: req.user.id
+        currentUser: req.user.id,
       });
     }
 
@@ -116,13 +127,13 @@ export const requireStaffRole = (req: any, res: any, next: any) => {
     return res.status(401).json({ message: "Authentication required" });
   }
 
-  const staffRoles = ['internal_employee', 'contractor_1099', 'employee', 'contractor'];
-  const isStaff = staffRoles.includes(req.user.role) || req.user.role === 'super_admin';
+  const staffRoles = ["internal_employee", "contractor_1099", "employee", "contractor"];
+  const isStaff = staffRoles.includes(req.user.role) || req.user.role === "super_admin";
 
   if (!isStaff) {
-    return res.status(403).json({ 
+    return res.status(403).json({
       message: "Staff access required",
-      userRole: req.user.role
+      userRole: req.user.role,
     });
   }
 
@@ -136,17 +147,24 @@ export const requireFacilityUser = (req: any, res: any, next: any) => {
   }
 
   const facilityRoles = [
-    'facility_admin', 'facility_administrator', 'scheduling_coordinator', 
-    'hr_manager', 'billing', 'supervisor', 'director_of_nursing', 
-    'corporate', 'regional_director', 'viewer'
+    "facility_admin",
+    "facility_administrator",
+    "scheduling_coordinator",
+    "hr_manager",
+    "billing",
+    "supervisor",
+    "director_of_nursing",
+    "corporate",
+    "regional_director",
+    "viewer",
   ];
-  
-  const isFacilityUser = facilityRoles.includes(req.user.role) || req.user.role === 'super_admin';
+
+  const isFacilityUser = facilityRoles.includes(req.user.role) || req.user.role === "super_admin";
 
   if (!isFacilityUser) {
-    return res.status(403).json({ 
+    return res.status(403).json({
       message: "Facility user access required",
-      userRole: req.user.role
+      userRole: req.user.role,
     });
   }
 
@@ -163,8 +181,11 @@ export const applyDataFiltering = (req: any, res: any, next: any) => {
   req.dataFilter = {
     userId: req.user.id,
     role: req.user.role,
-    facilityIds: req.user.associatedFacilityIds || req.user.associatedFacilities || (req.user.facilityId ? [req.user.facilityId] : []),
-    isSuperAdmin: req.user.role === 'super_admin' || req.user.role === UserRole.SUPER_ADMIN
+    facilityIds:
+      req.user.associatedFacilityIds ||
+      req.user.associatedFacilities ||
+      (req.user.facilityId ? [req.user.facilityId] : []),
+    isSuperAdmin: req.user.role === "super_admin" || req.user.role === UserRole.SUPER_ADMIN,
   };
 
   next();
@@ -178,7 +199,7 @@ export const validateInput = (schema: any) => {
       if (!result.success) {
         return res.status(400).json({
           message: "Invalid input data",
-          errors: result.error.issues
+          errors: result.error.issues,
         });
       }
       req.validatedBody = result.data;
@@ -186,7 +207,7 @@ export const validateInput = (schema: any) => {
     } catch (error) {
       return res.status(400).json({
         message: "Validation error",
-        error: error instanceof Error ? error.message : "Unknown error"
+        error: error instanceof Error ? error.message : "Unknown error",
       });
     }
   };
@@ -203,42 +224,47 @@ export const applyRateLimit = (req: any, res: any, next: any) => {
 export const auditLog = (action: string, resource: string) => {
   return async (req: any, res: any, next: any) => {
     const originalSend = res.json;
-    
+
     res.json = function (data: any) {
       // Log successful operations
       if (res.statusCode < 400 && req.user) {
-        storage.createAuditLog(
-          req.user.id,
-          action,
-          resource,
-          data?.id || req.params?.id,
-          req.body,
-          data,
-          req.ip,
-          req.get("User-Agent")
-        ).catch(error => {
-          console.error('Audit log failed:', error);
-        });
+        storage
+          .createAuditLog(
+            req.user.id,
+            action,
+            resource,
+            data?.id || req.params?.id,
+            req.body,
+            data,
+            req.ip,
+            req.get("User-Agent")
+          )
+          .catch((error) => {
+            console.error("Audit log failed:", error);
+          });
       }
       return originalSend.call(this, data);
     };
-    
+
     next();
   };
 };
 
 // Combined security middleware for common patterns
-export const secureEndpoint = (permissions: string[] = [], options: {
-  requireOwnership?: boolean;
-  requireFacilityAccess?: boolean;
-  auditAction?: string;
-  auditResource?: string;
-} = {}) => {
+export const secureEndpoint = (
+  permissions: string[] = [],
+  options: {
+    requireOwnership?: boolean;
+    requireFacilityAccess?: boolean;
+    auditAction?: string;
+    auditResource?: string;
+  } = {}
+) => {
   const middleware = [];
 
   // Apply permissions
   if (permissions.length > 0) {
-    permissions.forEach(permission => {
+    permissions.forEach((permission) => {
       middleware.push(requirePermission(permission));
     });
   }

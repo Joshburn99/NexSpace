@@ -1,18 +1,33 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { AlertCircle, Settings, Clock, Users, Shield, DollarSign, Save, Loader2 } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertCircle,
+  Settings,
+  Clock,
+  Users,
+  Shield,
+  DollarSign,
+  Save,
+  Loader2,
+} from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface WorkflowAutomationConfig {
   autoApproveShifts: boolean;
@@ -62,28 +77,28 @@ interface FacilitySettings {
 }
 
 export default function FacilitySettingsPage() {
-  const [activeTab, setActiveTab] = useState('workflow');
+  const [activeTab, setActiveTab] = useState("workflow");
   const [hasChanges, setHasChanges] = useState(false);
   const { permissions, hasPermission, facilityId } = useFacilityPermissions();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: settings, isLoading } = useQuery<FacilitySettings>({
-    queryKey: ['/api/facilities', facilityId, 'settings'],
-    enabled: !!facilityId && hasPermission('manage_facility_settings'),
+    queryKey: ["/api/facilities", facilityId, "settings"],
+    enabled: !!facilityId && hasPermission("manage_facility_settings"),
   });
 
   const updateSettings = useMutation({
     mutationFn: async (data: Partial<FacilitySettings>) => {
-      const response = await apiRequest('PATCH', `/api/facilities/${facilityId}/settings`, data);
+      const response = await apiRequest("PATCH", `/api/facilities/${facilityId}/settings`, data);
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to update settings');
+        throw new Error(error.message || "Failed to update settings");
       }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/facilities', facilityId, 'settings'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/facilities", facilityId, "settings"] });
       setHasChanges(false);
       toast({
         title: "Success",
@@ -91,16 +106,17 @@ export default function FacilitySettingsPage() {
       });
     },
     onError: (error: any) => {
-      console.error('Settings update error:', error);
+      console.error("Settings update error:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to update settings. Please check your connection and try again.",
+        description:
+          error.message || "Failed to update settings. Please check your connection and try again.",
         variant: "destructive",
       });
     },
   });
 
-  if (!hasPermission('manage_facility_settings')) {
+  if (!hasPermission("manage_facility_settings")) {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -146,7 +162,9 @@ export default function FacilitySettingsPage() {
             <Settings className="h-8 w-8" />
             Facility Settings
           </h1>
-          <p className="text-gray-600 mt-2">Configure advanced facility operations and automation</p>
+          <p className="text-gray-600 mt-2">
+            Configure advanced facility operations and automation
+          </p>
         </div>
         {hasChanges && (
           <Button onClick={handleSave} disabled={updateSettings.isPending}>
@@ -187,22 +205,30 @@ export default function FacilitySettingsPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Auto-Approve Shifts</Label>
-                    <p className="text-sm text-gray-600">Automatically approve shift requests that meet criteria</p>
+                    <p className="text-sm text-gray-600">
+                      Automatically approve shift requests that meet criteria
+                    </p>
                   </div>
                   <Switch
                     checked={settings.workflowAutomationConfig?.autoApproveShifts || false}
-                    onCheckedChange={(checked) => updateWorkflowConfig('autoApproveShifts', checked)}
+                    onCheckedChange={(checked) =>
+                      updateWorkflowConfig("autoApproveShifts", checked)
+                    }
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Auto-Send Reminders</Label>
-                    <p className="text-sm text-gray-600">Send automatic shift reminders to assigned staff</p>
+                    <p className="text-sm text-gray-600">
+                      Send automatic shift reminders to assigned staff
+                    </p>
                   </div>
                   <Switch
                     checked={settings.workflowAutomationConfig?.autoSendReminders || false}
-                    onCheckedChange={(checked) => updateWorkflowConfig('autoSendReminders', checked)}
+                    onCheckedChange={(checked) =>
+                      updateWorkflowConfig("autoSendReminders", checked)
+                    }
                   />
                 </div>
 
@@ -212,7 +238,9 @@ export default function FacilitySettingsPage() {
                     <Input
                       type="number"
                       value={settings.workflowAutomationConfig.reminderTimingHours || 24}
-                      onChange={(e) => updateWorkflowConfig('reminderTimingHours', parseInt(e.target.value))}
+                      onChange={(e) =>
+                        updateWorkflowConfig("reminderTimingHours", parseInt(e.target.value))
+                      }
                       className="w-32"
                     />
                   </div>
@@ -221,11 +249,13 @@ export default function FacilitySettingsPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Overtime Alerts</Label>
-                    <p className="text-sm text-gray-600">Alert managers when staff approach overtime</p>
+                    <p className="text-sm text-gray-600">
+                      Alert managers when staff approach overtime
+                    </p>
                   </div>
                   <Switch
                     checked={settings.workflowAutomationConfig?.overtimeAlerts || false}
-                    onCheckedChange={(checked) => updateWorkflowConfig('overtimeAlerts', checked)}
+                    onCheckedChange={(checked) => updateWorkflowConfig("overtimeAlerts", checked)}
                   />
                 </div>
 
@@ -236,14 +266,20 @@ export default function FacilitySettingsPage() {
                       <Input
                         type="number"
                         value={settings.workflowAutomationConfig.overtimeThresholdHours || 40}
-                        onChange={(e) => updateWorkflowConfig('overtimeThresholdHours', parseInt(e.target.value))}
+                        onChange={(e) =>
+                          updateWorkflowConfig("overtimeThresholdHours", parseInt(e.target.value))
+                        }
                         className="w-32"
                       />
                     </div>
                     <div className="flex items-center gap-2">
                       <Switch
-                        checked={settings.workflowAutomationConfig.requireApprovalForOvertime || false}
-                        onCheckedChange={(checked) => updateWorkflowConfig('requireApprovalForOvertime', checked)}
+                        checked={
+                          settings.workflowAutomationConfig.requireApprovalForOvertime || false
+                        }
+                        onCheckedChange={(checked) =>
+                          updateWorkflowConfig("requireApprovalForOvertime", checked)
+                        }
                       />
                       <Label>Require approval for overtime shifts</Label>
                     </div>
@@ -253,11 +289,15 @@ export default function FacilitySettingsPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Auto-Assign by Specialty</Label>
-                    <p className="text-sm text-gray-600">Automatically match staff to shifts based on specialty</p>
+                    <p className="text-sm text-gray-600">
+                      Automatically match staff to shifts based on specialty
+                    </p>
                   </div>
                   <Switch
                     checked={settings.workflowAutomationConfig?.autoAssignBySpecialty || false}
-                    onCheckedChange={(checked) => updateWorkflowConfig('autoAssignBySpecialty', checked)}
+                    onCheckedChange={(checked) =>
+                      updateWorkflowConfig("autoAssignBySpecialty", checked)
+                    }
                   />
                 </div>
               </div>
@@ -272,7 +312,9 @@ export default function FacilitySettingsPage() {
                 <Clock className="h-5 w-5" />
                 Shift Management Rules
               </CardTitle>
-              <CardDescription>Define shift scheduling constraints and requirements</CardDescription>
+              <CardDescription>
+                Define shift scheduling constraints and requirements
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-2 gap-6">
@@ -281,7 +323,9 @@ export default function FacilitySettingsPage() {
                   <Input
                     type="number"
                     value={settings.shiftManagementSettings?.minShiftLength || 4}
-                    onChange={(e) => updateShiftSettings('minShiftLength', parseInt(e.target.value))}
+                    onChange={(e) =>
+                      updateShiftSettings("minShiftLength", parseInt(e.target.value))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -289,7 +333,9 @@ export default function FacilitySettingsPage() {
                   <Input
                     type="number"
                     value={settings.shiftManagementSettings?.maxShiftLength || 12}
-                    onChange={(e) => updateShiftSettings('maxShiftLength', parseInt(e.target.value))}
+                    onChange={(e) =>
+                      updateShiftSettings("maxShiftLength", parseInt(e.target.value))
+                    }
                   />
                 </div>
               </div>
@@ -300,7 +346,9 @@ export default function FacilitySettingsPage() {
                   <Input
                     type="number"
                     value={settings.shiftManagementSettings?.breakRequiredAfterHours || 6}
-                    onChange={(e) => updateShiftSettings('breakRequiredAfterHours', parseInt(e.target.value))}
+                    onChange={(e) =>
+                      updateShiftSettings("breakRequiredAfterHours", parseInt(e.target.value))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -308,7 +356,9 @@ export default function FacilitySettingsPage() {
                   <Input
                     type="number"
                     value={settings.shiftManagementSettings?.breakDurationMinutes || 30}
-                    onChange={(e) => updateShiftSettings('breakDurationMinutes', parseInt(e.target.value))}
+                    onChange={(e) =>
+                      updateShiftSettings("breakDurationMinutes", parseInt(e.target.value))
+                    }
                   />
                 </div>
               </div>
@@ -319,7 +369,9 @@ export default function FacilitySettingsPage() {
                   <Input
                     type="number"
                     value={settings.shiftManagementSettings?.maxConsecutiveDays || 6}
-                    onChange={(e) => updateShiftSettings('maxConsecutiveDays', parseInt(e.target.value))}
+                    onChange={(e) =>
+                      updateShiftSettings("maxConsecutiveDays", parseInt(e.target.value))
+                    }
                   />
                 </div>
                 <div className="space-y-2">
@@ -327,7 +379,9 @@ export default function FacilitySettingsPage() {
                   <Input
                     type="number"
                     value={settings.shiftManagementSettings?.minRestBetweenShifts || 8}
-                    onChange={(e) => updateShiftSettings('minRestBetweenShifts', parseInt(e.target.value))}
+                    onChange={(e) =>
+                      updateShiftSettings("minRestBetweenShifts", parseInt(e.target.value))
+                    }
                   />
                 </div>
               </div>
@@ -336,22 +390,30 @@ export default function FacilitySettingsPage() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Allow Double Booking</Label>
-                    <p className="text-sm text-gray-600">Allow staff to be scheduled for overlapping shifts</p>
+                    <p className="text-sm text-gray-600">
+                      Allow staff to be scheduled for overlapping shifts
+                    </p>
                   </div>
                   <Switch
                     checked={settings.shiftManagementSettings?.allowDoubleBooking || false}
-                    onCheckedChange={(checked) => updateShiftSettings('allowDoubleBooking', checked)}
+                    onCheckedChange={(checked) =>
+                      updateShiftSettings("allowDoubleBooking", checked)
+                    }
                   />
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <Label>Require Float Pool Approval</Label>
-                    <p className="text-sm text-gray-600">Require approval to use float pool staff</p>
+                    <p className="text-sm text-gray-600">
+                      Require approval to use float pool staff
+                    </p>
                   </div>
                   <Switch
                     checked={settings.shiftManagementSettings?.requireFloatPoolApproval || false}
-                    onCheckedChange={(checked) => updateShiftSettings('requireFloatPoolApproval', checked)}
+                    onCheckedChange={(checked) =>
+                      updateShiftSettings("requireFloatPoolApproval", checked)
+                    }
                   />
                 </div>
               </div>
@@ -372,13 +434,14 @@ export default function FacilitySettingsPage() {
               <Alert className="mb-6">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Define minimum staffing requirements for each department across different shifts. 
-                  These targets will be used for scheduling recommendations and compliance monitoring.
+                  Define minimum staffing requirements for each department across different shifts.
+                  These targets will be used for scheduling recommendations and compliance
+                  monitoring.
                 </AlertDescription>
               </Alert>
 
               <div className="space-y-6">
-                {['ICU', 'Emergency', 'Medical/Surgical', 'Pediatrics'].map(dept => (
+                {["ICU", "Emergency", "Medical/Surgical", "Pediatrics"].map((dept) => (
                   <div key={dept} className="space-y-3">
                     <h4 className="font-medium text-lg">{dept}</h4>
                     <div className="grid grid-cols-3 gap-4">
@@ -387,7 +450,7 @@ export default function FacilitySettingsPage() {
                         <Input
                           type="number"
                           placeholder="0"
-                          value={settings.staffingTargets?.[dept]?.day || ''}
+                          value={settings.staffingTargets?.[dept]?.day || ""}
                           onChange={(e) => {
                             // Update staffing targets
                             setHasChanges(true);
@@ -399,7 +462,7 @@ export default function FacilitySettingsPage() {
                         <Input
                           type="number"
                           placeholder="0"
-                          value={settings.staffingTargets?.[dept]?.evening || ''}
+                          value={settings.staffingTargets?.[dept]?.evening || ""}
                           onChange={(e) => {
                             // Update staffing targets
                             setHasChanges(true);
@@ -411,7 +474,7 @@ export default function FacilitySettingsPage() {
                         <Input
                           type="number"
                           placeholder="0"
-                          value={settings.staffingTargets?.[dept]?.night || ''}
+                          value={settings.staffingTargets?.[dept]?.night || ""}
                           onChange={(e) => {
                             // Update staffing targets
                             setHasChanges(true);
@@ -433,21 +496,26 @@ export default function FacilitySettingsPage() {
                 <Shield className="h-5 w-5" />
                 Custom Rules
               </CardTitle>
-              <CardDescription>Create facility-specific scheduling and compliance rules</CardDescription>
+              <CardDescription>
+                Create facility-specific scheduling and compliance rules
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <Alert className="mb-6">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Custom rules allow you to define facility-specific logic for scheduling, compliance, and alerts.
-                  Contact support to help configure advanced custom rules.
+                  Custom rules allow you to define facility-specific logic for scheduling,
+                  compliance, and alerts. Contact support to help configure advanced custom rules.
                 </AlertDescription>
               </Alert>
 
               {settings.customRules && settings.customRules.length > 0 ? (
                 <div className="space-y-4">
-                  {settings.customRules.map(rule => (
-                    <div key={rule.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  {settings.customRules.map((rule) => (
+                    <div
+                      key={rule.id}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
                       <div>
                         <h4 className="font-medium">{rule.name}</h4>
                         <p className="text-sm text-gray-600">{rule.description}</p>

@@ -1,19 +1,25 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { Loader2, User, Building, UserPlus, Calendar, X, ChevronRight, Check } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { Loader2, User, Building, UserPlus, Calendar, X, ChevronRight, Check } from "lucide-react";
 
 interface OnboardingData {
   // Step 1: Profile
@@ -22,19 +28,19 @@ interface OnboardingData {
   phone?: string;
   department?: string;
   bio?: string;
-  
+
   // Step 2: Facility/Team
   facilityId?: number;
   facilityName?: string;
   teamName?: string;
-  
+
   // Step 3: Invite Staff
   invites?: Array<{
     email: string;
     role: string;
     name: string;
   }>;
-  
+
   // Step 4: First Shift
   shiftTitle?: string;
   shiftDate?: string;
@@ -42,41 +48,47 @@ interface OnboardingData {
 }
 
 const steps = [
-  { id: 1, title: 'Complete Your Profile', icon: User },
-  { id: 2, title: 'Set Up Facility/Team', icon: Building },
-  { id: 3, title: 'Invite Staff', icon: UserPlus },
-  { id: 4, title: 'Schedule First Shift', icon: Calendar },
+  { id: 1, title: "Complete Your Profile", icon: User },
+  { id: 2, title: "Set Up Facility/Team", icon: Building },
+  { id: 3, title: "Invite Staff", icon: UserPlus },
+  { id: 4, title: "Schedule First Shift", icon: Calendar },
 ];
 
 // Form schemas for each step
 const profileSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   phone: z.string().optional(),
   department: z.string().optional(),
   bio: z.string().optional(),
 });
 
-const facilitySchema = z.object({
-  facilityId: z.number().optional(),
-  facilityName: z.string().optional(),
-  teamName: z.string().optional(),
-}).refine((data) => data.facilityId || data.facilityName || data.teamName, {
-  message: "Please select an existing facility or provide facility/team information",
-});
+const facilitySchema = z
+  .object({
+    facilityId: z.number().optional(),
+    facilityName: z.string().optional(),
+    teamName: z.string().optional(),
+  })
+  .refine((data) => data.facilityId || data.facilityName || data.teamName, {
+    message: "Please select an existing facility or provide facility/team information",
+  });
 
 const inviteSchema = z.object({
-  invites: z.array(z.object({
-    email: z.string().email('Invalid email address'),
-    role: z.string().min(1, 'Role is required'),
-    name: z.string().min(1, 'Name is required'),
-  })).optional(),
+  invites: z
+    .array(
+      z.object({
+        email: z.string().email("Invalid email address"),
+        role: z.string().min(1, "Role is required"),
+        name: z.string().min(1, "Name is required"),
+      })
+    )
+    .optional(),
 });
 
 const shiftSchema = z.object({
-  shiftTitle: z.string().min(1, 'Shift title is required'),
-  shiftDate: z.string().min(1, 'Date is required'),
-  shiftTime: z.string().min(1, 'Time is required'),
+  shiftTitle: z.string().min(1, "Shift title is required"),
+  shiftDate: z.string().min(1, "Date is required"),
+  shiftTime: z.string().min(1, "Time is required"),
 });
 
 export function OnboardingWizard() {
@@ -98,7 +110,7 @@ export function OnboardingWizard() {
 
   // Fetch facilities for step 2
   const { data: facilities } = useQuery({
-    queryKey: ['/api/facilities'],
+    queryKey: ["/api/facilities"],
     enabled: currentStep === 2,
   });
 
@@ -106,23 +118,27 @@ export function OnboardingWizard() {
   const updateProgress = useMutation({
     mutationFn: async (data: { step: number; completed?: boolean }) => {
       const response = await fetch(`/api/users/${user?.id}/onboarding`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to update onboarding');
+      if (!response.ok) throw new Error("Failed to update onboarding");
       return response.json();
     },
     onSuccess: (data) => {
       updateUser(data);
-      queryClient.invalidateQueries({ queryKey: ['/api/me'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/me"] });
     },
   });
 
   // Skip onboarding
   const handleSkip = () => {
-    if (window.confirm('Are you sure you want to skip the onboarding? You can always complete it later from your profile settings.')) {
+    if (
+      window.confirm(
+        "Are you sure you want to skip the onboarding? You can always complete it later from your profile settings."
+      )
+    ) {
       updateProgress.mutate({ step: currentStep, completed: true });
       setIsExiting(true);
     }
@@ -167,12 +183,10 @@ export function OnboardingWizard() {
               <X className="h-4 w-4" />
             </Button>
           </div>
-          
+
           <CardTitle>Welcome to NexSpace!</CardTitle>
-          <CardDescription>
-            Let's get you set up in just a few steps
-          </CardDescription>
-          
+          <CardDescription>Let's get you set up in just a few steps</CardDescription>
+
           {/* Progress indicator */}
           <div className="mt-4 space-y-4">
             <Progress value={(currentStep / 4) * 100} className="h-2" />
@@ -183,19 +197,21 @@ export function OnboardingWizard() {
                   onClick={() => goToStep(step.id)}
                   className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
                     step.id === currentStep
-                      ? 'text-primary'
+                      ? "text-primary"
                       : step.id < currentStep
-                      ? 'text-green-600'
-                      : 'text-muted-foreground'
+                        ? "text-green-600"
+                        : "text-muted-foreground"
                   }`}
                 >
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                    step.id === currentStep
-                      ? 'border-primary bg-primary text-white'
-                      : step.id < currentStep
-                      ? 'border-green-600 bg-green-600 text-white'
-                      : 'border-muted-foreground'
-                  }`}>
+                  <div
+                    className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                      step.id === currentStep
+                        ? "border-primary bg-primary text-white"
+                        : step.id < currentStep
+                          ? "border-green-600 bg-green-600 text-white"
+                          : "border-muted-foreground"
+                    }`}
+                  >
                     {step.id < currentStep ? (
                       <Check className="h-5 w-5" />
                     ) : (
@@ -208,40 +224,51 @@ export function OnboardingWizard() {
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent className="overflow-y-auto max-h-[calc(90vh-200px)]">
-          {currentStep === 1 && <ProfileStep onNext={(data) => {
-            setOnboardingData({ ...onboardingData, ...data });
-            goToStep(2);
-          }} initialData={onboardingData} />}
-          
-          {currentStep === 2 && <FacilityStep 
-            onNext={(data) => {
-              setOnboardingData({ ...onboardingData, ...data });
-              goToStep(3);
-            }} 
-            onBack={() => goToStep(1)}
-            initialData={onboardingData}
-            facilities={facilities || []}
-          />}
-          
-          {currentStep === 3 && <InviteStep 
-            onNext={(data) => {
-              setOnboardingData({ ...onboardingData, ...data });
-              goToStep(4);
-            }} 
-            onBack={() => goToStep(2)}
-            initialData={onboardingData}
-          />}
-          
-          {currentStep === 4 && <ShiftStep 
-            onComplete={(data) => {
-              setOnboardingData({ ...onboardingData, ...data });
-              completeOnboarding();
-            }} 
-            onBack={() => goToStep(3)}
-            initialData={onboardingData}
-          />}
+          {currentStep === 1 && (
+            <ProfileStep
+              onNext={(data) => {
+                setOnboardingData({ ...onboardingData, ...data });
+                goToStep(2);
+              }}
+              initialData={onboardingData}
+            />
+          )}
+
+          {currentStep === 2 && (
+            <FacilityStep
+              onNext={(data) => {
+                setOnboardingData({ ...onboardingData, ...data });
+                goToStep(3);
+              }}
+              onBack={() => goToStep(1)}
+              initialData={onboardingData}
+              facilities={facilities || []}
+            />
+          )}
+
+          {currentStep === 3 && (
+            <InviteStep
+              onNext={(data) => {
+                setOnboardingData({ ...onboardingData, ...data });
+                goToStep(4);
+              }}
+              onBack={() => goToStep(2)}
+              initialData={onboardingData}
+            />
+          )}
+
+          {currentStep === 4 && (
+            <ShiftStep
+              onComplete={(data) => {
+                setOnboardingData({ ...onboardingData, ...data });
+                completeOnboarding();
+              }}
+              onBack={() => goToStep(3)}
+              initialData={onboardingData}
+            />
+          )}
         </CardContent>
       </Card>
     </div>
@@ -249,33 +276,36 @@ export function OnboardingWizard() {
 }
 
 // Step 1: Profile Component
-function ProfileStep({ onNext, initialData }: { 
+function ProfileStep({
+  onNext,
+  initialData,
+}: {
   onNext: (data: Partial<OnboardingData>) => void;
   initialData: OnboardingData;
 }) {
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   const form = useForm({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      firstName: initialData.firstName || user?.firstName || '',
-      lastName: initialData.lastName || user?.lastName || '',
-      phone: initialData.phone || '',
-      department: initialData.department || '',
-      bio: initialData.bio || '',
+      firstName: initialData.firstName || user?.firstName || "",
+      lastName: initialData.lastName || user?.lastName || "",
+      phone: initialData.phone || "",
+      department: initialData.department || "",
+      bio: initialData.bio || "",
     },
   });
 
   const updateProfile = useMutation({
     mutationFn: async (data: any) => {
       const response = await fetch(`/api/users/${user?.id}/profile`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to update profile');
+      if (!response.ok) throw new Error("Failed to update profile");
       return response.json();
     },
     onSuccess: () => {
@@ -296,28 +326,31 @@ function ProfileStep({ onNext, initialData }: {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="firstName">First Name</Label>
-          <Input id="firstName" {...form.register('firstName')} />
+          <Input id="firstName" {...form.register("firstName")} />
           {form.formState.errors.firstName && (
             <p className="text-sm text-red-500 mt-1">{form.formState.errors.firstName.message}</p>
           )}
         </div>
         <div>
           <Label htmlFor="lastName">Last Name</Label>
-          <Input id="lastName" {...form.register('lastName')} />
+          <Input id="lastName" {...form.register("lastName")} />
           {form.formState.errors.lastName && (
             <p className="text-sm text-red-500 mt-1">{form.formState.errors.lastName.message}</p>
           )}
         </div>
       </div>
-      
+
       <div>
         <Label htmlFor="phone">Phone Number</Label>
-        <Input id="phone" type="tel" {...form.register('phone')} placeholder="+1 (555) 123-4567" />
+        <Input id="phone" type="tel" {...form.register("phone")} placeholder="+1 (555) 123-4567" />
       </div>
-      
+
       <div>
         <Label htmlFor="department">Department</Label>
-        <Select onValueChange={(value) => form.setValue('department', value)} defaultValue={form.getValues('department')}>
+        <Select
+          onValueChange={(value) => form.setValue("department", value)}
+          defaultValue={form.getValues("department")}
+        >
           <SelectTrigger>
             <SelectValue placeholder="Select your department" />
           </SelectTrigger>
@@ -330,17 +363,17 @@ function ProfileStep({ onNext, initialData }: {
           </SelectContent>
         </Select>
       </div>
-      
+
       <div>
         <Label htmlFor="bio">Bio (Optional)</Label>
-        <Textarea 
-          id="bio" 
-          {...form.register('bio')} 
+        <Textarea
+          id="bio"
+          {...form.register("bio")}
           placeholder="Tell us a bit about yourself..."
           rows={3}
         />
       </div>
-      
+
       <div className="flex justify-end">
         <Button type="submit" disabled={updateProfile.isPending}>
           {updateProfile.isPending ? (
@@ -361,7 +394,12 @@ function ProfileStep({ onNext, initialData }: {
 }
 
 // Step 2: Facility Component
-function FacilityStep({ onNext, onBack, initialData, facilities }: { 
+function FacilityStep({
+  onNext,
+  onBack,
+  initialData,
+  facilities,
+}: {
   onNext: (data: Partial<OnboardingData>) => void;
   onBack: () => void;
   initialData: OnboardingData;
@@ -370,25 +408,25 @@ function FacilityStep({ onNext, onBack, initialData, facilities }: {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isCreatingNew, setIsCreatingNew] = useState(false);
-  
+
   const form = useForm({
     resolver: zodResolver(facilitySchema),
     defaultValues: {
       facilityId: initialData.facilityId,
-      facilityName: initialData.facilityName || '',
-      teamName: initialData.teamName || '',
+      facilityName: initialData.facilityName || "",
+      teamName: initialData.teamName || "",
     },
   });
 
   const createFacility = useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetch('/api/facilities', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+      const response = await fetch("/api/facilities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error('Failed to create facility');
+      if (!response.ok) throw new Error("Failed to create facility");
       return response.json();
     },
     onSuccess: (facility: any) => {
@@ -404,8 +442,8 @@ function FacilityStep({ onNext, onBack, initialData, facilities }: {
     if (isCreatingNew && data.facilityName) {
       await createFacility.mutateAsync({
         name: data.facilityName,
-        type: 'general',
-        address: 'TBD',
+        type: "general",
+        address: "TBD",
         teamName: data.teamName,
       });
     } else if (data.facilityId) {
@@ -442,9 +480,9 @@ function FacilityStep({ onNext, onBack, initialData, facilities }: {
       {!isCreatingNew ? (
         <div>
           <Label htmlFor="facility">Select Facility</Label>
-          <Select 
-            onValueChange={(value) => form.setValue('facilityId', parseInt(value))}
-            defaultValue={form.getValues('facilityId')?.toString()}
+          <Select
+            onValueChange={(value) => form.setValue("facilityId", parseInt(value))}
+            defaultValue={form.getValues("facilityId")?.toString()}
           >
             <SelectTrigger>
               <SelectValue placeholder="Choose a facility" />
@@ -462,17 +500,17 @@ function FacilityStep({ onNext, onBack, initialData, facilities }: {
         <>
           <div>
             <Label htmlFor="facilityName">Facility Name</Label>
-            <Input 
-              id="facilityName" 
-              {...form.register('facilityName')} 
+            <Input
+              id="facilityName"
+              {...form.register("facilityName")}
               placeholder="e.g., City General Hospital"
             />
           </div>
           <div>
             <Label htmlFor="teamName">Team Name (Optional)</Label>
-            <Input 
-              id="teamName" 
-              {...form.register('teamName')} 
+            <Input
+              id="teamName"
+              {...form.register("teamName")}
               placeholder="e.g., Emergency Department"
             />
           </div>
@@ -482,7 +520,7 @@ function FacilityStep({ onNext, onBack, initialData, facilities }: {
       {form.formState.errors.root && (
         <p className="text-sm text-red-500">{form.formState.errors.root.message}</p>
       )}
-      
+
       <div className="flex justify-between">
         <Button type="button" variant="outline" onClick={onBack}>
           Back
@@ -506,25 +544,29 @@ function FacilityStep({ onNext, onBack, initialData, facilities }: {
 }
 
 // Step 3: Invite Staff Component
-function InviteStep({ onNext, onBack, initialData }: { 
+function InviteStep({
+  onNext,
+  onBack,
+  initialData,
+}: {
   onNext: (data: Partial<OnboardingData>) => void;
   onBack: () => void;
   initialData: OnboardingData;
 }) {
   const { toast } = useToast();
-  const [invites, setInvites] = useState(initialData.invites || [
-    { email: '', role: '', name: '' }
-  ]);
+  const [invites, setInvites] = useState(
+    initialData.invites || [{ email: "", role: "", name: "" }]
+  );
 
   const sendInvites = useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetch('/api/invites', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+      const response = await fetch("/api/invites", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ invites: data }),
       });
-      if (!response.ok) throw new Error('Failed to send invites');
+      if (!response.ok) throw new Error("Failed to send invites");
       return response.json();
     },
     onSuccess: () => {
@@ -536,7 +578,7 @@ function InviteStep({ onNext, onBack, initialData }: {
   });
 
   const addInvite = () => {
-    setInvites([...invites, { email: '', role: '', name: '' }]);
+    setInvites([...invites, { email: "", role: "", name: "" }]);
   };
 
   const removeInvite = (index: number) => {
@@ -550,14 +592,12 @@ function InviteStep({ onNext, onBack, initialData }: {
   };
 
   const handleSubmit = async () => {
-    const validInvites = invites.filter(invite => 
-      invite.email && invite.role && invite.name
-    );
-    
+    const validInvites = invites.filter((invite) => invite.email && invite.role && invite.name);
+
     if (validInvites.length > 0) {
       await sendInvites.mutateAsync(validInvites);
     }
-    
+
     onNext({ invites: validInvites });
   };
 
@@ -582,7 +622,7 @@ function InviteStep({ onNext, onBack, initialData }: {
                 <Label>Name</Label>
                 <Input
                   value={invite.name}
-                  onChange={(e) => updateInvite(index, 'name', e.target.value)}
+                  onChange={(e) => updateInvite(index, "name", e.target.value)}
                   placeholder="John Doe"
                 />
               </div>
@@ -591,7 +631,7 @@ function InviteStep({ onNext, onBack, initialData }: {
                 <Input
                   type="email"
                   value={invite.email}
-                  onChange={(e) => updateInvite(index, 'email', e.target.value)}
+                  onChange={(e) => updateInvite(index, "email", e.target.value)}
                   placeholder="john@example.com"
                 />
               </div>
@@ -601,7 +641,7 @@ function InviteStep({ onNext, onBack, initialData }: {
                 <Label>Role</Label>
                 <Select
                   value={invite.role}
-                  onValueChange={(value) => updateInvite(index, 'role', value)}
+                  onValueChange={(value) => updateInvite(index, "role", value)}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
@@ -629,12 +669,7 @@ function InviteStep({ onNext, onBack, initialData }: {
         </Card>
       ))}
 
-      <Button
-        type="button"
-        variant="outline"
-        onClick={addInvite}
-        className="w-full"
-      >
+      <Button type="button" variant="outline" onClick={addInvite} className="w-full">
         <UserPlus className="mr-2 h-4 w-4" />
         Add Another Person
       </Button>
@@ -667,41 +702,45 @@ function InviteStep({ onNext, onBack, initialData }: {
 }
 
 // Step 4: First Shift Component
-function ShiftStep({ onComplete, onBack, initialData }: { 
+function ShiftStep({
+  onComplete,
+  onBack,
+  initialData,
+}: {
   onComplete: (data: Partial<OnboardingData>) => void;
   onBack: () => void;
   initialData: OnboardingData;
 }) {
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
   const form = useForm({
     resolver: zodResolver(shiftSchema),
     defaultValues: {
-      shiftTitle: initialData.shiftTitle || '',
-      shiftDate: initialData.shiftDate || '',
-      shiftTime: initialData.shiftTime || '',
+      shiftTitle: initialData.shiftTitle || "",
+      shiftDate: initialData.shiftDate || "",
+      shiftTime: initialData.shiftTime || "",
     },
   });
 
   const createShift = useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetch('/api/shifts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+      const response = await fetch("/api/shifts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           title: data.shiftTitle,
           date: data.shiftDate,
           startTime: data.shiftTime,
-          endTime: '17:00', // Default end time
+          endTime: "17:00", // Default end time
           facilityId: user?.facilityId || 1,
-          specialty: 'General',
+          specialty: "General",
           rate: 50,
           requiredWorkers: 1,
         }),
       });
-      if (!response.ok) throw new Error('Failed to create shift');
+      if (!response.ok) throw new Error("Failed to create shift");
       return response.json();
     },
     onSuccess: () => {
@@ -732,9 +771,9 @@ function ShiftStep({ onComplete, onBack, initialData }: {
 
       <div>
         <Label htmlFor="shiftTitle">Shift Title</Label>
-        <Input 
-          id="shiftTitle" 
-          {...form.register('shiftTitle')} 
+        <Input
+          id="shiftTitle"
+          {...form.register("shiftTitle")}
           placeholder="e.g., Morning Nursing Shift"
         />
         {form.formState.errors.shiftTitle && (
@@ -744,11 +783,11 @@ function ShiftStep({ onComplete, onBack, initialData }: {
 
       <div>
         <Label htmlFor="shiftDate">Date</Label>
-        <Input 
-          id="shiftDate" 
-          type="date" 
-          {...form.register('shiftDate')}
-          min={new Date().toISOString().split('T')[0]}
+        <Input
+          id="shiftDate"
+          type="date"
+          {...form.register("shiftDate")}
+          min={new Date().toISOString().split("T")[0]}
         />
         {form.formState.errors.shiftDate && (
           <p className="text-sm text-red-500 mt-1">{form.formState.errors.shiftDate.message}</p>
@@ -757,11 +796,7 @@ function ShiftStep({ onComplete, onBack, initialData }: {
 
       <div>
         <Label htmlFor="shiftTime">Start Time</Label>
-        <Input 
-          id="shiftTime" 
-          type="time" 
-          {...form.register('shiftTime')}
-        />
+        <Input id="shiftTime" type="time" {...form.register("shiftTime")} />
         {form.formState.errors.shiftTime && (
           <p className="text-sm text-red-500 mt-1">{form.formState.errors.shiftTime.message}</p>
         )}
@@ -769,7 +804,8 @@ function ShiftStep({ onComplete, onBack, initialData }: {
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <p className="text-sm text-blue-800">
-          <strong>Tip:</strong> After completing onboarding, you'll have access to advanced scheduling features including:
+          <strong>Tip:</strong> After completing onboarding, you'll have access to advanced
+          scheduling features including:
         </p>
         <ul className="text-sm text-blue-700 mt-2 ml-4 list-disc">
           <li>Multiple worker assignments</li>

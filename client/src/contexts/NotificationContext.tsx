@@ -1,8 +1,12 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from "react";
 
-export type NotificationType = 
-  | 'shift_request' | 'assignment_change' | 'message' 
-  | 'credential_update' | 'favorite_shift' | 'social_post';
+export type NotificationType =
+  | "shift_request"
+  | "assignment_change"
+  | "message"
+  | "credential_update"
+  | "favorite_shift"
+  | "social_post";
 
 export type Notification = {
   id: string;
@@ -13,11 +17,14 @@ export type Notification = {
   meta?: any;
 };
 
-export type Preferences = Record<NotificationType, {
-  email: boolean;
-  sms: boolean;
-  push: boolean;
-}>;
+export type Preferences = Record<
+  NotificationType,
+  {
+    email: boolean;
+    sms: boolean;
+    push: boolean;
+  }
+>;
 
 const samplePrefs: Preferences = {
   shift_request: { email: true, sms: false, push: true },
@@ -30,29 +37,29 @@ const samplePrefs: Preferences = {
 
 const sampleNotifications: Notification[] = [
   {
-    id: '1',
-    type: 'shift_request',
-    message: 'Your shift request for ICU Night Shift has been approved',
+    id: "1",
+    type: "shift_request",
+    message: "Your shift request for ICU Night Shift has been approved",
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     read: false,
-    meta: { shiftId: 1 }
+    meta: { shiftId: 1 },
   },
   {
-    id: '2',
-    type: 'message',
-    message: 'New message from Sarah Johnson in ICU Team',
+    id: "2",
+    type: "message",
+    message: "New message from Sarah Johnson in ICU Team",
     timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
     read: false,
-    meta: { threadId: 'team-icu' }
+    meta: { threadId: "team-icu" },
   },
   {
-    id: '3',
-    type: 'credential_update',
-    message: 'Your CPR certification expires in 30 days',
+    id: "3",
+    type: "credential_update",
+    message: "Your CPR certification expires in 30 days",
     timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
     read: true,
-    meta: { credentialId: 'cpr-cert' }
-  }
+    meta: { credentialId: "cpr-cert" },
+  },
 ];
 
 const NotificationContext = createContext<{
@@ -68,30 +75,31 @@ const NotificationContext = createContext<{
 export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>(sampleNotifications);
   const [prefs, setPrefs] = useState<Preferences>(samplePrefs);
-  
-  const unreadCount = notifications.filter(n => !n.read).length;
-  
-  const add = (n: Notification) => setNotifications(prev => [n, ...prev]);
-  
-  const markRead = (id: string) => 
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  
-  const markAllRead = () =>
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-  
-  const updatePref = (type: NotificationType, changes: Partial<Preferences[NotificationType]>) => 
-    setPrefs(prev => ({ ...prev, [type]: { ...prev[type], ...changes } }));
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const add = (n: Notification) => setNotifications((prev) => [n, ...prev]);
+
+  const markRead = (id: string) =>
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
+
+  const markAllRead = () => setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+
+  const updatePref = (type: NotificationType, changes: Partial<Preferences[NotificationType]>) =>
+    setPrefs((prev) => ({ ...prev, [type]: { ...prev[type], ...changes } }));
 
   return (
-    <NotificationContext.Provider value={{
-      notifications,
-      prefs,
-      unreadCount,
-      add,
-      markRead,
-      markAllRead,
-      updatePref
-    }}>
+    <NotificationContext.Provider
+      value={{
+        notifications,
+        prefs,
+        unreadCount,
+        add,
+        markRead,
+        markAllRead,
+        updatePref,
+      }}
+    >
       {children}
     </NotificationContext.Provider>
   );
@@ -99,6 +107,6 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
 export const useNotifications = () => {
   const ctx = useContext(NotificationContext);
-  if (!ctx) throw new Error('useNotifications must be used within NotificationProvider');
+  if (!ctx) throw new Error("useNotifications must be used within NotificationProvider");
   return ctx;
 };

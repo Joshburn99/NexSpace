@@ -1,28 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { 
-  Clock, 
-  MapPin, 
-  Users, 
-  Star, 
-  Shield, 
+  Clock,
+  MapPin,
+  Users,
+  Star,
+  Shield,
   UserPlus,
   CheckCircle2,
-  AlertCircle
-} from 'lucide-react';
-import type { Shift, User, Facility, AssignedWorker } from '../types';
-import { formatShiftTime, calculateShiftDuration } from '../utils/shiftUtils';
-import { getUserFullName, getUserInitials } from '../utils/userUtils';
+  AlertCircle,
+} from "lucide-react";
+import type { Shift, User, Facility, AssignedWorker } from "../types";
+import { formatShiftTime, calculateShiftDuration } from "../utils/shiftUtils";
+import { getUserFullName, getUserInitials } from "../utils/userUtils";
 
 interface ShiftDetailModalProps {
   isOpen: boolean;
@@ -43,7 +38,7 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
   assignedWorkers,
   requestedWorkers,
   onAssignWorker,
-  onUnassignWorker
+  onUnassignWorker,
 }) => {
   const [isAssigning, setIsAssigning] = useState<string | null>(null);
 
@@ -76,18 +71,16 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
   };
 
   const getReliabilityColor = (reliability: number) => {
-    if (reliability >= 0.9) return 'text-green-600';
-    if (reliability >= 0.7) return 'text-yellow-600';
-    return 'text-red-600';
+    if (reliability >= 0.9) return "text-green-600";
+    if (reliability >= 0.7) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const getRatingStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`h-3 w-3 ${
-          i < rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
-        }`}
+        className={`h-3 w-3 ${i < rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`}
       />
     ));
   };
@@ -119,7 +112,8 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-muted-foreground" />
                   <span>
-                    {shift.filledPositions || 0}/{shift.totalPositions || shift.requiredWorkers} workers assigned
+                    {shift.filledPositions || 0}/{shift.totalPositions || shift.requiredWorkers}{" "}
+                    workers assigned
                   </span>
                   {isFullyStaffed ? (
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -138,13 +132,13 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                 <div className="text-sm">
                   <span className="font-medium">Status:</span>
                   <Badge variant={isFullyStaffed ? "default" : "destructive"} className="ml-2">
-                    {isFullyStaffed ? 'Fully Staffed' : `${spotsRemaining} spot${spotsRemaining === 1 ? '' : 's'} open`}
+                    {isFullyStaffed
+                      ? "Fully Staffed"
+                      : `${spotsRemaining} spot${spotsRemaining === 1 ? "" : "s"} open`}
                   </Badge>
                 </div>
                 {shift.description && (
-                  <div className="text-sm text-muted-foreground">
-                    {shift.description}
-                  </div>
+                  <div className="text-sm text-muted-foreground">{shift.description}</div>
                 )}
               </div>
             </div>
@@ -169,14 +163,20 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold flex items-center gap-2">
                   <Users className="h-5 w-5" />
-                  Assigned Workers ({shift.filledPositions || 0}/{shift.totalPositions || shift.requiredWorkers})
+                  Assigned Workers ({shift.filledPositions || 0}/
+                  {shift.totalPositions || shift.requiredWorkers})
                 </h3>
-                <Badge variant={shift.filledPositions && shift.filledPositions > 0 ? "default" : "secondary"}>
-                  {shift.filledPositions || 0}/{shift.totalPositions || shift.requiredWorkers} Filled
+                <Badge
+                  variant={
+                    shift.filledPositions && shift.filledPositions > 0 ? "default" : "secondary"
+                  }
+                >
+                  {shift.filledPositions || 0}/{shift.totalPositions || shift.requiredWorkers}{" "}
+                  Filled
                 </Badge>
               </div>
 
-              {(!shift.assignedStaff || shift.assignedStaff.length === 0) ? (
+              {!shift.assignedStaff || shift.assignedStaff.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
                   <Users className="h-12 w-12 mx-auto mb-2 opacity-50" />
                   <p>No workers assigned to this shift</p>
@@ -184,7 +184,7 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {(shift.assignedStaff || []).map(worker => (
+                  {(shift.assignedStaff || []).map((worker) => (
                     <div
                       key={worker.id}
                       className="flex items-center gap-3 p-3 border rounded-lg bg-green-50 border-green-200"
@@ -192,17 +192,16 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={worker.avatar} />
                         <AvatarFallback>
-                          {worker.firstName?.[0]}{worker.lastName?.[0]}
+                          {worker.firstName?.[0]}
+                          {worker.lastName?.[0]}
                         </AvatarFallback>
                       </Avatar>
-                      
+
                       <div className="flex-1 min-w-0">
                         <div className="font-medium truncate">
                           {worker.name || `${worker.firstName} ${worker.lastName}`}
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {worker.specialty}
-                        </div>
+                        <div className="text-sm text-muted-foreground">{worker.specialty}</div>
                         <div className="flex items-center gap-2 mt-1">
                           <div className="flex items-center">
                             {getRatingStars(Math.floor(worker.rating || 4))}
@@ -240,9 +239,7 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                   <UserPlus className="h-5 w-5" />
                   Shift Requests ({requestedWorkers.length})
                 </h3>
-                {!canAssignMore && (
-                  <Badge variant="secondary">Shift is fully staffed</Badge>
-                )}
+                {!canAssignMore && <Badge variant="secondary">Shift is fully staffed</Badge>}
               </div>
 
               {requestedWorkers.length === 0 ? (
@@ -253,22 +250,20 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {requestedWorkers.map(worker => (
+                  {requestedWorkers.map((worker) => (
                     <div
                       key={worker.id}
                       className={`flex items-center gap-3 p-3 border rounded-lg transition-opacity ${
-                        !canAssignMore ? 'opacity-50 bg-gray-50' : 'bg-white hover:bg-gray-50'
+                        !canAssignMore ? "opacity-50 bg-gray-50" : "bg-white hover:bg-gray-50"
                       }`}
                     >
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={worker.avatar} />
                         <AvatarFallback>{getUserInitials(worker)}</AvatarFallback>
                       </Avatar>
-                      
+
                       <div className="flex-1 min-w-0">
-                        <div className="font-medium truncate">
-                          {getUserFullName(worker)}
-                        </div>
+                        <div className="font-medium truncate">{getUserFullName(worker)}</div>
                         <div className="text-sm text-muted-foreground">
                           {worker.specialty}
                           {worker.phoneNumber && ` • ${worker.phoneNumber}`}
@@ -276,9 +271,7 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                         <div className="flex items-center gap-4 mt-1">
                           <div className="flex items-center">
                             {getRatingStars(4)}
-                            <span className="text-xs text-muted-foreground ml-1">
-                              4.2
-                            </span>
+                            <span className="text-xs text-muted-foreground ml-1">4.2</span>
                           </div>
                           <div className={`text-xs font-medium ${getReliabilityColor(0.88)}`}>
                             88% reliable
@@ -296,7 +289,7 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
                           size="sm"
                           className="bg-green-600 hover:bg-green-700"
                         >
-                          {isAssigning === worker.id ? 'Assigning...' : 'Assign'}
+                          {isAssigning === worker.id ? "Assigning..." : "Assign"}
                         </Button>
                       </div>
                     </div>
@@ -310,11 +303,10 @@ const ShiftDetailModal: React.FC<ShiftDetailModalProps> = ({
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-sm font-medium">Staffing Status:</span>
-                  <span className={`ml-2 ${isFullyStaffed ? 'text-green-600' : 'text-orange-600'}`}>
-                    {isFullyStaffed 
-                      ? 'Fully staffed and ready'
-                      : `${spotsRemaining} ${spotsRemaining === 1 ? 'position' : 'positions'} remaining`
-                    }
+                  <span className={`ml-2 ${isFullyStaffed ? "text-green-600" : "text-orange-600"}`}>
+                    {isFullyStaffed
+                      ? "Fully staffed and ready"
+                      : `${spotsRemaining} ${spotsRemaining === 1 ? "position" : "positions"} remaining`}
                   </span>
                 </div>
                 {!isFullyStaffed && requestedWorkers.length > 0 && (

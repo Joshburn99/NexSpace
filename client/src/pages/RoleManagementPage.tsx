@@ -44,7 +44,7 @@ interface User {
   facilityId?: number;
   createdAt: string;
   lastLogin?: string;
-  status: 'active' | 'inactive';
+  status: "active" | "inactive";
 }
 
 export default function RoleManagementPage() {
@@ -57,7 +57,7 @@ export default function RoleManagementPage() {
   const [newRole, setNewRole] = useState<SystemRole>("viewer");
 
   // Check if user has permission to manage roles
-  if (!hasPermission('system.manage_permissions')) {
+  if (!hasPermission("system.manage_permissions")) {
     return (
       <div className="min-h-screen bg-gray-50 p-4 flex items-center justify-center">
         <Card className="max-w-md w-full">
@@ -66,7 +66,8 @@ export default function RoleManagementPage() {
               <Shield className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <h2 className="text-lg font-semibold mb-2">Access Denied</h2>
               <p className="text-gray-600">
-                You don't have permission to manage user roles. Contact your administrator for access.
+                You don't have permission to manage user roles. Contact your administrator for
+                access.
               </p>
             </div>
           </CardContent>
@@ -77,20 +78,20 @@ export default function RoleManagementPage() {
 
   // Fetch all users
   const { data: users, isLoading } = useQuery<User[]>({
-    queryKey: ['/api/admin/users'],
+    queryKey: ["/api/admin/users"],
   });
 
   // Update user role mutation
   const updateRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: number; role: SystemRole }) => {
-      return apiRequest(`/api/admin/users/${userId}/role`, 'PATCH', { role });
+      return apiRequest(`/api/admin/users/${userId}/role`, "PATCH", { role });
     },
     onSuccess: () => {
       toast({
         title: "Role Updated",
         description: "User role has been successfully updated.",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
       setEditingUser(null);
     },
     onError: (error: any) => {
@@ -103,19 +104,24 @@ export default function RoleManagementPage() {
   });
 
   // Filter users based on search and role
-  const filteredUsers = users?.filter((user: User) => {
-    const matchesSearch = 
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    return matchesSearch && matchesRole;
-  }) || [];
+  const filteredUsers =
+    users?.filter((user: User) => {
+      const matchesSearch =
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRole = roleFilter === "all" || user.role === roleFilter;
+      return matchesSearch && matchesRole;
+    }) || [];
 
   // Role stats
-  const roleStats = users?.reduce((acc: Record<SystemRole, number>, user: User) => {
-    acc[user.role] = (acc[user.role] || 0) + 1;
-    return acc;
-  }, {} as Record<SystemRole, number>) || {};
+  const roleStats =
+    users?.reduce(
+      (acc: Record<SystemRole, number>, user: User) => {
+        acc[user.role] = (acc[user.role] || 0) + 1;
+        return acc;
+      },
+      {} as Record<SystemRole, number>
+    ) || {};
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -126,9 +132,7 @@ export default function RoleManagementPage() {
             <Shield className="h-8 w-8 text-primary" />
             Role Management
           </h1>
-          <p className="text-gray-600">
-            Manage user roles and permissions across the platform
-          </p>
+          <p className="text-gray-600">Manage user roles and permissions across the platform</p>
         </div>
 
         {/* Role Statistics */}
@@ -139,9 +143,7 @@ export default function RoleManagementPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">{metadata.label}</p>
-                    <p className="text-2xl font-bold">
-                      {(roleStats as any)[role] || 0}
-                    </p>
+                    <p className="text-2xl font-bold">{(roleStats as any)[role] || 0}</p>
                   </div>
                   <div className={`p-3 rounded-full ${metadata.color}`}>
                     <Users className="h-5 w-5" />
@@ -167,7 +169,10 @@ export default function RoleManagementPage() {
                   />
                 </div>
               </div>
-              <Select value={roleFilter} onValueChange={(value) => setRoleFilter(value as SystemRole | "all")}>
+              <Select
+                value={roleFilter}
+                onValueChange={(value) => setRoleFilter(value as SystemRole | "all")}
+              >
                 <SelectTrigger className="w-full md:w-[200px]">
                   <SelectValue placeholder="Filter by role" />
                 </SelectTrigger>
@@ -225,20 +230,18 @@ export default function RoleManagementPage() {
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={ROLE_METADATA[user.role]?.color || ''}>
+                          <Badge className={ROLE_METADATA[user.role]?.color || ""}>
                             {ROLE_METADATA[user.role]?.label || user.role}
                           </Badge>
                         </TableCell>
+                        <TableCell>{user.facilityName || "-"}</TableCell>
                         <TableCell>
-                          {user.facilityName || '-'}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                          <Badge variant={user.status === "active" ? "default" : "secondary"}>
                             {user.status}
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : 'Never'}
+                          {user.lastLogin ? new Date(user.lastLogin).toLocaleDateString() : "Never"}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -248,7 +251,7 @@ export default function RoleManagementPage() {
                               setEditingUser(user);
                               setNewRole(user.role);
                             }}
-                            disabled={user.role === 'super_admin' && !hasPermission('users.edit')}
+                            disabled={user.role === "super_admin" && !hasPermission("users.edit")}
                           >
                             <Edit className="h-4 w-4 mr-1" />
                             Edit Role
@@ -291,7 +294,8 @@ export default function RoleManagementPage() {
               </Select>
               <div className="mt-4 p-3 bg-yellow-50 rounded-md">
                 <p className="text-sm text-yellow-800">
-                  <strong>Warning:</strong> Changing user roles will immediately affect their access to platform features.
+                  <strong>Warning:</strong> Changing user roles will immediately affect their access
+                  to platform features.
                 </p>
               </div>
             </div>

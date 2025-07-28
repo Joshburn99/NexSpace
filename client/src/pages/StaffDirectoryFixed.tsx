@@ -1,20 +1,46 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Plus, Edit, UserMinus, UserPlus, Shield, Clock, Mail, Phone, MapPin, Calendar, Users, Building2 } from 'lucide-react';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
-import { PermissionGuard } from '@/components/PermissionGuard';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
-import { FacilityUserCard } from '@/components/FacilityUserCard';
-import { FacilityUserEditForm } from '@/components/FacilityUserEditForm';
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Search,
+  Plus,
+  Edit,
+  UserMinus,
+  UserPlus,
+  Shield,
+  Clock,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  Users,
+  Building2,
+} from "lucide-react";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
+import { PermissionGuard } from "@/components/PermissionGuard";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { FacilityUserCard } from "@/components/FacilityUserCard";
+import { FacilityUserEditForm } from "@/components/FacilityUserEditForm";
 
 interface Staff {
   id: number;
@@ -69,21 +95,21 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
   const { hasPermission } = useFacilityPermissions();
   const queryClient = useQueryClient();
   const { toast } = useToast();
-  
-  const [selectedFacilityId, setSelectedFacilityId] = useState<string>('');
-  
+
+  const [selectedFacilityId, setSelectedFacilityId] = useState<string>("");
+
   // Add facility association mutation
   const addFacilityAssociation = useMutation({
     mutationFn: async (facilityId: number) => {
-      return apiRequest('POST', `/api/staff/${staff.id}/facilities`, { facilityId });
+      return apiRequest("POST", `/api/staff/${staff.id}/facilities`, { facilityId });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/staff'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
       toast({
         title: "Success",
         description: "Facility association added successfully",
       });
-      setSelectedFacilityId('');
+      setSelectedFacilityId("");
     },
     onError: (error: any) => {
       toast({
@@ -97,10 +123,10 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
   // Remove facility association mutation
   const removeFacilityAssociation = useMutation({
     mutationFn: async (facilityId: number) => {
-      return apiRequest('DELETE', `/api/staff/${staff.id}/facilities/${facilityId}`);
+      return apiRequest("DELETE", `/api/staff/${staff.id}/facilities/${facilityId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/staff'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
       toast({
         title: "Success",
         description: "Facility association removed successfully",
@@ -126,7 +152,7 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
   };
 
   const associatedFacilities = staff.associatedFacilities || [];
-  const availableFacilities = facilities.filter(f => !associatedFacilities.includes(f.id));
+  const availableFacilities = facilities.filter((f) => !associatedFacilities.includes(f.id));
 
   return (
     <Card className="hover:shadow-md transition-shadow">
@@ -136,7 +162,8 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
             <Avatar className="h-12 w-12">
               <AvatarImage src={staff.avatar} />
               <AvatarFallback>
-                {staff.firstName?.[0] || ''}{staff.lastName?.[0] || ''}
+                {staff.firstName?.[0] || ""}
+                {staff.lastName?.[0] || ""}
               </AvatarFallback>
             </Avatar>
             <div>
@@ -149,7 +176,7 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
               </CardDescription>
             </div>
           </div>
-          <Badge 
+          <Badge
             variant={staff.isActive ? "default" : "secondary"}
             className={staff.isActive ? "bg-green-100 text-green-800" : ""}
           >
@@ -157,34 +184,31 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
           </Badge>
         </div>
       </CardHeader>
-      
+
       <CardContent className="space-y-3">
         <div className="space-y-2 text-sm">
           <div className="flex items-center text-gray-600">
             <Mail className="h-4 w-4 mr-2 text-gray-400" />
             {staff.email}
           </div>
-          
+
           {staff.phone && (
             <div className="flex items-center text-gray-600">
               <Phone className="h-4 w-4 mr-2 text-gray-400" />
               {staff.phone}
             </div>
           )}
-          
+
           <div className="flex items-center text-gray-600">
             <Calendar className="h-4 w-4 mr-2 text-gray-400" />
-            {staff.employmentType?.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown'}
+            {staff.employmentType?.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase()) ||
+              "Unknown"}
           </div>
         </div>
 
         <div className="flex items-center gap-2 pt-2">
-          <Badge variant="outline">
-            {staff.specialty}
-          </Badge>
-          <Badge variant="outline">
-            {staff.department}
-          </Badge>
+          <Badge variant="outline">{staff.specialty}</Badge>
+          <Badge variant="outline">{staff.department}</Badge>
         </div>
 
         {/* Facility Associations */}
@@ -193,16 +217,19 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
             <Building2 className="h-4 w-4 text-gray-400" />
             <span className="text-sm font-medium">Facility Associations</span>
           </div>
-          
+
           {associatedFacilities.length > 0 ? (
             <div className="flex flex-wrap gap-1">
-              {associatedFacilities.map(facilityId => {
-                const facility = facilities.find(f => f.id === facilityId);
+              {associatedFacilities.map((facilityId) => {
+                const facility = facilities.find((f) => f.id === facilityId);
                 if (!facility) return null;
                 return (
-                  <div key={facilityId} className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded text-xs">
+                  <div
+                    key={facilityId}
+                    className="flex items-center gap-1 bg-blue-50 px-2 py-1 rounded text-xs"
+                  >
                     <span>{facility.name}</span>
-                    {hasPermission('edit_staff' as any) && (
+                    {hasPermission("edit_staff" as any) && (
                       <Button
                         size="sm"
                         variant="ghost"
@@ -219,15 +246,15 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
           ) : (
             <p className="text-xs text-gray-500">No facility associations</p>
           )}
-          
-          {hasPermission('edit_staff' as any) && availableFacilities.length > 0 && (
+
+          {hasPermission("edit_staff" as any) && availableFacilities.length > 0 && (
             <div className="flex gap-2 mt-2">
               <Select value={selectedFacilityId} onValueChange={setSelectedFacilityId}>
                 <SelectTrigger className="h-8 text-xs">
                   <SelectValue placeholder="Add facility..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {availableFacilities.map(facility => (
+                  {availableFacilities.map((facility) => (
                     <SelectItem key={facility.id} value={facility.id.toString()}>
                       {facility.name}
                     </SelectItem>
@@ -247,7 +274,7 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
         </div>
 
         {/* Credentials Section */}
-        <PermissionGuard requiredPermissions={['view_staff_credentials' as any]}>
+        <PermissionGuard requiredPermissions={["view_staff_credentials" as any]}>
           <div className="flex items-center gap-2 pt-3 border-t">
             <Dialog>
               <DialogTrigger asChild>
@@ -258,20 +285,25 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
               </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
-                  <DialogTitle>Staff Credentials - {staff.firstName} {staff.lastName}</DialogTitle>
+                  <DialogTitle>
+                    Staff Credentials - {staff.firstName} {staff.lastName}
+                  </DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4 mt-4">
                   {staff.certifications && staff.certifications.length > 0 ? (
                     <div className="space-y-3">
                       {staff.certifications.map((cert, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between p-4 border rounded-lg"
+                        >
                           <div>
                             <p className="font-medium">{cert}</p>
                             <p className="text-sm text-gray-600">Active</p>
                           </div>
                           <div className="flex items-center gap-2">
                             <Badge variant="default">Valid</Badge>
-                            {hasPermission('edit_staff_credentials' as any) && (
+                            {hasPermission("edit_staff_credentials" as any) && (
                               <Button size="sm" variant="ghost">
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -289,7 +321,7 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
                           </div>
                           <div className="flex items-center gap-2">
                             <Badge variant="default">Valid</Badge>
-                            {hasPermission('edit_staff_credentials' as any) && (
+                            {hasPermission("edit_staff_credentials" as any) && (
                               <Button size="sm" variant="ghost">
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -301,7 +333,7 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
                   ) : (
                     <p className="text-center text-gray-500 py-8">No credentials on file</p>
                   )}
-                  {hasPermission('upload_documents' as any) && (
+                  {hasPermission("upload_documents" as any) && (
                     <Button className="w-full mt-4">
                       <Plus className="h-4 w-4 mr-2" />
                       Add Credential
@@ -318,9 +350,9 @@ function StaffCard({ staff, facilities }: StaffCardProps) {
 }
 
 export default function StaffDirectory() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterSpecialty, setFilterSpecialty] = useState('all');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterSpecialty, setFilterSpecialty] = useState("all");
+  const [filterStatus, setFilterStatus] = useState("all");
   const [editingFacilityUser, setEditingFacilityUser] = useState<FacilityUser | null>(null);
   const { hasPermission } = useFacilityPermissions();
   const { toast } = useToast();
@@ -328,26 +360,30 @@ export default function StaffDirectory() {
 
   // Fetch facilities
   const { data: facilities = [], isLoading: facilitiesLoading } = useQuery<Facility[]>({
-    queryKey: ['/api/facilities'],
+    queryKey: ["/api/facilities"],
   });
 
   // Separate queries for staff and facility users
-  const { data: staff = [], isLoading: staffLoading, error: staffError } = useQuery<Staff[]>({
-    queryKey: ['/api/staff'],
-    enabled: hasPermission('view_staff' as any),
+  const {
+    data: staff = [],
+    isLoading: staffLoading,
+    error: staffError,
+  } = useQuery<Staff[]>({
+    queryKey: ["/api/staff"],
+    enabled: hasPermission("view_staff" as any),
   });
 
   const { data: facilityUsers = [], isLoading: facilityUsersLoading } = useQuery<FacilityUser[]>({
-    queryKey: ['/api/facility-users'],
+    queryKey: ["/api/facility-users"],
   });
 
   // Update facility user mutation
   const updateFacilityUser = useMutation({
     mutationFn: async (userData: Partial<FacilityUser>) => {
-      return apiRequest('PATCH', `/api/facility-users/${userData.id}`, userData);
+      return apiRequest("PATCH", `/api/facility-users/${userData.id}`, userData);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/facility-users'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/facility-users"] });
       setEditingFacilityUser(null);
       toast({
         title: "Success",
@@ -364,37 +400,39 @@ export default function StaffDirectory() {
   });
 
   // Filter functions
-  const filteredStaff = staff.filter(member => {
-    const matchesSearch = 
+  const filteredStaff = staff.filter((member) => {
+    const matchesSearch =
       member.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesSpecialty = filterSpecialty === 'all' || member.specialty === filterSpecialty;
-    const matchesStatus = filterStatus === 'all' || 
-      (filterStatus === 'active' && member.isActive) ||
-      (filterStatus === 'inactive' && !member.isActive);
+
+    const matchesSpecialty = filterSpecialty === "all" || member.specialty === filterSpecialty;
+    const matchesStatus =
+      filterStatus === "all" ||
+      (filterStatus === "active" && member.isActive) ||
+      (filterStatus === "inactive" && !member.isActive);
 
     return matchesSearch && matchesSpecialty && matchesStatus;
   });
 
-  const filteredFacilityUsers = facilityUsers.filter(user => {
-    const matchesSearch = 
+  const filteredFacilityUsers = facilityUsers.filter((user) => {
+    const matchesSearch =
       user.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = filterStatus === 'all' || 
-      (filterStatus === 'active' && user.isActive) ||
-      (filterStatus === 'inactive' && !user.isActive);
+
+    const matchesStatus =
+      filterStatus === "all" ||
+      (filterStatus === "active" && user.isActive) ||
+      (filterStatus === "inactive" && !user.isActive);
 
     return matchesSearch && matchesStatus;
   });
 
-  const specialties = [...new Set(staff.map(s => s.specialty).filter(Boolean))];
+  const specialties = [...new Set(staff.map((s) => s.specialty).filter(Boolean))];
 
   // Check if user has permission to view staff directory
-  if (!hasPermission('view_staff' as any)) {
+  if (!hasPermission("view_staff" as any)) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Card className="w-full max-w-md">
@@ -477,7 +515,7 @@ export default function StaffDirectory() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Specialties</SelectItem>
-                    {specialties.map(specialty => (
+                    {specialties.map((specialty) => (
                       <SelectItem key={specialty} value={specialty}>
                         {specialty}
                       </SelectItem>
@@ -550,9 +588,9 @@ export default function StaffDirectory() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredFacilityUsers.length > 0 ? (
               filteredFacilityUsers.map((user) => (
-                <FacilityUserCard 
-                  key={user.id} 
-                  user={user} 
+                <FacilityUserCard
+                  key={user.id}
+                  user={user}
                   onEdit={setEditingFacilityUser}
                   facilities={facilities}
                 />

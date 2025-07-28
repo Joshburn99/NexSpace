@@ -3,7 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertCircle, ArrowRight, Building, MapPin, Briefcase, GraduationCap } from "lucide-react";
@@ -17,14 +23,14 @@ interface RegistrationData {
   phone: string;
   password: string;
   confirmPassword: string;
-  
+
   // Professional Info
   profession: string;
   specialty: string;
   yearsOfExperience: string;
   primaryState: string;
   additionalStates: string[];
-  
+
   // Work Preferences
   employmentType: string;
   shiftPreference: string[];
@@ -49,7 +55,7 @@ export default function StaffRegistrationPage() {
     employmentType: "",
     shiftPreference: [],
     weekendAvailability: false,
-    travelRadius: ""
+    travelRadius: "",
   });
 
   const professions = [
@@ -62,25 +68,76 @@ export default function StaffRegistrationPage() {
     { value: "cst", label: "Surgical Technologist (CST)" },
     { value: "rad_tech", label: "Radiology Technician" },
     { value: "pharm_tech", label: "Pharmacy Technician" },
-    { value: "lab_tech", label: "Laboratory Technician" }
+    { value: "lab_tech", label: "Laboratory Technician" },
   ];
 
   const specialties = {
-    rn: ["ICU", "Emergency", "Med-Surg", "Pediatrics", "Labor & Delivery", "OR", "Telemetry", "Oncology"],
+    rn: [
+      "ICU",
+      "Emergency",
+      "Med-Surg",
+      "Pediatrics",
+      "Labor & Delivery",
+      "OR",
+      "Telemetry",
+      "Oncology",
+    ],
     lpn: ["Long-Term Care", "Home Health", "Clinic", "Pediatrics", "Rehabilitation"],
     cna: ["Hospital", "Nursing Home", "Home Care", "Hospice", "Rehabilitation"],
-    default: ["General Practice"]
+    default: ["General Practice"],
   };
 
   const states = [
-    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
-    "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
-    "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
-    "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
-    "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
-    "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
-    "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
-    "Wisconsin", "Wyoming"
+    "Alabama",
+    "Alaska",
+    "Arizona",
+    "Arkansas",
+    "California",
+    "Colorado",
+    "Connecticut",
+    "Delaware",
+    "Florida",
+    "Georgia",
+    "Hawaii",
+    "Idaho",
+    "Illinois",
+    "Indiana",
+    "Iowa",
+    "Kansas",
+    "Kentucky",
+    "Louisiana",
+    "Maine",
+    "Maryland",
+    "Massachusetts",
+    "Michigan",
+    "Minnesota",
+    "Mississippi",
+    "Missouri",
+    "Montana",
+    "Nebraska",
+    "Nevada",
+    "New Hampshire",
+    "New Jersey",
+    "New Mexico",
+    "New York",
+    "North Carolina",
+    "North Dakota",
+    "Ohio",
+    "Oklahoma",
+    "Oregon",
+    "Pennsylvania",
+    "Rhode Island",
+    "South Carolina",
+    "South Dakota",
+    "Tennessee",
+    "Texas",
+    "Utah",
+    "Vermont",
+    "Virginia",
+    "Washington",
+    "West Virginia",
+    "Wisconsin",
+    "Wyoming",
   ];
 
   const getSpecialtiesForProfession = () => {
@@ -188,7 +245,8 @@ export default function StaffRegistrationPage() {
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Your information is secure and will only be shared with facilities you choose to work with.
+                  Your information is secure and will only be shared with facilities you choose to
+                  work with.
                 </AlertDescription>
               </Alert>
 
@@ -214,7 +272,9 @@ export default function StaffRegistrationPage() {
                 <Label htmlFor="profession">Professional Title *</Label>
                 <Select
                   value={formData.profession}
-                  onValueChange={(value) => setFormData({ ...formData, profession: value, specialty: "" })}
+                  onValueChange={(value) =>
+                    setFormData({ ...formData, profession: value, specialty: "" })
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select your profession" />
@@ -296,7 +356,9 @@ export default function StaffRegistrationPage() {
 
               <div className="space-y-2">
                 <Label>Additional License States (if any)</Label>
-                <div className="text-sm text-gray-500 mb-2">Check all states where you hold active licenses</div>
+                <div className="text-sm text-gray-500 mb-2">
+                  Check all states where you hold active licenses
+                </div>
                 <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto border rounded-lg p-4">
                   {states.map((state) => (
                     <div key={state} className="flex items-center space-x-2">
@@ -307,12 +369,14 @@ export default function StaffRegistrationPage() {
                           if (checked) {
                             setFormData({
                               ...formData,
-                              additionalStates: [...formData.additionalStates, state]
+                              additionalStates: [...formData.additionalStates, state],
                             });
                           } else {
                             setFormData({
                               ...formData,
-                              additionalStates: formData.additionalStates.filter(s => s !== state)
+                              additionalStates: formData.additionalStates.filter(
+                                (s) => s !== state
+                              ),
                             });
                           }
                         }}
@@ -377,7 +441,14 @@ export default function StaffRegistrationPage() {
                 <Label>Shift Preferences *</Label>
                 <div className="text-sm text-gray-500 mb-2">Select all that apply</div>
                 <div className="space-y-3">
-                  {["Day Shift (7am-3pm)", "Evening Shift (3pm-11pm)", "Night Shift (11pm-7am)", "12-Hour Shifts", "8-Hour Shifts", "Flexible"].map((shift) => (
+                  {[
+                    "Day Shift (7am-3pm)",
+                    "Evening Shift (3pm-11pm)",
+                    "Night Shift (11pm-7am)",
+                    "12-Hour Shifts",
+                    "8-Hour Shifts",
+                    "Flexible",
+                  ].map((shift) => (
                     <div key={shift} className="flex items-center space-x-2">
                       <Checkbox
                         id={shift}
@@ -386,12 +457,12 @@ export default function StaffRegistrationPage() {
                           if (checked) {
                             setFormData({
                               ...formData,
-                              shiftPreference: [...formData.shiftPreference, shift]
+                              shiftPreference: [...formData.shiftPreference, shift],
                             });
                           } else {
                             setFormData({
                               ...formData,
-                              shiftPreference: formData.shiftPreference.filter(s => s !== shift)
+                              shiftPreference: formData.shiftPreference.filter((s) => s !== shift),
                             });
                           }
                         }}
@@ -408,7 +479,7 @@ export default function StaffRegistrationPage() {
                 <Checkbox
                   id="weekends"
                   checked={formData.weekendAvailability}
-                  onCheckedChange={(checked) => 
+                  onCheckedChange={(checked) =>
                     setFormData({ ...formData, weekendAvailability: checked as boolean })
                   }
                 />
@@ -440,7 +511,12 @@ export default function StaffRegistrationPage() {
               <Alert className="bg-blue-50 border-blue-200">
                 <Building className="h-4 w-4 text-blue-600" />
                 <AlertDescription className="text-blue-800">
-                  Based on your preferences, we've found <strong>12 facilities</strong> in your area actively looking for {formData.profession ? professions.find(p => p.value === formData.profession)?.label : "healthcare professionals"}.
+                  Based on your preferences, we've found <strong>12 facilities</strong> in your area
+                  actively looking for{" "}
+                  {formData.profession
+                    ? professions.find((p) => p.value === formData.profession)?.label
+                    : "healthcare professionals"}
+                  .
                 </AlertDescription>
               </Alert>
 

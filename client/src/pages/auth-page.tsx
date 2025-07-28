@@ -74,7 +74,7 @@ export default function AuthPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
     if (!loginData.username || !loginData.password) {
       toast({
@@ -84,16 +84,21 @@ export default function AuthPage() {
       });
       return;
     }
-    
+
     loginMutation.mutate(loginData);
   };
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Basic validation
-    if (!registerData.username || !registerData.email || !registerData.password || 
-        !registerData.firstName || !registerData.lastName) {
+    if (
+      !registerData.username ||
+      !registerData.email ||
+      !registerData.password ||
+      !registerData.firstName ||
+      !registerData.lastName
+    ) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
@@ -101,7 +106,7 @@ export default function AuthPage() {
       });
       return;
     }
-    
+
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(registerData.email)) {
@@ -112,7 +117,7 @@ export default function AuthPage() {
       });
       return;
     }
-    
+
     // Password strength check
     if (registerData.password.length < 6) {
       toast({
@@ -122,13 +127,13 @@ export default function AuthPage() {
       });
       return;
     }
-    
+
     registerMutation.mutate(registerData);
   };
 
   const handleForgotPassword = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!forgotPasswordUsername) {
       toast({
         title: "Missing Username",
@@ -137,7 +142,7 @@ export default function AuthPage() {
       });
       return;
     }
-    
+
     forgotPasswordMutation.mutate({ username: forgotPasswordUsername });
   };
 
@@ -217,7 +222,10 @@ export default function AuthPage() {
                     </Button>
 
                     <div className="text-center">
-                      <Dialog open={forgotPasswordDialogOpen} onOpenChange={setForgotPasswordDialogOpen}>
+                      <Dialog
+                        open={forgotPasswordDialogOpen}
+                        onOpenChange={setForgotPasswordDialogOpen}
+                      >
                         <DialogTrigger asChild>
                           <Button
                             variant="link"
@@ -245,16 +253,17 @@ export default function AuthPage() {
                                 disabled={forgotPasswordMutation.isPending}
                               />
                             </div>
-                            
+
                             {forgotPasswordMutation.error && (
                               <Alert variant="destructive">
                                 <AlertCircle className="h-4 w-4" />
                                 <AlertDescription>
-                                  {forgotPasswordMutation.error.message || "Failed to reset password. Please try again."}
+                                  {forgotPasswordMutation.error.message ||
+                                    "Failed to reset password. Please try again."}
                                 </AlertDescription>
                               </Alert>
                             )}
-                            
+
                             <Button
                               type="submit"
                               className="w-full"

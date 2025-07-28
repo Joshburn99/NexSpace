@@ -9,11 +9,7 @@ import {
   CommandInput,
   CommandItem,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { useFacilities, EnhancedFacility, getFacilityDisplayName } from "@/hooks/use-facility";
 
@@ -34,15 +30,15 @@ export function FacilitySelector({
   className,
   allowClear = false,
   showDetails = false,
-  filterActive = true
+  filterActive = true,
 }: FacilitySelectorProps) {
   const [open, setOpen] = useState(false);
-  
+
   const { data: facilities = [], isLoading } = useFacilities({
-    isActive: filterActive ? true : undefined
+    isActive: filterActive ? true : undefined,
   });
 
-  const selectedFacility = facilities.find(f => f.id === value);
+  const selectedFacility = facilities.find((f) => f.id === value);
 
   const handleSelect = (facility: EnhancedFacility | null) => {
     onSelect(facility?.id);
@@ -82,10 +78,7 @@ export function FacilitySelector({
           </CommandEmpty>
           <CommandGroup className="max-h-64 overflow-y-auto">
             {allowClear && selectedFacility && (
-              <CommandItem
-                onSelect={() => handleSelect(null)}
-                className="cursor-pointer"
-              >
+              <CommandItem onSelect={() => handleSelect(null)} className="cursor-pointer">
                 <div className="flex items-center gap-2 w-full">
                   <div className="w-4 h-4" /> {/* Spacer for alignment */}
                   <span className="text-muted-foreground">Clear selection</span>
@@ -95,7 +88,7 @@ export function FacilitySelector({
             {facilities.map((facility) => (
               <CommandItem
                 key={facility.id}
-                value={`${facility.name} ${facility.facilityType} ${facility.address?.city || ''}`}
+                value={`${facility.name} ${facility.facilityType} ${facility.address?.city || ""}`}
                 onSelect={() => handleSelect(facility)}
                 className="cursor-pointer"
               >
@@ -117,7 +110,9 @@ export function FacilitySelector({
                     <div className="flex items-center gap-1 mt-1 text-xs text-muted-foreground">
                       <MapPin className="h-3 w-3" />
                       <span className="truncate">
-                        {facility.address ? `${facility.address.street || ''}, ${facility.address.city}, ${facility.address.state}` : 'No address'}
+                        {facility.address
+                          ? `${facility.address.street || ""}, ${facility.address.city}, ${facility.address.state}`
+                          : "No address"}
                       </span>
                       <Badge variant="secondary" className="ml-auto">
                         {facility.bedCount} beds
@@ -140,7 +135,7 @@ export function FacilitySelectField({
   onSelect,
   placeholder = "Select facility...",
   className,
-  error
+  error,
 }: {
   value?: number;
   onSelect: (facilityId: number | undefined) => void;
@@ -156,9 +151,7 @@ export function FacilitySelectField({
         placeholder={placeholder}
         className={cn("w-full", error && "border-destructive")}
       />
-      {error && (
-        <p className="text-sm text-destructive mt-1">{error}</p>
-      )}
+      {error && <p className="text-sm text-destructive mt-1">{error}</p>}
     </div>
   );
 }

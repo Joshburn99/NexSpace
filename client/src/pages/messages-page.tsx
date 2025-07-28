@@ -1,26 +1,34 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/use-auth';
-import { 
-  MessageCircle, 
-  Send, 
-  Plus, 
+import React, { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  MessageCircle,
+  Send,
+  Plus,
   Search,
   Users,
   User,
   Clock,
   CheckCircle,
-  AlertCircle
-} from 'lucide-react';
+  AlertCircle,
+} from "lucide-react";
 
 interface Message {
   id: number;
@@ -51,22 +59,22 @@ interface Contact {
 }
 
 export default function MessagesPage() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedThread, setSelectedThread] = useState<number | null>(null);
   const [newMessageOpen, setNewMessageOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('inbox');
+  const [activeTab, setActiveTab] = useState("inbox");
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch messages
   const { data: messages = [], isLoading } = useQuery<Message[]>({
-    queryKey: ['/api/messages'],
+    queryKey: ["/api/messages"],
   });
 
   // Fetch contacts (staff and NexSpace team)
   const { data: contacts = [] } = useQuery<Contact[]>({
-    queryKey: ['/api/contacts'],
+    queryKey: ["/api/contacts"],
   });
 
   // Send message mutation
@@ -77,22 +85,22 @@ export default function MessagesPage() {
       content: string;
       isUrgent: boolean;
     }) => {
-      const response = await apiRequest('POST', '/api/messages', messageData);
+      const response = await apiRequest("POST", "/api/messages", messageData);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
       setNewMessageOpen(false);
       toast({
-        title: 'Message Sent',
-        description: 'Your message has been sent successfully.',
+        title: "Message Sent",
+        description: "Your message has been sent successfully.",
       });
     },
     onError: () => {
       toast({
-        title: 'Send Failed',
-        description: 'Failed to send message. Please try again.',
-        variant: 'destructive',
+        title: "Send Failed",
+        description: "Failed to send message. Please try again.",
+        variant: "destructive",
       });
     },
   });
@@ -100,28 +108,29 @@ export default function MessagesPage() {
   // Mark as read mutation
   const markAsReadMutation = useMutation({
     mutationFn: async (messageId: number) => {
-      const response = await apiRequest('PATCH', `/api/messages/${messageId}/read`);
+      const response = await apiRequest("PATCH", `/api/messages/${messageId}/read`);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/messages'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages"] });
     },
   });
 
   // Filter messages based on tab and search
-  const filteredMessages = messages.filter(message => {
-    const matchesSearch = message.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         message.senderName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         message.content.toLowerCase().includes(searchTerm.toLowerCase());
-    
+  const filteredMessages = messages.filter((message) => {
+    const matchesSearch =
+      message.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      message.senderName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      message.content.toLowerCase().includes(searchTerm.toLowerCase());
+
     switch (activeTab) {
-      case 'inbox':
+      case "inbox":
         return message.recipientId === user?.id && matchesSearch;
-      case 'sent':
+      case "sent":
         return message.senderId === user?.id && matchesSearch;
-      case 'unread':
+      case "unread":
         return message.recipientId === user?.id && !message.isRead && matchesSearch;
-      case 'urgent':
+      case "urgent":
         return message.recipientId === user?.id && message.isUrgent && matchesSearch;
       default:
         return matchesSearch;
@@ -129,35 +138,38 @@ export default function MessagesPage() {
   });
 
   // Group messages by thread
-  const messageThreads = filteredMessages.reduce((threads: { [key: number]: Message[] }, message) => {
-    const threadId = message.threadId || message.id;
-    if (!threads[threadId]) threads[threadId] = [];
-    threads[threadId].push(message);
-    return threads;
-  }, {});
+  const messageThreads = filteredMessages.reduce(
+    (threads: { [key: number]: Message[] }, message) => {
+      const threadId = message.threadId || message.id;
+      if (!threads[threadId]) threads[threadId] = [];
+      threads[threadId].push(message);
+      return threads;
+    },
+    {}
+  );
 
   const NewMessageDialog = () => {
-    const [recipient, setRecipient] = useState('');
-    const [subject, setSubject] = useState('');
-    const [content, setContent] = useState('');
+    const [recipient, setRecipient] = useState("");
+    const [subject, setSubject] = useState("");
+    const [content, setContent] = useState("");
     const [isUrgent, setIsUrgent] = useState(false);
 
     const handleSend = () => {
       if (!recipient || !subject || !content) {
         toast({
-          title: 'Missing Information',
-          description: 'Please fill in all required fields.',
-          variant: 'destructive',
+          title: "Missing Information",
+          description: "Please fill in all required fields.",
+          variant: "destructive",
         });
         return;
       }
 
-      const recipientContact = contacts.find(c => c.id.toString() === recipient);
+      const recipientContact = contacts.find((c) => c.id.toString() === recipient);
       if (!recipientContact) {
         toast({
-          title: 'Invalid Recipient',
-          description: 'Please select a valid recipient.',
-          variant: 'destructive',
+          title: "Invalid Recipient",
+          description: "Please select a valid recipient.",
+          variant: "destructive",
         });
         return;
       }
@@ -170,9 +182,9 @@ export default function MessagesPage() {
       });
 
       // Reset form
-      setRecipient('');
-      setSubject('');
-      setContent('');
+      setRecipient("");
+      setSubject("");
+      setContent("");
       setIsUrgent(false);
     };
 
@@ -181,11 +193,9 @@ export default function MessagesPage() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>New Message</DialogTitle>
-            <DialogDescription>
-              Send a message to your staff or the NexSpace team
-            </DialogDescription>
+            <DialogDescription>Send a message to your staff or the NexSpace team</DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium">To</label>
@@ -196,18 +206,23 @@ export default function MessagesPage() {
               >
                 <option value="">Select recipient...</option>
                 <optgroup label="NexSpace Team">
-                  {contacts.filter(c => c.role === 'nexspace_team').map(contact => (
-                    <option key={contact.id} value={contact.id}>
-                      {contact.name} - {contact.role}
-                    </option>
-                  ))}
+                  {contacts
+                    .filter((c) => c.role === "nexspace_team")
+                    .map((contact) => (
+                      <option key={contact.id} value={contact.id}>
+                        {contact.name} - {contact.role}
+                      </option>
+                    ))}
                 </optgroup>
                 <optgroup label="Facility Staff">
-                  {contacts.filter(c => c.role !== 'nexspace_team').map(contact => (
-                    <option key={contact.id} value={contact.id}>
-                      {contact.name} - {contact.specialty} {contact.facilityName && `(${contact.facilityName})`}
-                    </option>
-                  ))}
+                  {contacts
+                    .filter((c) => c.role !== "nexspace_team")
+                    .map((contact) => (
+                      <option key={contact.id} value={contact.id}>
+                        {contact.name} - {contact.specialty}{" "}
+                        {contact.facilityName && `(${contact.facilityName})`}
+                      </option>
+                    ))}
                 </optgroup>
               </select>
             </div>
@@ -241,7 +256,9 @@ export default function MessagesPage() {
                 onChange={(e) => setIsUrgent(e.target.checked)}
                 className="rounded"
               />
-              <label htmlFor="urgent" className="text-sm">Mark as urgent</label>
+              <label htmlFor="urgent" className="text-sm">
+                Mark as urgent
+              </label>
             </div>
           </div>
 
@@ -249,10 +266,7 @@ export default function MessagesPage() {
             <Button variant="outline" onClick={() => setNewMessageOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={handleSend}
-              disabled={sendMessageMutation.isPending}
-            >
+            <Button onClick={handleSend} disabled={sendMessageMutation.isPending}>
               <Send className="h-4 w-4 mr-2" />
               Send Message
             </Button>
@@ -319,10 +333,9 @@ export default function MessagesPage() {
                   No messages found
                 </h3>
                 <p className="text-gray-600 dark:text-gray-400 text-center">
-                  {searchTerm 
+                  {searchTerm
                     ? "No messages match your search criteria."
-                    : `No ${activeTab === 'inbox' ? '' : activeTab} messages at this time.`
-                  }
+                    : `No ${activeTab === "inbox" ? "" : activeTab} messages at this time.`}
                 </p>
               </CardContent>
             </Card>
@@ -331,12 +344,12 @@ export default function MessagesPage() {
               {Object.entries(messageThreads).map(([threadId, threadMessages]) => {
                 const latestMessage = threadMessages[threadMessages.length - 1];
                 return (
-                  <Card 
-                    key={threadId} 
+                  <Card
+                    key={threadId}
                     className={`hover:shadow-md transition-shadow cursor-pointer ${
-                      !latestMessage.isRead && latestMessage.recipientId === user?.id 
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' 
-                        : ''
+                      !latestMessage.isRead && latestMessage.recipientId === user?.id
+                        ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
+                        : ""
                     }`}
                     onClick={() => {
                       setSelectedThread(parseInt(threadId));
@@ -349,9 +362,7 @@ export default function MessagesPage() {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <CardTitle className="text-lg">{latestMessage.subject}</CardTitle>
-                          {latestMessage.isUrgent && (
-                            <Badge variant="destructive">Urgent</Badge>
-                          )}
+                          {latestMessage.isUrgent && <Badge variant="destructive">Urgent</Badge>}
                           {!latestMessage.isRead && latestMessage.recipientId === user?.id && (
                             <Badge variant="default">New</Badge>
                           )}
@@ -362,10 +373,9 @@ export default function MessagesPage() {
                         </div>
                       </div>
                       <CardDescription>
-                        {activeTab === 'sent' 
+                        {activeTab === "sent"
                           ? `To: ${latestMessage.recipientName}`
-                          : `From: ${latestMessage.senderName} (${latestMessage.senderRole})`
-                        }
+                          : `From: ${latestMessage.senderName} (${latestMessage.senderRole})`}
                         {latestMessage.facilityName && ` • ${latestMessage.facilityName}`}
                       </CardDescription>
                     </CardHeader>

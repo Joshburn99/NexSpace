@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { TrendingUp, DollarSign, Users, Clock, Target, Download } from 'lucide-react';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { TrendingUp, DollarSign, Users, Clock, Target, Download } from "lucide-react";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
 
 interface FloatPoolSaving {
   id: number;
@@ -25,18 +31,18 @@ interface FloatPoolSaving {
 }
 
 export default function FloatPoolAnalyticsPage() {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [dateRange, setDateRange] = useState('quarter');
-  const [departmentFilter, setDepartmentFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState("overview");
+  const [dateRange, setDateRange] = useState("quarter");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
   const { hasPermission } = useFacilityPermissions();
 
   const { data: floatPoolData, isLoading } = useQuery<FloatPoolSaving[]>({
-    queryKey: ['/api/float-pool-analytics', dateRange, departmentFilter],
+    queryKey: ["/api/float-pool-analytics", dateRange, departmentFilter],
     initialData: [
       {
         id: 1,
-        department: 'ICU',
-        month: '2025-07',
+        department: "ICU",
+        month: "2025-07",
         staffingNeed: 45,
         floatPoolUsed: 32,
         agencyAlternative: 13,
@@ -45,13 +51,13 @@ export default function FloatPoolAnalyticsPage() {
         savings: 38400,
         savingsPercentage: 30.8,
         utilizationRate: 71.1,
-        avgHourlyRate: 45.00,
-        totalHours: 1920
+        avgHourlyRate: 45.0,
+        totalHours: 1920,
       },
       {
         id: 2,
-        department: 'Emergency',
-        month: '2025-07',
+        department: "Emergency",
+        month: "2025-07",
         staffingNeed: 38,
         floatPoolUsed: 28,
         agencyAlternative: 10,
@@ -60,13 +66,13 @@ export default function FloatPoolAnalyticsPage() {
         savings: 20400,
         savingsPercentage: 21.3,
         utilizationRate: 73.7,
-        avgHourlyRate: 42.00,
-        totalHours: 1800
+        avgHourlyRate: 42.0,
+        totalHours: 1800,
       },
       {
         id: 3,
-        department: 'Med-Surg',
-        month: '2025-07',
+        department: "Med-Surg",
+        month: "2025-07",
         staffingNeed: 52,
         floatPoolUsed: 38,
         agencyAlternative: 14,
@@ -75,13 +81,13 @@ export default function FloatPoolAnalyticsPage() {
         savings: 43200,
         savingsPercentage: 32.1,
         utilizationRate: 73.1,
-        avgHourlyRate: 38.00,
-        totalHours: 2400
+        avgHourlyRate: 38.0,
+        totalHours: 2400,
       },
       {
         id: 4,
-        department: 'Surgery',
-        month: '2025-07',
+        department: "Surgery",
+        month: "2025-07",
         staffingNeed: 24,
         floatPoolUsed: 18,
         agencyAlternative: 6,
@@ -90,33 +96,40 @@ export default function FloatPoolAnalyticsPage() {
         savings: 16800,
         savingsPercentage: 25.0,
         utilizationRate: 75.0,
-        avgHourlyRate: 42.00,
-        totalHours: 1200
-      }
-    ]
+        avgHourlyRate: 42.0,
+        totalHours: 1200,
+      },
+    ],
   });
 
-  if (!hasPermission('view_float_pool_savings')) {
+  if (!hasPermission("view_float_pool_savings")) {
     return (
       <div className="container mx-auto p-6">
         <Card>
           <CardContent className="p-6">
-            <p className="text-gray-600">You don't have permission to view float pool savings analytics.</p>
+            <p className="text-gray-600">
+              You don't have permission to view float pool savings analytics.
+            </p>
           </CardContent>
         </Card>
       </div>
     );
   }
 
-  const filteredData = floatPoolData?.filter(record => {
-    const matchesDepartment = departmentFilter === 'all' || record.department === departmentFilter;
-    return matchesDepartment;
-  }) || [];
+  const filteredData =
+    floatPoolData?.filter((record) => {
+      const matchesDepartment =
+        departmentFilter === "all" || record.department === departmentFilter;
+      return matchesDepartment;
+    }) || [];
 
   const totalSavings = filteredData.reduce((sum, r) => sum + r.savings, 0);
   const totalFloatPoolCost = filteredData.reduce((sum, r) => sum + r.floatPoolCost, 0);
   const totalAgencyCost = filteredData.reduce((sum, r) => sum + r.agencyCost, 0);
-  const avgUtilization = filteredData.length > 0 ? filteredData.reduce((sum, r) => sum + r.utilizationRate, 0) / filteredData.length : 0;
+  const avgUtilization =
+    filteredData.length > 0
+      ? filteredData.reduce((sum, r) => sum + r.utilizationRate, 0) / filteredData.length
+      : 0;
   const totalHours = filteredData.reduce((sum, r) => sum + r.totalHours, 0);
 
   return (
@@ -174,9 +187,12 @@ export default function FloatPoolAnalyticsPage() {
                 <DollarSign className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-green-600">${totalSavings.toLocaleString()}</div>
+                <div className="text-2xl font-bold text-green-600">
+                  ${totalSavings.toLocaleString()}
+                </div>
                 <div className="text-xs text-muted-foreground">
-                  {totalAgencyCost > 0 ? ((totalSavings / totalAgencyCost) * 100).toFixed(1) : 0}% vs agency costs
+                  {totalAgencyCost > 0 ? ((totalSavings / totalAgencyCost) * 100).toFixed(1) : 0}%
+                  vs agency costs
                 </div>
               </CardContent>
             </Card>
@@ -199,9 +215,7 @@ export default function FloatPoolAnalyticsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{avgUtilization.toFixed(1)}%</div>
-                <div className="text-xs text-muted-foreground">
-                  Average across departments
-                </div>
+                <div className="text-xs text-muted-foreground">Average across departments</div>
               </CardContent>
             </Card>
             <Card>
@@ -211,9 +225,7 @@ export default function FloatPoolAnalyticsPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{totalHours.toLocaleString()}</div>
-                <div className="text-xs text-muted-foreground">
-                  Float pool hours worked
-                </div>
+                <div className="text-xs text-muted-foreground">Float pool hours worked</div>
               </CardContent>
             </Card>
           </div>
@@ -225,20 +237,27 @@ export default function FloatPoolAnalyticsPage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="text-center p-6 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">${totalFloatPoolCost.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    ${totalFloatPoolCost.toLocaleString()}
+                  </div>
                   <div className="text-sm text-gray-600">Float Pool Cost</div>
                   <div className="text-xs text-gray-500 mt-1">Internal staffing</div>
                 </div>
                 <div className="text-center p-6 bg-red-50 rounded-lg">
-                  <div className="text-2xl font-bold text-red-600">${totalAgencyCost.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-red-600">
+                    ${totalAgencyCost.toLocaleString()}
+                  </div>
                   <div className="text-sm text-gray-600">Agency Alternative</div>
                   <div className="text-xs text-gray-500 mt-1">External staffing</div>
                 </div>
                 <div className="text-center p-6 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">${totalSavings.toLocaleString()}</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    ${totalSavings.toLocaleString()}
+                  </div>
                   <div className="text-sm text-gray-600">Total Savings</div>
                   <div className="text-xs text-gray-500 mt-1">
-                    {totalAgencyCost > 0 ? ((totalSavings / totalAgencyCost) * 100).toFixed(1) : 0}% reduction
+                    {totalAgencyCost > 0 ? ((totalSavings / totalAgencyCost) * 100).toFixed(1) : 0}%
+                    reduction
                   </div>
                 </div>
               </div>
@@ -253,9 +272,7 @@ export default function FloatPoolAnalyticsPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-lg">{record.department}</CardTitle>
-                    <Badge variant="outline">
-                      {record.utilizationRate.toFixed(1)}% utilized
-                    </Badge>
+                    <Badge variant="outline">{record.utilizationRate.toFixed(1)}% utilized</Badge>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -270,7 +287,7 @@ export default function FloatPoolAnalyticsPage() {
                         <div className="text-lg font-semibold">{record.floatPoolUsed}</div>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium">Cost Comparison</span>
@@ -314,11 +331,13 @@ export default function FloatPoolAnalyticsPage() {
                     <div key={record.id}>
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">{record.department}</span>
-                        <span className="text-sm text-gray-600">${record.savings.toLocaleString()}</span>
+                        <span className="text-sm text-gray-600">
+                          ${record.savings.toLocaleString()}
+                        </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                        <div 
-                          className="bg-green-600 h-2 rounded-full" 
+                        <div
+                          className="bg-green-600 h-2 rounded-full"
                           style={{ width: `${(record.savings / totalSavings) * 100}%` }}
                         ></div>
                       </div>
@@ -338,13 +357,18 @@ export default function FloatPoolAnalyticsPage() {
                     <div key={record.id}>
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium">{record.department}</span>
-                        <span className="text-sm text-gray-600">{record.utilizationRate.toFixed(1)}%</span>
+                        <span className="text-sm text-gray-600">
+                          {record.utilizationRate.toFixed(1)}%
+                        </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                        <div 
+                        <div
                           className={`h-2 rounded-full ${
-                            record.utilizationRate >= 80 ? 'bg-green-600' : 
-                            record.utilizationRate >= 60 ? 'bg-yellow-600' : 'bg-red-600'
+                            record.utilizationRate >= 80
+                              ? "bg-green-600"
+                              : record.utilizationRate >= 60
+                                ? "bg-yellow-600"
+                                : "bg-red-600"
                           }`}
                           style={{ width: `${record.utilizationRate}%` }}
                         ></div>

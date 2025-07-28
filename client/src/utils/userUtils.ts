@@ -1,4 +1,4 @@
-import type { User, UserFilters, Specialty } from '../types';
+import type { User, UserFilters, Specialty } from "../types";
 
 /**
  * Get user's full name
@@ -16,7 +16,7 @@ export const getUserFullName = (user: User): string => {
  * @returns Filtered array of users
  */
 export const filterUsers = (users: User[], filters: UserFilters): User[] => {
-  return users.filter(user => {
+  return users.filter((user) => {
     if (filters.role && user.role !== filters.role) return false;
     if (filters.specialty && user.specialty !== filters.specialty) return false;
     if (filters.facilityId && !user.facilityIds.includes(filters.facilityId)) return false;
@@ -32,7 +32,7 @@ export const filterUsers = (users: User[], filters: UserFilters): User[] => {
  * @returns Array of users with the specified specialty
  */
 export const getUsersBySpecialty = (users: User[], specialty: Specialty): User[] => {
-  return users.filter(user => user.specialty === specialty);
+  return users.filter((user) => user.specialty === specialty);
 };
 
 /**
@@ -42,7 +42,7 @@ export const getUsersBySpecialty = (users: User[], specialty: Specialty): User[]
  * @returns Array of users associated with the facility
  */
 export const getUsersByFacility = (users: User[], facilityId: string): User[] => {
-  return users.filter(user => user.facilityIds.includes(facilityId));
+  return users.filter((user) => user.facilityIds.includes(facilityId));
 };
 
 /**
@@ -51,7 +51,7 @@ export const getUsersByFacility = (users: User[], facilityId: string): User[] =>
  * @returns Array of active staff users
  */
 export const getActiveStaff = (users: User[]): User[] => {
-  return users.filter(user => user.isActive && user.role === 'staff');
+  return users.filter((user) => user.isActive && user.role === "staff");
 };
 
 /**
@@ -60,15 +60,18 @@ export const getActiveStaff = (users: User[]): User[] => {
  * @returns Object with specialties as keys and arrays of users as values
  */
 export const groupUsersBySpecialty = (users: User[]): Record<string, User[]> => {
-  return users.reduce((grouped, user) => {
-    if (user.specialty) {
-      if (!grouped[user.specialty]) {
-        grouped[user.specialty] = [];
+  return users.reduce(
+    (grouped, user) => {
+      if (user.specialty) {
+        if (!grouped[user.specialty]) {
+          grouped[user.specialty] = [];
+        }
+        grouped[user.specialty].push(user);
       }
-      grouped[user.specialty].push(user);
-    }
-    return grouped;
-  }, {} as Record<string, User[]>);
+      return grouped;
+    },
+    {} as Record<string, User[]>
+  );
 };
 
 /**
@@ -87,7 +90,7 @@ export const getUserInitials = (user: User): string => {
  * @returns True if user is authorized for the facility
  */
 export const isUserAuthorizedForFacility = (user: User, facilityId: string): boolean => {
-  return user.facilityIds.includes(facilityId) || user.role === 'superuser';
+  return user.facilityIds.includes(facilityId) || user.role === "superuser";
 };
 
 /**
@@ -96,7 +99,7 @@ export const isUserAuthorizedForFacility = (user: User, facilityId: string): boo
  * @returns Array of users with admin or superuser roles
  */
 export const getAdminUsers = (users: User[]): User[] => {
-  return users.filter(user => user.role === 'facility_admin' || user.role === 'superuser');
+  return users.filter((user) => user.role === "facility_admin" || user.role === "superuser");
 };
 
 /**

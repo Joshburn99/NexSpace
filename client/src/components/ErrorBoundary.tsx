@@ -1,7 +1,7 @@
-import React, { Component, ReactNode } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { AlertTriangle, RotateCcw, Home } from 'lucide-react';
+import React, { Component, ReactNode } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { AlertTriangle, RotateCcw, Home } from "lucide-react";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
 
     // Log error for debugging
-    console.error('Error Boundary caught an error:', error, errorInfo);
+    console.error("Error Boundary caught an error:", error, errorInfo);
   }
 
   handleRetry = () => {
@@ -56,7 +56,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   };
 
   handleGoHome = () => {
-    window.location.href = '/';
+    window.location.href = "/";
   };
 
   render() {
@@ -80,10 +80,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             </CardHeader>
             <CardContent className="space-y-4">
               <p className="text-gray-600 dark:text-gray-400 text-center">
-                We encountered an unexpected error. This has been logged and our team will investigate.
+                We encountered an unexpected error. This has been logged and our team will
+                investigate.
               </p>
-              
-              {process.env.NODE_ENV === 'development' && this.state.error && (
+
+              {process.env.NODE_ENV === "development" && this.state.error && (
                 <details className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md text-sm">
                   <summary className="cursor-pointer font-medium mb-2">
                     Error Details (Development)
@@ -118,7 +119,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 // Hook version for functional components
 export function useErrorHandler() {
   return (error: Error, errorInfo?: any) => {
-    console.error('Error caught by error handler:', error, errorInfo);
+    console.error("Error caught by error handler:", error, errorInfo);
     // Additional error handling logic can be added here
   };
 }

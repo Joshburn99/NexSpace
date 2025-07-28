@@ -10,9 +10,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <div className="min-h-screen bg-background mobile-container">
       <UnifiedHeader />
       <main className="container mx-auto mobile-safe py-4 sm:py-6 lg:py-8">
-        <div className="animate-in fade-in duration-500">
-          {children}
-        </div>
+        <div className="animate-in fade-in duration-500">{children}</div>
       </main>
       <ProductTour />
     </div>

@@ -11,16 +11,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { 
-  Clock, 
-  MapPin, 
-  DollarSign, 
-  Building2, 
-  Calendar, 
+import {
+  Clock,
+  MapPin,
+  DollarSign,
+  Building2,
+  Calendar,
   X,
   AlertCircle,
   Loader2,
-  Info
+  Info,
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
@@ -51,64 +51,72 @@ export default function WorkerMyRequestsPage() {
 
   // Fetch worker's shift requests - only unassigned requests by this worker
   const { data: myRequests = [], isLoading } = useQuery({
-    queryKey: ['/api/shift-requests', user?.id],
+    queryKey: ["/api/shift-requests", user?.id],
     enabled: !!user?.id,
   });
 
   // Withdraw shift request mutation
   const withdrawRequestMutation = useMutation({
     mutationFn: async ({ requestId, reason }: { requestId: number; reason: string }) => {
-      const response = await apiRequest('POST', `/api/shift-requests/${requestId}/withdraw`, { reason });
+      const response = await apiRequest("POST", `/api/shift-requests/${requestId}/withdraw`, {
+        reason,
+      });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to withdraw request');
+        throw new Error(error.message || "Failed to withdraw request");
       }
       return response.json();
     },
     onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/shift-requests'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/shift-requests"] });
       toast({
-        title: 'Request Withdrawn',
-        description: 'Your shift request has been withdrawn successfully.',
+        title: "Request Withdrawn",
+        description: "Your shift request has been withdrawn successfully.",
       });
       setConfirmWithdrawId(null);
-      setWithdrawReason('');
+      setWithdrawReason("");
     },
     onError: (error: any) => {
-      console.error('Withdrawal error:', error);
+      console.error("Withdrawal error:", error);
       toast({
-        title: 'Withdrawal Failed',
-        description: error.message || 'Failed to withdraw shift request. Please try again.',
-        variant: 'destructive',
+        title: "Withdrawal Failed",
+        description: error.message || "Failed to withdraw shift request. Please try again.",
+        variant: "destructive",
       });
     },
   });
 
   // Filter to only show requests by current worker that are still unassigned
-  const workerRequests = (myRequests as ShiftRequest[]).filter((request: ShiftRequest) => 
-    request.requestedBy === user?.id && 
-    ["requested", "pending"].includes(request.status)
+  const workerRequests = (myRequests as ShiftRequest[]).filter(
+    (request: ShiftRequest) =>
+      request.requestedBy === user?.id && ["requested", "pending"].includes(request.status)
   );
 
   const getUrgencyColor = (urgency: string) => {
     switch (urgency) {
-      case "critical": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      case "high": return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300";
-      case "medium": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-      default: return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
+      case "critical":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+      case "high":
+        return "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+      default:
+        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
     }
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "pending": return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-      case "approved": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      case "declined": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
-      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+      case "approved":
+        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+      case "declined":
+        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+      default:
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
     }
   };
-
-
 
   if (isLoading) {
     return (
@@ -116,7 +124,7 @@ export default function WorkerMyRequestsPage() {
         <div className="animate-pulse space-y-4">
           <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-64"></div>
           <div className="grid gap-4">
-            {[1, 2, 3].map(i => (
+            {[1, 2, 3].map((i) => (
               <div key={i} className="h-48 bg-gray-200 dark:bg-gray-700 rounded"></div>
             ))}
           </div>
@@ -139,12 +147,26 @@ export default function WorkerMyRequestsPage() {
               <TooltipContent side="right" className="max-w-xs">
                 <p className="text-sm font-medium mb-1">Request Status Guide:</p>
                 <ul className="text-xs space-y-1">
-                  <li><span className="font-medium text-yellow-600">Pending:</span> Awaiting facility review</li>
-                  <li><span className="font-medium text-green-600">Approved:</span> You've been assigned to the shift</li>
-                  <li><span className="font-medium text-red-600">Declined:</span> Request was not approved</li>
-                  <li><span className="font-medium text-gray-600">Withdrawn:</span> You cancelled the request</li>
+                  <li>
+                    <span className="font-medium text-yellow-600">Pending:</span> Awaiting facility
+                    review
+                  </li>
+                  <li>
+                    <span className="font-medium text-green-600">Approved:</span> You've been
+                    assigned to the shift
+                  </li>
+                  <li>
+                    <span className="font-medium text-red-600">Declined:</span> Request was not
+                    approved
+                  </li>
+                  <li>
+                    <span className="font-medium text-gray-600">Withdrawn:</span> You cancelled the
+                    request
+                  </li>
                 </ul>
-                <p className="text-xs mt-2 text-gray-500">You can withdraw pending requests at any time</p>
+                <p className="text-xs mt-2 text-gray-500">
+                  You can withdraw pending requests at any time
+                </p>
               </TooltipContent>
             </Tooltip>
           </p>
@@ -202,11 +224,15 @@ export default function WorkerMyRequestsPage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div>
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Department</p>
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Department
+                    </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">{request.department}</p>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Specialty</p>
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Specialty
+                    </p>
                     <p className="text-sm text-gray-600 dark:text-gray-400">{request.specialty}</p>
                   </div>
                   <div>
@@ -221,15 +247,19 @@ export default function WorkerMyRequestsPage() {
 
                 {request.description && (
                   <div className="mb-4">
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{request.description}</p>
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      Description
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {request.description}
+                    </p>
                   </div>
                 )}
 
                 <div className="flex justify-end gap-2">
                   {request.status === "requested" && (
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={() => setConfirmWithdrawId(request.id)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
@@ -264,7 +294,7 @@ export default function WorkerMyRequestsPage() {
         onOpenChange={(open) => {
           if (!open) {
             setConfirmWithdrawId(null);
-            setWithdrawReason('');
+            setWithdrawReason("");
           }
         }}
       >
@@ -275,23 +305,23 @@ export default function WorkerMyRequestsPage() {
               Are you sure you want to withdraw this shift request? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 my-4">
             {/* Find the request being withdrawn */}
-            {confirmWithdrawId && workerRequests.find(r => r.id === confirmWithdrawId) && (
+            {confirmWithdrawId && workerRequests.find((r) => r.id === confirmWithdrawId) && (
               <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
                 <p className="font-medium text-sm mb-1">
-                  {workerRequests.find(r => r.id === confirmWithdrawId)?.title}
+                  {workerRequests.find((r) => r.id === confirmWithdrawId)?.title}
                 </p>
                 <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-3 w-3" />
-                    {workerRequests.find(r => r.id === confirmWithdrawId)?.date}
+                    {workerRequests.find((r) => r.id === confirmWithdrawId)?.date}
                   </div>
                   <div className="flex items-center gap-2">
                     <Clock className="h-3 w-3" />
-                    {workerRequests.find(r => r.id === confirmWithdrawId)?.startTime} - 
-                    {workerRequests.find(r => r.id === confirmWithdrawId)?.endTime}
+                    {workerRequests.find((r) => r.id === confirmWithdrawId)?.startTime} -
+                    {workerRequests.find((r) => r.id === confirmWithdrawId)?.endTime}
                   </div>
                 </div>
               </div>
@@ -336,7 +366,7 @@ export default function WorkerMyRequestsPage() {
                 if (confirmWithdrawId) {
                   withdrawRequestMutation.mutate({
                     requestId: confirmWithdrawId,
-                    reason: withdrawReason
+                    reason: withdrawReason,
                   });
                 }
               }}
@@ -359,7 +389,7 @@ export default function WorkerMyRequestsPage() {
               variant="outline"
               onClick={() => {
                 setConfirmWithdrawId(null);
-                setWithdrawReason('');
+                setWithdrawReason("");
               }}
               disabled={withdrawRequestMutation.isPending}
               className="flex-1"

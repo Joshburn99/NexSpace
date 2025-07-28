@@ -1,22 +1,45 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Users, UserPlus, Building, DollarSign, Star, Mail, Phone, Plus, Search, Filter } from 'lucide-react';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Users,
+  UserPlus,
+  Building,
+  DollarSign,
+  Star,
+  Mail,
+  Phone,
+  Plus,
+  Search,
+  Filter,
+} from "lucide-react";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Referral {
   id: number;
-  type: 'staff' | 'facility';
+  type: "staff" | "facility";
   referrerName: string;
   referrerEmail: string;
   refereeName: string;
@@ -24,7 +47,7 @@ interface Referral {
   refereePhone?: string;
   specialty?: string;
   facilityName?: string;
-  status: 'pending' | 'contacted' | 'interviewed' | 'hired' | 'declined';
+  status: "pending" | "contacted" | "interviewed" | "hired" | "declined";
   referralBonus?: number;
   notes: string;
   createdAt: string;
@@ -32,7 +55,7 @@ interface Referral {
 }
 
 interface ReferralForm {
-  type: 'staff' | 'facility';
+  type: "staff" | "facility";
   refereeName: string;
   refereeEmail: string;
   refereePhone: string;
@@ -42,91 +65,91 @@ interface ReferralForm {
 }
 
 export default function ReferralSystemPage() {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [activeTab, setActiveTab] = useState("overview");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { hasPermission } = useFacilityPermissions();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const [formData, setFormData] = useState<ReferralForm>({
-    type: 'staff',
-    refereeName: '',
-    refereeEmail: '',
-    refereePhone: '',
-    specialty: '',
-    facilityName: '',
-    notes: ''
+    type: "staff",
+    refereeName: "",
+    refereeEmail: "",
+    refereePhone: "",
+    specialty: "",
+    facilityName: "",
+    notes: "",
   });
 
   const { data: referrals, isLoading } = useQuery<Referral[]>({
-    queryKey: ['/api/referrals'],
+    queryKey: ["/api/referrals"],
     initialData: [
       {
         id: 1,
-        type: 'staff',
-        referrerName: 'Sarah Johnson',
-        referrerEmail: 'sarah.johnson@email.com',
-        refereeName: 'Michael Chen',
-        refereeEmail: 'michael.chen@email.com',
-        refereePhone: '(555) 123-4567',
-        specialty: 'Registered Nurse',
-        status: 'interviewed',
+        type: "staff",
+        referrerName: "Sarah Johnson",
+        referrerEmail: "sarah.johnson@email.com",
+        refereeName: "Michael Chen",
+        refereeEmail: "michael.chen@email.com",
+        refereePhone: "(555) 123-4567",
+        specialty: "Registered Nurse",
+        status: "interviewed",
         referralBonus: 2000,
-        notes: 'Excellent ICU experience, highly recommended',
-        createdAt: '2025-07-01',
-        updatedAt: '2025-07-12'
+        notes: "Excellent ICU experience, highly recommended",
+        createdAt: "2025-07-01",
+        updatedAt: "2025-07-12",
       },
       {
         id: 2,
-        type: 'facility',
-        referrerName: 'David Rodriguez',
-        referrerEmail: 'david.rodriguez@email.com',
-        refereeName: 'Lisa Park',
-        refereeEmail: 'lisa.park@email.com',
-        refereePhone: '(555) 987-6543',
-        facilityName: 'Sunset Care Center',
-        status: 'contacted',
+        type: "facility",
+        referrerName: "David Rodriguez",
+        referrerEmail: "david.rodriguez@email.com",
+        refereeName: "Lisa Park",
+        refereeEmail: "lisa.park@email.com",
+        refereePhone: "(555) 987-6543",
+        facilityName: "Sunset Care Center",
+        status: "contacted",
         referralBonus: 1500,
-        notes: 'Interested in partnership opportunities',
-        createdAt: '2025-07-05',
-        updatedAt: '2025-07-10'
+        notes: "Interested in partnership opportunities",
+        createdAt: "2025-07-05",
+        updatedAt: "2025-07-10",
       },
       {
         id: 3,
-        type: 'staff',
-        referrerName: 'Emily Watson',
-        referrerEmail: 'emily.watson@email.com',
-        refereeName: 'James Miller',
-        refereeEmail: 'james.miller@email.com',
-        refereePhone: '(555) 456-7890',
-        specialty: 'Physical Therapist',
-        status: 'hired',
+        type: "staff",
+        referrerName: "Emily Watson",
+        referrerEmail: "emily.watson@email.com",
+        refereeName: "James Miller",
+        refereeEmail: "james.miller@email.com",
+        refereePhone: "(555) 456-7890",
+        specialty: "Physical Therapist",
+        status: "hired",
         referralBonus: 1800,
-        notes: 'Great addition to our PT team',
-        createdAt: '2025-06-20',
-        updatedAt: '2025-07-08'
-      }
-    ]
+        notes: "Great addition to our PT team",
+        createdAt: "2025-06-20",
+        updatedAt: "2025-07-08",
+      },
+    ],
   });
 
   const createReferral = useMutation({
     mutationFn: async (data: ReferralForm) => {
-      return apiRequest('POST', '/api/referrals', data);
+      return apiRequest("POST", "/api/referrals", data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/referrals'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/referrals"] });
       setIsCreateModalOpen(false);
       setFormData({
-        type: 'staff',
-        refereeName: '',
-        refereeEmail: '',
-        refereePhone: '',
-        specialty: '',
-        facilityName: '',
-        notes: ''
+        type: "staff",
+        refereeName: "",
+        refereeEmail: "",
+        refereePhone: "",
+        specialty: "",
+        facilityName: "",
+        notes: "",
       });
       toast({
         title: "Success",
@@ -142,34 +165,42 @@ export default function ReferralSystemPage() {
     },
   });
 
-  const filteredReferrals = referrals?.filter(referral => {
-    const matchesSearch = referral.refereeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         referral.referrerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         referral.specialty?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         referral.facilityName?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || referral.status === statusFilter;
-    const matchesType = typeFilter === 'all' || referral.type === typeFilter;
-    
-    return matchesSearch && matchesStatus && matchesType;
-  }) || [];
+  const filteredReferrals =
+    referrals?.filter((referral) => {
+      const matchesSearch =
+        referral.refereeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        referral.referrerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        referral.specialty?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        referral.facilityName?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus = statusFilter === "all" || referral.status === statusFilter;
+      const matchesType = typeFilter === "all" || referral.type === typeFilter;
+
+      return matchesSearch && matchesStatus && matchesType;
+    }) || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'contacted': return 'bg-blue-100 text-blue-800';
-      case 'interviewed': return 'bg-purple-100 text-purple-800';
-      case 'hired': return 'bg-green-100 text-green-800';
-      case 'declined': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "contacted":
+        return "bg-blue-100 text-blue-800";
+      case "interviewed":
+        return "bg-purple-100 text-purple-800";
+      case "hired":
+        return "bg-green-100 text-green-800";
+      case "declined":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const getTypeIcon = (type: string) => {
-    return type === 'staff' ? Users : Building;
+    return type === "staff" ? Users : Building;
   };
 
   const handleInputChange = (field: keyof ReferralForm, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = () => {
@@ -185,7 +216,7 @@ export default function ReferralSystemPage() {
     createReferral.mutate(formData);
   };
 
-  if (!hasPermission('view_referral_system')) {
+  if (!hasPermission("view_referral_system")) {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -198,9 +229,12 @@ export default function ReferralSystemPage() {
   }
 
   const totalReferrals = referrals?.length || 0;
-  const pendingReferrals = referrals?.filter(r => r.status === 'pending').length || 0;
-  const hiredReferrals = referrals?.filter(r => r.status === 'hired').length || 0;
-  const totalEarnings = referrals?.filter(r => r.status === 'hired').reduce((sum, r) => sum + (r.referralBonus || 0), 0) || 0;
+  const pendingReferrals = referrals?.filter((r) => r.status === "pending").length || 0;
+  const hiredReferrals = referrals?.filter((r) => r.status === "hired").length || 0;
+  const totalEarnings =
+    referrals
+      ?.filter((r) => r.status === "hired")
+      .reduce((sum, r) => sum + (r.referralBonus || 0), 0) || 0;
 
   return (
     <div className="container mx-auto p-6">
@@ -212,7 +246,7 @@ export default function ReferralSystemPage() {
           </h1>
           <p className="text-gray-600 mt-2">Manage staff and facility referrals</p>
         </div>
-        {hasPermission('manage_referral_system') && (
+        {hasPermission("manage_referral_system") && (
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -227,7 +261,10 @@ export default function ReferralSystemPage() {
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="type">Referral Type</Label>
-                  <Select value={formData.type} onValueChange={(value) => handleInputChange('type', value)}>
+                  <Select
+                    value={formData.type}
+                    onValueChange={(value) => handleInputChange("type", value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
@@ -244,7 +281,7 @@ export default function ReferralSystemPage() {
                     <Input
                       id="refereeName"
                       value={formData.refereeName}
-                      onChange={(e) => handleInputChange('refereeName', e.target.value)}
+                      onChange={(e) => handleInputChange("refereeName", e.target.value)}
                       placeholder="Enter referee name"
                     />
                   </div>
@@ -254,7 +291,7 @@ export default function ReferralSystemPage() {
                       id="refereeEmail"
                       type="email"
                       value={formData.refereeEmail}
-                      onChange={(e) => handleInputChange('refereeEmail', e.target.value)}
+                      onChange={(e) => handleInputChange("refereeEmail", e.target.value)}
                       placeholder="Enter referee email"
                     />
                   </div>
@@ -265,22 +302,29 @@ export default function ReferralSystemPage() {
                   <Input
                     id="refereePhone"
                     value={formData.refereePhone}
-                    onChange={(e) => handleInputChange('refereePhone', e.target.value)}
+                    onChange={(e) => handleInputChange("refereePhone", e.target.value)}
                     placeholder="Enter referee phone number"
                   />
                 </div>
 
-                {formData.type === 'staff' && (
+                {formData.type === "staff" && (
                   <div>
                     <Label htmlFor="specialty">Specialty</Label>
-                    <Select value={formData.specialty} onValueChange={(value) => handleInputChange('specialty', value)}>
+                    <Select
+                      value={formData.specialty}
+                      onValueChange={(value) => handleInputChange("specialty", value)}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select specialty" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="Registered Nurse">Registered Nurse</SelectItem>
-                        <SelectItem value="Licensed Practical Nurse">Licensed Practical Nurse</SelectItem>
-                        <SelectItem value="Certified Nursing Assistant">Certified Nursing Assistant</SelectItem>
+                        <SelectItem value="Licensed Practical Nurse">
+                          Licensed Practical Nurse
+                        </SelectItem>
+                        <SelectItem value="Certified Nursing Assistant">
+                          Certified Nursing Assistant
+                        </SelectItem>
                         <SelectItem value="Physical Therapist">Physical Therapist</SelectItem>
                         <SelectItem value="Respiratory Therapist">Respiratory Therapist</SelectItem>
                         <SelectItem value="Medical Doctor">Medical Doctor</SelectItem>
@@ -291,13 +335,13 @@ export default function ReferralSystemPage() {
                   </div>
                 )}
 
-                {formData.type === 'facility' && (
+                {formData.type === "facility" && (
                   <div>
                     <Label htmlFor="facilityName">Facility Name</Label>
                     <Input
                       id="facilityName"
                       value={formData.facilityName}
-                      onChange={(e) => handleInputChange('facilityName', e.target.value)}
+                      onChange={(e) => handleInputChange("facilityName", e.target.value)}
                       placeholder="Enter facility name"
                     />
                   </div>
@@ -308,7 +352,7 @@ export default function ReferralSystemPage() {
                   <Textarea
                     id="notes"
                     value={formData.notes}
-                    onChange={(e) => handleInputChange('notes', e.target.value)}
+                    onChange={(e) => handleInputChange("notes", e.target.value)}
                     placeholder="Add any additional notes about the referral"
                     className="min-h-20"
                   />
@@ -319,7 +363,7 @@ export default function ReferralSystemPage() {
                     Cancel
                   </Button>
                   <Button onClick={handleSubmit} disabled={createReferral.isPending}>
-                    {createReferral.isPending ? 'Submitting...' : 'Submit Referral'}
+                    {createReferral.isPending ? "Submitting..." : "Submit Referral"}
                   </Button>
                 </div>
               </div>
@@ -423,12 +467,12 @@ export default function ReferralSystemPage() {
                         <TypeIcon className="h-5 w-5" />
                         <div>
                           <CardTitle className="text-lg">{referral.refereeName}</CardTitle>
-                          <p className="text-sm text-gray-600">{referral.specialty || referral.facilityName}</p>
+                          <p className="text-sm text-gray-600">
+                            {referral.specialty || referral.facilityName}
+                          </p>
                         </div>
                       </div>
-                      <Badge className={getStatusColor(referral.status)}>
-                        {referral.status}
-                      </Badge>
+                      <Badge className={getStatusColor(referral.status)}>{referral.status}</Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -449,8 +493,8 @@ export default function ReferralSystemPage() {
                       </div>
                       {referral.referralBonus && (
                         <div className="flex items-center gap-2 text-sm font-medium text-green-600">
-                          <DollarSign className="h-3 w-3" />
-                          ${referral.referralBonus.toLocaleString()} bonus
+                          <DollarSign className="h-3 w-3" />$
+                          {referral.referralBonus.toLocaleString()} bonus
                         </div>
                       )}
                       {referral.notes && (
@@ -472,10 +516,9 @@ export default function ReferralSystemPage() {
                 <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No referrals found</h3>
                 <p className="text-gray-600 mb-4">
-                  {searchTerm || statusFilter !== 'all' || typeFilter !== 'all' 
-                    ? 'Try adjusting your search or filters'
-                    : 'No referrals have been submitted yet'
-                  }
+                  {searchTerm || statusFilter !== "all" || typeFilter !== "all"
+                    ? "Try adjusting your search or filters"
+                    : "No referrals have been submitted yet"}
                 </p>
               </CardContent>
             </Card>
@@ -491,7 +534,9 @@ export default function ReferralSystemPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">${totalEarnings.toLocaleString()}</div>
+                    <div className="text-2xl font-bold text-green-600">
+                      ${totalEarnings.toLocaleString()}
+                    </div>
                     <div className="text-sm text-gray-600">Total Earned</div>
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
@@ -500,7 +545,7 @@ export default function ReferralSystemPage() {
                   </div>
                   <div className="text-center p-4 bg-purple-50 rounded-lg">
                     <div className="text-2xl font-bold text-purple-600">
-                      ${hiredReferrals > 0 ? (totalEarnings / hiredReferrals).toFixed(0) : '0'}
+                      ${hiredReferrals > 0 ? (totalEarnings / hiredReferrals).toFixed(0) : "0"}
                     </div>
                     <div className="text-sm text-gray-600">Avg. Bonus</div>
                   </div>

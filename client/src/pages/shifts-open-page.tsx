@@ -19,7 +19,7 @@ export default function OpenShiftsPage() {
       toast({
         title: "Authentication Required",
         description: "Please log in to request shifts.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
@@ -34,7 +34,7 @@ export default function OpenShiftsPage() {
       toast({
         title: "Request Failed",
         description: "Failed to request shift. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -54,9 +54,8 @@ export default function OpenShiftsPage() {
 
   // Ensure openShifts is always an array before filtering
   const safeOpenShifts = Array.isArray(openShifts) ? openShifts : [];
-  const filteredShifts = filter === "all" 
-    ? safeOpenShifts 
-    : safeOpenShifts.filter((shift) => shift.urgency === filter);
+  const filteredShifts =
+    filter === "all" ? safeOpenShifts : safeOpenShifts.filter((shift) => shift.urgency === filter);
 
   if (isLoading) {
     return (
@@ -150,7 +149,8 @@ export default function OpenShiftsPage() {
                   <div>
                     <div className="font-medium">${shift.rate}/hr</div>
                     <div className="text-gray-500">
-                      {shift.premiumMultiplier > 1 && `${(shift.premiumMultiplier * 100).toFixed(0)}% premium`}
+                      {shift.premiumMultiplier > 1 &&
+                        `${(shift.premiumMultiplier * 100).toFixed(0)}% premium`}
                     </div>
                   </div>
                 </div>
@@ -168,22 +168,23 @@ export default function OpenShiftsPage() {
               <div className="space-y-2">
                 <div className="text-sm font-medium">Requirements:</div>
                 <div className="flex flex-wrap gap-1">
-                  {Array.isArray(shift.specialRequirements) && shift.specialRequirements.map((req, index) => (
-                    <Badge key={index} variant="secondary" className="text-xs">
-                      {req}
-                    </Badge>
-                  ))}
+                  {Array.isArray(shift.specialRequirements) &&
+                    shift.specialRequirements.map((req, index) => (
+                      <Badge key={index} variant="secondary" className="text-xs">
+                        {req}
+                      </Badge>
+                    ))}
                 </div>
               </div>
 
               <div className="flex gap-2 pt-2">
-                <Button 
-                  className="flex-1" 
+                <Button
+                  className="flex-1"
                   size="sm"
                   onClick={() => handleShiftRequest(shift.id)}
                   disabled={isLoading}
                 >
-                  {isLoading ? 'Requesting...' : 'Apply Now'}
+                  {isLoading ? "Requesting..." : "Apply Now"}
                 </Button>
                 <Button variant="outline" size="sm">
                   Details

@@ -253,9 +253,7 @@ export default function UserProfilePage() {
                 {profile.firstName} {profile.lastName}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">{profile.role}</p>
-              <Badge className={`mt-2 ${getStatusColor(profile.status)}`}>
-                {profile.status}
-              </Badge>
+              <Badge className={`mt-2 ${getStatusColor(profile.status)}`}>{profile.status}</Badge>
             </div>
           </div>
           <div className="flex gap-2">
@@ -495,9 +493,7 @@ export default function UserProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>Professional Information</CardTitle>
-              <CardDescription>
-                Your work-related details and specializations
-              </CardDescription>
+              <CardDescription>Your work-related details and specializations</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -630,9 +626,7 @@ export default function UserProfilePage() {
               ) : (
                 <div className="text-center py-8">
                   <Shield className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400">
-                    No credentials uploaded yet
-                  </p>
+                  <p className="text-gray-600 dark:text-gray-400">No credentials uploaded yet</p>
                 </div>
               )}
             </CardContent>
@@ -644,9 +638,7 @@ export default function UserProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>Facility Assignments</CardTitle>
-              <CardDescription>
-                Your current facility and role assignments
-              </CardDescription>
+              <CardDescription>Your current facility and role assignments</CardDescription>
             </CardHeader>
             <CardContent>
               {profile.facilities && profile.facilities.length > 0 ? (
@@ -676,9 +668,7 @@ export default function UserProfilePage() {
               ) : (
                 <div className="text-center py-8">
                   <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-600 dark:text-gray-400">
-                    No facility assignments
-                  </p>
+                  <p className="text-gray-600 dark:text-gray-400">No facility assignments</p>
                 </div>
               )}
             </CardContent>

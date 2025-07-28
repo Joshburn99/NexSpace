@@ -192,11 +192,11 @@ export default function CompliancePage() {
 
   const generateReport = async (type: string) => {
     setGeneratingReport(type);
-    
+
     try {
       // Simulate API call to generate report
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+
       toast({
         title: `${type} report generated`,
         description: "Report has been generated and will be emailed to you shortly.",
@@ -214,321 +214,314 @@ export default function CompliancePage() {
 
   return (
     <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Compliance Tracking
-              </h1>
-              <p className="text-gray-600 dark:text-gray-300">
-                Monitor credentials, certifications, and compliance issues
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => generateReport("Weekly")}
-                disabled={generatingReport !== null}
-              >
-                {generatingReport === "Weekly" ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <FileText className="w-4 h-4 mr-2" />
-                    Weekly Report
-                  </>
-                )}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => generateReport("Monthly")}
-                disabled={generatingReport !== null}
-              >
-                {generatingReport === "Monthly" ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Calendar className="w-4 h-4 mr-2" />
-                    Monthly Report
-                  </>
-                )}
-              </Button>
-              <Button 
-                onClick={() => generateReport("Custom")}
-                disabled={generatingReport !== null}
-              >
-                {generatingReport === "Custom" ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Exporting...
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4 mr-2" />
-                    Export Data
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-
-          {/* Compliance Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                      Active Credentials
-                    </p>
-                    <p className="text-2xl font-bold text-green-600">{activeCredentials}</p>
-                    <p className="text-xs text-gray-500">Up to date</p>
-                  </div>
-                  <CheckCircle className="w-8 h-8 text-green-600" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                      Expiring Soon
-                    </p>
-                    <p className="text-2xl font-bold text-yellow-600">{expiringSoon}</p>
-                    <p className="text-xs text-gray-500">Next 90 days</p>
-                  </div>
-                  <Clock className="w-8 h-8 text-yellow-600" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Expired</p>
-                    <p className="text-2xl font-bold text-red-600">{expired}</p>
-                    <p className="text-xs text-gray-500">Needs renewal</p>
-                  </div>
-                  <AlertTriangle className="w-8 h-8 text-red-600" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
-                      Compliance Issues
-                    </p>
-                    <p className="text-2xl font-bold text-orange-600">{totalIssues}</p>
-                    <p className="text-xs text-gray-500">Active issues</p>
-                  </div>
-                  <Shield className="w-8 h-8 text-orange-600" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Compliance Issues Alert */}
-          {complianceIssues.length > 0 && (
-            <Card className="mb-6 border-red-200 bg-red-50 dark:bg-red-900/20">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-800 dark:text-red-200">
-                  <AlertTriangle className="w-5 h-5" />
-                  Active Compliance Issues
-                </CardTitle>
-                <CardDescription className="text-red-700 dark:text-red-300">
-                  Issues requiring immediate attention
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {complianceIssues.map((issue) => (
-                    <div
-                      key={issue.id}
-                      className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg"
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <Badge className={getSeverityColor(issue.severity)}>
-                            {issue.severity.toUpperCase()}
-                          </Badge>
-                          <h4 className="font-medium">{issue.type}</h4>
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                          {issue.description}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {issue.affectedCount} staff affected • Due:{" "}
-                          {new Date(issue.dueDate).toLocaleDateString()}
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Resolve
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Filters */}
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="flex flex-wrap gap-4">
-                <div className="flex-1 min-w-64">
-                  <Input
-                    placeholder="Search by employee name or credential type..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <Select value={timeframe} onValueChange={setTimeframe}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Time Period" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="next_30_days">Next 30 Days</SelectItem>
-                    <SelectItem value="next_90_days">Next 90 Days</SelectItem>
-                    <SelectItem value="next_6_months">Next 6 Months</SelectItem>
-                    <SelectItem value="all_active">All Active</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select value={credentialType} onValueChange={setCredentialType}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Credential Type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    {credentialTypes.map((type) => (
-                      <SelectItem key={type} value={type}>
-                        {type}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="expiring_soon">Expiring Soon</SelectItem>
-                    <SelectItem value="expired">Expired</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Credential Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Credential Details</CardTitle>
-              <CardDescription>
-                Detailed credential tracking for all staff ({filteredData.length} records)
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {filteredData.map((record) => (
-                  <div
-                    key={record.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-center space-x-4">
-                      <Avatar className="w-12 h-12">
-                        <AvatarFallback>
-                          {record.employeeName
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      <div>
-                        <h4 className="font-medium">{record.employeeName}</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                          {record.position}
-                        </p>
-                        <p className="text-sm text-gray-500">{record.department}</p>
-                      </div>
-                    </div>
-
-                    <div className="text-center">
-                      <h4 className="font-medium">{record.credentialType}</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        {record.issuingAuthority}
-                      </p>
-                      <p className="text-sm text-gray-500">{record.licenseNumber}</p>
-                    </div>
-
-                    <div className="text-center">
-                      <p className="text-sm">
-                        <span className="font-medium">Issued:</span>{" "}
-                        {new Date(record.issueDate).toLocaleDateString()}
-                      </p>
-                      <p className="text-sm">
-                        <span className="font-medium">Expires:</span>{" "}
-                        {new Date(record.expiryDate).toLocaleDateString()}
-                      </p>
-                      {record.daysUntilExpiry >= 0 ? (
-                        <p
-                          className={`text-sm ${record.daysUntilExpiry <= 90 ? "text-yellow-600" : "text-green-600"}`}
-                        >
-                          {record.daysUntilExpiry} days remaining
-                        </p>
-                      ) : (
-                        <p className="text-sm text-red-600">
-                          Expired {Math.abs(record.daysUntilExpiry)} days ago
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="text-center">
-                      <Badge className={getStatusColor(record.status)}>
-                        <div className="flex items-center gap-1">
-                          {getStatusIcon(record.status)}
-                          {record.status === "expiring_soon"
-                            ? "Expiring Soon"
-                            : record.status === "expired"
-                              ? "Expired"
-                              : record.status.charAt(0).toUpperCase() + record.status.slice(1)}
-                        </div>
-                      </Badge>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        View Details
-                      </Button>
-                      {(record.status === "expired" || record.status === "expiring_soon") && (
-                        <Button size="sm">Renew</Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {filteredData.length === 0 && (
-                <div className="text-center py-8">
-                  <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    No credentials found
-                  </h3>
-                  <p className="text-gray-500">Try adjusting your search criteria or filters</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Compliance Tracking</h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            Monitor credentials, certifications, and compliance issues
+          </p>
         </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => generateReport("Weekly")}
+            disabled={generatingReport !== null}
+          >
+            {generatingReport === "Weekly" ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <FileText className="w-4 h-4 mr-2" />
+                Weekly Report
+              </>
+            )}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => generateReport("Monthly")}
+            disabled={generatingReport !== null}
+          >
+            {generatingReport === "Monthly" ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Generating...
+              </>
+            ) : (
+              <>
+                <Calendar className="w-4 h-4 mr-2" />
+                Monthly Report
+              </>
+            )}
+          </Button>
+          <Button onClick={() => generateReport("Custom")} disabled={generatingReport !== null}>
+            {generatingReport === "Custom" ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Exporting...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4 mr-2" />
+                Export Data
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Compliance Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Active Credentials
+                </p>
+                <p className="text-2xl font-bold text-green-600">{activeCredentials}</p>
+                <p className="text-xs text-gray-500">Up to date</p>
+              </div>
+              <CheckCircle className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Expiring Soon
+                </p>
+                <p className="text-2xl font-bold text-yellow-600">{expiringSoon}</p>
+                <p className="text-xs text-gray-500">Next 90 days</p>
+              </div>
+              <Clock className="w-8 h-8 text-yellow-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Expired</p>
+                <p className="text-2xl font-bold text-red-600">{expired}</p>
+                <p className="text-xs text-gray-500">Needs renewal</p>
+              </div>
+              <AlertTriangle className="w-8 h-8 text-red-600" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                  Compliance Issues
+                </p>
+                <p className="text-2xl font-bold text-orange-600">{totalIssues}</p>
+                <p className="text-xs text-gray-500">Active issues</p>
+              </div>
+              <Shield className="w-8 h-8 text-orange-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Compliance Issues Alert */}
+      {complianceIssues.length > 0 && (
+        <Card className="mb-6 border-red-200 bg-red-50 dark:bg-red-900/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-800 dark:text-red-200">
+              <AlertTriangle className="w-5 h-5" />
+              Active Compliance Issues
+            </CardTitle>
+            <CardDescription className="text-red-700 dark:text-red-300">
+              Issues requiring immediate attention
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {complianceIssues.map((issue) => (
+                <div
+                  key={issue.id}
+                  className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-lg"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3">
+                      <Badge className={getSeverityColor(issue.severity)}>
+                        {issue.severity.toUpperCase()}
+                      </Badge>
+                      <h4 className="font-medium">{issue.type}</h4>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                      {issue.description}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {issue.affectedCount} staff affected • Due:{" "}
+                      {new Date(issue.dueDate).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm">
+                    Resolve
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Filters */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-64">
+              <Input
+                placeholder="Search by employee name or credential type..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Select value={timeframe} onValueChange={setTimeframe}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Time Period" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="next_30_days">Next 30 Days</SelectItem>
+                <SelectItem value="next_90_days">Next 90 Days</SelectItem>
+                <SelectItem value="next_6_months">Next 6 Months</SelectItem>
+                <SelectItem value="all_active">All Active</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={credentialType} onValueChange={setCredentialType}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Credential Type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                {credentialTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="expiring_soon">Expiring Soon</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Credential Details */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Credential Details</CardTitle>
+          <CardDescription>
+            Detailed credential tracking for all staff ({filteredData.length} records)
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {filteredData.map((record) => (
+              <div
+                key={record.id}
+                className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center space-x-4">
+                  <Avatar className="w-12 h-12">
+                    <AvatarFallback>
+                      {record.employeeName
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  <div>
+                    <h4 className="font-medium">{record.employeeName}</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-300">{record.position}</p>
+                    <p className="text-sm text-gray-500">{record.department}</p>
+                  </div>
+                </div>
+
+                <div className="text-center">
+                  <h4 className="font-medium">{record.credentialType}</h4>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
+                    {record.issuingAuthority}
+                  </p>
+                  <p className="text-sm text-gray-500">{record.licenseNumber}</p>
+                </div>
+
+                <div className="text-center">
+                  <p className="text-sm">
+                    <span className="font-medium">Issued:</span>{" "}
+                    {new Date(record.issueDate).toLocaleDateString()}
+                  </p>
+                  <p className="text-sm">
+                    <span className="font-medium">Expires:</span>{" "}
+                    {new Date(record.expiryDate).toLocaleDateString()}
+                  </p>
+                  {record.daysUntilExpiry >= 0 ? (
+                    <p
+                      className={`text-sm ${record.daysUntilExpiry <= 90 ? "text-yellow-600" : "text-green-600"}`}
+                    >
+                      {record.daysUntilExpiry} days remaining
+                    </p>
+                  ) : (
+                    <p className="text-sm text-red-600">
+                      Expired {Math.abs(record.daysUntilExpiry)} days ago
+                    </p>
+                  )}
+                </div>
+
+                <div className="text-center">
+                  <Badge className={getStatusColor(record.status)}>
+                    <div className="flex items-center gap-1">
+                      {getStatusIcon(record.status)}
+                      {record.status === "expiring_soon"
+                        ? "Expiring Soon"
+                        : record.status === "expired"
+                          ? "Expired"
+                          : record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                    </div>
+                  </Badge>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm">
+                    View Details
+                  </Button>
+                  {(record.status === "expired" || record.status === "expiring_soon") && (
+                    <Button size="sm">Renew</Button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {filteredData.length === 0 && (
+            <div className="text-center py-8">
+              <Shield className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                No credentials found
+              </h3>
+              <p className="text-gray-500">Try adjusting your search criteria or filters</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

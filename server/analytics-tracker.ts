@@ -21,11 +21,11 @@ class AnalyticsTracker {
   getContextFromRequest(req: Request): TrackingContext {
     const user = req.user as any;
     const session = req.session as any;
-    
+
     return {
       userId: user?.id || user?.userId,
       facilityId: user?.facilityId || user?.associatedFacilities?.[0],
-      userAgent: req.get('user-agent'),
+      userAgent: req.get("user-agent"),
       ipAddress: req.ip || req.connection.remoteAddress,
       sessionId: session?.id || req.sessionID,
     };
@@ -67,13 +67,17 @@ class AnalyticsTracker {
   /**
    * Track authentication events
    */
-  async trackAuth(action: 'login' | 'logout' | 'signup' | 'failed_login', context: TrackingContext, metadata?: EventMetadata): Promise<void> {
-    await this.track(`user_${action}`, 'auth', context, {
+  async trackAuth(
+    action: "login" | "logout" | "signup" | "failed_login",
+    context: TrackingContext,
+    metadata?: EventMetadata
+  ): Promise<void> {
+    await this.track(`user_${action}`, "auth", context, {
       action,
       metadata: {
         ...metadata,
         timestamp: new Date().toISOString(),
-      }
+      },
     });
   }
 
@@ -81,16 +85,16 @@ class AnalyticsTracker {
    * Track shift-related events
    */
   async trackShift(
-    action: 'create' | 'update' | 'delete' | 'request' | 'approve' | 'deny' | 'withdraw' | 'assign',
+    action: "create" | "update" | "delete" | "request" | "approve" | "deny" | "withdraw" | "assign",
     shiftId: string,
     context: TrackingContext,
     metadata?: EventMetadata
   ): Promise<void> {
-    await this.track(`shift_${action}`, 'shifts', context, {
-      entityType: 'shift',
+    await this.track(`shift_${action}`, "shifts", context, {
+      entityType: "shift",
       entityId: shiftId,
       action,
-      metadata
+      metadata,
     });
   }
 
@@ -98,16 +102,16 @@ class AnalyticsTracker {
    * Track staff-related events
    */
   async trackStaff(
-    action: 'create' | 'update' | 'delete' | 'view' | 'export',
+    action: "create" | "update" | "delete" | "view" | "export",
     staffId: string | number,
     context: TrackingContext,
     metadata?: EventMetadata
   ): Promise<void> {
-    await this.track(`staff_${action}`, 'staff', context, {
-      entityType: 'staff',
+    await this.track(`staff_${action}`, "staff", context, {
+      entityType: "staff",
       entityId: staffId.toString(),
       action,
-      metadata
+      metadata,
     });
   }
 
@@ -115,16 +119,16 @@ class AnalyticsTracker {
    * Track messaging events
    */
   async trackMessage(
-    action: 'send' | 'receive' | 'read',
+    action: "send" | "receive" | "read",
     messageId: string | number,
     context: TrackingContext,
     metadata?: EventMetadata
   ): Promise<void> {
-    await this.track(`message_${action}`, 'messaging', context, {
-      entityType: 'message',
+    await this.track(`message_${action}`, "messaging", context, {
+      entityType: "message",
       entityId: messageId.toString(),
       action,
-      metadata
+      metadata,
     });
   }
 
@@ -132,16 +136,16 @@ class AnalyticsTracker {
    * Track template-related events
    */
   async trackTemplate(
-    action: 'create' | 'update' | 'delete' | 'activate' | 'deactivate' | 'use',
+    action: "create" | "update" | "delete" | "activate" | "deactivate" | "use",
     templateId: string | number,
     context: TrackingContext,
     metadata?: EventMetadata
   ): Promise<void> {
-    await this.track(`template_${action}`, 'templates', context, {
-      entityType: 'template',
+    await this.track(`template_${action}`, "templates", context, {
+      entityType: "template",
       entityId: templateId.toString(),
       action,
-      metadata
+      metadata,
     });
   }
 
@@ -149,16 +153,16 @@ class AnalyticsTracker {
    * Track facility management events
    */
   async trackFacility(
-    action: 'create' | 'update' | 'delete' | 'view' | 'activate' | 'deactivate',
+    action: "create" | "update" | "delete" | "view" | "activate" | "deactivate",
     facilityId: string | number,
     context: TrackingContext,
     metadata?: EventMetadata
   ): Promise<void> {
-    await this.track(`facility_${action}`, 'facilities', context, {
-      entityType: 'facility',
+    await this.track(`facility_${action}`, "facilities", context, {
+      entityType: "facility",
       entityId: facilityId.toString(),
       action,
-      metadata
+      metadata,
     });
   }
 
@@ -166,16 +170,16 @@ class AnalyticsTracker {
    * Track time-off events
    */
   async trackTimeOff(
-    action: 'request' | 'approve' | 'deny' | 'cancel',
+    action: "request" | "approve" | "deny" | "cancel",
     requestId: string | number,
     context: TrackingContext,
     metadata?: EventMetadata
   ): Promise<void> {
-    await this.track(`timeoff_${action}`, 'timeoff', context, {
-      entityType: 'timeoff_request',
+    await this.track(`timeoff_${action}`, "timeoff", context, {
+      entityType: "timeoff_request",
       entityId: requestId.toString(),
       action,
-      metadata
+      metadata,
     });
   }
 
@@ -188,14 +192,14 @@ class AnalyticsTracker {
     context: TrackingContext,
     metadata?: EventMetadata
   ): Promise<void> {
-    await this.track(`performance_${operation}`, 'performance', context, {
-      action: 'measure',
+    await this.track(`performance_${operation}`, "performance", context, {
+      action: "measure",
       duration,
       metadata: {
         ...metadata,
         operation,
         duration_ms: duration,
-      }
+      },
     });
   }
 }

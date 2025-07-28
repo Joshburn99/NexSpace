@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useTimeClocks } from '@/contexts/TimeClockContext';
-import { useAuth } from '@/hooks/use-auth';
+import React, { useState, useEffect } from "react";
+import { useTimeClocks } from "@/contexts/TimeClockContext";
+import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,12 +34,12 @@ export default function TimeClockPage() {
   const [showClockOutDialog, setShowClockOutDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [clockOutData, setClockOutData] = useState({
-    clockInTime: '',
-    clockOutTime: '',
+    clockInTime: "",
+    clockOutTime: "",
     breakDuration: 0,
-    notes: '',
-    supervisorSignature: '',
-    supervisorName: ''
+    notes: "",
+    supervisorSignature: "",
+    supervisorName: "",
   });
 
   useEffect(() => {
@@ -55,23 +55,23 @@ export default function TimeClockPage() {
 
   const handleClockOut = () => {
     if (!currentIn) return;
-    
+
     // Stop the elapsed time counter immediately
     setIsClockingOut(true);
-    
+
     // Initialize clock out dialog with current times
     const now = new Date();
     const clockInDate = new Date(currentIn);
-    
+
     setClockOutData({
       clockInTime: clockInDate.toISOString().slice(0, 16), // Format for datetime-local input
       clockOutTime: now.toISOString().slice(0, 16),
       breakDuration: 0,
-      notes: '',
-      supervisorSignature: '',
-      supervisorName: ''
+      notes: "",
+      supervisorSignature: "",
+      supervisorName: "",
     });
-    
+
     setShowClockOutDialog(true);
   };
 
@@ -84,7 +84,7 @@ export default function TimeClockPage() {
       });
       return;
     }
-    
+
     const validation = validateTimeAdjustments();
     if (!validation.valid) {
       toast({
@@ -94,9 +94,9 @@ export default function TimeClockPage() {
       });
       return;
     }
-    
+
     setIsSubmitting(true);
-    
+
     try {
       // Submit the work log with all the enhanced data
       await clockOut({
@@ -105,14 +105,14 @@ export default function TimeClockPage() {
         breakDuration: clockOutData.breakDuration,
         notes: clockOutData.notes,
         supervisorName: clockOutData.supervisorName,
-        supervisorSignature: clockOutData.supervisorSignature
+        supervisorSignature: clockOutData.supervisorSignature,
       });
-      
+
       toast({
         title: "Clock Out Successful",
         description: "Your time has been recorded successfully.",
       });
-      
+
       setShowClockOutDialog(false);
       setIsClockingOut(false);
     } catch (error) {
@@ -138,40 +138,40 @@ export default function TimeClockPage() {
 
   const calculateAdjustedEarnings = () => {
     if (!clockOutData.clockInTime || !clockOutData.clockOutTime) return 0;
-    
+
     const start = new Date(clockOutData.clockInTime).getTime();
     const end = new Date(clockOutData.clockOutTime).getTime();
     const totalHours = (end - start) / (1000 * 60 * 60);
-    const workHours = totalHours - (clockOutData.breakDuration / 60);
-    
+    const workHours = totalHours - clockOutData.breakDuration / 60;
+
     return workHours * currentRate;
   };
 
   const validateTimeAdjustments = () => {
-    if (!clockOutData.clockInTime || !clockOutData.clockOutTime) return { valid: false, message: "Please set both clock in and clock out times" };
-    
+    if (!clockOutData.clockInTime || !clockOutData.clockOutTime)
+      return { valid: false, message: "Please set both clock in and clock out times" };
+
     const adjustedStart = new Date(clockOutData.clockInTime).getTime();
     const adjustedEnd = new Date(clockOutData.clockOutTime).getTime();
     const totalHours = (adjustedEnd - adjustedStart) / (1000 * 60 * 60);
-    
+
     if (totalHours < 0) {
       return { valid: false, message: "Clock out time must be after clock in time" };
     }
-    
+
     // Check if the total work session (adjusted times) is within reasonable limits
     if (totalHours > 12) {
       return { valid: false, message: "Work sessions cannot exceed 12 hours" };
     }
-    
+
     return { valid: true, message: "" };
   };
 
   // Make validation reactive to state changes
-  const timeValidation = React.useMemo(() => validateTimeAdjustments(), [
-    clockOutData.clockInTime,
-    clockOutData.clockOutTime,
-    currentIn
-  ]);
+  const timeValidation = React.useMemo(
+    () => validateTimeAdjustments(),
+    [clockOutData.clockInTime, clockOutData.clockOutTime, currentIn]
+  );
 
   const currentRate = (currentUser as any)?.rate ?? 25;
   const currentEarnings = (elapsed / 3600000) * currentRate;
@@ -190,17 +190,19 @@ export default function TimeClockPage() {
         <CardHeader className="p-4 md:p-6">
           <CardTitle className="flex items-center gap-2 text-base md:text-lg">
             <Clock className="w-5 h-5 md:w-6 md:h-6" />
-            {currentIn ? 'Currently Working' : 'Ready to Clock In'}
+            {currentIn ? "Currently Working" : "Ready to Clock In"}
           </CardTitle>
           <CardDescription className="text-sm">
-            {currentIn ? `Started at ${new Date(currentIn).toLocaleTimeString()}` : 'Click to start your shift'}
+            {currentIn
+              ? `Started at ${new Date(currentIn).toLocaleTimeString()}`
+              : "Click to start your shift"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 p-4 md:p-6">
           {!currentIn ? (
-            <Button 
-              onClick={clockIn} 
-              size="lg" 
+            <Button
+              onClick={clockIn}
+              size="lg"
               className="w-full bg-green-600 hover:bg-green-700 min-h-[48px] touch-manipulation"
             >
               <Clock className="w-5 h-5 mr-2" />
@@ -215,9 +217,7 @@ export default function TimeClockPage() {
                       <Clock className="w-4 h-4 text-blue-600" />
                       <span className="font-medium text-sm">Time Elapsed</span>
                     </div>
-                    <p className="text-2xl font-bold text-blue-600">
-                      {formatDuration(elapsed)}
-                    </p>
+                    <p className="text-2xl font-bold text-blue-600">{formatDuration(elapsed)}</p>
                   </CardContent>
                 </Card>
 
@@ -234,12 +234,7 @@ export default function TimeClockPage() {
                 </Card>
               </div>
 
-              <Button 
-                onClick={handleClockOut} 
-                size="lg" 
-                variant="destructive" 
-                className="w-full"
-              >
+              <Button onClick={handleClockOut} size="lg" variant="destructive" className="w-full">
                 Clock Out
               </Button>
             </div>
@@ -252,62 +247,64 @@ export default function TimeClockPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            Recent {(currentUser as any)?.role === 'contractor' ? 'Invoices' : 'Work Logs'}
+            Recent {(currentUser as any)?.role === "contractor" ? "Invoices" : "Work Logs"}
           </CardTitle>
-          <CardDescription>
-            Your recent work history and earnings
-          </CardDescription>
+          <CardDescription>Your recent work history and earnings</CardDescription>
         </CardHeader>
         <CardContent>
-          {logs.filter(l => l.userId === currentUser?.id.toString()).length === 0 ? (
+          {logs.filter((l) => l.userId === currentUser?.id.toString()).length === 0 ? (
             <div className="text-center py-8 text-gray-500 dark:text-gray-400">
               <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p>No work logs yet. Clock in to start tracking your time!</p>
             </div>
           ) : (
-            <div 
+            <div
               className="h-96 overflow-y-auto overflow-x-hidden space-y-4 pr-2 border border-gray-200 dark:border-gray-700 rounded-lg p-4"
-              style={{ scrollBehavior: 'smooth' }}
+              style={{ scrollBehavior: "smooth" }}
             >
               {logs
-                .filter(l => l.userId === currentUser?.id.toString())
-                .map(log => (
+                .filter((l) => l.userId === currentUser?.id.toString())
+                .map((log) => (
                   <Card key={log.id} className="border-l-4 border-l-blue-500">
                     <CardContent className="p-4">
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">Clock In</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            Clock In
+                          </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             {new Date(log.clockIn).toLocaleString()}
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">Clock Out</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            Clock Out
+                          </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             {new Date(log.clockOut).toLocaleString()}
                           </p>
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">Duration</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            Duration
+                          </p>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
                             {formatDuration(
                               new Date(log.clockOut).getTime() - new Date(log.clockIn).getTime()
                             )}
                           </p>
                           {log.breakDuration > 0 && (
-                            <p className="text-xs text-gray-500">
-                              Break: {log.breakDuration} min
-                            </p>
+                            <p className="text-xs text-gray-500">Break: {log.breakDuration} min</p>
                           )}
                         </div>
                         <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">Earnings</p>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">
+                            Earnings
+                          </p>
                           <p className="text-lg font-bold text-green-600">
                             ${log.earnings.toFixed(2)}
                           </p>
-                          <p className="text-xs text-gray-500">
-                            Rate: ${log.rate}/hr
-                          </p>
+                          <p className="text-xs text-gray-500">Rate: ${log.rate}/hr</p>
                           {log.adjustedTimes && (
                             <Badge variant="outline" className="mt-1 text-xs">
                               Time Adjusted
@@ -315,17 +312,21 @@ export default function TimeClockPage() {
                           )}
                         </div>
                       </div>
-                      
+
                       {/* Additional Information */}
                       {(log.notes || log.supervisorName) && (
                         <div className="mt-4 pt-4 border-t space-y-2">
                           {log.notes && (
                             <div>
-                              <p className="text-xs font-medium text-gray-700 dark:text-gray-300">Notes:</p>
-                              <p className="text-xs text-gray-600 dark:text-gray-400">{log.notes}</p>
+                              <p className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                                Notes:
+                              </p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">
+                                {log.notes}
+                              </p>
                             </div>
                           )}
-                          
+
                           {log.supervisorName && log.supervisorSignature && (
                             <div className="flex items-center gap-2">
                               <FileSignature className="w-3 h-3 text-blue-600" />
@@ -356,34 +357,42 @@ export default function TimeClockPage() {
               Review your work session details before submitting.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4">
             {/* Time Adjustments */}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label htmlFor="clockInTime" className="text-sm">Clock In Time</Label>
+                <Label htmlFor="clockInTime" className="text-sm">
+                  Clock In Time
+                </Label>
                 <Input
                   id="clockInTime"
                   type="datetime-local"
                   value={clockOutData.clockInTime}
-                  onChange={(e) => setClockOutData(prev => ({
-                    ...prev,
-                    clockInTime: e.target.value
-                  }))}
+                  onChange={(e) =>
+                    setClockOutData((prev) => ({
+                      ...prev,
+                      clockInTime: e.target.value,
+                    }))
+                  }
                   className="text-sm"
                 />
               </div>
-              
+
               <div className="space-y-1">
-                <Label htmlFor="clockOutTime" className="text-sm">Clock Out Time</Label>
+                <Label htmlFor="clockOutTime" className="text-sm">
+                  Clock Out Time
+                </Label>
                 <Input
                   id="clockOutTime"
                   type="datetime-local"
                   value={clockOutData.clockOutTime}
-                  onChange={(e) => setClockOutData(prev => ({
-                    ...prev,
-                    clockOutTime: e.target.value
-                  }))}
+                  onChange={(e) =>
+                    setClockOutData((prev) => ({
+                      ...prev,
+                      clockOutTime: e.target.value,
+                    }))
+                  }
                   className="text-sm"
                 />
               </div>
@@ -391,17 +400,21 @@ export default function TimeClockPage() {
 
             {/* Break Duration */}
             <div className="space-y-1">
-              <Label htmlFor="breakDuration" className="text-sm">Break Duration (minutes)</Label>
+              <Label htmlFor="breakDuration" className="text-sm">
+                Break Duration (minutes)
+              </Label>
               <Input
                 id="breakDuration"
                 type="number"
                 min="0"
                 max="480"
                 value={clockOutData.breakDuration}
-                onChange={(e) => setClockOutData(prev => ({
-                  ...prev,
-                  breakDuration: parseInt(e.target.value) || 0
-                }))}
+                onChange={(e) =>
+                  setClockOutData((prev) => ({
+                    ...prev,
+                    breakDuration: parseInt(e.target.value) || 0,
+                  }))
+                }
                 placeholder="Enter break time"
                 className="text-sm"
               />
@@ -417,17 +430,31 @@ export default function TimeClockPage() {
             )}
 
             {/* Earnings Preview */}
-            <Card className={timeValidation.valid ? "bg-green-50 dark:bg-green-950" : "bg-gray-50 dark:bg-gray-950"}>
+            <Card
+              className={
+                timeValidation.valid
+                  ? "bg-green-50 dark:bg-green-950"
+                  : "bg-gray-50 dark:bg-gray-950"
+              }
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Adjusted Earnings:</span>
-                  <span className={`text-lg font-bold ${timeValidation.valid ? 'text-green-600' : 'text-gray-500'}`}>
-                    ${timeValidation.valid ? calculateAdjustedEarnings().toFixed(2) : '0.00'}
+                  <span
+                    className={`text-lg font-bold ${timeValidation.valid ? "text-green-600" : "text-gray-500"}`}
+                  >
+                    ${timeValidation.valid ? calculateAdjustedEarnings().toFixed(2) : "0.00"}
                   </span>
                 </div>
                 {timeValidation.valid && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Total hours: {((new Date(clockOutData.clockOutTime).getTime() - new Date(clockOutData.clockInTime).getTime()) / (1000 * 60 * 60) - (clockOutData.breakDuration / 60)).toFixed(2)}
+                    Total hours:{" "}
+                    {(
+                      (new Date(clockOutData.clockOutTime).getTime() -
+                        new Date(clockOutData.clockInTime).getTime()) /
+                        (1000 * 60 * 60) -
+                      clockOutData.breakDuration / 60
+                    ).toFixed(2)}
                   </p>
                 )}
               </CardContent>
@@ -435,14 +462,18 @@ export default function TimeClockPage() {
 
             {/* Notes Section */}
             <div className="space-y-1">
-              <Label htmlFor="notes" className="text-sm">Notes (Optional)</Label>
+              <Label htmlFor="notes" className="text-sm">
+                Notes (Optional)
+              </Label>
               <Textarea
                 id="notes"
                 value={clockOutData.notes}
-                onChange={(e) => setClockOutData(prev => ({
-                  ...prev,
-                  notes: e.target.value
-                }))}
+                onChange={(e) =>
+                  setClockOutData((prev) => ({
+                    ...prev,
+                    notes: e.target.value,
+                  }))
+                }
                 placeholder="Add any notes about your shift..."
                 rows={2}
                 className="text-sm"
@@ -452,29 +483,33 @@ export default function TimeClockPage() {
             {/* Supervisor Signature Section */}
             <div className="space-y-2">
               <Label className="text-sm font-medium">Supervisor Approval (Optional)</Label>
-              
+
               <div className="grid grid-cols-2 gap-3">
                 <Input
                   value={clockOutData.supervisorName}
-                  onChange={(e) => setClockOutData(prev => ({
-                    ...prev,
-                    supervisorName: e.target.value
-                  }))}
+                  onChange={(e) =>
+                    setClockOutData((prev) => ({
+                      ...prev,
+                      supervisorName: e.target.value,
+                    }))
+                  }
                   placeholder="Supervisor name"
                   className="text-sm"
                 />
-                
+
                 <Input
                   value={clockOutData.supervisorSignature}
-                  onChange={(e) => setClockOutData(prev => ({
-                    ...prev,
-                    supervisorSignature: e.target.value
-                  }))}
+                  onChange={(e) =>
+                    setClockOutData((prev) => ({
+                      ...prev,
+                      supervisorSignature: e.target.value,
+                    }))
+                  }
                   placeholder="Digital signature"
                   className="text-sm"
                 />
               </div>
-              
+
               {clockOutData.supervisorName && clockOutData.supervisorSignature && (
                 <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded text-xs text-blue-700 dark:text-blue-300">
                   ✓ Approved by: {clockOutData.supervisorName}
@@ -484,7 +519,7 @@ export default function TimeClockPage() {
 
             {/* Action Buttons */}
             <div className="flex gap-2 pt-2">
-              <Button 
+              <Button
                 onClick={handleSubmitClockOut}
                 className="flex-1 bg-green-600 hover:bg-green-700 text-sm"
                 disabled={!timeValidation.valid || isSubmitting}
@@ -498,8 +533,8 @@ export default function TimeClockPage() {
                   "Submit Timesheet"
                 )}
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={handleCancelClockOut}
                 className="flex-1 text-sm"
                 disabled={isSubmitting}

@@ -1,32 +1,32 @@
-import React, { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
-import ShiftCalendarCell from './ShiftCalendarCell';
-import ShiftDetailModal from './ShiftDetailModal';
-import { useShiftsWithAssignments } from '../hooks/useShiftsWithAssignments';
-import { addDays, formatDate } from '../utils';
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useMemo } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Loader2 } from "lucide-react";
+import ShiftCalendarCell from "./ShiftCalendarCell";
+import ShiftDetailModal from "./ShiftDetailModal";
+import { useShiftsWithAssignments } from "../hooks/useShiftsWithAssignments";
+import { addDays, formatDate } from "../utils";
+import { useQuery } from "@tanstack/react-query";
 
 const ShiftCalendar: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedShift, setSelectedShift] = useState<string | null>(null);
-  
+
   const {
     getShiftWithStaffing,
     getShiftsForDate,
     assignWorker,
     unassignWorker,
     getDashboardStats,
-    isLoading
+    isLoading,
   } = useShiftsWithAssignments();
 
   // Fetch facilities data
   const { data: facilities = [] } = useQuery({
-    queryKey: ['/api/facilities'],
+    queryKey: ["/api/facilities"],
     queryFn: async () => {
-      const response = await fetch('/api/facilities', { credentials: 'include' });
-      if (!response.ok) throw new Error('Failed to fetch facilities');
+      const response = await fetch("/api/facilities", { credentials: "include" });
+      if (!response.ok) throw new Error("Failed to fetch facilities");
       return response.json();
     },
   });
@@ -37,19 +37,19 @@ const ShiftCalendar: React.FC = () => {
     const day = startOfWeek.getDay();
     const diff = startOfWeek.getDate() - day; // Adjust to Sunday
     startOfWeek.setDate(diff);
-    
+
     return Array.from({ length: 7 }, (_, i) => {
       const date = new Date(startOfWeek);
       date.setDate(startOfWeek.getDate() + i);
-      return date.toISOString().split('T')[0];
+      return date.toISOString().split("T")[0];
     });
   }, [currentDate]);
 
   // Get shifts for each day of the week
   const weeklyShifts = useMemo(() => {
-    return weekDates.map(date => ({
+    return weekDates.map((date) => ({
       date,
-      shifts: getShiftsForDate(date)
+      shifts: getShiftsForDate(date),
     }));
   }, [weekDates, getShiftsForDate]);
 
@@ -65,9 +65,9 @@ const ShiftCalendar: React.FC = () => {
 
   const dashboardStats = getDashboardStats;
 
-  const navigateWeek = (direction: 'prev' | 'next') => {
+  const navigateWeek = (direction: "prev" | "next") => {
     const newDate = new Date(currentDate);
-    newDate.setDate(currentDate.getDate() + (direction === 'next' ? 7 : -7));
+    newDate.setDate(currentDate.getDate() + (direction === "next" ? 7 : -7));
     setCurrentDate(newDate);
   };
 
@@ -87,7 +87,7 @@ const ShiftCalendar: React.FC = () => {
     try {
       await assignWorker(shiftId, workerId);
     } catch (error) {
-      console.error('Failed to assign worker:', error);
+      console.error("Failed to assign worker:", error);
       // In a real app, you'd show a toast notification here
     }
   };
@@ -96,12 +96,12 @@ const ShiftCalendar: React.FC = () => {
     try {
       await unassignWorker(shiftId, workerId);
     } catch (error) {
-      console.error('Failed to unassign worker:', error);
+      console.error("Failed to unassign worker:", error);
       // In a real app, you'd show a toast notification here
     }
   };
 
-  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
   if (isLoading) {
     return (
@@ -125,17 +125,13 @@ const ShiftCalendar: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-primary">
-              {dashboardStats.activeStaff || 0}
-            </div>
+            <div className="text-2xl font-bold text-primary">{dashboardStats.activeStaff || 0}</div>
           </CardContent>
         </Card>
 
         <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Open Shifts
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Open Shifts</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
@@ -184,23 +180,15 @@ const ShiftCalendar: React.FC = () => {
                 Week of {formatDate(weekDates[0])}
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={goToToday} size="sm">
                 Today
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigateWeek('prev')}
-              >
+              <Button variant="outline" size="sm" onClick={() => navigateWeek("prev")}>
                 <ChevronLeft className="h-4 w-4" />
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigateWeek('next')}
-              >
+              <Button variant="outline" size="sm" onClick={() => navigateWeek("next")}>
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
@@ -214,14 +202,16 @@ const ShiftCalendar: React.FC = () => {
             <div className="hidden lg:contents">
               {dayNames.map((dayName, index) => {
                 const date = weekDates[index];
-                const isToday = date === new Date().toISOString().split('T')[0];
-                
+                const isToday = date === new Date().toISOString().split("T")[0];
+
                 return (
                   <div key={dayName} className="text-center">
-                    <div className={`font-medium ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
+                    <div
+                      className={`font-medium ${isToday ? "text-primary" : "text-muted-foreground"}`}
+                    >
                       {dayName}
                     </div>
-                    <div className={`text-lg font-bold ${isToday ? 'text-primary' : ''}`}>
+                    <div className={`text-lg font-bold ${isToday ? "text-primary" : ""}`}>
                       {new Date(date).getDate()}
                     </div>
                   </div>
@@ -231,26 +221,28 @@ const ShiftCalendar: React.FC = () => {
 
             {/* Calendar Cells with Shifts */}
             {weeklyShifts.map(({ date, shifts }, dayIndex) => {
-              const isToday = date === new Date().toISOString().split('T')[0];
+              const isToday = date === new Date().toISOString().split("T")[0];
               const dayName = dayNames[dayIndex];
-              
+
               return (
                 <div
                   key={date}
                   className={`min-h-[150px] md:min-h-[200px] border rounded-lg p-2 space-y-2 ${
-                    isToday ? 'bg-primary/5 border-primary/20' : 'bg-muted/30'
+                    isToday ? "bg-primary/5 border-primary/20" : "bg-muted/30"
                   }`}
                 >
                   {/* Mobile day header */}
                   <div className="lg:hidden text-center mb-2">
-                    <div className={`font-medium text-sm ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
+                    <div
+                      className={`font-medium text-sm ${isToday ? "text-primary" : "text-muted-foreground"}`}
+                    >
                       {dayName}
                     </div>
-                    <div className={`text-base font-bold ${isToday ? 'text-primary' : ''}`}>
+                    <div className={`text-base font-bold ${isToday ? "text-primary" : ""}`}>
                       {new Date(date).getDate()}
                     </div>
                   </div>
-                  
+
                   {shifts.length === 0 ? (
                     <div className="text-center text-muted-foreground text-sm py-4 md:py-8">
                       No shifts scheduled
@@ -258,7 +250,7 @@ const ShiftCalendar: React.FC = () => {
                   ) : (
                     shifts.map((shiftData, shiftIndex) => {
                       if (!shiftData) return null;
-                      
+
                       return (
                         <ShiftCalendarCell
                           key={`shift-${shiftData.shift.id}-${date}-${shiftIndex}`}

@@ -1,55 +1,56 @@
-import React from 'react';
-import { useNotifications, NotificationType } from '@/contexts/NotificationContext';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Bell, Settings, Check, Mail, Phone, Smartphone } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import React from "react";
+import { useNotifications, NotificationType } from "@/contexts/NotificationContext";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Bell, Settings, Check, Mail, Phone, Smartphone } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 export default function NotificationsPage() {
-  const { notifications, prefs, unreadCount, markRead, markAllRead, updatePref } = useNotifications();
+  const { notifications, prefs, unreadCount, markRead, markAllRead, updatePref } =
+    useNotifications();
 
   const getNotificationIcon = (type: NotificationType) => {
     switch (type) {
-      case 'shift_request':
-        return '📅';
-      case 'assignment_change':
-        return '🔄';
-      case 'message':
-        return '💬';
-      case 'credential_update':
-        return '📋';
-      case 'favorite_shift':
-        return '⭐';
-      case 'social_post':
-        return '📣';
+      case "shift_request":
+        return "📅";
+      case "assignment_change":
+        return "🔄";
+      case "message":
+        return "💬";
+      case "credential_update":
+        return "📋";
+      case "favorite_shift":
+        return "⭐";
+      case "social_post":
+        return "📣";
       default:
-        return '🔔';
+        return "🔔";
     }
   };
 
   const getNotificationColor = (type: NotificationType) => {
     switch (type) {
-      case 'shift_request':
-        return 'bg-blue-100 text-blue-800';
-      case 'assignment_change':
-        return 'bg-orange-100 text-orange-800';
-      case 'message':
-        return 'bg-green-100 text-green-800';
-      case 'credential_update':
-        return 'bg-red-100 text-red-800';
-      case 'favorite_shift':
-        return 'bg-purple-100 text-purple-800';
-      case 'social_post':
-        return 'bg-pink-100 text-pink-800';
+      case "shift_request":
+        return "bg-blue-100 text-blue-800";
+      case "assignment_change":
+        return "bg-orange-100 text-orange-800";
+      case "message":
+        return "bg-green-100 text-green-800";
+      case "credential_update":
+        return "bg-red-100 text-red-800";
+      case "favorite_shift":
+        return "bg-purple-100 text-purple-800";
+      case "social_post":
+        return "bg-pink-100 text-pink-800";
       default:
-        return 'bg-gray-100 text-gray-800';
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const formatNotificationType = (type: NotificationType) => {
-    return type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+    return type.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
   };
 
   return (
@@ -60,11 +61,7 @@ export default function NotificationsPage() {
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
             Notification Center
           </h1>
-          {unreadCount > 0 && (
-            <Badge variant="destructive">
-              {unreadCount} unread
-            </Badge>
-          )}
+          {unreadCount > 0 && <Badge variant="destructive">{unreadCount} unread</Badge>}
         </div>
         {unreadCount > 0 && (
           <Button onClick={markAllRead} variant="outline" size="sm">
@@ -97,7 +94,7 @@ export default function NotificationsPage() {
                     </div>
                     <Switch
                       checked={conf.email}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         updatePref(type as NotificationType, { email: checked })
                       }
                     />
@@ -109,7 +106,7 @@ export default function NotificationsPage() {
                     </div>
                     <Switch
                       checked={conf.sms}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         updatePref(type as NotificationType, { sms: checked })
                       }
                     />
@@ -121,7 +118,7 @@ export default function NotificationsPage() {
                     </div>
                     <Switch
                       checked={conf.push}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         updatePref(type as NotificationType, { push: checked })
                       }
                     />
@@ -150,19 +147,17 @@ export default function NotificationsPage() {
                     key={notification.id}
                     className={`p-4 rounded-lg border transition-colors ${
                       !notification.read
-                        ? 'bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800'
-                        : 'bg-gray-50 border-gray-200 dark:bg-gray-900 dark:border-gray-700'
+                        ? "bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800"
+                        : "bg-gray-50 border-gray-200 dark:bg-gray-900 dark:border-gray-700"
                     }`}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3 flex-1">
-                        <div className="text-xl">
-                          {getNotificationIcon(notification.type)}
-                        </div>
+                        <div className="text-xl">{getNotificationIcon(notification.type)}</div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <Badge 
-                              variant="secondary" 
+                            <Badge
+                              variant="secondary"
                               className={getNotificationColor(notification.type)}
                             >
                               {formatNotificationType(notification.type)}
@@ -175,7 +170,9 @@ export default function NotificationsPage() {
                             {notification.message}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {formatDistanceToNow(new Date(notification.timestamp), { addSuffix: true })}
+                            {formatDistanceToNow(new Date(notification.timestamp), {
+                              addSuffix: true,
+                            })}
                           </p>
                         </div>
                       </div>

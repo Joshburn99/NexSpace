@@ -140,8 +140,20 @@ export interface IStorage {
   updateUser(id: number, updates: Partial<InsertUser>): Promise<User | undefined>;
   getUsersByRole(role: string): Promise<User[]>;
   getUsersByFacility(facilityId: number): Promise<User[]>;
-  updateUserOnboarding(id: number, data: { onboardingStep: number; onboardingCompleted: boolean }): Promise<User | undefined>;
-  updateUserProfile(id: number, data: { firstName?: string; lastName?: string; phone?: string; department?: string; bio?: string }): Promise<User | undefined>;
+  updateUserOnboarding(
+    id: number,
+    data: { onboardingStep: number; onboardingCompleted: boolean }
+  ): Promise<User | undefined>;
+  updateUserProfile(
+    id: number,
+    data: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      department?: string;
+      bio?: string;
+    }
+  ): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
   updateUserRole(id: number, role: string): Promise<User | undefined>;
 
@@ -154,38 +166,58 @@ export interface IStorage {
   getFacilitiesByState(state: string): Promise<Facility[]>;
   getFacilityByCMSId(cmsId: string): Promise<Facility | undefined>;
   getFacilitiesWithinRadius(lat: number, lng: number, radiusMiles: number): Promise<Facility[]>;
-  
+
   // Facility Address methods
   getFacilityAddress(facilityId: number): Promise<FacilityAddress | undefined>;
   createFacilityAddress(address: InsertFacilityAddress): Promise<FacilityAddress>;
-  updateFacilityAddress(facilityId: number, updates: Partial<InsertFacilityAddress>): Promise<FacilityAddress | undefined>;
-  
+  updateFacilityAddress(
+    facilityId: number,
+    updates: Partial<InsertFacilityAddress>
+  ): Promise<FacilityAddress | undefined>;
+
   // Facility Contact methods
   getFacilityContacts(facilityId: number): Promise<FacilityContact[]>;
   createFacilityContact(contact: InsertFacilityContact): Promise<FacilityContact>;
-  updateFacilityContact(id: number, updates: Partial<InsertFacilityContact>): Promise<FacilityContact | undefined>;
+  updateFacilityContact(
+    id: number,
+    updates: Partial<InsertFacilityContact>
+  ): Promise<FacilityContact | undefined>;
   deleteFacilityContact(id: number): Promise<boolean>;
-  
+
   // Facility Settings methods
   getFacilitySettings(facilityId: number): Promise<FacilitySettings | undefined>;
   createFacilitySettings(settings: InsertFacilitySettings): Promise<FacilitySettings>;
-  updateFacilitySettings(facilityId: number, updates: Partial<InsertFacilitySettings>): Promise<FacilitySettings | undefined>;
-  
+  updateFacilitySettings(
+    facilityId: number,
+    updates: Partial<InsertFacilitySettings>
+  ): Promise<FacilitySettings | undefined>;
+
   // Facility Rates methods
   getFacilityRates(facilityId: number): Promise<FacilityRates[]>;
   createFacilityRate(rate: InsertFacilityRates): Promise<FacilityRates>;
-  updateFacilityRate(id: number, updates: Partial<InsertFacilityRates>): Promise<FacilityRates | undefined>;
+  updateFacilityRate(
+    id: number,
+    updates: Partial<InsertFacilityRates>
+  ): Promise<FacilityRates | undefined>;
   getActiveFacilityRates(facilityId: number, specialty?: string): Promise<FacilityRates[]>;
-  
+
   // Facility Staffing Targets methods
   getFacilityStaffingTargets(facilityId: number): Promise<FacilityStaffingTargets[]>;
-  createFacilityStaffingTarget(target: InsertFacilityStaffingTargets): Promise<FacilityStaffingTargets>;
-  updateFacilityStaffingTarget(id: number, updates: Partial<InsertFacilityStaffingTargets>): Promise<FacilityStaffingTargets | undefined>;
-  
+  createFacilityStaffingTarget(
+    target: InsertFacilityStaffingTargets
+  ): Promise<FacilityStaffingTargets>;
+  updateFacilityStaffingTarget(
+    id: number,
+    updates: Partial<InsertFacilityStaffingTargets>
+  ): Promise<FacilityStaffingTargets | undefined>;
+
   // Facility Documents methods
   getFacilityDocuments(facilityId: number): Promise<FacilityDocuments[]>;
   createFacilityDocument(document: InsertFacilityDocuments): Promise<FacilityDocuments>;
-  updateFacilityDocument(id: number, updates: Partial<InsertFacilityDocuments>): Promise<FacilityDocuments | undefined>;
+  updateFacilityDocument(
+    id: number,
+    updates: Partial<InsertFacilityDocuments>
+  ): Promise<FacilityDocuments | undefined>;
   deleteFacilityDocument(id: number): Promise<boolean>;
 
   // Job methods
@@ -212,7 +244,13 @@ export interface IStorage {
   getTodaysShifts(facilityId: number): Promise<Shift[]>;
   getOpenShifts(facilityId?: number): Promise<Shift[]>;
   assignStaffToShift(shiftId: number, staffIds: number[]): Promise<Shift | undefined>;
-  checkShiftConflicts(staffIds: number[], date: string, startTime: string, endTime: string, excludeShiftId?: number): Promise<{
+  checkShiftConflicts(
+    staffIds: number[],
+    date: string,
+    startTime: string,
+    endTime: string,
+    excludeShiftId?: number
+  ): Promise<{
     hasConflicts: boolean;
     conflicts: Array<{
       staffId: number;
@@ -260,16 +298,22 @@ export interface IStorage {
   getConversation(id: number): Promise<Conversation | undefined>;
   getUserConversations(userId: number): Promise<Conversation[]>;
   updateConversationLastMessage(conversationId: number): Promise<void>;
-  
+
   // Conversation participant methods
-  addConversationParticipant(participant: InsertConversationParticipant): Promise<ConversationParticipant>;
+  addConversationParticipant(
+    participant: InsertConversationParticipant
+  ): Promise<ConversationParticipant>;
   getConversationParticipants(conversationId: number): Promise<ConversationParticipant[]>;
   updateParticipantReadStatus(conversationId: number, userId: number): Promise<void>;
-  
+
   // Message methods
   createMessage(message: InsertMessage): Promise<Message>;
   getUserMessages(userId: number): Promise<Message[]>;
-  getConversationMessages(conversationId: number, limit?: number, offset?: number): Promise<Message[]>;
+  getConversationMessages(
+    conversationId: number,
+    limit?: number,
+    offset?: number
+  ): Promise<Message[]>;
   getUnreadMessageCount(userId: number): Promise<number>;
   markMessagesAsRead(conversationId: number, userId: number): Promise<void>;
   searchMessages(userId: number, query: string): Promise<Message[]>;
@@ -317,7 +361,7 @@ export interface IStorage {
     monthlyHours: number;
   }>;
   getRecentActivity(facilityId: number, limit?: number): Promise<AuditLog[]>;
-  
+
   // Dashboard customization
   getUserDashboardWidgets(userId: number): Promise<any>;
   saveDashboardWidgets(userId: number, widgets: any): Promise<void>;
@@ -390,32 +434,52 @@ export interface IStorage {
   syncWithPayrollProvider(facilityId: number, syncType: string): Promise<PayrollSyncLog>;
 
   // Shift assignment methods
-  getShiftAssignments(shiftId: string): Promise<Array<{ workerId: number; assignedAt: string; status: string }>>;
-  addShiftAssignment(assignment: { shiftId: string; workerId: number; assignedById: number; status: string }): Promise<void>;
+  getShiftAssignments(
+    shiftId: string
+  ): Promise<Array<{ workerId: number; assignedAt: string; status: string }>>;
+  addShiftAssignment(assignment: {
+    shiftId: string;
+    workerId: number;
+    assignedById: number;
+    status: string;
+  }): Promise<void>;
   updateShiftAssignmentStatus(shiftId: string, workerId: number, status: string): Promise<void>;
 
   // Shift template methods - replaces in-memory template storage
   createShiftTemplate(template: InsertShiftTemplate): Promise<ShiftTemplate>;
   getShiftTemplates(facilityId?: number): Promise<ShiftTemplate[]>;
-  updateShiftTemplate(id: number, updates: Partial<InsertShiftTemplate>): Promise<ShiftTemplate | undefined>;
+  updateShiftTemplate(
+    id: number,
+    updates: Partial<InsertShiftTemplate>
+  ): Promise<ShiftTemplate | undefined>;
   deleteShiftTemplate(id: number): Promise<boolean>;
 
   // Generated shift methods - replaces global templateGeneratedShifts
   createGeneratedShift(shift: InsertGeneratedShift): Promise<GeneratedShift>;
   getGeneratedShifts(dateRange?: { start: string; end: string }): Promise<GeneratedShift[]>;
-  updateGeneratedShift(id: string, updates: Partial<InsertGeneratedShift>): Promise<GeneratedShift | undefined>;
+  updateGeneratedShift(
+    id: string,
+    updates: Partial<InsertGeneratedShift>
+  ): Promise<GeneratedShift | undefined>;
   deleteGeneratedShift(id: string): Promise<boolean>;
 
   // Session methods - replaces file-based sessions
   createUserSession(session: InsertUserSession): Promise<UserSession>;
   getUserSession(sessionId: string): Promise<UserSession | undefined>;
-  updateUserSession(sessionId: string, updates: Partial<InsertUserSession>): Promise<UserSession | undefined>;
+  updateUserSession(
+    sessionId: string,
+    updates: Partial<InsertUserSession>
+  ): Promise<UserSession | undefined>;
   deleteUserSession(sessionId: string): Promise<boolean>;
   cleanupExpiredSessions(): Promise<number>;
 
   // Notification methods
   createNotification(notification: InsertNotification): Promise<Notification>;
-  getNotifications(userId: number | null, facilityUserId: number | null, limit?: number): Promise<Notification[]>;
+  getNotifications(
+    userId: number | null,
+    facilityUserId: number | null,
+    limit?: number
+  ): Promise<Notification[]>;
   getUnreadNotificationCount(userId: number | null, facilityUserId: number | null): Promise<number>;
   markNotificationAsRead(id: number): Promise<void>;
   markAllNotificationsAsRead(userId: number | null, facilityUserId: number | null): Promise<void>;
@@ -425,13 +489,23 @@ export interface IStorage {
   // Time-off methods
   getTimeOffTypes(isActive?: boolean): Promise<TimeOffType[]>;
   createTimeOffType(type: InsertTimeOffType): Promise<TimeOffType>;
-  updateTimeOffType(id: number, updates: Partial<InsertTimeOffType>): Promise<TimeOffType | undefined>;
-  
+  updateTimeOffType(
+    id: number,
+    updates: Partial<InsertTimeOffType>
+  ): Promise<TimeOffType | undefined>;
+
   getTimeOffBalances(userId: number, year?: number): Promise<TimeOffBalance[]>;
-  getTimeOffBalance(userId: number, timeOffTypeId: number, year: number): Promise<TimeOffBalance | undefined>;
+  getTimeOffBalance(
+    userId: number,
+    timeOffTypeId: number,
+    year: number
+  ): Promise<TimeOffBalance | undefined>;
   createTimeOffBalance(balance: InsertTimeOffBalance): Promise<TimeOffBalance>;
-  updateTimeOffBalance(id: number, updates: Partial<InsertTimeOffBalance>): Promise<TimeOffBalance | undefined>;
-  
+  updateTimeOffBalance(
+    id: number,
+    updates: Partial<InsertTimeOffBalance>
+  ): Promise<TimeOffBalance | undefined>;
+
   getTimeOffRequests(filters?: {
     userId?: number;
     status?: string;
@@ -441,33 +515,46 @@ export interface IStorage {
   }): Promise<TimeOffRequest[]>;
   getTimeOffRequest(id: number): Promise<TimeOffRequest | undefined>;
   createTimeOffRequest(request: InsertTimeOffRequest): Promise<TimeOffRequest>;
-  updateTimeOffRequest(id: number, updates: Partial<InsertTimeOffRequest>): Promise<TimeOffRequest | undefined>;
-  reviewTimeOffRequest(id: number, status: string, reviewedBy: number, reviewNotes?: string): Promise<TimeOffRequest | undefined>;
-  
+  updateTimeOffRequest(
+    id: number,
+    updates: Partial<InsertTimeOffRequest>
+  ): Promise<TimeOffRequest | undefined>;
+  reviewTimeOffRequest(
+    id: number,
+    status: string,
+    reviewedBy: number,
+    reviewNotes?: string
+  ): Promise<TimeOffRequest | undefined>;
+
   getTimeOffPolicies(facilityId?: number): Promise<TimeOffPolicy[]>;
   createTimeOffPolicy(policy: InsertTimeOffPolicy): Promise<TimeOffPolicy>;
-  updateTimeOffPolicy(id: number, updates: Partial<InsertTimeOffPolicy>): Promise<TimeOffPolicy | undefined>;
-  
+  updateTimeOffPolicy(
+    id: number,
+    updates: Partial<InsertTimeOffPolicy>
+  ): Promise<TimeOffPolicy | undefined>;
+
   checkShiftCoverage(userId: number, startDate: Date, endDate: Date): Promise<Shift[]>;
   calculateTimeOffAccrual(userId: number, timeOffTypeId: number, year: number): Promise<number>;
-  
+
   // Staff methods
   getAllStaff(): Promise<Staff[]>;
   getStaffMember(id: number): Promise<Staff | undefined>;
   getStaffByEmail(email: string): Promise<Staff | undefined>;
   createStaffMember(staff: InsertStaff): Promise<Staff>;
   updateStaffMember(id: number, updates: Partial<InsertStaff>): Promise<Staff | undefined>;
-  
+
   // Staff-facility association methods
   getStaffByFacility(facilityId: number): Promise<Staff[]>;
-  addStaffFacilityAssociation(association: InsertStaffFacilityAssociation): Promise<StaffFacilityAssociation>;
+  addStaffFacilityAssociation(
+    association: InsertStaffFacilityAssociation
+  ): Promise<StaffFacilityAssociation>;
   removeStaffFacilityAssociation(staffId: number, facilityId: number): Promise<void>;
   getStaffFacilityAssociations(staffId: number): Promise<StaffFacilityAssociation[]>;
-  
+
   // Staff credential methods
   addStaffCredential(credential: InsertStaffCredential): Promise<StaffCredential>;
   getStaffCredentials(staffId: number): Promise<Credential[]>;
-  
+
   // Analytics event tracking methods
   trackEvent(event: InsertAnalyticsEvent): Promise<void>;
   getAnalyticsEvents(filters?: {
@@ -483,20 +570,30 @@ export interface IStorage {
     eventCategory?: string;
     startDate?: Date;
     endDate?: Date;
-    groupBy?: 'day' | 'week' | 'month';
+    groupBy?: "day" | "week" | "month";
   }): Promise<{ date: string; count: number; category?: string }[]>;
-  getRecentAnalyticsEvents(limit: number, offset: number, category?: string): Promise<AnalyticsEvent[]>;
+  getRecentAnalyticsEvents(
+    limit: number,
+    offset: number,
+    category?: string
+  ): Promise<AnalyticsEvent[]>;
   getAnalyticsEventCounts(): Promise<{ [category: string]: number }>;
-  
+
   // Calendar sync methods
   getUserAssignedShifts(userId: number): Promise<Shift[]>;
-  saveUserCalendarTokens(userId: number, tokens: {
-    provider: string;
-    accessToken: string;
-    refreshToken?: string;
-    expiryDate?: number;
-  }): Promise<void>;
-  getUserCalendarTokens(userId: number, provider: string): Promise<{
+  saveUserCalendarTokens(
+    userId: number,
+    tokens: {
+      provider: string;
+      accessToken: string;
+      refreshToken?: string;
+      expiryDate?: number;
+    }
+  ): Promise<void>;
+  getUserCalendarTokens(
+    userId: number,
+    provider: string
+  ): Promise<{
     accessToken: string;
     refreshToken?: string;
     expiryDate?: number;
@@ -511,18 +608,16 @@ export class DatabaseStorage implements IStorage {
 
   constructor() {
     // Use file-based session store for persistence during development
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Using file-based session store for development persistence');
+    if (process.env.NODE_ENV === "development") {
       this.sessionStore = new FileSessionStore({
-        path: './sessions',
-        secret: process.env.SESSION_SECRET || 'nexspace-dev-secret',
+        path: "./sessions",
+        secret: process.env.SESSION_SECRET || "nexspace-dev-secret",
         ttl: 86400 * 7, // 7 days for dev
         retries: 0,
         logFn: () => {}, // Suppress file store logs
       });
     } else {
       // Use memory store for production to avoid file system issues
-      console.log('Using memory session store for production');
       this.sessionStore = new MemorySessionStore({
         checkPeriod: 86400000, // prune expired entries every 24h
       });
@@ -531,22 +626,18 @@ export class DatabaseStorage implements IStorage {
 
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    console.log(`[STORAGE] getUser called with id: ${id}`);
-    
+
     try {
       // First try to find in users table
       const [user] = await db.select().from(users).where(eq(users.id, id));
       if (user) {
-        console.log(`[STORAGE] Found user in users table:`, user);
         return user;
       }
-      
+
       // If not found, try facility_users table
-      console.log(`[STORAGE] User not found in users table, checking facility_users table`);
       const [facilityUser] = await db.select().from(facilityUsers).where(eq(facilityUsers.id, id));
       if (facilityUser) {
-        console.log(`[STORAGE] Found facility user:`, facilityUser);
-        
+
         // Convert facility user to user format for compatibility
         const convertedUser = {
           id: facilityUser.id,
@@ -560,16 +651,14 @@ export class DatabaseStorage implements IStorage {
           avatar: facilityUser.avatar,
           createdAt: facilityUser.createdAt,
           updatedAt: facilityUser.updatedAt,
-          password: '', // Not needed for facility users
-          userType: 'facility_user',
-          permissions: facilityUser.permissions
+          password: "", // Not needed for facility users
+          userType: "facility_user",
+          permissions: facilityUser.permissions,
         } as any;
-        
-        console.log(`[STORAGE] Converted facility user to user format:`, convertedUser);
+
         return convertedUser;
       }
-      
-      console.log(`[STORAGE] User not found in either table`);
+
       return undefined;
     } catch (error) {
       console.error(`[STORAGE] Error in getUser:`, error);
@@ -615,30 +704,38 @@ export class DatabaseStorage implements IStorage {
       .where(and(eq(users.facilityId, facilityId), eq(users.isActive, true)));
   }
 
-  async updateUserOnboarding(id: number, data: { onboardingStep: number; onboardingCompleted: boolean }): Promise<User | undefined> {
+  async updateUserOnboarding(
+    id: number,
+    data: { onboardingStep: number; onboardingCompleted: boolean }
+  ): Promise<User | undefined> {
     const [user] = await db
       .update(users)
       .set({
         onboardingStep: data.onboardingStep,
         onboardingCompleted: data.onboardingCompleted,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(users.id, id))
       .returning();
     return user || undefined;
   }
 
-  async updateUserProfile(id: number, data: { firstName?: string; lastName?: string; phone?: string; department?: string; bio?: string }): Promise<User | undefined> {
+  async updateUserProfile(
+    id: number,
+    data: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      department?: string;
+      bio?: string;
+    }
+  ): Promise<User | undefined> {
     const updates: any = { updatedAt: new Date() };
     if (data.firstName !== undefined) updates.firstName = data.firstName;
     if (data.lastName !== undefined) updates.lastName = data.lastName;
     // Note: phone, department, and bio fields would need to be added to the users table schema
-    
-    const [user] = await db
-      .update(users)
-      .set(updates)
-      .where(eq(users.id, id))
-      .returning();
+
+    const [user] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
     return user || undefined;
   }
 
@@ -672,7 +769,7 @@ export class DatabaseStorage implements IStorage {
   ): Promise<Facility | undefined> {
     // Remove fields that don't exist in the database
     const { updatedAt, ...validUpdates } = updates as any;
-    
+
     const [facility] = await db
       .update(facilities)
       .set(validUpdates)
@@ -703,8 +800,8 @@ export class DatabaseStorage implements IStorage {
           )
         )
       );
-    
-    return result.map(r => r.facility);
+
+    return result.map((r) => r.facility);
   }
 
   async getFacilitiesByState(state: string): Promise<Facility[]> {
@@ -714,12 +811,9 @@ export class DatabaseStorage implements IStorage {
       })
       .from(facilities)
       .innerJoin(facilityAddresses, eq(facilities.id, facilityAddresses.facilityId))
-      .where(and(
-        eq(facilities.isActive, true), 
-        eq(facilityAddresses.state, state)
-      ));
-    
-    return result.map(r => r.facility);
+      .where(and(eq(facilities.isActive, true), eq(facilityAddresses.state, state)));
+
+    return result.map((r) => r.facility);
   }
 
   async getFacilityByCMSId(cmsId: string): Promise<Facility | undefined> {
@@ -727,7 +821,11 @@ export class DatabaseStorage implements IStorage {
     return facility || undefined;
   }
 
-  async getFacilitiesWithinRadius(lat: number, lng: number, radiusMiles: number): Promise<Facility[]> {
+  async getFacilitiesWithinRadius(
+    lat: number,
+    lng: number,
+    radiusMiles: number
+  ): Promise<Facility[]> {
     // Using the Haversine formula for distance calculation
     const result = await db
       .select({
@@ -744,9 +842,10 @@ export class DatabaseStorage implements IStorage {
       })
       .from(facilities)
       .innerJoin(facilityAddresses, eq(facilities.id, facilityAddresses.facilityId))
-      .where(and(
-        eq(facilities.isActive, true),
-        sql`
+      .where(
+        and(
+          eq(facilities.isActive, true),
+          sql`
           (3959 * acos(
             cos(radians(${lat})) * 
             cos(radians(${facilityAddresses.latitude})) * 
@@ -755,10 +854,11 @@ export class DatabaseStorage implements IStorage {
             sin(radians(${facilityAddresses.latitude}))
           )) <= ${radiusMiles}
         `
-      ))
+        )
+      )
       .orderBy(sql`distance`);
-    
-    return result.map(r => r.facility);
+
+    return result.map((r) => r.facility);
   }
 
   // Facility Address methods
@@ -775,7 +875,10 @@ export class DatabaseStorage implements IStorage {
     return newAddress;
   }
 
-  async updateFacilityAddress(facilityId: number, updates: Partial<InsertFacilityAddress>): Promise<FacilityAddress | undefined> {
+  async updateFacilityAddress(
+    facilityId: number,
+    updates: Partial<InsertFacilityAddress>
+  ): Promise<FacilityAddress | undefined> {
     const [updatedAddress] = await db
       .update(facilityAddresses)
       .set({ ...updates, updatedAt: new Date() })
@@ -798,7 +901,10 @@ export class DatabaseStorage implements IStorage {
     return newContact;
   }
 
-  async updateFacilityContact(id: number, updates: Partial<InsertFacilityContact>): Promise<FacilityContact | undefined> {
+  async updateFacilityContact(
+    id: number,
+    updates: Partial<InsertFacilityContact>
+  ): Promise<FacilityContact | undefined> {
     const [updatedContact] = await db
       .update(facilityContacts)
       .set({ ...updates, updatedAt: new Date() })
@@ -826,7 +932,10 @@ export class DatabaseStorage implements IStorage {
     return newSettings;
   }
 
-  async updateFacilitySettings(facilityId: number, updates: Partial<InsertFacilitySettings>): Promise<FacilitySettings | undefined> {
+  async updateFacilitySettings(
+    facilityId: number,
+    updates: Partial<InsertFacilitySettings>
+  ): Promise<FacilitySettings | undefined> {
     const [updatedSettings] = await db
       .update(facilitySettings)
       .set({ ...updates, updatedAt: new Date() })
@@ -849,7 +958,10 @@ export class DatabaseStorage implements IStorage {
     return newRate;
   }
 
-  async updateFacilityRate(id: number, updates: Partial<InsertFacilityRates>): Promise<FacilityRates | undefined> {
+  async updateFacilityRate(
+    id: number,
+    updates: Partial<InsertFacilityRates>
+  ): Promise<FacilityRates | undefined> {
     const [updatedRate] = await db
       .update(facilityRates)
       .set({ ...updates, updatedAt: new Date() })
@@ -863,19 +975,18 @@ export class DatabaseStorage implements IStorage {
     let query = db
       .select()
       .from(facilityRates)
-      .where(and(
-        eq(facilityRates.facilityId, facilityId),
-        lte(facilityRates.effectiveDate, now),
-        or(
-          gt(facilityRates.endDate, now),
-          sql`${facilityRates.endDate} IS NULL`
+      .where(
+        and(
+          eq(facilityRates.facilityId, facilityId),
+          lte(facilityRates.effectiveDate, now),
+          or(gt(facilityRates.endDate, now), sql`${facilityRates.endDate} IS NULL`)
         )
-      ));
-    
+      );
+
     if (specialty) {
       query = query.where(eq(facilityRates.specialty, specialty));
     }
-    
+
     return await query.orderBy(desc(facilityRates.effectiveDate));
   }
 
@@ -888,12 +999,17 @@ export class DatabaseStorage implements IStorage {
       .orderBy(asc(facilityStaffingTargets.department));
   }
 
-  async createFacilityStaffingTarget(target: InsertFacilityStaffingTargets): Promise<FacilityStaffingTargets> {
+  async createFacilityStaffingTarget(
+    target: InsertFacilityStaffingTargets
+  ): Promise<FacilityStaffingTargets> {
     const [newTarget] = await db.insert(facilityStaffingTargets).values(target).returning();
     return newTarget;
   }
 
-  async updateFacilityStaffingTarget(id: number, updates: Partial<InsertFacilityStaffingTargets>): Promise<FacilityStaffingTargets | undefined> {
+  async updateFacilityStaffingTarget(
+    id: number,
+    updates: Partial<InsertFacilityStaffingTargets>
+  ): Promise<FacilityStaffingTargets | undefined> {
     const [updatedTarget] = await db
       .update(facilityStaffingTargets)
       .set({ ...updates, updatedAt: new Date() })
@@ -916,7 +1032,10 @@ export class DatabaseStorage implements IStorage {
     return newDoc;
   }
 
-  async updateFacilityDocument(id: number, updates: Partial<InsertFacilityDocuments>): Promise<FacilityDocuments | undefined> {
+  async updateFacilityDocument(
+    id: number,
+    updates: Partial<InsertFacilityDocuments>
+  ): Promise<FacilityDocuments | undefined> {
     const [updatedDoc] = await db
       .update(facilityDocuments)
       .set({ ...updates, updatedAt: new Date() })
@@ -970,22 +1089,27 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(staffFacilityAssociations.facilityId, facilityId),
-          eq(staffFacilityAssociations.status, 'active'),
+          eq(staffFacilityAssociations.status, "active"),
           eq(staff.isActive, true)
         )
       );
-    return staffMembers.map(row => row.staff);
+    return staffMembers.map((row) => row.staff);
   }
 
-  async addStaffFacilityAssociation(association: InsertStaffFacilityAssociation): Promise<StaffFacilityAssociation> {
-    const [newAssociation] = await db.insert(staffFacilityAssociations).values(association).returning();
+  async addStaffFacilityAssociation(
+    association: InsertStaffFacilityAssociation
+  ): Promise<StaffFacilityAssociation> {
+    const [newAssociation] = await db
+      .insert(staffFacilityAssociations)
+      .values(association)
+      .returning();
     return newAssociation;
   }
 
   async removeStaffFacilityAssociation(staffId: number, facilityId: number): Promise<void> {
     await db
       .update(staffFacilityAssociations)
-      .set({ status: 'inactive', endDate: new Date() })
+      .set({ status: "inactive", endDate: new Date() })
       .where(
         and(
           eq(staffFacilityAssociations.staffId, staffId),
@@ -1001,7 +1125,7 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(staffFacilityAssociations.staffId, staffId),
-          eq(staffFacilityAssociations.status, 'active')
+          eq(staffFacilityAssociations.status, "active")
         )
       );
   }
@@ -1020,7 +1144,7 @@ export class DatabaseStorage implements IStorage {
       .from(credentials)
       .innerJoin(staffCredentials, eq(credentials.id, staffCredentials.credentialId))
       .where(eq(staffCredentials.staffId, staffId));
-    return staffCreds.map(row => row.credential);
+    return staffCreds.map((row) => row.credential);
   }
 
   // Job methods
@@ -1119,9 +1243,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getShiftsByDateRange(facilityId: number, startDate: Date, endDate: Date): Promise<Shift[]> {
-    const startDateStr = startDate.toISOString().split('T')[0]; // YYYY-MM-DD format
-    const endDateStr = endDate.toISOString().split('T')[0]; // YYYY-MM-DD format
-    
+    const startDateStr = startDate.toISOString().split("T")[0]; // YYYY-MM-DD format
+    const endDateStr = endDate.toISOString().split("T")[0]; // YYYY-MM-DD format
+
     return await db
       .select()
       .from(shifts)
@@ -1168,7 +1292,13 @@ export class DatabaseStorage implements IStorage {
     return shift || undefined;
   }
 
-  async checkShiftConflicts(staffIds: number[], date: string, startTime: string, endTime: string, excludeShiftId?: number): Promise<{
+  async checkShiftConflicts(
+    staffIds: number[],
+    date: string,
+    startTime: string,
+    endTime: string,
+    excludeShiftId?: number
+  ): Promise<{
     hasConflicts: boolean;
     conflicts: Array<{
       staffId: number;
@@ -1234,13 +1364,13 @@ export class DatabaseStorage implements IStorage {
 
             conflicts.push({
               staffId,
-              staffName: staffMember[0]?.name || 'Unknown Staff',
+              staffName: staffMember[0]?.name || "Unknown Staff",
               conflictingShift: {
                 id: shift.id,
-                title: shift.title || 'Untitled Shift',
+                title: shift.title || "Untitled Shift",
                 startTime: shift.startTime,
                 endTime: shift.endTime,
-                facilityName: shift.facilityName || 'Unknown Facility',
+                facilityName: shift.facilityName || "Unknown Facility",
               },
             });
           }
@@ -1415,10 +1545,10 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(desc(conversations.lastMessageAt));
-    
-    return results.map(r => ({
+
+    return results.map((r) => ({
       ...r.conversation,
-      unreadCount: r.unreadCount || 0
+      unreadCount: r.unreadCount || 0,
     }));
   }
 
@@ -1430,7 +1560,9 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Conversation participant methods
-  async addConversationParticipant(participant: InsertConversationParticipant): Promise<ConversationParticipant> {
+  async addConversationParticipant(
+    participant: InsertConversationParticipant
+  ): Promise<ConversationParticipant> {
     const [result] = await db.insert(conversationParticipants).values(participant).returning();
     return result;
   }
@@ -1445,9 +1577,9 @@ export class DatabaseStorage implements IStorage {
   async updateParticipantReadStatus(conversationId: number, userId: number): Promise<void> {
     await db
       .update(conversationParticipants)
-      .set({ 
+      .set({
         lastReadAt: new Date(),
-        unreadCount: 0 
+        unreadCount: 0,
       })
       .where(
         and(
@@ -1460,10 +1592,10 @@ export class DatabaseStorage implements IStorage {
   // Message methods
   async createMessage(insertMessage: InsertMessage): Promise<Message> {
     const [message] = await db.insert(messages).values(insertMessage).returning();
-    
+
     // Update conversation last message time
     await this.updateConversationLastMessage(message.conversationId);
-    
+
     // Increment unread count for all participants except sender
     await db
       .update(conversationParticipants)
@@ -1474,7 +1606,7 @@ export class DatabaseStorage implements IStorage {
           sql`${conversationParticipants.userId} != ${message.senderId}`
         )
       );
-    
+
     return message;
   }
 
@@ -1484,11 +1616,11 @@ export class DatabaseStorage implements IStorage {
       .select({ conversationId: conversationParticipants.conversationId })
       .from(conversationParticipants)
       .where(eq(conversationParticipants.userId, userId));
-    
+
     if (participantConversations.length === 0) return [];
-    
-    const conversationIds = participantConversations.map(p => p.conversationId);
-    
+
+    const conversationIds = participantConversations.map((p) => p.conversationId);
+
     return await db
       .select()
       .from(messages)
@@ -1497,7 +1629,11 @@ export class DatabaseStorage implements IStorage {
       .limit(100);
   }
 
-  async getConversationMessages(conversationId: number, limit = 50, offset = 0): Promise<Message[]> {
+  async getConversationMessages(
+    conversationId: number,
+    limit = 50,
+    offset = 0
+  ): Promise<Message[]> {
     return await db
       .select()
       .from(messages)
@@ -1509,10 +1645,12 @@ export class DatabaseStorage implements IStorage {
 
   async getUnreadMessageCount(userId: number): Promise<number> {
     const [result] = await db
-      .select({ totalUnread: sql<number>`COALESCE(SUM(${conversationParticipants.unreadCount}), 0)` })
+      .select({
+        totalUnread: sql<number>`COALESCE(SUM(${conversationParticipants.unreadCount}), 0)`,
+      })
       .from(conversationParticipants)
       .where(eq(conversationParticipants.userId, userId));
-    
+
     return result.totalUnread || 0;
   }
 
@@ -1525,11 +1663,11 @@ export class DatabaseStorage implements IStorage {
       .select({ conversationId: conversationParticipants.conversationId })
       .from(conversationParticipants)
       .where(eq(conversationParticipants.userId, userId));
-    
+
     if (participantConversations.length === 0) return [];
-    
-    const conversationIds = participantConversations.map(p => p.conversationId);
-    
+
+    const conversationIds = participantConversations.map((p) => p.conversationId);
+
     return await db
       .select()
       .from(messages)
@@ -1604,10 +1742,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(facilityUserRoleTemplates)
       .where(
-        and(
-          eq(facilityUserRoleTemplates.role, role),
-          eq(facilityUserRoleTemplates.isActive, true)
-        )
+        and(eq(facilityUserRoleTemplates.role, role), eq(facilityUserRoleTemplates.isActive, true))
       );
     return template || undefined;
   }
@@ -1623,10 +1758,7 @@ export class DatabaseStorage implements IStorage {
 
   async getAllFacilityUsers(): Promise<any[]> {
     const { facilityUsers } = await import("@shared/schema");
-    return await db
-      .select()
-      .from(facilityUsers)
-      .orderBy(facilityUsers.email);
+    return await db.select().from(facilityUsers).orderBy(facilityUsers.email);
   }
 
   async updateFacilityUserRole(id: number, role: string): Promise<any | undefined> {
@@ -1737,8 +1869,8 @@ export class DatabaseStorage implements IStorage {
     priorityTasks: any[];
   }> {
     // Build facility filter condition
-    const facilityCondition = facilityIds?.length 
-      ? or(...facilityIds.map(id => eq(facilities.id, id)))
+    const facilityCondition = facilityIds?.length
+      ? or(...facilityIds.map((id) => eq(facilities.id, id)))
       : undefined;
 
     // Active staff count from staff table with facility association filtering
@@ -1746,14 +1878,14 @@ export class DatabaseStorage implements IStorage {
       .select({ count: count() })
       .from(staff)
       .where(eq(staff.isActive, true));
-    
+
     if (facilityIds?.length) {
       // Filter staff by associated facilities
       activeStaffQuery = activeStaffQuery.where(
         sql`${staff.associatedFacilities} && ${facilityIds}`
       );
     }
-    
+
     const [activeStaffResult] = await activeStaffQuery;
 
     // Open shifts count
@@ -1761,13 +1893,13 @@ export class DatabaseStorage implements IStorage {
       .select({ count: count() })
       .from(shifts)
       .where(eq(shifts.status, "open"));
-    
+
     if (facilityIds?.length) {
       openShiftsQuery = openShiftsQuery.where(
-        or(...facilityIds.map(id => eq(shifts.facilityId, id)))
+        or(...facilityIds.map((id) => eq(shifts.facilityId, id)))
       );
     }
-    
+
     const [openShiftsResult] = await openShiftsQuery;
 
     // Filled shifts count
@@ -1775,32 +1907,25 @@ export class DatabaseStorage implements IStorage {
       .select({ count: count() })
       .from(shifts)
       .where(eq(shifts.status, "filled"));
-    
+
     if (facilityIds?.length) {
       filledShiftsQuery = filledShiftsQuery.where(
-        or(...facilityIds.map(id => eq(shifts.facilityId, id)))
+        or(...facilityIds.map((id) => eq(shifts.facilityId, id)))
       );
     }
-    
+
     const [filledShiftsResult] = await filledShiftsQuery;
 
     // Float pool count (available staff not on active shift)
     let floatPoolQuery = db
       .select({ count: count() })
       .from(staff)
-      .where(
-        and(
-          eq(staff.isActive, true),
-          eq(staff.employmentType, "full_time")
-        )
-      );
-    
+      .where(and(eq(staff.isActive, true), eq(staff.employmentType, "full_time")));
+
     if (facilityIds?.length) {
-      floatPoolQuery = floatPoolQuery.where(
-        sql`${staff.associatedFacilities} && ${facilityIds}`
-      );
+      floatPoolQuery = floatPoolQuery.where(sql`${staff.associatedFacilities} && ${facilityIds}`);
     }
-    
+
     const [floatPoolResult] = await floatPoolQuery;
 
     // Upcoming time off (next 7 days) - placeholder for now
@@ -1813,58 +1938,47 @@ export class DatabaseStorage implements IStorage {
         totalAmount: sql<number>`COALESCE(SUM(${invoices.amount}), 0)`,
       })
       .from(invoices)
-      .where(
-        or(
-          eq(invoices.status, "pending"),
-          eq(invoices.status, "overdue")
-        )
-      );
-    
+      .where(or(eq(invoices.status, "pending"), eq(invoices.status, "overdue")));
+
     if (facilityIds?.length) {
       billingTotalQuery = billingTotalQuery.where(
-        or(...facilityIds.map(id => eq(invoices.facilityId, id)))
+        or(...facilityIds.map((id) => eq(invoices.facilityId, id)))
       );
     }
-    
+
     const [billingTotalResult] = await billingTotalQuery;
 
     // Urgent shifts (those posted in last 24 hours or marked urgent)
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     let urgentShiftsQuery = db
       .select({ count: count() })
       .from(shifts)
       .where(
         and(
           eq(shifts.status, "open"),
-          or(
-            gte(shifts.createdAt, yesterday),
-            eq(shifts.urgency, "urgent")
-          )
+          or(gte(shifts.createdAt, yesterday), eq(shifts.urgency, "urgent"))
         )
       );
-    
+
     if (facilityIds?.length) {
       urgentShiftsQuery = urgentShiftsQuery.where(
-        or(...facilityIds.map(id => eq(shifts.facilityId, id)))
+        or(...facilityIds.map((id) => eq(shifts.facilityId, id)))
       );
     }
-    
+
     const [urgentShiftsResult] = await urgentShiftsQuery;
 
     // Expiring credentials (next 30 days)
     const thirtyDaysFromNow = new Date();
     thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
-    
+
     const [expiringCredentialsResult] = await db
       .select({ count: count() })
       .from(credentials)
       .where(
-        and(
-          eq(credentials.status, "active"),
-          lte(credentials.expirationDate, thirtyDaysFromNow)
-        )
+        and(eq(credentials.status, "active"), lte(credentials.expirationDate, thirtyDaysFromNow))
       );
 
     // Outstanding invoices
@@ -1883,12 +1997,7 @@ export class DatabaseStorage implements IStorage {
         totalRevenue: sql<number>`COALESCE(SUM(${invoices.amount}), 0)`,
       })
       .from(invoices)
-      .where(
-        and(
-          eq(invoices.status, "paid"),
-          gte(invoices.paidAt, firstOfMonth)
-        )
-      );
+      .where(and(eq(invoices.status, "paid"), gte(invoices.paidAt, firstOfMonth)));
 
     // Monthly hours calculation
     const [monthlyHoursResult] = await db
@@ -1899,18 +2008,15 @@ export class DatabaseStorage implements IStorage {
       .where(gte(timeClockEntries.clockIn, firstOfMonth));
 
     // Compliance rate calculation
-    const [totalCredentials] = await db
-      .select({ count: count() })
-      .from(credentials);
+    const [totalCredentials] = await db.select({ count: count() }).from(credentials);
 
     const [activeCredentials] = await db
       .select({ count: count() })
       .from(credentials)
       .where(eq(credentials.status, "active"));
 
-    const complianceRate = totalCredentials.count > 0 
-      ? (activeCredentials.count / totalCredentials.count) * 100 
-      : 100;
+    const complianceRate =
+      totalCredentials.count > 0 ? (activeCredentials.count / totalCredentials.count) * 100 : 100;
 
     // Recent activity
     const recentActivity = await db
@@ -1921,8 +2027,8 @@ export class DatabaseStorage implements IStorage {
         createdAt: auditLogs.createdAt,
         user: {
           firstName: users.firstName,
-          lastName: users.lastName
-        }
+          lastName: users.lastName,
+        },
       })
       .from(auditLogs)
       .leftJoin(users, eq(auditLogs.userId, users.id))
@@ -1931,31 +2037,43 @@ export class DatabaseStorage implements IStorage {
 
     // Priority tasks
     const priorityTasks = [
-      ...(urgentShiftsResult.count > 0 ? [{
-        id: 'urgent-shifts',
-        title: `${urgentShiftsResult.count} Urgent Shifts Need Attention`,
-        type: 'urgent',
-        count: urgentShiftsResult.count
-      }] : []),
-      ...(expiringCredentialsResult.count > 0 ? [{
-        id: 'expiring-credentials',
-        title: `${expiringCredentialsResult.count} Credentials Expiring Soon`,
-        type: 'warning',
-        count: expiringCredentialsResult.count
-      }] : []),
-      ...(outstandingInvoicesResult.count > 0 ? [{
-        id: 'outstanding-invoices',
-        title: `${outstandingInvoicesResult.count} Invoices Pending Review`,
-        type: 'info',
-        count: outstandingInvoicesResult.count
-      }] : [])
+      ...(urgentShiftsResult.count > 0
+        ? [
+            {
+              id: "urgent-shifts",
+              title: `${urgentShiftsResult.count} Urgent Shifts Need Attention`,
+              type: "urgent",
+              count: urgentShiftsResult.count,
+            },
+          ]
+        : []),
+      ...(expiringCredentialsResult.count > 0
+        ? [
+            {
+              id: "expiring-credentials",
+              title: `${expiringCredentialsResult.count} Credentials Expiring Soon`,
+              type: "warning",
+              count: expiringCredentialsResult.count,
+            },
+          ]
+        : []),
+      ...(outstandingInvoicesResult.count > 0
+        ? [
+            {
+              id: "outstanding-invoices",
+              title: `${outstandingInvoicesResult.count} Invoices Pending Review`,
+              type: "info",
+              count: outstandingInvoicesResult.count,
+            },
+          ]
+        : []),
     ];
 
     // Total facilities count
     let facilitiesQuery = db.select({ count: count() }).from(facilities);
     if (facilityIds?.length) {
       facilitiesQuery = facilitiesQuery.where(
-        or(...facilityIds.map(id => eq(facilities.id, id)))
+        or(...facilityIds.map((id) => eq(facilities.id, id)))
       );
     }
     const [totalFacilitiesResult] = await facilitiesQuery;
@@ -1975,7 +2093,7 @@ export class DatabaseStorage implements IStorage {
       upcomingTimeOff: upcomingTimeOffResult.count,
       billingTotal: Number(billingTotalResult.totalAmount) || 0,
       recentActivity,
-      priorityTasks
+      priorityTasks,
     };
   }
 
@@ -1990,46 +2108,81 @@ export class DatabaseStorage implements IStorage {
         .limit(1);
 
       if (user.length > 0 && user[0].dashboardPreferences) {
-        console.log(`[STORAGE] Found existing dashboard config for user ${userId}`);
         return user[0].dashboardPreferences;
       }
 
       // Return default widget configuration if none exists
       const defaultWidgets = [
         // Core Stats Widgets
-        { id: 'active-staff', title: 'Active Staff', visible: true, category: 'stats' },
-        { id: 'open-shifts', title: 'Open Shifts', visible: true, category: 'stats' },
-        { id: 'compliance-rate', title: 'Compliance Rate', visible: true, category: 'stats' },
-        { id: 'monthly-revenue', title: 'Monthly Revenue', visible: false, category: 'stats' },
-        { id: 'monthly-hours', title: 'Monthly Hours', visible: false, category: 'stats' },
-        { id: 'total-facilities', title: 'Total Facilities', visible: false, category: 'stats' },
-        { id: 'outstanding-invoices', title: 'Outstanding Invoices', visible: false, category: 'stats' },
-        { id: 'urgent-shifts', title: 'Urgent Shifts', visible: false, category: 'stats' },
-        { id: 'expiring-credentials', title: 'Expiring Credentials', visible: false, category: 'stats' },
-        
+        { id: "active-staff", title: "Active Staff", visible: true, category: "stats" },
+        { id: "open-shifts", title: "Open Shifts", visible: true, category: "stats" },
+        { id: "compliance-rate", title: "Compliance Rate", visible: true, category: "stats" },
+        { id: "monthly-revenue", title: "Monthly Revenue", visible: false, category: "stats" },
+        { id: "monthly-hours", title: "Monthly Hours", visible: false, category: "stats" },
+        { id: "total-facilities", title: "Total Facilities", visible: false, category: "stats" },
+        {
+          id: "outstanding-invoices",
+          title: "Outstanding Invoices",
+          visible: false,
+          category: "stats",
+        },
+        { id: "urgent-shifts", title: "Urgent Shifts", visible: false, category: "stats" },
+        {
+          id: "expiring-credentials",
+          title: "Expiring Credentials",
+          visible: false,
+          category: "stats",
+        },
+
         // Activity & Communication Widgets
-        { id: 'priority-tasks', title: 'Priority Tasks', visible: true, category: 'activity' },
-        { id: 'recent-activity', title: 'Recent Activity', visible: true, category: 'activity' },
-        { id: 'notifications', title: 'Notifications', visible: false, category: 'activity' },
-        { id: 'message-center', title: 'Message Center', visible: false, category: 'activity' },
-        
+        { id: "priority-tasks", title: "Priority Tasks", visible: true, category: "activity" },
+        { id: "recent-activity", title: "Recent Activity", visible: true, category: "activity" },
+        { id: "notifications", title: "Notifications", visible: false, category: "activity" },
+        { id: "message-center", title: "Message Center", visible: false, category: "activity" },
+
         // Analytics & Reporting Widgets
-        { id: 'performance-trends', title: 'Performance Trends', visible: false, category: 'analytics' },
-        { id: 'capacity-planning', title: 'Capacity Planning', visible: false, category: 'analytics' },
-        { id: 'financial-summary', title: 'Financial Summary', visible: false, category: 'analytics' },
-        { id: 'schedule-overview', title: 'Schedule Overview', visible: false, category: 'analytics' },
-        
+        {
+          id: "performance-trends",
+          title: "Performance Trends",
+          visible: false,
+          category: "analytics",
+        },
+        {
+          id: "capacity-planning",
+          title: "Capacity Planning",
+          visible: false,
+          category: "analytics",
+        },
+        {
+          id: "financial-summary",
+          title: "Financial Summary",
+          visible: false,
+          category: "analytics",
+        },
+        {
+          id: "schedule-overview",
+          title: "Schedule Overview",
+          visible: false,
+          category: "analytics",
+        },
+
         // Operations Widgets
-        { id: 'facility-map', title: 'Facility Map', visible: false, category: 'operations' },
-        { id: 'quick-actions', title: 'Quick Actions', visible: false, category: 'operations' },
-        { id: 'staff-availability', title: 'Staff Availability', visible: false, category: 'operations' },
-        { id: 'shift-coverage', title: 'Shift Coverage', visible: false, category: 'operations' }
+        { id: "facility-map", title: "Facility Map", visible: false, category: "operations" },
+        { id: "quick-actions", title: "Quick Actions", visible: false, category: "operations" },
+        {
+          id: "staff-availability",
+          title: "Staff Availability",
+          visible: false,
+          category: "operations",
+        },
+        { id: "shift-coverage", title: "Shift Coverage", visible: false, category: "operations" },
       ];
 
-      console.log(`[STORAGE] Returning default dashboard config for user ${userId} - ${defaultWidgets.length} total widgets`);
+        `[STORAGE] Returning default dashboard config for user ${userId} - ${defaultWidgets.length} total widgets`
+      );
       return {
-        layout: 'grid',
-        widgets: defaultWidgets
+        layout: "grid",
+        widgets: defaultWidgets,
       };
     } catch (error) {
       console.error(`[STORAGE] Error getting dashboard widgets for user ${userId}:`, error);
@@ -2039,14 +2192,13 @@ export class DatabaseStorage implements IStorage {
 
   async saveDashboardWidgets(userId: number, widgets: any): Promise<void> {
     try {
-      console.log(`[STORAGE] Saving dashboard widgets for user ${userId}:`, {
         widgetCount: widgets?.length || 0,
-        visibleWidgets: widgets?.filter((w: any) => w.visible)?.length || 0
+        visibleWidgets: widgets?.filter((w: any) => w.visible)?.length || 0,
       });
 
       const widgetConfiguration = {
-        layout: 'grid',
-        widgets: widgets
+        layout: "grid",
+        widgets: widgets,
       };
 
       // Update user's dashboard preferences
@@ -2054,11 +2206,10 @@ export class DatabaseStorage implements IStorage {
         .update(schema.users)
         .set({
           dashboardPreferences: widgetConfiguration,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(schema.users.id, userId));
-      
-      console.log(`[STORAGE] Updated dashboard preferences for user ${userId}`);
+
     } catch (error) {
       console.error(`[STORAGE] Error saving dashboard widgets for user ${userId}:`, error);
       throw error;
@@ -2506,27 +2657,28 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Shift assignment methods
-  async getShiftAssignments(shiftId: string): Promise<Array<{ workerId: number; assignedAt: string; status: string }>> {
+  async getShiftAssignments(
+    shiftId: string
+  ): Promise<Array<{ workerId: number; assignedAt: string; status: string }>> {
     try {
-      console.log(`[DEBUG] Querying assignments for shift ${shiftId}`);
-      
-      const assignments = await db.select({
-        workerId: shiftAssignments.workerId,
-        assignedAt: shiftAssignments.assignedAt,
-        status: shiftAssignments.status,
-      })
-      .from(shiftAssignments)
-      .where(and(
-        eq(shiftAssignments.shiftId, shiftId),
-        eq(shiftAssignments.status, 'assigned')
-      ));
-      
-      console.log(`[DEBUG] Found ${assignments.length} assignments for shift ${shiftId}:`, assignments);
-      
-      return assignments.map(a => ({
+
+      const assignments = await db
+        .select({
+          workerId: shiftAssignments.workerId,
+          assignedAt: shiftAssignments.assignedAt,
+          status: shiftAssignments.status,
+        })
+        .from(shiftAssignments)
+        .where(and(eq(shiftAssignments.shiftId, shiftId), eq(shiftAssignments.status, "assigned")));
+
+        `[DEBUG] Found ${assignments.length} assignments for shift ${shiftId}:`,
+        assignments
+      );
+
+      return assignments.map((a) => ({
         workerId: a.workerId,
         assignedAt: a.assignedAt?.toISOString() || new Date().toISOString(),
-        status: a.status
+        status: a.status,
       }));
     } catch (error: any) {
       console.error("Error in getShiftAssignments:", error);
@@ -2534,7 +2686,12 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async addShiftAssignment(assignment: { shiftId: string; workerId: number; assignedById: number; status: string }): Promise<void> {
+  async addShiftAssignment(assignment: {
+    shiftId: string;
+    workerId: number;
+    assignedById: number;
+    status: string;
+  }): Promise<void> {
     try {
       await db.insert(shiftAssignments).values({
         shiftId: assignment.shiftId,
@@ -2549,14 +2706,16 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateShiftAssignmentStatus(shiftId: string, workerId: number, status: string): Promise<void> {
+  async updateShiftAssignmentStatus(
+    shiftId: string,
+    workerId: number,
+    status: string
+  ): Promise<void> {
     try {
-      await db.update(shiftAssignments)
+      await db
+        .update(shiftAssignments)
         .set({ status })
-        .where(and(
-          eq(shiftAssignments.shiftId, shiftId),
-          eq(shiftAssignments.workerId, workerId)
-        ));
+        .where(and(eq(shiftAssignments.shiftId, shiftId), eq(shiftAssignments.workerId, workerId)));
     } catch (error: any) {
       console.error("Error in updateShiftAssignmentStatus:", error);
       throw error;
@@ -2571,13 +2730,18 @@ export class DatabaseStorage implements IStorage {
 
   async getShiftTemplates(facilityId?: number): Promise<ShiftTemplate[]> {
     if (facilityId) {
-      return await db.select().from(shiftTemplates)
+      return await db
+        .select()
+        .from(shiftTemplates)
         .where(and(eq(shiftTemplates.facilityId, facilityId), eq(shiftTemplates.isActive, true)));
     }
     return await db.select().from(shiftTemplates).where(eq(shiftTemplates.isActive, true));
   }
 
-  async updateShiftTemplate(id: number, updates: Partial<InsertShiftTemplate>): Promise<ShiftTemplate | undefined> {
+  async updateShiftTemplate(
+    id: number,
+    updates: Partial<InsertShiftTemplate>
+  ): Promise<ShiftTemplate | undefined> {
     const [result] = await db
       .update(shiftTemplates)
       .set({ ...updates, updatedAt: new Date() })
@@ -2602,19 +2766,25 @@ export class DatabaseStorage implements IStorage {
 
   async getGeneratedShifts(dateRange?: { start: string; end: string }): Promise<GeneratedShift[]> {
     if (dateRange) {
-      return await db.select().from(generatedShifts)
-        .where(and(
-          gte(generatedShifts.date, dateRange.start),
-          lte(generatedShifts.date, dateRange.end)
-        ))
+      return await db
+        .select()
+        .from(generatedShifts)
+        .where(
+          and(gte(generatedShifts.date, dateRange.start), lte(generatedShifts.date, dateRange.end))
+        )
         .orderBy(generatedShifts.date, generatedShifts.startTime);
     }
-    
-    return await db.select().from(generatedShifts)
+
+    return await db
+      .select()
+      .from(generatedShifts)
       .orderBy(generatedShifts.date, generatedShifts.startTime);
   }
 
-  async updateGeneratedShift(id: string, updates: Partial<InsertGeneratedShift>): Promise<GeneratedShift | undefined> {
+  async updateGeneratedShift(
+    id: string,
+    updates: Partial<InsertGeneratedShift>
+  ): Promise<GeneratedShift | undefined> {
     const [result] = await db
       .update(generatedShifts)
       .set({ ...updates, updatedAt: new Date() })
@@ -2635,12 +2805,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserSession(sessionId: string): Promise<UserSession | undefined> {
-    const [result] = await db.select().from(userSessions)
+    const [result] = await db
+      .select()
+      .from(userSessions)
       .where(and(eq(userSessions.id, sessionId), gt(userSessions.expiresAt, new Date())));
     return result;
   }
 
-  async updateUserSession(sessionId: string, updates: Partial<InsertUserSession>): Promise<UserSession | undefined> {
+  async updateUserSession(
+    sessionId: string,
+    updates: Partial<InsertUserSession>
+  ): Promise<UserSession | undefined> {
     const [result] = await db
       .update(userSessions)
       .set({ ...updates, updatedAt: new Date() })
@@ -2665,31 +2840,36 @@ export class DatabaseStorage implements IStorage {
     return newNotification;
   }
 
-  async getNotifications(userId: number | null, facilityUserId: number | null, limit: number = 50): Promise<Notification[]> {
+  async getNotifications(
+    userId: number | null,
+    facilityUserId: number | null,
+    limit: number = 50
+  ): Promise<Notification[]> {
     const conditions = [];
     if (userId !== null) conditions.push(eq(notifications.userId, userId));
     if (facilityUserId !== null) conditions.push(eq(notifications.facilityUserId, facilityUserId));
-    
+
     const query = db.select().from(notifications);
     if (conditions.length > 0) {
       query.where(or(...conditions));
     }
-    
-    return await query
-      .orderBy(desc(notifications.createdAt))
-      .limit(limit);
+
+    return await query.orderBy(desc(notifications.createdAt)).limit(limit);
   }
 
-  async getUnreadNotificationCount(userId: number | null, facilityUserId: number | null): Promise<number> {
+  async getUnreadNotificationCount(
+    userId: number | null,
+    facilityUserId: number | null
+  ): Promise<number> {
     const conditions = [eq(notifications.isRead, false)];
     if (userId !== null) conditions.push(eq(notifications.userId, userId));
     if (facilityUserId !== null) conditions.push(eq(notifications.facilityUserId, facilityUserId));
-    
+
     const result = await db
       .select({ count: sql<number>`count(*)` })
       .from(notifications)
       .where(and(...conditions));
-    
+
     return result[0]?.count || 0;
   }
 
@@ -2700,11 +2880,14 @@ export class DatabaseStorage implements IStorage {
       .where(eq(notifications.id, id));
   }
 
-  async markAllNotificationsAsRead(userId: number | null, facilityUserId: number | null): Promise<void> {
+  async markAllNotificationsAsRead(
+    userId: number | null,
+    facilityUserId: number | null
+  ): Promise<void> {
     const conditions = [eq(notifications.isRead, false)];
     if (userId !== null) conditions.push(eq(notifications.userId, userId));
     if (facilityUserId !== null) conditions.push(eq(notifications.facilityUserId, facilityUserId));
-    
+
     await db
       .update(notifications)
       .set({ isRead: true, readAt: new Date() })
@@ -2715,11 +2898,14 @@ export class DatabaseStorage implements IStorage {
     await db.delete(notifications).where(eq(notifications.id, id));
   }
 
-  async deleteAllNotifications(userId: number | null, facilityUserId: number | null): Promise<void> {
+  async deleteAllNotifications(
+    userId: number | null,
+    facilityUserId: number | null
+  ): Promise<void> {
     const conditions = [];
     if (userId !== null) conditions.push(eq(notifications.userId, userId));
     if (facilityUserId !== null) conditions.push(eq(notifications.facilityUserId, facilityUserId));
-    
+
     if (conditions.length > 0) {
       await db.delete(notifications).where(or(...conditions));
     }
@@ -2739,7 +2925,10 @@ export class DatabaseStorage implements IStorage {
     return newType;
   }
 
-  async updateTimeOffType(id: number, updates: Partial<InsertTimeOffType>): Promise<TimeOffType | undefined> {
+  async updateTimeOffType(
+    id: number,
+    updates: Partial<InsertTimeOffType>
+  ): Promise<TimeOffType | undefined> {
     const [updated] = await db
       .update(timeOffTypes)
       .set({ ...updates, updatedAt: new Date() })
@@ -2756,7 +2945,11 @@ export class DatabaseStorage implements IStorage {
     return await query.orderBy(timeOffBalances.timeOffTypeId);
   }
 
-  async getTimeOffBalance(userId: number, timeOffTypeId: number, year: number): Promise<TimeOffBalance | undefined> {
+  async getTimeOffBalance(
+    userId: number,
+    timeOffTypeId: number,
+    year: number
+  ): Promise<TimeOffBalance | undefined> {
     const [balance] = await db
       .select()
       .from(timeOffBalances)
@@ -2775,7 +2968,10 @@ export class DatabaseStorage implements IStorage {
     return newBalance;
   }
 
-  async updateTimeOffBalance(id: number, updates: Partial<InsertTimeOffBalance>): Promise<TimeOffBalance | undefined> {
+  async updateTimeOffBalance(
+    id: number,
+    updates: Partial<InsertTimeOffBalance>
+  ): Promise<TimeOffBalance | undefined> {
     const [updated] = await db
       .update(timeOffBalances)
       .set({ ...updates, updatedAt: new Date() })
@@ -2792,7 +2988,7 @@ export class DatabaseStorage implements IStorage {
     facilityId?: number;
   }): Promise<TimeOffRequest[]> {
     const conditions = [];
-    
+
     if (filters?.userId) {
       conditions.push(eq(timeOffRequests.userId, filters.userId));
     }
@@ -2810,7 +3006,7 @@ export class DatabaseStorage implements IStorage {
     if (conditions.length > 0) {
       query.where(and(...conditions));
     }
-    
+
     return await query.orderBy(desc(timeOffRequests.createdAt));
   }
 
@@ -2824,7 +3020,10 @@ export class DatabaseStorage implements IStorage {
     return newRequest;
   }
 
-  async updateTimeOffRequest(id: number, updates: Partial<InsertTimeOffRequest>): Promise<TimeOffRequest | undefined> {
+  async updateTimeOffRequest(
+    id: number,
+    updates: Partial<InsertTimeOffRequest>
+  ): Promise<TimeOffRequest | undefined> {
     const [updated] = await db
       .update(timeOffRequests)
       .set({ ...updates, updatedAt: new Date() })
@@ -2833,7 +3032,12 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  async reviewTimeOffRequest(id: number, status: string, reviewedBy: number, reviewNotes?: string): Promise<TimeOffRequest | undefined> {
+  async reviewTimeOffRequest(
+    id: number,
+    status: string,
+    reviewedBy: number,
+    reviewNotes?: string
+  ): Promise<TimeOffRequest | undefined> {
     const [updated] = await db
       .update(timeOffRequests)
       .set({
@@ -2841,28 +3045,32 @@ export class DatabaseStorage implements IStorage {
         reviewedBy,
         reviewedAt: new Date(),
         reviewNotes,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(timeOffRequests.id, id))
       .returning();
-      
+
     // If approved, update the balance
-    if (updated && status === 'approved') {
+    if (updated && status === "approved") {
       const balance = await this.getTimeOffBalance(
         updated.userId,
         updated.timeOffTypeId,
         new Date(updated.startDate).getFullYear()
       );
-      
+
       if (balance) {
         await this.updateTimeOffBalance(balance.id, {
           used: (parseFloat(balance.used) + parseFloat(updated.totalHours.toString())).toString(),
-          pending: (parseFloat(balance.pending) - parseFloat(updated.totalHours.toString())).toString(),
-          available: (parseFloat(balance.available) - parseFloat(updated.totalHours.toString())).toString()
+          pending: (
+            parseFloat(balance.pending) - parseFloat(updated.totalHours.toString())
+          ).toString(),
+          available: (
+            parseFloat(balance.available) - parseFloat(updated.totalHours.toString())
+          ).toString(),
         });
       }
     }
-    
+
     return updated;
   }
 
@@ -2879,7 +3087,10 @@ export class DatabaseStorage implements IStorage {
     return newPolicy;
   }
 
-  async updateTimeOffPolicy(id: number, updates: Partial<InsertTimeOffPolicy>): Promise<TimeOffPolicy | undefined> {
+  async updateTimeOffPolicy(
+    id: number,
+    updates: Partial<InsertTimeOffPolicy>
+  ): Promise<TimeOffPolicy | undefined> {
     const [updated] = await db
       .update(timeOffPolicies)
       .set({ ...updates, updatedAt: new Date() })
@@ -2903,28 +3114,32 @@ export class DatabaseStorage implements IStorage {
     return userShifts;
   }
 
-  async calculateTimeOffAccrual(userId: number, timeOffTypeId: number, year: number): Promise<number> {
+  async calculateTimeOffAccrual(
+    userId: number,
+    timeOffTypeId: number,
+    year: number
+  ): Promise<number> {
     // Get the user's facility and policy
     const user = await this.getUser(userId);
     if (!user || !user.facilityId) return 0;
-    
+
     const policies = await this.getTimeOffPolicies(user.facilityId);
-    const policy = policies.find(p => p.isActive);
-    
+    const policy = policies.find((p) => p.isActive);
+
     if (!policy) return 0;
-    
+
     // Simple accrual calculation - can be expanded based on policy settings
-    if (policy.accrualMethod === 'annual') {
-      return parseFloat(policy.yearlyAllocation?.toString() || '0');
-    } else if (policy.accrualMethod === 'monthly') {
+    if (policy.accrualMethod === "annual") {
+      return parseFloat(policy.yearlyAllocation?.toString() || "0");
+    } else if (policy.accrualMethod === "monthly") {
       const monthsWorked = new Date().getMonth() + 1; // Current month
-      const monthlyRate = parseFloat(policy.accrualRate?.toString() || '0');
+      const monthlyRate = parseFloat(policy.accrualRate?.toString() || "0");
       return monthlyRate * monthsWorked;
     }
-    
+
     return 0;
   }
-  
+
   // Analytics event tracking implementation
   async trackEvent(event: InsertAnalyticsEvent): Promise<void> {
     try {
@@ -2933,15 +3148,14 @@ export class DatabaseStorage implements IStorage {
         try {
           await db.insert(analyticsEvents).values(event);
         } catch (error) {
-          console.error('Failed to track analytics event:', error);
           // Don't throw - we don't want analytics failures to break the app
         }
       });
     } catch (error) {
-      console.error('Failed to queue analytics event:', error);
+      // Failed to queue analytics event
     }
   }
-  
+
   async getAnalyticsEvents(filters?: {
     userId?: number;
     facilityId?: number;
@@ -2953,7 +3167,7 @@ export class DatabaseStorage implements IStorage {
   }): Promise<AnalyticsEvent[]> {
     let query = db.select().from(analyticsEvents);
     const conditions = [];
-    
+
     if (filters?.userId) {
       conditions.push(eq(analyticsEvents.userId, filters.userId));
     }
@@ -2972,74 +3186,75 @@ export class DatabaseStorage implements IStorage {
     if (filters?.endDate) {
       conditions.push(lte(analyticsEvents.timestamp, filters.endDate));
     }
-    
+
     if (conditions.length > 0) {
       query = query.where(and(...conditions));
     }
-    
+
     query = query.orderBy(desc(analyticsEvents.timestamp));
-    
+
     if (filters?.limit) {
       query = query.limit(filters.limit);
     }
-    
+
     return await query;
   }
-  
-  async getRecentAnalyticsEvents(limit: number, offset: number, category?: string): Promise<AnalyticsEvent[]> {
+
+  async getRecentAnalyticsEvents(
+    limit: number,
+    offset: number,
+    category?: string
+  ): Promise<AnalyticsEvent[]> {
     let query = db.select().from(analyticsEvents);
-    
+
     if (category) {
       query = query.where(eq(analyticsEvents.eventCategory, category));
     }
-    
-    const events = await query
-      .orderBy(desc(analyticsEvents.timestamp))
-      .limit(limit)
-      .offset(offset);
-      
+
+    const events = await query.orderBy(desc(analyticsEvents.timestamp)).limit(limit).offset(offset);
+
     return events;
   }
-  
+
   async getAnalyticsEventCounts(): Promise<{ [category: string]: number }> {
     const results = await db
       .select({
         category: analyticsEvents.eventCategory,
-        count: sql<number>`count(*)::int`
+        count: sql<number>`count(*)::int`,
       })
       .from(analyticsEvents)
       .groupBy(analyticsEvents.eventCategory);
-      
+
     const counts: { [category: string]: number } = {};
-    results.forEach(result => {
+    results.forEach((result) => {
       if (result.category) {
         counts[result.category] = result.count;
       }
     });
-    
+
     return counts;
   }
-  
+
   async getEventStats(filters?: {
     eventCategory?: string;
     startDate?: Date;
     endDate?: Date;
-    groupBy?: 'day' | 'week' | 'month';
+    groupBy?: "day" | "week" | "month";
   }): Promise<{ date: string; count: number; category?: string }[]> {
-    const groupBy = filters?.groupBy || 'day';
+    const groupBy = filters?.groupBy || "day";
     let dateFormat: string;
-    
+
     switch (groupBy) {
-      case 'week':
-        dateFormat = 'YYYY-WW';
+      case "week":
+        dateFormat = "YYYY-WW";
         break;
-      case 'month':
-        dateFormat = 'YYYY-MM';
+      case "month":
+        dateFormat = "YYYY-MM";
         break;
       default:
-        dateFormat = 'YYYY-MM-DD';
+        dateFormat = "YYYY-MM-DD";
     }
-    
+
     const conditions = [];
     if (filters?.eventCategory) {
       conditions.push(eq(analyticsEvents.eventCategory, filters.eventCategory));
@@ -3050,7 +3265,7 @@ export class DatabaseStorage implements IStorage {
     if (filters?.endDate) {
       conditions.push(lte(analyticsEvents.timestamp, filters.endDate));
     }
-    
+
     const results = await db
       .select({
         date: sql<string>`TO_CHAR(${analyticsEvents.timestamp}, ${dateFormat})`,
@@ -3064,26 +3279,22 @@ export class DatabaseStorage implements IStorage {
         analyticsEvents.eventCategory
       )
       .orderBy(sql`TO_CHAR(${analyticsEvents.timestamp}, ${dateFormat})`);
-    
+
     return results;
   }
-  
+
   // Calendar sync methods implementation
   async getUserAssignedShifts(userId: number): Promise<Shift[]> {
     try {
       // Get staff member by user ID
-      const staffMember = await db
-        .select()
-        .from(staff)
-        .where(eq(staff.userId, userId))
-        .limit(1);
-      
+      const staffMember = await db.select().from(staff).where(eq(staff.userId, userId)).limit(1);
+
       if (!staffMember.length) {
         return [];
       }
-      
+
       const staffId = staffMember[0].id;
-      
+
       // Get shifts where this staff member is assigned
       const assignedShifts = await db
         .select({
@@ -3108,53 +3319,53 @@ export class DatabaseStorage implements IStorage {
         .where(
           and(
             sql`${staffId} = ANY(${shifts.assignedStaffIds})`,
-            gte(shifts.date, new Date().toISOString().split('T')[0]) // Only future shifts
+            gte(shifts.date, new Date().toISOString().split("T")[0]) // Only future shifts
           )
         )
         .orderBy(asc(shifts.date), asc(shifts.startTime));
-      
+
       return assignedShifts as any[];
     } catch (error) {
-      console.error('Error fetching user assigned shifts:', error);
+      console.error("Error fetching user assigned shifts:", error);
       return [];
     }
   }
-  
-  async saveUserCalendarTokens(userId: number, tokens: {
-    provider: string;
-    accessToken: string;
-    refreshToken?: string;
-    expiryDate?: number;
-  }): Promise<void> {
+
+  async saveUserCalendarTokens(
+    userId: number,
+    tokens: {
+      provider: string;
+      accessToken: string;
+      refreshToken?: string;
+      expiryDate?: number;
+    }
+  ): Promise<void> {
     // In a production app, you would create a calendar_tokens table
     // For now, we'll store this in user metadata or a temporary implementation
-    console.log('Saving calendar tokens for user:', userId, 'provider:', tokens.provider);
     // TODO: Implement calendar_tokens table
   }
-  
-  async getUserCalendarTokens(userId: number, provider: string): Promise<{
+
+  async getUserCalendarTokens(
+    userId: number,
+    provider: string
+  ): Promise<{
     accessToken: string;
     refreshToken?: string;
     expiryDate?: number;
   } | null> {
     // TODO: Implement calendar_tokens table lookup
-    console.log('Getting calendar tokens for user:', userId, 'provider:', provider);
     return null;
   }
-  
+
   async deleteUserCalendarTokens(userId: number, provider: string): Promise<void> {
     // TODO: Implement calendar_tokens table deletion
-    console.log('Deleting calendar tokens for user:', userId, 'provider:', provider);
   }
-  
+
   async saveUserCalendarFeedToken(userId: number, token: string): Promise<void> {
     // Update user record with calendar feed token
-    await db
-      .update(users)
-      .set({ calendarFeedToken: token })
-      .where(eq(users.id, userId));
+    await db.update(users).set({ calendarFeedToken: token }).where(eq(users.id, userId));
   }
-  
+
   async getUserCalendarFeedToken(userId: number): Promise<string | null> {
     const user = await this.getUser(userId);
     return user?.calendarFeedToken || null;

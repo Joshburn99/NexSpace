@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Search, Plus, Building2, X } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
+import React, { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Search, Plus, Building2, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 
 interface Staff {
   id: number;
@@ -37,19 +37,19 @@ export function StaffFacilityAssociationDialog({
   isOpen,
   onClose,
   staff,
-  facilities
+  facilities,
 }: StaffFacilityAssociationDialogProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Add facility association mutation
   const addFacilityAssociation = useMutation({
     mutationFn: async (facilityId: number) => {
-      return apiRequest('POST', `/api/staff/${staff.id}/facilities`, { facilityId });
+      return apiRequest("POST", `/api/staff/${staff.id}/facilities`, { facilityId });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/staff'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
       toast({
         title: "Success",
         description: "Facility association added successfully",
@@ -67,10 +67,10 @@ export function StaffFacilityAssociationDialog({
   // Remove facility association mutation
   const removeFacilityAssociation = useMutation({
     mutationFn: async (facilityId: number) => {
-      return apiRequest('DELETE', `/api/staff/${staff.id}/facilities/${facilityId}`);
+      return apiRequest("DELETE", `/api/staff/${staff.id}/facilities/${facilityId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/staff'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/staff"] });
       toast({
         title: "Success",
         description: "Facility association removed successfully",
@@ -94,14 +94,17 @@ export function StaffFacilityAssociationDialog({
   };
 
   const associatedFacilities = staff.associatedFacilities || [];
-  const filteredFacilities = facilities.filter(facility => 
-    facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    facility.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    facility.address?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredFacilities = facilities.filter(
+    (facility) =>
+      facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      facility.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      facility.address?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const availableFacilities = filteredFacilities.filter(f => !associatedFacilities.includes(f.id));
-  const currentFacilities = facilities.filter(f => associatedFacilities.includes(f.id));
+  const availableFacilities = filteredFacilities.filter(
+    (f) => !associatedFacilities.includes(f.id)
+  );
+  const currentFacilities = facilities.filter((f) => associatedFacilities.includes(f.id));
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -197,7 +200,9 @@ export function StaffFacilityAssociationDialog({
               </div>
             ) : (
               <p className="text-center text-gray-500 py-8">
-                {searchTerm ? 'No facilities match your search' : 'No available facilities to associate'}
+                {searchTerm
+                  ? "No facilities match your search"
+                  : "No available facilities to associate"}
               </p>
             )}
           </div>

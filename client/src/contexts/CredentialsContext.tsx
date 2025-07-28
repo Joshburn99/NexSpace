@@ -1,7 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 export type CredentialStatus = "active" | "expiring_soon" | "expired" | "pending" | "suspended";
-export type CredentialType = "nursing_license" | "cpr_certification" | "background_check" | "drug_screening" | "tb_test" | "physical_exam" | "training_certification" | "specialty_certification";
+export type CredentialType =
+  | "nursing_license"
+  | "cpr_certification"
+  | "background_check"
+  | "drug_screening"
+  | "tb_test"
+  | "physical_exam"
+  | "training_certification"
+  | "specialty_certification";
 
 export interface Credential {
   id: number;
@@ -71,7 +79,7 @@ const sampleCredentials: Credential[] = [
     status: "active",
     documentUrl: "/documents/rn-license-sarah.pdf",
     verifiedBy: "HR Manager",
-    verifiedDate: "2024-12-01"
+    verifiedDate: "2024-12-01",
   },
   {
     id: 2,
@@ -87,7 +95,7 @@ const sampleCredentials: Credential[] = [
     status: "active",
     documentUrl: "/documents/cna-license-michael.pdf",
     verifiedBy: "HR Manager",
-    verifiedDate: "2024-11-15"
+    verifiedDate: "2024-11-15",
   },
   {
     id: 3,
@@ -103,9 +111,9 @@ const sampleCredentials: Credential[] = [
     status: "active",
     documentUrl: "/documents/lpn-license-emily.pdf",
     verifiedBy: "HR Manager",
-    verifiedDate: "2024-10-20"
+    verifiedDate: "2024-10-20",
   },
-  
+
   // CPR Certifications
   {
     id: 4,
@@ -121,7 +129,7 @@ const sampleCredentials: Credential[] = [
     status: "active",
     documentUrl: "/documents/bls-sarah.pdf",
     verifiedBy: "Training Coordinator",
-    verifiedDate: "2024-02-16"
+    verifiedDate: "2024-02-16",
   },
   {
     id: 5,
@@ -137,7 +145,7 @@ const sampleCredentials: Credential[] = [
     status: "active",
     documentUrl: "/documents/bls-david.pdf",
     verifiedBy: "Training Coordinator",
-    verifiedDate: "2023-08-11"
+    verifiedDate: "2023-08-11",
   },
 
   // Expiring credentials
@@ -158,7 +166,7 @@ const sampleCredentials: Credential[] = [
     renewalInProgress: true,
     notes: "Renewal application submitted",
     verifiedBy: "HR Manager",
-    verifiedDate: "2024-06-01"
+    verifiedDate: "2024-06-01",
   },
   {
     id: 7,
@@ -176,7 +184,7 @@ const sampleCredentials: Credential[] = [
     reminderSent: true,
     notes: "Renewal class scheduled for next week",
     verifiedBy: "Training Coordinator",
-    verifiedDate: "2023-06-21"
+    verifiedDate: "2023-06-21",
   },
 
   // Expired credentials
@@ -195,7 +203,7 @@ const sampleCredentials: Credential[] = [
     documentUrl: "/documents/tb-test-jennifer.pdf",
     notes: "Follow-up required immediately",
     verifiedBy: "Occupational Health",
-    verifiedDate: "2023-05-02"
+    verifiedDate: "2023-05-02",
   },
   {
     id: 9,
@@ -213,7 +221,7 @@ const sampleCredentials: Credential[] = [
     notes: "Renewal in progress",
     renewalInProgress: true,
     verifiedBy: "HR Manager",
-    verifiedDate: "2022-12-02"
+    verifiedDate: "2022-12-02",
   },
 
   // Specialty certifications
@@ -231,7 +239,7 @@ const sampleCredentials: Credential[] = [
     status: "active",
     documentUrl: "/documents/ot-license-lisa.pdf",
     verifiedBy: "HR Manager",
-    verifiedDate: "2024-01-05"
+    verifiedDate: "2024-01-05",
   },
   {
     id: 11,
@@ -247,7 +255,7 @@ const sampleCredentials: Credential[] = [
     status: "active",
     documentUrl: "/documents/lcsw-mark.pdf",
     verifiedBy: "HR Manager",
-    verifiedDate: "2023-09-05"
+    verifiedDate: "2023-09-05",
   },
 
   // Physical exams and drug screenings
@@ -265,7 +273,7 @@ const sampleCredentials: Credential[] = [
     status: "active",
     documentUrl: "/documents/physical-sarah.pdf",
     verifiedBy: "Occupational Health",
-    verifiedDate: "2024-01-11"
+    verifiedDate: "2024-01-11",
   },
   {
     id: 13,
@@ -281,7 +289,7 @@ const sampleCredentials: Credential[] = [
     status: "active",
     documentUrl: "/documents/drug-test-michael.pdf",
     verifiedBy: "HR Manager",
-    verifiedDate: "2024-02-16"
+    verifiedDate: "2024-02-16",
   },
 
   // Training certifications
@@ -299,7 +307,7 @@ const sampleCredentials: Credential[] = [
     status: "active",
     documentUrl: "/documents/dementia-training-emily.pdf",
     verifiedBy: "Training Coordinator",
-    verifiedDate: "2024-03-02"
+    verifiedDate: "2024-03-02",
   },
   {
     id: 15,
@@ -315,8 +323,8 @@ const sampleCredentials: Credential[] = [
     status: "active",
     documentUrl: "/documents/fall-prevention-david.pdf",
     verifiedBy: "Training Coordinator",
-    verifiedDate: "2024-04-02"
-  }
+    verifiedDate: "2024-04-02",
+  },
 ];
 
 // Generate credential alerts
@@ -324,9 +332,11 @@ const generateAlerts = (credentials: Credential[]): CredentialAlert[] => {
   const alerts: CredentialAlert[] = [];
   const today = new Date();
 
-  credentials.forEach(credential => {
+  credentials.forEach((credential) => {
     const expirationDate = new Date(credential.expirationDate);
-    const daysUntilExpiration = Math.ceil((expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const daysUntilExpiration = Math.ceil(
+      (expirationDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
 
     if (credential.status === "expired") {
       alerts.push({
@@ -340,7 +350,7 @@ const generateAlerts = (credentials: Credential[]): CredentialAlert[] => {
         severity: "critical",
         daysUntilExpiration,
         actionRequired: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
     } else if (daysUntilExpiration <= 30 && daysUntilExpiration > 0) {
       alerts.push({
@@ -354,7 +364,7 @@ const generateAlerts = (credentials: Credential[]): CredentialAlert[] => {
         severity: daysUntilExpiration <= 7 ? "high" : daysUntilExpiration <= 14 ? "medium" : "low",
         daysUntilExpiration,
         actionRequired: daysUntilExpiration <= 14,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
     }
   });
@@ -372,7 +382,7 @@ export const CredentialsProvider: React.FC<{ children: ReactNode }> = ({ childre
   }, [credentials]);
 
   const getActiveCredentials = (): Credential[] => {
-    return credentials.filter(cred => cred.status === "active");
+    return credentials.filter((cred) => cred.status === "active");
   };
 
   const getExpiringCredentials = (days: number = 30): Credential[] => {
@@ -380,48 +390,44 @@ export const CredentialsProvider: React.FC<{ children: ReactNode }> = ({ childre
     const cutoffDate = new Date();
     cutoffDate.setDate(today.getDate() + days);
 
-    return credentials.filter(cred => {
+    return credentials.filter((cred) => {
       const expirationDate = new Date(cred.expirationDate);
       return expirationDate <= cutoffDate && expirationDate > today && cred.status !== "expired";
     });
   };
 
   const getExpiredCredentials = (): Credential[] => {
-    return credentials.filter(cred => cred.status === "expired");
+    return credentials.filter((cred) => cred.status === "expired");
   };
 
   const getUserCredentials = (userId: number): Credential[] => {
-    return credentials.filter(cred => cred.userId === userId);
+    return credentials.filter((cred) => cred.userId === userId);
   };
 
   const getCredentialsByType = (type: CredentialType): Credential[] => {
-    return credentials.filter(cred => cred.credentialType === type);
+    return credentials.filter((cred) => cred.credentialType === type);
   };
 
   const getComplianceRate = (): number => {
     const totalCredentials = credentials.length;
-    const activeCredentials = credentials.filter(cred => cred.status === "active").length;
+    const activeCredentials = credentials.filter((cred) => cred.status === "active").length;
     return totalCredentials > 0 ? (activeCredentials / totalCredentials) * 100 : 0;
   };
 
   const addCredential = (credential: Omit<Credential, "id">) => {
     const newCredential: Credential = {
       ...credential,
-      id: Math.max(...credentials.map(c => c.id), 0) + 1
+      id: Math.max(...credentials.map((c) => c.id), 0) + 1,
     };
-    setCredentials(prev => [...prev, newCredential]);
+    setCredentials((prev) => [...prev, newCredential]);
   };
 
   const updateCredential = (id: number, updates: Partial<Credential>) => {
-    setCredentials(prev => 
-      prev.map(cred => 
-        cred.id === id ? { ...cred, ...updates } : cred
-      )
-    );
+    setCredentials((prev) => prev.map((cred) => (cred.id === id ? { ...cred, ...updates } : cred)));
   };
 
   const deleteCredential = (id: number) => {
-    setCredentials(prev => prev.filter(cred => cred.id !== id));
+    setCredentials((prev) => prev.filter((cred) => cred.id !== id));
   };
 
   const value: CredentialsContextType = {
@@ -436,20 +442,16 @@ export const CredentialsProvider: React.FC<{ children: ReactNode }> = ({ childre
     getComplianceRate,
     addCredential,
     updateCredential,
-    deleteCredential
+    deleteCredential,
   };
 
-  return (
-    <CredentialsContext.Provider value={value}>
-      {children}
-    </CredentialsContext.Provider>
-  );
+  return <CredentialsContext.Provider value={value}>{children}</CredentialsContext.Provider>;
 };
 
 export const useCredentials = (): CredentialsContextType => {
   const context = useContext(CredentialsContext);
   if (!context) {
-    throw new Error('useCredentials must be used within a CredentialsProvider');
+    throw new Error("useCredentials must be used within a CredentialsProvider");
   }
   return context;
 };

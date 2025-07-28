@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -18,9 +24,9 @@ export function SessionRestoreButton() {
     setIsLoading(true);
     try {
       // Check if there's stored impersonation state
-      const impersonationState = localStorage.getItem('nexspace_impersonation_state');
+      const impersonationState = localStorage.getItem("nexspace_impersonation_state");
       const impersonationData = impersonationState ? JSON.parse(impersonationState) : null;
-      
+
       await restoreSession(username, password, impersonationData?.impersonatedUserId);
       setIsOpen(false);
     } catch (error) {
@@ -42,16 +48,14 @@ export function SessionRestoreButton() {
   if (sessionState.isImpersonating) {
     return (
       <div className="flex items-center gap-2">
-        <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+        <Badge
+          variant="secondary"
+          className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+        >
           <UserCheck className="h-3 w-3 mr-1" />
           Impersonating: {sessionState.user?.firstName} {sessionState.user?.lastName}
         </Badge>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleStopImpersonation}
-          className="text-xs"
-        >
+        <Button size="sm" variant="outline" onClick={handleStopImpersonation} className="text-xs">
           <User className="h-3 w-3 mr-1" />
           Quit Session
         </Button>
@@ -75,7 +79,7 @@ export function SessionRestoreButton() {
           <div className="text-sm text-muted-foreground">
             Quickly restore your superuser session and any active impersonation state.
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="username">Username</Label>
             <Input
@@ -85,7 +89,7 @@ export function SessionRestoreButton() {
               placeholder="Enter username"
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input
@@ -97,17 +101,17 @@ export function SessionRestoreButton() {
             />
           </div>
 
-          {localStorage.getItem('nexspace_impersonation_state') && (
+          {localStorage.getItem("nexspace_impersonation_state") && (
             <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
               <div className="text-sm text-blue-800 dark:text-blue-200">
                 Will restore active impersonation session if credentials are valid.
               </div>
             </div>
           )}
-          
+
           <div className="flex gap-2">
-            <Button 
-              onClick={handleQuickRestore} 
+            <Button
+              onClick={handleQuickRestore}
               disabled={isLoading || !username || !password}
               className="flex-1"
             >

@@ -147,7 +147,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
   // Role-based navigation
   const getNavigationGroups = (): NavigationGroup[] => {
     const isWorker = user?.role === "internal_employee" || user?.role === "contractor_1099";
-    
+
     if (isWorker) {
       // Worker navigation - restricted to essential features only
       return [
@@ -170,7 +170,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
         },
       ];
     }
-    
+
     // Admin/Manager navigation - full access
     return [
       {
@@ -381,7 +381,7 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                 <h1 className="text-xl font-bold text-gray-900">{title || "Dashboard"}</h1>
                 {subtitle && <p className="text-gray-600">{subtitle}</p>}
               </div>
-              
+
               {/* Impersonation Banner */}
               {isImpersonating && (
                 <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-2 rounded-md flex items-center gap-2">
@@ -404,14 +404,10 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
             <div className="flex items-center space-x-4">
               {/* Session Management */}
               <SessionRestoreButton />
-              
+
               {/* Superuser Impersonation Button */}
               {user?.role === "super_admin" && !isImpersonating && (
-                <Button
-                  onClick={() => setShowImpersonationModal(true)}
-                  variant="outline"
-                  size="sm"
-                >
+                <Button onClick={() => setShowImpersonationModal(true)} variant="outline" size="sm">
                   <Users className="h-4 w-4 mr-2" />
                   Impersonate User
                 </Button>
@@ -478,15 +474,11 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
           <div className="bg-white rounded-lg p-6 w-96 max-h-96 overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Impersonate User</h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowImpersonationModal(false)}
-              >
+              <Button variant="ghost" size="sm" onClick={() => setShowImpersonationModal(false)}>
                 ×
               </Button>
             </div>
-            
+
             <div className="mb-4">
               <Input
                 placeholder="Search users..."
@@ -494,13 +486,14 @@ export function AppLayout({ children, title, subtitle }: AppLayoutProps) {
                 onChange={(e) => setImpersonationSearch(e.target.value)}
               />
             </div>
-            
+
             <div className="space-y-2">
               {(allUsers as any[])
-                .filter((u: any) => 
-                  u.firstName.toLowerCase().includes(impersonationSearch.toLowerCase()) ||
-                  u.lastName.toLowerCase().includes(impersonationSearch.toLowerCase()) ||
-                  u.email.toLowerCase().includes(impersonationSearch.toLowerCase())
+                .filter(
+                  (u: any) =>
+                    u.firstName.toLowerCase().includes(impersonationSearch.toLowerCase()) ||
+                    u.lastName.toLowerCase().includes(impersonationSearch.toLowerCase()) ||
+                    u.email.toLowerCase().includes(impersonationSearch.toLowerCase())
                 )
                 .map((impUser: any) => (
                   <div

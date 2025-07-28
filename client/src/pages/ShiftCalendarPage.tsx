@@ -1,5 +1,5 @@
-import React from 'react';
-import ShiftCalendar from '../components/ShiftCalendar';
+import React from "react";
+import ShiftCalendar from "../components/ShiftCalendar";
 
 const ShiftCalendarPage: React.FC = () => {
   return (
@@ -10,7 +10,7 @@ const ShiftCalendarPage: React.FC = () => {
           Manage multi-worker shift assignments and view real-time staffing levels
         </p>
       </div>
-      
+
       <ShiftCalendar />
     </div>
   );

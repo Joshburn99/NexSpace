@@ -131,18 +131,58 @@ function AppContent() {
       <ProtectedRoute path="/worker-open-shifts" component={WorkerOpenShiftsPage} />
       <ProtectedRoute path="/shift-requests" component={ShiftRequestsPage} />
       <ProtectedRoute path="/time-clock" component={TimeClockPage} />
-      <ProtectedRoute path="/staff" component={EnhancedStaffPage} requiredPermissions={['staff.view']} />
-      <ProtectedRoute path="/staff-directory" component={StaffDirectory} requiredPermissions={['staff.view']} />
-      <ProtectedRoute path="/staff/contractors" component={EnhancedStaffPage} requiredPermissions={['staff.view']} />
+      <ProtectedRoute
+        path="/staff"
+        component={EnhancedStaffPage}
+        requiredPermissions={["staff.view"]}
+      />
+      <ProtectedRoute
+        path="/staff-directory"
+        component={StaffDirectory}
+        requiredPermissions={["staff.view"]}
+      />
+      <ProtectedRoute
+        path="/staff/contractors"
+        component={EnhancedStaffPage}
+        requiredPermissions={["staff.view"]}
+      />
       <ProtectedRoute path="/referrals" component={EnhancedReferralPage} />
       <ProtectedRoute path="/staff/referrals" component={EnhancedReferralPage} />
-      <ProtectedRoute path="/analytics" component={AnalyticsPage} requiredPermissions={['analytics.view']} />
-      <ProtectedRoute path="/analytics/shifts" component={DetailedShiftAnalyticsPage} requiredPermissions={['analytics.view']} />
-      <ProtectedRoute path="/analytics/float-pool" component={FloatPoolAnalyticsPage} requiredPermissions={['analytics.view_float_pool']} />
-      <ProtectedRoute path="/analytics/overtime" component={OvertimeReportPage} requiredPermissions={['analytics.view_overtime']} />
-      <ProtectedRoute path="/analytics/attendance" component={AttendancePage} requiredPermissions={['analytics.view_attendance']} />
-      <ProtectedRoute path="/analytics/agency-usage" component={AgencyUsagePage} requiredPermissions={['analytics.view_agency_usage']} />
-      <ProtectedRoute path="/analytics/compliance" component={CompliancePage} requiredPermissions={['compliance.view']} />
+      <ProtectedRoute
+        path="/analytics"
+        component={AnalyticsPage}
+        requiredPermissions={["analytics.view"]}
+      />
+      <ProtectedRoute
+        path="/analytics/shifts"
+        component={DetailedShiftAnalyticsPage}
+        requiredPermissions={["analytics.view"]}
+      />
+      <ProtectedRoute
+        path="/analytics/float-pool"
+        component={FloatPoolAnalyticsPage}
+        requiredPermissions={["analytics.view_float_pool"]}
+      />
+      <ProtectedRoute
+        path="/analytics/overtime"
+        component={OvertimeReportPage}
+        requiredPermissions={["analytics.view_overtime"]}
+      />
+      <ProtectedRoute
+        path="/analytics/attendance"
+        component={AttendancePage}
+        requiredPermissions={["analytics.view_attendance"]}
+      />
+      <ProtectedRoute
+        path="/analytics/agency-usage"
+        component={AgencyUsagePage}
+        requiredPermissions={["analytics.view_agency_usage"]}
+      />
+      <ProtectedRoute
+        path="/analytics/compliance"
+        component={CompliancePage}
+        requiredPermissions={["compliance.view"]}
+      />
       <ProtectedRoute path="/compliance" component={CompliancePage} />
       <ProtectedRoute path="/messages" component={MessagesPage} />
       <ProtectedRoute path="/messaging" component={EnhancedRealTimeMessagingPage} />
@@ -170,11 +210,31 @@ function AppContent() {
       <AdminRoute path="/admin/database" component={AdminDatabaseConsolePage} />
       <AdminRoute path="/admin/analytics" component={AdminAnalytics} />
       <AdminRoute path="/admin/roles" component={RoleManagementPage} />
-      <FacilityRoute path="/facility-management" component={FacilityManagementPage} requiredPermissions={['facilities.view']} />
-      <FacilityRoute path="/facility-profile" component={FacilityProfilePage} requiredPermissions={['facilities.view_profile']} />
-      <FacilityRoute path="/facility-settings" component={FacilitySettingsPage} requiredPermissions={['facilities.manage_settings']} />
-      <FacilityRoute path="/facility-users" component={FacilityUsersManagementPage} requiredPermissions={['users.view']} />
-      <FacilityRoute path="/facility-audit-logs" component={FacilityAuditLogsPage} requiredPermissions={['system.view_audit_logs']} />
+      <FacilityRoute
+        path="/facility-management"
+        component={FacilityManagementPage}
+        requiredPermissions={["facilities.view"]}
+      />
+      <FacilityRoute
+        path="/facility-profile"
+        component={FacilityProfilePage}
+        requiredPermissions={["facilities.view_profile"]}
+      />
+      <FacilityRoute
+        path="/facility-settings"
+        component={FacilitySettingsPage}
+        requiredPermissions={["facilities.manage_settings"]}
+      />
+      <FacilityRoute
+        path="/facility-users"
+        component={FacilityUsersManagementPage}
+        requiredPermissions={["users.view"]}
+      />
+      <FacilityRoute
+        path="/facility-audit-logs"
+        component={FacilityAuditLogsPage}
+        requiredPermissions={["system.view_audit_logs"]}
+      />
       <ProtectedRoute path="/job-postings" component={JobPostingsPage} />
       <ProtectedRoute path="/create-job-posting" component={CreateJobPostingPage} />
       <ProtectedRoute path="/referral-system" component={ReferralSystemPage} />
@@ -209,42 +269,42 @@ function App() {
           <RBACProvider>
             <FacilityPermissionsProvider>
               <NotificationProvider>
-              <ShiftProvider>
-              <TimeClockProvider>
-                <StaffProvider>
-                  <TeamProvider>
-                    <MessageProvider>
-                      <MessagingProvider>
-                        <EnhancedCredentialProvider>
-                          <CredentialVerificationProvider>
-                            <PTOProvider>
-                              <JobProvider>
-                                <ProfileProvider>
-                                  <CredentialsProvider>
-                                    <InsightsProvider>
-                                      <InvoiceProvider>
-                                        <DashboardProvider>
-                                          <TooltipProvider>
-                                            <Toaster />
-                                            <AppContent />
-                                          </TooltipProvider>
-                                        </DashboardProvider>
-                                      </InvoiceProvider>
-                                    </InsightsProvider>
-                                  </CredentialsProvider>
-                                </ProfileProvider>
-                              </JobProvider>
-                            </PTOProvider>
-                          </CredentialVerificationProvider>
-                        </EnhancedCredentialProvider>
-                      </MessagingProvider>
-                  </MessageProvider>
-                </TeamProvider>
-              </StaffProvider>
-            </TimeClockProvider>
-          </ShiftProvider>
-        </NotificationProvider>
-          </FacilityPermissionsProvider>
+                <ShiftProvider>
+                  <TimeClockProvider>
+                    <StaffProvider>
+                      <TeamProvider>
+                        <MessageProvider>
+                          <MessagingProvider>
+                            <EnhancedCredentialProvider>
+                              <CredentialVerificationProvider>
+                                <PTOProvider>
+                                  <JobProvider>
+                                    <ProfileProvider>
+                                      <CredentialsProvider>
+                                        <InsightsProvider>
+                                          <InvoiceProvider>
+                                            <DashboardProvider>
+                                              <TooltipProvider>
+                                                <Toaster />
+                                                <AppContent />
+                                              </TooltipProvider>
+                                            </DashboardProvider>
+                                          </InvoiceProvider>
+                                        </InsightsProvider>
+                                      </CredentialsProvider>
+                                    </ProfileProvider>
+                                  </JobProvider>
+                                </PTOProvider>
+                              </CredentialVerificationProvider>
+                            </EnhancedCredentialProvider>
+                          </MessagingProvider>
+                        </MessageProvider>
+                      </TeamProvider>
+                    </StaffProvider>
+                  </TimeClockProvider>
+                </ShiftProvider>
+              </NotificationProvider>
+            </FacilityPermissionsProvider>
           </RBACProvider>
         </SessionProvider>
       </AuthProvider>

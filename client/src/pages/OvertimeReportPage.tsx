@@ -1,13 +1,27 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Clock, DollarSign, TrendingUp, AlertTriangle, Users, Search, Download } from 'lucide-react';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import {
+  Clock,
+  DollarSign,
+  TrendingUp,
+  AlertTriangle,
+  Users,
+  Search,
+  Download,
+} from "lucide-react";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
 
 interface OvertimeRecord {
   id: number;
@@ -24,100 +38,100 @@ interface OvertimeRecord {
   regularPay: number;
   overtimePay: number;
   totalPay: number;
-  approvalStatus: 'pending' | 'approved' | 'rejected';
+  approvalStatus: "pending" | "approved" | "rejected";
   approvedBy?: string;
   notes?: string;
 }
 
 export default function OvertimeReportPage() {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [dateRange, setDateRange] = useState('month');
+  const [activeTab, setActiveTab] = useState("overview");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [dateRange, setDateRange] = useState("month");
   const { hasPermission } = useFacilityPermissions();
 
   const { data: overtimeData, isLoading } = useQuery<OvertimeRecord[]>({
-    queryKey: ['/api/overtime-reports', dateRange, departmentFilter],
+    queryKey: ["/api/overtime-reports", dateRange, departmentFilter],
     initialData: [
       {
         id: 1,
         staffId: 1,
-        staffName: 'Sarah Johnson',
-        specialty: 'Registered Nurse',
-        department: 'ICU',
-        week: '2025-07-07',
+        staffName: "Sarah Johnson",
+        specialty: "Registered Nurse",
+        department: "ICU",
+        week: "2025-07-07",
         regularHours: 40,
         overtimeHours: 8,
         totalHours: 48,
-        regularRate: 35.00,
-        overtimeRate: 52.50,
-        regularPay: 1400.00,
-        overtimePay: 420.00,
-        totalPay: 1820.00,
-        approvalStatus: 'approved',
-        approvedBy: 'Manager Smith',
-        notes: 'Critical patient care coverage'
+        regularRate: 35.0,
+        overtimeRate: 52.5,
+        regularPay: 1400.0,
+        overtimePay: 420.0,
+        totalPay: 1820.0,
+        approvalStatus: "approved",
+        approvedBy: "Manager Smith",
+        notes: "Critical patient care coverage",
       },
       {
         id: 2,
         staffId: 2,
-        staffName: 'Michael Chen',
-        specialty: 'Licensed Practical Nurse',
-        department: 'Emergency',
-        week: '2025-07-07',
+        staffName: "Michael Chen",
+        specialty: "Licensed Practical Nurse",
+        department: "Emergency",
+        week: "2025-07-07",
         regularHours: 40,
         overtimeHours: 12,
         totalHours: 52,
-        regularRate: 28.00,
-        overtimeRate: 42.00,
-        regularPay: 1120.00,
-        overtimePay: 504.00,
-        totalPay: 1624.00,
-        approvalStatus: 'pending',
-        notes: 'Emergency department shortage'
+        regularRate: 28.0,
+        overtimeRate: 42.0,
+        regularPay: 1120.0,
+        overtimePay: 504.0,
+        totalPay: 1624.0,
+        approvalStatus: "pending",
+        notes: "Emergency department shortage",
       },
       {
         id: 3,
         staffId: 3,
-        staffName: 'Emily Rodriguez',
-        specialty: 'Certified Nursing Assistant',
-        department: 'Med-Surg',
-        week: '2025-07-07',
+        staffName: "Emily Rodriguez",
+        specialty: "Certified Nursing Assistant",
+        department: "Med-Surg",
+        week: "2025-07-07",
         regularHours: 40,
         overtimeHours: 4,
         totalHours: 44,
-        regularRate: 18.00,
-        overtimeRate: 27.00,
-        regularPay: 720.00,
-        overtimePay: 108.00,
-        totalPay: 828.00,
-        approvalStatus: 'approved',
-        approvedBy: 'Manager Johnson',
-        notes: 'Voluntary overtime for patient care'
+        regularRate: 18.0,
+        overtimeRate: 27.0,
+        regularPay: 720.0,
+        overtimePay: 108.0,
+        totalPay: 828.0,
+        approvalStatus: "approved",
+        approvedBy: "Manager Johnson",
+        notes: "Voluntary overtime for patient care",
       },
       {
         id: 4,
         staffId: 4,
-        staffName: 'David Wilson',
-        specialty: 'Respiratory Therapist',
-        department: 'ICU',
-        week: '2025-07-07',
+        staffName: "David Wilson",
+        specialty: "Respiratory Therapist",
+        department: "ICU",
+        week: "2025-07-07",
         regularHours: 40,
         overtimeHours: 16,
         totalHours: 56,
-        regularRate: 32.00,
-        overtimeRate: 48.00,
-        regularPay: 1280.00,
-        overtimePay: 768.00,
-        totalPay: 2048.00,
-        approvalStatus: 'rejected',
-        notes: 'Exceeded maximum overtime threshold'
-      }
-    ]
+        regularRate: 32.0,
+        overtimeRate: 48.0,
+        regularPay: 1280.0,
+        overtimePay: 768.0,
+        totalPay: 2048.0,
+        approvalStatus: "rejected",
+        notes: "Exceeded maximum overtime threshold",
+      },
+    ],
   });
 
-  if (!hasPermission('view_overtime_reports')) {
+  if (!hasPermission("view_overtime_reports")) {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -129,29 +143,36 @@ export default function OvertimeReportPage() {
     );
   }
 
-  const filteredOvertime = overtimeData?.filter(record => {
-    const matchesSearch = record.staffName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         record.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         record.department.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = departmentFilter === 'all' || record.department === departmentFilter;
-    const matchesStatus = statusFilter === 'all' || record.approvalStatus === statusFilter;
-    
-    return matchesSearch && matchesDepartment && matchesStatus;
-  }) || [];
+  const filteredOvertime =
+    overtimeData?.filter((record) => {
+      const matchesSearch =
+        record.staffName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        record.department.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesDepartment =
+        departmentFilter === "all" || record.department === departmentFilter;
+      const matchesStatus = statusFilter === "all" || record.approvalStatus === statusFilter;
+
+      return matchesSearch && matchesDepartment && matchesStatus;
+    }) || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
   const totalOvertimeHours = overtimeData?.reduce((sum, r) => sum + r.overtimeHours, 0) || 0;
   const totalOvertimePay = overtimeData?.reduce((sum, r) => sum + r.overtimePay, 0) || 0;
   const avgOvertimeHours = overtimeData?.length ? totalOvertimeHours / overtimeData.length : 0;
-  const pendingApprovals = overtimeData?.filter(r => r.approvalStatus === 'pending').length || 0;
+  const pendingApprovals = overtimeData?.filter((r) => r.approvalStatus === "pending").length || 0;
 
   return (
     <div className="container mx-auto p-6">
@@ -211,7 +232,8 @@ export default function OvertimeReportPage() {
               <CardContent>
                 <div className="text-2xl font-bold">${totalOvertimePay.toLocaleString()}</div>
                 <div className="text-xs text-muted-foreground">
-                  ${overtimeData?.length ? (totalOvertimePay / overtimeData.length).toFixed(0) : 0} avg per employee
+                  ${overtimeData?.length ? (totalOvertimePay / overtimeData.length).toFixed(0) : 0}{" "}
+                  avg per employee
                 </div>
               </CardContent>
             </Card>
@@ -222,9 +244,7 @@ export default function OvertimeReportPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{pendingApprovals}</div>
-                <div className="text-xs text-muted-foreground">
-                  Requires manager approval
-                </div>
+                <div className="text-xs text-muted-foreground">Requires manager approval</div>
               </CardContent>
             </Card>
             <Card>
@@ -234,11 +254,14 @@ export default function OvertimeReportPage() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {((totalOvertimeHours / (overtimeData?.reduce((sum, r) => sum + r.totalHours, 0) || 1)) * 100).toFixed(1)}%
+                  {(
+                    (totalOvertimeHours /
+                      (overtimeData?.reduce((sum, r) => sum + r.totalHours, 0) || 1)) *
+                    100
+                  ).toFixed(1)}
+                  %
                 </div>
-                <div className="text-xs text-muted-foreground">
-                  Of total hours worked
-                </div>
+                <div className="text-xs text-muted-foreground">Of total hours worked</div>
               </CardContent>
             </Card>
           </div>
@@ -290,7 +313,9 @@ export default function OvertimeReportPage() {
                         <Users className="h-5 w-5" />
                         <div>
                           <div className="font-semibold">{record.staffName}</div>
-                          <div className="text-sm text-gray-600">{record.specialty} • {record.department}</div>
+                          <div className="text-sm text-gray-600">
+                            {record.specialty} • {record.department}
+                          </div>
                         </div>
                       </div>
                       <Badge className={getStatusColor(record.approvalStatus)}>
@@ -312,11 +337,15 @@ export default function OvertimeReportPage() {
                   <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
                     <div>
                       <span className="font-medium">Regular Hours:</span> {record.regularHours}
-                      <div className="text-xs text-gray-600">${record.regularRate}/hr = ${record.regularPay}</div>
+                      <div className="text-xs text-gray-600">
+                        ${record.regularRate}/hr = ${record.regularPay}
+                      </div>
                     </div>
                     <div>
                       <span className="font-medium">Overtime Hours:</span> {record.overtimeHours}
-                      <div className="text-xs text-gray-600">${record.overtimeRate}/hr = ${record.overtimePay}</div>
+                      <div className="text-xs text-gray-600">
+                        ${record.overtimeRate}/hr = ${record.overtimePay}
+                      </div>
                     </div>
                     <div>
                       <span className="font-medium">Total Hours:</span> {record.totalHours}
@@ -325,7 +354,8 @@ export default function OvertimeReportPage() {
                       </div>
                     </div>
                     <div>
-                      <span className="font-medium">Total Pay:</span> ${record.totalPay.toLocaleString()}
+                      <span className="font-medium">Total Pay:</span> $
+                      {record.totalPay.toLocaleString()}
                       <div className="text-xs text-gray-600">
                         ${(record.totalPay / record.totalHours).toFixed(2)} avg/hr
                       </div>
@@ -352,10 +382,9 @@ export default function OvertimeReportPage() {
                 <Clock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold mb-2">No overtime records found</h3>
                 <p className="text-gray-600">
-                  {searchTerm || departmentFilter !== 'all' || statusFilter !== 'all' 
-                    ? 'Try adjusting your search or filters'
-                    : 'No overtime records available for the selected period'
-                  }
+                  {searchTerm || departmentFilter !== "all" || statusFilter !== "all"
+                    ? "Try adjusting your search or filters"
+                    : "No overtime records available for the selected period"}
                 </p>
               </CardContent>
             </Card>
@@ -375,21 +404,21 @@ export default function OvertimeReportPage() {
                     <span className="text-sm text-gray-600">24h ($1,188)</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '60%' }}></div>
+                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: "60%" }}></div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Emergency</span>
                     <span className="text-sm text-gray-600">12h ($504)</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-red-600 h-2 rounded-full" style={{ width: '30%' }}></div>
+                    <div className="bg-red-600 h-2 rounded-full" style={{ width: "30%" }}></div>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Med-Surg</span>
                     <span className="text-sm text-gray-600">4h ($108)</span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-600 h-2 rounded-full" style={{ width: '10%' }}></div>
+                    <div className="bg-green-600 h-2 rounded-full" style={{ width: "10%" }}></div>
                   </div>
                 </div>
               </CardContent>

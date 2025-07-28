@@ -12,7 +12,7 @@ export default function SchedulingPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
 
   const currentUser = impersonatedUser || user;
-  const canPostShifts = currentUser?.role === 'manager' || currentUser?.role === 'admin';
+  const canPostShifts = currentUser?.role === "manager" || currentUser?.role === "admin";
 
   const { data: shifts = [] } = useQuery({
     queryKey: ["/api/shifts"],

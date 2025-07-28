@@ -28,7 +28,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Plus, Edit, Trash2, Search, ArrowLeft, Home, UserCheck, UserX, Settings, Shield, Database } from "lucide-react";
+import {
+  Users,
+  Plus,
+  Edit,
+  Trash2,
+  Search,
+  ArrowLeft,
+  Home,
+  UserCheck,
+  UserX,
+  Settings,
+  Shield,
+  Database,
+} from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { UserRole } from "@shared/schema";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -81,12 +94,18 @@ export default function AdminUserManagementPage() {
 
   // Permission sets for facility users
   const permissionSets = {
-    view_facility_profile: { name: "View Facility Profile", description: "View facility information" },
+    view_facility_profile: {
+      name: "View Facility Profile",
+      description: "View facility information",
+    },
     edit_facility_profile: { name: "Edit Facility Profile", description: "Edit facility settings" },
     create_shifts: { name: "Create Shifts", description: "Create new shifts" },
     edit_shifts: { name: "Edit Shifts", description: "Modify existing shifts" },
     delete_shifts: { name: "Delete Shifts", description: "Remove shifts" },
-    approve_shift_requests: { name: "Approve Shift Requests", description: "Approve shift requests" },
+    approve_shift_requests: {
+      name: "Approve Shift Requests",
+      description: "Approve shift requests",
+    },
     onboard_staff: { name: "Onboard Staff", description: "Onboard new staff members" },
     offboard_staff: { name: "Offboard Staff", description: "Offboard staff members" },
     view_rates: { name: "View Rates", description: "View billing rates" },
@@ -105,63 +124,153 @@ export default function AdminUserManagementPage() {
     access_analytics: { name: "Access Analytics", description: "View analytics and insights" },
     access_reports: { name: "Access Reports", description: "Generate and view reports" },
     manage_users_and_team: { name: "Manage Users & Team", description: "Manage team members" },
-    manage_job_openings: { name: "Manage Job Openings", description: "Create and manage job postings" },
-    view_job_openings: { name: "View Job Openings", description: "View job postings" }
+    manage_job_openings: {
+      name: "Manage Job Openings",
+      description: "Create and manage job postings",
+    },
+    view_job_openings: { name: "View Job Openings", description: "View job postings" },
   };
 
   const rolePermissions = {
     facility_admin: [
-      "view_facility_profile", "edit_facility_profile", "create_shifts", "edit_shifts", 
-      "delete_shifts", "approve_shift_requests", "onboard_staff", "offboard_staff",
-      "view_rates", "edit_rates", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
-      "premium_shift_multiplier_1_2", "premium_shift_multiplier_1_3", "premium_shift_multiplier_1_4", 
-      "premium_shift_multiplier_1_5", "premium_shift_multiplier_1_6", "view_timesheets", 
-      "export_timesheets", "approve_timesheets", "approve_payroll", "access_analytics", 
-      "access_reports", "manage_users_and_team", "manage_job_openings", "view_job_openings"
+      "view_facility_profile",
+      "edit_facility_profile",
+      "create_shifts",
+      "edit_shifts",
+      "delete_shifts",
+      "approve_shift_requests",
+      "onboard_staff",
+      "offboard_staff",
+      "view_rates",
+      "edit_rates",
+      "premium_shift_multiplier_1_0",
+      "premium_shift_multiplier_1_1",
+      "premium_shift_multiplier_1_2",
+      "premium_shift_multiplier_1_3",
+      "premium_shift_multiplier_1_4",
+      "premium_shift_multiplier_1_5",
+      "premium_shift_multiplier_1_6",
+      "view_timesheets",
+      "export_timesheets",
+      "approve_timesheets",
+      "approve_payroll",
+      "access_analytics",
+      "access_reports",
+      "manage_users_and_team",
+      "manage_job_openings",
+      "view_job_openings",
     ],
     scheduling_coordinator: [
-      "view_facility_profile", "create_shifts", "edit_shifts", "delete_shifts", 
-      "approve_shift_requests", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
-      "premium_shift_multiplier_1_2", "view_timesheets", "access_reports", 
-      "manage_job_openings", "view_job_openings"
+      "view_facility_profile",
+      "create_shifts",
+      "edit_shifts",
+      "delete_shifts",
+      "approve_shift_requests",
+      "premium_shift_multiplier_1_0",
+      "premium_shift_multiplier_1_1",
+      "premium_shift_multiplier_1_2",
+      "view_timesheets",
+      "access_reports",
+      "manage_job_openings",
+      "view_job_openings",
     ],
     hr_manager: [
-      "view_facility_profile", "onboard_staff", "offboard_staff", "view_rates", 
-      "view_timesheets", "export_timesheets", "approve_timesheets", "access_analytics", 
-      "access_reports", "manage_users_and_team", "manage_job_openings", "view_job_openings"
+      "view_facility_profile",
+      "onboard_staff",
+      "offboard_staff",
+      "view_rates",
+      "view_timesheets",
+      "export_timesheets",
+      "approve_timesheets",
+      "access_analytics",
+      "access_reports",
+      "manage_users_and_team",
+      "manage_job_openings",
+      "view_job_openings",
     ],
     corporate: [
-      "view_facility_profile", "edit_facility_profile", "view_rates", "edit_rates", 
-      "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", "premium_shift_multiplier_1_2", 
-      "premium_shift_multiplier_1_3", "premium_shift_multiplier_1_4", "premium_shift_multiplier_1_5", 
-      "premium_shift_multiplier_1_6", "view_timesheets", "export_timesheets", "approve_timesheets", 
-      "approve_payroll", "access_analytics", "access_reports", "manage_users_and_team"
+      "view_facility_profile",
+      "edit_facility_profile",
+      "view_rates",
+      "edit_rates",
+      "premium_shift_multiplier_1_0",
+      "premium_shift_multiplier_1_1",
+      "premium_shift_multiplier_1_2",
+      "premium_shift_multiplier_1_3",
+      "premium_shift_multiplier_1_4",
+      "premium_shift_multiplier_1_5",
+      "premium_shift_multiplier_1_6",
+      "view_timesheets",
+      "export_timesheets",
+      "approve_timesheets",
+      "approve_payroll",
+      "access_analytics",
+      "access_reports",
+      "manage_users_and_team",
     ],
     regional_director: [
-      "view_facility_profile", "edit_facility_profile", "approve_shift_requests", 
-      "view_rates", "edit_rates", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
-      "premium_shift_multiplier_1_2", "premium_shift_multiplier_1_3", "premium_shift_multiplier_1_4", 
-      "premium_shift_multiplier_1_5", "premium_shift_multiplier_1_6", "view_timesheets", 
-      "export_timesheets", "approve_payroll", "access_analytics", "access_reports", 
-      "manage_users_and_team"
+      "view_facility_profile",
+      "edit_facility_profile",
+      "approve_shift_requests",
+      "view_rates",
+      "edit_rates",
+      "premium_shift_multiplier_1_0",
+      "premium_shift_multiplier_1_1",
+      "premium_shift_multiplier_1_2",
+      "premium_shift_multiplier_1_3",
+      "premium_shift_multiplier_1_4",
+      "premium_shift_multiplier_1_5",
+      "premium_shift_multiplier_1_6",
+      "view_timesheets",
+      "export_timesheets",
+      "approve_payroll",
+      "access_analytics",
+      "access_reports",
+      "manage_users_and_team",
     ],
     billing: [
-      "view_facility_profile", "view_rates", "view_timesheets", "export_timesheets", 
-      "approve_timesheets", "approve_payroll", "access_reports"
+      "view_facility_profile",
+      "view_rates",
+      "view_timesheets",
+      "export_timesheets",
+      "approve_timesheets",
+      "approve_payroll",
+      "access_reports",
     ],
     supervisor: [
-      "view_facility_profile", "create_shifts", "edit_shifts", "approve_shift_requests", 
-      "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", "view_timesheets", 
-      "approve_timesheets", "access_reports", "view_job_openings"
+      "view_facility_profile",
+      "create_shifts",
+      "edit_shifts",
+      "approve_shift_requests",
+      "premium_shift_multiplier_1_0",
+      "premium_shift_multiplier_1_1",
+      "view_timesheets",
+      "approve_timesheets",
+      "access_reports",
+      "view_job_openings",
     ],
     director_of_nursing: [
-      "view_facility_profile", "edit_facility_profile", "create_shifts", "edit_shifts", 
-      "delete_shifts", "approve_shift_requests", "onboard_staff", "offboard_staff", 
-      "view_rates", "premium_shift_multiplier_1_0", "premium_shift_multiplier_1_1", 
-      "premium_shift_multiplier_1_2", "premium_shift_multiplier_1_3", "view_timesheets", 
-      "export_timesheets", "approve_timesheets", "access_analytics", "access_reports", 
-      "manage_job_openings", "view_job_openings"
-    ]
+      "view_facility_profile",
+      "edit_facility_profile",
+      "create_shifts",
+      "edit_shifts",
+      "delete_shifts",
+      "approve_shift_requests",
+      "onboard_staff",
+      "offboard_staff",
+      "view_rates",
+      "premium_shift_multiplier_1_0",
+      "premium_shift_multiplier_1_1",
+      "premium_shift_multiplier_1_2",
+      "premium_shift_multiplier_1_3",
+      "view_timesheets",
+      "export_timesheets",
+      "approve_timesheets",
+      "access_analytics",
+      "access_reports",
+      "manage_job_openings",
+      "view_job_openings",
+    ],
   };
 
   const filteredUsers = (users as any[]).filter((user: any) => {
@@ -192,7 +301,9 @@ export default function AdminUserManagementPage() {
 
   const updateUserPermissions = useMutation({
     mutationFn: async ({ userId, permissions }: { userId: number; permissions: string[] }) => {
-      const response = await apiRequest("PATCH", `/api/facility-users/${userId}/permissions`, { permissions });
+      const response = await apiRequest("PATCH", `/api/facility-users/${userId}/permissions`, {
+        permissions,
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -205,7 +316,7 @@ export default function AdminUserManagementPage() {
   const handleEditPermissions = (user: any) => {
     setEditingPermissions({
       ...user,
-      permissions: user.permissions || (rolePermissions as any)[user.role] || []
+      permissions: user.permissions || (rolePermissions as any)[user.role] || [],
     });
     setIsPermissionsDialogOpen(true);
   };
@@ -214,19 +325,19 @@ export default function AdminUserManagementPage() {
     if (editingPermissions) {
       updateUserPermissions.mutate({
         userId: editingPermissions.id,
-        permissions: editingPermissions.permissions
+        permissions: editingPermissions.permissions,
       });
     }
   };
 
   const togglePermission = (permission: string) => {
     if (!editingPermissions) return;
-    
+
     setEditingPermissions({
       ...editingPermissions,
       permissions: editingPermissions.permissions.includes(permission)
         ? editingPermissions.permissions.filter((p: string) => p !== permission)
-        : [...editingPermissions.permissions, permission]
+        : [...editingPermissions.permissions, permission],
     });
   };
 
@@ -309,16 +420,15 @@ export default function AdminUserManagementPage() {
             <SelectItem value="director_of_nursing">Director of Nursing</SelectItem>
           </SelectContent>
         </Select>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={async () => {
             try {
               const response = await apiRequest("POST", "/api/setup-facility-users", {});
               const result = await response.json();
-              console.log('Sample users created:', result);
               queryClient.invalidateQueries({ queryKey: ["/api/facility-users"] });
             } catch (error) {
-              console.error('Failed to create sample users:', error);
+              console.error("Failed to create sample users:", error);
             }
           }}
           className="gap-2"
@@ -411,29 +521,31 @@ export default function AdminUserManagementPage() {
               <TableBody>
                 {filteredUsers.map((user: any) => (
                   <TableRow key={user.id}>
-                    <TableCell>
-                      {`${user.firstName} ${user.lastName}`}
-                    </TableCell>
+                    <TableCell>{`${user.firstName} ${user.lastName}`}</TableCell>
                     <TableCell>
                       <div className="space-y-1">
                         {user.title && <div className="font-medium">{user.title}</div>}
-                        {user.department && <div className="text-sm text-muted-foreground">{user.department}</div>}
+                        {user.department && (
+                          <div className="text-sm text-muted-foreground">{user.department}</div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>{user.email}</TableCell>
                     <TableCell>
                       <Badge variant={getRoleBadgeVariant(user.role)}>
-                        {user.role.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                        {user.role
+                          .replace("_", " ")
+                          .replace(/\b\w/g, (l: string) => l.toUpperCase())}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       <div className="text-sm">
                         {user.teamMemberships && user.teamMemberships.length > 0
-                          ? user.teamMemberships.map((tm: any) => tm.teamName).join(', ')
-                          : user.associatedFacilityIds && user.associatedFacilityIds.length > 1 
+                          ? user.teamMemberships.map((tm: any) => tm.teamName).join(", ")
+                          : user.associatedFacilityIds && user.associatedFacilityIds.length > 1
                             ? `Multiple Facilities (${user.associatedFacilityIds.length})`
-                            : user.facilityName || `Facility ${user.primaryFacilityId || user.facilityId}`
-                        }
+                            : user.facilityName ||
+                              `Facility ${user.primaryFacilityId || user.facilityId}`}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -457,7 +569,11 @@ export default function AdminUserManagementPage() {
                           </Button>
                         </PermissionAction>
                         <PermissionAction action="manage_users">
-                          <Button size="sm" variant="outline" onClick={() => handleEditPermissions(user)}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleEditPermissions(user)}
+                          >
                             <Shield className="h-3 w-3" />
                           </Button>
                         </PermissionAction>
@@ -553,12 +669,17 @@ export default function AdminUserManagementPage() {
 
       {/* Permissions Editing Dialog */}
       {editingPermissions && (
-        <Dialog open={isPermissionsDialogOpen} onOpenChange={() => setIsPermissionsDialogOpen(false)}>
+        <Dialog
+          open={isPermissionsDialogOpen}
+          onOpenChange={() => setIsPermissionsDialogOpen(false)}
+        >
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Shield className="h-5 w-5" />
-                Edit Permissions - {editingPermissions.name || `${editingPermissions.firstName} ${editingPermissions.lastName}`}
+                Edit Permissions -{" "}
+                {editingPermissions.name ||
+                  `${editingPermissions.firstName} ${editingPermissions.lastName}`}
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6">
@@ -600,13 +721,11 @@ export default function AdminUserManagementPage() {
 
               <div className="flex justify-between">
                 <div className="text-sm text-muted-foreground">
-                  {editingPermissions.permissions.length} of {Object.keys(permissionSets).length} permissions selected
+                  {editingPermissions.permissions.length} of {Object.keys(permissionSets).length}{" "}
+                  permissions selected
                 </div>
                 <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsPermissionsDialogOpen(false)}
-                  >
+                  <Button variant="outline" onClick={() => setIsPermissionsDialogOpen(false)}>
                     Cancel
                   </Button>
                   <Button

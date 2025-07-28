@@ -20,9 +20,7 @@ export default function FacilitySchedulePage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Facility Schedule
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Facility Schedule</h1>
           <p className="text-gray-600 dark:text-gray-300">
             Modern scheduling interface for facility coordinators
           </p>
@@ -70,8 +68,8 @@ export default function FacilitySchedulePage() {
         </CardHeader>
         <CardContent>
           <div className="text-center py-8 text-muted-foreground">
-            OnShift-style facility scheduling grid will be implemented here with staff names, 
-            days of the week, shift assignments, and real-time coverage management.
+            OnShift-style facility scheduling grid will be implemented here with staff names, days
+            of the week, shift assignments, and real-time coverage management.
           </div>
         </CardContent>
       </Card>

@@ -63,15 +63,14 @@ class WebSocketManager {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
-        console.log("WebSocket connected, authenticating...");
         this.isConnected = true;
         this.reconnectAttempts = 0;
-        
+
         // Send authentication message immediately
         if (this.userId) {
           this.send({
             type: "authenticate",
-            userId: this.userId
+            userId: this.userId,
           });
         }
       };
@@ -79,10 +78,9 @@ class WebSocketManager {
       this.ws.onmessage = (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
-          
+
           // Handle authentication response
           if (message.type === "authenticated") {
-            console.log("WebSocket authenticated for user:", message.userId);
             this.isAuthenticated = true;
             this.notifyListeners("connection", { status: "connected" });
           } else {
@@ -94,7 +92,6 @@ class WebSocketManager {
       };
 
       this.ws.onclose = () => {
-        console.log("WebSocket disconnected");
         this.isConnected = false;
         this.isAuthenticated = false;
         this.notifyListeners("connection", { status: "disconnected" });
@@ -114,14 +111,12 @@ class WebSocketManager {
   }
 
   private handleMessage(message: WebSocketMessage) {
-    console.log("Received WebSocket message:", message);
     this.notifyListeners(message.type, message.data);
   }
 
   private handleReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(
         `Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`
       );
 

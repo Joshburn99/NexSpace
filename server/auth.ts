@@ -100,15 +100,15 @@ export function setupAuth(app: Express) {
 
     try {
       const user = await storage.getUser(id);
-      
+
       // If this is a facility user, fetch their permissions and facility associations
-      if (user && user.role !== 'super_admin') {
+      if (user && user.role !== "super_admin") {
         try {
           const roleTemplate = await storage.getFacilityUserRoleTemplate(user.role);
           if (roleTemplate && roleTemplate.permissions) {
             (user as any).permissions = roleTemplate.permissions;
           }
-          
+
           // Get facility user data to include associated facilities
           const facilityUser = await storage.getFacilityUserByEmail(user.email);
           if (facilityUser && facilityUser.associated_facility_ids) {
@@ -118,7 +118,7 @@ export function setupAuth(app: Express) {
           console.error("Error fetching user permissions during deserialization:", error);
         }
       }
-      
+
       done(null, user);
     } catch (error) {
       console.error("Database deserialization error:", error);
@@ -129,14 +129,14 @@ export function setupAuth(app: Express) {
   app.post("/api/register", async (req, res, next) => {
     const startTime = Date.now();
     const context = analytics.getContextFromRequest(req);
-    
+
     const existingUser = await storage.getUserByUsername(req.body.username);
     if (existingUser) {
       // Track failed registration attempt
-      await analytics.trackAuth('signup', context, {
-        reason: 'username_exists',
+      await analytics.trackAuth("signup", context, {
+        reason: "username_exists",
         username: req.body.username,
-        success: false
+        success: false,
       });
       return res.status(400).send("Username already exists");
     }
@@ -150,120 +150,120 @@ export function setupAuth(app: Express) {
       req.login(user, async (err) => {
         if (err) {
           // Track failed registration
-          await analytics.trackAuth('signup', context, {
-            reason: 'login_after_register_failed',
+          await analytics.trackAuth("signup", context, {
+            reason: "login_after_register_failed",
             username: req.body.username,
             success: false,
-            error: err.message
+            error: err.message,
           });
           return next(err);
         }
-        
+
         // Track successful registration
-        await analytics.trackAuth('signup', 
-          { ...context, userId: user.id, facilityId: user.facilityId }, 
+        await analytics.trackAuth(
+          "signup",
+          { ...context, userId: user.id, facilityId: user.facilityId },
           {
             username: user.username,
             role: user.role,
             facilityId: user.facilityId,
             success: true,
-            duration: Date.now() - startTime
+            duration: Date.now() - startTime,
           }
         );
-        
+
         res.status(201).json(user);
       });
     } catch (error) {
       // Track registration error
-      await analytics.trackAuth('signup', context, {
-        reason: 'create_user_failed',
+      await analytics.trackAuth("signup", context, {
+        reason: "create_user_failed",
         username: req.body.username,
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : "Unknown error",
       });
       throw error;
     }
   });
 
-  app.post("/api/login", 
-    (req, res, next) => {
-      const startTime = Date.now();
-      const context = analytics.getContextFromRequest(req);
-      
-      passport.authenticate("local", async (err, user, info) => {
-        if (err) {
-          // Track authentication error
-          await analytics.trackAuth('failed_login', context, {
-            reason: 'authentication_error',
+  app.post("/api/login", (req, res, next) => {
+    const startTime = Date.now();
+    const context = analytics.getContextFromRequest(req);
+
+    passport.authenticate("local", async (err, user, info) => {
+      if (err) {
+        // Track authentication error
+        await analytics.trackAuth("failed_login", context, {
+          reason: "authentication_error",
+          username: req.body.username,
+          success: false,
+          error: err.message,
+        });
+        return next(err);
+      }
+
+      if (!user) {
+        // Track failed login
+        await analytics.trackAuth("failed_login", context, {
+          reason: "invalid_credentials",
+          username: req.body.username,
+          success: false,
+        });
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      req.login(user, async (loginErr) => {
+        if (loginErr) {
+          // Track login session error
+          await analytics.trackAuth("failed_login", context, {
+            reason: "session_error",
             username: req.body.username,
             success: false,
-            error: err.message
+            error: loginErr.message,
           });
-          return next(err);
+          return next(loginErr);
         }
-        
-        if (!user) {
-          // Track failed login
-          await analytics.trackAuth('failed_login', context, {
-            reason: 'invalid_credentials',
-            username: req.body.username,
-            success: false
-          });
-          return res.status(401).json({ message: "Invalid credentials" });
+
+        // If this is a facility user, fetch their permissions and facility associations
+        if (user && user.role !== "super_admin") {
+          try {
+            // Get permissions from the role template
+            const roleTemplate = await storage.getFacilityUserRoleTemplate(user.role);
+            if (roleTemplate && roleTemplate.permissions) {
+              // Add permissions to user object
+              (user as any).permissions = roleTemplate.permissions;
+            }
+
+            // Get facility user data to include associated facilities
+            const facilityUser = await storage.getFacilityUserByEmail(user.email);
+            if (facilityUser && facilityUser.associated_facility_ids) {
+              (user as any).associatedFacilityIds = facilityUser.associated_facility_ids;
+              (user as any).associatedFacilities = facilityUser.associated_facility_ids; // Keep both for compatibility
+            }
+          } catch (error) {
+            console.error("Error fetching user permissions:", error);
+          }
         }
-        
-        req.login(user, async (loginErr) => {
-          if (loginErr) {
-            // Track login session error
-            await analytics.trackAuth('failed_login', context, {
-              reason: 'session_error',
-              username: req.body.username,
-              success: false,
-              error: loginErr.message
-            });
-            return next(loginErr);
+
+        // Track successful login
+        await analytics.trackAuth(
+          "login",
+          { ...context, userId: user.id, facilityId: user.facilityId },
+          {
+            username: user.username,
+            role: user.role,
+            facilityId: user.facilityId,
+            hasPermissions: !!(user as any).permissions,
+            hasFacilityAssociations: !!(user as any).associatedFacilities,
+            success: true,
+            duration: Date.now() - startTime,
           }
-          
-          // If this is a facility user, fetch their permissions and facility associations
-          if (user && user.role !== 'super_admin') {
-            try {
-              // Get permissions from the role template
-              const roleTemplate = await storage.getFacilityUserRoleTemplate(user.role);
-              if (roleTemplate && roleTemplate.permissions) {
-                // Add permissions to user object
-                (user as any).permissions = roleTemplate.permissions;
-              }
-              
-              // Get facility user data to include associated facilities
-              const facilityUser = await storage.getFacilityUserByEmail(user.email);
-              if (facilityUser && facilityUser.associated_facility_ids) {
-                (user as any).associatedFacilityIds = facilityUser.associated_facility_ids;
-                (user as any).associatedFacilities = facilityUser.associated_facility_ids; // Keep both for compatibility
-              }
-            } catch (error) {
-              console.error("Error fetching user permissions:", error);
-            }
-          }
-          
-          // Track successful login
-          await analytics.trackAuth('login',
-            { ...context, userId: user.id, facilityId: user.facilityId },
-            {
-              username: user.username,
-              role: user.role,
-              facilityId: user.facilityId,
-              hasPermissions: !!(user as any).permissions,
-              hasFacilityAssociations: !!(user as any).associatedFacilities,
-              success: true,
-              duration: Date.now() - startTime
-            }
-          );
-          
-          res.status(200).json(user);
-        });
-      })(req, res, next);
-    }
-  );
+        );
+
+        res.status(200).json(user);
+      });
+    })(req, res, next);
+  });
 
   app.post("/api/forgot-password", async (req, res) => {
     const { username } = req.body;
@@ -302,29 +302,30 @@ export function setupAuth(app: Express) {
     const userId = req.user?.id;
     const username = req.user?.username;
     const role = req.user?.role;
-    
+
     req.logout(async (err) => {
       if (err) {
         // Track logout error
-        await analytics.trackAuth('logout', context, {
+        await analytics.trackAuth("logout", context, {
           username,
           role,
           success: false,
-          error: err.message
+          error: err.message,
         });
         return next(err);
       }
-      
+
       // Track successful logout
-      await analytics.trackAuth('logout', 
-        { ...context, userId }, 
+      await analytics.trackAuth(
+        "logout",
+        { ...context, userId },
         {
           username,
           role,
-          success: true
+          success: true,
         }
       );
-      
+
       res.sendStatus(200);
     });
   });

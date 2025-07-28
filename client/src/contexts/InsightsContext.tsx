@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export type MetricCategory = "staffing" | "scheduling" | "compliance" | "financial" | "quality" | "operational";
+export type MetricCategory =
+  | "staffing"
+  | "scheduling"
+  | "compliance"
+  | "financial"
+  | "quality"
+  | "operational";
 export type MetricPeriod = "daily" | "weekly" | "monthly" | "quarterly" | "yearly";
 
 export interface Insight {
@@ -84,7 +90,7 @@ const sampleInsights: Insight[] = [
     target: 90,
     benchmark: 85,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Total number of active employees"
+    description: "Total number of active employees",
   },
   {
     id: 2,
@@ -99,7 +105,7 @@ const sampleInsights: Insight[] = [
     target: 85,
     benchmark: 82,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Percentage of scheduled hours actually worked"
+    description: "Percentage of scheduled hours actually worked",
   },
   {
     id: 3,
@@ -114,7 +120,7 @@ const sampleInsights: Insight[] = [
     target: 300,
     benchmark: 280,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Total overtime hours worked this week"
+    description: "Total overtime hours worked this week",
   },
   {
     id: 4,
@@ -129,7 +135,7 @@ const sampleInsights: Insight[] = [
     target: 15,
     benchmark: 18,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Monthly staff turnover percentage"
+    description: "Monthly staff turnover percentage",
   },
 
   // Scheduling Metrics
@@ -146,7 +152,7 @@ const sampleInsights: Insight[] = [
     target: 95,
     benchmark: 92,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Percentage of shifts successfully filled"
+    description: "Percentage of shifts successfully filled",
   },
   {
     id: 6,
@@ -161,7 +167,7 @@ const sampleInsights: Insight[] = [
     target: 20,
     benchmark: 25,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Shifts filled within 24 hours of start time"
+    description: "Shifts filled within 24 hours of start time",
   },
   {
     id: 7,
@@ -176,7 +182,7 @@ const sampleInsights: Insight[] = [
     target: 95,
     benchmark: 93,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Percentage of scheduled shifts worked as planned"
+    description: "Percentage of scheduled shifts worked as planned",
   },
 
   // Compliance Metrics
@@ -193,7 +199,7 @@ const sampleInsights: Insight[] = [
     target: 95,
     benchmark: 90,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Percentage of staff with current credentials"
+    description: "Percentage of staff with current credentials",
   },
   {
     id: 9,
@@ -208,7 +214,7 @@ const sampleInsights: Insight[] = [
     target: 90,
     benchmark: 85,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Percentage of required training completed"
+    description: "Percentage of required training completed",
   },
   {
     id: 10,
@@ -223,7 +229,7 @@ const sampleInsights: Insight[] = [
     target: 95,
     benchmark: 92,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Most recent regulatory audit score"
+    description: "Most recent regulatory audit score",
   },
 
   // Financial Metrics
@@ -231,7 +237,7 @@ const sampleInsights: Insight[] = [
     id: 11,
     key: "monthly_revenue",
     name: "Monthly Revenue",
-    value: 245678.90,
+    value: 245678.9,
     unit: "$",
     category: "financial",
     period: "monthly",
@@ -240,7 +246,7 @@ const sampleInsights: Insight[] = [
     target: 250000,
     benchmark: 235000,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Total revenue for current month"
+    description: "Total revenue for current month",
   },
   {
     id: 12,
@@ -255,7 +261,7 @@ const sampleInsights: Insight[] = [
     target: 65,
     benchmark: 68,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Labor costs as percentage of revenue"
+    description: "Labor costs as percentage of revenue",
   },
   {
     id: 13,
@@ -270,7 +276,7 @@ const sampleInsights: Insight[] = [
     target: 6,
     benchmark: 5,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Net profit margin percentage"
+    description: "Net profit margin percentage",
   },
 
   // Quality Metrics
@@ -287,7 +293,7 @@ const sampleInsights: Insight[] = [
     target: 4.5,
     benchmark: 4.2,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Average patient satisfaction rating"
+    description: "Average patient satisfaction rating",
   },
   {
     id: 15,
@@ -302,7 +308,7 @@ const sampleInsights: Insight[] = [
     target: 4.2,
     benchmark: 4.0,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Average staff satisfaction rating"
+    description: "Average staff satisfaction rating",
   },
   {
     id: 16,
@@ -317,7 +323,7 @@ const sampleInsights: Insight[] = [
     target: 1.0,
     benchmark: 1.2,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Safety incidents per 1000 patient days"
+    description: "Safety incidents per 1000 patient days",
   },
 
   // Operational Metrics
@@ -334,7 +340,7 @@ const sampleInsights: Insight[] = [
     target: 90,
     benchmark: 88,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Percentage of beds currently occupied"
+    description: "Percentage of beds currently occupied",
   },
   {
     id: 18,
@@ -349,7 +355,7 @@ const sampleInsights: Insight[] = [
     target: 30,
     benchmark: 32,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Average patient length of stay"
+    description: "Average patient length of stay",
   },
   {
     id: 19,
@@ -364,7 +370,7 @@ const sampleInsights: Insight[] = [
     target: 10,
     benchmark: 12,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Percentage of patients readmitted within 30 days"
+    description: "Percentage of patients readmitted within 30 days",
   },
   {
     id: 20,
@@ -379,15 +385,15 @@ const sampleInsights: Insight[] = [
     target: 4,
     benchmark: 6,
     lastUpdated: "2025-06-19T09:00:00Z",
-    description: "Percentage of shifts with no-shows"
-  }
+    description: "Percentage of shifts with no-shows",
+  },
 ];
 
 // Generate KPI metrics from insights
 const generateKPIMetrics = (insights: Insight[]): KPIMetric[] => {
-  return insights.slice(0, 12).map(insight => {
+  return insights.slice(0, 12).map((insight) => {
     let status: "excellent" | "good" | "warning" | "critical" = "good";
-    
+
     if (insight.target) {
       const performance = insight.value / insight.target;
       if (performance >= 1.05) status = "excellent";
@@ -396,8 +402,12 @@ const generateKPIMetrics = (insights: Insight[]): KPIMetric[] => {
       else status = "critical";
     }
 
-    const trend = insight.trendPercentage > 5 ? "improving" : 
-                 insight.trendPercentage < -5 ? "declining" : "stable";
+    const trend =
+      insight.trendPercentage > 5
+        ? "improving"
+        : insight.trendPercentage < -5
+          ? "declining"
+          : "stable";
 
     return {
       id: insight.id,
@@ -411,7 +421,7 @@ const generateKPIMetrics = (insights: Insight[]): KPIMetric[] => {
       changePercent: insight.trendPercentage,
       lastPeriod: insight.value / (1 + insight.trendPercentage / 100),
       benchmarkValue: insight.benchmark,
-      description: insight.description || ""
+      description: insight.description || "",
     };
   });
 };
@@ -420,7 +430,7 @@ const generateKPIMetrics = (insights: Insight[]): KPIMetric[] => {
 const generateAlerts = (insights: Insight[]): InsightAlert[] => {
   const alerts: InsightAlert[] = [];
 
-  insights.forEach(insight => {
+  insights.forEach((insight) => {
     if (insight.target && insight.value < insight.target * 0.85) {
       alerts.push({
         id: alerts.length + 1,
@@ -429,7 +439,7 @@ const generateAlerts = (insights: Insight[]): InsightAlert[] => {
         severity: insight.value < insight.target * 0.7 ? "critical" : "high",
         message: `${insight.name} is significantly below target (${insight.value} vs ${insight.target})`,
         actionRequired: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
     }
 
@@ -441,7 +451,7 @@ const generateAlerts = (insights: Insight[]): InsightAlert[] => {
         severity: insight.trendPercentage < -20 ? "high" : "medium",
         message: `${insight.name} shows significant ${insight.trend} trend (${insight.trendPercentage}%)`,
         actionRequired: insight.trendPercentage < -15,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
     }
   });
@@ -461,16 +471,16 @@ export const InsightsProvider: React.FC<{ children: ReactNode }> = ({ children }
   }, [insights]);
 
   const getInsightsByCategory = (category: MetricCategory): Insight[] => {
-    return insights.filter(insight => insight.category === category);
+    return insights.filter((insight) => insight.category === category);
   };
 
   const getInsightsByPeriod = (period: MetricPeriod): Insight[] => {
-    return insights.filter(insight => insight.period === period);
+    return insights.filter((insight) => insight.period === period);
   };
 
   const getKPIStatus = () => {
     const statusCounts = { excellent: 0, good: 0, warning: 0, critical: 0 };
-    kpiMetrics.forEach(metric => {
+    kpiMetrics.forEach((metric) => {
       statusCounts[metric.status]++;
     });
     return statusCounts;
@@ -478,7 +488,7 @@ export const InsightsProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const getTrendData = (metricKey: string, periods: number = 12): TrendData[] => {
     // Generate mock trend data for the past periods
-    const insight = insights.find(i => i.key === metricKey);
+    const insight = insights.find((i) => i.key === metricKey);
     if (!insight) return [];
 
     const trendData: TrendData[] = [];
@@ -489,11 +499,11 @@ export const InsightsProvider: React.FC<{ children: ReactNode }> = ({ children }
       const periodValue = currentValue / Math.pow(1 + trendRate, i);
       const date = new Date();
       date.setMonth(date.getMonth() - i);
-      
+
       trendData.push({
-        period: date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+        period: date.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
         value: Math.round(periodValue * 100) / 100,
-        target: insight.target
+        target: insight.target,
       });
     }
 
@@ -501,42 +511,42 @@ export const InsightsProvider: React.FC<{ children: ReactNode }> = ({ children }
   };
 
   const updateInsight = (key: string, value: number) => {
-    setInsights(prev => 
-      prev.map(insight => 
-        insight.key === key 
-          ? { 
-              ...insight, 
-              value, 
-              lastUpdated: new Date().toISOString() 
-            } 
+    setInsights((prev) =>
+      prev.map((insight) =>
+        insight.key === key
+          ? {
+              ...insight,
+              value,
+              lastUpdated: new Date().toISOString(),
+            }
           : insight
       )
     );
   };
 
   const getComplianceScore = (): number => {
-    const complianceInsights = insights.filter(i => i.category === "compliance");
+    const complianceInsights = insights.filter((i) => i.category === "compliance");
     if (complianceInsights.length === 0) return 0;
-    
+
     const totalScore = complianceInsights.reduce((sum, insight) => sum + insight.value, 0);
     return totalScore / complianceInsights.length;
   };
 
   const getStaffingEfficiency = (): number => {
-    const staffingInsights = insights.filter(i => i.category === "staffing");
+    const staffingInsights = insights.filter((i) => i.category === "staffing");
     if (staffingInsights.length === 0) return 0;
-    
-    const utilizationRate = insights.find(i => i.key === "staff_utilization_rate")?.value || 0;
-    const turnoverRate = insights.find(i => i.key === "turnover_rate")?.value || 0;
-    
+
+    const utilizationRate = insights.find((i) => i.key === "staff_utilization_rate")?.value || 0;
+    const turnoverRate = insights.find((i) => i.key === "turnover_rate")?.value || 0;
+
     // Calculate efficiency score (higher utilization, lower turnover = better)
     return Math.max(0, utilizationRate - turnoverRate);
   };
 
   const getFinancialHealth = (): number => {
-    const profitMargin = insights.find(i => i.key === "profit_margin")?.value || 0;
-    const laborCostPercentage = insights.find(i => i.key === "labor_cost_percentage")?.value || 0;
-    
+    const profitMargin = insights.find((i) => i.key === "profit_margin")?.value || 0;
+    const laborCostPercentage = insights.find((i) => i.key === "labor_cost_percentage")?.value || 0;
+
     // Simple financial health score
     return Math.max(0, profitMargin + (70 - laborCostPercentage));
   };
@@ -553,20 +563,16 @@ export const InsightsProvider: React.FC<{ children: ReactNode }> = ({ children }
     updateInsight,
     getComplianceScore,
     getStaffingEfficiency,
-    getFinancialHealth
+    getFinancialHealth,
   };
 
-  return (
-    <InsightsContext.Provider value={value}>
-      {children}
-    </InsightsContext.Provider>
-  );
+  return <InsightsContext.Provider value={value}>{children}</InsightsContext.Provider>;
 };
 
 export const useInsights = (): InsightsContextType => {
   const context = useContext(InsightsContext);
   if (!context) {
-    throw new Error('useInsights must be used within an InsightsProvider');
+    throw new Error("useInsights must be used within an InsightsProvider");
   }
   return context;
 };

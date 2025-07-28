@@ -12,17 +12,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Clock, 
-  MapPin, 
-  DollarSign, 
-  Users, 
+import {
+  Clock,
+  MapPin,
+  DollarSign,
+  Users,
   Calendar,
   CheckCircle,
   User,
   Phone,
   Mail,
-  Award
+  Award,
 } from "lucide-react";
 
 interface ShiftDetailsModalProps {
@@ -83,9 +83,7 @@ export function ShiftDetailsModal({ shiftId, isOpen, onClose }: ShiftDetailsModa
             <Calendar className="h-5 w-5" />
             {shift.title}
           </DialogTitle>
-          <DialogDescription>
-            Shift details and staff assignment
-          </DialogDescription>
+          <DialogDescription>Shift details and staff assignment</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
@@ -116,25 +114,19 @@ export function ShiftDetailsModal({ shiftId, isOpen, onClose }: ShiftDetailsModa
                 </div>
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">
-                    {shift.requiredStaff} staff required
-                  </span>
+                  <span className="text-sm">{shift.requiredStaff} staff required</span>
                 </div>
               </div>
 
               <div className="flex gap-2">
-                <Badge className={getStatusColor(shift.status)}>
-                  {shift.status.toUpperCase()}
-                </Badge>
+                <Badge className={getStatusColor(shift.status)}>{shift.status.toUpperCase()}</Badge>
                 <Badge className={getUrgencyColor(shift.urgency)}>
                   {shift.urgency.toUpperCase()}
                 </Badge>
               </div>
 
               {shift.description && (
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {shift.description}
-                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{shift.description}</p>
               )}
 
               {shift.specialRequirements.length > 0 && (
@@ -166,14 +158,15 @@ export function ShiftDetailsModal({ shiftId, isOpen, onClose }: ShiftDetailsModa
                 ) : (
                   <div className="space-y-3">
                     {compliantStaff.slice(0, 5).map((staff) => (
-                      <div 
-                        key={staff.id} 
+                      <div
+                        key={staff.id}
                         className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
                       >
                         <div className="flex items-center gap-3">
                           <Avatar className="h-10 w-10">
                             <AvatarFallback className="bg-blue-600 text-white">
-                              {staff.firstName[0]}{staff.lastName[0]}
+                              {staff.firstName[0]}
+                              {staff.lastName[0]}
                             </AvatarFallback>
                           </Avatar>
                           <div>
@@ -210,17 +203,18 @@ export function ShiftDetailsModal({ shiftId, isOpen, onClose }: ShiftDetailsModa
               <CardContent>
                 <div className="space-y-3">
                   {shift.assignedStaffIds.map((staffId) => {
-                    const staff = compliantStaff.find(s => s.id === staffId);
+                    const staff = compliantStaff.find((s) => s.id === staffId);
                     if (!staff) return null;
-                    
+
                     return (
-                      <div 
-                        key={staffId} 
+                      <div
+                        key={staffId}
                         className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg"
                       >
                         <Avatar className="h-10 w-10">
                           <AvatarFallback className="bg-green-600 text-white">
-                            {staff.firstName[0]}{staff.lastName[0]}
+                            {staff.firstName[0]}
+                            {staff.lastName[0]}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">

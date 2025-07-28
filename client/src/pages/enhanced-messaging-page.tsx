@@ -25,16 +25,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  MessageSquare, 
-  Send, 
-  Plus, 
-  AlertCircle, 
-  CheckCircle, 
+import {
+  MessageSquare,
+  Send,
+  Plus,
+  AlertCircle,
+  CheckCircle,
   Clock,
   User,
   Mail,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -44,68 +44,73 @@ export default function EnhancedMessagingPage() {
   const { getMessagesForUser, getUnreadCount, sendMessage, markAsRead } = useMessaging();
   const { staff } = useStaff();
   const { toast } = useToast();
-  const facilityStaff = staff.filter(staffMember => 
-    staffMember.id !== user?.id && staffMember.compliant
+  const facilityStaff = staff.filter(
+    (staffMember) => staffMember.id !== user?.id && staffMember.compliant
   );
 
   // Define preset groups for mass messaging
   const presetGroups = [
-    { 
-      id: "all_users", 
-      label: "All Users", 
+    {
+      id: "all_users",
+      label: "All Users",
       description: "Everyone in the system",
-      getRecipients: () => staff.filter(s => s.id !== user?.id)
+      getRecipients: () => staff.filter((s) => s.id !== user?.id),
     },
-    { 
-      id: "all_employees", 
-      label: "All Employees", 
+    {
+      id: "all_employees",
+      label: "All Employees",
       description: "All internal employees",
-      getRecipients: () => staff.filter(s => s.id !== user?.id && (s.role === 'nurse' || s.role === 'cna' || s.role === 'lpn'))
+      getRecipients: () =>
+        staff.filter(
+          (s) => s.id !== user?.id && (s.role === "nurse" || s.role === "cna" || s.role === "lpn")
+        ),
     },
-    { 
-      id: "all_facility_users", 
-      label: "All Facility Users", 
+    {
+      id: "all_facility_users",
+      label: "All Facility Users",
       description: "All facility staff members",
-      getRecipients: () => staff.filter(s => s.id !== user?.id && s.compliant)
+      getRecipients: () => staff.filter((s) => s.id !== user?.id && s.compliant),
     },
-    { 
-      id: "all_contractors", 
-      label: "All Contractors", 
+    {
+      id: "all_contractors",
+      label: "All Contractors",
       description: "All 1099 contractors",
-      getRecipients: () => staff.filter(s => s.id !== user?.id && s.role === 'contractor')
+      getRecipients: () => staff.filter((s) => s.id !== user?.id && s.role === "contractor"),
     },
-    { 
-      id: "all_rns", 
-      label: "All RNs", 
+    {
+      id: "all_rns",
+      label: "All RNs",
       description: "All Registered Nurses",
-      getRecipients: () => staff.filter(s => s.id !== user?.id && s.role === 'nurse' && s.specialty?.includes('RN'))
+      getRecipients: () =>
+        staff.filter((s) => s.id !== user?.id && s.role === "nurse" && s.specialty?.includes("RN")),
     },
-    { 
-      id: "all_lpns", 
-      label: "All LPNs", 
+    {
+      id: "all_lpns",
+      label: "All LPNs",
       description: "All Licensed Practical Nurses",
-      getRecipients: () => staff.filter(s => s.id !== user?.id && s.role === 'lpn')
+      getRecipients: () => staff.filter((s) => s.id !== user?.id && s.role === "lpn"),
     },
-    { 
-      id: "all_cnas", 
-      label: "All CNAs", 
+    {
+      id: "all_cnas",
+      label: "All CNAs",
       description: "All Certified Nursing Assistants",
-      getRecipients: () => staff.filter(s => s.id !== user?.id && s.role === 'cna')
+      getRecipients: () => staff.filter((s) => s.id !== user?.id && s.role === "cna"),
     },
-    { 
-      id: "day_shift", 
-      label: "Day Shift Staff", 
+    {
+      id: "day_shift",
+      label: "Day Shift Staff",
       description: "Staff working day shifts",
-      getRecipients: () => staff.filter(s => s.id !== user?.id && s.department?.includes('Day'))
+      getRecipients: () => staff.filter((s) => s.id !== user?.id && s.department?.includes("Day")),
     },
-    { 
-      id: "night_shift", 
-      label: "Night Shift Staff", 
+    {
+      id: "night_shift",
+      label: "Night Shift Staff",
       description: "Staff working night shifts",
-      getRecipients: () => staff.filter(s => s.id !== user?.id && s.department?.includes('Night'))
-    }
+      getRecipients: () =>
+        staff.filter((s) => s.id !== user?.id && s.department?.includes("Night")),
+    },
   ];
-  
+
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [isNexSpaceMessage, setIsNexSpaceMessage] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<any>(null);
@@ -124,16 +129,16 @@ export default function EnhancedMessagingPage() {
 
   const userMessages = user ? getMessagesForUser(user.id) : [];
   const unreadCount = user ? getUnreadCount(user.id) : 0;
-  
+
   // Separate inbox and sent messages
-  const inboxMessages = userMessages.filter(msg => {
+  const inboxMessages = userMessages.filter((msg) => {
     // Inbox contains messages where user is recipient or NexSpace Team messages for superusers
     if (msg.recipientId === user?.id) return true;
     if (msg.recipientId === 999 && user?.id === 3) return true;
     return false;
   });
-  
-  const sentMessages = userMessages.filter(msg => msg.senderId === user?.id);
+
+  const sentMessages = userMessages.filter((msg) => msg.senderId === user?.id);
 
   const handleSendMessage = async () => {
     if (!user) {
@@ -175,44 +180,50 @@ export default function EnhancedMessagingPage() {
           subject: subject.trim(),
           content: content.trim(),
           priority: priority as any,
-          category: category as any
+          category: category as any,
         });
-        
+
         toast({
           title: "Message sent",
           description: "Your message has been sent to the NexSpace Team.",
         });
       } else if (isMassMessage && selectedRecipients.length > 0) {
         // Send mass message to multiple recipients
-        selectedRecipients.forEach(recipient => {
+        selectedRecipients.forEach((recipient) => {
           sendMessage({
             senderId: user.id,
-            senderName: (user.id === 3 || user.role === 'super_admin' || user.role === 'facility_manager') ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
+            senderName:
+              user.id === 3 || user.role === "super_admin" || user.role === "facility_manager"
+                ? "NexSpace Team"
+                : `${user.firstName} ${user.lastName}`,
             recipientId: recipient.id,
             recipientName: `${recipient.firstName} ${recipient.lastName}`,
             subject: subject.trim(),
             content: content.trim(),
             priority: priority as any,
-            category: category as any
+            category: category as any,
           });
         });
-        
+
         toast({
           title: "Mass message sent",
-          description: `Message sent to ${selectedRecipients.length} recipient${selectedRecipients.length > 1 ? 's' : ''}.`,
+          description: `Message sent to ${selectedRecipients.length} recipient${selectedRecipients.length > 1 ? "s" : ""}.`,
         });
       } else if (selectedRecipient) {
         sendMessage({
           senderId: user.id,
-          senderName: (user.id === 3 || user.role === 'super_admin' || user.role === 'facility_manager') ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
+          senderName:
+            user.id === 3 || user.role === "super_admin" || user.role === "facility_manager"
+              ? "NexSpace Team"
+              : `${user.firstName} ${user.lastName}`,
           recipientId: selectedRecipient.id,
           recipientName: `${selectedRecipient.firstName} ${selectedRecipient.lastName}`,
           subject: subject.trim(),
           content: content.trim(),
           priority: priority as any,
-          category: category as any
+          category: category as any,
         });
-        
+
         toast({
           title: "Message sent",
           description: `Message sent to ${selectedRecipient.firstName} ${selectedRecipient.lastName}.`,
@@ -281,10 +292,10 @@ export default function EnhancedMessagingPage() {
   };
 
   const toggleRecipientSelection = (staffMember: any) => {
-    setSelectedRecipients(prev => {
-      const isSelected = prev.some(r => r.id === staffMember.id);
+    setSelectedRecipients((prev) => {
+      const isSelected = prev.some((r) => r.id === staffMember.id);
       if (isSelected) {
-        return prev.filter(r => r.id !== staffMember.id);
+        return prev.filter((r) => r.id !== staffMember.id);
       } else {
         return [...prev, staffMember];
       }
@@ -294,7 +305,7 @@ export default function EnhancedMessagingPage() {
   const handlePresetGroupSelection = (groupId: string) => {
     setSelectedPresetGroup(groupId);
     if (groupId && groupId !== "custom") {
-      const group = presetGroups.find(g => g.id === groupId);
+      const group = presetGroups.find((g) => g.id === groupId);
       if (group) {
         setSelectedRecipients(group.getRecipients());
       }
@@ -306,49 +317,56 @@ export default function EnhancedMessagingPage() {
   const handleMessageClick = (message: any) => {
     setSelectedMessage(message);
     // Mark as read if unread and user is recipient
-    if (!message.isRead && (message.recipientId === user?.id || (message.recipientId === 999 && user?.id === 3))) {
+    if (
+      !message.isRead &&
+      (message.recipientId === user?.id || (message.recipientId === 999 && user?.id === 3))
+    ) {
       markAsRead(message.id);
     }
   };
 
   const handleChatClick = (message: any) => {
     // Determine chat participant based on current user
-    const participant = message.senderId === user?.id 
-      ? { id: message.recipientId, name: message.recipientName }
-      : { id: message.senderId, name: message.senderName };
-    
+    const participant =
+      message.senderId === user?.id
+        ? { id: message.recipientId, name: message.recipientName }
+        : { id: message.senderId, name: message.senderName };
+
     setChatParticipant(participant);
     setChatView(true);
   };
 
   const getConversationHistory = (participantId: number) => {
     if (!user) return [];
-    
+
     const allMessages = getMessagesForUser(user.id);
-    return allMessages.filter((msg: any) => 
-      (msg.senderId === user.id && msg.recipientId === participantId) ||
-      (msg.senderId === participantId && msg.recipientId === user.id)
-    ).sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+    return allMessages
+      .filter(
+        (msg: any) =>
+          (msg.senderId === user.id && msg.recipientId === participantId) ||
+          (msg.senderId === participantId && msg.recipientId === user.id)
+      )
+      .sort((a: any, b: any) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
   };
 
   const getAllMessageHistory = () => {
     if (!user) return [];
-    
+
     const allMessages = getMessagesForUser(user.id);
-    return allMessages.filter((msg: any) => 
-      msg.senderId === user.id || msg.recipientId === user.id
-    ).sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return allMessages
+      .filter((msg: any) => msg.senderId === user.id || msg.recipientId === user.id)
+      .sort((a: any, b: any) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   };
 
   const getPriorityBadge = (priority: string) => {
     switch (priority) {
-      case 'urgent':
+      case "urgent":
         return <Badge variant="destructive">Urgent</Badge>;
-      case 'high':
+      case "high":
         return <Badge className="bg-orange-100 text-orange-800">High</Badge>;
-      case 'normal':
+      case "normal":
         return <Badge variant="outline">Normal</Badge>;
-      case 'low':
+      case "low":
         return <Badge variant="secondary">Low</Badge>;
       default:
         return <Badge variant="outline">{priority}</Badge>;
@@ -357,11 +375,11 @@ export default function EnhancedMessagingPage() {
 
   const getCategoryIcon = (category: string) => {
     switch (category) {
-      case 'support':
+      case "support":
         return <AlertCircle className="w-4 h-4" />;
-      case 'scheduling':
+      case "scheduling":
         return <Clock className="w-4 h-4" />;
-      case 'emergency':
+      case "emergency":
         return <AlertCircle className="w-4 h-4 text-red-500" />;
       default:
         return <MessageSquare className="w-4 h-4" />;
@@ -369,16 +387,14 @@ export default function EnhancedMessagingPage() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
     });
   };
-
-
 
   return (
     <div className="w-full space-y-4 md:space-y-6">
@@ -386,26 +402,37 @@ export default function EnhancedMessagingPage() {
         <div>
           <h1 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white">Messages</h1>
           <div className="text-sm md:text-base text-gray-600 dark:text-gray-400 mt-1 flex items-center flex-wrap gap-2">
-            <span className="hidden md:inline">Communicate with facility team and NexSpace support</span>
-            {unreadCount > 0 && (
-              <Badge className="bg-blue-600">{unreadCount} unread</Badge>
-            )}
+            <span className="hidden md:inline">
+              Communicate with facility team and NexSpace support
+            </span>
+            {unreadCount > 0 && <Badge className="bg-blue-600">{unreadCount} unread</Badge>}
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={handleNewMessage} className="bg-blue-600 hover:bg-blue-700 min-h-[44px] touch-manipulation">
+          <Button
+            onClick={handleNewMessage}
+            className="bg-blue-600 hover:bg-blue-700 min-h-[44px] touch-manipulation"
+          >
             <Plus className="w-4 h-4 mr-1 md:mr-2" />
             <span className="hidden md:inline">New Message</span>
             <span className="md:hidden">New</span>
           </Button>
-          {(user?.role === 'super_admin' || user?.role === 'facility_manager') && (
-            <Button onClick={handleMassMessage} variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-50 min-h-[44px] touch-manipulation">
+          {(user?.role === "super_admin" || user?.role === "facility_manager") && (
+            <Button
+              onClick={handleMassMessage}
+              variant="outline"
+              className="border-purple-600 text-purple-600 hover:bg-purple-50 min-h-[44px] touch-manipulation"
+            >
               <Mail className="w-4 h-4 mr-1 md:mr-2" />
               <span className="hidden md:inline">Mass Message</span>
               <span className="md:hidden">Mass</span>
             </Button>
           )}
-          <Button onClick={handleNexSpaceMessage} variant="outline" className="border-green-600 text-green-600 hover:bg-green-50 min-h-[44px] touch-manipulation">
+          <Button
+            onClick={handleNexSpaceMessage}
+            variant="outline"
+            className="border-green-600 text-green-600 hover:bg-green-50 min-h-[44px] touch-manipulation"
+          >
             <MessageSquare className="w-4 h-4 mr-1 md:mr-2" />
             <span className="hidden md:inline">Message NexSpace</span>
             <span className="md:hidden">Support</span>
@@ -414,35 +441,32 @@ export default function EnhancedMessagingPage() {
 
         <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
           <DialogTrigger asChild>
-            <div style={{ display: 'none' }} />
+            <div style={{ display: "none" }} />
           </DialogTrigger>
           <DialogContent className="sm:max-w-md w-[95vw] md:w-full max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-lg md:text-xl">Compose Message</DialogTitle>
               <DialogDescription className="text-sm">
-                {isNexSpaceMessage 
+                {isNexSpaceMessage
                   ? "Send a message to the NexSpace support team"
-                  : isMassMessage 
+                  : isMassMessage
                     ? "Send a message to multiple facility staff members"
-                    : "Send a message"
-                }
+                    : "Send a message"}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
                 <Label htmlFor="to">To</Label>
                 {isNexSpaceMessage ? (
-                  <Input
-                    id="to"
-                    value="NexSpace Team"
-                    disabled
-                    className="bg-gray-50"
-                  />
+                  <Input id="to" value="NexSpace Team" disabled className="bg-gray-50" />
                 ) : isMassMessage ? (
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="presetGroup">Preset Groups</Label>
-                      <Select value={selectedPresetGroup} onValueChange={handlePresetGroupSelection}>
+                      <Select
+                        value={selectedPresetGroup}
+                        onValueChange={handlePresetGroupSelection}
+                      >
                         <SelectTrigger>
                           <SelectValue placeholder="Choose a preset group or select manually..." />
                         </SelectTrigger>
@@ -456,7 +480,7 @@ export default function EnhancedMessagingPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -481,19 +505,25 @@ export default function EnhancedMessagingPage() {
                             key={staff.id}
                             className={cn(
                               "flex items-center p-2 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800",
-                              selectedRecipients.some(r => r.id === staff.id) ? "bg-blue-50 dark:bg-blue-900" : ""
+                              selectedRecipients.some((r) => r.id === staff.id)
+                                ? "bg-blue-50 dark:bg-blue-900"
+                                : ""
                             )}
                             onClick={() => toggleRecipientSelection(staff)}
                           >
                             <input
                               type="checkbox"
-                              checked={selectedRecipients.some(r => r.id === staff.id)}
+                              checked={selectedRecipients.some((r) => r.id === staff.id)}
                               onChange={() => toggleRecipientSelection(staff)}
                               className="mr-3"
                             />
                             <div className="flex-1">
-                              <div className="font-medium">{staff.firstName} {staff.lastName}</div>
-                              <div className="text-sm text-gray-500">{staff.role} - {staff.department}</div>
+                              <div className="font-medium">
+                                {staff.firstName} {staff.lastName}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {staff.role} - {staff.department}
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -501,10 +531,15 @@ export default function EnhancedMessagingPage() {
                     </div>
                   </div>
                 ) : (
-                  <Select value={selectedRecipient?.id.toString() || ""} onValueChange={(value) => {
-                    const recipient = facilityStaff.find(staff => staff.id.toString() === value);
-                    setSelectedRecipient(recipient || null);
-                  }}>
+                  <Select
+                    value={selectedRecipient?.id.toString() || ""}
+                    onValueChange={(value) => {
+                      const recipient = facilityStaff.find(
+                        (staff) => staff.id.toString() === value
+                      );
+                      setSelectedRecipient(recipient || null);
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select recipient..." />
                     </SelectTrigger>
@@ -574,10 +609,16 @@ export default function EnhancedMessagingPage() {
               </div>
 
               <div className="flex gap-2 pt-4">
-                <Button 
-                  onClick={handleSendMessage} 
+                <Button
+                  onClick={handleSendMessage}
                   className="flex-1"
-                  disabled={isSending || !subject.trim() || !content.trim() || (!isNexSpaceMessage && !isMassMessage && !selectedRecipient) || (isMassMessage && selectedRecipients.length === 0)}
+                  disabled={
+                    isSending ||
+                    !subject.trim() ||
+                    !content.trim() ||
+                    (!isNexSpaceMessage && !isMassMessage && !selectedRecipient) ||
+                    (isMassMessage && selectedRecipients.length === 0)
+                  }
                 >
                   {isSending ? (
                     <>
@@ -591,7 +632,11 @@ export default function EnhancedMessagingPage() {
                     </>
                   )}
                 </Button>
-                <Button variant="outline" onClick={() => setIsComposeOpen(false)} className="flex-1">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsComposeOpen(false)}
+                  className="flex-1"
+                >
                   Cancel
                 </Button>
               </div>
@@ -604,14 +649,15 @@ export default function EnhancedMessagingPage() {
         <div className="flex justify-between items-center">
           <TabsList className="grid w-full grid-cols-2 max-w-md">
             <TabsTrigger value="inbox">
-              Inbox {unreadCount > 0 && <Badge className="ml-2 bg-blue-600 text-xs">{unreadCount}</Badge>}
+              Inbox{" "}
+              {unreadCount > 0 && <Badge className="ml-2 bg-blue-600 text-xs">{unreadCount}</Badge>}
             </TabsTrigger>
             <TabsTrigger value="sent">Sent</TabsTrigger>
           </TabsList>
-          
+
           <div className="flex gap-2">
-            <Button 
-              variant={showAllHistory ? "default" : "outline"} 
+            <Button
+              variant={showAllHistory ? "default" : "outline"}
               size="sm"
               onClick={() => setShowAllHistory(!showAllHistory)}
             >
@@ -635,14 +681,19 @@ export default function EnhancedMessagingPage() {
               <CardContent>
                 <div className="space-y-4 max-h-96 overflow-y-auto">
                   {getConversationHistory(chatParticipant.id).map((message: any) => (
-                    <div key={message.id} className={cn(
-                      "p-3 rounded-lg max-w-sm",
-                      message.senderId === user?.id 
-                        ? "bg-blue-100 dark:bg-blue-900 ml-auto text-right" 
-                        : "bg-gray-100 dark:bg-gray-800"
-                    )}>
+                    <div
+                      key={message.id}
+                      className={cn(
+                        "p-3 rounded-lg max-w-sm",
+                        message.senderId === user?.id
+                          ? "bg-blue-100 dark:bg-blue-900 ml-auto text-right"
+                          : "bg-gray-100 dark:bg-gray-800"
+                      )}
+                    >
                       <p className="text-sm font-medium mb-1">
-                        {message.senderId === user?.id ? "You" : getDisplayName(message.senderId, user, staff)}
+                        {message.senderId === user?.id
+                          ? "You"
+                          : getDisplayName(message.senderId, user, staff)}
                       </p>
                       <p className="text-sm">{message.content}</p>
                       <p className="text-xs text-gray-500 mt-1">{formatDate(message.timestamp)}</p>
@@ -655,8 +706,8 @@ export default function EnhancedMessagingPage() {
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="space-y-2">
                 {getAllMessageHistory().map((message: any) => (
-                  <Card 
-                    key={message.id} 
+                  <Card
+                    key={message.id}
                     className={cn(
                       "cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800",
                       !message.isRead && "border-blue-500 bg-blue-50 dark:bg-blue-950",
@@ -669,7 +720,9 @@ export default function EnhancedMessagingPage() {
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-gray-400" />
                           <span className="font-medium text-sm">
-                            {message.senderId === user?.id ? `To: ${message.recipientName}` : `From: ${getDisplayName(message.senderId, user, staff)}`}
+                            {message.senderId === user?.id
+                              ? `To: ${message.recipientName}`
+                              : `From: ${getDisplayName(message.senderId, user, staff)}`}
                           </span>
                           {!message.isRead && message.recipientId === user?.id && (
                             <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
@@ -684,9 +737,7 @@ export default function EnhancedMessagingPage() {
                       <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
                         {message.content}
                       </p>
-                      <p className="text-xs text-gray-500 mt-2">
-                        {formatDate(message.timestamp)}
-                      </p>
+                      <p className="text-xs text-gray-500 mt-2">{formatDate(message.timestamp)}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -718,8 +769,8 @@ export default function EnhancedMessagingPage() {
                       <p className="whitespace-pre-wrap">{selectedMessage.content}</p>
                     </div>
                     <div className="flex gap-2 mt-4 pt-4 border-t">
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => handleChatClick(selectedMessage)}
                       >
@@ -742,8 +793,8 @@ export default function EnhancedMessagingPage() {
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="space-y-2">
                 {inboxMessages.map((message) => (
-                  <Card 
-                    key={message.id} 
+                  <Card
+                    key={message.id}
                     className={cn(
                       "cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800",
                       !message.isRead && "border-blue-500 bg-blue-50 dark:bg-blue-950",
@@ -771,9 +822,7 @@ export default function EnhancedMessagingPage() {
                       <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
                         {message.content}
                       </p>
-                      <p className="text-xs text-gray-500 mt-2">
-                        {formatDate(message.timestamp)}
-                      </p>
+                      <p className="text-xs text-gray-500 mt-2">{formatDate(message.timestamp)}</p>
                     </CardContent>
                   </Card>
                 ))}
@@ -806,8 +855,8 @@ export default function EnhancedMessagingPage() {
                       <p className="whitespace-pre-wrap">{selectedMessage.content}</p>
                     </div>
                     <div className="flex gap-2 mt-4 pt-4 border-t">
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => handleChatClick(selectedMessage)}
                       >
@@ -826,36 +875,38 @@ export default function EnhancedMessagingPage() {
           {showAllHistory ? (
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="space-y-2">
-                {getAllMessageHistory().filter((msg: any) => msg.senderId === user?.id).map((message: any) => (
-                  <Card 
-                    key={message.id} 
-                    className={cn(
-                      "cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800",
-                      selectedMessage?.id === message.id && "ring-2 ring-blue-500"
-                    )}
-                    onClick={() => handleMessageClick(message)}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium text-sm">To: {message.recipientName}</span>
+                {getAllMessageHistory()
+                  .filter((msg: any) => msg.senderId === user?.id)
+                  .map((message: any) => (
+                    <Card
+                      key={message.id}
+                      className={cn(
+                        "cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800",
+                        selectedMessage?.id === message.id && "ring-2 ring-blue-500"
+                      )}
+                      onClick={() => handleMessageClick(message)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-gray-400" />
+                            <span className="font-medium text-sm">To: {message.recipientName}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {getCategoryIcon(message.category)}
+                            {getPriorityBadge(message.priority)}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {getCategoryIcon(message.category)}
-                          {getPriorityBadge(message.priority)}
-                        </div>
-                      </div>
-                      <h3 className="font-semibold text-sm mb-1">{message.subject}</h3>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
-                        {message.content}
-                      </p>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Sent: {formatDate(message.timestamp)}
-                      </p>
-                    </CardContent>
-                  </Card>
-                ))}
+                        <h3 className="font-semibold text-sm mb-1">{message.subject}</h3>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                          {message.content}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Sent: {formatDate(message.timestamp)}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  ))}
               </div>
               {selectedMessage && (
                 <Card>
@@ -884,8 +935,8 @@ export default function EnhancedMessagingPage() {
                       <p className="whitespace-pre-wrap">{selectedMessage.content}</p>
                     </div>
                     <div className="flex gap-2 mt-4 pt-4 border-t">
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => handleChatClick(selectedMessage)}
                       >
@@ -908,7 +959,7 @@ export default function EnhancedMessagingPage() {
             <div className="grid gap-4 lg:grid-cols-2">
               <div className="space-y-2">
                 {sentMessages.map((message) => (
-                  <Card 
+                  <Card
                     key={message.id}
                     className={cn(
                       "cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-gray-800",
@@ -965,8 +1016,8 @@ export default function EnhancedMessagingPage() {
                       <p className="whitespace-pre-wrap">{selectedMessage.content}</p>
                     </div>
                     <div className="flex gap-2 mt-4 pt-4 border-t">
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => handleChatClick(selectedMessage)}
                       >

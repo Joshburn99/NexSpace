@@ -1,7 +1,7 @@
-import React from 'react';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
-import { FacilityPermission } from '@/hooks/use-facility-permissions';
-import { Button } from '@/components/ui/button';
+import React from "react";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
+import { FacilityPermission } from "@/hooks/use-facility-permissions";
+import { Button } from "@/components/ui/button";
 
 interface PermissionGuardProps {
   requiredPermissions: FacilityPermission[];
@@ -14,7 +14,7 @@ export function PermissionGuard({
   requiredPermissions,
   children,
   fallback = null,
-  requireAll = false
+  requireAll = false,
 }: PermissionGuardProps) {
   const { hasPermission, hasAnyPermission } = useFacilityPermissions();
 
@@ -24,7 +24,7 @@ export function PermissionGuard({
   }
 
   const hasAccess = requireAll
-    ? requiredPermissions.every(permission => hasPermission(permission))
+    ? requiredPermissions.every((permission) => hasPermission(permission))
     : hasAnyPermission(requiredPermissions);
 
   if (!hasAccess) {
@@ -38,13 +38,10 @@ export function PermissionGuard({
 export function ConditionalRender({
   requiredPermissions,
   children,
-  requireAll = false
-}: Omit<PermissionGuardProps, 'fallback'>) {
+  requireAll = false,
+}: Omit<PermissionGuardProps, "fallback">) {
   return (
-    <PermissionGuard
-      requiredPermissions={requiredPermissions}
-      requireAll={requireAll}
-    >
+    <PermissionGuard requiredPermissions={requiredPermissions} requireAll={requireAll}>
       {children}
     </PermissionGuard>
   );
@@ -68,7 +65,7 @@ export function ConditionalButton({
   size = "default",
   className,
   onClick,
-  disabled
+  disabled,
 }: ConditionalButtonProps) {
   const { hasPermission } = useFacilityPermissions();
 
@@ -93,12 +90,9 @@ export function ConditionalButton({
 export function useConditionalRender() {
   const { hasPermission, hasAnyPermission } = useFacilityPermissions();
 
-  const shouldRender = (
-    requiredPermissions: FacilityPermission[],
-    requireAll: boolean = false
-  ) => {
+  const shouldRender = (requiredPermissions: FacilityPermission[], requireAll: boolean = false) => {
     return requireAll
-      ? requiredPermissions.every(permission => hasPermission(permission))
+      ? requiredPermissions.every((permission) => hasPermission(permission))
       : hasAnyPermission(requiredPermissions);
   };
 

@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -26,7 +26,7 @@ import {
   Building,
   UserCheck,
   Home,
-  ArrowLeft
+  ArrowLeft,
 } from "lucide-react";
 import { User as SelectUser } from "@shared/schema";
 import { useLocation, Link } from "wouter";
@@ -46,11 +46,11 @@ export default function AdminImpersonationPage() {
   });
 
   // Convert staff members to User type for impersonation
-  const staffAsUsers: SelectUser[] = staff.map(s => ({
+  const staffAsUsers: SelectUser[] = staff.map((s) => ({
     id: s.id,
     username: `${s.firstName.toLowerCase()}${s.lastName.toLowerCase()}`,
     email: s.email,
-    password: '', // Not needed for impersonation
+    password: "", // Not needed for impersonation
     firstName: s.firstName,
     lastName: s.lastName,
     role: s.role,
@@ -61,16 +61,17 @@ export default function AdminImpersonationPage() {
     updatedAt: new Date(),
   }));
 
-  const filteredUsers = staffAsUsers.filter(u => {
-    const matchesSearch = u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (u.firstName + " " + u.lastName).toLowerCase().includes(searchTerm.toLowerCase());
-    
+  const filteredUsers = staffAsUsers.filter((u) => {
+    const matchesSearch =
+      u.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (u.firstName + " " + u.lastName).toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesRole = roleFilter === "all" || u.role === roleFilter;
-    
+
     // Don't show the current user in the list
     const isNotCurrentUser = u.id !== (impersonatedUser?.id || user?.id);
-    
+
     return matchesSearch && matchesRole && isNotCurrentUser;
   });
 
@@ -78,20 +79,20 @@ export default function AdminImpersonationPage() {
     await startImpersonation(targetUser);
     // Navigate to appropriate dashboard based on role
     switch (targetUser.role) {
-      case 'clinician':
-        navigate('/clinician-dashboard');
+      case "clinician":
+        navigate("/clinician-dashboard");
         break;
-      case 'employee':
-        navigate('/employee-dashboard');
+      case "employee":
+        navigate("/employee-dashboard");
         break;
-      case 'contractor':
-        navigate('/contractor-dashboard');
+      case "contractor":
+        navigate("/contractor-dashboard");
         break;
-      case 'manager':
-        navigate('/dashboard');
+      case "manager":
+        navigate("/dashboard");
         break;
       default:
-        navigate('/dashboard');
+        navigate("/dashboard");
     }
   };
 
@@ -109,12 +110,12 @@ export default function AdminImpersonationPage() {
       facilityId: targetUser.primaryFacilityId,
       createdAt: targetUser.createdAt,
       updatedAt: targetUser.updatedAt,
-      userType: 'facility_user' // Mark as facility user
+      userType: "facility_user", // Mark as facility user
     };
-    
+
     await startImpersonation(impersonationUser);
     // Navigate to facility dashboard
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   const handleQuitImpersonation = () => {
@@ -157,24 +158,27 @@ export default function AdminImpersonationPage() {
         </div>
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              User Impersonation
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">User Impersonation</h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">
               Impersonate staff members and facility users to test functionality and provide support
             </p>
           </div>
-        
+
           {impersonatedUser && (
             <div className="flex items-center gap-4">
               <Badge className="bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 px-3 py-1">
                 <Eye className="h-4 w-4 mr-2" />
-                Viewing as: {impersonatedUser.firstName} {impersonatedUser.lastName} ({impersonatedUser.username})
-            </Badge>
-            <Button onClick={handleQuitImpersonation} variant="outline" className="bg-red-50 hover:bg-red-100">
-              <LogOut className="h-4 w-4 mr-2" />
-              Quit Impersonation
-            </Button>
+                Viewing as: {impersonatedUser.firstName} {impersonatedUser.lastName} (
+                {impersonatedUser.username})
+              </Badge>
+              <Button
+                onClick={handleQuitImpersonation}
+                variant="outline"
+                className="bg-red-50 hover:bg-red-100"
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Quit Impersonation
+              </Button>
             </div>
           )}
         </div>
@@ -247,69 +251,68 @@ export default function AdminImpersonationPage() {
                 </Select>
               </div>
 
-          {/* Users List */}
-          <div className="space-y-3">
-            {isLoading ? (
-              <div className="text-center py-8 text-gray-500">
-                Loading users...
-              </div>
-            ) : filteredUsers.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                No users found matching your criteria
-              </div>
-            ) : (
-              filteredUsers.map((targetUser) => (
-                <div
-                  key={targetUser.id}
-                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                >
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-10 w-10">
-                      <AvatarFallback className="bg-blue-600 text-white">
-                        {targetUser.firstName?.[0]}{targetUser.lastName?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-gray-900 dark:text-white">
-                          {targetUser.firstName} {targetUser.lastName}
-                        </h3>
-                        <Badge className={getRoleBadgeColor(targetUser.role)}>
-                          {targetUser.role}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        @{targetUser.username} • {targetUser.email}
-                      </div>
-                      {targetUser.facilityId && (
-                        <div className="text-xs text-gray-400 dark:text-gray-500">
-                          Facility ID: {targetUser.facilityId}
-                        </div>
-                      )}
-                    </div>
+              {/* Users List */}
+              <div className="space-y-3">
+                {isLoading ? (
+                  <div className="text-center py-8 text-gray-500">Loading users...</div>
+                ) : filteredUsers.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No users found matching your criteria
                   </div>
-
-                  <div className="flex items-center gap-2">
-                    {!targetUser.isActive && (
-                      <Badge variant="outline" className="text-red-600 border-red-200">
-                        Inactive
-                      </Badge>
-                    )}
-                    
-                    <Button
-                      onClick={() => handleImpersonate(targetUser)}
-                      disabled={!targetUser.isActive}
-                      size="sm"
-                      className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                ) : (
+                  filteredUsers.map((targetUser) => (
+                    <div
+                      key={targetUser.id}
+                      className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                     >
-                      <User className="h-4 w-4 mr-2" />
-                      Impersonate
-                    </Button>
-                  </div>
-                </div>
-              ))
-            )}
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-10 w-10">
+                          <AvatarFallback className="bg-blue-600 text-white">
+                            {targetUser.firstName?.[0]}
+                            {targetUser.lastName?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-medium text-gray-900 dark:text-white">
+                              {targetUser.firstName} {targetUser.lastName}
+                            </h3>
+                            <Badge className={getRoleBadgeColor(targetUser.role)}>
+                              {targetUser.role}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            @{targetUser.username} • {targetUser.email}
+                          </div>
+                          {targetUser.facilityId && (
+                            <div className="text-xs text-gray-400 dark:text-gray-500">
+                              Facility ID: {targetUser.facilityId}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {!targetUser.isActive && (
+                          <Badge variant="outline" className="text-red-600 border-red-200">
+                            Inactive
+                          </Badge>
+                        )}
+
+                        <Button
+                          onClick={() => handleImpersonate(targetUser)}
+                          disabled={!targetUser.isActive}
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          <User className="h-4 w-4 mr-2" />
+                          Impersonate
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -356,24 +359,25 @@ export default function AdminImpersonationPage() {
               {/* Facility Users List */}
               <div className="space-y-3">
                 {isLoadingFacilityUsers ? (
-                  <div className="text-center py-8 text-gray-500">
-                    Loading facility users...
-                  </div>
+                  <div className="text-center py-8 text-gray-500">Loading facility users...</div>
                 ) : facilityUsers.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
-                    No facility users found. Use "Setup Sample Data" in the Facility Users page to create sample users.
+                    No facility users found. Use "Setup Sample Data" in the Facility Users page to
+                    create sample users.
                   </div>
                 ) : (
                   facilityUsers
                     .filter((user: any) => {
-                      const searchMatch = facilitySearchTerm === "" || 
+                      const searchMatch =
+                        facilitySearchTerm === "" ||
                         user.firstName?.toLowerCase().includes(facilitySearchTerm.toLowerCase()) ||
                         user.lastName?.toLowerCase().includes(facilitySearchTerm.toLowerCase()) ||
                         user.email?.toLowerCase().includes(facilitySearchTerm.toLowerCase()) ||
                         user.username?.toLowerCase().includes(facilitySearchTerm.toLowerCase());
-                      
-                      const roleMatch = facilityRoleFilter === "all" || user.role === facilityRoleFilter;
-                      
+
+                      const roleMatch =
+                        facilityRoleFilter === "all" || user.role === facilityRoleFilter;
+
                       return searchMatch && roleMatch;
                     })
                     .map((facilityUser: any) => (
@@ -384,17 +388,18 @@ export default function AdminImpersonationPage() {
                         <div className="flex items-center gap-4">
                           <Avatar className="h-10 w-10">
                             <AvatarFallback className="bg-green-600 text-white">
-                              {facilityUser.firstName?.[0]}{facilityUser.lastName?.[0]}
+                              {facilityUser.firstName?.[0]}
+                              {facilityUser.lastName?.[0]}
                             </AvatarFallback>
                           </Avatar>
-                          
+
                           <div>
                             <div className="flex items-center gap-2">
                               <h3 className="font-medium text-gray-900 dark:text-white">
                                 {facilityUser.firstName} {facilityUser.lastName}
                               </h3>
                               <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                                {facilityUser.role?.replace('_', ' ')}
+                                {facilityUser.role?.replace("_", " ")}
                               </Badge>
                             </div>
                             <div className="text-sm text-gray-500 dark:text-gray-400">
@@ -412,7 +417,7 @@ export default function AdminImpersonationPage() {
                               Inactive
                             </Badge>
                           )}
-                          
+
                           <Button
                             onClick={() => handleImpersonateFacilityUser(facilityUser)}
                             disabled={!facilityUser.isActive}

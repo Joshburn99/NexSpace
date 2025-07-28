@@ -10,7 +10,7 @@ const firebaseConfig = {
   storageBucket: "nexspace-59af7.appspot.com",
   messagingSenderId: "748946115248",
   appId: "1:748946115248:web:4540557823e1681f9f8975",
-  measurementId: "G-P5V43LLWWN"
+  measurementId: "G-P5V43LLWWN",
 };
 
 // Initialize Firebase app

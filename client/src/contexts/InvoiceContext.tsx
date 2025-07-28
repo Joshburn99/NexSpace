@@ -1,7 +1,20 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-export type InvoiceStatus = "draft" | "pending" | "sent" | "paid" | "overdue" | "cancelled" | "disputed";
-export type InvoiceType = "timesheet" | "contract" | "expense" | "overtime" | "bonus" | "adjustment";
+export type InvoiceStatus =
+  | "draft"
+  | "pending"
+  | "sent"
+  | "paid"
+  | "overdue"
+  | "cancelled"
+  | "disputed";
+export type InvoiceType =
+  | "timesheet"
+  | "contract"
+  | "expense"
+  | "overtime"
+  | "bonus"
+  | "adjustment";
 export type PaymentMethod = "direct_deposit" | "check" | "wire_transfer" | "paypal" | "venmo";
 
 export interface Invoice {
@@ -40,7 +53,14 @@ export interface InvoiceLineItem {
   shiftId?: number;
   hours?: number;
   overtimeHours?: number;
-  category: "regular" | "overtime" | "holiday" | "weekend" | "night_differential" | "bonus" | "expense";
+  category:
+    | "regular"
+    | "overtime"
+    | "holiday"
+    | "weekend"
+    | "night_differential"
+    | "bonus"
+    | "expense";
 }
 
 export interface PaymentSummary {
@@ -74,9 +94,20 @@ interface InvoiceContextType {
   getInvoicesByDateRange: (startDate: string, endDate: string) => Invoice[];
   getOverdueInvoices: () => Invoice[];
   getPendingInvoices: () => Invoice[];
-  createInvoice: (invoice: Omit<Invoice, "id" | "invoiceNumber" | "createdAt" | "updatedAt">) => void;
-  updateInvoiceStatus: (id: number, status: InvoiceStatus, paymentMethod?: PaymentMethod, paymentReference?: string) => void;
-  calculateTotals: (lineItems: InvoiceLineItem[]) => { subtotal: number; tax: number; total: number };
+  createInvoice: (
+    invoice: Omit<Invoice, "id" | "invoiceNumber" | "createdAt" | "updatedAt">
+  ) => void;
+  updateInvoiceStatus: (
+    id: number,
+    status: InvoiceStatus,
+    paymentMethod?: PaymentMethod,
+    paymentReference?: string
+  ) => void;
+  calculateTotals: (lineItems: InvoiceLineItem[]) => {
+    subtotal: number;
+    tax: number;
+    total: number;
+  };
   generateInvoiceNumber: () => string;
 }
 
@@ -85,56 +116,56 @@ const InvoiceContext = createContext<InvoiceContextType | null>(null);
 // Sample invoice line items
 const generateLineItems = (userId: number, type: InvoiceType): InvoiceLineItem[] => {
   const baseItems: InvoiceLineItem[] = [];
-  
+
   if (type === "timesheet") {
     // Regular shift hours
     baseItems.push({
       id: 1,
       description: "Regular Hours - Day Shift",
       quantity: 32,
-      rate: 28.50,
-      amount: 912.00,
+      rate: 28.5,
+      amount: 912.0,
       date: "2025-06-15",
       shiftId: 1,
       hours: 32,
-      category: "regular"
+      category: "regular",
     });
-    
+
     // Overtime hours
     baseItems.push({
       id: 2,
       description: "Overtime Hours",
       quantity: 6,
       rate: 42.75,
-      amount: 256.50,
+      amount: 256.5,
       date: "2025-06-16",
       shiftId: 2,
       hours: 6,
       overtimeHours: 6,
-      category: "overtime"
+      category: "overtime",
     });
-    
+
     // Weekend differential
     baseItems.push({
       id: 3,
       description: "Weekend Differential",
       quantity: 16,
-      rate: 3.00,
-      amount: 48.00,
+      rate: 3.0,
+      amount: 48.0,
       date: "2025-06-17",
       shiftId: 3,
       hours: 16,
-      category: "weekend"
+      category: "weekend",
     });
   } else if (type === "bonus") {
     baseItems.push({
       id: 1,
       description: "Performance Bonus - Q2 2025",
       quantity: 1,
-      rate: 500.00,
-      amount: 500.00,
+      rate: 500.0,
+      amount: 500.0,
       date: "2025-06-19",
-      category: "bonus"
+      category: "bonus",
     });
   }
 
@@ -154,7 +185,7 @@ const sampleInvoices: Invoice[] = [
     facilityName: "Sunrise Senior Living",
     type: "timesheet",
     status: "paid",
-    amount: 1216.50,
+    amount: 1216.5,
     tax: 121.65,
     totalAmount: 1338.15,
     currency: "USD",
@@ -167,7 +198,7 @@ const sampleInvoices: Invoice[] = [
     paymentReference: "DD-20250612-001",
     notes: "Paid via direct deposit",
     createdAt: "2025-06-01T09:00:00Z",
-    updatedAt: "2025-06-12T14:30:00Z"
+    updatedAt: "2025-06-12T14:30:00Z",
   },
   {
     id: 2,
@@ -179,9 +210,9 @@ const sampleInvoices: Invoice[] = [
     facilityName: "Sunrise Senior Living",
     type: "timesheet",
     status: "paid",
-    amount: 892.00,
-    tax: 89.20,
-    totalAmount: 981.20,
+    amount: 892.0,
+    tax: 89.2,
+    totalAmount: 981.2,
     currency: "USD",
     issueDate: "2025-06-01",
     dueDate: "2025-06-15",
@@ -192,17 +223,17 @@ const sampleInvoices: Invoice[] = [
         id: 1,
         description: "Regular Hours - CNA",
         quantity: 40,
-        rate: 22.30,
-        amount: 892.00,
+        rate: 22.3,
+        amount: 892.0,
         date: "2025-06-01",
         hours: 40,
-        category: "regular"
-      }
+        category: "regular",
+      },
     ],
     paymentMethod: "direct_deposit",
     paymentReference: "DD-20250610-002",
     createdAt: "2025-06-01T09:00:00Z",
-    updatedAt: "2025-06-10T16:45:00Z"
+    updatedAt: "2025-06-10T16:45:00Z",
   },
 
   // Pending invoices
@@ -216,9 +247,9 @@ const sampleInvoices: Invoice[] = [
     facilityName: "Sunrise Senior Living",
     type: "timesheet",
     status: "pending",
-    amount: 1045.00,
-    tax: 104.50,
-    totalAmount: 1149.50,
+    amount: 1045.0,
+    tax: 104.5,
+    totalAmount: 1149.5,
     currency: "USD",
     issueDate: "2025-06-15",
     dueDate: "2025-06-30",
@@ -228,26 +259,26 @@ const sampleInvoices: Invoice[] = [
         id: 1,
         description: "Regular Hours - LPN",
         quantity: 38,
-        rate: 25.50,
-        amount: 969.00,
+        rate: 25.5,
+        amount: 969.0,
         date: "2025-06-15",
         hours: 38,
-        category: "regular"
+        category: "regular",
       },
       {
         id: 2,
         description: "Night Differential",
         quantity: 16,
         rate: 4.75,
-        amount: 76.00,
+        amount: 76.0,
         date: "2025-06-15",
         hours: 16,
-        category: "night_differential"
-      }
+        category: "night_differential",
+      },
     ],
     notes: "Includes night shift differential",
     createdAt: "2025-06-15T10:00:00Z",
-    updatedAt: "2025-06-15T10:00:00Z"
+    updatedAt: "2025-06-15T10:00:00Z",
   },
   {
     id: 4,
@@ -259,9 +290,9 @@ const sampleInvoices: Invoice[] = [
     facilityName: "Sunrise Senior Living",
     type: "contract",
     status: "sent",
-    amount: 2400.00,
-    tax: 240.00,
-    totalAmount: 2640.00,
+    amount: 2400.0,
+    tax: 240.0,
+    totalAmount: 2640.0,
     currency: "USD",
     issueDate: "2025-06-10",
     dueDate: "2025-06-25",
@@ -271,15 +302,15 @@ const sampleInvoices: Invoice[] = [
         id: 1,
         description: "PT Services - 30 sessions",
         quantity: 30,
-        rate: 80.00,
-        amount: 2400.00,
+        rate: 80.0,
+        amount: 2400.0,
         date: "2025-06-10",
-        category: "regular"
-      }
+        category: "regular",
+      },
     ],
     notes: "Monthly contract payment",
     createdAt: "2025-06-10T08:00:00Z",
-    updatedAt: "2025-06-10T08:00:00Z"
+    updatedAt: "2025-06-10T08:00:00Z",
   },
 
   // Overdue invoices
@@ -293,9 +324,9 @@ const sampleInvoices: Invoice[] = [
     facilityName: "Sunrise Senior Living",
     type: "timesheet",
     status: "overdue",
-    amount: 1680.00,
-    tax: 168.00,
-    totalAmount: 1848.00,
+    amount: 1680.0,
+    tax: 168.0,
+    totalAmount: 1848.0,
     currency: "USD",
     issueDate: "2025-05-20",
     dueDate: "2025-06-05",
@@ -305,16 +336,16 @@ const sampleInvoices: Invoice[] = [
         id: 1,
         description: "OT Services",
         quantity: 28,
-        rate: 60.00,
-        amount: 1680.00,
+        rate: 60.0,
+        amount: 1680.0,
         date: "2025-05-20",
         hours: 28,
-        category: "regular"
-      }
+        category: "regular",
+      },
     ],
     notes: "Payment overdue - follow up required",
     createdAt: "2025-05-20T09:00:00Z",
-    updatedAt: "2025-06-05T12:00:00Z"
+    updatedAt: "2025-06-05T12:00:00Z",
   },
 
   // Bonus payments
@@ -328,9 +359,9 @@ const sampleInvoices: Invoice[] = [
     facilityName: "Sunrise Senior Living",
     type: "bonus",
     status: "pending",
-    amount: 500.00,
-    tax: 50.00,
-    totalAmount: 550.00,
+    amount: 500.0,
+    tax: 50.0,
+    totalAmount: 550.0,
     currency: "USD",
     issueDate: "2025-06-18",
     dueDate: "2025-07-02",
@@ -338,7 +369,7 @@ const sampleInvoices: Invoice[] = [
     lineItems: generateLineItems(1, "bonus"),
     notes: "Quarterly performance bonus",
     createdAt: "2025-06-18T15:00:00Z",
-    updatedAt: "2025-06-18T15:00:00Z"
+    updatedAt: "2025-06-18T15:00:00Z",
   },
 
   // Draft invoices
@@ -352,9 +383,9 @@ const sampleInvoices: Invoice[] = [
     facilityName: "Sunrise Senior Living",
     type: "timesheet",
     status: "draft",
-    amount: 1344.00,
-    tax: 134.40,
-    totalAmount: 1478.40,
+    amount: 1344.0,
+    tax: 134.4,
+    totalAmount: 1478.4,
     currency: "USD",
     issueDate: "2025-06-19",
     dueDate: "2025-07-03",
@@ -364,26 +395,26 @@ const sampleInvoices: Invoice[] = [
         id: 1,
         description: "Regular Hours - Night Shift",
         quantity: 36,
-        rate: 32.00,
-        amount: 1152.00,
+        rate: 32.0,
+        amount: 1152.0,
         date: "2025-06-19",
         hours: 36,
-        category: "regular"
+        category: "regular",
       },
       {
         id: 2,
         description: "Night Differential",
         quantity: 36,
         rate: 5.33,
-        amount: 192.00,
+        amount: 192.0,
         date: "2025-06-19",
         hours: 36,
-        category: "night_differential"
-      }
+        category: "night_differential",
+      },
     ],
     notes: "Draft - week not complete",
     createdAt: "2025-06-19T06:00:00Z",
-    updatedAt: "2025-06-19T06:00:00Z"
+    updatedAt: "2025-06-19T06:00:00Z",
   },
 
   // Expense reimbursements
@@ -397,9 +428,9 @@ const sampleInvoices: Invoice[] = [
     facilityName: "Sunrise Senior Living",
     type: "expense",
     status: "pending",
-    amount: 85.50,
+    amount: 85.5,
     tax: 0,
-    totalAmount: 85.50,
+    totalAmount: 85.5,
     currency: "USD",
     issueDate: "2025-06-17",
     dueDate: "2025-07-01",
@@ -409,49 +440,50 @@ const sampleInvoices: Invoice[] = [
         id: 1,
         description: "CPR Training Manual",
         quantity: 1,
-        rate: 45.50,
-        amount: 45.50,
+        rate: 45.5,
+        amount: 45.5,
         date: "2025-06-15",
-        category: "expense"
+        category: "expense",
       },
       {
         id: 2,
         description: "Certification Fee",
         quantity: 1,
-        rate: 40.00,
-        amount: 40.00,
+        rate: 40.0,
+        amount: 40.0,
         date: "2025-06-16",
-        category: "expense"
-      }
+        category: "expense",
+      },
     ],
     notes: "Receipts attached",
     createdAt: "2025-06-17T11:00:00Z",
-    updatedAt: "2025-06-17T11:00:00Z"
-  }
+    updatedAt: "2025-06-17T11:00:00Z",
+  },
 ];
 
 // Calculate payment summary
 const calculatePaymentSummary = (invoices: Invoice[]): PaymentSummary => {
   const totalInvoices = invoices.length;
   const totalAmount = invoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
-  const paidInvoices = invoices.filter(inv => inv.status === "paid");
+  const paidInvoices = invoices.filter((inv) => inv.status === "paid");
   const paidAmount = paidInvoices.reduce((sum, inv) => sum + inv.totalAmount, 0);
   const pendingAmount = invoices
-    .filter(inv => inv.status === "pending" || inv.status === "sent")
+    .filter((inv) => inv.status === "pending" || inv.status === "sent")
     .reduce((sum, inv) => sum + inv.totalAmount, 0);
   const overdueAmount = invoices
-    .filter(inv => inv.status === "overdue")
+    .filter((inv) => inv.status === "overdue")
     .reduce((sum, inv) => sum + inv.totalAmount, 0);
 
   // Calculate average payment time
-  const paidWithDates = paidInvoices.filter(inv => inv.paidDate);
-  const avgPaymentTime = paidWithDates.length > 0 
-    ? paidWithDates.reduce((sum, inv) => {
-        const issued = new Date(inv.issueDate).getTime();
-        const paid = new Date(inv.paidDate!).getTime();
-        return sum + (paid - issued) / (1000 * 60 * 60 * 24);
-      }, 0) / paidWithDates.length
-    : 0;
+  const paidWithDates = paidInvoices.filter((inv) => inv.paidDate);
+  const avgPaymentTime =
+    paidWithDates.length > 0
+      ? paidWithDates.reduce((sum, inv) => {
+          const issued = new Date(inv.issueDate).getTime();
+          const paid = new Date(inv.paidDate!).getTime();
+          return sum + (paid - issued) / (1000 * 60 * 60 * 24);
+        }, 0) / paidWithDates.length
+      : 0;
 
   const paymentRate = totalInvoices > 0 ? (paidInvoices.length / totalInvoices) * 100 : 0;
 
@@ -462,7 +494,7 @@ const calculatePaymentSummary = (invoices: Invoice[]): PaymentSummary => {
     pendingAmount,
     overdueAmount,
     averagePaymentTime: Math.round(avgPaymentTime),
-    paymentRate: Math.round(paymentRate * 100) / 100
+    paymentRate: Math.round(paymentRate * 100) / 100,
   };
 };
 
@@ -471,7 +503,7 @@ const generateInvoiceAlerts = (invoices: Invoice[]): InvoiceAlert[] => {
   const alerts: InvoiceAlert[] = [];
   const today = new Date();
 
-  invoices.forEach(invoice => {
+  invoices.forEach((invoice) => {
     const dueDate = new Date(invoice.dueDate);
     const daysUntilDue = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
@@ -483,7 +515,7 @@ const generateInvoiceAlerts = (invoices: Invoice[]): InvoiceAlert[] => {
         severity: "critical",
         message: `Invoice ${invoice.invoiceNumber} is overdue by ${Math.abs(daysUntilDue)} days`,
         actionRequired: true,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
     } else if (invoice.status === "pending" && daysUntilDue <= 3) {
       alerts.push({
@@ -493,7 +525,7 @@ const generateInvoiceAlerts = (invoices: Invoice[]): InvoiceAlert[] => {
         severity: daysUntilDue <= 1 ? "high" : "medium",
         message: `Invoice ${invoice.invoiceNumber} is due in ${daysUntilDue} days`,
         actionRequired: daysUntilDue <= 1,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       });
     }
   });
@@ -511,7 +543,7 @@ export const InvoiceProvider: React.FC<{ children: ReactNode }> = ({ children })
     pendingAmount: 0,
     overdueAmount: 0,
     averagePaymentTime: 0,
-    paymentRate: 0
+    paymentRate: 0,
   });
   const [isLoading, setIsLoading] = useState(false);
 
@@ -521,38 +553,35 @@ export const InvoiceProvider: React.FC<{ children: ReactNode }> = ({ children })
   }, [invoices]);
 
   const getInvoicesByStatus = (status: InvoiceStatus): Invoice[] => {
-    return invoices.filter(invoice => invoice.status === status);
+    return invoices.filter((invoice) => invoice.status === status);
   };
 
   const getInvoicesByUser = (userId: number): Invoice[] => {
-    return invoices.filter(invoice => invoice.userId === userId);
+    return invoices.filter((invoice) => invoice.userId === userId);
   };
 
   const getInvoicesByDateRange = (startDate: string, endDate: string): Invoice[] => {
     const start = new Date(startDate);
     const end = new Date(endDate);
-    return invoices.filter(invoice => {
+    return invoices.filter((invoice) => {
       const issueDate = new Date(invoice.issueDate);
       return issueDate >= start && issueDate <= end;
     });
   };
 
   const getOverdueInvoices = (): Invoice[] => {
-    return invoices.filter(invoice => invoice.status === "overdue");
+    return invoices.filter((invoice) => invoice.status === "overdue");
   };
 
   const getPendingInvoices = (): Invoice[] => {
-    return invoices.filter(invoice => 
-      invoice.status === "pending" || invoice.status === "sent"
-    );
+    return invoices.filter((invoice) => invoice.status === "pending" || invoice.status === "sent");
   };
 
   const generateInvoiceNumber = (): string => {
     const year = new Date().getFullYear();
-    const nextNumber = Math.max(...invoices.map(inv => 
-      parseInt(inv.invoiceNumber.split('-')[2]) || 0
-    )) + 1;
-    return `INV-${year}-${nextNumber.toString().padStart(3, '0')}`;
+    const nextNumber =
+      Math.max(...invoices.map((inv) => parseInt(inv.invoiceNumber.split("-")[2]) || 0)) + 1;
+    return `INV-${year}-${nextNumber.toString().padStart(3, "0")}`;
   };
 
   const calculateTotals = (lineItems: InvoiceLineItem[]) => {
@@ -562,34 +591,36 @@ export const InvoiceProvider: React.FC<{ children: ReactNode }> = ({ children })
     return { subtotal, tax, total };
   };
 
-  const createInvoice = (invoiceData: Omit<Invoice, "id" | "invoiceNumber" | "createdAt" | "updatedAt">) => {
+  const createInvoice = (
+    invoiceData: Omit<Invoice, "id" | "invoiceNumber" | "createdAt" | "updatedAt">
+  ) => {
     const newInvoice: Invoice = {
       ...invoiceData,
-      id: Math.max(...invoices.map(inv => inv.id), 0) + 1,
+      id: Math.max(...invoices.map((inv) => inv.id), 0) + 1,
       invoiceNumber: generateInvoiceNumber(),
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
-    setInvoices(prev => [...prev, newInvoice]);
+    setInvoices((prev) => [...prev, newInvoice]);
   };
 
   const updateInvoiceStatus = (
-    id: number, 
-    status: InvoiceStatus, 
-    paymentMethod?: PaymentMethod, 
+    id: number,
+    status: InvoiceStatus,
+    paymentMethod?: PaymentMethod,
     paymentReference?: string
   ) => {
-    setInvoices(prev => 
-      prev.map(invoice => 
-        invoice.id === id 
-          ? { 
-              ...invoice, 
+    setInvoices((prev) =>
+      prev.map((invoice) =>
+        invoice.id === id
+          ? {
+              ...invoice,
               status,
               paymentMethod,
               paymentReference,
               paidDate: status === "paid" ? new Date().toISOString() : invoice.paidDate,
-              updatedAt: new Date().toISOString()
-            } 
+              updatedAt: new Date().toISOString(),
+            }
           : invoice
       )
     );
@@ -608,20 +639,16 @@ export const InvoiceProvider: React.FC<{ children: ReactNode }> = ({ children })
     createInvoice,
     updateInvoiceStatus,
     calculateTotals,
-    generateInvoiceNumber
+    generateInvoiceNumber,
   };
 
-  return (
-    <InvoiceContext.Provider value={value}>
-      {children}
-    </InvoiceContext.Provider>
-  );
+  return <InvoiceContext.Provider value={value}>{children}</InvoiceContext.Provider>;
 };
 
 export const useInvoices = (): InvoiceContextType => {
   const context = useContext(InvoiceContext);
   if (!context) {
-    throw new Error('useInvoices must be used within an InvoiceProvider');
+    throw new Error("useInvoices must be used within an InvoiceProvider");
   }
   return context;
 };

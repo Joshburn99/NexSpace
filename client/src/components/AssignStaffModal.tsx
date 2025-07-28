@@ -30,8 +30,8 @@ interface AssignStaffModalProps {
 export function AssignStaffModal({ shiftId, isOpen, onClose }: AssignStaffModalProps) {
   const { compliantStaff } = useStaff();
   const { assignStaffToShift, shifts } = useShifts();
-  
-  const getShiftById = (id: number) => shifts.find(shift => shift.id === id);
+
+  const getShiftById = (id: number) => shifts.find((shift) => shift.id === id);
   const [selectedStaffId, setSelectedStaffId] = useState<string>("");
   const [isAssigning, setIsAssigning] = useState(false);
 
@@ -91,10 +91,13 @@ export function AssignStaffModal({ shiftId, isOpen, onClose }: AssignStaffModalP
                     <div className="flex items-center gap-2">
                       <Avatar className="h-6 w-6">
                         <AvatarFallback className="text-xs">
-                          {staff.firstName[0]}{staff.lastName[0]}
+                          {staff.firstName[0]}
+                          {staff.lastName[0]}
                         </AvatarFallback>
                       </Avatar>
-                      <span>{staff.firstName} {staff.lastName}</span>
+                      <span>
+                        {staff.firstName} {staff.lastName}
+                      </span>
                       <Badge variant="outline" className="text-xs">
                         {staff.role}
                       </Badge>
@@ -109,7 +112,8 @@ export function AssignStaffModal({ shiftId, isOpen, onClose }: AssignStaffModalP
           {compliantStaff.length === 0 && (
             <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                No compliant staff members available. All staff must have active credentials to be assigned to shifts.
+                No compliant staff members available. All staff must have active credentials to be
+                assigned to shifts.
               </p>
             </div>
           )}
@@ -126,8 +130,8 @@ export function AssignStaffModal({ shiftId, isOpen, onClose }: AssignStaffModalP
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleAssign} 
+          <Button
+            onClick={handleAssign}
             disabled={!selectedStaffId || isAssigning || compliantStaff.length === 0}
           >
             {isAssigning ? "Assigning..." : "Assign Staff"}

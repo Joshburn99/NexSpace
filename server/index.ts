@@ -59,7 +59,7 @@ function killPort5000() {
 (async () => {
   // Kill any existing process on port 5000
   await killPort5000();
-  
+
   // Initialize enhanced staff profiles on startup
   try {
     await setupFacilityUserRoleTemplates();
@@ -73,7 +73,7 @@ function killPort5000() {
   } catch (error) {
     log(`Enhanced staff profiles initialization error: ${error}`);
   }
-  
+
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -96,9 +96,9 @@ function killPort5000() {
   // Use environment PORT or fallback to 5000
   // this serves both the API and the client.
   const PORT = process.env.PORT ? parseInt(process.env.PORT) : 5000;
-  
-  server.on('error', (err: any) => {
-    if (err.code === 'EADDRINUSE') {
+
+  server.on("error", (err: any) => {
+    if (err.code === "EADDRINUSE") {
       console.error(`Port ${PORT} is already in use. Attempting to kill process and retry...`);
       killPort5000().then(() => {
         setTimeout(() => {
@@ -109,14 +109,13 @@ function killPort5000() {
               reusePort: true,
             },
             () => {
-              console.log(`Server running on port ${PORT}`);
               log(`serving on port ${PORT}`);
             }
           );
         }, 1000);
       });
     } else {
-      console.error('Server error:', err);
+      console.error("Server error:", err);
       process.exit(1);
     }
   });
@@ -128,7 +127,6 @@ function killPort5000() {
       reusePort: true,
     },
     () => {
-      console.log(`Server running on port ${PORT}`);
       log(`serving on port ${PORT}`);
     }
   );

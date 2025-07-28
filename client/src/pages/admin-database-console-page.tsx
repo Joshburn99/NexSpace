@@ -15,7 +15,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Database, Play, ArrowLeft, Home, AlertTriangle, CheckCircle, Info, ShieldAlert } from "lucide-react";
+import {
+  Database,
+  Play,
+  ArrowLeft,
+  Home,
+  AlertTriangle,
+  CheckCircle,
+  Info,
+  ShieldAlert,
+} from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useAuth } from "@/hooks/use-auth";
 import { useRBAC } from "@/hooks/use-rbac";
@@ -133,7 +142,7 @@ export default function AdminDatabaseConsolePage() {
   };
 
   // Only super admins should have access to the database console
-  if (user?.role !== 'super_admin') {
+  if (user?.role !== "super_admin") {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -144,7 +153,9 @@ export default function AdminDatabaseConsolePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <p className="text-gray-600">Only super administrators can access the database console.</p>
+            <p className="text-gray-600">
+              Only super administrators can access the database console.
+            </p>
             <Link href="/">
               <Button variant="outline" className="mt-4">
                 <Home className="h-4 w-4 mr-2" />

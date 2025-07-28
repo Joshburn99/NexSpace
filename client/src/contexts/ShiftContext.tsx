@@ -359,17 +359,17 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
 
   const loadAllShifts = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
       // Fetch all shift categories in parallel
       const [openResponse, requestedResponse, bookedResponse, historyResponse] = await Promise.all([
-        fetch('/api/shifts?status=open', { credentials: 'include' }),
-        fetch('/api/shifts?status=requested', { credentials: 'include' }),
-        fetch('/api/shifts?status=assigned,in_progress', { credentials: 'include' }),
-        fetch(`/api/shifts/history/${user.id}`, { credentials: 'include' })
+        fetch("/api/shifts?status=open", { credentials: "include" }),
+        fetch("/api/shifts?status=requested", { credentials: "include" }),
+        fetch("/api/shifts?status=assigned,in_progress", { credentials: "include" }),
+        fetch(`/api/shifts/history/${user.id}`, { credentials: "include" }),
       ]);
 
       if (openResponse.ok) {
@@ -377,39 +377,40 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
         setOpen(openData);
       } else {
         // Fallback to sample data for development
-        setOpen(sampleShifts.filter(s => s.status === 'open'));
+        setOpen(sampleShifts.filter((s) => s.status === "open"));
       }
 
       if (requestedResponse.ok) {
         const requestedData = await requestedResponse.json();
         setRequested(requestedData);
       } else {
-        setRequested(sampleShifts.filter(s => s.status === 'requested'));
+        setRequested(sampleShifts.filter((s) => s.status === "requested"));
       }
 
       if (bookedResponse.ok) {
         const bookedData = await bookedResponse.json();
         setBooked(bookedData);
       } else {
-        setBooked(sampleShifts.filter(s => s.status === 'assigned' || s.status === 'in_progress'));
+        setBooked(
+          sampleShifts.filter((s) => s.status === "assigned" || s.status === "in_progress")
+        );
       }
 
       if (historyResponse.ok) {
         const historyData = await historyResponse.json();
         setHistory(historyData);
       } else {
-        setHistory(sampleShifts.filter(s => s.status === 'completed'));
+        setHistory(sampleShifts.filter((s) => s.status === "completed"));
       }
-
     } catch (error) {
-      console.error('Failed to load shifts:', error);
-      setError('Failed to load shifts');
-      
+      console.error("Failed to load shifts:", error);
+      setError("Failed to load shifts");
+
       // Fallback to sample data
-      setOpen(sampleShifts.filter(s => s.status === 'open'));
-      setRequested(sampleShifts.filter(s => s.status === 'requested'));
-      setBooked(sampleShifts.filter(s => s.status === 'assigned' || s.status === 'in_progress'));
-      setHistory(sampleShifts.filter(s => s.status === 'completed'));
+      setOpen(sampleShifts.filter((s) => s.status === "open"));
+      setRequested(sampleShifts.filter((s) => s.status === "requested"));
+      setBooked(sampleShifts.filter((s) => s.status === "assigned" || s.status === "in_progress"));
+      setHistory(sampleShifts.filter((s) => s.status === "completed"));
     } finally {
       setIsLoading(false);
     }
@@ -428,20 +429,20 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
 
   const fetchShiftHistory = async (userId: number) => {
     if (!user) return;
-    
+
     try {
       const response = await fetch(`/api/shifts/history/${userId}`, {
-        credentials: 'include'
+        credentials: "include",
       });
       if (response.ok) {
         const data = await response.json();
         setHistory(data);
       } else {
-        setHistory(sampleShifts.filter(s => s.status === "completed"));
+        setHistory(sampleShifts.filter((s) => s.status === "completed"));
       }
     } catch (err) {
       console.error("Failed to fetch shift history:", err);
-      setHistory(sampleShifts.filter(s => s.status === "completed"));
+      setHistory(sampleShifts.filter((s) => s.status === "completed"));
     }
   };
 
@@ -477,7 +478,7 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
   };
 
   const getShiftById = (id: number): Shift | undefined => {
-    return shifts.find(shift => shift.id === id);
+    return shifts.find((shift) => shift.id === id);
   };
 
   const addShift = async (shiftData: Omit<Shift, "id" | "createdAt" | "updatedAt">) => {
@@ -488,7 +489,7 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      setShifts(prevShifts => [...prevShifts, newShift]);
+      setShifts((prevShifts) => [...prevShifts, newShift]);
     } catch (err) {
       setError("Failed to add shift");
     }
@@ -496,36 +497,36 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
 
   const requestShift = async (shiftId: number) => {
     if (!user) return;
-    
+
     try {
-      const response = await fetch('/api/shifts/request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ shiftId, userId: user.id })
+      const response = await fetch("/api/shifts/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ shiftId, userId: user.id }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
-        
+
         // Move shift from open to requested
-        const shiftToMove = open.find(s => s.id === shiftId);
+        const shiftToMove = open.find((s) => s.id === shiftId);
         if (shiftToMove) {
-          setOpen(prev => prev.filter(s => s.id !== shiftId));
-          
+          setOpen((prev) => prev.filter((s) => s.id !== shiftId));
+
           if (data.autoAssigned) {
             // Auto-assigned, move to booked
-            setBooked(prev => [...prev, data.assignedShift]);
+            setBooked((prev) => [...prev, data.assignedShift]);
           } else {
             // Move to requested
-            setRequested(prev => [...prev, data.requestedShift]);
+            setRequested((prev) => [...prev, data.requestedShift]);
           }
-          
+
           // Add to history
-          setHistory(prev => [...prev, data.historyEntry]);
+          setHistory((prev) => [...prev, data.historyEntry]);
         }
       } else {
-        throw new Error('Failed to request shift');
+        throw new Error("Failed to request shift");
       }
     } catch (err) {
       setError("Failed to request shift");
@@ -534,25 +535,25 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
 
   const assignShift = async (shiftId: number, userId: number) => {
     try {
-      const response = await fetch('/api/shifts/assign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ shiftId, userId })
+      const response = await fetch("/api/shifts/assign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ shiftId, userId }),
       });
-      
+
       if (response.ok) {
         const data = await response.json();
-        
+
         // Move shift from requested to booked
-        const shiftToMove = requested.find(s => s.id === shiftId);
+        const shiftToMove = requested.find((s) => s.id === shiftId);
         if (shiftToMove) {
-          setRequested(prev => prev.filter(s => s.id !== shiftId));
-          setBooked(prev => [...prev, data.assignedShift]);
-          setHistory(prev => [...prev, data.historyEntry]);
+          setRequested((prev) => prev.filter((s) => s.id !== shiftId));
+          setBooked((prev) => [...prev, data.assignedShift]);
+          setHistory((prev) => [...prev, data.historyEntry]);
         }
       } else {
-        throw new Error('Failed to assign shift');
+        throw new Error("Failed to assign shift");
       }
     } catch (err) {
       setError("Failed to assign shift");

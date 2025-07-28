@@ -49,12 +49,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { 
-  Clock, 
-  Users, 
-  Plus, 
-  Edit, 
-  Trash2, 
+import {
+  Clock,
+  Users,
+  Plus,
+  Edit,
+  Trash2,
   MoreHorizontal,
   Search,
   Filter,
@@ -63,35 +63,41 @@ import {
   CheckCircle,
   AlertTriangle,
   RefreshCw,
-  Loader2
+  Loader2,
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 
 // Template schema
-const templateSchema = z.object({
-  name: z.string().min(1, "Template name is required"),
-  department: z.string().min(1, "Department is required"),
-  specialty: z.string().min(1, "Specialty is required"),
-  facilityId: z.number().min(1, "Facility is required"),
-  facilityName: z.string().optional(),
-  buildingId: z.string().optional(),
-  buildingName: z.string().optional(),
-  minStaff: z.number().min(1, "Staff required must be at least 1"),
-  maxStaff: z.number().min(1, "Maximum staff must be at least 1"),
-  shiftType: z.string(),
-  startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
-  endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
-  daysOfWeek: z.array(z.number()).min(1, "Select at least one day"),
-  isActive: z.boolean().default(true),
-  hourlyRate: z.number().min(0, "Hourly rate must be positive").optional(),
-  daysPostedOut: z.number().min(1, "Days posted out must be at least 1").max(90, "Days posted out cannot exceed 90").default(7),
-  notes: z.string().optional(),
-}).refine((data) => data.maxStaff >= data.minStaff, {
-  message: "Maximum staff must be greater than or equal to minimum staff",
-  path: ["maxStaff"],
-});
+const templateSchema = z
+  .object({
+    name: z.string().min(1, "Template name is required"),
+    department: z.string().min(1, "Department is required"),
+    specialty: z.string().min(1, "Specialty is required"),
+    facilityId: z.number().min(1, "Facility is required"),
+    facilityName: z.string().optional(),
+    buildingId: z.string().optional(),
+    buildingName: z.string().optional(),
+    minStaff: z.number().min(1, "Staff required must be at least 1"),
+    maxStaff: z.number().min(1, "Maximum staff must be at least 1"),
+    shiftType: z.string(),
+    startTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
+    endTime: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, "Invalid time format"),
+    daysOfWeek: z.array(z.number()).min(1, "Select at least one day"),
+    isActive: z.boolean().default(true),
+    hourlyRate: z.number().min(0, "Hourly rate must be positive").optional(),
+    daysPostedOut: z
+      .number()
+      .min(1, "Days posted out must be at least 1")
+      .max(90, "Days posted out cannot exceed 90")
+      .default(7),
+    notes: z.string().optional(),
+  })
+  .refine((data) => data.maxStaff >= data.minStaff, {
+    message: "Maximum staff must be greater than or equal to minimum staff",
+    path: ["maxStaff"],
+  });
 
 interface ShiftTemplate {
   id: number;
@@ -136,13 +142,13 @@ const DAYS_OF_WEEK = [
 
 const SPECIALTIES = [
   "Registered Nurse",
-  "Licensed Practical Nurse", 
+  "Licensed Practical Nurse",
   "Certified Nursing Assistant",
   "Physical Therapist",
   "Respiratory Therapist",
   "Medical Technologist",
   "Pharmacist",
-  "Social Worker"
+  "Social Worker",
 ];
 
 const DEPARTMENTS = [
@@ -153,7 +159,7 @@ const DEPARTMENTS = [
   "Labor & Delivery",
   "Pediatrics",
   "Radiology",
-  "Laboratory"
+  "Laboratory",
 ];
 
 export default function ShiftTemplatesPage() {
@@ -207,7 +213,7 @@ export default function ShiftTemplatesPage() {
       const response = await apiRequest("POST", "/api/shift-templates", templateData);
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to create template');
+        throw new Error(error.message || "Failed to create template");
       }
       return response.json();
     },
@@ -223,10 +229,11 @@ export default function ShiftTemplatesPage() {
       });
     },
     onError: (error: any) => {
-      console.error('Create template error:', error);
+      console.error("Create template error:", error);
       toast({
         title: "Template Creation Failed",
-        description: error.message || "Failed to create template. Please check your data and try again.",
+        description:
+          error.message || "Failed to create template. Please check your data and try again.",
         variant: "destructive",
       });
     },
@@ -235,22 +242,16 @@ export default function ShiftTemplatesPage() {
   // Update template mutation
   const updateTemplateMutation = useMutation({
     mutationFn: async ({ id, ...data }: { id: number } & z.infer<typeof templateSchema>) => {
-      console.log('=== UPDATE MUTATION DEBUG ===');
-      console.log('Template ID:', id);
-      console.log('Update data being sent:', JSON.stringify(data, null, 2));
 
       const response = await apiRequest("PUT", `/api/shift-templates/${id}`, data);
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to update template');
+        throw new Error(error.message || "Failed to update template");
       }
       const result = await response.json();
-      console.log('Update response:', result);
       return result;
     },
     onSuccess: (updatedTemplate) => {
-      console.log('=== UPDATE SUCCESS ===');
-      console.log('Updated template received:', updatedTemplate);
 
       // Force refresh of data to ensure UI shows latest changes
       queryClient.invalidateQueries({ queryKey: ["/api/shift-templates"] });
@@ -285,10 +286,11 @@ export default function ShiftTemplatesPage() {
       });
     },
     onError: (error: any) => {
-      console.error('Update template error:', error);
+      console.error("Update template error:", error);
       toast({
         title: "Update Failed",
-        description: error.message || "Failed to update template. Please check your data and try again.",
+        description:
+          error.message || "Failed to update template. Please check your data and try again.",
         variant: "destructive",
       });
     },
@@ -326,8 +328,8 @@ export default function ShiftTemplatesPage() {
 
       toast({
         title: "Template Updated",
-        description: variables.isActive 
-          ? "Template activated - new shifts will be generated" 
+        description: variables.isActive
+          ? "Template activated - new shifts will be generated"
           : "Template deactivated - existing shifts preserved",
       });
     },
@@ -372,24 +374,26 @@ export default function ShiftTemplatesPage() {
 
   // Filter templates
   const filteredTemplates = templates.filter((template) => {
-    const matchesSearch = searchTerm === "" || 
+    const matchesSearch =
+      searchTerm === "" ||
       template.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       template.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
       template.specialty.toLowerCase().includes(searchTerm.toLowerCase()) ||
       template.facilityName.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesDepartment = selectedDepartment === "all" || template.department === selectedDepartment;
-    const matchesStatus = selectedStatus === "all" || 
+    const matchesDepartment =
+      selectedDepartment === "all" || template.department === selectedDepartment;
+    const matchesStatus =
+      selectedStatus === "all" ||
       (selectedStatus === "active" && template.isActive) ||
       (selectedStatus === "inactive" && !template.isActive);
-    const matchesFacility = selectedFacility === "all" || template.facilityId.toString() === selectedFacility;
+    const matchesFacility =
+      selectedFacility === "all" || template.facilityId.toString() === selectedFacility;
 
     return matchesSearch && matchesDepartment && matchesStatus && matchesFacility;
   });
 
   const handleEditTemplate = (template: ShiftTemplate) => {
-    console.log('=== EDITING TEMPLATE DEBUG ===');
-    console.log('Template data received:', JSON.stringify(template, null, 2));
 
     // Set editing state first
     setEditingTemplate(template);
@@ -415,7 +419,6 @@ export default function ShiftTemplatesPage() {
       notes: template.notes || "",
     };
 
-    console.log('Processed form data:', JSON.stringify(formData, null, 2));
 
     // Reset form with the template data
     templateForm.reset(formData);
@@ -429,24 +432,22 @@ export default function ShiftTemplatesPage() {
       templateForm.reset(formData);
 
       Object.entries(formData).forEach(([key, value]) => {
-        templateForm.setValue(key as any, value, { 
-          shouldValidate: false, 
+        templateForm.setValue(key as any, value, {
+          shouldValidate: false,
           shouldTouch: true,
-          shouldDirty: true 
+          shouldDirty: true,
         });
       });
 
       // Force re-render of all form controls
       templateForm.trigger();
 
-      console.log('Final form values:', templateForm.getValues());
-      console.log('Form watch values:', {
         name: templateForm.watch("name"),
-        department: templateForm.watch("department"), 
+        department: templateForm.watch("department"),
         specialty: templateForm.watch("specialty"),
         facilityId: templateForm.watch("facilityId"),
         shiftType: templateForm.watch("shiftType"),
-        minStaff: templateForm.watch("minStaff")
+        minStaff: templateForm.watch("minStaff"),
       });
     }, 300);
 
@@ -454,27 +455,24 @@ export default function ShiftTemplatesPage() {
   };
 
   const handleTemplateSubmit = (data: z.infer<typeof templateSchema>) => {
-    console.log('=== TEMPLATE SUBMISSION DEBUG ===');
-    console.log('Submitted data:', JSON.stringify(data, null, 2));
-    console.log('Editing template ID:', editingTemplate?.id);
-    console.log('Form errors:', templateForm.formState.errors);
-    console.log('Is editing mode:', !!editingTemplate);
 
     if (editingTemplate) {
-      console.log('Calling UPDATE mutation for template ID:', editingTemplate.id);
       updateTemplateMutation.mutate({ id: editingTemplate.id, ...data });
     } else {
-      console.log('Calling CREATE mutation');
       createTemplateMutation.mutate(data);
     }
   };
 
   const getShiftTypeColor = (shiftType: string) => {
     switch (shiftType) {
-      case "day": return "bg-green-100 text-green-800";
-      case "evening": return "bg-orange-100 text-orange-800";
-      case "night": return "bg-blue-100 text-blue-800";
-      default: return "bg-gray-100 text-gray-800";
+      case "day":
+        return "bg-green-100 text-green-800";
+      case "evening":
+        return "bg-orange-100 text-orange-800";
+      case "night":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -483,66 +481,69 @@ export default function ShiftTemplatesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Shift Templates
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Shift Templates</h1>
           <p className="text-gray-600 dark:text-gray-300">
             Manage reusable shift templates that automatically generate facility schedules
           </p>
         </div>
-        <Dialog open={isTemplateDialogOpen} onOpenChange={(open) => {
-          setIsTemplateDialogOpen(open);
-          if (!open) {
-            setEditingTemplate(null);
-            templateForm.reset({
-              name: "",
-              department: "",
-              specialty: "",
-              facilityId: 0,
-              facilityName: "",
-              buildingId: "",
-              buildingName: "",
-              minStaff: 1,
-              maxStaff: 1,
-              shiftType: "day",
-              startTime: "07:00",
-              endTime: "19:00",
-              daysOfWeek: [1, 2, 3, 4, 5],
-              isActive: true,
-              hourlyRate: 0,
-              daysPostedOut: 7,
-              notes: "",
-            });
-          }
-        }}>
+        <Dialog
+          open={isTemplateDialogOpen}
+          onOpenChange={(open) => {
+            setIsTemplateDialogOpen(open);
+            if (!open) {
+              setEditingTemplate(null);
+              templateForm.reset({
+                name: "",
+                department: "",
+                specialty: "",
+                facilityId: 0,
+                facilityName: "",
+                buildingId: "",
+                buildingName: "",
+                minStaff: 1,
+                maxStaff: 1,
+                shiftType: "day",
+                startTime: "07:00",
+                endTime: "19:00",
+                daysOfWeek: [1, 2, 3, 4, 5],
+                isActive: true,
+                hourlyRate: 0,
+                daysPostedOut: 7,
+                notes: "",
+              });
+            }
+          }}
+        >
           <DialogTrigger asChild>
             <PermissionAction
               permission="shifts.manage_templates"
               action="Create Shift Template"
               fallback={null}
             >
-              <Button onClick={() => {
-                setEditingTemplate(null);
-                templateForm.reset({
-                  name: "",
-                  department: "",
-                  specialty: "",
-                  facilityId: 0,
-                  facilityName: "",
-                  buildingId: "",
-                  buildingName: "",
-                  minStaff: 1,
-                  maxStaff: 1,
-                  shiftType: "day",
-                  startTime: "07:00",
-                  endTime: "19:00",
-                  daysOfWeek: [1, 2, 3, 4, 5],
-                  isActive: true,
-                  hourlyRate: 0,
-                  daysPostedOut: 7,
-                  notes: "",
-                });
-              }}>
+              <Button
+                onClick={() => {
+                  setEditingTemplate(null);
+                  templateForm.reset({
+                    name: "",
+                    department: "",
+                    specialty: "",
+                    facilityId: 0,
+                    facilityName: "",
+                    buildingId: "",
+                    buildingName: "",
+                    minStaff: 1,
+                    maxStaff: 1,
+                    shiftType: "day",
+                    startTime: "07:00",
+                    endTime: "19:00",
+                    daysOfWeek: [1, 2, 3, 4, 5],
+                    isActive: true,
+                    hourlyRate: 0,
+                    daysPostedOut: 7,
+                    notes: "",
+                  });
+                }}
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Template
               </Button>
@@ -555,11 +556,12 @@ export default function ShiftTemplatesPage() {
               </DialogTitle>
             </DialogHeader>
             {editingTemplate && (
-              <div className="text-sm text-gray-600 mb-4">
-                Editing: {editingTemplate.name}
-              </div>
+              <div className="text-sm text-gray-600 mb-4">Editing: {editingTemplate.name}</div>
             )}
-            <form onSubmit={templateForm.handleSubmit(handleTemplateSubmit)} className="space-y-4 max-h-[70vh] overflow-y-auto pr-2">
+            <form
+              onSubmit={templateForm.handleSubmit(handleTemplateSubmit)}
+              className="space-y-4 max-h-[70vh] overflow-y-auto pr-2"
+            >
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Template Name</Label>
@@ -576,14 +578,17 @@ export default function ShiftTemplatesPage() {
                 </div>
                 <div>
                   <Label>Facility</Label>
-                  <Select 
-                    value={templateForm.watch("facilityId")?.toString() || ""} 
+                  <Select
+                    value={templateForm.watch("facilityId")?.toString() || ""}
                     onValueChange={(value) => {
                       templateForm.setValue("facilityId", parseInt(value));
                       // Also set facilityName for consistency
-                      const selectedFacility = facilities.find(f => f.id === parseInt(value));
+                      const selectedFacility = facilities.find((f) => f.id === parseInt(value));
                       if (selectedFacility) {
-                        templateForm.setValue("facilityName", getFacilityDisplayName(selectedFacility));
+                        templateForm.setValue(
+                          "facilityName",
+                          getFacilityDisplayName(selectedFacility)
+                        );
                       }
                     }}
                   >
@@ -603,8 +608,8 @@ export default function ShiftTemplatesPage() {
 
               <div>
                 <Label>Building/Unit</Label>
-                <Select 
-                  value={templateForm.watch("buildingId") || ""} 
+                <Select
+                  value={templateForm.watch("buildingId") || ""}
                   onValueChange={(value) => {
                     templateForm.setValue("buildingId", value);
                     templateForm.setValue("buildingName", value ? `Building ${value}` : "");
@@ -629,8 +634,8 @@ export default function ShiftTemplatesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Department</Label>
-                  <Select 
-                    value={templateForm.watch("department") || ""} 
+                  <Select
+                    value={templateForm.watch("department") || ""}
                     onValueChange={(value) => templateForm.setValue("department", value)}
                   >
                     <SelectTrigger>
@@ -647,30 +652,32 @@ export default function ShiftTemplatesPage() {
                 </div>
                 <div>
                   <Label>Specialty</Label>
-                  <Select 
-                    value={templateForm.watch("specialty") || ""} 
+                  <Select
+                    value={templateForm.watch("specialty") || ""}
                     onValueChange={(value) => templateForm.setValue("specialty", value)}
                   >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select specialty" />
-                </SelectTrigger>
-                <SelectContent>
-                  {SPECIALTIES.map((specialty, idx) => (
-                    <SelectItem key={`${specialty}-${idx}`} value={specialty}>
-                      {specialty}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              </div>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select specialty" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {SPECIALTIES.map((specialty, idx) => (
+                        <SelectItem key={`${specialty}-${idx}`} value={specialty}>
+                          {specialty}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label>Shift Type</Label>
-                  <Select 
-                    value={templateForm.watch("shiftType") || ""} 
-                    onValueChange={(value) => templateForm.setValue("shiftType", value as "day" | "evening" | "night")}
+                  <Select
+                    value={templateForm.watch("shiftType") || ""}
+                    onValueChange={(value) =>
+                      templateForm.setValue("shiftType", value as "day" | "evening" | "night")
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select shift type" />
@@ -748,7 +755,10 @@ export default function ShiftTemplatesPage() {
                           if (e.target.checked) {
                             templateForm.setValue("daysOfWeek", [...current, day.value]);
                           } else {
-                            templateForm.setValue("daysOfWeek", current.filter(d => d !== day.value));
+                            templateForm.setValue(
+                              "daysOfWeek",
+                              current.filter((d) => d !== day.value)
+                            );
                           }
                         }}
                         className="rounded"
@@ -780,7 +790,7 @@ export default function ShiftTemplatesPage() {
               </div>
 
               {/* Hourly Rate - Only visible to superusers */}
-              {user?.role === 'superuser' && (
+              {user?.role === "superuser" && (
                 <div>
                   <Label>Hourly Rate (Optional)</Label>
                   <Input
@@ -794,9 +804,7 @@ export default function ShiftTemplatesPage() {
                     }}
                     placeholder="0.00"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Only visible to superusers
-                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Only visible to superusers</p>
                 </div>
               )}
 
@@ -848,8 +856,8 @@ export default function ShiftTemplatesPage() {
                 >
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="flex-1"
                   disabled={createTemplateMutation.isPending || updateTemplateMutation.isPending}
                 >
@@ -950,9 +958,9 @@ export default function ShiftTemplatesPage() {
               <Calendar className="h-5 w-5" />
               Shift Templates ({filteredTemplates.length})
             </div>
-            {filteredTemplates.some(t => t.isActive) && (
+            {filteredTemplates.some((t) => t.isActive) && (
               <Badge className="bg-green-100 text-green-800">
-                {filteredTemplates.filter(t => t.isActive).length} Active Templates
+                {filteredTemplates.filter((t) => t.isActive).length} Active Templates
               </Badge>
             )}
           </CardTitle>
@@ -996,7 +1004,9 @@ export default function ShiftTemplatesPage() {
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Building className="h-4 w-4 text-muted-foreground" />
-                          {getFacilityDisplayName(facilities.find(f => f.id === template.facilityId)) || template.facilityName}
+                          {getFacilityDisplayName(
+                            facilities.find((f) => f.id === template.facilityId)
+                          ) || template.facilityName}
                         </div>
                       </TableCell>
                       <TableCell>{template.department}</TableCell>
@@ -1007,7 +1017,11 @@ export default function ShiftTemplatesPage() {
                             {template.shiftType} ({template.startTime} - {template.endTime})
                           </Badge>
                           <div className="text-xs text-muted-foreground">
-                            {template.daysOfWeek.map(d => DAYS_OF_WEEK.find(day => day.value === d)?.label.slice(0, 3)).join(", ")}
+                            {template.daysOfWeek
+                              .map((d) =>
+                                DAYS_OF_WEEK.find((day) => day.value === d)?.label.slice(0, 3)
+                              )
+                              .join(", ")}
                           </div>
                         </div>
                       </TableCell>
@@ -1018,9 +1032,7 @@ export default function ShiftTemplatesPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Badge variant="secondary">
-                            {template.generatedShiftsCount} shifts
-                          </Badge>
+                          <Badge variant="secondary">{template.generatedShiftsCount} shifts</Badge>
                           <Button
                             size="sm"
                             variant="ghost"
@@ -1036,7 +1048,7 @@ export default function ShiftTemplatesPage() {
                           <PermissionGate permission="shifts.manage_templates">
                             <Switch
                               checked={template.isActive}
-                              onCheckedChange={(checked) => 
+                              onCheckedChange={(checked) =>
                                 toggleStatusMutation.mutate({ id: template.id, isActive: checked })
                               }
                               disabled={toggleStatusMutation.isPending}
@@ -1064,7 +1076,7 @@ export default function ShiftTemplatesPage() {
                               </DropdownMenuItem>
                             </PermissionGate>
                             <PermissionGate permission="shifts.manage_templates">
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 onClick={() => regenerateShiftsMutation.mutate(template.id)}
                                 disabled={regenerateShiftsMutation.isPending}
                               >
@@ -1073,7 +1085,7 @@ export default function ShiftTemplatesPage() {
                               </DropdownMenuItem>
                             </PermissionGate>
                             <PermissionGate permission="shifts.manage_templates">
-                              <DropdownMenuItem 
+                              <DropdownMenuItem
                                 onClick={() => setDeleteTemplate(template)}
                                 className="text-red-600"
                               >
@@ -1099,7 +1111,8 @@ export default function ShiftTemplatesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Shift Template</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deleteTemplate?.name}"? This will remove the template and all associated future shifts. This action cannot be undone.
+              Are you sure you want to delete "{deleteTemplate?.name}"? This will remove the
+              template and all associated future shifts. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

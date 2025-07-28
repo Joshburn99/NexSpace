@@ -42,7 +42,7 @@ export default function AnalyticsPage() {
 
   // Use shift context data - centralized source of truth
   const { open, requested, booked, history } = useShifts();
-  
+
   // Derive metrics from shift data
   const totalShifts = history.length;
   const openCount = open.length;

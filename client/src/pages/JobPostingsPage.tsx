@@ -1,13 +1,29 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building, MapPin, Clock, DollarSign, Search, Filter, Plus, Users, Calendar } from 'lucide-react';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
-import { Link } from 'wouter';
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Building,
+  MapPin,
+  Clock,
+  DollarSign,
+  Search,
+  Filter,
+  Plus,
+  Users,
+  Calendar,
+} from "lucide-react";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
+import { Link } from "wouter";
 
 interface JobPosting {
   id: number;
@@ -19,88 +35,95 @@ interface JobPosting {
   experience: string;
   postedDate: string;
   applicants: number;
-  status: 'active' | 'paused' | 'closed';
+  status: "active" | "paused" | "closed";
   description: string;
   requirements: string[];
   benefits: string[];
 }
 
 export default function JobPostingsPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [departmentFilter, setDepartmentFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const { hasPermission } = useFacilityPermissions();
 
   const { data: jobPostings, isLoading } = useQuery<JobPosting[]>({
-    queryKey: ['/api/job-postings'],
+    queryKey: ["/api/job-postings"],
     initialData: [
       {
         id: 1,
-        title: 'Registered Nurse - ICU',
-        department: 'Intensive Care',
-        location: 'General Hospital',
-        employmentType: 'Full-time',
-        payRate: '$35-45/hour',
-        experience: '2+ years',
-        postedDate: '2025-07-10',
+        title: "Registered Nurse - ICU",
+        department: "Intensive Care",
+        location: "General Hospital",
+        employmentType: "Full-time",
+        payRate: "$35-45/hour",
+        experience: "2+ years",
+        postedDate: "2025-07-10",
         applicants: 12,
-        status: 'active',
-        description: 'Seeking experienced ICU nurse for day shift position',
-        requirements: ['BSN degree', 'ICU experience', 'BLS certification'],
-        benefits: ['Health insurance', 'Paid time off', 'Continuing education']
+        status: "active",
+        description: "Seeking experienced ICU nurse for day shift position",
+        requirements: ["BSN degree", "ICU experience", "BLS certification"],
+        benefits: ["Health insurance", "Paid time off", "Continuing education"],
       },
       {
         id: 2,
-        title: 'Licensed Practical Nurse - Med/Surg',
-        department: 'Medical/Surgical',
-        location: 'General Hospital',
-        employmentType: 'Part-time',
-        payRate: '$28-32/hour',
-        experience: '1+ years',
-        postedDate: '2025-07-08',
+        title: "Licensed Practical Nurse - Med/Surg",
+        department: "Medical/Surgical",
+        location: "General Hospital",
+        employmentType: "Part-time",
+        payRate: "$28-32/hour",
+        experience: "1+ years",
+        postedDate: "2025-07-08",
         applicants: 8,
-        status: 'active',
-        description: 'Part-time LPN position for medical/surgical unit',
-        requirements: ['LPN license', 'Med/Surg experience', 'CPR certification'],
-        benefits: ['Flexible schedule', 'Health insurance', 'Professional development']
+        status: "active",
+        description: "Part-time LPN position for medical/surgical unit",
+        requirements: ["LPN license", "Med/Surg experience", "CPR certification"],
+        benefits: ["Flexible schedule", "Health insurance", "Professional development"],
       },
       {
         id: 3,
-        title: 'Certified Nursing Assistant - Emergency',
-        department: 'Emergency',
-        location: 'General Hospital',
-        employmentType: 'Per Diem',
-        payRate: '$20-25/hour',
-        experience: 'Entry level',
-        postedDate: '2025-07-05',
+        title: "Certified Nursing Assistant - Emergency",
+        department: "Emergency",
+        location: "General Hospital",
+        employmentType: "Per Diem",
+        payRate: "$20-25/hour",
+        experience: "Entry level",
+        postedDate: "2025-07-05",
         applicants: 5,
-        status: 'paused',
-        description: 'Per diem CNA position in fast-paced emergency department',
-        requirements: ['CNA certification', 'Strong communication skills', 'Physical stamina'],
-        benefits: ['Flexible scheduling', 'Experience in emergency care', 'Competitive pay']
-      }
-    ]
+        status: "paused",
+        description: "Per diem CNA position in fast-paced emergency department",
+        requirements: ["CNA certification", "Strong communication skills", "Physical stamina"],
+        benefits: ["Flexible scheduling", "Experience in emergency care", "Competitive pay"],
+      },
+    ],
   });
 
-  const filteredPostings = jobPostings?.filter(posting => {
-    const matchesSearch = posting.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         posting.department.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDepartment = departmentFilter === 'all' || posting.department === departmentFilter;
-    const matchesStatus = statusFilter === 'all' || posting.status === statusFilter;
-    
-    return matchesSearch && matchesDepartment && matchesStatus;
-  }) || [];
+  const filteredPostings =
+    jobPostings?.filter((posting) => {
+      const matchesSearch =
+        posting.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        posting.department.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesDepartment =
+        departmentFilter === "all" || posting.department === departmentFilter;
+      const matchesStatus = statusFilter === "all" || posting.status === statusFilter;
+
+      return matchesSearch && matchesDepartment && matchesStatus;
+    }) || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'paused': return 'bg-yellow-100 text-yellow-800';
-      case 'closed': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case "active":
+        return "bg-green-100 text-green-800";
+      case "paused":
+        return "bg-yellow-100 text-yellow-800";
+      case "closed":
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
-  if (!hasPermission('view_job_openings')) {
+  if (!hasPermission("view_job_openings")) {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -122,7 +145,7 @@ export default function JobPostingsPage() {
           </h1>
           <p className="text-gray-600 mt-2">View and manage current job openings</p>
         </div>
-        {hasPermission('manage_job_openings') && (
+        {hasPermission("manage_job_openings") && (
           <Link href="/create-job-posting">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
@@ -198,9 +221,7 @@ export default function JobPostingsPage() {
                       {posting.location}
                     </p>
                   </div>
-                  <Badge className={getStatusColor(posting.status)}>
-                    {posting.status}
-                  </Badge>
+                  <Badge className={getStatusColor(posting.status)}>{posting.status}</Badge>
                 </div>
               </CardHeader>
               <CardContent>
@@ -215,7 +236,7 @@ export default function JobPostingsPage() {
                       {posting.employmentType}
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-1 font-medium text-green-600">
                       <DollarSign className="h-3 w-3" />
@@ -226,16 +247,14 @@ export default function JobPostingsPage() {
                       {posting.applicants} applicants
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-1 text-sm text-gray-500">
                     <Calendar className="h-3 w-3" />
                     Posted {new Date(posting.postedDate).toLocaleDateString()}
                   </div>
-                  
-                  <p className="text-sm text-gray-700 line-clamp-2">
-                    {posting.description}
-                  </p>
-                  
+
+                  <p className="text-sm text-gray-700 line-clamp-2">{posting.description}</p>
+
                   <div className="flex flex-wrap gap-1">
                     {posting.requirements.slice(0, 2).map((req, index) => (
                       <Badge key={index} variant="outline" className="text-xs">
@@ -248,7 +267,7 @@ export default function JobPostingsPage() {
                       </Badge>
                     )}
                   </div>
-                  
+
                   <div className="pt-2 border-t">
                     <Button variant="outline" className="w-full">
                       View Details
@@ -267,12 +286,11 @@ export default function JobPostingsPage() {
             <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold mb-2">No job postings found</h3>
             <p className="text-gray-600 mb-4">
-              {searchTerm || departmentFilter !== 'all' || statusFilter !== 'all' 
-                ? 'Try adjusting your search or filters'
-                : 'No job postings have been created yet'
-              }
+              {searchTerm || departmentFilter !== "all" || statusFilter !== "all"
+                ? "Try adjusting your search or filters"
+                : "No job postings have been created yet"}
             </p>
-            {hasPermission('manage_job_openings') && (
+            {hasPermission("manage_job_openings") && (
               <Link href="/create-job-posting">
                 <Button>
                   <Plus className="h-4 w-4 mr-2" />

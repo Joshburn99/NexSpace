@@ -1,11 +1,17 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface MobileFormProps {
   title: string;
@@ -14,12 +20,7 @@ interface MobileFormProps {
   className?: string;
 }
 
-export const MobileForm: React.FC<MobileFormProps> = ({ 
-  title, 
-  children, 
-  onSubmit, 
-  className 
-}) => {
+export const MobileForm: React.FC<MobileFormProps> = ({ title, children, onSubmit, className }) => {
   return (
     <Card className={cn("w-full max-w-full", className)}>
       <CardHeader className="pb-4">
@@ -47,7 +48,7 @@ export const MobileFormField: React.FC<MobileFormFieldProps> = ({
   children,
   required = false,
   error,
-  className
+  className,
 }) => {
   return (
     <div className={cn("space-y-2", className)}>
@@ -56,9 +57,7 @@ export const MobileFormField: React.FC<MobileFormFieldProps> = ({
         {required && <span className="text-red-500 ml-1">*</span>}
       </Label>
       {children}
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </div>
   );
 };
@@ -68,15 +67,8 @@ interface MobileFormRowProps {
   className?: string;
 }
 
-export const MobileFormRow: React.FC<MobileFormRowProps> = ({ 
-  children, 
-  className 
-}) => {
-  return (
-    <div className={cn("form-row-mobile", className)}>
-      {children}
-    </div>
-  );
+export const MobileFormRow: React.FC<MobileFormRowProps> = ({ children, className }) => {
+  return <div className={cn("form-row-mobile", className)}>{children}</div>;
 };
 
 interface MobileFormActionsProps {
@@ -84,14 +76,9 @@ interface MobileFormActionsProps {
   className?: string;
 }
 
-export const MobileFormActions: React.FC<MobileFormActionsProps> = ({ 
-  children, 
-  className 
-}) => {
+export const MobileFormActions: React.FC<MobileFormActionsProps> = ({ children, className }) => {
   return (
-    <div className={cn("flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4", className)}>
-      {children}
-    </div>
+    <div className={cn("flex flex-col sm:flex-row gap-3 sm:gap-4 pt-4", className)}>{children}</div>
   );
 };
 
@@ -101,12 +88,7 @@ interface MobileInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
 }
 
-export const MobileInput: React.FC<MobileInputProps> = ({ 
-  label, 
-  error, 
-  className, 
-  ...props 
-}) => {
+export const MobileInput: React.FC<MobileInputProps> = ({ label, error, className, ...props }) => {
   return (
     <div className="space-y-2">
       {label && (
@@ -115,7 +97,7 @@ export const MobileInput: React.FC<MobileInputProps> = ({
           {props.required && <span className="text-red-500 ml-1">*</span>}
         </Label>
       )}
-      <Input 
+      <Input
         {...props}
         className={cn(
           "mobile-touch h-12 sm:h-10 text-base sm:text-sm",
@@ -123,9 +105,7 @@ export const MobileInput: React.FC<MobileInputProps> = ({
           className
         )}
       />
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </div>
   );
 };
@@ -135,11 +115,11 @@ interface MobileTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaE
   error?: string;
 }
 
-export const MobileTextarea: React.FC<MobileTextareaProps> = ({ 
-  label, 
-  error, 
-  className, 
-  ...props 
+export const MobileTextarea: React.FC<MobileTextareaProps> = ({
+  label,
+  error,
+  className,
+  ...props
 }) => {
   return (
     <div className="space-y-2">
@@ -149,7 +129,7 @@ export const MobileTextarea: React.FC<MobileTextareaProps> = ({
           {props.required && <span className="text-red-500 ml-1">*</span>}
         </Label>
       )}
-      <Textarea 
+      <Textarea
         {...props}
         className={cn(
           "min-h-[100px] text-base sm:text-sm resize-none",
@@ -157,9 +137,7 @@ export const MobileTextarea: React.FC<MobileTextareaProps> = ({
           className
         )}
       />
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </div>
   );
 };
@@ -174,66 +152,62 @@ interface MobileSelectProps {
   className?: string;
 }
 
-export const MobileSelect: React.FC<MobileSelectProps> = ({ 
-  label, 
-  error, 
-  placeholder, 
-  value, 
-  onValueChange, 
-  children, 
-  className 
+export const MobileSelect: React.FC<MobileSelectProps> = ({
+  label,
+  error,
+  placeholder,
+  value,
+  onValueChange,
+  children,
+  className,
 }) => {
   return (
     <div className="space-y-2">
-      {label && (
-        <Label className="text-sm sm:text-base font-medium">{label}</Label>
-      )}
+      {label && <Label className="text-sm sm:text-base font-medium">{label}</Label>}
       <Select value={value} onValueChange={onValueChange}>
-        <SelectTrigger className={cn(
-          "mobile-touch h-12 sm:h-10 text-base sm:text-sm",
-          error && "border-red-500 focus:border-red-500",
-          className
-        )}>
+        <SelectTrigger
+          className={cn(
+            "mobile-touch h-12 sm:h-10 text-base sm:text-sm",
+            error && "border-red-500 focus:border-red-500",
+            className
+          )}
+        >
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
-        <SelectContent className="max-h-[200px] overflow-y-auto">
-          {children}
-        </SelectContent>
+        <SelectContent className="max-h-[200px] overflow-y-auto">{children}</SelectContent>
       </Select>
-      {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
     </div>
   );
 };
 
 interface MobileButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "sm" | "md" | "lg";
   loading?: boolean;
   children: React.ReactNode;
 }
 
-export const MobileButton: React.FC<MobileButtonProps> = ({ 
-  variant = 'primary', 
-  size = 'md', 
-  loading = false, 
-  children, 
-  className, 
+export const MobileButton: React.FC<MobileButtonProps> = ({
+  variant = "primary",
+  size = "md",
+  loading = false,
+  children,
+  className,
   disabled,
-  ...props 
+  ...props
 }) => {
   const variants = {
-    primary: 'btn-mobile-primary',
-    secondary: 'btn-mobile-secondary',
-    outline: 'btn-mobile border border-input bg-background hover:bg-accent',
-    ghost: 'btn-mobile hover:bg-accent hover:text-accent-foreground'
+    primary: "btn-mobile-primary",
+    secondary: "btn-mobile-secondary",
+    outline: "btn-mobile border border-input bg-background hover:bg-accent",
+    ghost: "btn-mobile hover:bg-accent hover:text-accent-foreground",
   };
 
   const sizes = {
-    sm: 'px-3 py-2 text-sm',
-    md: 'px-4 py-3 sm:px-3 sm:py-2',
-    lg: 'px-6 py-4 sm:px-4 sm:py-3 text-lg sm:text-base'
+    sm: "px-3 py-2 text-sm",
+    md: "px-4 py-3 sm:px-3 sm:py-2",
+    lg: "px-6 py-4 sm:px-4 sm:py-3 text-lg sm:text-base",
   };
 
   return (
@@ -243,8 +217,8 @@ export const MobileButton: React.FC<MobileButtonProps> = ({
       className={cn(
         variants[variant],
         sizes[size],
-        'mobile-touch transition-all duration-200',
-        loading && 'opacity-50 cursor-not-allowed',
+        "mobile-touch transition-all duration-200",
+        loading && "opacity-50 cursor-not-allowed",
         className
       )}
     >

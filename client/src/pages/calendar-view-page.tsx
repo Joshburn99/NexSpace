@@ -24,7 +24,7 @@ export default function CalendarViewPage() {
   const [selectedUnit, setSelectedUnit] = useState("all");
 
   const currentUser = impersonatedUser || user;
-  const canPostShifts = currentUser?.role === 'manager' || currentUser?.role === 'admin';
+  const canPostShifts = currentUser?.role === "manager" || currentUser?.role === "admin";
 
   const { data: shifts = [] } = useQuery({
     queryKey: ["/api/shifts"],
@@ -372,14 +372,14 @@ export default function CalendarViewPage() {
 
         {/* Legend */}
         <div className="mt-6 flex items-center space-x-6">
-<div className="text-sm text-gray-600">Specialty Color Code:</div>
-{Object.entries(specialtyColors).map(([specialty, className], idx) => (
-  <div key={`${specialty}-${idx}`} className="flex items-center space-x-2">
-    <Badge className={className}>{specialty}</Badge>
-  </div>
-))}
-</div>
-</div>
-</div>
-);
+          <div className="text-sm text-gray-600">Specialty Color Code:</div>
+          {Object.entries(specialtyColors).map(([specialty, className], idx) => (
+            <div key={`${specialty}-${idx}`} className="flex items-center space-x-2">
+              <Badge className={className}>{specialty}</Badge>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 }

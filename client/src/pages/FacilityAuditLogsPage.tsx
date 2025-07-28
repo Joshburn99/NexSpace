@@ -1,16 +1,38 @@
-import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Shield, Search, Calendar as CalendarIcon, Filter, Download, User, Clock, Activity } from 'lucide-react';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
-import { format } from 'date-fns';
+import React, { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Shield,
+  Search,
+  Calendar as CalendarIcon,
+  Filter,
+  Download,
+  User,
+  Clock,
+  Activity,
+} from "lucide-react";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
+import { format } from "date-fns";
 
 interface AuditLog {
   id: number;
@@ -27,35 +49,35 @@ interface AuditLog {
 }
 
 const ACTION_TYPES = {
-  'user.login': { label: 'User Login', color: 'default' },
-  'user.logout': { label: 'User Logout', color: 'secondary' },
-  'shift.create': { label: 'Shift Created', color: 'default' },
-  'shift.update': { label: 'Shift Updated', color: 'outline' },
-  'shift.delete': { label: 'Shift Deleted', color: 'destructive' },
-  'shift.assign': { label: 'Shift Assigned', color: 'default' },
-  'staff.create': { label: 'Staff Added', color: 'default' },
-  'staff.update': { label: 'Staff Updated', color: 'outline' },
-  'facility.update': { label: 'Facility Updated', color: 'outline' },
-  'settings.update': { label: 'Settings Changed', color: 'outline' },
-  'compliance.update': { label: 'Compliance Updated', color: 'outline' },
-  'user.permission_change': { label: 'Permissions Changed', color: 'destructive' }
+  "user.login": { label: "User Login", color: "default" },
+  "user.logout": { label: "User Logout", color: "secondary" },
+  "shift.create": { label: "Shift Created", color: "default" },
+  "shift.update": { label: "Shift Updated", color: "outline" },
+  "shift.delete": { label: "Shift Deleted", color: "destructive" },
+  "shift.assign": { label: "Shift Assigned", color: "default" },
+  "staff.create": { label: "Staff Added", color: "default" },
+  "staff.update": { label: "Staff Updated", color: "outline" },
+  "facility.update": { label: "Facility Updated", color: "outline" },
+  "settings.update": { label: "Settings Changed", color: "outline" },
+  "compliance.update": { label: "Compliance Updated", color: "outline" },
+  "user.permission_change": { label: "Permissions Changed", color: "destructive" },
 };
 
 export default function FacilityAuditLogsPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterAction, setFilterAction] = useState('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterAction, setFilterAction] = useState("all");
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: undefined,
-    to: undefined
+    to: undefined,
   });
   const { permissions, hasPermission, facilityId } = useFacilityPermissions();
 
   const { data: auditLogs = [], isLoading } = useQuery<AuditLog[]>({
-    queryKey: ['/api/audit-logs', 'facility', facilityId],
-    enabled: !!facilityId && hasPermission('view_audit_logs'),
+    queryKey: ["/api/audit-logs", "facility", facilityId],
+    enabled: !!facilityId && hasPermission("view_audit_logs"),
   });
 
-  if (!hasPermission('view_audit_logs')) {
+  if (!hasPermission("view_audit_logs")) {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -67,40 +89,41 @@ export default function FacilityAuditLogsPage() {
     );
   }
 
-  const filteredLogs = auditLogs.filter(log => {
-    const matchesSearch = 
+  const filteredLogs = auditLogs.filter((log) => {
+    const matchesSearch =
       log.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.resource.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesAction = filterAction === 'all' || log.action === filterAction;
-    
+
+    const matchesAction = filterAction === "all" || log.action === filterAction;
+
     const logDate = new Date(log.timestamp);
-    const matchesDateRange = 
-      (!dateRange.from || logDate >= dateRange.from) &&
-      (!dateRange.to || logDate <= dateRange.to);
-    
+    const matchesDateRange =
+      (!dateRange.from || logDate >= dateRange.from) && (!dateRange.to || logDate <= dateRange.to);
+
     return matchesSearch && matchesAction && matchesDateRange;
   });
 
   const exportLogs = () => {
     // Export functionality
     const csv = [
-      ['Timestamp', 'User', 'Action', 'Resource', 'IP Address'],
-      ...filteredLogs.map(log => [
+      ["Timestamp", "User", "Action", "Resource", "IP Address"],
+      ...filteredLogs.map((log) => [
         log.timestamp,
         log.userName,
         ACTION_TYPES[log.action as keyof typeof ACTION_TYPES]?.label || log.action,
         log.resource,
-        log.ipAddress
-      ])
-    ].map(row => row.join(',')).join('\n');
+        log.ipAddress,
+      ]),
+    ]
+      .map((row) => row.join(","))
+      .join("\n");
 
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `audit-logs-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    a.download = `audit-logs-${format(new Date(), "yyyy-MM-dd")}.csv`;
     a.click();
   };
 
@@ -134,7 +157,7 @@ export default function FacilityAuditLogsPage() {
                 />
               </div>
             </div>
-            
+
             <Select value={filterAction} onValueChange={setFilterAction}>
               <SelectTrigger className="w-[200px]">
                 <SelectValue placeholder="Filter by action" />
@@ -156,8 +179,7 @@ export default function FacilityAuditLogsPage() {
                   {dateRange.from ? (
                     dateRange.to ? (
                       <>
-                        {format(dateRange.from, "LLL dd, y")} -{" "}
-                        {format(dateRange.to, "LLL dd, y")}
+                        {format(dateRange.from, "LLL dd, y")} - {format(dateRange.to, "LLL dd, y")}
                       </>
                     ) : (
                       format(dateRange.from, "LLL dd, y")
@@ -171,7 +193,9 @@ export default function FacilityAuditLogsPage() {
                 <Calendar
                   mode="range"
                   selected={{ from: dateRange.from, to: dateRange.to }}
-                  onSelect={(range: any) => setDateRange(range || { from: undefined, to: undefined })}
+                  onSelect={(range: any) =>
+                    setDateRange(range || { from: undefined, to: undefined })
+                  }
                   initialFocus
                 />
               </PopoverContent>
@@ -205,7 +229,7 @@ export default function FacilityAuditLogsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredLogs.map(log => {
+                {filteredLogs.map((log) => {
                   const actionConfig = ACTION_TYPES[log.action as keyof typeof ACTION_TYPES];
                   return (
                     <TableRow key={log.id}>
@@ -214,10 +238,10 @@ export default function FacilityAuditLogsPage() {
                           <Clock className="h-4 w-4 text-gray-400" />
                           <div>
                             <p className="font-medium">
-                              {format(new Date(log.timestamp), 'MMM d, yyyy')}
+                              {format(new Date(log.timestamp), "MMM d, yyyy")}
                             </p>
                             <p className="text-gray-600">
-                              {format(new Date(log.timestamp), 'h:mm a')}
+                              {format(new Date(log.timestamp), "h:mm a")}
                             </p>
                           </div>
                         </div>
@@ -229,7 +253,7 @@ export default function FacilityAuditLogsPage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={actionConfig?.color as any || 'default'}>
+                        <Badge variant={(actionConfig?.color as any) || "default"}>
                           {actionConfig?.label || log.action}
                         </Badge>
                       </TableCell>

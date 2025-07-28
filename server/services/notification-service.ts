@@ -1,8 +1,8 @@
-import { MailService } from '@sendgrid/mail';
-import { InsertNotification, Notification } from '@shared/schema';
-import { IStorage } from '../storage';
-import { User } from '@shared/schema';
-import { WebSocketServer } from 'ws';
+import { MailService } from "@sendgrid/mail";
+import { InsertNotification, Notification } from "@shared/schema";
+import { IStorage } from "../storage";
+import { User } from "@shared/schema";
+import { WebSocketServer } from "ws";
 
 // Initialize SendGrid
 const mailService = new MailService();
@@ -47,12 +47,15 @@ export class NotificationService {
 
     // Send real-time WebSocket notification
     if (this.wss) {
-      this.wss.clients.forEach(client => {
-        if (client.readyState === 1) { // WebSocket.OPEN
-          client.send(JSON.stringify({
-            type: 'notification',
-            data: notification
-          }));
+      this.wss.clients.forEach((client) => {
+        if (client.readyState === 1) {
+          // WebSocket.OPEN
+          client.send(
+            JSON.stringify({
+              type: "notification",
+              data: notification,
+            })
+          );
         }
       });
     }
@@ -61,11 +64,11 @@ export class NotificationService {
     if (process.env.SENDGRID_API_KEY && context.user.email) {
       try {
         await this.sendEmailNotification(context.user.email, context);
-        
+
         // Mark email as sent - we'll need to add a method to update notification emailSent status
         // For now, the notification was created with emailSent: true if email was sent successfully
       } catch (error) {
-        console.error('Failed to send email notification:', error);
+        console.error("Failed to send email notification:", error);
       }
     }
 
@@ -73,8 +76,8 @@ export class NotificationService {
   }
 
   private async sendEmailNotification(to: string, context: NotificationContext): Promise<void> {
-    const fromEmail = process.env.SENDGRID_FROM_EMAIL || 'notifications@nexspace.com';
-    
+    const fromEmail = process.env.SENDGRID_FROM_EMAIL || "notifications@nexspace.com";
+
     const msg = {
       to,
       from: fromEmail,
@@ -87,7 +90,7 @@ export class NotificationService {
   }
 
   private generateEmailHtml(context: NotificationContext): string {
-    const baseUrl = process.env.APP_URL || 'https://nexspace.com';
+    const baseUrl = process.env.APP_URL || "https://nexspace.com";
     const linkUrl = context.link ? `${baseUrl}${context.link}` : baseUrl;
 
     return `
@@ -113,7 +116,7 @@ export class NotificationService {
           <div class="content">
             <h2>${context.title}</h2>
             <p>${context.message}</p>
-            ${context.link ? `<a href="${linkUrl}" class="button">View Details</a>` : ''}
+            ${context.link ? `<a href="${linkUrl}" class="button">View Details</a>` : ""}
           </div>
           <div class="footer">
             <p>You received this email because you have notifications enabled in NexSpace.</p>
@@ -129,8 +132,8 @@ export class NotificationService {
   async notifyShiftAssigned(user: User, shift: any): Promise<Notification> {
     return this.sendNotification({
       user,
-      type: 'shift_assigned',
-      title: 'New Shift Assigned',
+      type: "shift_assigned",
+      title: "New Shift Assigned",
       message: `You have been assigned to ${shift.title} on ${shift.date} from ${shift.startTime} to ${shift.endTime} at ${shift.facilityName}.`,
       metadata: { shiftId: shift.id, facilityId: shift.facilityId },
       link: `/calendar?date=${shift.date}`,
@@ -140,12 +143,12 @@ export class NotificationService {
   async notifyShiftChanged(user: User, shift: any, changes: any): Promise<Notification> {
     const changesList = Object.entries(changes)
       .map(([key, value]) => `${key}: ${value}`)
-      .join(', ');
+      .join(", ");
 
     return this.sendNotification({
       user,
-      type: 'shift_changed',
-      title: 'Shift Updated',
+      type: "shift_changed",
+      title: "Shift Updated",
       message: `Your shift ${shift.title} on ${shift.date} has been updated. Changes: ${changesList}`,
       metadata: { shiftId: shift.id, facilityId: shift.facilityId, changes },
       link: `/calendar?date=${shift.date}`,
@@ -155,41 +158,41 @@ export class NotificationService {
   async notifyShiftCancelled(user: User, shift: any): Promise<Notification> {
     return this.sendNotification({
       user,
-      type: 'shift_cancelled',
-      title: 'Shift Cancelled',
+      type: "shift_cancelled",
+      title: "Shift Cancelled",
       message: `Your shift ${shift.title} on ${shift.date} has been cancelled.`,
       metadata: { shiftId: shift.id, facilityId: shift.facilityId },
-      link: '/calendar',
+      link: "/calendar",
     });
   }
 
   async notifyNewMessage(user: User, message: any, sender: any): Promise<Notification> {
     return this.sendNotification({
       user,
-      type: 'message_received',
+      type: "message_received",
       title: `New message from ${sender.name}`,
-      message: message.content.substring(0, 100) + (message.content.length > 100 ? '...' : ''),
+      message: message.content.substring(0, 100) + (message.content.length > 100 ? "..." : ""),
       metadata: { messageId: message.id, senderId: sender.id },
-      link: '/messaging',
+      link: "/messaging",
     });
   }
 
   async notifyApprovalPending(user: User, item: string, itemId: number): Promise<Notification> {
     return this.sendNotification({
       user,
-      type: 'approval_pending',
-      title: 'Approval Required',
+      type: "approval_pending",
+      title: "Approval Required",
       message: `A ${item} requires your approval.`,
       metadata: { itemType: item, itemId },
-      link: '/approvals',
+      link: "/approvals",
     });
   }
 
   async notifyShiftRequestApproved(user: User, shift: any): Promise<Notification> {
     return this.sendNotification({
       user,
-      type: 'shift_request_approved',
-      title: 'Shift Request Approved',
+      type: "shift_request_approved",
+      title: "Shift Request Approved",
       message: `Your request for ${shift.title} on ${shift.date} has been approved.`,
       metadata: { shiftId: shift.id, facilityId: shift.facilityId },
       link: `/calendar?date=${shift.date}`,
@@ -199,11 +202,11 @@ export class NotificationService {
   async notifyShiftRequestDenied(user: User, shift: any, reason?: string): Promise<Notification> {
     return this.sendNotification({
       user,
-      type: 'shift_request_denied',
-      title: 'Shift Request Denied',
-      message: `Your request for ${shift.title} on ${shift.date} was denied.${reason ? ` Reason: ${reason}` : ''}`,
+      type: "shift_request_denied",
+      title: "Shift Request Denied",
+      message: `Your request for ${shift.title} on ${shift.date} was denied.${reason ? ` Reason: ${reason}` : ""}`,
       metadata: { shiftId: shift.id, facilityId: shift.facilityId, reason },
-      link: '/my-requests',
+      link: "/my-requests",
     });
   }
 }

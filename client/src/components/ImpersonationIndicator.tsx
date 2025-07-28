@@ -22,14 +22,15 @@ export function ImpersonationIndicator() {
                 Impersonating
               </Badge>
               <span className="text-sm text-orange-800 dark:text-orange-200">
-                Viewing as <strong>{impersonatedUser.username}</strong> ({impersonatedUser.firstName} {impersonatedUser.lastName})
+                Viewing as <strong>{impersonatedUser.username}</strong> (
+                {impersonatedUser.firstName} {impersonatedUser.lastName})
               </span>
               <span className="text-xs text-orange-600 dark:text-orange-300">
                 • Original: {originalUser.username}
               </span>
             </div>
           </div>
-          
+
           <Button
             onClick={quitImpersonation}
             size="sm"

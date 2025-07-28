@@ -1,5 +1,15 @@
 import { db } from "./db";
-import { users, facilities, shifts, messages, credentials, staff, facilityUsers, teams, facilityUserTeamMemberships } from "@shared/schema";
+import {
+  users,
+  facilities,
+  shifts,
+  messages,
+  credentials,
+  staff,
+  facilityUsers,
+  teams,
+  facilityUserTeamMemberships,
+} from "@shared/schema";
 import { eq, sql, and, inArray } from "drizzle-orm";
 import type { WebSocketServer } from "ws";
 
@@ -39,10 +49,10 @@ export class UnifiedDataService {
       `);
 
       return staffData.rows.map((staffMember: any) => {
-        const nameParts = (staffMember.name || 'Unknown Staff').split(' ');
-        const firstName = nameParts[0] || 'Unknown';
-        const lastName = nameParts.slice(1).join(' ') || 'Staff';
-        
+        const nameParts = (staffMember.name || "Unknown Staff").split(" ");
+        const firstName = nameParts[0] || "Unknown";
+        const lastName = nameParts.slice(1).join(" ") || "Staff";
+
         return {
           ...staffMember,
           firstName,
@@ -74,12 +84,12 @@ export class UnifiedDataService {
           lastName: facilityUsers.lastName,
           email: facilityUsers.email,
           role: facilityUsers.role,
-          specialty: sql<string>`null`.as('specialty'),
+          specialty: sql<string>`null`.as("specialty"),
           associatedFacilities: facilityUsers.associatedFacilityIds,
           isActive: facilityUsers.isActive,
           avatar: facilityUsers.avatar,
           facilityId: facilityUsers.primaryFacilityId,
-          availabilityStatus: sql<string>`'available'`.as('availabilityStatus'),
+          availabilityStatus: sql<string>`'available'`.as("availabilityStatus"),
           createdAt: facilityUsers.createdAt,
           updatedAt: facilityUsers.updatedAt,
           phone: facilityUsers.phone,
@@ -113,16 +123,18 @@ export class UnifiedDataService {
         })
       );
 
-      return usersWithTeams.map(user => ({
+      return usersWithTeams.map((user) => ({
         id: user.id,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         role: user.role,
         specialty: user.specialty,
-        associatedFacilities: Array.isArray(user.associatedFacilities) 
-          ? user.associatedFacilities 
-          : (user.facilityId ? [user.facilityId] : []),
+        associatedFacilities: Array.isArray(user.associatedFacilities)
+          ? user.associatedFacilities
+          : user.facilityId
+            ? [user.facilityId]
+            : [],
         isActive: user.isActive,
         avatar: user.avatar,
         facilityId: user.facilityId,
@@ -149,15 +161,15 @@ export class UnifiedDataService {
     try {
       const [updatedStaff] = await db
         .update(users)
-        .set({ 
+        .set({
           associatedFacilities: facilityIds,
-          updatedAt: new Date()
+          updatedAt: new Date(),
         })
         .where(eq(users.id, staffId))
         .returning();
 
       // Broadcast update via WebSocket
-      this.broadcastUpdate('staff:updated', updatedStaff);
+      this.broadcastUpdate("staff:updated", updatedStaff);
 
       return updatedStaff;
     } catch (error) {
@@ -172,7 +184,7 @@ export class UnifiedDataService {
   async getActiveShifts(userId?: number, facilityId?: number) {
     try {
       const baseQuery = db.select().from(shifts);
-      
+
       if (userId && facilityId) {
         return await baseQuery.where(
           and(
@@ -200,12 +212,12 @@ export class UnifiedDataService {
    */
   async updateShiftStatus(shiftId: number, status: string, userId?: number) {
     try {
-      const updateData: any = { 
-        status, 
-        updatedAt: new Date() 
+      const updateData: any = {
+        status,
+        updatedAt: new Date(),
       };
 
-      if (userId && status === 'assigned') {
+      if (userId && status === "assigned") {
         // Add user to assigned staff
         const shift = await db
           .select({ assignedStaffIds: shifts.assignedStaffIds })
@@ -228,7 +240,7 @@ export class UnifiedDataService {
         .returning();
 
       // Broadcast update to all connected clients
-      this.broadcastUpdate('shift:updated', updatedShift);
+      this.broadcastUpdate("shift:updated", updatedShift);
 
       return updatedShift;
     } catch (error) {
@@ -242,13 +254,10 @@ export class UnifiedDataService {
    */
   async createMessage(messageData: any) {
     try {
-      const [message] = await db
-        .insert(messages)
-        .values(messageData)
-        .returning();
+      const [message] = await db.insert(messages).values(messageData).returning();
 
       // Broadcast to WebSocket clients
-      this.broadcastUpdate('message:new', message);
+      this.broadcastUpdate("message:new", message);
 
       return message;
     } catch (error) {
@@ -298,9 +307,10 @@ export class UnifiedDataService {
     if (!this.wss) return;
 
     const message = JSON.stringify({ type, data });
-    
+
     this.wss.clients.forEach((client) => {
-      if (client.readyState === 1) { // WebSocket.OPEN
+      if (client.readyState === 1) {
+        // WebSocket.OPEN
         client.send(message);
       }
     });
@@ -316,41 +326,41 @@ export class UnifiedDataService {
       // Check for orphaned facility associations
       const staff = await this.getStaffWithAssociations();
       const allFacilities = await this.getFacilities(false);
-      const facilityIds = new Set(allFacilities.map(f => f.id));
+      const facilityIds = new Set(allFacilities.map((f) => f.id));
 
       for (const member of staff) {
-        const invalidFacilities = member.associatedFacilities.filter(
-          id => !facilityIds.has(id)
-        );
+        const invalidFacilities = member.associatedFacilities.filter((id) => !facilityIds.has(id));
         if (invalidFacilities.length > 0) {
-          issues.push(`Staff ${member.id} has invalid facility associations: ${invalidFacilities.join(', ')}`);
+          issues.push(
+            `Staff ${member.id} has invalid facility associations: ${invalidFacilities.join(", ")}`
+          );
         }
       }
 
       // Check for shifts with invalid staff assignments
       const allShifts = await this.getActiveShifts();
-      const userIds = new Set(staff.map(s => s.id));
+      const userIds = new Set(staff.map((s) => s.id));
 
       for (const shift of allShifts) {
         if (shift.assignedStaffIds) {
-          const invalidUsers = shift.assignedStaffIds.filter(
-            id => !userIds.has(id)
-          );
+          const invalidUsers = shift.assignedStaffIds.filter((id) => !userIds.has(id));
           if (invalidUsers.length > 0) {
-            issues.push(`Shift ${shift.id} has invalid staff assignments: ${invalidUsers.join(', ')}`);
+            issues.push(
+              `Shift ${shift.id} has invalid staff assignments: ${invalidUsers.join(", ")}`
+            );
           }
         }
       }
 
       return {
         isValid: issues.length === 0,
-        issues
+        issues,
       };
     } catch (error) {
       console.error("Error validating data consistency:", error);
       return {
         isValid: false,
-        issues: ["Failed to validate data consistency"]
+        issues: ["Failed to validate data consistency"],
       };
     }
   }

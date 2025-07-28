@@ -1,15 +1,15 @@
-import React from 'react';
-import { useAuth } from '@/hooks/use-auth';
-import { useNotifications } from '@/contexts/NotificationContext';
-import { useMessages } from '@/contexts/MessageContext';
-import { Link, useLocation } from 'wouter';
-import { 
-  Calendar, 
-  Clock, 
-  FileText, 
-  MessageSquare, 
-  Bell, 
-  User, 
+import React from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { useNotifications } from "@/contexts/NotificationContext";
+import { useMessages } from "@/contexts/MessageContext";
+import { Link, useLocation } from "wouter";
+import {
+  Calendar,
+  Clock,
+  FileText,
+  MessageSquare,
+  Bell,
+  User,
   Briefcase,
   CreditCard,
   PlusCircle,
@@ -18,10 +18,10 @@ import {
   Users,
   Settings,
   Home,
-  BarChart3
-} from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+  BarChart3,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface NavItem {
   href: string;
@@ -36,65 +36,79 @@ export function RoleBasedSidebar() {
   const { unreadCount } = useNotifications();
   const { getTotalUnreadCount } = useMessages();
   const [location] = useLocation();
-  
+
   const currentUser = impersonatedUser || user;
-  const userRole = currentUser?.role || 'employee';
-  
+  const userRole = currentUser?.role || "employee";
+
   const messageUnreadCount = getTotalUnreadCount();
-  
+
   // Define nav items based on role using the specified pattern
-  const base = ['Dashboard', 'Calendar', 'My Requests', 'My Schedule', 'Resources', 'Messaging', 'Notifications'];
-  const employee = [...base, 'PTO', 'Work Logs'];
-  const contractor = [...base, 'Invoices'];
-  const superuser = ['Staff Mgmt', 'Facilities', 'Admin', 'Teams', ...base];
-  
-  const items = userRole === 'employee'
-    ? employee
-    : userRole === 'contractor'
-      ? contractor
-      : userRole === 'super_admin' || userRole === 'admin'
-        ? superuser
-        : base;
+  const base = [
+    "Dashboard",
+    "Calendar",
+    "My Requests",
+    "My Schedule",
+    "Resources",
+    "Messaging",
+    "Notifications",
+  ];
+  const employee = [...base, "PTO", "Work Logs"];
+  const contractor = [...base, "Invoices"];
+  const superuser = ["Staff Mgmt", "Facilities", "Admin", "Teams", ...base];
+
+  const items =
+    userRole === "employee"
+      ? employee
+      : userRole === "contractor"
+        ? contractor
+        : userRole === "super_admin" || userRole === "admin"
+          ? superuser
+          : base;
 
   // Map items to NavItem objects
-  const navItems: NavItem[] = items.map(item => {
-    switch(item) {
-      case 'Dashboard':
-        return { href: '/dashboard', label: 'Dashboard', icon: Home, roles: [userRole] };
-      case 'Calendar':
-        return { href: '/calendar', label: 'Open Shifts', icon: Calendar, roles: [userRole] };
-      case 'My Requests':
-        return { href: '/my-requests', label: 'My Requests', icon: FileText, roles: [userRole] };
-      case 'My Schedule':
-        return { href: '/my-schedule', label: 'My Schedule', icon: Calendar, roles: [userRole] };
-      case 'Resources':
-        return { href: '/resources', label: 'Resources', icon: BookOpen, roles: [userRole] };
-      case 'Messaging':
-        return { href: '/messaging', label: 'Messaging', icon: MessageSquare, roles: [userRole] };
-      case 'Notifications':
-        return { href: '/notifications', label: 'Notifications', icon: Bell, roles: [userRole] };
-      case 'PTO':
-        return { href: '/my-pto', label: 'PTO', icon: Calendar, roles: [userRole] };
-      case 'Work Logs':
-        return { href: '/time-clock', label: 'Time Clock', icon: Clock, roles: [userRole] };
-      case 'Invoices':
-        return { href: '/invoices', label: 'Invoices', icon: CreditCard, roles: [userRole] };
-      case 'Staff Mgmt':
-        return { href: '/workforce', label: 'Staff Management', icon: Users, roles: [userRole] };
-      case 'Facilities':
-        return { href: '/facility-management', label: 'Facilities', icon: Settings, roles: [userRole] };
-      case 'Admin':
-        return { href: '/analytics', label: 'Analytics', icon: BarChart3, roles: [userRole] };
-      case 'Teams':
-        return { href: '/teams', label: 'Teams', icon: Users, roles: [userRole] };
+  const navItems: NavItem[] = items.map((item) => {
+    switch (item) {
+      case "Dashboard":
+        return { href: "/dashboard", label: "Dashboard", icon: Home, roles: [userRole] };
+      case "Calendar":
+        return { href: "/calendar", label: "Open Shifts", icon: Calendar, roles: [userRole] };
+      case "My Requests":
+        return { href: "/my-requests", label: "My Requests", icon: FileText, roles: [userRole] };
+      case "My Schedule":
+        return { href: "/my-schedule", label: "My Schedule", icon: Calendar, roles: [userRole] };
+      case "Resources":
+        return { href: "/resources", label: "Resources", icon: BookOpen, roles: [userRole] };
+      case "Messaging":
+        return { href: "/messaging", label: "Messaging", icon: MessageSquare, roles: [userRole] };
+      case "Notifications":
+        return { href: "/notifications", label: "Notifications", icon: Bell, roles: [userRole] };
+      case "PTO":
+        return { href: "/my-pto", label: "PTO", icon: Calendar, roles: [userRole] };
+      case "Work Logs":
+        return { href: "/time-clock", label: "Time Clock", icon: Clock, roles: [userRole] };
+      case "Invoices":
+        return { href: "/invoices", label: "Invoices", icon: CreditCard, roles: [userRole] };
+      case "Staff Mgmt":
+        return { href: "/workforce", label: "Staff Management", icon: Users, roles: [userRole] };
+      case "Facilities":
+        return {
+          href: "/facility-management",
+          label: "Facilities",
+          icon: Settings,
+          roles: [userRole],
+        };
+      case "Admin":
+        return { href: "/analytics", label: "Analytics", icon: BarChart3, roles: [userRole] };
+      case "Teams":
+        return { href: "/teams", label: "Teams", icon: Users, roles: [userRole] };
       default:
-        return { href: '/dashboard', label: 'Dashboard', icon: Home, roles: [userRole] };
+        return { href: "/dashboard", label: "Dashboard", icon: Home, roles: [userRole] };
     }
   });
 
   const getBadgeCount = (href: string) => {
-    if (href === '/notifications') return unreadCount;
-    if (href === '/messaging') return messageUnreadCount;
+    if (href === "/notifications") return unreadCount;
+    if (href === "/messaging") return messageUnreadCount;
     return undefined;
   };
 
@@ -115,7 +129,7 @@ export function RoleBasedSidebar() {
           {navItems.map((item) => {
             const isActive = location === item.href;
             const badgeCount = getBadgeCount(item.href);
-            
+
             return (
               <Link key={item.href} href={item.href}>
                 <div
@@ -132,7 +146,7 @@ export function RoleBasedSidebar() {
                   </div>
                   {badgeCount && badgeCount > 0 && (
                     <Badge variant="destructive" className="h-5 text-xs">
-                      {badgeCount > 99 ? '99+' : badgeCount}
+                      {badgeCount > 99 ? "99+" : badgeCount}
                     </Badge>
                   )}
                 </div>
@@ -142,7 +156,7 @@ export function RoleBasedSidebar() {
         </nav>
 
         {/* Quick Actions for workers */}
-        {(userRole === 'employee' || userRole === 'contractor' || userRole === 'clinician') && (
+        {(userRole === "employee" || userRole === "contractor" || userRole === "clinician") && (
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
               Quick Actions
@@ -171,7 +185,7 @@ export function RoleBasedSidebar() {
         )}
 
         {/* Quick Actions for managers/admins */}
-        {(userRole === 'manager' || userRole === 'admin' || userRole === 'super_admin') && (
+        {(userRole === "manager" || userRole === "admin" || userRole === "super_admin") && (
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
               Quick Actions

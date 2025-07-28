@@ -7,10 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Bell, 
-  Mail, 
-  MessageSquare, 
+import {
+  Bell,
+  Mail,
+  MessageSquare,
   Smartphone,
   Clock,
   DollarSign,
@@ -18,7 +18,7 @@ import {
   AlertCircle,
   MapPin,
   Star,
-  Zap
+  Zap,
 } from "lucide-react";
 
 interface NotificationSetting {
@@ -40,7 +40,7 @@ export default function NotificationPreferencesPage() {
       email: true,
       sms: true,
       inApp: true,
-      icon: <Calendar className="h-5 w-5" />
+      icon: <Calendar className="h-5 w-5" />,
     },
     {
       id: "urgent-shifts",
@@ -49,7 +49,7 @@ export default function NotificationPreferencesPage() {
       email: true,
       sms: true,
       inApp: true,
-      icon: <Zap className="h-5 w-5" />
+      icon: <Zap className="h-5 w-5" />,
     },
     {
       id: "shift-reminders",
@@ -58,7 +58,7 @@ export default function NotificationPreferencesPage() {
       email: true,
       sms: true,
       inApp: true,
-      icon: <Clock className="h-5 w-5" />
+      icon: <Clock className="h-5 w-5" />,
     },
     {
       id: "shift-updates",
@@ -67,7 +67,7 @@ export default function NotificationPreferencesPage() {
       email: true,
       sms: false,
       inApp: true,
-      icon: <AlertCircle className="h-5 w-5" />
+      icon: <AlertCircle className="h-5 w-5" />,
     },
     {
       id: "messages",
@@ -76,7 +76,7 @@ export default function NotificationPreferencesPage() {
       email: true,
       sms: false,
       inApp: true,
-      icon: <MessageSquare className="h-5 w-5" />
+      icon: <MessageSquare className="h-5 w-5" />,
     },
     {
       id: "credentials",
@@ -85,7 +85,7 @@ export default function NotificationPreferencesPage() {
       email: true,
       sms: false,
       inApp: true,
-      icon: <AlertCircle className="h-5 w-5" />
+      icon: <AlertCircle className="h-5 w-5" />,
     },
     {
       id: "payments",
@@ -94,8 +94,8 @@ export default function NotificationPreferencesPage() {
       email: true,
       sms: false,
       inApp: true,
-      icon: <DollarSign className="h-5 w-5" />
-    }
+      icon: <DollarSign className="h-5 w-5" />,
+    },
   ]);
 
   const [shiftAlertRadius, setShiftAlertRadius] = useState([25]);
@@ -103,25 +103,19 @@ export default function NotificationPreferencesPage() {
   const [quietHours, setQuietHours] = useState({
     enabled: true,
     start: "22:00",
-    end: "07:00"
+    end: "07:00",
   });
 
-  const updateNotification = (id: string, channel: 'email' | 'sms' | 'inApp', value: boolean) => {
-    setNotifications(prev => 
-      prev.map(notif => 
-        notif.id === id 
-          ? { ...notif, [channel]: value }
-          : notif
-      )
+  const updateNotification = (id: string, channel: "email" | "sms" | "inApp", value: boolean) => {
+    setNotifications((prev) =>
+      prev.map((notif) => (notif.id === id ? { ...notif, [channel]: value } : notif))
     );
   };
 
   const NotificationRow = ({ notification }: { notification: NotificationSetting }) => (
     <div className="flex items-center justify-between py-4 border-b last:border-0">
       <div className="flex items-start gap-3 flex-1">
-        <div className="p-2 bg-gray-100 rounded-lg">
-          {notification.icon}
-        </div>
+        <div className="p-2 bg-gray-100 rounded-lg">{notification.icon}</div>
         <div>
           <p className="font-medium">{notification.label}</p>
           <p className="text-sm text-gray-600">{notification.description}</p>
@@ -132,21 +126,21 @@ export default function NotificationPreferencesPage() {
           <Mail className="h-4 w-4 text-gray-400" />
           <Switch
             checked={notification.email}
-            onCheckedChange={(checked) => updateNotification(notification.id, 'email', checked)}
+            onCheckedChange={(checked) => updateNotification(notification.id, "email", checked)}
           />
         </div>
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-gray-400" />
           <Switch
             checked={notification.sms}
-            onCheckedChange={(checked) => updateNotification(notification.id, 'sms', checked)}
+            onCheckedChange={(checked) => updateNotification(notification.id, "sms", checked)}
           />
         </div>
         <div className="flex items-center gap-2">
           <Smartphone className="h-4 w-4 text-gray-400" />
           <Switch
             checked={notification.inApp}
-            onCheckedChange={(checked) => updateNotification(notification.id, 'inApp', checked)}
+            onCheckedChange={(checked) => updateNotification(notification.id, "inApp", checked)}
           />
         </div>
       </div>
@@ -194,7 +188,7 @@ export default function NotificationPreferencesPage() {
               </CardHeader>
               <CardContent>
                 <div className="divide-y">
-                  {notifications.map(notification => (
+                  {notifications.map((notification) => (
                     <NotificationRow key={notification.id} notification={notification} />
                   ))}
                 </div>
@@ -279,8 +273,8 @@ export default function NotificationPreferencesPage() {
                     <div>
                       <p className="font-medium text-blue-900">Smart Alert Frequency</p>
                       <p className="text-sm text-blue-700 mt-1">
-                        We'll bundle similar shifts together to reduce notification fatigue. 
-                        Urgent shifts will always notify you immediately.
+                        We'll bundle similar shifts together to reduce notification fatigue. Urgent
+                        shifts will always notify you immediately.
                       </p>
                     </div>
                   </div>
@@ -311,8 +305,8 @@ export default function NotificationPreferencesPage() {
                   <Switch
                     id="quiet-hours-toggle"
                     checked={quietHours.enabled}
-                    onCheckedChange={(checked) => 
-                      setQuietHours(prev => ({ ...prev, enabled: checked }))
+                    onCheckedChange={(checked) =>
+                      setQuietHours((prev) => ({ ...prev, enabled: checked }))
                     }
                   />
                 </div>
@@ -326,8 +320,8 @@ export default function NotificationPreferencesPage() {
                           id="start-time"
                           type="time"
                           value={quietHours.start}
-                          onChange={(e) => 
-                            setQuietHours(prev => ({ ...prev, start: e.target.value }))
+                          onChange={(e) =>
+                            setQuietHours((prev) => ({ ...prev, start: e.target.value }))
                           }
                         />
                       </div>
@@ -337,8 +331,8 @@ export default function NotificationPreferencesPage() {
                           id="end-time"
                           type="time"
                           value={quietHours.end}
-                          onChange={(e) => 
-                            setQuietHours(prev => ({ ...prev, end: e.target.value }))
+                          onChange={(e) =>
+                            setQuietHours((prev) => ({ ...prev, end: e.target.value }))
                           }
                         />
                       </div>

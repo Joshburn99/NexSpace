@@ -17,7 +17,17 @@ import { useCredentials } from "@/contexts/CredentialsContext";
 
 export default function CredentialsPage() {
   const { user } = useAuth();
-  const { credentials, alerts, getActiveCredentials, getExpiringCredentials, getExpiredCredentials, getComplianceRate, addCredential, updateCredential, isLoading } = useCredentials();
+  const {
+    credentials,
+    alerts,
+    getActiveCredentials,
+    getExpiringCredentials,
+    getExpiredCredentials,
+    getComplianceRate,
+    addCredential,
+    updateCredential,
+    isLoading,
+  } = useCredentials();
   const [showAddCredential, setShowAddCredential] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [credentialForm, setCredentialForm] = useState({
@@ -68,7 +78,7 @@ export default function CredentialsPage() {
     }
 
     setIsSubmitting(true);
-    
+
     try {
       await addCredential({
         employeeId: user.id,
@@ -76,7 +86,7 @@ export default function CredentialsPage() {
         name: credentialForm.name,
         issuingAuthority: credentialForm.issuingAuthority,
         expiryDate: credentialForm.expiryDate,
-        status: 'pending',
+        status: "pending",
       });
 
       // Reset form on success
@@ -88,7 +98,7 @@ export default function CredentialsPage() {
       });
       setShowAddCredential(false);
     } catch (error) {
-      console.error('Credential submission error:', error);
+      console.error("Credential submission error:", error);
       // Error handling could be enhanced here with toast notifications
     } finally {
       setIsSubmitting(false);
@@ -121,7 +131,10 @@ export default function CredentialsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="credentialType">Credential Type</Label>
-                <Select value={credentialForm.type} onValueChange={(value) => setCredentialForm({ ...credentialForm, type: value })}>
+                <Select
+                  value={credentialForm.type}
+                  onValueChange={(value) => setCredentialForm({ ...credentialForm, type: value })}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select credential type" />
                   </SelectTrigger>
@@ -135,26 +148,30 @@ export default function CredentialsPage() {
               </div>
               <div>
                 <Label htmlFor="credentialName">Credential Name</Label>
-                <Input 
-                  placeholder="e.g., RN License, CPR Certification" 
+                <Input
+                  placeholder="e.g., RN License, CPR Certification"
                   value={credentialForm.name}
                   onChange={(e) => setCredentialForm({ ...credentialForm, name: e.target.value })}
                 />
               </div>
               <div>
                 <Label htmlFor="issuingAuthority">Issuing Authority</Label>
-                <Input 
-                  placeholder="e.g., State Board of Nursing" 
+                <Input
+                  placeholder="e.g., State Board of Nursing"
                   value={credentialForm.issuingAuthority}
-                  onChange={(e) => setCredentialForm({ ...credentialForm, issuingAuthority: e.target.value })}
+                  onChange={(e) =>
+                    setCredentialForm({ ...credentialForm, issuingAuthority: e.target.value })
+                  }
                 />
               </div>
               <div>
                 <Label htmlFor="expiryDate">Expiry Date</Label>
-                <Input 
-                  type="date" 
+                <Input
+                  type="date"
                   value={credentialForm.expiryDate}
-                  onChange={(e) => setCredentialForm({ ...credentialForm, expiryDate: e.target.value })}
+                  onChange={(e) =>
+                    setCredentialForm({ ...credentialForm, expiryDate: e.target.value })
+                  }
                 />
               </div>
             </div>
@@ -173,7 +190,11 @@ export default function CredentialsPage() {
                   "Save Credential"
                 )}
               </Button>
-              <Button variant="outline" onClick={() => setShowAddCredential(false)} disabled={isSubmitting}>
+              <Button
+                variant="outline"
+                onClick={() => setShowAddCredential(false)}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
             </div>

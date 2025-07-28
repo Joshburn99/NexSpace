@@ -11,14 +11,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Calendar, 
-  Award, 
-  CheckCircle, 
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  Award,
+  CheckCircle,
   AlertTriangle,
   Edit,
   Save,
@@ -26,7 +26,7 @@ import {
   Upload,
   FileText,
   Download,
-  Star
+  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,80 +34,80 @@ export default function EnhancedProfilePage() {
   const { user } = useAuth();
   const { getStaffById, updateStaff } = useStaff();
   const { getVerifiedCredentials } = useCredentialVerification();
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState({
-    email: '',
-    phone: '',
-    firstName: '',
-    lastName: '',
-    bio: '',
-    location: '',
-    hourlyRate: '',
-    experience: '',
+    email: "",
+    phone: "",
+    firstName: "",
+    lastName: "",
+    bio: "",
+    location: "",
+    hourlyRate: "",
+    experience: "",
     skills: [] as string[],
     certifications: [] as string[],
     resume: null as File | null,
     coverLetter: null as File | null,
-    resumeUrl: '',
-    coverLetterUrl: '',
-    linkedIn: '',
-    portfolio: ''
+    resumeUrl: "",
+    coverLetterUrl: "",
+    linkedIn: "",
+    portfolio: "",
   });
 
   // Preset skill options for healthcare workers
   const availableSkills = [
-    'Critical Care',
-    'Patient Assessment',
-    'IV Therapy',
-    'Medication Administration',
-    'Wound Care',
-    'Emergency Response',
-    'Patient Education',
-    'Documentation',
-    'Infection Control',
-    'Pediatric Care',
-    'Geriatric Care',
-    'Mental Health',
-    'Rehabilitation',
-    'Surgical Assistance',
-    'Cardiac Care',
-    'Respiratory Care',
-    'Dialysis',
-    'Oncology',
-    'Labor & Delivery',
-    'Anesthesia',
-    'Radiology',
-    'Laboratory',
-    'Pharmacy',
-    'Physical Therapy',
-    'Occupational Therapy',
-    'Speech Therapy',
-    'Case Management',
-    'Quality Assurance',
-    'Leadership',
-    'Training & Education'
+    "Critical Care",
+    "Patient Assessment",
+    "IV Therapy",
+    "Medication Administration",
+    "Wound Care",
+    "Emergency Response",
+    "Patient Education",
+    "Documentation",
+    "Infection Control",
+    "Pediatric Care",
+    "Geriatric Care",
+    "Mental Health",
+    "Rehabilitation",
+    "Surgical Assistance",
+    "Cardiac Care",
+    "Respiratory Care",
+    "Dialysis",
+    "Oncology",
+    "Labor & Delivery",
+    "Anesthesia",
+    "Radiology",
+    "Laboratory",
+    "Pharmacy",
+    "Physical Therapy",
+    "Occupational Therapy",
+    "Speech Therapy",
+    "Case Management",
+    "Quality Assurance",
+    "Leadership",
+    "Training & Education",
   ];
 
   const availableCertifications = [
-    'RN (Registered Nurse)',
-    'LPN (Licensed Practical Nurse)',
-    'CNA (Certified Nursing Assistant)',
-    'ACLS (Advanced Cardiac Life Support)',
-    'BLS (Basic Life Support)',
-    'CCRN (Critical Care Registered Nurse)',
-    'CEN (Certified Emergency Nurse)',
-    'PALS (Pediatric Advanced Life Support)',
-    'NRP (Neonatal Resuscitation Program)',
-    'TNCC (Trauma Nurse Core Course)',
-    'OCN (Oncology Certified Nurse)',
-    'CMSRN (Certified Medical-Surgical Registered Nurse)',
-    'CNE (Certified Nurse Educator)',
-    'CNOR (Certified Perioperative Nurse)',
-    'CPN (Certified Pediatric Nurse)',
-    'PMHN (Psychiatric-Mental Health Nurse)',
-    'CPAN (Certified Post Anesthesia Nurse)',
-    'CAPA (Certified Ambulatory Perianesthesia Nurse)'
+    "RN (Registered Nurse)",
+    "LPN (Licensed Practical Nurse)",
+    "CNA (Certified Nursing Assistant)",
+    "ACLS (Advanced Cardiac Life Support)",
+    "BLS (Basic Life Support)",
+    "CCRN (Critical Care Registered Nurse)",
+    "CEN (Certified Emergency Nurse)",
+    "PALS (Pediatric Advanced Life Support)",
+    "NRP (Neonatal Resuscitation Program)",
+    "TNCC (Trauma Nurse Core Course)",
+    "OCN (Oncology Certified Nurse)",
+    "CMSRN (Certified Medical-Surgical Registered Nurse)",
+    "CNE (Certified Nurse Educator)",
+    "CNOR (Certified Perioperative Nurse)",
+    "CPN (Certified Pediatric Nurse)",
+    "PMHN (Psychiatric-Mental Health Nurse)",
+    "CPAN (Certified Post Anesthesia Nurse)",
+    "CAPA (Certified Ambulatory Perianesthesia Nurse)",
   ];
 
   const staffMember = user ? getStaffById(user.id) : null;
@@ -117,55 +117,55 @@ export default function EnhancedProfilePage() {
     if (staffMember) {
       setEditedProfile({
         email: staffMember.email,
-        phone: staffMember.phone || '',
+        phone: staffMember.phone || "",
         firstName: staffMember.firstName,
         lastName: staffMember.lastName,
-        bio: staffMember.bio || '',
-        location: staffMember.location || '',
-        hourlyRate: staffMember.hourlyRate?.toString() || '',
-        experience: staffMember.experience || '',
+        bio: staffMember.bio || "",
+        location: staffMember.location || "",
+        hourlyRate: staffMember.hourlyRate?.toString() || "",
+        experience: staffMember.experience || "",
         skills: staffMember.skills || [],
         certifications: staffMember.certifications || [],
         resume: null,
         coverLetter: null,
-        resumeUrl: staffMember.resumeUrl || '',
-        coverLetterUrl: staffMember.coverLetterUrl || '',
-        linkedIn: staffMember.linkedIn || '',
-        portfolio: staffMember.portfolio || ''
+        resumeUrl: staffMember.resumeUrl || "",
+        coverLetterUrl: staffMember.coverLetterUrl || "",
+        linkedIn: staffMember.linkedIn || "",
+        portfolio: staffMember.portfolio || "",
       });
     }
   }, [staffMember]);
 
   const handleSkillToggle = (skill: string) => {
-    setEditedProfile(prev => ({
+    setEditedProfile((prev) => ({
       ...prev,
       skills: prev.skills.includes(skill)
-        ? prev.skills.filter(s => s !== skill)
-        : [...prev.skills, skill]
+        ? prev.skills.filter((s) => s !== skill)
+        : [...prev.skills, skill],
     }));
   };
 
   const handleCertificationToggle = (cert: string) => {
-    setEditedProfile(prev => ({
+    setEditedProfile((prev) => ({
       ...prev,
       certifications: prev.certifications.includes(cert)
-        ? prev.certifications.filter(c => c !== cert)
-        : [...prev.certifications, cert]
+        ? prev.certifications.filter((c) => c !== cert)
+        : [...prev.certifications, cert],
     }));
   };
 
-  const handleFileUpload = (file: File, type: 'resume' | 'coverLetter') => {
-    if (type === 'resume') {
-      setEditedProfile(prev => ({
+  const handleFileUpload = (file: File, type: "resume" | "coverLetter") => {
+    if (type === "resume") {
+      setEditedProfile((prev) => ({
         ...prev,
         resume: file,
-        resumeUrl: URL.createObjectURL(file)
+        resumeUrl: URL.createObjectURL(file),
       }));
     } else {
-      setEditedProfile(prev => ({
+      setEditedProfile((prev) => ({
         ...prev,
         coverLetter: file,
-        coverLetterUrl: URL.createObjectURL(file)
+        coverLetterUrl: URL.createObjectURL(file),
       }));
     }
   };
@@ -186,13 +186,13 @@ export default function EnhancedProfilePage() {
         skills: editedProfile.skills,
         certifications: editedProfile.certifications,
         linkedIn: editedProfile.linkedIn,
-        portfolio: editedProfile.portfolio
+        portfolio: editedProfile.portfolio,
       };
-      
+
       await updateStaffMember(user.id, updates);
       setIsEditing(false);
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      console.error("Failed to update profile:", error);
     }
   };
 
@@ -200,21 +200,21 @@ export default function EnhancedProfilePage() {
     if (staffMember) {
       setEditedProfile({
         email: staffMember.email,
-        phone: staffMember.phone || '',
+        phone: staffMember.phone || "",
         firstName: staffMember.firstName,
         lastName: staffMember.lastName,
-        bio: staffMember.bio || '',
-        location: staffMember.location || '',
-        hourlyRate: staffMember.hourlyRate?.toString() || '',
-        experience: staffMember.experience || '',
+        bio: staffMember.bio || "",
+        location: staffMember.location || "",
+        hourlyRate: staffMember.hourlyRate?.toString() || "",
+        experience: staffMember.experience || "",
         skills: staffMember.skills || [],
         certifications: staffMember.certifications || [],
         resume: null,
         coverLetter: null,
-        resumeUrl: staffMember.resumeUrl || '',
-        coverLetterUrl: staffMember.coverLetterUrl || '',
-        linkedIn: staffMember.linkedIn || '',
-        portfolio: staffMember.portfolio || ''
+        resumeUrl: staffMember.resumeUrl || "",
+        coverLetterUrl: staffMember.coverLetterUrl || "",
+        linkedIn: staffMember.linkedIn || "",
+        portfolio: staffMember.portfolio || "",
       });
     }
     setIsEditing(false);
@@ -222,12 +222,27 @@ export default function EnhancedProfilePage() {
 
   const getCredentialStatusBadge = (status: string) => {
     switch (status) {
-      case 'verified':
-        return <Badge className="bg-green-100 text-green-800"><CheckCircle className="w-3 h-3 mr-1" />Verified</Badge>;
-      case 'pending':
-        return <Badge variant="outline" className="text-yellow-600"><AlertTriangle className="w-3 h-3 mr-1" />Pending</Badge>;
-      case 'expired':
-        return <Badge variant="destructive"><X className="w-3 h-3 mr-1" />Expired</Badge>;
+      case "verified":
+        return (
+          <Badge className="bg-green-100 text-green-800">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Verified
+          </Badge>
+        );
+      case "pending":
+        return (
+          <Badge variant="outline" className="text-yellow-600">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Pending
+          </Badge>
+        );
+      case "expired":
+        return (
+          <Badge variant="destructive">
+            <X className="w-3 h-3 mr-1" />
+            Expired
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -256,7 +271,9 @@ export default function EnhancedProfilePage() {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Profile</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your professional information and job application details</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Manage your professional information and job application details
+          </p>
         </div>
         {!isEditing ? (
           <Button onClick={() => setIsEditing(true)} variant="outline">
@@ -294,7 +311,8 @@ export default function EnhancedProfilePage() {
                 <Avatar className="w-24 h-24">
                   <AvatarImage src={staffMember.avatar} />
                   <AvatarFallback className="text-xl">
-                    {staffMember.firstName.charAt(0)}{staffMember.lastName.charAt(0)}
+                    {staffMember.firstName.charAt(0)}
+                    {staffMember.lastName.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1">
@@ -303,11 +321,12 @@ export default function EnhancedProfilePage() {
                       {staffMember.firstName} {staffMember.lastName}
                     </h2>
                     <Badge variant="outline" className="ml-2">
-                      {staffMember.specialty || 'Healthcare Professional'}
+                      {staffMember.specialty || "Healthcare Professional"}
                     </Badge>
                   </div>
                   <p className="text-gray-600 dark:text-gray-400 mb-1">
-                    {staffMember.role.charAt(0).toUpperCase() + staffMember.role.slice(1)} • Internal Employee
+                    {staffMember.role.charAt(0).toUpperCase() + staffMember.role.slice(1)} •
+                    Internal Employee
                   </p>
                   <div className="flex items-center gap-4 text-sm text-gray-500">
                     <div className="flex items-center gap-1">
@@ -336,7 +355,9 @@ export default function EnhancedProfilePage() {
                   {isEditing ? (
                     <Input
                       value={editedProfile.email}
-                      onChange={(e) => setEditedProfile(prev => ({ ...prev, email: e.target.value }))}
+                      onChange={(e) =>
+                        setEditedProfile((prev) => ({ ...prev, email: e.target.value }))
+                      }
                       placeholder="Email address"
                     />
                   ) : (
@@ -348,11 +369,13 @@ export default function EnhancedProfilePage() {
                   {isEditing ? (
                     <Input
                       value={editedProfile.phone}
-                      onChange={(e) => setEditedProfile(prev => ({ ...prev, phone: e.target.value }))}
+                      onChange={(e) =>
+                        setEditedProfile((prev) => ({ ...prev, phone: e.target.value }))
+                      }
                       placeholder="Phone number"
                     />
                   ) : (
-                    <span>{staffMember.phone || '(555) 123-4567'}</span>
+                    <span>{staffMember.phone || "(555) 123-4567"}</span>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
@@ -360,11 +383,13 @@ export default function EnhancedProfilePage() {
                   {isEditing ? (
                     <Input
                       value={editedProfile.location}
-                      onChange={(e) => setEditedProfile(prev => ({ ...prev, location: e.target.value }))}
+                      onChange={(e) =>
+                        setEditedProfile((prev) => ({ ...prev, location: e.target.value }))
+                      }
                       placeholder="City, State"
                     />
                   ) : (
-                    <span>{staffMember.location || 'Chicago, IL'}</span>
+                    <span>{staffMember.location || "Chicago, IL"}</span>
                   )}
                 </div>
               </CardContent>
@@ -378,13 +403,14 @@ export default function EnhancedProfilePage() {
                 {isEditing ? (
                   <Textarea
                     value={editedProfile.bio}
-                    onChange={(e) => setEditedProfile(prev => ({ ...prev, bio: e.target.value }))}
+                    onChange={(e) => setEditedProfile((prev) => ({ ...prev, bio: e.target.value }))}
                     placeholder="Write a brief professional summary highlighting your expertise and experience..."
                     rows={4}
                   />
                 ) : (
                   <p className="text-gray-700 dark:text-gray-300">
-                    {staffMember.bio || 'Experienced ICU nurse with expertise in critical care and patient management.'}
+                    {staffMember.bio ||
+                      "Experienced ICU nurse with expertise in critical care and patient management."}
                   </p>
                 )}
               </CardContent>
@@ -403,11 +429,13 @@ export default function EnhancedProfilePage() {
                   {isEditing ? (
                     <Input
                       value={editedProfile.experience}
-                      onChange={(e) => setEditedProfile(prev => ({ ...prev, experience: e.target.value }))}
+                      onChange={(e) =>
+                        setEditedProfile((prev) => ({ ...prev, experience: e.target.value }))
+                      }
                       placeholder="Years of experience"
                     />
                   ) : (
-                    <p className="mt-1 font-semibold">{staffMember.experience || '8 years'}</p>
+                    <p className="mt-1 font-semibold">{staffMember.experience || "8 years"}</p>
                   )}
                 </div>
                 <div>
@@ -415,7 +443,9 @@ export default function EnhancedProfilePage() {
                   {isEditing ? (
                     <Input
                       value={editedProfile.hourlyRate}
-                      onChange={(e) => setEditedProfile(prev => ({ ...prev, hourlyRate: e.target.value }))}
+                      onChange={(e) =>
+                        setEditedProfile((prev) => ({ ...prev, hourlyRate: e.target.value }))
+                      }
                       placeholder="$45"
                     />
                   ) : (
@@ -444,7 +474,10 @@ export default function EnhancedProfilePage() {
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {(editedProfile.skills.length > 0 ? editedProfile.skills : ['Critical Care', 'Patient Assessment', 'IV Therapy']).map((skill) => (
+                {(editedProfile.skills.length > 0
+                  ? editedProfile.skills
+                  : ["Critical Care", "Patient Assessment", "IV Therapy"]
+                ).map((skill) => (
                   <Badge key={skill} variant="secondary">
                     {skill}
                   </Badge>
@@ -459,7 +492,9 @@ export default function EnhancedProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>Skills & Expertise</CardTitle>
-              <CardDescription>Select your skills from the healthcare professional categories below</CardDescription>
+              <CardDescription>
+                Select your skills from the healthcare professional categories below
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {isEditing && (
@@ -471,20 +506,20 @@ export default function EnhancedProfilePage() {
                         checked={editedProfile.skills.includes(skill)}
                         onCheckedChange={() => handleSkillToggle(skill)}
                       />
-                      <Label
-                        htmlFor={skill}
-                        className="text-sm font-normal cursor-pointer"
-                      >
+                      <Label htmlFor={skill} className="text-sm font-normal cursor-pointer">
                         {skill}
                       </Label>
                     </div>
                   ))}
                 </div>
               )}
-              
+
               {!isEditing && (
                 <div className="flex flex-wrap gap-2">
-                  {(editedProfile.skills.length > 0 ? editedProfile.skills : ['Critical Care', 'Patient Assessment', 'IV Therapy']).map((skill) => (
+                  {(editedProfile.skills.length > 0
+                    ? editedProfile.skills
+                    : ["Critical Care", "Patient Assessment", "IV Therapy"]
+                  ).map((skill) => (
                     <Badge key={skill} variant="secondary">
                       {skill}
                     </Badge>
@@ -510,20 +545,20 @@ export default function EnhancedProfilePage() {
                         checked={editedProfile.certifications.includes(cert)}
                         onCheckedChange={() => handleCertificationToggle(cert)}
                       />
-                      <Label
-                        htmlFor={cert}
-                        className="text-sm font-normal cursor-pointer"
-                      >
+                      <Label htmlFor={cert} className="text-sm font-normal cursor-pointer">
                         {cert}
                       </Label>
                     </div>
                   ))}
                 </div>
               )}
-              
+
               {!isEditing && (
                 <div className="flex flex-wrap gap-2">
-                  {(editedProfile.certifications.length > 0 ? editedProfile.certifications : ['ACLS', 'BLS', 'CCRN']).map((cert) => (
+                  {(editedProfile.certifications.length > 0
+                    ? editedProfile.certifications
+                    : ["ACLS", "BLS", "CCRN"]
+                  ).map((cert) => (
                     <Badge key={cert} variant="outline" className="flex items-center gap-1">
                       <Award className="w-3 h-3" />
                       {cert}
@@ -538,7 +573,9 @@ export default function EnhancedProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>Professional Links</CardTitle>
-              <CardDescription>Add your professional social media and portfolio links</CardDescription>
+              <CardDescription>
+                Add your professional social media and portfolio links
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -547,12 +584,14 @@ export default function EnhancedProfilePage() {
                   <Input
                     id="linkedIn"
                     value={editedProfile.linkedIn}
-                    onChange={(e) => setEditedProfile(prev => ({ ...prev, linkedIn: e.target.value }))}
+                    onChange={(e) =>
+                      setEditedProfile((prev) => ({ ...prev, linkedIn: e.target.value }))
+                    }
                     placeholder="https://linkedin.com/in/yourname"
                   />
                 ) : (
                   <p className="mt-1 text-blue-600 hover:underline cursor-pointer">
-                    {editedProfile.linkedIn || 'Not provided'}
+                    {editedProfile.linkedIn || "Not provided"}
                   </p>
                 )}
               </div>
@@ -562,12 +601,14 @@ export default function EnhancedProfilePage() {
                   <Input
                     id="portfolio"
                     value={editedProfile.portfolio}
-                    onChange={(e) => setEditedProfile(prev => ({ ...prev, portfolio: e.target.value }))}
+                    onChange={(e) =>
+                      setEditedProfile((prev) => ({ ...prev, portfolio: e.target.value }))
+                    }
                     placeholder="https://yourportfolio.com"
                   />
                 ) : (
                   <p className="mt-1 text-blue-600 hover:underline cursor-pointer">
-                    {editedProfile.portfolio || 'Not provided'}
+                    {editedProfile.portfolio || "Not provided"}
                   </p>
                 )}
               </div>
@@ -593,7 +634,7 @@ export default function EnhancedProfilePage() {
                     accept=".pdf,.doc,.docx"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) handleFileUpload(file, 'resume');
+                      if (file) handleFileUpload(file, "resume");
                     }}
                     className="hidden"
                     id="resume-upload"
@@ -646,7 +687,7 @@ export default function EnhancedProfilePage() {
                     accept=".pdf,.doc,.docx"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
-                      if (file) handleFileUpload(file, 'coverLetter');
+                      if (file) handleFileUpload(file, "coverLetter");
                     }}
                     className="hidden"
                     id="cover-letter-upload"
@@ -692,7 +733,8 @@ export default function EnhancedProfilePage() {
                     Profile Complete - Ready for Job Applications
                   </h3>
                   <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-                    Your profile, resume, and cover letter are ready. You can now apply for jobs on the job board with one click.
+                    Your profile, resume, and cover letter are ready. You can now apply for jobs on
+                    the job board with one click.
                   </p>
                 </div>
               </div>
@@ -711,14 +753,18 @@ export default function EnhancedProfilePage() {
                   <Calendar className="w-5 h-5 text-blue-600" />
                   <div>
                     <p className="font-medium">Profile Updated</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Skills and certifications were updated</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Skills and certifications were updated
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 p-3 border-l-4 border-green-500 bg-green-50 dark:bg-green-950">
                   <FileText className="w-5 h-5 text-green-600" />
                   <div>
                     <p className="font-medium">Documents Uploaded</p>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Resume and cover letter uploaded successfully</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Resume and cover letter uploaded successfully
+                    </p>
                   </div>
                 </div>
               </div>
@@ -730,20 +776,26 @@ export default function EnhancedProfilePage() {
           <Card>
             <CardHeader>
               <CardTitle>Account Settings</CardTitle>
-              <CardDescription>Manage your account preferences and privacy settings</CardDescription>
+              <CardDescription>
+                Manage your account preferences and privacy settings
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-medium">Email Notifications</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Receive emails about job matches and updates</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Receive emails about job matches and updates
+                  </p>
                 </div>
                 <Checkbox defaultChecked />
               </div>
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-medium">Profile Visibility</h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Make your profile visible to employers</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Make your profile visible to employers
+                  </p>
                 </div>
                 <Checkbox defaultChecked />
               </div>

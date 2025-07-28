@@ -1,42 +1,62 @@
-import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
-import { useToast } from '@/hooks/use-toast';
-import { apiRequest } from '@/lib/queryClient';
-import { 
-  DollarSign, 
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import {
+  DollarSign,
   Plus,
   Edit,
   Calendar,
   Users,
   TrendingUp,
   AlertTriangle,
-  Loader2
-} from 'lucide-react';
+  Loader2,
+} from "lucide-react";
 
 const rateSchema = z.object({
   facilityId: z.number(),
-  specialty: z.string().min(1, 'Specialty is required'),
-  position: z.string().min(1, 'Position is required'),
-  payRate: z.number().positive('Pay rate must be positive'),
-  billRate: z.number().positive('Bill rate must be positive'),
-  contractType: z.enum(['full_time', 'part_time', 'contract', 'per_diem']),
-  effectiveDate: z.string().min(1, 'Effective date is required'),
+  specialty: z.string().min(1, "Specialty is required"),
+  position: z.string().min(1, "Position is required"),
+  payRate: z.number().positive("Pay rate must be positive"),
+  billRate: z.number().positive("Bill rate must be positive"),
+  contractType: z.enum(["full_time", "part_time", "contract", "per_diem"]),
+  effectiveDate: z.string().min(1, "Effective date is required"),
   department: z.string().optional(),
-  shiftType: z.enum(['day', 'evening', 'night', 'weekend']).optional(),
-  experienceLevel: z.enum(['entry', 'intermediate', 'senior', 'expert']).optional(),
+  shiftType: z.enum(["day", "evening", "night", "weekend"]).optional(),
+  experienceLevel: z.enum(["entry", "intermediate", "senior", "expert"]).optional(),
   overtimeMultiplier: z.number().optional(),
   holidayMultiplier: z.number().optional(),
   weekendMultiplier: z.number().optional(),
@@ -67,11 +87,11 @@ export default function RatesManagementPage() {
   const queryClient = useQueryClient();
   const [showCreateRate, setShowCreateRate] = useState(false);
   const [editingRate, setEditingRate] = useState<BillingRate | null>(null);
-  const [filterSpecialty, setFilterSpecialty] = useState<string>('all');
-  const [filterContractType, setFilterContractType] = useState<string>('all');
+  const [filterSpecialty, setFilterSpecialty] = useState<string>("all");
+  const [filterContractType, setFilterContractType] = useState<string>("all");
 
   // Permission check - only users with view_rates permission can access this page
-  if (!hasPermission('view_rates')) {
+  if (!hasPermission("view_rates")) {
     return (
       <div className="container mx-auto p-6">
         <Card>
@@ -89,29 +109,33 @@ export default function RatesManagementPage() {
 
   // Query for billing rates
   const { data: billingRates = [], isLoading: ratesLoading } = useQuery<BillingRate[]>({
-    queryKey: ['/api/billing/rates', facilityId],
+    queryKey: ["/api/billing/rates", facilityId],
     enabled: !!facilityId,
   });
 
   // Get unique specialties and contract types for filtering
-  const specialties = [...new Set(billingRates.map(rate => rate.specialty))];
-  const contractTypes = [...new Set(billingRates.map(rate => rate.contractType))];
+  const specialties = [...new Set(billingRates.map((rate) => rate.specialty))];
+  const contractTypes = [...new Set(billingRates.map((rate) => rate.contractType))];
 
   // Filter rates based on selected filters
-  const filteredRates = billingRates.filter(rate => {
-    const specialtyMatch = filterSpecialty === 'all' || rate.specialty === filterSpecialty;
-    const contractMatch = filterContractType === 'all' || rate.contractType === filterContractType;
+  const filteredRates = billingRates.filter((rate) => {
+    const specialtyMatch = filterSpecialty === "all" || rate.specialty === filterSpecialty;
+    const contractMatch = filterContractType === "all" || rate.contractType === filterContractType;
     return specialtyMatch && contractMatch;
   });
 
   // Calculate rate analytics
   const rateAnalytics = {
-    averagePayRate: filteredRates.reduce((sum, rate) => sum + rate.payRate, 0) / filteredRates.length || 0,
-    averageBillRate: filteredRates.reduce((sum, rate) => sum + rate.billRate, 0) / filteredRates.length || 0,
-    averageMargin: filteredRates.reduce((sum, rate) => sum + (rate.billRate - rate.payRate), 0) / filteredRates.length || 0,
+    averagePayRate:
+      filteredRates.reduce((sum, rate) => sum + rate.payRate, 0) / filteredRates.length || 0,
+    averageBillRate:
+      filteredRates.reduce((sum, rate) => sum + rate.billRate, 0) / filteredRates.length || 0,
+    averageMargin:
+      filteredRates.reduce((sum, rate) => sum + (rate.billRate - rate.payRate), 0) /
+        filteredRates.length || 0,
     totalPositions: filteredRates.length,
-    highestPayRate: Math.max(...filteredRates.map(rate => rate.payRate)),
-    lowestPayRate: Math.min(...filteredRates.map(rate => rate.payRate)),
+    highestPayRate: Math.max(...filteredRates.map((rate) => rate.payRate)),
+    lowestPayRate: Math.min(...filteredRates.map((rate) => rate.payRate)),
   };
 
   // Form for creating/editing rates
@@ -119,51 +143,53 @@ export default function RatesManagementPage() {
     resolver: zodResolver(rateSchema),
     defaultValues: {
       facilityId: facilityId || 0,
-      specialty: '',
-      position: '',
+      specialty: "",
+      position: "",
       payRate: 0,
       billRate: 0,
-      contractType: 'full_time',
-      effectiveDate: new Date().toISOString().split('T')[0],
-      department: '',
-      shiftType: 'day',
-      experienceLevel: 'intermediate',
+      contractType: "full_time",
+      effectiveDate: new Date().toISOString().split("T")[0],
+      department: "",
+      shiftType: "day",
+      experienceLevel: "intermediate",
       overtimeMultiplier: 1.5,
       holidayMultiplier: 2.0,
       weekendMultiplier: 1.2,
-    }
+    },
   });
 
   // Mutation for creating/updating rates
   const rateMutation = useMutation({
     mutationFn: async (data: z.infer<typeof rateSchema>) => {
-      const endpoint = editingRate ? `/api/billing/rates/${editingRate.id}` : '/api/billing/rates';
-      const method = editingRate ? 'PATCH' : 'POST';
+      const endpoint = editingRate ? `/api/billing/rates/${editingRate.id}` : "/api/billing/rates";
+      const method = editingRate ? "PATCH" : "POST";
       const response = await apiRequest(method, endpoint, data);
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || `Failed to ${editingRate ? 'update' : 'create'} rate`);
+        throw new Error(error.message || `Failed to ${editingRate ? "update" : "create"} rate`);
       }
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/billing/rates'] });
+      queryClient.invalidateQueries({ queryKey: ["/api/billing/rates"] });
       setShowCreateRate(false);
       setEditingRate(null);
       form.reset();
       toast({
         title: "Success",
-        description: `Rate ${editingRate ? 'updated' : 'created'} successfully`,
+        description: `Rate ${editingRate ? "updated" : "created"} successfully`,
       });
     },
     onError: (error: any) => {
-      console.error('Rate mutation error:', error);
+      console.error("Rate mutation error:", error);
       toast({
         title: "Error",
-        description: error.message || `Failed to ${editingRate ? 'update' : 'create'} rate. Please check your connection and try again.`,
+        description:
+          error.message ||
+          `Failed to ${editingRate ? "update" : "create"} rate. Please check your connection and try again.`,
         variant: "destructive",
       });
-    }
+    },
   });
 
   const handleCreateRate = (data: z.infer<typeof rateSchema>) => {
@@ -180,7 +206,7 @@ export default function RatesManagementPage() {
       billRate: rate.billRate,
       contractType: rate.contractType as any,
       effectiveDate: rate.effectiveDate,
-      department: rate.department || '',
+      department: rate.department || "",
       shiftType: rate.shiftType as any,
       experienceLevel: rate.experienceLevel as any,
       overtimeMultiplier: rate.overtimeMultiplier || 1.5,
@@ -192,11 +218,16 @@ export default function RatesManagementPage() {
 
   const getContractTypeBadge = (contractType: string) => {
     switch (contractType) {
-      case 'full_time': return <Badge className="bg-green-100 text-green-800">Full Time</Badge>;
-      case 'part_time': return <Badge className="bg-blue-100 text-blue-800">Part Time</Badge>;
-      case 'contract': return <Badge className="bg-purple-100 text-purple-800">Contract</Badge>;
-      case 'per_diem': return <Badge className="bg-orange-100 text-orange-800">Per Diem</Badge>;
-      default: return <Badge variant="outline">{contractType}</Badge>;
+      case "full_time":
+        return <Badge className="bg-green-100 text-green-800">Full Time</Badge>;
+      case "part_time":
+        return <Badge className="bg-blue-100 text-blue-800">Part Time</Badge>;
+      case "contract":
+        return <Badge className="bg-purple-100 text-purple-800">Contract</Badge>;
+      case "per_diem":
+        return <Badge className="bg-orange-100 text-orange-800">Per Diem</Badge>;
+      default:
+        return <Badge variant="outline">{contractType}</Badge>;
     }
   };
 
@@ -207,8 +238,8 @@ export default function RatesManagementPage() {
           <h1 className="text-2xl font-bold text-gray-900">Billing & Pay Rates</h1>
           <p className="text-gray-600">Manage facility billing rates and staff compensation</p>
         </div>
-        
-        {hasPermission('edit_rates') && (
+
+        {hasPermission("edit_rates") && (
           <Button onClick={() => setShowCreateRate(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Add Rate
@@ -278,8 +309,10 @@ export default function RatesManagementPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Specialties</SelectItem>
-                  {specialties.map(specialty => (
-                    <SelectItem key={specialty} value={specialty}>{specialty}</SelectItem>
+                  {specialties.map((specialty) => (
+                    <SelectItem key={specialty} value={specialty}>
+                      {specialty}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -292,8 +325,10 @@ export default function RatesManagementPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Contract Types</SelectItem>
-                  {contractTypes.map(type => (
-                    <SelectItem key={type} value={type}>{type.replace('_', ' ')}</SelectItem>
+                  {contractTypes.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type.replace("_", " ")}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -321,7 +356,7 @@ export default function RatesManagementPage() {
                   <TableHead>Margin</TableHead>
                   <TableHead>Contract Type</TableHead>
                   <TableHead>Effective Date</TableHead>
-                  {hasPermission('edit_rates') && <TableHead>Actions</TableHead>}
+                  {hasPermission("edit_rates") && <TableHead>Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -332,21 +367,19 @@ export default function RatesManagementPage() {
                     <TableCell>${rate.payRate.toFixed(2)}/hr</TableCell>
                     <TableCell>${rate.billRate.toFixed(2)}/hr</TableCell>
                     <TableCell>
-                      <span className={`font-medium ${
-                        (rate.billRate - rate.payRate) < 10 ? 'text-red-600' : 'text-green-600'
-                      }`}>
+                      <span
+                        className={`font-medium ${
+                          rate.billRate - rate.payRate < 10 ? "text-red-600" : "text-green-600"
+                        }`}
+                      >
                         ${(rate.billRate - rate.payRate).toFixed(2)}/hr
                       </span>
                     </TableCell>
                     <TableCell>{getContractTypeBadge(rate.contractType)}</TableCell>
                     <TableCell>{new Date(rate.effectiveDate).toLocaleDateString()}</TableCell>
-                    {hasPermission('edit_rates') && (
+                    {hasPermission("edit_rates") && (
                       <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEditRate(rate)}
-                        >
+                        <Button variant="ghost" size="sm" onClick={() => handleEditRate(rate)}>
                           <Edit className="h-4 w-4" />
                         </Button>
                       </TableCell>
@@ -363,9 +396,7 @@ export default function RatesManagementPage() {
       <Dialog open={showCreateRate} onOpenChange={setShowCreateRate}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>
-              {editingRate ? 'Edit Rate' : 'Create New Rate'}
-            </DialogTitle>
+            <DialogTitle>{editingRate ? "Edit Rate" : "Create New Rate"}</DialogTitle>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleCreateRate)} className="space-y-4">
@@ -397,7 +428,7 @@ export default function RatesManagementPage() {
                   )}
                 />
               </div>
-              
+
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -406,10 +437,10 @@ export default function RatesManagementPage() {
                     <FormItem>
                       <FormLabel>Pay Rate ($/hr)</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="0.00" 
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
                           {...field}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
@@ -425,10 +456,10 @@ export default function RatesManagementPage() {
                     <FormItem>
                       <FormLabel>Bill Rate ($/hr)</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="number" 
-                          step="0.01" 
-                          placeholder="0.00" 
+                        <Input
+                          type="number"
+                          step="0.01"
+                          placeholder="0.00"
                           {...field}
                           onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
                         />
@@ -518,21 +549,17 @@ export default function RatesManagementPage() {
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  onClick={() => setShowCreateRate(false)}
-                >
+                <Button type="button" variant="outline" onClick={() => setShowCreateRate(false)}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={rateMutation.isPending}>
                   {rateMutation.isPending ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {editingRate ? 'Updating...' : 'Creating...'}
+                      {editingRate ? "Updating..." : "Creating..."}
                     </>
                   ) : (
-                    `${editingRate ? 'Update' : 'Create'} Rate`
+                    `${editingRate ? "Update" : "Create"} Rate`
                   )}
                 </Button>
               </div>

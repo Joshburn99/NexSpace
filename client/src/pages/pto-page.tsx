@@ -28,14 +28,14 @@ import { cn } from "@/lib/utils";
 
 export default function PTOPage() {
   const { user } = useAuth();
-  const { 
-    getEmployeeBalance, 
-    getEmployeeRequests, 
+  const {
+    getEmployeeBalance,
+    getEmployeeRequests,
     getPendingRequests,
     submitPTORequest,
-    reviewPTORequest 
+    reviewPTORequest,
   } = usePTO();
-  
+
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const [requestType, setRequestType] = useState<string>("");
   const [startDate, setStartDate] = useState("");
@@ -47,7 +47,7 @@ export default function PTOPage() {
   const userBalance = user ? getEmployeeBalance(user.id) : null;
   const userRequests = user ? getEmployeeRequests(user.id) : [];
   const pendingRequests = getPendingRequests();
-  const isManager = user?.role === 'manager' || user?.role === 'admin';
+  const isManager = user?.role === "manager" || user?.role === "admin";
 
   const calculateDays = (start: string, end: string): number => {
     if (!start || !end) return 0;
@@ -61,10 +61,10 @@ export default function PTOPage() {
     if (!user || !requestType || !startDate || !endDate) return;
 
     setIsSubmitting(true);
-    
+
     try {
       const totalDays = calculateDays(startDate, endDate);
-      
+
       await submitPTORequest({
         employeeId: user.id,
         employeeName: `${user.firstName} ${user.lastName}`,
@@ -73,7 +73,7 @@ export default function PTOPage() {
         endDate,
         totalDays,
         reason,
-        isEmergency
+        isEmergency,
       });
 
       // Reset form on success
@@ -84,7 +84,7 @@ export default function PTOPage() {
       setIsEmergency(false);
       setIsSubmitDialogOpen(false);
     } catch (error) {
-      console.error('PTO submission error:', error);
+      console.error("PTO submission error:", error);
       // Error handling could be enhanced here with toast notifications
     } finally {
       setIsSubmitting(false);
@@ -93,22 +93,37 @@ export default function PTOPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'pending':
-        return <Badge variant="outline" className="text-yellow-600"><AlertCircle className="w-3 h-3 mr-1" />Pending</Badge>;
-      case 'approved':
-        return <Badge variant="outline" className="text-green-600"><CheckCircle className="w-3 h-3 mr-1" />Approved</Badge>;
-      case 'denied':
-        return <Badge variant="outline" className="text-red-600"><XCircle className="w-3 h-3 mr-1" />Denied</Badge>;
+      case "pending":
+        return (
+          <Badge variant="outline" className="text-yellow-600">
+            <AlertCircle className="w-3 h-3 mr-1" />
+            Pending
+          </Badge>
+        );
+      case "approved":
+        return (
+          <Badge variant="outline" className="text-green-600">
+            <CheckCircle className="w-3 h-3 mr-1" />
+            Approved
+          </Badge>
+        );
+      case "denied":
+        return (
+          <Badge variant="outline" className="text-red-600">
+            <XCircle className="w-3 h-3 mr-1" />
+            Denied
+          </Badge>
+        );
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -117,7 +132,9 @@ export default function PTOPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Time Off</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">Manage your paid time off requests</p>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Manage your paid time off requests
+          </p>
         </div>
         {!isManager && (
           <Dialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
@@ -130,9 +147,7 @@ export default function PTOPage() {
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>Request Time Off</DialogTitle>
-                <DialogDescription>
-                  Submit a new PTO request for approval
-                </DialogDescription>
+                <DialogDescription>Submit a new PTO request for approval</DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
@@ -150,7 +165,7 @@ export default function PTOPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="start-date">Start Date</Label>
@@ -197,7 +212,9 @@ export default function PTOPage() {
                     onChange={(e) => setIsEmergency(e.target.checked)}
                     className="rounded border-gray-300"
                   />
-                  <Label htmlFor="emergency" className="text-sm">This is an emergency request</Label>
+                  <Label htmlFor="emergency" className="text-sm">
+                    This is an emergency request
+                  </Label>
                 </div>
 
                 <div className="flex gap-2 pt-4">
@@ -211,7 +228,12 @@ export default function PTOPage() {
                       "Submit Request"
                     )}
                   </Button>
-                  <Button variant="outline" onClick={() => setIsSubmitDialogOpen(false)} disabled={isSubmitting} className="flex-1">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsSubmitDialogOpen(false)}
+                    disabled={isSubmitting}
+                    className="flex-1"
+                  >
                     Cancel
                   </Button>
                 </div>
@@ -309,14 +331,17 @@ export default function PTOPage() {
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold">{request.employeeName}</h3>
                             {request.isEmergency && (
-                              <Badge variant="destructive" className="text-xs">Emergency</Badge>
+                              <Badge variant="destructive" className="text-xs">
+                                Emergency
+                              </Badge>
                             )}
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {request.requestType.charAt(0).toUpperCase() + request.requestType.slice(1)}
+                            {request.requestType.charAt(0).toUpperCase() +
+                              request.requestType.slice(1)}
                           </p>
                           <p className="text-sm">
-                            {formatDate(request.startDate)} - {formatDate(request.endDate)} 
+                            {formatDate(request.startDate)} - {formatDate(request.endDate)}
                             <span className="text-gray-500 ml-2">({request.totalDays} days)</span>
                           </p>
                           {request.reason && (
@@ -332,7 +357,14 @@ export default function PTOPage() {
                           <Button
                             size="sm"
                             className="bg-green-600 hover:bg-green-700"
-                            onClick={() => reviewPTORequest(request.id, 'approved', 'Approved by manager', user?.firstName + ' ' + user?.lastName)}
+                            onClick={() =>
+                              reviewPTORequest(
+                                request.id,
+                                "approved",
+                                "Approved by manager",
+                                user?.firstName + " " + user?.lastName
+                              )
+                            }
                           >
                             Approve
                           </Button>
@@ -340,7 +372,14 @@ export default function PTOPage() {
                             size="sm"
                             variant="outline"
                             className="text-red-600 border-red-600 hover:bg-red-50"
-                            onClick={() => reviewPTORequest(request.id, 'denied', 'Denied by manager', user?.firstName + ' ' + user?.lastName)}
+                            onClick={() =>
+                              reviewPTORequest(
+                                request.id,
+                                "denied",
+                                "Denied by manager",
+                                user?.firstName + " " + user?.lastName
+                              )
+                            }
                           >
                             Deny
                           </Button>
@@ -368,15 +407,18 @@ export default function PTOPage() {
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
                             <h3 className="font-semibold">
-                              {request.requestType.charAt(0).toUpperCase() + request.requestType.slice(1)}
+                              {request.requestType.charAt(0).toUpperCase() +
+                                request.requestType.slice(1)}
                             </h3>
                             {getStatusBadge(request.status)}
                             {request.isEmergency && (
-                              <Badge variant="destructive" className="text-xs">Emergency</Badge>
+                              <Badge variant="destructive" className="text-xs">
+                                Emergency
+                              </Badge>
                             )}
                           </div>
                           <p className="text-sm">
-                            {formatDate(request.startDate)} - {formatDate(request.endDate)} 
+                            {formatDate(request.startDate)} - {formatDate(request.endDate)}
                             <span className="text-gray-500 ml-2">({request.totalDays} days)</span>
                           </p>
                           {request.reason && (
@@ -389,7 +431,9 @@ export default function PTOPage() {
                           </p>
                           {request.reviewedAt && (
                             <div className="text-xs text-gray-500 border-t pt-2 mt-2">
-                              <p>Reviewed by {request.reviewedBy} on {formatDate(request.reviewedAt)}</p>
+                              <p>
+                                Reviewed by {request.reviewedBy} on {formatDate(request.reviewedAt)}
+                              </p>
                               {request.reviewNotes && (
                                 <p className="italic">"{request.reviewNotes}"</p>
                               )}

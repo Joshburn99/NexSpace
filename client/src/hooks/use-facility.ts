@@ -9,7 +9,7 @@ export interface EnhancedFacility {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  
+
   // Normalized address data
   address?: {
     id: number;
@@ -20,7 +20,7 @@ export interface EnhancedFacility {
     zipCode?: string;
     country?: string;
   };
-  
+
   // Normalized contacts
   contacts?: Array<{
     id: number;
@@ -32,7 +32,7 @@ export interface EnhancedFacility {
     email?: string;
     isPrimary?: boolean;
   }>;
-  
+
   // Normalized settings
   settings?: {
     id: number;
@@ -47,7 +47,7 @@ export interface EnhancedFacility {
     requiresFloatPool?: boolean;
     floatPoolRadius?: number;
   };
-  
+
   // Normalized rates
   rates?: Array<{
     id: number;
@@ -60,7 +60,7 @@ export interface EnhancedFacility {
     effectiveDate: string;
     endDate?: string;
   }>;
-  
+
   // Normalized staffing targets
   staffingTargets?: Array<{
     id: number;
@@ -71,7 +71,7 @@ export interface EnhancedFacility {
     minCount: number;
     maxCount?: number;
   }>;
-  
+
   // Normalized documents
   documents?: Array<{
     id: number;
@@ -82,16 +82,16 @@ export interface EnhancedFacility {
     expiryDate?: string;
     status?: string;
   }>;
-  
+
   // Legacy fields for backward compatibility (deprecated)
   phone?: string;
   email?: string;
-  
+
   // Additional operational fields from original interface
   teamId?: number;
   netTerms?: string;
   overallRating?: number;
-  
+
   // Legacy JSON fields (these might be moved to normalized tables in future)
   billRates?: Record<string, number>;
   payRates?: Record<string, number>;
@@ -133,11 +133,11 @@ export interface EnhancedFacility {
   regulatoryDocs?: Array<{
     id: string;
     name: string;
-    type: 'license' | 'certification' | 'policy' | 'procedure' | 'contract';
+    type: "license" | "certification" | "policy" | "procedure" | "contract";
     url?: string;
     uploadDate: string;
     expirationDate?: string;
-    status: 'active' | 'expired' | 'pending_renewal';
+    status: "active" | "expired" | "pending_renewal";
   }>;
   // Additional fields from main facilities table
   emrSystem?: string;
@@ -155,7 +155,7 @@ export function useFacility(facilityId: number | undefined) {
     queryKey: ["/api/facilities", facilityId],
     queryFn: async (): Promise<EnhancedFacility> => {
       if (!facilityId) throw new Error("Facility ID is required");
-      
+
       const response = await fetch(`/api/facilities/${facilityId}`);
       if (!response.ok) {
         throw new Error(`Failed to fetch facility: ${response.statusText}`);
@@ -164,7 +164,7 @@ export function useFacility(facilityId: number | undefined) {
     },
     enabled: !!facilityId,
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1
+    retry: 1,
   });
 }
 
@@ -178,16 +178,16 @@ export function useFacilities(filters?: {
   isActive?: boolean;
 }) {
   const queryParams = new URLSearchParams();
-  
-  if (filters?.search) queryParams.append('search', filters.search);
-  if (filters?.state) queryParams.append('state', filters.state);
-  if (filters?.facilityType) queryParams.append('facilityType', filters.facilityType);
-  if (filters?.isActive !== undefined) queryParams.append('isActive', filters.isActive.toString());
+
+  if (filters?.search) queryParams.append("search", filters.search);
+  if (filters?.state) queryParams.append("state", filters.state);
+  if (filters?.facilityType) queryParams.append("facilityType", filters.facilityType);
+  if (filters?.isActive !== undefined) queryParams.append("isActive", filters.isActive.toString());
 
   return useQuery({
     queryKey: ["/api/facilities", filters],
     queryFn: async (): Promise<EnhancedFacility[]> => {
-      const url = `/api/facilities${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const url = `/api/facilities${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to fetch facilities: ${response.statusText}`);
@@ -195,7 +195,7 @@ export function useFacilities(filters?: {
       return response.json();
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    retry: 1
+    retry: 1,
   });
 }
 
@@ -213,7 +213,7 @@ export function getFacilityDisplayName(facility: EnhancedFacility | undefined): 
 export function getFacilityAddress(facility: EnhancedFacility | undefined): string {
   if (!facility || !facility.address) return "";
   const addr = facility.address;
-  return `${addr.street || ''}, ${addr.city || ''}, ${addr.state || ''} ${addr.zipCode || ''}`.trim();
+  return `${addr.street || ""}, ${addr.city || ""}, ${addr.state || ""} ${addr.zipCode || ""}`.trim();
 }
 
 /**
@@ -227,8 +227,8 @@ export function getFacilityTimezone(facility: EnhancedFacility | undefined): str
  * Helper function to check if facility has specific capability
  */
 export function hasFacilityCapability(
-  facility: EnhancedFacility | undefined, 
-  capability: keyof NonNullable<EnhancedFacility['workflowAutomationConfig']>
+  facility: EnhancedFacility | undefined,
+  capability: keyof NonNullable<EnhancedFacility["workflowAutomationConfig"]>
 ): boolean {
   return facility?.workflowAutomationConfig?.[capability] === true;
 }
@@ -237,7 +237,7 @@ export function hasFacilityCapability(
  * Helper function to get billing rate for specialty
  */
 export function getFacilityBillRate(
-  facility: EnhancedFacility | undefined, 
+  facility: EnhancedFacility | undefined,
   specialty: string
 ): number | undefined {
   return facility?.billRates?.[specialty];
@@ -247,7 +247,7 @@ export function getFacilityBillRate(
  * Helper function to get pay rate for specialty
  */
 export function getFacilityPayRate(
-  facility: EnhancedFacility | undefined, 
+  facility: EnhancedFacility | undefined,
   specialty: string
 ): number | undefined {
   return facility?.payRates?.[specialty];
@@ -257,11 +257,11 @@ export function getFacilityPayRate(
  * Helper function to get staffing targets for department
  */
 export function getFacilityStaffingTargets(
-  facility: EnhancedFacility | undefined, 
+  facility: EnhancedFacility | undefined,
   department: string
 ) {
   if (!facility?.staffingTargets) return undefined;
-  return facility.staffingTargets.filter(target => target.department === department);
+  return facility.staffingTargets.filter((target) => target.department === department);
 }
 
 /**
@@ -274,9 +274,9 @@ export function getFacilityComplianceStatus(facility: EnhancedFacility | undefin
 
   const docs = facility.regulatoryDocs;
   return {
-    active: docs.filter(doc => doc.status === 'active').length,
-    expired: docs.filter(doc => doc.status === 'expired').length,
-    pending: docs.filter(doc => doc.status === 'pending_renewal').length,
-    total: docs.length
+    active: docs.filter((doc) => doc.status === "active").length,
+    expired: docs.filter((doc) => doc.status === "expired").length,
+    pending: docs.filter((doc) => doc.status === "pending_renewal").length,
+    total: docs.length,
   };
 }
