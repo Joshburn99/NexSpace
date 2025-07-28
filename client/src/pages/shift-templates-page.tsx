@@ -61,7 +61,8 @@ import {
   Calendar,
   CheckCircle,
   AlertTriangle,
-  RefreshCw
+  RefreshCw,
+  Loader2
 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -203,6 +204,10 @@ export default function ShiftTemplatesPage() {
   const createTemplateMutation = useMutation({
     mutationFn: async (templateData: z.infer<typeof templateSchema>) => {
       const response = await apiRequest("POST", "/api/shift-templates", templateData);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create template');
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -216,6 +221,14 @@ export default function ShiftTemplatesPage() {
         description: "Shift template created and shifts generated automatically.",
       });
     },
+    onError: (error: any) => {
+      console.error('Create template error:', error);
+      toast({
+        title: "Template Creation Failed",
+        description: error.message || "Failed to create template. Please check your data and try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   // Update template mutation
@@ -226,6 +239,10 @@ export default function ShiftTemplatesPage() {
       console.log('Update data being sent:', JSON.stringify(data, null, 2));
 
       const response = await apiRequest("PUT", `/api/shift-templates/${id}`, data);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update template');
+      }
       const result = await response.json();
       console.log('Update response:', result);
       return result;
@@ -266,11 +283,11 @@ export default function ShiftTemplatesPage() {
         description: `Updated "${updatedTemplate.name}" - changes will reflect immediately.`,
       });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Update template error:', error);
       toast({
         title: "Update Failed",
-        description: "Failed to update template. Please try again.",
+        description: error.message || "Failed to update template. Please check your data and try again.",
         variant: "destructive",
       });
     },
@@ -829,7 +846,16 @@ export default function ShiftTemplatesPage() {
                   className="flex-1"
                   disabled={createTemplateMutation.isPending || updateTemplateMutation.isPending}
                 >
-                  {createTemplateMutation.isPending || updateTemplateMutation.isPending ? "Saving..." : editingTemplate ? "Update Template" : "Create Template"}
+                  {createTemplateMutation.isPending || updateTemplateMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : editingTemplate ? (
+                    "Update Template"
+                  ) : (
+                    "Create Template"
+                  )}
                 </Button>
               </div>
             </form>

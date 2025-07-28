@@ -1450,75 +1450,115 @@ export default function EnhancedCalendarPage() {
 
       {/* Add Shift Dialog */}
       <Dialog open={showAddShiftDialog} onOpenChange={setShowAddShiftDialog}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl w-[95vw] md:w-full max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Add New Shift</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-lg md:text-xl">Add New Shift</DialogTitle>
+            <DialogDescription className="text-sm">
               Create a new shift assignment for your facility
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={(e) => {
+            e.preventDefault();
+            // Validate all required fields
+            const validationErrors = [];
+            if (!shiftFormData.title) validationErrors.push("Title is required");
+            if (!shiftFormData.facilityId) validationErrors.push("Facility must be selected");
+            if (!shiftFormData.date && (!shiftFormData.selectedDates || shiftFormData.selectedDates.length === 0)) {
+              validationErrors.push("At least one date must be selected");
+            }
+            
+            if (validationErrors.length > 0) {
+              toast({ 
+                title: "Validation Error", 
+                description: validationErrors.join(", "), 
+                variant: "destructive" 
+              });
+              return;
+            }
+            
+            // Submit form
+            const shiftData = {
+              ...shiftFormData,
+              rate: parseFloat(shiftFormData.rate),
+              requiredStaff: parseInt(shiftFormData.requiredStaff),
+              dates: shiftFormData.selectedDates.length > 0 ? shiftFormData.selectedDates : [shiftFormData.date]
+            };
+            createShiftMutation.mutate(shiftData);
+          }} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
-                <Label className="text-sm font-medium">Title</Label>
-                <input 
+                <Label className="text-sm font-medium">Title <span className="text-red-500">*</span></Label>
+                <Input 
                   type="text" 
-                  className="w-full mt-1 p-2 border rounded-md"
                   placeholder="ICU Day Shift"
                   value={shiftFormData.title}
                   onChange={(e) => setShiftFormData({...shiftFormData, title: e.target.value})}
+                  disabled={createShiftMutation.isPending}
+                  required
                 />
               </div>
               <div>
-                <Label className="text-sm font-medium">Specialty</Label>
-                <select 
-                  className="w-full mt-1 p-2 border rounded-md"
+                <Label className="text-sm font-medium">Specialty <span className="text-red-500">*</span></Label>
+                <Select 
                   value={shiftFormData.specialty}
-                  onChange={(e) => setShiftFormData({...shiftFormData, specialty: e.target.value})}
+                  onValueChange={(value) => setShiftFormData({...shiftFormData, specialty: value})}
+                  disabled={createShiftMutation.isPending}
                 >
-                  <option value="RN">RN - Registered Nurse</option>
-                  <option value="LPN">LPN - Licensed Practical Nurse</option>
-                  <option value="CNA">CNA - Certified Nursing Assistant</option>
-                  <option value="RT">RT - Respiratory Therapist</option>
-                  <option value="PT">PT - Physical Therapist</option>
-                  <option value="CST">CST - Certified Surgical Tech</option>
-                  <option value="PCT">PCT - Patient Care Technician</option>
-                  <option value="MA">MA - Medical Assistant</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="RN">RN - Registered Nurse</SelectItem>
+                    <SelectItem value="LPN">LPN - Licensed Practical Nurse</SelectItem>
+                    <SelectItem value="CNA">CNA - Certified Nursing Assistant</SelectItem>
+                    <SelectItem value="RT">RT - Respiratory Therapist</SelectItem>
+                    <SelectItem value="PT">PT - Physical Therapist</SelectItem>
+                    <SelectItem value="CST">CST - Certified Surgical Tech</SelectItem>
+                    <SelectItem value="PCT">PCT - Patient Care Technician</SelectItem>
+                    <SelectItem value="MA">MA - Medical Assistant</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
                 <Label className="text-sm font-medium">Shift Type</Label>
-                <select 
-                  className="w-full mt-1 p-2 border rounded-md"
+                <Select 
                   value={shiftFormData.shiftType}
-                  onChange={(e) => setShiftFormData({...shiftFormData, shiftType: e.target.value})}
+                  onValueChange={(value) => setShiftFormData({...shiftFormData, shiftType: value})}
+                  disabled={createShiftMutation.isPending}
                 >
-                  <option value="Day">Day Shift</option>
-                  <option value="Night">Night Shift</option>
-                  <option value="Evening">Evening Shift</option>
-                  <option value="Weekend">Weekend Shift</option>
-                  <option value="On-Call">On-Call</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Day">Day Shift</SelectItem>
+                    <SelectItem value="Night">Night Shift</SelectItem>
+                    <SelectItem value="Evening">Evening Shift</SelectItem>
+                    <SelectItem value="Weekend">Weekend Shift</SelectItem>
+                    <SelectItem value="On-Call">On-Call</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
-                <Label className="text-sm font-medium">Facility</Label>
-                <div className="mt-1">
-                  <select 
-                    className="w-full p-2 border rounded-md"
-                    value={shiftFormData.facilityId}
-                    onChange={(e) => setShiftFormData({...shiftFormData, facilityId: e.target.value})}
-                  >
-                    <option value="">Select Facility</option>
+                <Label className="text-sm font-medium">Facility <span className="text-red-500">*</span></Label>
+                <Select 
+                  value={shiftFormData.facilityId}
+                  onValueChange={(value) => setShiftFormData({...shiftFormData, facilityId: value})}
+                  disabled={createShiftMutation.isPending}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Facility" />
+                  </SelectTrigger>
+                  <SelectContent>
                     {/* Only show facilities the user is associated with */}
                     {(isFacilityUser ? filteredFacilities : facilities).map((facility) => (
-                      <option key={facility.id} value={facility.id.toString()}>
+                      <SelectItem key={facility.id} value={facility.id.toString()}>
                         {getFacilityDisplayName(facility)}
-                      </option>
+                      </SelectItem>
                     ))}
-                  </select>
-                </div>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div>
@@ -1578,118 +1618,113 @@ export default function EnhancedCalendarPage() {
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
-                <Label className="text-sm font-medium">Start Time</Label>
-                <input 
+                <Label className="text-sm font-medium">Start Time <span className="text-red-500">*</span></Label>
+                <Input 
                   type="time" 
-                  className="w-full mt-1 p-2 border rounded-md"
                   value={shiftFormData.startTime}
                   onChange={(e) => setShiftFormData({...shiftFormData, startTime: e.target.value})}
+                  disabled={createShiftMutation.isPending}
+                  required
                 />
               </div>
               <div>
-                <Label className="text-sm font-medium">End Time</Label>
-                <input 
+                <Label className="text-sm font-medium">End Time <span className="text-red-500">*</span></Label>
+                <Input 
                   type="time" 
-                  className="w-full mt-1 p-2 border rounded-md"
                   value={shiftFormData.endTime}
                   onChange={(e) => setShiftFormData({...shiftFormData, endTime: e.target.value})}
+                  disabled={createShiftMutation.isPending}
+                  required
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
               <div>
                 <Label className="text-sm font-medium">Hourly Rate</Label>
-                <input 
+                <Input 
                   type="number" 
-                  className="w-full mt-1 p-2 border rounded-md"
                   placeholder="45.00"
                   step="0.01"
                   value={shiftFormData.rate}
                   onChange={(e) => setShiftFormData({...shiftFormData, rate: e.target.value})}
+                  disabled={createShiftMutation.isPending}
                 />
               </div>
               <div>
                 <Label className="text-sm font-medium">Required Staff</Label>
-                <input 
+                <Input 
                   type="number" 
-                  className="w-full mt-1 p-2 border rounded-md"
                   min="1"
                   max="10"
                   value={shiftFormData.requiredStaff}
                   onChange={(e) => setShiftFormData({...shiftFormData, requiredStaff: e.target.value})}
+                  disabled={createShiftMutation.isPending}
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-sm font-medium">Urgency</Label>
-                <select 
-                  className="w-full mt-1 p-2 border rounded-md"
-                  value={shiftFormData.urgency}
-                  onChange={(e) => setShiftFormData({...shiftFormData, urgency: e.target.value})}
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="critical">Critical</option>
-                </select>
-              </div>
+            <div>
+              <Label className="text-sm font-medium">Urgency</Label>
+              <Select 
+                value={shiftFormData.urgency}
+                onValueChange={(value) => setShiftFormData({...shiftFormData, urgency: value})}
+                disabled={createShiftMutation.isPending}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Low</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High</SelectItem>
+                  <SelectItem value="critical">Critical</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label className="text-sm font-medium">Description</Label>
-              <textarea 
-                className="w-full mt-1 p-2 border rounded-md"
+              <Textarea 
                 rows={3}
                 placeholder="Additional shift details and requirements..."
                 value={shiftFormData.description}
                 onChange={(e) => setShiftFormData({...shiftFormData, description: e.target.value})}
+                disabled={createShiftMutation.isPending}
               />
             </div>
-          </div>
+            
+            {/* Error display */}
+            {createShiftMutation.error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  {createShiftMutation.error.message || "Failed to create shift. Please check your connection and try again."}
+                </AlertDescription>
+              </Alert>
+            )}
+          </form>
+          
           <div className="flex justify-end gap-2 mt-6">
-            <Button variant="outline" onClick={() => setShowAddShiftDialog(false)}>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowAddShiftDialog(false)}
+              disabled={createShiftMutation.isPending}
+            >
               Cancel
             </Button>
             <Button 
-              onClick={() => {
-                if (!shiftFormData.facilityId) {
-                  toast({ 
-                    title: "Validation Error", 
-                    description: "Please select a facility", 
-                    variant: "destructive" 
-                  });
-                  return;
-                }
-
-                // Use selected dates if any, otherwise use single date
-                const datesToCreate = shiftFormData.selectedDates.length > 0 
-                  ? shiftFormData.selectedDates 
-                  : [shiftFormData.date];
-
-                // Create a shift for each selected date
-                datesToCreate.forEach(date => {
-                  createShiftMutation.mutate({
-                    title: shiftFormData.title || `${shiftFormData.specialty} Shift`,
-                    specialty: shiftFormData.specialty,
-                    shiftType: shiftFormData.shiftType,
-                    department: shiftFormData.specialty, // Use specialty as department fallback
-                    date: date,
-                    facilityId: parseInt(shiftFormData.facilityId),
-                    startTime: shiftFormData.startTime,
-                    endTime: shiftFormData.endTime,
-                    rate: parseFloat(shiftFormData.rate) || 45.00,
-                    urgency: shiftFormData.urgency,
-                    description: shiftFormData.description || '',
-                    requiredStaff: parseInt(shiftFormData.requiredStaff) || 1,
-                    status: 'open'
-                  });
-                });
-              }}
+              type="submit"
+              form="add-shift-form"
               disabled={createShiftMutation.isPending}
             >
-{createShiftMutation.isPending ? "Creating..." : `Create ${shiftFormData.selectedDates.length > 1 ? `${shiftFormData.selectedDates.length} Shifts` : 'Shift'}`}
+              {createShiftMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating {shiftFormData.selectedDates.length > 1 ? `${shiftFormData.selectedDates.length} Shifts` : 'Shift'}...
+                </>
+              ) : (
+                `Create ${shiftFormData.selectedDates.length > 1 ? `${shiftFormData.selectedDates.length} Shifts` : 'Shift'}`
+              )}
             </Button>
           </div>
         </DialogContent>

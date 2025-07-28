@@ -59,6 +59,7 @@ import {
   Settings,
   Building2,
   X,
+  Loader2,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -330,6 +331,10 @@ function EnhancedStaffPageContent() {
   const createStaffMutation = useMutation({
     mutationFn: async (staffData: any) => {
       const response = await apiRequest("POST", "/api/staff", staffData);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create staff member");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -340,11 +345,22 @@ function EnhancedStaffPageContent() {
         description: "New staff member has been added successfully.",
       });
     },
+    onError: (error: any) => {
+      toast({
+        title: "Error Creating Staff",
+        description: error.message || "Failed to create staff member. Please check your data and try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const updateStaffMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: any }) => {
       const response = await apiRequest("PATCH", `/api/staff/${id}`, data);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update staff profile");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -355,13 +371,34 @@ function EnhancedStaffPageContent() {
         description: "Staff profile has been updated successfully.",
       });
     },
+    onError: (error: any) => {
+      toast({
+        title: "Error Updating Profile",
+        description: error.message || "Failed to update profile. Please check your connection and try again.",
+        variant: "destructive",
+      });
+    },
   });
 
   const uploadProfileImageMutation = useMutation({
     mutationFn: async ({ id, file }: { id: number; file: File }) => {
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        throw new Error("File size must be less than 5MB");
+      }
+      
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        throw new Error("Please upload a valid image file");
+      }
+      
       const formData = new FormData();
       formData.append("profileImage", file);
       const response = await apiRequest("POST", `/api/staff/${id}/profile-image`, formData);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to upload image");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -369,6 +406,13 @@ function EnhancedStaffPageContent() {
       toast({
         title: "Profile Image Updated",
         description: "Profile image has been uploaded successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error Uploading Image",
+        description: error.message || "Failed to upload image. Please try again with a smaller file.",
+        variant: "destructive",
       });
     },
   });
@@ -567,17 +611,33 @@ function EnhancedStaffPageContent() {
                     </Select>
                   </div>
                 )}
-                <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setShowAddStaffDialog(false)}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={createStaffMutation.isPending}>
-                    Add Staff Member
-                  </Button>
+                <div className="space-y-2">
+                  {createStaffMutation.isError && (
+                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md text-sm">
+                      <p className="font-medium">Failed to add staff member</p>
+                      <p className="text-xs mt-1">Please check all fields and try again.</p>
+                    </div>
+                  )}
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setShowAddStaffDialog(false)}
+                      disabled={createStaffMutation.isPending}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={createStaffMutation.isPending}>
+                      {createStaffMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Adding Staff...
+                        </>
+                      ) : (
+                        "Add Staff Member"
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </form>
             </DialogContent>
@@ -1091,9 +1151,23 @@ function EnhancedStaffPageContent() {
                         />
                       </div>
                     </div>
-                    <Button type="submit" disabled={updateStaffMutation.isPending}>
-                      Update Profile
-                    </Button>
+                    <div className="flex items-center gap-4">
+                      <Button type="submit" disabled={updateStaffMutation.isPending}>
+                        {updateStaffMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Updating Profile...
+                          </>
+                        ) : (
+                          "Update Profile"
+                        )}
+                      </Button>
+                      {updateStaffMutation.isError && (
+                        <p className="text-sm text-red-500">
+                          Failed to update profile. Please try again.
+                        </p>
+                      )}
+                    </div>
                   </form>
                 ) : (
                   <div className="space-y-6">

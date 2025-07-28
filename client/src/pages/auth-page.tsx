@@ -13,10 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlertCircle, CheckCircle, Users, Calendar, Shield, BarChart } from "lucide-react";
+import { AlertCircle, CheckCircle, Users, Calendar, Shield, BarChart, Loader2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Logo } from "@/components/ui/logo";
 import { UserRole } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -29,8 +30,10 @@ import {
 export default function AuthPage() {
   const { user, loginMutation, registerMutation, forgotPasswordMutation } = useAuth();
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   const [loginData, setLoginData] = useState({ username: "", password: "" });
   const [forgotPasswordUsername, setForgotPasswordUsername] = useState("");
+  const [forgotPasswordDialogOpen, setForgotPasswordDialogOpen] = useState(false);
   const [registerData, setRegisterData] = useState({
     username: "",
     email: "",
@@ -48,18 +51,93 @@ export default function AuthPage() {
     }
   }, [user, setLocation]);
 
+  // Handle mutation success/error states
+  useEffect(() => {
+    if (forgotPasswordMutation.isSuccess) {
+      toast({
+        title: "Password Reset Successful",
+        description: "A temporary password has been sent to your email address.",
+      });
+      setForgotPasswordDialogOpen(false);
+      setForgotPasswordUsername("");
+    }
+  }, [forgotPasswordMutation.isSuccess, toast]);
+
+  useEffect(() => {
+    if (registerMutation.isSuccess) {
+      toast({
+        title: "Registration Successful",
+        description: "Your account has been created. Please sign in.",
+      });
+    }
+  }, [registerMutation.isSuccess, toast]);
+
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!loginData.username || !loginData.password) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both username and password.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     loginMutation.mutate(loginData);
   };
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Basic validation
+    if (!registerData.username || !registerData.email || !registerData.password || 
+        !registerData.firstName || !registerData.lastName) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(registerData.email)) {
+      toast({
+        title: "Invalid Email",
+        description: "Please enter a valid email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    // Password strength check
+    if (registerData.password.length < 6) {
+      toast({
+        title: "Weak Password",
+        description: "Password must be at least 6 characters long.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     registerMutation.mutate(registerData);
   };
 
   const handleForgotPassword = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!forgotPasswordUsername) {
+      toast({
+        title: "Missing Username",
+        description: "Please enter your username.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     forgotPasswordMutation.mutate({ username: forgotPasswordUsername });
   };
 
@@ -128,11 +206,18 @@ export default function AuthPage() {
                     )}
 
                     <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
-                      {loginMutation.isPending ? "Signing In..." : "Sign In"}
+                      {loginMutation.isPending ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Signing In...
+                        </>
+                      ) : (
+                        "Sign In"
+                      )}
                     </Button>
 
                     <div className="text-center">
-                      <Dialog>
+                      <Dialog open={forgotPasswordDialogOpen} onOpenChange={setForgotPasswordDialogOpen}>
                         <DialogTrigger asChild>
                           <Button
                             variant="link"
@@ -156,15 +241,33 @@ export default function AuthPage() {
                                 type="text"
                                 value={forgotPasswordUsername}
                                 onChange={(e) => setForgotPasswordUsername(e.target.value)}
-                                required
+                                placeholder="Enter your username"
+                                disabled={forgotPasswordMutation.isPending}
                               />
                             </div>
+                            
+                            {forgotPasswordMutation.error && (
+                              <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertDescription>
+                                  {forgotPasswordMutation.error.message || "Failed to reset password. Please try again."}
+                                </AlertDescription>
+                              </Alert>
+                            )}
+                            
                             <Button
                               type="submit"
                               className="w-full"
                               disabled={forgotPasswordMutation.isPending}
                             >
-                              {forgotPasswordMutation.isPending ? "Resetting..." : "Reset Password"}
+                              {forgotPasswordMutation.isPending ? (
+                                <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Sending Reset Instructions...
+                                </>
+                              ) : (
+                                "Reset Password"
+                              )}
                             </Button>
                           </form>
                         </DialogContent>

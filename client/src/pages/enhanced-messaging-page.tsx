@@ -33,14 +33,17 @@ import {
   CheckCircle, 
   Clock,
   User,
-  Mail
+  Mail,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 export default function EnhancedMessagingPage() {
   const { user } = useAuth();
   const { getMessagesForUser, getUnreadCount, sendMessage, markAsRead } = useMessaging();
   const { staff } = useStaff();
+  const { toast } = useToast();
   const facilityStaff = staff.filter(staffMember => 
     staffMember.id !== user?.id && staffMember.compliant
   );
@@ -117,6 +120,7 @@ export default function EnhancedMessagingPage() {
   const [showAllHistory, setShowAllHistory] = useState(false);
   const [chatView, setChatView] = useState(false);
   const [chatParticipant, setChatParticipant] = useState<any>(null);
+  const [isSending, setIsSending] = useState(false);
 
   const userMessages = user ? getMessagesForUser(user.id) : [];
   const unreadCount = user ? getUnreadCount(user.id) : 0;
@@ -131,57 +135,110 @@ export default function EnhancedMessagingPage() {
   
   const sentMessages = userMessages.filter(msg => msg.senderId === user?.id);
 
-  const handleSendMessage = () => {
-    if (!user || !subject.trim() || !content.trim()) return;
-
-    if (isNexSpaceMessage) {
-      sendMessage({
-        senderId: user.id,
-        senderName: `${user.firstName} ${user.lastName}`,
-        recipientId: 999, // NexSpace Team superuser
-        recipientName: "NexSpace Team",
-        subject: subject.trim(),
-        content: content.trim(),
-        priority: priority as any,
-        category: category as any
+  const handleSendMessage = async () => {
+    if (!user) {
+      toast({
+        title: "Not authenticated",
+        description: "Please log in to send messages.",
+        variant: "destructive",
       });
-    } else if (isMassMessage && selectedRecipients.length > 0) {
-      // Send mass message to multiple recipients
-      selectedRecipients.forEach(recipient => {
+      return;
+    }
+
+    if (!subject.trim() || !content.trim()) {
+      toast({
+        title: "Missing information",
+        description: "Please enter both subject and message content.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!isNexSpaceMessage && !selectedRecipient && selectedRecipients.length === 0) {
+      toast({
+        title: "No recipient selected",
+        description: "Please select at least one recipient.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSending(true);
+
+    try {
+      if (isNexSpaceMessage) {
         sendMessage({
           senderId: user.id,
-          senderName: (user.id === 3 || user.role === 'super_admin' || user.role === 'facility_manager') ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
-          recipientId: recipient.id,
-          recipientName: `${recipient.firstName} ${recipient.lastName}`,
+          senderName: `${user.firstName} ${user.lastName}`,
+          recipientId: 999, // NexSpace Team superuser
+          recipientName: "NexSpace Team",
           subject: subject.trim(),
           content: content.trim(),
           priority: priority as any,
           category: category as any
         });
-      });
-    } else if (selectedRecipient) {
-      sendMessage({
-        senderId: user.id,
-        senderName: (user.id === 3 || user.role === 'super_admin' || user.role === 'facility_manager') ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
-        recipientId: selectedRecipient.id,
-        recipientName: `${selectedRecipient.firstName} ${selectedRecipient.lastName}`,
-        subject: subject.trim(),
-        content: content.trim(),
-        priority: priority as any,
-        category: category as any
-      });
-    }
+        
+        toast({
+          title: "Message sent",
+          description: "Your message has been sent to the NexSpace Team.",
+        });
+      } else if (isMassMessage && selectedRecipients.length > 0) {
+        // Send mass message to multiple recipients
+        selectedRecipients.forEach(recipient => {
+          sendMessage({
+            senderId: user.id,
+            senderName: (user.id === 3 || user.role === 'super_admin' || user.role === 'facility_manager') ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
+            recipientId: recipient.id,
+            recipientName: `${recipient.firstName} ${recipient.lastName}`,
+            subject: subject.trim(),
+            content: content.trim(),
+            priority: priority as any,
+            category: category as any
+          });
+        });
+        
+        toast({
+          title: "Mass message sent",
+          description: `Message sent to ${selectedRecipients.length} recipient${selectedRecipients.length > 1 ? 's' : ''}.`,
+        });
+      } else if (selectedRecipient) {
+        sendMessage({
+          senderId: user.id,
+          senderName: (user.id === 3 || user.role === 'super_admin' || user.role === 'facility_manager') ? 'NexSpace Team' : `${user.firstName} ${user.lastName}`,
+          recipientId: selectedRecipient.id,
+          recipientName: `${selectedRecipient.firstName} ${selectedRecipient.lastName}`,
+          subject: subject.trim(),
+          content: content.trim(),
+          priority: priority as any,
+          category: category as any
+        });
+        
+        toast({
+          title: "Message sent",
+          description: `Message sent to ${selectedRecipient.firstName} ${selectedRecipient.lastName}.`,
+        });
+      }
 
-    // Reset form
-    setSubject("");
-    setContent("");
-    setPriority("normal");
-    setCategory("general");
-    setSelectedRecipient(null);
-    setSelectedRecipients([]);
-    setIsNexSpaceMessage(false);
-    setIsMassMessage(false);
-    setIsComposeOpen(false);
+      // Reset form
+      setSubject("");
+      setContent("");
+      setPriority("normal");
+      setCategory("general");
+      setSelectedRecipient(null);
+      setSelectedRecipients([]);
+      setIsNexSpaceMessage(false);
+      setIsMassMessage(false);
+      setIsComposeOpen(false);
+    } catch (error) {
+      console.error("Error sending message:", error);
+      toast({
+        title: "Failed to send message",
+        description: "Please try again. If the problem persists, contact support.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleNexSpaceMessage = () => {
@@ -520,10 +577,19 @@ export default function EnhancedMessagingPage() {
                 <Button 
                   onClick={handleSendMessage} 
                   className="flex-1"
-                  disabled={!subject.trim() || !content.trim() || (!isNexSpaceMessage && !isMassMessage && !selectedRecipient) || (isMassMessage && selectedRecipients.length === 0)}
+                  disabled={isSending || !subject.trim() || !content.trim() || (!isNexSpaceMessage && !isMassMessage && !selectedRecipient) || (isMassMessage && selectedRecipients.length === 0)}
                 >
-                  <Send className="w-4 h-4 mr-2" />
-                  Send Message
+                  {isSending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Send Message
+                    </>
+                  )}
                 </Button>
                 <Button variant="outline" onClick={() => setIsComposeOpen(false)} className="flex-1">
                   Cancel

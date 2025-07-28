@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, MapPin, Clock, DollarSign, Plus, Briefcase } from "lucide-react";
+import { Search, MapPin, Clock, DollarSign, Plus, Briefcase, Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertJobSchema, insertJobApplicationSchema, type Job, UserRole } from "@shared/schema";
@@ -62,6 +62,10 @@ export default function JobBoard() {
   const applyMutation = useMutation({
     mutationFn: async ({ jobId, data }: { jobId: number; data: any }) => {
       const res = await apiRequest("POST", `/api/jobs/${jobId}/apply`, data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Failed to submit application');
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -70,6 +74,15 @@ export default function JobBoard() {
         description: "Your job application has been submitted successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+      applicationForm.reset();
+    },
+    onError: (error: any) => {
+      console.error('Job application error:', error);
+      toast({
+        title: "Application Failed",
+        description: error.message || "Failed to submit your application. Please try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -77,6 +90,10 @@ export default function JobBoard() {
   const createJobMutation = useMutation({
     mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/jobs", data);
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || 'Failed to create job posting');
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -85,6 +102,15 @@ export default function JobBoard() {
         description: "Your job posting has been created successfully.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/jobs"] });
+      jobForm.reset();
+    },
+    onError: (error: any) => {
+      console.error('Job creation error:', error);
+      toast({
+        title: "Job Creation Failed",
+        description: error.message || "Failed to create job posting. Please check your data and try again.",
+        variant: "destructive",
+      });
     },
   });
 
@@ -297,7 +323,14 @@ export default function JobBoard() {
                           Cancel
                         </Button>
                         <Button type="submit" disabled={createJobMutation.isPending}>
-                          {createJobMutation.isPending ? "Posting..." : "Post Job"}
+                          {createJobMutation.isPending ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              Posting...
+                            </>
+                          ) : (
+                            "Post Job"
+                          )}
                         </Button>
                       </div>
                     </form>
@@ -489,9 +522,14 @@ export default function JobBoard() {
                                         Cancel
                                       </Button>
                                       <Button type="submit" disabled={applyMutation.isPending}>
-                                        {applyMutation.isPending
-                                          ? "Submitting..."
-                                          : "Submit Application"}
+                                        {applyMutation.isPending ? (
+                                          <>
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                            Submitting...
+                                          </>
+                                        ) : (
+                                          "Submit Application"
+                                        )}
                                       </Button>
                                     </div>
                                   </form>

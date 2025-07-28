@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { Building2, MapPin, Phone, Mail, Clock, Edit, Save, X, Users, Shield, Settings } from 'lucide-react';
+import { Building2, MapPin, Phone, Mail, Clock, Edit, Save, X, Users, Shield, Settings, Loader2 } from 'lucide-react';
 import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
 import { PermissionGuard } from '@/components/PermissionGuard';
 import { useToast } from '@/hooks/use-toast';
@@ -143,7 +143,12 @@ export default function FacilityProfilePage() {
 
   const updateFacility = useMutation({
     mutationFn: async (data: Partial<Facility>) => {
-      return apiRequest('PATCH', `/api/facilities/${facilityId}`, data);
+      const response = await apiRequest('PATCH', `/api/facilities/${facilityId}`, data);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update facility profile');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/facilities', facilityId] });
@@ -153,10 +158,11 @@ export default function FacilityProfilePage() {
         description: "Facility profile updated successfully",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Facility update error:', error);
       toast({
         title: "Error",
-        description: "Failed to update facility profile",
+        description: error.message || "Failed to update facility profile. Please check your data and try again.",
         variant: "destructive",
       });
     },
@@ -260,8 +266,17 @@ export default function FacilityProfilePage() {
           ) : (
             <div className="flex gap-2">
               <Button onClick={handleSave} disabled={updateFacility.isPending} className="min-h-[44px] touch-manipulation">
-                <Save className="h-4 w-4 mr-1 md:mr-2" />
-                Save
+                {updateFacility.isPending ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1 md:mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-1 md:mr-2" />
+                    Save
+                  </>
+                )}
               </Button>
               <Button variant="outline" onClick={handleCancel} className="min-h-[44px] touch-manipulation">
                 <X className="h-4 w-4 mr-1 md:mr-2" />

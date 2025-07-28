@@ -15,7 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Clock, DollarSign, Calendar, Edit, FileSignature } from "lucide-react";
+import { Clock, DollarSign, Calendar, Edit, FileSignature, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 function formatDuration(ms: number) {
   const h = Math.floor(ms / 3600000);
@@ -27,9 +28,11 @@ function formatDuration(ms: number) {
 export default function TimeClockPage() {
   const { currentIn, logs, clockIn, clockOut } = useTimeClocks();
   const { user: currentUser } = useAuth();
+  const { toast } = useToast();
   const [elapsed, setElapsed] = useState(0);
   const [isClockingOut, setIsClockingOut] = useState(false);
   const [showClockOutDialog, setShowClockOutDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [clockOutData, setClockOutData] = useState({
     clockInTime: '',
     clockOutTime: '',
@@ -72,24 +75,56 @@ export default function TimeClockPage() {
     setShowClockOutDialog(true);
   };
 
-  const handleSubmitClockOut = () => {
-    if (!clockOutData.clockInTime || !clockOutData.clockOutTime) return;
+  const handleSubmitClockOut = async () => {
+    if (!clockOutData.clockInTime || !clockOutData.clockOutTime) {
+      toast({
+        title: "Missing Information",
+        description: "Please set both clock in and clock out times.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     const validation = validateTimeAdjustments();
-    if (!validation.valid) return;
+    if (!validation.valid) {
+      toast({
+        title: "Invalid Time",
+        description: validation.message,
+        variant: "destructive",
+      });
+      return;
+    }
     
-    // Submit the work log with all the enhanced data
-    clockOut({
-      clockInTime: clockOutData.clockInTime,
-      clockOutTime: clockOutData.clockOutTime,
-      breakDuration: clockOutData.breakDuration,
-      notes: clockOutData.notes,
-      supervisorName: clockOutData.supervisorName,
-      supervisorSignature: clockOutData.supervisorSignature
-    });
+    setIsSubmitting(true);
     
-    setShowClockOutDialog(false);
-    setIsClockingOut(false);
+    try {
+      // Submit the work log with all the enhanced data
+      await clockOut({
+        clockInTime: clockOutData.clockInTime,
+        clockOutTime: clockOutData.clockOutTime,
+        breakDuration: clockOutData.breakDuration,
+        notes: clockOutData.notes,
+        supervisorName: clockOutData.supervisorName,
+        supervisorSignature: clockOutData.supervisorSignature
+      });
+      
+      toast({
+        title: "Clock Out Successful",
+        description: "Your time has been recorded successfully.",
+      });
+      
+      setShowClockOutDialog(false);
+      setIsClockingOut(false);
+    } catch (error) {
+      console.error("Error clocking out:", error);
+      toast({
+        title: "Clock Out Failed",
+        description: "Failed to record your time. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancelClockOut = () => {
@@ -452,14 +487,22 @@ export default function TimeClockPage() {
               <Button 
                 onClick={handleSubmitClockOut}
                 className="flex-1 bg-green-600 hover:bg-green-700 text-sm"
-                disabled={!timeValidation.valid}
+                disabled={!timeValidation.valid || isSubmitting}
               >
-                Submit Timesheet
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Submit Timesheet"
+                )}
               </Button>
               <Button 
                 variant="outline" 
                 onClick={handleCancelClockOut}
                 className="flex-1 text-sm"
+                disabled={isSubmitting}
               >
                 Cancel
               </Button>
