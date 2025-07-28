@@ -4,7 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useFacilities, useFacility, getFacilityDisplayName, getFacilityTimezone } from "@/hooks/use-facility";
-import { useRBAC, PermissionAction, PermissionGate } from "@/hooks/use-rbac";
+import { useRBAC, PermissionAction, PermissionGate, useRBACContext } from "@/hooks/use-rbac";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -154,6 +154,7 @@ const getStatusIconSVG = (status: string) => {
 
 export default function EnhancedCalendarPage() {
   const { user, impersonatedUser } = useAuth();
+  const { hasPermission } = useRBACContext();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -622,6 +623,68 @@ export default function EnhancedCalendarPage() {
     }));
   };
 
+  // Handle event drop (drag & drop to reschedule)
+  const handleEventDrop = async (info: any) => {
+    const shift = info.event.extendedProps.shift;
+    const newDate = format(info.event.start, 'yyyy-MM-dd');
+    const newStartTime = format(info.event.start, 'HH:mm');
+    const newEndTime = format(info.event.end, 'HH:mm');
+
+    try {
+      await apiRequest(`/api/shifts/${shift.id}`, 'PATCH', {
+        date: newDate,
+        startTime: newStartTime,
+        endTime: newEndTime
+      });
+
+      toast({
+        title: "Shift Rescheduled",
+        description: `Shift moved to ${format(info.event.start, 'MMM dd, yyyy')} at ${newStartTime}`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+    } catch (error) {
+      // Revert the event if the update fails
+      info.revert();
+      toast({
+        title: "Failed to reschedule",
+        description: "Please try again or check your permissions.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Handle event resize
+  const handleEventResize = async (info: any) => {
+    const shift = info.event.extendedProps.shift;
+    const newStartTime = format(info.event.start, 'HH:mm');
+    const newEndTime = format(info.event.end, 'HH:mm');
+
+    try {
+      await apiRequest(`/api/shifts/${shift.id}`, 'PATCH', {
+        startTime: newStartTime,
+        endTime: newEndTime
+      });
+
+      toast({
+        title: "Shift Duration Updated",
+        description: `Shift now runs from ${newStartTime} to ${newEndTime}`,
+      });
+
+      queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+    } catch (error) {
+      // Revert the resize if the update fails
+      info.revert();
+      toast({
+        title: "Failed to update shift duration",
+        description: "Please try again or check your permissions.",
+        variant: "destructive"
+      });
+    }
+  };
+
+
+
   const clearFilters = () => {
     setFilters({
       facilities: [],
@@ -996,22 +1059,25 @@ export default function EnhancedCalendarPage() {
                 moreLinkClick: 'popover',
                 moreLinkContent: (args) => {
                   const hiddenEventCount = args.num;
-                  return `Show ${hiddenEventCount} more`;
-                }
+                  return `+${hiddenEventCount}`;
+                },
+                eventMaxStack: 3
               },
               timeGridWeek: {
                 slotMinTime: '05:00:00',
                 slotMaxTime: '23:00:00',
                 slotDuration: '01:00:00',
                 slotLabelInterval: '02:00:00',
-                allDaySlot: false
+                allDaySlot: false,
+                expandRows: true
               },
               timeGridDay: {
                 slotMinTime: '05:00:00',
                 slotMaxTime: '23:00:00',
                 slotDuration: '01:00:00',
                 slotLabelInterval: '01:00:00',
-                allDaySlot: false
+                allDaySlot: false,
+                expandRows: true
               }
             }}
             events={calendarEvents}
@@ -1020,9 +1086,50 @@ export default function EnhancedCalendarPage() {
             }}
             eventClick={handleEventClick}
             height="auto"
+            aspectRatio={1.8}
             dayMaxEvents={6}
             moreLinkClick="popover"
             eventDisplay="block"
+            editable={hasPermission("shifts.edit")}
+            droppable={hasPermission("shifts.edit")}
+            eventDragStart={(info) => {
+              // Visual feedback when dragging starts
+              info.el.style.opacity = '0.7';
+            }}
+            eventDragStop={(info) => {
+              // Reset visual feedback
+              info.el.style.opacity = '1';
+            }}
+            eventDrop={handleEventDrop}
+            eventResize={handleEventResize}
+            eventResizableFromStart={true}
+            dragRevertDuration={200}
+            snapDuration='00:30:00'
+            eventOverlap={false}
+            selectMirror={true}
+            stickyHeaderDates={true}
+            expandRows={true}
+            dayHeaderClassNames="text-xs md:text-sm font-medium"
+            slotLabelClassNames="text-xs md:text-sm"
+            eventClassNames={(arg) => {
+              const baseClasses = "cursor-pointer transition-transform hover:scale-[1.02] shadow-sm hover:shadow-md";
+              const mobileClasses = "text-[10px] md:text-xs";
+              return `${baseClasses} ${mobileClasses}`;
+            }}
+            windowResize={() => {
+              // Adjust calendar view based on window size
+              const width = window.innerWidth;
+              if (width < 768 && viewMode === "timeGridWeek") {
+                calendarRef.current?.getApi().changeView("timeGridDay");
+              }
+            }}
+            datesSet={(dateInfo) => {
+              // Ensure proper view on mobile
+              const width = window.innerWidth;
+              if (width < 768 && dateInfo.view.type === "timeGridWeek") {
+                calendarRef.current?.getApi().changeView("timeGridDay");
+              }
+            }}
             displayEventTime={true}
             eventTimeFormat={{
               hour: 'numeric',
