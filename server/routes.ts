@@ -11854,12 +11854,50 @@ export function registerRoutes(app: Express): Server {
     try {
       const requestId = parseInt(req.params.id);
       const user = req.user;
+      const { shiftId, workerId } = req.body;
       
       // Check permissions
       if (user.role !== 'super_admin' && user.role !== 'admin' && 
           user.role !== 'facility_manager' && !hasPermission(user, 'approve_shift_requests')) {
         return res.status(403).json({ message: "Not authorized to approve shift requests" });
       }
+      
+      // Get shift details from database
+      const shift = await storage.getShift(shiftId);
+      if (!shift) {
+        return res.status(404).json({ message: "Shift not found" });
+      }
+      
+      // Check for scheduling conflicts
+      const conflictCheck = await storage.checkShiftConflicts(
+        [workerId],
+        shift.date,
+        shift.startTime,
+        shift.endTime,
+        shiftId
+      );
+      
+      if (conflictCheck.hasConflicts) {
+        const conflict = conflictCheck.conflicts[0];
+        return res.status(409).json({
+          success: false,
+          message: "Cannot approve shift request due to scheduling conflict",
+          conflict: {
+            staffName: conflict.staffName,
+            conflictingShift: {
+              title: conflict.conflictingShift.title,
+              time: `${conflict.conflictingShift.startTime} - ${conflict.conflictingShift.endTime}`,
+              facility: conflict.conflictingShift.facilityName
+            }
+          }
+        });
+      }
+      
+      // If no conflicts, assign the worker to the shift
+      const currentAssigned = shift.assignedStaffIds || [];
+      const updatedAssigned = [...currentAssigned, workerId];
+      
+      await storage.assignStaffToShift(shiftId, updatedAssigned);
       
       console.log(`[SHIFT REQUEST] Request ${requestId} approved by ${user.id}`);
       
@@ -11871,10 +11909,11 @@ export function registerRoutes(app: Express): Server {
           message: 'Your shift request has been approved! You have been assigned to the shift.',
           link: '/my-schedule',
           isRead: false,
-          userId: 45, // In production, this would be the actual requester's ID
+          userId: workerId,
           metadata: {
             requestId: requestId,
-            approvedBy: user.id
+            approvedBy: user.id,
+            shiftId: shiftId
           }
         });
       } catch (notificationError) {
@@ -11884,8 +11923,8 @@ export function registerRoutes(app: Express): Server {
       res.json({
         success: true,
         message: "Shift request approved and worker assigned",
-        shiftId: 1,
-        assignedWorkerId: 45
+        shiftId: shiftId,
+        assignedWorkerId: workerId
       });
     } catch (error) {
       console.error('Error approving request:', error);

@@ -13,6 +13,23 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 28, 2025 - Shift Conflict Detection Implementation
+- **Frontend Conflict Detection**: Added real-time shift conflict detection when employees request shifts
+  - Checks for overlapping shifts on the same date and time when Request Shift button is clicked
+  - Displays clear warning messages listing all conflicting shifts with times and facilities
+  - Disables the Confirm Request button when conflicts exist to prevent double-booking
+  - Shows "Cannot Request (Conflict)" text on disabled button for clarity
+- **User Experience Enhancement**: Improved shift request workflow with conflict prevention
+  - Conflict warnings appear prominently in red with AlertTriangle icon
+  - Each conflicting shift is listed with title, time range, and facility
+  - Clear message explains "You cannot work two shifts at the same time"
+  - Conflicts are automatically cleared when dialog is closed or request succeeds
+- **Technical Implementation**: Frontend validation in enhanced-calendar-page.tsx
+  - Filters user's assigned shifts for same date
+  - Checks time overlaps: requestStart < shiftEnd && requestEnd > shiftStart
+  - Stores conflicts in component state for UI display
+  - Integrates seamlessly with existing shift request mutation
+
 ### July 28, 2025 - Comprehensive Mobile Responsiveness Implementation
 - **Complete Mobile-First Design System**: Implemented comprehensive mobile responsiveness across the entire NexSpace platform with dedicated mobile components and CSS frameworks
   - Created MobileForm.tsx component with touch-friendly form elements, mobile-optimized inputs, and responsive layouts

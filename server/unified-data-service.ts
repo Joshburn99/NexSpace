@@ -19,32 +19,39 @@ export class UnifiedDataService {
    */
   async getStaffWithAssociations() {
     try {
-      const staffData = await db
-        .select({
-          id: staff.id,
-          firstName: staff.firstName,
-          lastName: staff.lastName,
-          email: staff.email,
-          role: staff.employmentType,
-          specialty: staff.specialty,
-          department: staff.department,
-          isActive: staff.isActive,
-          avatar: staff.profilePhoto,
+      const staffData = await db.execute(sql`
+        SELECT 
+          id,
+          name,
+          email,
+          employment_type as role,
+          specialty,
+          department,
+          is_active,
+          profile_photo as avatar,
+          phone,
+          hourly_rate,
+          availability_status,
+          created_at,
+          updated_at
+        FROM staff
+        WHERE is_active = true
+      `);
 
-          phone: staff.phone,
-          hourlyRate: staff.hourlyRate,
-          availabilityStatus: staff.availabilityStatus,
-          createdAt: staff.createdAt,
-          updatedAt: staff.updatedAt,
-        })
-        .from(staff)
-        .where(eq(staff.isActive, true));
-
-      return staffData.map(staffMember => {
+      return staffData.rows.map((staffMember: any) => {
+        const nameParts = (staffMember.name || 'Unknown Staff').split(' ');
+        const firstName = nameParts[0] || 'Unknown';
+        const lastName = nameParts.slice(1).join(' ') || 'Staff';
+        
         return {
           ...staffMember,
-          firstName: staffMember.firstName || 'Unknown',
-          lastName: staffMember.lastName || 'Staff',
+          firstName,
+          lastName,
+          isActive: staffMember.is_active,
+          hourlyRate: staffMember.hourly_rate,
+          availabilityStatus: staffMember.availability_status,
+          createdAt: staffMember.created_at,
+          updatedAt: staffMember.updated_at,
           associatedFacilities: [], // Will be populated from separate table when implemented
         };
       });

@@ -212,6 +212,20 @@ export interface IStorage {
   getTodaysShifts(facilityId: number): Promise<Shift[]>;
   getOpenShifts(facilityId?: number): Promise<Shift[]>;
   assignStaffToShift(shiftId: number, staffIds: number[]): Promise<Shift | undefined>;
+  checkShiftConflicts(staffIds: number[], date: string, startTime: string, endTime: string, excludeShiftId?: number): Promise<{
+    hasConflicts: boolean;
+    conflicts: Array<{
+      staffId: number;
+      staffName: string;
+      conflictingShift: {
+        id: number;
+        title: string;
+        startTime: string;
+        endTime: string;
+        facilityName: string;
+      };
+    }>;
+  }>;
 
   // Invoice methods
   createInvoice(invoice: InsertInvoice): Promise<Invoice>;
@@ -1135,6 +1149,92 @@ export class DatabaseStorage implements IStorage {
       .where(eq(shifts.id, shiftId))
       .returning();
     return shift || undefined;
+  }
+
+  async checkShiftConflicts(staffIds: number[], date: string, startTime: string, endTime: string, excludeShiftId?: number): Promise<{
+    hasConflicts: boolean;
+    conflicts: Array<{
+      staffId: number;
+      staffName: string;
+      conflictingShift: {
+        id: number;
+        title: string;
+        startTime: string;
+        endTime: string;
+        facilityName: string;
+      };
+    }>;
+  }> {
+    const conflicts: Array<{
+      staffId: number;
+      staffName: string;
+      conflictingShift: {
+        id: number;
+        title: string;
+        startTime: string;
+        endTime: string;
+        facilityName: string;
+      };
+    }> = [];
+
+    // Check each staff member for conflicts
+    for (const staffId of staffIds) {
+      // Get all shifts for this staff member on the same date
+      const staffShifts = await db
+        .select({
+          id: shifts.id,
+          title: shifts.title,
+          startTime: shifts.startTime,
+          endTime: shifts.endTime,
+          facilityName: shifts.facilityName,
+          assignedStaffIds: shifts.assignedStaffIds,
+        })
+        .from(shifts)
+        .where(
+          and(
+            eq(shifts.date, date),
+            excludeShiftId ? sql`${shifts.id} != ${excludeShiftId}` : undefined
+          )
+        );
+
+      // Check if this staff member is assigned to any of these shifts
+      for (const shift of staffShifts) {
+        if (shift.assignedStaffIds && shift.assignedStaffIds.includes(staffId)) {
+          // Check for time overlap
+          const shiftStart = shift.startTime;
+          const shiftEnd = shift.endTime;
+
+          // Time overlap detection: Two time periods overlap if:
+          // - New shift starts before existing shift ends AND
+          // - New shift ends after existing shift starts
+          if (startTime < shiftEnd && endTime > shiftStart) {
+            // Get staff member name
+            const staffMember = await db
+              .select({ name: staff.name })
+              .from(staff)
+              .where(eq(staff.id, staffId))
+              .limit(1);
+
+            conflicts.push({
+              staffId,
+              staffName: staffMember[0]?.name || 'Unknown Staff',
+              conflictingShift: {
+                id: shift.id,
+                title: shift.title || 'Untitled Shift',
+                startTime: shift.startTime,
+                endTime: shift.endTime,
+                facilityName: shift.facilityName || 'Unknown Facility',
+              },
+            });
+          }
+        }
+      }
+    }
+
+    return {
+      hasConflicts: conflicts.length > 0,
+      conflicts,
+    };
   }
 
   // Invoice methods

@@ -234,6 +234,7 @@ export default function EnhancedCalendarPage() {
     requiredStaff: '1'
   });
   const [showRequestConfirmDialog, setShowRequestConfirmDialog] = useState(false);
+  const [shiftConflicts, setShiftConflicts] = useState<any[]>([]);
   const [requestNote, setRequestNote] = useState("");
 
   
@@ -475,6 +476,7 @@ export default function EnhancedCalendarPage() {
       });
       setShowRequestConfirmDialog(false);
       setRequestNote("");
+      setShiftConflicts([]);
       setSelectedShift(null);
       queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/shift-requests"] });
@@ -1846,7 +1848,36 @@ export default function EnhancedCalendarPage() {
                     </div>
                     <Button 
                       className="bg-green-600 hover:bg-green-700 text-white"
-                      onClick={() => setShowRequestConfirmDialog(true)}
+                      onClick={async () => {
+                        // Check for conflicts before opening dialog
+                        if (selectedShift && user) {
+                          try {
+                            // Check if user has any shifts on the same date
+                            const userShifts = shifts.filter(s => 
+                              s.assignedStaffId === user.id && 
+                              s.date === selectedShift.date &&
+                              s.id !== selectedShift.id
+                            );
+                            
+                            // Check for time overlaps
+                            const conflicts = userShifts.filter(s => {
+                              const shiftStart = s.startTime;
+                              const shiftEnd = s.endTime;
+                              const requestStart = selectedShift.startTime;
+                              const requestEnd = selectedShift.endTime;
+                              
+                              // Check if times overlap
+                              return requestStart < shiftEnd && requestEnd > shiftStart;
+                            });
+                            
+                            setShiftConflicts(conflicts);
+                          } catch (error) {
+                            console.error('Error checking conflicts:', error);
+                            setShiftConflicts([]);
+                          }
+                        }
+                        setShowRequestConfirmDialog(true);
+                      }}
                     >
                       <CheckCircle className="h-4 w-4 mr-2" />
                       Request Shift
@@ -2153,6 +2184,46 @@ export default function EnhancedCalendarPage() {
           
           {selectedShift && (
             <div className="space-y-4">
+              {/* Conflict Warning */}
+              {shiftConflicts.length > 0 && (
+                <div className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800 mb-4">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-red-900 dark:text-red-100 mb-2">
+                        Scheduling Conflict Detected
+                      </h4>
+                      <p className="text-sm text-red-700 dark:text-red-300 mb-2">
+                        You have overlapping shift{shiftConflicts.length > 1 ? 's' : ''} on this date:
+                      </p>
+                      <div className="space-y-2">
+                        {shiftConflicts.map((conflict) => (
+                          <div key={conflict.id} className="bg-red-100 dark:bg-red-800/20 p-2 rounded text-sm">
+                            <div className="font-medium text-red-900 dark:text-red-100">
+                              {conflict.title}
+                            </div>
+                            <div className="text-red-700 dark:text-red-300 text-xs">
+                              <span className="inline-flex items-center gap-1">
+                                <Clock className="h-3 w-3" />
+                                {conflict.startTime} - {conflict.endTime}
+                              </span>
+                              <span className="mx-2">•</span>
+                              <span className="inline-flex items-center gap-1">
+                                <Building className="h-3 w-3" />
+                                {conflict.facilityName}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="text-xs text-red-600 dark:text-red-400 mt-2 font-medium">
+                        You cannot work two shifts at the same time. Please resolve this conflict before proceeding.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Shift Details Summary */}
               <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
                 <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
@@ -2220,13 +2291,18 @@ export default function EnhancedCalendarPage() {
                       note: requestNote 
                     });
                   }}
-                  disabled={requestShiftMutation.isPending}
+                  disabled={requestShiftMutation.isPending || shiftConflicts.length > 0}
                   className="flex-1"
                 >
                   {requestShiftMutation.isPending ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
                       Submitting...
+                    </>
+                  ) : shiftConflicts.length > 0 ? (
+                    <>
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      Cannot Request (Conflict)
                     </>
                   ) : (
                     <>
@@ -2240,6 +2316,7 @@ export default function EnhancedCalendarPage() {
                   onClick={() => {
                     setShowRequestConfirmDialog(false);
                     setRequestNote("");
+                    setShiftConflicts([]);
                   }}
                   disabled={requestShiftMutation.isPending}
                   className="flex-1"
