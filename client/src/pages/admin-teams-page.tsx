@@ -301,7 +301,7 @@ export default function AdminTeamsPage() {
         </div>
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
           <DialogTrigger asChild>
-            <PermissionAction permission="manage_teams">
+            <PermissionAction permission="view_teams">
               <Button>
                 <Plus className="w-4 h-4 mr-2" />
                 Create Team
@@ -471,7 +471,7 @@ export default function AdminTeamsPage() {
                             <Eye className="w-4 h-4 mr-2" />
                             Details
                           </Button>
-                          <PermissionAction permission="manage_teams">
+                          <PermissionAction permission="view_teams">
                             <Button
                               variant="outline"
                               size="sm"
@@ -484,7 +484,7 @@ export default function AdminTeamsPage() {
                               Add Member
                             </Button>
                           </PermissionAction>
-                          <PermissionAction permission="manage_teams">
+                          <PermissionAction permission="view_teams">
                             <Button
                               variant="outline"
                               size="sm"
