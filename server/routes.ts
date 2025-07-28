@@ -201,7 +201,8 @@ export function registerRoutes(app: Express): Server {
         console.log(`[ROUTES] Super admin - showing all facility data`);
       } else {
         // For facility users, filter by their associated facilities
-        const associatedFacilities = req.user?.associatedFacilities || req.user?.associatedFacilityIds;
+        // Check associatedFacilityIds first (set by impersonation), then associatedFacilities
+        const associatedFacilities = req.user?.associatedFacilityIds || req.user?.associatedFacilities;
         const singleFacility = req.user?.facilityId;
         
         if (associatedFacilities && associatedFacilities.length > 0) {

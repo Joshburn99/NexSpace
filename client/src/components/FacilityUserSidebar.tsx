@@ -381,7 +381,7 @@ export function FacilityUserSidebar({ expanded = true, onToggle }: FacilityUserS
         {/* Header with toggle */}
         <div className={cn("flex items-center mb-8", expanded ? "space-x-2" : "justify-center")}>
           <img 
-            src="/assets/ChatGPT%20Image%20Jun%2017,%202025,%2001_56_58%20PM_1753685377411.png" 
+            src="/nexspace-logo.png" 
             alt="NexSpace" 
             className={cn("object-contain", expanded ? "h-10 w-auto" : "h-8 w-8")}
           />

@@ -305,7 +305,7 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
         <img 
-          src="/assets/ChatGPT%20Image%20Jun%2017,%202025,%2001_56_58%20PM_1753685377411.png" 
+          src="/nexspace-logo.png" 
           alt="NexSpace" 
           className={cn("object-contain", expanded ? "h-10 w-auto" : "h-8 w-8")}
         />
