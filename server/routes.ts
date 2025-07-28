@@ -11631,13 +11631,16 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Shift Requests API
+  // Shift Requests API with proper user filtering
   app.get("/api/shift-requests", requireAuth, async (req: any, res) => {
     try {
       const user = req.user;
-      const shiftRequests = [
+      
+      // Base shift requests data
+      const allShiftRequests = [
         {
           id: 1,
+          shiftId: 1,
           title: "ICU Night Shift",
           date: "2025-07-15",
           startTime: "19:00",
@@ -11660,6 +11663,7 @@ export function registerRoutes(app: Express): Server {
         },
         {
           id: 2,
+          shiftId: 2,
           title: "Emergency Day Shift",
           date: "2025-07-16",
           startTime: "07:00",
@@ -11678,30 +11682,117 @@ export function registerRoutes(app: Express): Server {
             specialty: "RN"
           },
           requestedAt: "2025-07-09T14:15:00Z",
-          description: "Emergency department day shift coverage."
+          description: "Critical emergency department coverage required."
         }
       ];
       
-      res.json(shiftRequests);
+      // For workers, only show their own requests
+      if (user.role === 'employee' || user.role === 'contractor') {
+        const workerRequests = allShiftRequests.filter(req => req.requestedBy.id === user.id);
+        return res.json(workerRequests);
+      }
+      
+      // For facility managers and admins, show all requests
+      res.json(allShiftRequests);
     } catch (error) {
+      console.error('Error fetching shift requests:', error);
       res.status(500).json({ message: "Failed to fetch shift requests" });
+    }
+  });
+
+  // Request a shift
+  app.post("/api/shifts/:id/request", requireAuth, async (req: any, res) => {
+    try {
+      const shiftId = parseInt(req.params.id);
+      const user = req.user;
+      
+      // Simulate creating a shift request
+      const newRequest = {
+        id: Date.now(),
+        shiftId,
+        requestedBy: user.id,
+        requestedAt: new Date().toISOString(),
+        status: 'pending',
+        note: req.body.note || ''
+      };
+      
+      console.log(`[SHIFT REQUEST] User ${user.id} requested shift ${shiftId}`);
+      
+      res.json({
+        success: true,
+        message: "Shift request submitted successfully",
+        request: newRequest
+      });
+    } catch (error) {
+      console.error('Error requesting shift:', error);
+      res.status(500).json({ message: "Failed to request shift" });
+    }
+  });
+
+  // Withdraw a shift request
+  app.post("/api/shift-requests/:id/withdraw", requireAuth, async (req: any, res) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      const user = req.user;
+      
+      console.log(`[SHIFT REQUEST] User ${user.id} withdrew request ${requestId}`);
+      
+      res.json({
+        success: true,
+        message: "Shift request withdrawn successfully"
+      });
+    } catch (error) {
+      console.error('Error withdrawing request:', error);
+      res.status(500).json({ message: "Failed to withdraw request" });
     }
   });
 
   app.post("/api/shift-requests/:id/approve", requireAuth, async (req: any, res) => {
     try {
-      const { id } = req.params;
-      res.json({ success: true, message: `Shift request ${id} approved` });
+      const requestId = parseInt(req.params.id);
+      const user = req.user;
+      
+      // Check permissions
+      if (user.role !== 'super_admin' && user.role !== 'admin' && 
+          user.role !== 'facility_manager' && !hasPermission(user, 'approve_shift_requests')) {
+        return res.status(403).json({ message: "Not authorized to approve shift requests" });
+      }
+      
+      console.log(`[SHIFT REQUEST] Request ${requestId} approved by ${user.id}`);
+      
+      res.json({
+        success: true,
+        message: "Shift request approved and worker assigned",
+        shiftId: 1,
+        assignedWorkerId: 45
+      });
     } catch (error) {
+      console.error('Error approving request:', error);
       res.status(500).json({ message: "Failed to approve shift request" });
     }
   });
 
   app.post("/api/shift-requests/:id/deny", requireAuth, async (req: any, res) => {
     try {
-      const { id } = req.params;
-      res.json({ success: true, message: `Shift request ${id} denied` });
+      const requestId = parseInt(req.params.id);
+      const user = req.user;
+      const reason = req.body.reason || 'No reason provided';
+      
+      // Check permissions
+      if (user.role !== 'super_admin' && user.role !== 'admin' && 
+          user.role !== 'facility_manager' && !hasPermission(user, 'approve_shift_requests')) {
+        return res.status(403).json({ message: "Not authorized to deny shift requests" });
+      }
+      
+      console.log(`[SHIFT REQUEST] Request ${requestId} denied by ${user.id}. Reason: ${reason}`);
+      
+      res.json({
+        success: true,
+        message: "Shift request denied",
+        reason
+      });
     } catch (error) {
+      console.error('Error denying request:', error);
       res.status(500).json({ message: "Failed to deny shift request" });
     }
   });

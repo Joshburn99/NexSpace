@@ -209,6 +209,8 @@ export default function EnhancedCalendarPage() {
     description: '',
     requiredStaff: '1'
   });
+  const [showRequestConfirmDialog, setShowRequestConfirmDialog] = useState(false);
+  const [requestNote, setRequestNote] = useState("");
 
   
   // Advanced filters state with facility user filtering
@@ -427,6 +429,36 @@ export default function EnhancedCalendarPage() {
       toast({
         title: "Unassignment Failed",
         description: error.message || "Failed to remove worker from shift.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Request shift mutation for employees/contractors
+  const requestShiftMutation = useMutation({
+    mutationFn: async ({ shiftId, note }: { shiftId: number; note: string }) => {
+      const response = await apiRequest('POST', `/api/shifts/${shiftId}/request`, { note });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to request shift');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Shift Request Submitted",
+        description: "Your request has been sent to the facility manager for review.",
+      });
+      setShowRequestConfirmDialog(false);
+      setRequestNote("");
+      setSelectedShift(null);
+      queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/shift-requests"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Request Failed",
+        description: error.message || "Failed to submit shift request. Please try again.",
         variant: "destructive"
       });
     }
@@ -1436,7 +1468,10 @@ export default function EnhancedCalendarPage() {
                         Submit a request to work this shift. Your request will be reviewed by the facility manager.
                       </p>
                     </div>
-                    <Button className="bg-green-600 hover:bg-green-700 text-white">
+                    <Button 
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                      onClick={() => setShowRequestConfirmDialog(true)}
+                    >
                       <CheckCircle className="h-4 w-4 mr-2" />
                       Request Shift
                     </Button>
@@ -1727,6 +1762,117 @@ export default function EnhancedCalendarPage() {
               )}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Shift Request Confirmation Dialog */}
+      <Dialog open={showRequestConfirmDialog} onOpenChange={setShowRequestConfirmDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Shift Request</DialogTitle>
+            <DialogDescription>
+              You're about to request this shift. The facility manager will review your request.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedShift && (
+            <div className="space-y-4">
+              {/* Shift Details Summary */}
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                  {selectedShift.title}
+                </h3>
+                <div className="grid grid-cols-2 gap-2 text-sm text-blue-700 dark:text-blue-300">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    <span>{selectedShift.date}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span>{selectedShift.startTime} - {selectedShift.endTime}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4" />
+                    <span>{selectedShift.facilityName}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    <span>${selectedShift.rate}/hour</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Note Input */}
+              <div className="space-y-2">
+                <Label htmlFor="request-note">
+                  Add a note (optional)
+                  <span className="text-xs text-gray-500 ml-2">
+                    Let the manager know your availability or any special considerations
+                  </span>
+                </Label>
+                <textarea
+                  id="request-note"
+                  value={requestNote}
+                  onChange={(e) => setRequestNote(e.target.value)}
+                  placeholder="e.g., I have experience with this unit, available for overtime if needed..."
+                  className="w-full p-3 border rounded-lg resize-none h-20 text-sm"
+                />
+              </div>
+
+              {/* Tips for New Users */}
+              <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5" />
+                  <div className="text-sm text-amber-700 dark:text-amber-300">
+                    <p className="font-medium mb-1">Tips for Getting Approved:</p>
+                    <ul className="list-disc list-inside space-y-1 text-xs">
+                      <li>Ensure your certifications are up to date</li>
+                      <li>Check that you meet the specialty requirements</li>
+                      <li>Your request will appear in "My Requests" page</li>
+                      <li>You'll receive a notification when approved</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <Button
+                  onClick={() => {
+                    requestShiftMutation.mutate({ 
+                      shiftId: selectedShift.id, 
+                      note: requestNote 
+                    });
+                  }}
+                  disabled={requestShiftMutation.isPending}
+                  className="flex-1"
+                >
+                  {requestShiftMutation.isPending ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Confirm Request
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowRequestConfirmDialog(false);
+                    setRequestNote("");
+                  }}
+                  disabled={requestShiftMutation.isPending}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

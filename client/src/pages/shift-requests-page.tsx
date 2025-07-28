@@ -3,7 +3,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
@@ -46,6 +54,9 @@ interface ShiftRequest {
 export default function ShiftRequestsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('pending');
+  const [confirmApproveId, setConfirmApproveId] = useState<number | null>(null);
+  const [confirmDenyId, setConfirmDenyId] = useState<number | null>(null);
+  const [denyReason, setDenyReason] = useState('');
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -215,11 +226,11 @@ export default function ShiftRequestsPage() {
                         <div className="flex space-x-2">
                           <Button
                             size="sm"
-                            onClick={() => approveRequestMutation.mutate(request.id)}
+                            onClick={() => setConfirmApproveId(request.id)}
                             disabled={approveRequestMutation.isPending || denyRequestMutation.isPending}
                             className="bg-green-600 hover:bg-green-700"
                           >
-                            {approveRequestMutation.isPending ? (
+                            {approveRequestMutation.isPending && confirmApproveId === request.id ? (
                               <>
                                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                                 Approving...
@@ -234,10 +245,10 @@ export default function ShiftRequestsPage() {
                           <Button
                             size="sm"
                             variant="destructive"
-                            onClick={() => denyRequestMutation.mutate(request.id)}
+                            onClick={() => setConfirmDenyId(request.id)}
                             disabled={denyRequestMutation.isPending || approveRequestMutation.isPending}
                           >
-                            {denyRequestMutation.isPending ? (
+                            {denyRequestMutation.isPending && confirmDenyId === request.id ? (
                               <>
                                 <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                                 Denying...
@@ -301,6 +312,170 @@ export default function ShiftRequestsPage() {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Approve Confirmation Dialog */}
+      <Dialog
+        open={confirmApproveId !== null}
+        onOpenChange={(open) => {
+          if (!open) setConfirmApproveId(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Shift Request Approval</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to approve this shift request? This will:
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-3 my-4">
+            <div className="flex items-start gap-2">
+              <Check className="h-4 w-4 text-green-600 mt-0.5" />
+              <p className="text-sm">Assign the worker to this shift</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <Check className="h-4 w-4 text-green-600 mt-0.5" />
+              <p className="text-sm">Update the shift status to filled</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <Check className="h-4 w-4 text-green-600 mt-0.5" />
+              <p className="text-sm">Notify the worker of the approval</p>
+            </div>
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5" />
+              <p className="text-sm text-amber-700 dark:text-amber-300">
+                This action cannot be undone without manually removing the assignment
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              onClick={() => {
+                if (confirmApproveId) {
+                  approveRequestMutation.mutate(confirmApproveId);
+                  setConfirmApproveId(null);
+                }
+              }}
+              disabled={approveRequestMutation.isPending}
+              className="flex-1"
+            >
+              {approveRequestMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Approving...
+                </>
+              ) : (
+                <>
+                  <Check className="h-4 w-4 mr-2" />
+                  Confirm Approval
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmApproveId(null)}
+              disabled={approveRequestMutation.isPending}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Deny Confirmation Dialog */}
+      <Dialog
+        open={confirmDenyId !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmDenyId(null);
+            setDenyReason('');
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Confirm Shift Request Denial</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to deny this shift request? The worker will be notified.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 my-4">
+            <div>
+              <Label htmlFor="deny-reason">
+                Reason for denial (optional)
+                <span className="text-xs text-gray-500 ml-2">
+                  Help the worker understand why their request was denied
+                </span>
+              </Label>
+              <textarea
+                id="deny-reason"
+                value={denyReason}
+                onChange={(e) => setDenyReason(e.target.value)}
+                placeholder="e.g., Shift has been filled, does not meet specialty requirements, etc."
+                className="w-full mt-2 p-3 border rounded-lg resize-none h-20 text-sm"
+              />
+            </div>
+
+            <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5" />
+                <div className="text-sm text-amber-700 dark:text-amber-300">
+                  <p className="font-medium mb-1">This will:</p>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>Mark the request as denied</li>
+                    <li>Notify the worker via the messaging system</li>
+                    <li>Keep the shift open for other workers</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (confirmDenyId) {
+                  denyRequestMutation.mutate({
+                    requestId: confirmDenyId,
+                    reason: denyReason
+                  });
+                  setConfirmDenyId(null);
+                  setDenyReason('');
+                }
+              }}
+              disabled={denyRequestMutation.isPending}
+              className="flex-1"
+            >
+              {denyRequestMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Denying...
+                </>
+              ) : (
+                <>
+                  <X className="h-4 w-4 mr-2" />
+                  Confirm Denial
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setConfirmDenyId(null);
+                setDenyReason('');
+              }}
+              disabled={denyRequestMutation.isPending}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

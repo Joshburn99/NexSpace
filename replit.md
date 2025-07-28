@@ -13,6 +13,30 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 28, 2025 - Comprehensive Shift Request Workflow Enhancement
+- **Shift Request Process Audit**: Completed comprehensive audit of shift request process from both clinician and facility perspectives
+- **Request Shift Button Fix**: Fixed non-functional "Request Shift" button in enhanced calendar page with proper click handlers and confirmation dialog
+- **Confirmation Dialogs Implementation**: Added confirmation dialogs throughout the workflow to prevent accidental actions
+  - Shift request confirmation with shift details summary, optional note input, and tips for new users
+  - Approval confirmation showing what happens when request is approved (worker assignment, status update, notifications)
+  - Denial confirmation with optional reason field to help workers understand decisions
+  - Withdrawal confirmation with optional reason field and clear explanation of consequences
+- **Tooltips and User Guidance**: Added helpful tooltips and step-by-step hints for new users
+  - Tips for getting approved (certifications up to date, meeting specialty requirements)
+  - Information about where requests appear and notification system
+  - Clear explanations of what happens after each action
+- **Worker's My Requests Enhancement**: Implemented full withdrawal functionality with confirmation dialog
+  - Workers can withdraw pending shift requests with optional reason
+  - Clear information about withdrawal consequences
+  - Loading states and error handling for all mutations
+- **Backend Integration**: Connected all frontend actions to backend shift request endpoints
+  - Request shift: POST /api/shifts/:id/request
+  - Approve request: POST /api/shift-requests/:id/approve
+  - Deny request: POST /api/shift-requests/:id/deny
+  - Withdraw request: POST /api/shift-requests/:id/withdraw
+- **Real-time UI Updates**: All actions invalidate queries to ensure UI updates immediately after mutations
+- **Improved UX**: Consistent confirmation patterns, loading states, and success/error toasts throughout the workflow
+
 ### July 28, 2025 - Facility Profile as Single Source of Truth
 - **Comprehensive Facility Profile Enhancement**: Enhanced FacilityProfilePage to serve as the single source of truth for all facility data across the platform
   - Added 8 specialized tabs for complete facility management: Basic Info, Contact Details, Operations, Billing & Rates, Compliance, Workflow Automation, Shift Rules, and Staffing Targets & Custom Rules

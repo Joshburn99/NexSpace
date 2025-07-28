@@ -1,10 +1,30 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, MapPin, DollarSign, Building2, Calendar } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { 
+  Clock, 
+  MapPin, 
+  DollarSign, 
+  Building2, 
+  Calendar, 
+  X,
+  AlertCircle,
+  Loader2,
+  Info
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { apiRequest } from "@/lib/queryClient";
 
 interface ShiftRequest {
   id: number;
@@ -25,11 +45,43 @@ interface ShiftRequest {
 export default function WorkerMyRequestsPage() {
   const { toast } = useToast();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [confirmWithdrawId, setConfirmWithdrawId] = useState<number | null>(null);
+  const [withdrawReason, setWithdrawReason] = useState("");
 
   // Fetch worker's shift requests - only unassigned requests by this worker
   const { data: myRequests = [], isLoading } = useQuery({
     queryKey: ['/api/shift-requests', user?.id],
     enabled: !!user?.id,
+  });
+
+  // Withdraw shift request mutation
+  const withdrawRequestMutation = useMutation({
+    mutationFn: async ({ requestId, reason }: { requestId: number; reason: string }) => {
+      const response = await apiRequest('POST', `/api/shift-requests/${requestId}/withdraw`, { reason });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to withdraw request');
+      }
+      return response.json();
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/shift-requests'] });
+      toast({
+        title: 'Request Withdrawn',
+        description: 'Your shift request has been withdrawn successfully.',
+      });
+      setConfirmWithdrawId(null);
+      setWithdrawReason('');
+    },
+    onError: (error: any) => {
+      console.error('Withdrawal error:', error);
+      toast({
+        title: 'Withdrawal Failed',
+        description: error.message || 'Failed to withdraw shift request. Please try again.',
+        variant: 'destructive',
+      });
+    },
   });
 
   // Filter to only show requests by current worker that are still unassigned
@@ -56,13 +108,7 @@ export default function WorkerMyRequestsPage() {
     }
   };
 
-  const cancelRequest = (requestId: number) => {
-    // API call to cancel request would go here
-    toast({ 
-      title: "Request cancelled", 
-      description: "Your shift request has been cancelled successfully." 
-    });
-  };
+
 
   if (isLoading) {
     return (
@@ -170,10 +216,21 @@ export default function WorkerMyRequestsPage() {
                     <Button 
                       variant="outline" 
                       size="sm"
-                      onClick={() => cancelRequest(request.id)}
+                      onClick={() => setConfirmWithdrawId(request.id)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                      disabled={withdrawRequestMutation.isPending}
                     >
-                      Cancel Request
+                      {withdrawRequestMutation.isPending && confirmWithdrawId === request.id ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                          Withdrawing...
+                        </>
+                      ) : (
+                        <>
+                          <X className="h-4 w-4 mr-1" />
+                          Cancel Request
+                        </>
+                      )}
                     </Button>
                   )}
                   <Button variant="outline" size="sm">
@@ -185,6 +242,118 @@ export default function WorkerMyRequestsPage() {
           ))}
         </div>
       )}
+
+      {/* Withdrawal Confirmation Dialog */}
+      <Dialog
+        open={confirmWithdrawId !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmWithdrawId(null);
+            setWithdrawReason('');
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Withdraw Shift Request</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to withdraw this shift request? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 my-4">
+            {/* Find the request being withdrawn */}
+            {confirmWithdrawId && workerRequests.find(r => r.id === confirmWithdrawId) && (
+              <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700">
+                <p className="font-medium text-sm mb-1">
+                  {workerRequests.find(r => r.id === confirmWithdrawId)?.title}
+                </p>
+                <div className="text-xs text-gray-600 dark:text-gray-400 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-3 w-3" />
+                    {workerRequests.find(r => r.id === confirmWithdrawId)?.date}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-3 w-3" />
+                    {workerRequests.find(r => r.id === confirmWithdrawId)?.startTime} - 
+                    {workerRequests.find(r => r.id === confirmWithdrawId)?.endTime}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div>
+              <Label htmlFor="withdraw-reason">
+                Reason for withdrawal (optional)
+                <span className="text-xs text-gray-500 ml-2">
+                  Let the facility know why you're withdrawing
+                </span>
+              </Label>
+              <textarea
+                id="withdraw-reason"
+                value={withdrawReason}
+                onChange={(e) => setWithdrawReason(e.target.value)}
+                placeholder="e.g., Schedule conflict, family emergency, etc."
+                className="w-full mt-2 p-3 border rounded-lg resize-none h-20 text-sm"
+              />
+            </div>
+
+            <div className="bg-amber-50 dark:bg-amber-900/20 p-3 rounded-lg border border-amber-200 dark:border-amber-800">
+              <div className="flex items-start gap-2">
+                <Info className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5" />
+                <div className="text-sm text-amber-700 dark:text-amber-300">
+                  <p className="font-medium mb-1">What happens next:</p>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>Your request will be removed from the pending list</li>
+                    <li>The shift will remain open for other workers</li>
+                    <li>The facility will be notified of your withdrawal</li>
+                    <li>You can request this shift again if needed</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (confirmWithdrawId) {
+                  withdrawRequestMutation.mutate({
+                    requestId: confirmWithdrawId,
+                    reason: withdrawReason
+                  });
+                }
+              }}
+              disabled={withdrawRequestMutation.isPending}
+              className="flex-1"
+            >
+              {withdrawRequestMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Withdrawing...
+                </>
+              ) : (
+                <>
+                  <X className="h-4 w-4 mr-2" />
+                  Confirm Withdrawal
+                </>
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setConfirmWithdrawId(null);
+                setWithdrawReason('');
+              }}
+              disabled={withdrawRequestMutation.isPending}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
