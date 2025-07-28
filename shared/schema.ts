@@ -1545,3 +1545,42 @@ export type InsertFacilityStaffingTargets = z.infer<typeof insertFacilityStaffin
 export type FacilityStaffingTargets = typeof facilityStaffingTargets.$inferSelect;
 export type InsertFacilityDocuments = z.infer<typeof insertFacilityDocumentsSchema>;
 export type FacilityDocuments = typeof facilityDocuments.$inferSelect;
+
+// Analytics Events Table
+export const analyticsEvents = pgTable("analytics_events", {
+  id: serial("id").primaryKey(),
+  eventName: text("event_name").notNull(), // e.g., "user_signup", "shift_created", "message_sent"
+  eventCategory: text("event_category").notNull(), // e.g., "auth", "shifts", "messaging", "staff"
+  userId: integer("user_id"), // The user who performed the action
+  facilityId: integer("facility_id"), // The facility context if applicable
+  entityType: text("entity_type"), // e.g., "shift", "staff", "message", "template"
+  entityId: text("entity_id"), // ID of the entity being acted upon
+  action: text("action"), // e.g., "create", "update", "delete", "view", "approve"
+  metadata: jsonb("metadata"), // Additional context data as JSON
+  userAgent: text("user_agent"), // Browser/client information
+  ipAddress: text("ip_address"), // User's IP address
+  sessionId: text("session_id"), // Session identifier for grouping events
+  timestamp: timestamp("timestamp").notNull().defaultNow(),
+  duration: integer("duration"), // Time taken for the action in milliseconds
+});
+
+// Analytics event relations
+export const analyticsEventsRelations = relations(analyticsEvents, ({ one }) => ({
+  user: one(users, {
+    fields: [analyticsEvents.userId],
+    references: [users.id],
+  }),
+  facility: one(facilities, {
+    fields: [analyticsEvents.facilityId],
+    references: [facilities.id],
+  }),
+}));
+
+// Insert schemas for analytics
+export const insertAnalyticsEventSchema = createInsertSchema(analyticsEvents).omit({
+  id: true,
+  timestamp: true,
+});
+
+export type InsertAnalyticsEvent = z.infer<typeof insertAnalyticsEventSchema>;
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;

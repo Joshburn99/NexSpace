@@ -68,6 +68,7 @@ import { UnifiedDataService } from "./unified-data-service";
 import multer from "multer";
 import OpenAI from "openai";
 import dashboardPreferencesRoutes from "./dashboard-preferences-routes";
+import { analytics } from "./analytics-tracker";
 
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
@@ -4635,11 +4636,22 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.patch("/api/staff/:id", requireAuth, async (req: any, res) => {
+    const startTime = Date.now();
+    const context = analytics.getContextFromRequest(req);
+    
     try {
       const staffId = parseInt(req.params.id);
       
       // Only allow users to update their own profile
       if (req.user.id !== staffId) {
+        // Track unauthorized update attempt
+        await analytics.trackStaff('update', staffId, context, {
+          reason: 'unauthorized_update',
+          attemptedBy: req.user.id,
+          targetStaffId: staffId,
+          success: false
+        });
+        
         return res.status(403).json({ message: "You can only update your own profile" });
       }
 
@@ -4677,8 +4689,27 @@ export function registerRoutes(app: Express): Server {
         updatedAt: new Date().toISOString()
       };
 
+      // Track successful staff update
+      await analytics.trackStaff('update', staffId, context, {
+        fieldsUpdated: Object.keys(req.body).filter(key => req.body[key] !== undefined),
+        hasSkills: skills && skills.length > 0,
+        hasCertifications: certifications && certifications.length > 0,
+        hasPortfolio: !!portfolio,
+        hasLinkedIn: !!linkedIn,
+        hourlyRate: parseFloat(hourlyRate) || 0,
+        success: true,
+        duration: Date.now() - startTime
+      });
+
       res.json(updatedProfile);
     } catch (error) {
+      // Track failed staff update
+      await analytics.trackStaff('update', req.params.id, context, {
+        reason: 'update_failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        success: false
+      });
+      
       console.error("Profile update error:", error);
       res.status(500).json({ message: "Failed to update profile" });
     }
@@ -8694,8 +8725,11 @@ export function registerRoutes(app: Express): Server {
   // Remove this duplicate route - using the one below with transformations
 
   app.post("/api/shift-templates", requireAuth, async (req, res) => {
+    const startTime = Date.now();
+    const context = analytics.getContextFromRequest(req);
+    
     try {
-      const { name, department, specialty, facilityId, facilityName, minStaff, maxStaff, shiftType, startTime, endTime, daysOfWeek, hourlyRate, daysPostedOut, notes } = req.body;
+      const { name, department, specialty, facilityId, facilityName, minStaff, maxStaff, shiftType, startTime: shiftStartTime, endTime, daysOfWeek, hourlyRate, daysPostedOut, notes } = req.body;
       
       const newTemplate = await storage.createShiftTemplate({
         name,
@@ -8706,7 +8740,7 @@ export function registerRoutes(app: Express): Server {
         minStaff,
         maxStaff: maxStaff || minStaff, // Default maxStaff to minStaff if not provided
         shiftType,
-        startTime,
+        startTime: shiftStartTime,
         endTime,
         daysOfWeek,
         hourlyRate,
@@ -8716,8 +8750,37 @@ export function registerRoutes(app: Express): Server {
         generatedShiftsCount: 0,
       });
 
+      // Track successful template creation
+      await analytics.trackTemplate('create', newTemplate.id,
+        { ...context, facilityId },
+        {
+          templateName: name,
+          department,
+          specialty,
+          facilityId,
+          facilityName: facilityName || "Unknown Facility",
+          shiftType,
+          minStaff,
+          maxStaff: maxStaff || minStaff,
+          daysOfWeek: daysOfWeek.length,
+          hourlyRate,
+          daysPostedOut: daysPostedOut || 7,
+          success: true,
+          duration: Date.now() - startTime
+        }
+      );
+
       res.status(201).json(newTemplate);
     } catch (error) {
+      // Track failed template creation
+      await analytics.trackTemplate('create', 'failed', context, {
+        reason: 'creation_failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        templateName: req.body.name,
+        facilityId: req.body.facilityId,
+        success: false
+      });
+      
       console.error('Error creating shift template:', error);
       res.status(500).json({ message: "Failed to create shift template" });
     }
@@ -8807,6 +8870,9 @@ export function registerRoutes(app: Express): Server {
 
   // Create shift endpoint - validates facility associations for facility users
   app.post("/api/shifts", requireAuth, async (req, res) => {
+    const startTime = Date.now();
+    const context = analytics.getContextFromRequest(req);
+    
     try {
       const shiftData = req.body;
       const user = (req as any).user;
@@ -8823,6 +8889,14 @@ export function registerRoutes(app: Express): Server {
           const requestedFacilityId = parseInt(shiftData.facilityId);
           
           if (!associatedFacilityIds.includes(requestedFacilityId)) {
+            // Track unauthorized shift creation attempt
+            await analytics.trackShift('create', 'unauthorized', context, {
+              facilityId: requestedFacilityId,
+              userFacilities: associatedFacilityIds,
+              reason: 'facility_not_associated',
+              success: false
+            });
+            
             return res.status(403).json({ 
               message: "You can only create shifts for facilities you are associated with" 
             });
@@ -8861,6 +8935,23 @@ export function registerRoutes(app: Express): Server {
         totalHours: 8,
         shiftType: shiftData.shiftType || "Day"
       });
+      
+      // Track successful shift creation
+      await analytics.trackShift('create', shiftId, 
+        { ...context, facilityId: parseInt(shiftData.facilityId) },
+        {
+          title: shiftData.title,
+          specialty: shiftData.specialty,
+          date: shiftData.date,
+          facilityId: parseInt(shiftData.facilityId),
+          facilityName: facility?.name,
+          urgency: shiftData.urgency,
+          requiredWorkers: parseInt(shiftData.requiredStaff) || 1,
+          rate: parseFloat(shiftData.rate) || 45.0,
+          success: true,
+          duration: Date.now() - startTime
+        }
+      );
       
       res.json({
         message: "Shift created successfully",
@@ -11416,6 +11507,9 @@ export function registerRoutes(app: Express): Server {
 
   // Request a shift
   app.post("/api/shifts/:id/request", requireAuth, async (req: any, res) => {
+    const startTime = Date.now();
+    const context = analytics.getContextFromRequest(req);
+    
     try {
       const shiftId = parseInt(req.params.id);
       const user = req.user;
@@ -11433,9 +11527,10 @@ export function registerRoutes(app: Express): Server {
       console.log(`[SHIFT REQUEST] User ${user.id} requested shift ${shiftId}`);
       
       // Create notification for facility managers
+      let shift = null;
       try {
         // Get shift details to include in notification
-        const shift = mainShifts.find(s => s.id === shiftId) || generatedShifts.find(s => s.id === shiftId);
+        shift = mainShifts.find(s => s.id === shiftId) || generatedShifts.find(s => s.id === shiftId);
         if (shift) {
           await storage.createNotification({
             type: 'shift_request',
@@ -11456,12 +11551,36 @@ export function registerRoutes(app: Express): Server {
         console.error('[NOTIFICATION] Failed to create shift request notification:', notificationError);
       }
       
+      // Track successful shift request
+      await analytics.trackShift('request', shiftId.toString(), 
+        { ...context, facilityId: shift?.facilityId },
+        {
+          requestId: newRequest.id,
+          shiftTitle: shift?.title,
+          shiftDate: shift?.date,
+          shiftSpecialty: shift?.specialty,
+          facilityId: shift?.facilityId,
+          requestNote: req.body.note || '',
+          userRole: user.role,
+          userSpecialty: user.specialty,
+          success: true,
+          duration: Date.now() - startTime
+        }
+      );
+      
       res.json({
         success: true,
         message: "Shift request submitted successfully",
         request: newRequest
       });
     } catch (error) {
+      // Track failed shift request
+      await analytics.trackShift('request', req.params.id, context, {
+        reason: 'request_failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        success: false
+      });
+      
       console.error('Error requesting shift:', error);
       res.status(500).json({ message: "Failed to request shift" });
     }
@@ -11677,6 +11796,9 @@ export function registerRoutes(app: Express): Server {
   });
 
   app.post("/api/messages", requireAuth, async (req: any, res) => {
+    const startTime = Date.now();
+    const context = analytics.getContextFromRequest(req);
+    
     try {
       const { recipientId, subject, content, isUrgent } = req.body;
       const user = req.user;
@@ -11715,8 +11837,28 @@ export function registerRoutes(app: Express): Server {
         console.error('[NOTIFICATION] Failed to create message notification:', notificationError);
       }
       
+      // Track successful message send
+      await analytics.trackMessage('send', newMessage.id, context, {
+        recipientId,
+        senderRole: user.role,
+        recipientType: 'user', // Could be enhanced to distinguish recipient types
+        subject: subject.substring(0, 50), // Truncate for privacy
+        isUrgent: isUrgent || false,
+        messageLength: content.length,
+        hasAttachments: false,
+        success: true,
+        duration: Date.now() - startTime
+      });
+      
       res.json(newMessage);
     } catch (error) {
+      // Track failed message send
+      await analytics.trackMessage('send', 'failed', context, {
+        reason: 'send_failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        success: false
+      });
+      
       res.status(500).json({ message: "Failed to send message" });
     }
   });
@@ -11824,6 +11966,37 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error deleting all notifications:", error);
       res.status(500).json({ message: "Failed to delete all notifications" });
+    }
+  });
+
+  // Analytics endpoint for super admins to view events
+  app.get("/api/analytics/events", requireAuth, async (req: any, res) => {
+    try {
+      // Only super admins can view analytics
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied" });
+      }
+
+      const limit = parseInt(req.query.limit as string) || 100;
+      const offset = parseInt(req.query.offset as string) || 0;
+      const category = req.query.category as string;
+
+      // Get recent analytics events
+      const events = await storage.getRecentAnalyticsEvents(limit, offset, category);
+      
+      // Get event counts by category
+      const eventCounts = await storage.getAnalyticsEventCounts();
+
+      res.json({
+        events,
+        counts: eventCounts,
+        total: events.length,
+        limit,
+        offset
+      });
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics data" });
     }
   });
 

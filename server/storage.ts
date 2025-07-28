@@ -36,6 +36,7 @@ import {
   payments,
   facilityUsers,
   notifications,
+  analyticsEvents,
   type User,
   type InsertUser,
   type Facility,
@@ -112,6 +113,8 @@ import {
   type InsertTimeOffRequest,
   type TimeOffPolicy,
   type InsertTimeOffPolicy,
+  type AnalyticsEvent,
+  type InsertAnalyticsEvent,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc, gte, lte, lt, gt, count, sql, or, ilike } from "drizzle-orm";
@@ -442,6 +445,26 @@ export interface IStorage {
   // Staff credential methods
   addStaffCredential(credential: InsertStaffCredential): Promise<StaffCredential>;
   getStaffCredentials(staffId: number): Promise<Credential[]>;
+  
+  // Analytics event tracking methods
+  trackEvent(event: InsertAnalyticsEvent): Promise<void>;
+  getAnalyticsEvents(filters?: {
+    userId?: number;
+    facilityId?: number;
+    eventCategory?: string;
+    eventName?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+  }): Promise<AnalyticsEvent[]>;
+  getEventStats(filters?: {
+    eventCategory?: string;
+    startDate?: Date;
+    endDate?: Date;
+    groupBy?: 'day' | 'week' | 'month';
+  }): Promise<{ date: string; count: number; category?: string }[]>;
+  getRecentAnalyticsEvents(limit: number, offset: number, category?: string): Promise<AnalyticsEvent[]>;
+  getAnalyticsEventCounts(): Promise<{ [category: string]: number }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2717,6 +2740,149 @@ export class DatabaseStorage implements IStorage {
     }
     
     return 0;
+  }
+  
+  // Analytics event tracking implementation
+  async trackEvent(event: InsertAnalyticsEvent): Promise<void> {
+    try {
+      // Use setImmediate to make this non-blocking
+      setImmediate(async () => {
+        try {
+          await db.insert(analyticsEvents).values(event);
+        } catch (error) {
+          console.error('Failed to track analytics event:', error);
+          // Don't throw - we don't want analytics failures to break the app
+        }
+      });
+    } catch (error) {
+      console.error('Failed to queue analytics event:', error);
+    }
+  }
+  
+  async getAnalyticsEvents(filters?: {
+    userId?: number;
+    facilityId?: number;
+    eventCategory?: string;
+    eventName?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+  }): Promise<AnalyticsEvent[]> {
+    let query = db.select().from(analyticsEvents);
+    const conditions = [];
+    
+    if (filters?.userId) {
+      conditions.push(eq(analyticsEvents.userId, filters.userId));
+    }
+    if (filters?.facilityId) {
+      conditions.push(eq(analyticsEvents.facilityId, filters.facilityId));
+    }
+    if (filters?.eventCategory) {
+      conditions.push(eq(analyticsEvents.eventCategory, filters.eventCategory));
+    }
+    if (filters?.eventName) {
+      conditions.push(eq(analyticsEvents.eventName, filters.eventName));
+    }
+    if (filters?.startDate) {
+      conditions.push(gte(analyticsEvents.timestamp, filters.startDate));
+    }
+    if (filters?.endDate) {
+      conditions.push(lte(analyticsEvents.timestamp, filters.endDate));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    query = query.orderBy(desc(analyticsEvents.timestamp));
+    
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
+    }
+    
+    return await query;
+  }
+  
+  async getRecentAnalyticsEvents(limit: number, offset: number, category?: string): Promise<AnalyticsEvent[]> {
+    let query = db.select().from(analyticsEvents);
+    
+    if (category) {
+      query = query.where(eq(analyticsEvents.eventCategory, category));
+    }
+    
+    const events = await query
+      .orderBy(desc(analyticsEvents.timestamp))
+      .limit(limit)
+      .offset(offset);
+      
+    return events;
+  }
+  
+  async getAnalyticsEventCounts(): Promise<{ [category: string]: number }> {
+    const results = await db
+      .select({
+        category: analyticsEvents.eventCategory,
+        count: sql<number>`count(*)::int`
+      })
+      .from(analyticsEvents)
+      .groupBy(analyticsEvents.eventCategory);
+      
+    const counts: { [category: string]: number } = {};
+    results.forEach(result => {
+      if (result.category) {
+        counts[result.category] = result.count;
+      }
+    });
+    
+    return counts;
+  }
+  
+  async getEventStats(filters?: {
+    eventCategory?: string;
+    startDate?: Date;
+    endDate?: Date;
+    groupBy?: 'day' | 'week' | 'month';
+  }): Promise<{ date: string; count: number; category?: string }[]> {
+    const groupBy = filters?.groupBy || 'day';
+    let dateFormat: string;
+    
+    switch (groupBy) {
+      case 'week':
+        dateFormat = 'YYYY-WW';
+        break;
+      case 'month':
+        dateFormat = 'YYYY-MM';
+        break;
+      default:
+        dateFormat = 'YYYY-MM-DD';
+    }
+    
+    const conditions = [];
+    if (filters?.eventCategory) {
+      conditions.push(eq(analyticsEvents.eventCategory, filters.eventCategory));
+    }
+    if (filters?.startDate) {
+      conditions.push(gte(analyticsEvents.timestamp, filters.startDate));
+    }
+    if (filters?.endDate) {
+      conditions.push(lte(analyticsEvents.timestamp, filters.endDate));
+    }
+    
+    const results = await db
+      .select({
+        date: sql<string>`TO_CHAR(${analyticsEvents.timestamp}, ${dateFormat})`,
+        count: count(),
+        category: analyticsEvents.eventCategory,
+      })
+      .from(analyticsEvents)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .groupBy(
+        sql`TO_CHAR(${analyticsEvents.timestamp}, ${dateFormat})`,
+        analyticsEvents.eventCategory
+      )
+      .orderBy(sql`TO_CHAR(${analyticsEvents.timestamp}, ${dateFormat})`);
+    
+    return results;
   }
 }
 
