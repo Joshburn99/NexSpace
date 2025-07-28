@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { LogOut, User } from 'lucide-react';
 import { GlobalSearch } from './GlobalSearch';
+import { NotificationDropdown } from './NotificationDropdown';
 
 export function TopBar() {
   const { user, impersonatedUser, quitImpersonation, originalUser } = useAuth();
@@ -59,6 +60,8 @@ export function TopBar() {
             </Button>
           </div>
         )}
+        
+        <NotificationDropdown />
         
         <div className="flex items-center space-x-3">
           <Avatar className="h-8 w-8">

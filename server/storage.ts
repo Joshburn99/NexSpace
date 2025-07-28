@@ -27,6 +27,7 @@ import {
   payrollSyncLogs,
   payments,
   facilityUsers,
+  notifications,
   type User,
   type InsertUser,
   type Facility,
@@ -73,6 +74,8 @@ import {
   type InsertPayrollSyncLog,
   type Payment,
   type InsertPayment,
+  type Notification,
+  type InsertNotification,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc, gte, lte, lt, gt, count, sql, or, ilike } from "drizzle-orm";
@@ -315,6 +318,15 @@ export interface IStorage {
   updateUserSession(sessionId: string, updates: Partial<InsertUserSession>): Promise<UserSession | undefined>;
   deleteUserSession(sessionId: string): Promise<boolean>;
   cleanupExpiredSessions(): Promise<number>;
+
+  // Notification methods
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getNotifications(userId: number | null, facilityUserId: number | null, limit?: number): Promise<Notification[]>;
+  getUnreadNotificationCount(userId: number | null, facilityUserId: number | null): Promise<number>;
+  markNotificationAsRead(id: number): Promise<void>;
+  markAllNotificationsAsRead(userId: number | null, facilityUserId: number | null): Promise<void>;
+  deleteNotification(id: number): Promise<void>;
+  deleteAllNotifications(userId: number | null, facilityUserId: number | null): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1973,6 +1985,72 @@ export class DatabaseStorage implements IStorage {
   async cleanupExpiredSessions(): Promise<number> {
     const result = await db.delete(userSessions).where(lt(userSessions.expiresAt, new Date()));
     return result.rowCount ?? 0;
+  }
+
+  // Notification methods implementation
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    const [newNotification] = await db.insert(notifications).values(notification).returning();
+    return newNotification;
+  }
+
+  async getNotifications(userId: number | null, facilityUserId: number | null, limit: number = 50): Promise<Notification[]> {
+    const conditions = [];
+    if (userId !== null) conditions.push(eq(notifications.userId, userId));
+    if (facilityUserId !== null) conditions.push(eq(notifications.facilityUserId, facilityUserId));
+    
+    const query = db.select().from(notifications);
+    if (conditions.length > 0) {
+      query.where(or(...conditions));
+    }
+    
+    return await query
+      .orderBy(desc(notifications.createdAt))
+      .limit(limit);
+  }
+
+  async getUnreadNotificationCount(userId: number | null, facilityUserId: number | null): Promise<number> {
+    const conditions = [eq(notifications.isRead, false)];
+    if (userId !== null) conditions.push(eq(notifications.userId, userId));
+    if (facilityUserId !== null) conditions.push(eq(notifications.facilityUserId, facilityUserId));
+    
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(notifications)
+      .where(and(...conditions));
+    
+    return result[0]?.count || 0;
+  }
+
+  async markNotificationAsRead(id: number): Promise<void> {
+    await db
+      .update(notifications)
+      .set({ isRead: true, readAt: new Date() })
+      .where(eq(notifications.id, id));
+  }
+
+  async markAllNotificationsAsRead(userId: number | null, facilityUserId: number | null): Promise<void> {
+    const conditions = [eq(notifications.isRead, false)];
+    if (userId !== null) conditions.push(eq(notifications.userId, userId));
+    if (facilityUserId !== null) conditions.push(eq(notifications.facilityUserId, facilityUserId));
+    
+    await db
+      .update(notifications)
+      .set({ isRead: true, readAt: new Date() })
+      .where(and(...conditions));
+  }
+
+  async deleteNotification(id: number): Promise<void> {
+    await db.delete(notifications).where(eq(notifications.id, id));
+  }
+
+  async deleteAllNotifications(userId: number | null, facilityUserId: number | null): Promise<void> {
+    const conditions = [];
+    if (userId !== null) conditions.push(eq(notifications.userId, userId));
+    if (facilityUserId !== null) conditions.push(eq(notifications.facilityUserId, facilityUserId));
+    
+    if (conditions.length > 0) {
+      await db.delete(notifications).where(or(...conditions));
+    }
   }
 }
 

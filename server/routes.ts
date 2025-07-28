@@ -11718,6 +11718,30 @@ export function registerRoutes(app: Express): Server {
       
       console.log(`[SHIFT REQUEST] User ${user.id} requested shift ${shiftId}`);
       
+      // Create notification for facility managers
+      try {
+        // Get shift details to include in notification
+        const shift = mainShifts.find(s => s.id === shiftId) || generatedShifts.find(s => s.id === shiftId);
+        if (shift) {
+          await storage.createNotification({
+            type: 'shift_request',
+            title: 'New Shift Request',
+            message: `${user.firstName} ${user.lastName} has requested ${shift.title} on ${shift.date}`,
+            link: '/shift-requests',
+            isRead: false,
+            facilityUserId: 1, // In production, this would be determined by the shift's facility
+            metadata: {
+              shiftId: shiftId,
+              requestedBy: user.id,
+              shiftTitle: shift.title,
+              shiftDate: shift.date
+            }
+          });
+        }
+      } catch (notificationError) {
+        console.error('[NOTIFICATION] Failed to create shift request notification:', notificationError);
+      }
+      
       res.json({
         success: true,
         message: "Shift request submitted successfully",
@@ -11736,6 +11760,24 @@ export function registerRoutes(app: Express): Server {
       const user = req.user;
       
       console.log(`[SHIFT REQUEST] User ${user.id} withdrew request ${requestId}`);
+      
+      // Create notification for facility managers about withdrawal
+      try {
+        await storage.createNotification({
+          type: 'shift_cancelled',
+          title: 'Shift Request Withdrawn',
+          message: `${user.firstName} ${user.lastName} has withdrawn their shift request`,
+          link: '/shift-requests',
+          isRead: false,
+          facilityUserId: 1, // In production, this would be determined by the shift's facility
+          metadata: {
+            requestId: requestId,
+            withdrawnBy: user.id
+          }
+        });
+      } catch (notificationError) {
+        console.error('[NOTIFICATION] Failed to create withdrawal notification:', notificationError);
+      }
       
       res.json({
         success: true,
@@ -11759,6 +11801,24 @@ export function registerRoutes(app: Express): Server {
       }
       
       console.log(`[SHIFT REQUEST] Request ${requestId} approved by ${user.id}`);
+      
+      // Create notification for the worker
+      try {
+        await storage.createNotification({
+          type: 'shift_approved',
+          title: 'Shift Request Approved',
+          message: 'Your shift request has been approved! You have been assigned to the shift.',
+          link: '/my-schedule',
+          isRead: false,
+          userId: 45, // In production, this would be the actual requester's ID
+          metadata: {
+            requestId: requestId,
+            approvedBy: user.id
+          }
+        });
+      } catch (notificationError) {
+        console.error('[NOTIFICATION] Failed to create approval notification:', notificationError);
+      }
       
       res.json({
         success: true,
@@ -11785,6 +11845,25 @@ export function registerRoutes(app: Express): Server {
       }
       
       console.log(`[SHIFT REQUEST] Request ${requestId} denied by ${user.id}. Reason: ${reason}`);
+      
+      // Create notification for the worker
+      try {
+        await storage.createNotification({
+          type: 'shift_denied',
+          title: 'Shift Request Denied',
+          message: `Your shift request has been denied. Reason: ${reason}`,
+          link: '/my-requests',
+          isRead: false,
+          userId: 45, // In production, this would be the actual requester's ID
+          metadata: {
+            requestId: requestId,
+            deniedBy: user.id,
+            reason: reason
+          }
+        });
+      } catch (notificationError) {
+        console.error('[NOTIFICATION] Failed to create denial notification:', notificationError);
+      }
       
       res.json({
         success: true,
@@ -11901,6 +11980,27 @@ export function registerRoutes(app: Express): Server {
         isUrgent: isUrgent || false
       };
       
+      // Create notification for the recipient
+      try {
+        await storage.createNotification({
+          type: 'message_received',
+          title: 'New Message',
+          message: `${user.firstName} ${user.lastName} sent you a message: ${subject}`,
+          link: '/messaging',
+          isRead: false,
+          userId: recipientId, // For regular users
+          facilityUserId: recipientId, // For facility users (in production, determine which to use)
+          metadata: {
+            messageId: newMessage.id,
+            senderId: user.id,
+            subject: subject,
+            isUrgent: isUrgent
+          }
+        });
+      } catch (notificationError) {
+        console.error('[NOTIFICATION] Failed to create message notification:', notificationError);
+      }
+      
       res.json(newMessage);
     } catch (error) {
       res.status(500).json({ message: "Failed to send message" });
@@ -11913,6 +12013,164 @@ export function registerRoutes(app: Express): Server {
       res.json({ success: true, message: `Message ${id} marked as read` });
     } catch (error) {
       res.status(500).json({ message: "Failed to mark message as read" });
+    }
+  });
+
+  // Notification endpoints
+  app.get("/api/notifications", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      const userId = user.id;
+      const facilityUserId = user.facilityUserId || null;
+      const limit = parseInt(req.query.limit) || 50;
+
+      const notifications = await storage.getNotifications(
+        user.role === 'facility_user' ? null : userId,
+        user.role === 'facility_user' ? facilityUserId : null,
+        limit
+      );
+
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.get("/api/notifications/unread-count", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      const userId = user.id;
+      const facilityUserId = user.facilityUserId || null;
+
+      const count = await storage.getUnreadNotificationCount(
+        user.role === 'facility_user' ? null : userId,
+        user.role === 'facility_user' ? facilityUserId : null
+      );
+
+      res.json({ count });
+    } catch (error) {
+      console.error("Error fetching unread count:", error);
+      res.status(500).json({ message: "Failed to fetch unread count" });
+    }
+  });
+
+  app.put("/api/notifications/:id/read", requireAuth, async (req: any, res) => {
+    try {
+      const notificationId = parseInt(req.params.id);
+      await storage.markNotificationAsRead(notificationId);
+      res.json({ message: "Notification marked as read" });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  app.put("/api/notifications/read-all", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      const userId = user.id;
+      const facilityUserId = user.facilityUserId || null;
+
+      await storage.markAllNotificationsAsRead(
+        user.role === 'facility_user' ? null : userId,
+        user.role === 'facility_user' ? facilityUserId : null
+      );
+
+      res.json({ message: "All notifications marked as read" });
+    } catch (error) {
+      console.error("Error marking all as read:", error);
+      res.status(500).json({ message: "Failed to mark all as read" });
+    }
+  });
+
+  app.delete("/api/notifications/:id", requireAuth, async (req: any, res) => {
+    try {
+      const notificationId = parseInt(req.params.id);
+      await storage.deleteNotification(notificationId);
+      res.json({ message: "Notification deleted" });
+    } catch (error) {
+      console.error("Error deleting notification:", error);
+      res.status(500).json({ message: "Failed to delete notification" });
+    }
+  });
+
+  app.delete("/api/notifications", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      const userId = user.id;
+      const facilityUserId = user.facilityUserId || null;
+
+      await storage.deleteAllNotifications(
+        user.role === 'facility_user' ? null : userId,
+        user.role === 'facility_user' ? facilityUserId : null
+      );
+
+      res.json({ message: "All notifications deleted" });
+    } catch (error) {
+      console.error("Error deleting all notifications:", error);
+      res.status(500).json({ message: "Failed to delete all notifications" });
+    }
+  });
+
+  // Test endpoint to generate sample notifications
+  app.post("/api/notifications/test", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      const testNotifications = [];
+
+      // Create various test notifications
+      const notifications = [
+        {
+          type: 'shift_request',
+          title: 'New Shift Request',
+          message: 'Emily Davis has requested ICU Night Shift on 2025-07-20',
+          link: '/shift-requests',
+          isRead: false,
+          userId: user.role !== 'facility_user' ? user.id : null,
+          facilityUserId: user.role === 'facility_user' ? user.facilityUserId : null
+        },
+        {
+          type: 'shift_approved',
+          title: 'Shift Request Approved',
+          message: 'Your request for Emergency Day Shift has been approved!',
+          link: '/my-schedule',
+          isRead: false,
+          userId: user.role !== 'facility_user' ? user.id : null,
+          facilityUserId: user.role === 'facility_user' ? user.facilityUserId : null
+        },
+        {
+          type: 'message_received',
+          title: 'New Message',
+          message: 'Sarah Johnson sent you a message: Schedule Update',
+          link: '/messaging',
+          isRead: true,
+          userId: user.role !== 'facility_user' ? user.id : null,
+          facilityUserId: user.role === 'facility_user' ? user.facilityUserId : null
+        },
+        {
+          type: 'shift_denied',
+          title: 'Shift Request Denied',
+          message: 'Your request for Surgery Day Shift was denied. Reason: Fully staffed',
+          link: '/my-requests',
+          isRead: false,
+          userId: user.role !== 'facility_user' ? user.id : null,
+          facilityUserId: user.role === 'facility_user' ? user.facilityUserId : null
+        }
+      ];
+
+      for (const notification of notifications) {
+        const created = await storage.createNotification(notification);
+        testNotifications.push(created);
+      }
+
+      res.json({
+        message: "Test notifications created successfully",
+        notifications: testNotifications
+      });
+    } catch (error) {
+      console.error("Error creating test notifications:", error);
+      res.status(500).json({ message: "Failed to create test notifications" });
     }
   });
 

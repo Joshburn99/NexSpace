@@ -286,6 +286,22 @@ export const facilityUserActivityLog = pgTable("facility_user_activity_log", {
   timestamp: timestamp("timestamp").defaultNow(),
 });
 
+// Notifications table for system-wide notifications
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: 'cascade' }),
+  facilityUserId: integer("facility_user_id").references(() => facilityUsers.id, { onDelete: 'cascade' }),
+  type: text("type").notNull(), // shift_request, shift_approved, shift_denied, shift_cancelled, message_received, etc.
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  link: text("link"), // optional link to the relevant page/item
+  isRead: boolean("is_read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  readAt: timestamp("read_at"),
+  // Additional context data
+  metadata: jsonb("metadata"), // store related IDs, shift details, etc.
+});
+
 // Facilities table
 export const facilities = pgTable("facilities", {
   id: serial("id").primaryKey(),
@@ -1203,3 +1219,13 @@ export type InsertFacilityUserFacilityAssociation = z.infer<typeof insertFacilit
 export type FacilityUserFacilityAssociation = typeof facilityUserFacilityAssociations.$inferSelect;
 export type InsertFacilityUserTeamMembership = z.infer<typeof insertFacilityUserTeamMembershipSchema>;
 export type FacilityUserTeamMembership = typeof facilityUserTeamMemberships.$inferSelect;
+
+// Notification schemas and types
+export const insertNotificationSchema = createInsertSchema(notifications).omit({
+  id: true,
+  createdAt: true,
+  readAt: true,
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Notification = typeof notifications.$inferSelect;
