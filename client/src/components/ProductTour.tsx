@@ -32,7 +32,7 @@ const tourSteps: Step[] = [
     placement: "bottom",
   },
   {
-    target: '[href*="/calendar"], [href*="/schedule"]',
+    target: '[href*="/enhanced-calendar"], [href*="/calendar"], [href*="/schedule"]',
     content: (
       <div>
         <h3 className="text-lg font-semibold mb-2">Scheduling Calendar</h3>
@@ -58,7 +58,7 @@ const tourSteps: Step[] = [
     placement: "bottom",
   },
   {
-    target: '[href*="/staff"], [href*="/workforce"]',
+    target: '[href*="/staff-directory"], [href*="/staff"], [href*="/workforce"]',
     content: (
       <div>
         <h3 className="text-lg font-semibold mb-2">Staff Management</h3>
@@ -199,11 +199,11 @@ export function ProductTour() {
       // Navigate to appropriate page if needed
       if (typeof step.target === "string") {
         if (step.target.includes("calendar") && !location.includes("calendar")) {
-          setLocation("/calendar");
+          setLocation("/enhanced-calendar");
         } else if (step.target.includes("messaging") && !location.includes("messaging")) {
           setLocation("/messaging");
         } else if (step.target.includes("staff") && !location.includes("staff")) {
-          setLocation("/staff");
+          setLocation("/staff-directory");
         } else if (step.target.includes("analytics") && !location.includes("analytics")) {
           setLocation("/analytics");
         }
