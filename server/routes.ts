@@ -6102,6 +6102,84 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Employee Dashboard API - personalized data for clinicians
+  app.get("/api/employee/dashboard", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      const now = new Date();
+      const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      
+      // Calculate week hours from timesheet data
+      const weekHours = 32; // In production, calculate from actual timesheet entries
+      
+      // Calculate monthly earnings
+      const monthlyEarnings = 3245.67; // In production, calculate from actual paystubs
+      
+      res.json({
+        weekHours,
+        monthlyEarnings,
+        totalShiftsThisMonth: 12,
+        upcomingShiftsCount: 3,
+        pendingRequests: 2,
+        credentialsExpiring: 1
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch dashboard data" });
+    }
+  });
+
+  // Get upcoming shifts for employee
+  app.get("/api/shifts/my-upcoming", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Mock upcoming shifts for the employee
+      const upcomingShifts = [
+        {
+          id: 201,
+          date: new Date(today.getTime() + 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Tomorrow
+          startTime: "07:00",
+          endTime: "15:00",
+          department: "ICU",
+          specialty: "RN",
+          facilityName: "Portland General Hospital",
+          status: "confirmed"
+        },
+        {
+          id: 202,
+          date: new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 3 days from now
+          startTime: "15:00",
+          endTime: "23:00",
+          department: "Emergency",
+          specialty: "RN",
+          facilityName: "Portland General Hospital",
+          status: "confirmed"
+        }
+      ];
+      
+      res.json(upcomingShifts);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch upcoming shifts" });
+    }
+  });
+
+  // Get available shifts count for employee
+  app.get("/api/shifts/available-count", requireAuth, async (req: any, res) => {
+    try {
+      const user = req.user;
+      
+      // In production, this would query shifts matching employee's specialty and facility associations
+      const availableCount = 24; // Mock count
+      
+      res.json({ count: availableCount });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch available shifts count" });
+    }
+  });
+
   // Admin shift requests API with worker details for management view
   app.get("/api/admin/shift-requests", requireAuth, async (req, res) => {
     try {
