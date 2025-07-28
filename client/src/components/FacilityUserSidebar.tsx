@@ -383,7 +383,7 @@ export function FacilityUserSidebar({ expanded = true, onToggle }: FacilityUserS
           <img 
             src="/nexspace-logo.png" 
             alt="NexSpace" 
-            className={cn("object-contain", expanded ? "h-10 w-auto" : "h-8 w-8")}
+            className={cn("object-contain", expanded ? "h-12 w-auto max-w-full" : "h-10 w-10")}
           />
           {onToggle && (
             <button

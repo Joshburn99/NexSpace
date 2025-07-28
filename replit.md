@@ -13,6 +13,16 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 28, 2025 - Logo Integration & Executive Director Data Filtering
+- **NexSpace Logo Implementation**: Replaced text "NexSpace" with company logo in both sidebars
+  - Added logo file to client/public/nexspace-logo.png for proper serving
+  - Updated logo sizing for better visibility (h-12 expanded, h-10 collapsed)
+  - Logo now appears consistently in both super admin and facility user sidebars
+- **Executive Director Data Filtering Fix**: Updated dashboard stats endpoint to properly check associatedFacilityIds
+  - Dashboard endpoint now prioritizes associatedFacilityIds (from impersonation) over associatedFacilities
+  - Executive directors will only see data from their associated facilities when impersonated
+  - Fixed data filtering to prevent showing all 19 facilities to facility-restricted users
+
 ### July 24, 2025 - Dashboard Restoration & Database Enhancement
 - **Dashboard Bug Fix**: Fixed broken drag-and-drop dashboard implementation that was showing empty widgets and corrupted layout
   - Restored functional dashboard with real-time data display showing active staff, open shifts, compliance rates, and facility metrics

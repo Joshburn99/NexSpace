@@ -307,7 +307,7 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
         <img 
           src="/nexspace-logo.png" 
           alt="NexSpace" 
-          className={cn("object-contain", expanded ? "h-10 w-auto" : "h-8 w-8")}
+          className={cn("object-contain", expanded ? "h-12 w-auto max-w-full" : "h-10 w-10")}
         />
         {onToggle && (
           <Button variant="ghost" size="sm" onClick={onToggle} className="p-1">
