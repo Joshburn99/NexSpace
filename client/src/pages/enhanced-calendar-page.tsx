@@ -1,4 +1,18 @@
-import { useState, useRef, useMemo } from "react";
+/*
+ERROR STACK TRACE (TypeScript Diagnostics):
+- Line 227: 'React' refers to a UMD global, but the current file is a module. Consider adding an import instead.
+- Line 265, 266: Property 'length' and 'map' do not exist on type '{}' (data structure issues)
+- Line 297, 301: Property 'length' and 'includes' do not exist on type '{}'
+- Line 870: Cannot find name 'getCalendarColor'
+- Lines 1543-1571: Missing Tooltip, TooltipTrigger, TooltipContent imports
+- Lines 2025-2039: Missing Tooltip components
+- Line 2216: Cannot find name 'filteredFacilities'
+- Line 2363: Cannot find name 'Textarea'
+- Lines 2376-2382: Missing Alert, AlertDescription imports
+- Line 2397: Cannot find name 'Loader2'
+*/
+
+import React, { useState, useRef, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -15,6 +29,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Select,
   SelectContent,
@@ -61,6 +83,8 @@ import {
   Plus,
   List,
   Grid,
+  Info,
+  Loader2,
 } from "lucide-react";
 import { format, addDays, startOfWeek, isToday, isTomorrow, isPast, isSameDay } from "date-fns";
 
@@ -170,6 +194,11 @@ const getStatusIconSVG = (status: string) => {
     default: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
   };
   return svgPaths[status as keyof typeof svgPaths] || svgPaths.default;
+};
+
+// Helper function to get calendar color for specialty
+const getCalendarColor = (specialty: string): string => {
+  return specialtyColors[specialty as keyof typeof specialtyColors] || specialtyColors.default;
 };
 
 export default function EnhancedCalendarPage() {
@@ -2213,7 +2242,7 @@ export default function EnhancedCalendarPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {/* Only show facilities the user is associated with */}
-                    {(isFacilityUser ? filteredFacilities : facilities).map((facility) => (
+                    {facilities.map((facility) => (
                       <SelectItem key={facility.id} value={facility.id.toString()}>
                         {getFacilityDisplayName(facility)}
                       </SelectItem>
