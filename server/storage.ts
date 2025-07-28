@@ -76,6 +76,18 @@ import {
   type InsertPayment,
   type Notification,
   type InsertNotification,
+  timeOffTypes,
+  timeOffBalances,
+  timeOffRequests,
+  timeOffPolicies,
+  type TimeOffType,
+  type InsertTimeOffType,
+  type TimeOffBalance,
+  type InsertTimeOffBalance,
+  type TimeOffRequest,
+  type InsertTimeOffRequest,
+  type TimeOffPolicy,
+  type InsertTimeOffPolicy,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc, gte, lte, lt, gt, count, sql, or, ilike } from "drizzle-orm";
@@ -327,6 +339,35 @@ export interface IStorage {
   markAllNotificationsAsRead(userId: number | null, facilityUserId: number | null): Promise<void>;
   deleteNotification(id: number): Promise<void>;
   deleteAllNotifications(userId: number | null, facilityUserId: number | null): Promise<void>;
+
+  // Time-off methods
+  getTimeOffTypes(isActive?: boolean): Promise<TimeOffType[]>;
+  createTimeOffType(type: InsertTimeOffType): Promise<TimeOffType>;
+  updateTimeOffType(id: number, updates: Partial<InsertTimeOffType>): Promise<TimeOffType | undefined>;
+  
+  getTimeOffBalances(userId: number, year?: number): Promise<TimeOffBalance[]>;
+  getTimeOffBalance(userId: number, timeOffTypeId: number, year: number): Promise<TimeOffBalance | undefined>;
+  createTimeOffBalance(balance: InsertTimeOffBalance): Promise<TimeOffBalance>;
+  updateTimeOffBalance(id: number, updates: Partial<InsertTimeOffBalance>): Promise<TimeOffBalance | undefined>;
+  
+  getTimeOffRequests(filters?: {
+    userId?: number;
+    status?: string;
+    startDate?: Date;
+    endDate?: Date;
+    facilityId?: number;
+  }): Promise<TimeOffRequest[]>;
+  getTimeOffRequest(id: number): Promise<TimeOffRequest | undefined>;
+  createTimeOffRequest(request: InsertTimeOffRequest): Promise<TimeOffRequest>;
+  updateTimeOffRequest(id: number, updates: Partial<InsertTimeOffRequest>): Promise<TimeOffRequest | undefined>;
+  reviewTimeOffRequest(id: number, status: string, reviewedBy: number, reviewNotes?: string): Promise<TimeOffRequest | undefined>;
+  
+  getTimeOffPolicies(facilityId?: number): Promise<TimeOffPolicy[]>;
+  createTimeOffPolicy(policy: InsertTimeOffPolicy): Promise<TimeOffPolicy>;
+  updateTimeOffPolicy(id: number, updates: Partial<InsertTimeOffPolicy>): Promise<TimeOffPolicy | undefined>;
+  
+  checkShiftCoverage(userId: number, startDate: Date, endDate: Date): Promise<Shift[]>;
+  calculateTimeOffAccrual(userId: number, timeOffTypeId: number, year: number): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2117,6 +2158,206 @@ export class DatabaseStorage implements IStorage {
     if (conditions.length > 0) {
       await db.delete(notifications).where(or(...conditions));
     }
+  }
+
+  // Time-off methods implementation
+  async getTimeOffTypes(isActive?: boolean): Promise<TimeOffType[]> {
+    const query = db.select().from(timeOffTypes);
+    if (isActive !== undefined) {
+      query.where(eq(timeOffTypes.isActive, isActive));
+    }
+    return await query.orderBy(timeOffTypes.displayName);
+  }
+
+  async createTimeOffType(type: InsertTimeOffType): Promise<TimeOffType> {
+    const [newType] = await db.insert(timeOffTypes).values(type).returning();
+    return newType;
+  }
+
+  async updateTimeOffType(id: number, updates: Partial<InsertTimeOffType>): Promise<TimeOffType | undefined> {
+    const [updated] = await db
+      .update(timeOffTypes)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(timeOffTypes.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getTimeOffBalances(userId: number, year?: number): Promise<TimeOffBalance[]> {
+    const query = db.select().from(timeOffBalances).where(eq(timeOffBalances.userId, userId));
+    if (year) {
+      query.where(and(eq(timeOffBalances.userId, userId), eq(timeOffBalances.year, year)));
+    }
+    return await query.orderBy(timeOffBalances.timeOffTypeId);
+  }
+
+  async getTimeOffBalance(userId: number, timeOffTypeId: number, year: number): Promise<TimeOffBalance | undefined> {
+    const [balance] = await db
+      .select()
+      .from(timeOffBalances)
+      .where(
+        and(
+          eq(timeOffBalances.userId, userId),
+          eq(timeOffBalances.timeOffTypeId, timeOffTypeId),
+          eq(timeOffBalances.year, year)
+        )
+      );
+    return balance;
+  }
+
+  async createTimeOffBalance(balance: InsertTimeOffBalance): Promise<TimeOffBalance> {
+    const [newBalance] = await db.insert(timeOffBalances).values(balance).returning();
+    return newBalance;
+  }
+
+  async updateTimeOffBalance(id: number, updates: Partial<InsertTimeOffBalance>): Promise<TimeOffBalance | undefined> {
+    const [updated] = await db
+      .update(timeOffBalances)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(timeOffBalances.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getTimeOffRequests(filters?: {
+    userId?: number;
+    status?: string;
+    startDate?: Date;
+    endDate?: Date;
+    facilityId?: number;
+  }): Promise<TimeOffRequest[]> {
+    const conditions = [];
+    
+    if (filters?.userId) {
+      conditions.push(eq(timeOffRequests.userId, filters.userId));
+    }
+    if (filters?.status) {
+      conditions.push(eq(timeOffRequests.status, filters.status));
+    }
+    if (filters?.startDate) {
+      conditions.push(gte(timeOffRequests.startDate, filters.startDate));
+    }
+    if (filters?.endDate) {
+      conditions.push(lte(timeOffRequests.endDate, filters.endDate));
+    }
+
+    const query = db.select().from(timeOffRequests);
+    if (conditions.length > 0) {
+      query.where(and(...conditions));
+    }
+    
+    return await query.orderBy(desc(timeOffRequests.createdAt));
+  }
+
+  async getTimeOffRequest(id: number): Promise<TimeOffRequest | undefined> {
+    const [request] = await db.select().from(timeOffRequests).where(eq(timeOffRequests.id, id));
+    return request;
+  }
+
+  async createTimeOffRequest(request: InsertTimeOffRequest): Promise<TimeOffRequest> {
+    const [newRequest] = await db.insert(timeOffRequests).values(request).returning();
+    return newRequest;
+  }
+
+  async updateTimeOffRequest(id: number, updates: Partial<InsertTimeOffRequest>): Promise<TimeOffRequest | undefined> {
+    const [updated] = await db
+      .update(timeOffRequests)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(timeOffRequests.id, id))
+      .returning();
+    return updated;
+  }
+
+  async reviewTimeOffRequest(id: number, status: string, reviewedBy: number, reviewNotes?: string): Promise<TimeOffRequest | undefined> {
+    const [updated] = await db
+      .update(timeOffRequests)
+      .set({
+        status,
+        reviewedBy,
+        reviewedAt: new Date(),
+        reviewNotes,
+        updatedAt: new Date()
+      })
+      .where(eq(timeOffRequests.id, id))
+      .returning();
+      
+    // If approved, update the balance
+    if (updated && status === 'approved') {
+      const balance = await this.getTimeOffBalance(
+        updated.userId,
+        updated.timeOffTypeId,
+        new Date(updated.startDate).getFullYear()
+      );
+      
+      if (balance) {
+        await this.updateTimeOffBalance(balance.id, {
+          used: (parseFloat(balance.used) + parseFloat(updated.totalHours.toString())).toString(),
+          pending: (parseFloat(balance.pending) - parseFloat(updated.totalHours.toString())).toString(),
+          available: (parseFloat(balance.available) - parseFloat(updated.totalHours.toString())).toString()
+        });
+      }
+    }
+    
+    return updated;
+  }
+
+  async getTimeOffPolicies(facilityId?: number): Promise<TimeOffPolicy[]> {
+    const query = db.select().from(timeOffPolicies);
+    if (facilityId) {
+      query.where(eq(timeOffPolicies.facilityId, facilityId));
+    }
+    return await query.orderBy(timeOffPolicies.name);
+  }
+
+  async createTimeOffPolicy(policy: InsertTimeOffPolicy): Promise<TimeOffPolicy> {
+    const [newPolicy] = await db.insert(timeOffPolicies).values(policy).returning();
+    return newPolicy;
+  }
+
+  async updateTimeOffPolicy(id: number, updates: Partial<InsertTimeOffPolicy>): Promise<TimeOffPolicy | undefined> {
+    const [updated] = await db
+      .update(timeOffPolicies)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(timeOffPolicies.id, id))
+      .returning();
+    return updated;
+  }
+
+  async checkShiftCoverage(userId: number, startDate: Date, endDate: Date): Promise<Shift[]> {
+    // Find shifts assigned to this user during the requested time off period
+    const userShifts = await db
+      .select()
+      .from(shifts)
+      .where(
+        and(
+          sql`${shifts.assignedStaffIds}::jsonb @> ${JSON.stringify([userId])}::jsonb`,
+          gte(shifts.date, startDate.toISOString()),
+          lte(shifts.date, endDate.toISOString())
+        )
+      );
+    return userShifts;
+  }
+
+  async calculateTimeOffAccrual(userId: number, timeOffTypeId: number, year: number): Promise<number> {
+    // Get the user's facility and policy
+    const user = await this.getUser(userId);
+    if (!user || !user.facilityId) return 0;
+    
+    const policies = await this.getTimeOffPolicies(user.facilityId);
+    const policy = policies.find(p => p.isActive);
+    
+    if (!policy) return 0;
+    
+    // Simple accrual calculation - can be expanded based on policy settings
+    if (policy.accrualMethod === 'annual') {
+      return parseFloat(policy.yearlyAllocation?.toString() || '0');
+    } else if (policy.accrualMethod === 'monthly') {
+      const monthsWorked = new Date().getMonth() + 1; // Current month
+      const monthlyRate = parseFloat(policy.accrualRate?.toString() || '0');
+      return monthlyRate * monthsWorked;
+    }
+    
+    return 0;
   }
 }
 

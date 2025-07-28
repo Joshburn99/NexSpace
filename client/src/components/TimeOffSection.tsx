@@ -1,35 +1,38 @@
-import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
+import { usePTO } from "@/contexts/PTOContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
-
-interface PTOBalance {
-  available: number;
-  used: number;
-  pending: number;
-}
-
-interface PTORequest {
-  id: number;
-  startDate: string;
-  endDate: string;
-  hours: number;
-  status: "pending" | "approved" | "denied";
-  reason: string;
-}
+import { useRouter } from "wouter";
 
 export function TimeOffSection() {
   const { user } = useAuth();
+  const [, navigate] = useRouter();
+  const { 
+    getEmployeeBalance, 
+    getEmployeeRequests, 
+    types,
+    isLoadingBalances: balanceLoading,
+    isLoading: requestsLoading 
+  } = usePTO();
 
-  const { data: balance, isLoading: balanceLoading } = useQuery<PTOBalance>({
-    queryKey: ["/api/timeoff/balance"],
-  });
-
-  const { data: requests, isLoading: requestsLoading } = useQuery<PTORequest[]>({
-    queryKey: ["/api/timeoff/requests"],
-  });
+  // Get current year balances and requests for the logged-in user
+  const balances = user ? getEmployeeBalance(user.id) : [];
+  const requests = user ? getEmployeeRequests(user.id) : [];
+  
+  // Calculate total available, used, and pending from all balance types
+  const totalBalance = balances.reduce((acc, balance) => {
+    const available = parseFloat(balance.available) || 0;
+    const used = parseFloat(balance.used) || 0;
+    const pending = parseFloat(balance.pending) || 0;
+    return {
+      available: acc.available + available,
+      used: acc.used + used,
+      pending: acc.pending + pending,
+      allocated: acc.allocated + (parseFloat(balance.allocated) || 0)
+    };
+  }, { available: 0, used: 0, pending: 0, allocated: 0 });
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -82,11 +85,11 @@ export function TimeOffSection() {
                   fill="none"
                   stroke="currentColor"
                   strokeWidth="3"
-                  strokeDasharray={`${((balance?.available || 0) / 80) * 100}, 100`}
+                  strokeDasharray={`${((totalBalance.available || 0) / (totalBalance.allocated || 120)) * 100}, 100`}
                 />
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-bold">{balance?.available || 0}</span>
+                <span className="text-2xl font-bold">{totalBalance.available.toFixed(1)}</span>
                 <span className="text-sm text-gray-600">hours</span>
               </div>
             </div>
@@ -95,15 +98,15 @@ export function TimeOffSection() {
           {/* Balance Details */}
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-2xl font-semibold text-blue-600">{balance?.available || 0}</p>
+              <p className="text-2xl font-semibold text-blue-600">{totalBalance.available.toFixed(1)}</p>
               <p className="text-xs text-gray-600">Available</p>
             </div>
             <div>
-              <p className="text-2xl font-semibold text-gray-600">{balance?.used || 0}</p>
+              <p className="text-2xl font-semibold text-gray-600">{totalBalance.used.toFixed(1)}</p>
               <p className="text-xs text-gray-600">Used</p>
             </div>
             <div>
-              <p className="text-2xl font-semibold text-yellow-600">{balance?.pending || 0}</p>
+              <p className="text-2xl font-semibold text-yellow-600">{totalBalance.pending.toFixed(1)}</p>
               <p className="text-xs text-gray-600">Pending</p>
             </div>
           </div>
@@ -125,7 +128,7 @@ export function TimeOffSection() {
                         {new Date(request.endDate).toLocaleDateString()}
                       </p>
                       <p className="text-xs text-gray-600">
-                        {request.hours} hours • {request.reason}
+                        {request.totalHours} hours • {request.reason}
                       </p>
                     </div>
                   </div>
@@ -135,7 +138,7 @@ export function TimeOffSection() {
             </div>
           )}
 
-          <Button className="w-full">
+          <Button className="w-full" onClick={() => navigate('/my-pto')}>
             <Calendar className="w-4 h-4 mr-2" />
             Request Time Off
           </Button>

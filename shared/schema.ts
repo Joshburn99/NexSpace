@@ -895,6 +895,112 @@ export const payments = pgTable("payments", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+// Time-Off Management Tables
+export const timeOffTypes = pgTable("time_off_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(), // 'vacation', 'sick', 'personal', 'bereavement', etc.
+  displayName: text("display_name").notNull(),
+  color: text("color").notNull(), // for calendar display
+  requiresApproval: boolean("requires_approval").default(true),
+  requiresDocumentation: boolean("requires_documentation").default(false),
+  maxConsecutiveDays: integer("max_consecutive_days"),
+  advanceNoticeRequired: integer("advance_notice_required"), // days
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const timeOffBalances = pgTable("time_off_balances", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  timeOffTypeId: integer("time_off_type_id").notNull(),
+  year: integer("year").notNull(),
+  allocated: decimal("allocated", { precision: 8, scale: 2 }).notNull().default("0"),
+  used: decimal("used", { precision: 8, scale: 2 }).notNull().default("0"),
+  pending: decimal("pending", { precision: 8, scale: 2 }).notNull().default("0"),
+  available: decimal("available", { precision: 8, scale: 2 }).notNull().default("0"),
+  carryover: decimal("carryover", { precision: 8, scale: 2 }).default("0"),
+  expiresAt: timestamp("expires_at"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const timeOffRequests = pgTable("time_off_requests", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  timeOffTypeId: integer("time_off_type_id").notNull(),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  startTime: text("start_time"), // for partial day requests
+  endTime: text("end_time"), // for partial day requests
+  totalHours: decimal("total_hours", { precision: 8, scale: 2 }).notNull(),
+  reason: text("reason").notNull(),
+  coverageNotes: text("coverage_notes"), // who will cover shifts
+  status: text("status").notNull().default("pending"), // 'pending', 'approved', 'denied', 'cancelled'
+  reviewedBy: integer("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  attachments: jsonb("attachments"), // for documentation
+  affectedShifts: jsonb("affected_shifts"), // array of shift IDs that need coverage
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const timeOffPolicies = pgTable("time_off_policies", {
+  id: serial("id").primaryKey(),
+  facilityId: integer("facility_id"),
+  name: text("name").notNull(),
+  description: text("description"),
+  accrualMethod: text("accrual_method").notNull(), // 'annual', 'monthly', 'pay_period', 'hours_worked'
+  accrualRate: decimal("accrual_rate", { precision: 8, scale: 2 }),
+  maxAccrual: decimal("max_accrual", { precision: 8, scale: 2 }),
+  yearlyAllocation: decimal("yearly_allocation", { precision: 8, scale: 2 }),
+  carryoverAllowed: boolean("carryover_allowed").default(false),
+  carryoverMaxDays: decimal("carryover_max_days", { precision: 8, scale: 2 }),
+  minimumServiceDays: integer("minimum_service_days").default(0), // probation period
+  employmentTypes: jsonb("employment_types"), // which employment types this applies to
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Insert schemas and types for time-off tables
+export const insertTimeOffTypeSchema = createInsertSchema(timeOffTypes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertTimeOffType = z.infer<typeof insertTimeOffTypeSchema>;
+export type TimeOffType = typeof timeOffTypes.$inferSelect;
+
+export const insertTimeOffBalanceSchema = createInsertSchema(timeOffBalances).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertTimeOffBalance = z.infer<typeof insertTimeOffBalanceSchema>;
+export type TimeOffBalance = typeof timeOffBalances.$inferSelect;
+
+export const insertTimeOffRequestSchema = createInsertSchema(timeOffRequests).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  reviewedBy: true,
+  reviewedAt: true,
+  reviewNotes: true,
+});
+export type InsertTimeOffRequest = z.infer<typeof insertTimeOffRequestSchema>;
+export type TimeOffRequest = typeof timeOffRequests.$inferSelect;
+
+export const insertTimeOffPolicySchema = createInsertSchema(timeOffPolicies).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertTimeOffPolicy = z.infer<typeof insertTimeOffPolicySchema>;
+export type TimeOffPolicy = typeof timeOffPolicies.$inferSelect;
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   facility: one(facilities, { fields: [users.facilityId], references: [facilities.id] }),
@@ -908,6 +1014,8 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   sentMessages: many(messages, { relationName: "sender" }),
   receivedMessages: many(messages, { relationName: "recipient" }),
   auditLogs: many(auditLogs),
+  timeOffBalances: many(timeOffBalances),
+  timeOffRequests: many(timeOffRequests),
 }));
 
 export const facilitiesRelations = relations(facilities, ({ one, many }) => ({
@@ -950,6 +1058,27 @@ export const shiftsRelations = relations(shifts, ({ one, many }) => ({
   timeClockEntries: many(timeClockEntries),
   workLogs: many(workLogs),
   messages: many(messages),
+}));
+
+// Time-off relations
+export const timeOffBalancesRelations = relations(timeOffBalances, ({ one }) => ({
+  user: one(users, { fields: [timeOffBalances.userId], references: [users.id] }),
+  timeOffType: one(timeOffTypes, { fields: [timeOffBalances.timeOffTypeId], references: [timeOffTypes.id] }),
+}));
+
+export const timeOffRequestsRelations = relations(timeOffRequests, ({ one }) => ({
+  user: one(users, { fields: [timeOffRequests.userId], references: [users.id] }),
+  timeOffType: one(timeOffTypes, { fields: [timeOffRequests.timeOffTypeId], references: [timeOffTypes.id] }),
+  reviewer: one(users, { fields: [timeOffRequests.reviewedBy], references: [users.id] }),
+}));
+
+export const timeOffTypesRelations = relations(timeOffTypes, ({ many }) => ({
+  balances: many(timeOffBalances),
+  requests: many(timeOffRequests),
+}));
+
+export const timeOffPoliciesRelations = relations(timeOffPolicies, ({ one }) => ({
+  facility: one(facilities, { fields: [timeOffPolicies.facilityId], references: [facilities.id] }),
 }));
 
 // Insert schemas

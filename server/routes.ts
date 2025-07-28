@@ -12174,5 +12174,261 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Time-Off Management API Routes
+  
+  // Get time-off types
+  app.get("/api/timeoff/types", requireAuth, async (req, res) => {
+    try {
+      const types = await storage.getTimeOffTypes(true);
+      res.json(types);
+    } catch (error) {
+      console.error("Error fetching time-off types:", error);
+      res.status(500).json({ message: "Failed to fetch time-off types" });
+    }
+  });
+
+  // Get user's time-off balances
+  app.get("/api/timeoff/balance", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const year = parseInt(req.query.year) || new Date().getFullYear();
+      
+      const balances = await storage.getTimeOffBalances(userId, year);
+      
+      // If no balances exist, create default ones
+      if (balances.length === 0) {
+        const types = await storage.getTimeOffTypes(true);
+        for (const type of types) {
+          await storage.createTimeOffBalance({
+            userId,
+            timeOffTypeId: type.id,
+            year,
+            allocated: type.name === 'vacation' ? 80 : type.name === 'sick' ? 40 : 24, // Default hours
+            used: 0,
+            pending: 0,
+            available: type.name === 'vacation' ? 80 : type.name === 'sick' ? 40 : 24,
+          });
+        }
+        const newBalances = await storage.getTimeOffBalances(userId, year);
+        return res.json(newBalances);
+      }
+      
+      res.json(balances);
+    } catch (error) {
+      console.error("Error fetching time-off balance:", error);
+      res.status(500).json({ message: "Failed to fetch time-off balance" });
+    }
+  });
+
+  // Get time-off requests (for employees and managers)
+  app.get("/api/timeoff/requests", requireAuth, async (req: any, res) => {
+    try {
+      const { status, startDate, endDate, userId } = req.query;
+      const currentUser = req.user;
+      
+      // Build filters based on permissions
+      const filters: any = {};
+      
+      // If user has approval permission, they can see all requests
+      if (currentUser.permissions?.includes('timeoff.approve_requests')) {
+        if (userId) filters.userId = parseInt(userId);
+      } else {
+        // Otherwise, only see their own requests
+        filters.userId = currentUser.id;
+      }
+      
+      if (status) filters.status = status;
+      if (startDate) filters.startDate = new Date(startDate);
+      if (endDate) filters.endDate = new Date(endDate);
+      
+      const requests = await storage.getTimeOffRequests(filters);
+      
+      // Enrich requests with user and type information
+      const enrichedRequests = await Promise.all(
+        requests.map(async (request) => {
+          const user = await storage.getUser(request.userId);
+          const type = await storage.getTimeOffTypes();
+          const timeOffType = type.find(t => t.id === request.timeOffTypeId);
+          
+          return {
+            ...request,
+            userName: user ? `${user.firstName} ${user.lastName}` : 'Unknown',
+            userEmail: user?.email,
+            typeName: timeOffType?.displayName || 'Unknown',
+            typeColor: timeOffType?.color || '#6b7280',
+          };
+        })
+      );
+      
+      res.json(enrichedRequests);
+    } catch (error) {
+      console.error("Error fetching time-off requests:", error);
+      res.status(500).json({ message: "Failed to fetch time-off requests" });
+    }
+  });
+
+  // Create time-off request
+  app.post("/api/timeoff/requests", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const requestData = {
+        ...req.body,
+        userId,
+        status: 'pending',
+      };
+      
+      // Validate request against balance
+      const year = new Date(requestData.startDate).getFullYear();
+      const balance = await storage.getTimeOffBalance(userId, requestData.timeOffTypeId, year);
+      
+      if (!balance || parseFloat(balance.available) < parseFloat(requestData.totalHours)) {
+        return res.status(400).json({ 
+          message: "Insufficient time-off balance for this request" 
+        });
+      }
+      
+      // Check for shift conflicts
+      const conflictingShifts = await storage.checkShiftCoverage(
+        userId,
+        new Date(requestData.startDate),
+        new Date(requestData.endDate)
+      );
+      
+      if (conflictingShifts.length > 0) {
+        requestData.affectedShifts = conflictingShifts.map(s => s.id);
+      }
+      
+      // Create the request
+      const newRequest = await storage.createTimeOffRequest(requestData);
+      
+      // Update pending balance
+      await storage.updateTimeOffBalance(balance.id, {
+        pending: (parseFloat(balance.pending) + parseFloat(requestData.totalHours)).toString(),
+        available: (parseFloat(balance.available) - parseFloat(requestData.totalHours)).toString(),
+      });
+      
+      res.json(newRequest);
+    } catch (error) {
+      console.error("Error creating time-off request:", error);
+      res.status(500).json({ message: "Failed to create time-off request" });
+    }
+  });
+
+  // Review time-off request (approve/deny)
+  app.post("/api/timeoff/requests/:id/review", requireAuth, requirePermission('timeoff.approve_requests'), async (req: any, res) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      const { status, reviewNotes } = req.body;
+      const reviewedBy = req.user.id;
+      
+      if (!['approved', 'denied'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be 'approved' or 'denied'" });
+      }
+      
+      const updatedRequest = await storage.reviewTimeOffRequest(
+        requestId,
+        status,
+        reviewedBy,
+        reviewNotes
+      );
+      
+      if (!updatedRequest) {
+        return res.status(404).json({ message: "Time-off request not found" });
+      }
+      
+      // If denied, restore the pending balance
+      if (status === 'denied') {
+        const year = new Date(updatedRequest.startDate).getFullYear();
+        const balance = await storage.getTimeOffBalance(
+          updatedRequest.userId,
+          updatedRequest.timeOffTypeId,
+          year
+        );
+        
+        if (balance) {
+          await storage.updateTimeOffBalance(balance.id, {
+            pending: (parseFloat(balance.pending) - parseFloat(updatedRequest.totalHours.toString())).toString(),
+            available: (parseFloat(balance.available) + parseFloat(updatedRequest.totalHours.toString())).toString(),
+          });
+        }
+      }
+      
+      // Create notification for the employee
+      await storage.createNotification({
+        userId: updatedRequest.userId,
+        facilityUserId: null,
+        type: 'timeoff_update',
+        title: `Time-off request ${status}`,
+        message: `Your time-off request from ${new Date(updatedRequest.startDate).toLocaleDateString()} to ${new Date(updatedRequest.endDate).toLocaleDateString()} has been ${status}.`,
+        priority: 'normal',
+        metadata: { requestId, status, reviewNotes },
+      });
+      
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Error reviewing time-off request:", error);
+      res.status(500).json({ message: "Failed to review time-off request" });
+    }
+  });
+
+  // Cancel time-off request
+  app.post("/api/timeoff/requests/:id/cancel", requireAuth, async (req: any, res) => {
+    try {
+      const requestId = parseInt(req.params.id);
+      const userId = req.user.id;
+      
+      // Get the request to verify ownership
+      const request = await storage.getTimeOffRequest(requestId);
+      if (!request) {
+        return res.status(404).json({ message: "Time-off request not found" });
+      }
+      
+      if (request.userId !== userId) {
+        return res.status(403).json({ message: "You can only cancel your own requests" });
+      }
+      
+      if (request.status !== 'pending') {
+        return res.status(400).json({ message: "Only pending requests can be cancelled" });
+      }
+      
+      // Update request status
+      const updatedRequest = await storage.updateTimeOffRequest(requestId, {
+        status: 'cancelled',
+      });
+      
+      // Restore the balance
+      const year = new Date(request.startDate).getFullYear();
+      const balance = await storage.getTimeOffBalance(
+        userId,
+        request.timeOffTypeId,
+        year
+      );
+      
+      if (balance) {
+        await storage.updateTimeOffBalance(balance.id, {
+          pending: (parseFloat(balance.pending) - parseFloat(request.totalHours.toString())).toString(),
+          available: (parseFloat(balance.available) + parseFloat(request.totalHours.toString())).toString(),
+        });
+      }
+      
+      res.json(updatedRequest);
+    } catch (error) {
+      console.error("Error cancelling time-off request:", error);
+      res.status(500).json({ message: "Failed to cancel time-off request" });
+    }
+  });
+
+  // Get time-off policies for a facility
+  app.get("/api/timeoff/policies", requireAuth, async (req: any, res) => {
+    try {
+      const facilityId = req.query.facilityId ? parseInt(req.query.facilityId) : req.user.facilityId;
+      const policies = await storage.getTimeOffPolicies(facilityId);
+      res.json(policies);
+    } catch (error) {
+      console.error("Error fetching time-off policies:", error);
+      res.status(500).json({ message: "Failed to fetch time-off policies" });
+    }
+  });
+
   return httpServer;
 }

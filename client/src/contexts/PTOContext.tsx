@@ -1,180 +1,190 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { queryClient, apiRequest } from '@/lib/queryClient';
+import { useAuth } from '@/hooks/use-auth';
 
-export interface PTORequest {
+export interface TimeOffType {
   id: number;
-  employeeId: number;
-  employeeName: string;
-  requestType: 'vacation' | 'sick' | 'personal' | 'family' | 'bereavement';
-  startDate: string;
-  endDate: string;
-  totalDays: number;
-  reason?: string;
-  status: 'pending' | 'approved' | 'denied';
-  requestedAt: string;
-  reviewedBy?: string;
-  reviewedAt?: string;
-  reviewNotes?: string;
-  isEmergency: boolean;
+  name: string;
+  displayName: string;
+  description?: string;
+  color: string;
+  icon?: string;
+  requiresApproval: boolean;
+  requiresDocumentation: boolean;
+  maxConsecutiveDays?: number;
+  advanceNoticeRequired?: number;
+  isActive: boolean;
 }
 
-export interface PTOBalance {
-  employeeId: number;
-  vacationAvailable: number;
-  vacationUsed: number;
-  sickAvailable: number;
-  sickUsed: number;
-  personalAvailable: number;
-  personalUsed: number;
-  totalEarned: number;
-  carryOver: number;
+export interface TimeOffBalance {
+  id: number;
+  userId: number;
+  timeOffTypeId: number;
+  year: number;
+  allocated: string;
+  used: string;
+  pending: string;
+  available: string;
+  createdAt: string;
+  updatedAt: string;
+  type?: TimeOffType;
+}
+
+export interface TimeOffRequest {
+  id: number;
+  userId: number;
+  timeOffTypeId: number;
+  startDate: string;
+  endDate: string;
+  totalHours: string;
+  reason?: string;
+  status: 'pending' | 'approved' | 'denied' | 'cancelled';
+  requestedAt: string;
+  reviewedBy?: number;
+  reviewedAt?: string;
+  reviewNotes?: string;
+  affectedShifts?: number[];
+  createdAt: string;
+  updatedAt: string;
+  // Additional fields from the API enrichment
+  userName?: string;
+  userEmail?: string;
+  typeName?: string;
+  typeColor?: string;
+}
+
+interface CreateTimeOffRequest {
+  timeOffTypeId: number;
+  startDate: string;
+  endDate: string;
+  totalHours: string;
+  reason?: string;
 }
 
 interface PTOContextType {
-  requests: PTORequest[];
-  balances: PTOBalance[];
-  getEmployeeBalance: (employeeId: number) => PTOBalance | null;
-  getEmployeeRequests: (employeeId: number) => PTORequest[];
-  getPendingRequests: () => PTORequest[];
-  submitPTORequest: (request: Omit<PTORequest, 'id' | 'requestedAt' | 'status'>) => void;
-  reviewPTORequest: (requestId: number, status: 'approved' | 'denied', reviewNotes?: string, reviewedBy?: string) => void;
+  requests: TimeOffRequest[];
+  balances: TimeOffBalance[];
+  types: TimeOffType[];
+  getEmployeeBalance: (employeeId: number) => TimeOffBalance[];
+  getEmployeeRequests: (employeeId: number) => TimeOffRequest[];
+  getPendingRequests: () => TimeOffRequest[];
+  submitPTORequest: (request: CreateTimeOffRequest) => Promise<void>;
+  reviewPTORequest: (requestId: number, status: 'approved' | 'denied', reviewNotes?: string) => Promise<void>;
+  cancelPTORequest: (requestId: number) => Promise<void>;
   isLoading: boolean;
+  isLoadingBalances: boolean;
+  isLoadingTypes: boolean;
 }
 
 const PTOContext = createContext<PTOContextType | undefined>(undefined);
 
-// Sample PTO balances
-const sampleBalances: PTOBalance[] = [
-  {
-    employeeId: 1,
-    vacationAvailable: 15,
-    vacationUsed: 5,
-    sickAvailable: 8,
-    sickUsed: 2,
-    personalAvailable: 3,
-    personalUsed: 1,
-    totalEarned: 26,
-    carryOver: 5
-  },
-  {
-    employeeId: 2,
-    vacationAvailable: 12,
-    vacationUsed: 8,
-    sickAvailable: 10,
-    sickUsed: 1,
-    personalAvailable: 2,
-    personalUsed: 0,
-    totalEarned: 24,
-    carryOver: 3
-  },
-  {
-    employeeId: 3,
-    vacationAvailable: 18,
-    vacationUsed: 3,
-    sickAvailable: 12,
-    sickUsed: 0,
-    personalAvailable: 4,
-    personalUsed: 1,
-    totalEarned: 34,
-    carryOver: 8
-  }
-];
-
-// Sample PTO requests
-const sampleRequests: PTORequest[] = [
-  {
-    id: 1,
-    employeeId: 1,
-    employeeName: 'Alice Smith',
-    requestType: 'vacation',
-    startDate: '2025-07-15',
-    endDate: '2025-07-19',
-    totalDays: 5,
-    reason: 'Family vacation to Hawaii',
-    status: 'pending',
-    requestedAt: '2025-06-20T10:30:00Z',
-    isEmergency: false
-  },
-  {
-    id: 2,
-    employeeId: 2,
-    employeeName: 'Bob Johnson',
-    requestType: 'sick',
-    startDate: '2025-06-18',
-    endDate: '2025-06-19',
-    totalDays: 2,
-    reason: 'Medical appointment and recovery',
-    status: 'approved',
-    requestedAt: '2025-06-17T08:15:00Z',
-    reviewedBy: 'Sarah Johnson',
-    reviewedAt: '2025-06-17T14:30:00Z',
-    reviewNotes: 'Approved for medical reasons',
-    isEmergency: true
-  },
-  {
-    id: 3,
-    employeeId: 3,
-    employeeName: 'Carol Lee',
-    requestType: 'personal',
-    startDate: '2025-07-01',
-    endDate: '2025-07-01',
-    totalDays: 1,
-    reason: 'Personal business',
-    status: 'pending',
-    requestedAt: '2025-06-19T16:45:00Z',
-    isEmergency: false
-  }
-];
-
 export const PTOProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [requests, setRequests] = useState<PTORequest[]>(sampleRequests);
-  const [balances] = useState<PTOBalance[]>(sampleBalances);
-  const [isLoading] = useState(false);
-
-  const getEmployeeBalance = (employeeId: number): PTOBalance | null => {
-    return balances.find(balance => balance.employeeId === employeeId) || null;
+  const { user } = useAuth();
+  const currentYear = new Date().getFullYear();
+  
+  // Fetch time-off types
+  const { data: types = [], isLoading: isLoadingTypes } = useQuery<TimeOffType[]>({
+    queryKey: ['/api/timeoff/types'],
+    enabled: !!user,
+  });
+  
+  // Fetch user's time-off balances
+  const { data: balances = [], isLoading: isLoadingBalances, refetch: refetchBalances } = useQuery<TimeOffBalance[]>({
+    queryKey: ['/api/timeoff/balance', currentYear],
+    queryFn: () => fetch(`/api/timeoff/balance?year=${currentYear}`).then(res => res.json()),
+    enabled: !!user,
+  });
+  
+  // Fetch time-off requests
+  const { data: requests = [], isLoading: isLoadingRequests, refetch: refetchRequests } = useQuery<TimeOffRequest[]>({
+    queryKey: ['/api/timeoff/requests'],
+    enabled: !!user,
+  });
+  
+  // Submit PTO request mutation
+  const submitMutation = useMutation({
+    mutationFn: async (requestData: CreateTimeOffRequest) => {
+      const res = await apiRequest('/api/timeoff/requests', 'POST', requestData);
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchRequests();
+      refetchBalances();
+      queryClient.invalidateQueries({ queryKey: ['/api/timeoff/requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/timeoff/balance'] });
+    },
+  });
+  
+  // Review PTO request mutation
+  const reviewMutation = useMutation({
+    mutationFn: async ({ requestId, status, reviewNotes }: { requestId: number; status: 'approved' | 'denied'; reviewNotes?: string }) => {
+      const res = await apiRequest(
+        `/api/timeoff/requests/${requestId}/review`, 
+        'POST', 
+        { status, reviewNotes }
+      );
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchRequests();
+      refetchBalances();
+      queryClient.invalidateQueries({ queryKey: ['/api/timeoff/requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/timeoff/balance'] });
+    },
+  });
+  
+  // Cancel PTO request mutation
+  const cancelMutation = useMutation({
+    mutationFn: async (requestId: number) => {
+      const res = await apiRequest(`/api/timeoff/requests/${requestId}/cancel`, 'POST');
+      return res.json();
+    },
+    onSuccess: () => {
+      refetchRequests();
+      refetchBalances();
+      queryClient.invalidateQueries({ queryKey: ['/api/timeoff/requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/timeoff/balance'] });
+    },
+  });
+  
+  const getEmployeeBalance = (employeeId: number): TimeOffBalance[] => {
+    return balances.filter((balance: TimeOffBalance) => balance.userId === employeeId);
   };
 
-  const getEmployeeRequests = (employeeId: number): PTORequest[] => {
-    return requests.filter(request => request.employeeId === employeeId);
+  const getEmployeeRequests = (employeeId: number): TimeOffRequest[] => {
+    return requests.filter((request: TimeOffRequest) => request.userId === employeeId);
   };
 
-  const getPendingRequests = (): PTORequest[] => {
-    return requests.filter(request => request.status === 'pending');
+  const getPendingRequests = (): TimeOffRequest[] => {
+    return requests.filter((request: TimeOffRequest) => request.status === 'pending');
   };
 
-  const submitPTORequest = (requestData: Omit<PTORequest, 'id' | 'requestedAt' | 'status'>) => {
-    const newRequest: PTORequest = {
-      ...requestData,
-      id: Date.now(),
-      status: 'pending',
-      requestedAt: new Date().toISOString()
-    };
-    setRequests(prev => [...prev, newRequest]);
+  const submitPTORequest = async (requestData: CreateTimeOffRequest) => {
+    await submitMutation.mutateAsync(requestData);
   };
 
-  const reviewPTORequest = (requestId: number, status: 'approved' | 'denied', reviewNotes?: string, reviewedBy?: string) => {
-    setRequests(prev => prev.map(request => 
-      request.id === requestId 
-        ? {
-            ...request,
-            status,
-            reviewedBy,
-            reviewedAt: new Date().toISOString(),
-            reviewNotes
-          }
-        : request
-    ));
+  const reviewPTORequest = async (requestId: number, status: 'approved' | 'denied', reviewNotes?: string) => {
+    await reviewMutation.mutateAsync({ requestId, status, reviewNotes });
+  };
+  
+  const cancelPTORequest = async (requestId: number) => {
+    await cancelMutation.mutateAsync(requestId);
   };
 
   const value: PTOContextType = {
     requests,
     balances,
+    types,
     getEmployeeBalance,
     getEmployeeRequests,
     getPendingRequests,
     submitPTORequest,
     reviewPTORequest,
-    isLoading
+    cancelPTORequest,
+    isLoading: isLoadingRequests,
+    isLoadingBalances,
+    isLoadingTypes,
   };
 
   return <PTOContext.Provider value={value}>{children}</PTOContext.Provider>;

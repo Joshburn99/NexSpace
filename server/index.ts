@@ -5,6 +5,7 @@ import { exec } from "child_process";
 import { createEnhancedStaffProfiles } from "./enhanced-staff-data";
 import { generateComprehensiveSampleData } from "./sample-data-generator";
 import { setupFacilityUserRoleTemplates } from "./facility-user-roles-setup";
+import { initializeTimeOffData } from "./init-timeoff-data";
 
 const app = express();
 app.use(express.json());
@@ -62,6 +63,9 @@ function killPort5000() {
   // Initialize enhanced staff profiles on startup
   try {
     await setupFacilityUserRoleTemplates();
+    // Initialize time-off data
+    await initializeTimeOffData();
+    log("Time-off data initialized successfully");
     // Temporarily disable enhanced staff data creation until schema is fixed
     // await createEnhancedStaffProfiles();
     // Temporarily disable sample data generation to prevent database errors
