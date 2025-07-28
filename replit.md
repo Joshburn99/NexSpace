@@ -13,6 +13,33 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 28, 2025 - Enhanced Facility Management Page UI/UX
+- **Advanced Sorting Functionality**: Implemented sortable table headers with chevron indicators for all facility columns
+  - Click any header to sort by facility name, type, location, team, beds, or status
+  - Visual indicators show current sort field and direction (ascending/descending)
+- **Enhanced Pagination System**: Redesigned pagination with improved navigation and mobile responsiveness
+  - Icon-based first/last/next/previous navigation buttons
+  - Smart page number display with ellipsis for large datasets
+  - Mobile-optimized pagination that shows current page indicator on small screens
+  - Items per page selector (25/50/100 options)
+- **Form Redesign with Field Groupings**: Restructured facility creation form for better usability
+  - Organized fields into logical groups: Basic Information, Location Details, Contact Information
+  - Added visual separators and section headers for clarity
+  - Implemented real-time validation with red border highlighting on errors
+  - Required field indicators (*) and helpful field descriptions
+  - Input restrictions (maxLength for state/ZIP codes, min values for numbers)
+- **Mobile-Responsive Improvements**: Complete mobile optimization across all components
+  - Responsive page header that adapts text and icon sizes
+  - Form tabs that stack on mobile (2 columns) vs desktop (5 columns)
+  - Collapsible grid layouts that adjust from 3 columns to 1 on small screens
+  - Touch-friendly button sizes and spacing
+  - Mobile-optimized filter section with full-width search bar
+- **Enhanced Search & Filter UI**: Improved filter section with better organization
+  - Dedicated card with header for search and filters
+  - Responsive grid layout for filter dropdowns
+  - Action buttons that stack vertically on mobile
+  - Clear visual hierarchy and consistent spacing
+
 ### July 28, 2025 - Bulk Actions Implementation for Enhanced Management
 - **Bulk Shift Request Management**: Implemented comprehensive bulk actions for shift requests
   - Multi-select checkboxes with "Select All" functionality for pending requests

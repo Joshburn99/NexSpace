@@ -48,7 +48,14 @@ import {
   EyeOff,
   Upload,
   Download,
-  Search
+  Search,
+  ChevronUp,
+  ChevronDown,
+  ChevronsUpDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight
 } from "lucide-react";
 
 // Enhanced Facility Types
@@ -234,6 +241,8 @@ export default function FacilityManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [viewMode, setViewMode] = useState<'list' | 'cards'>('list');
+  const [sortField, setSortField] = useState<keyof EnhancedFacility>('name');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -277,10 +286,85 @@ export default function FacilityManagementPage() {
     return matchesSearch && matchesState && matchesType && matchesTeam;
   }) : [];
 
+  // Sort facilities
+  const sortedFacilities = [...filteredFacilities].sort((a, b) => {
+    let aValue = a[sortField];
+    let bValue = b[sortField];
+    
+    // Handle special cases
+    if (sortField === 'teamId') {
+      aValue = getTeamName(a.teamId);
+      bValue = getTeamName(b.teamId);
+    }
+    
+    // Handle null/undefined values
+    if (aValue == null) aValue = '';
+    if (bValue == null) bValue = '';
+    
+    // Compare values
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortDirection === 'asc' 
+        ? aValue.toLowerCase().localeCompare(bValue.toLowerCase())
+        : bValue.toLowerCase().localeCompare(aValue.toLowerCase());
+    }
+    
+    if (typeof aValue === 'number' && typeof bValue === 'number') {
+      return sortDirection === 'asc' ? aValue - bValue : bValue - aValue;
+    }
+    
+    return 0;
+  });
+
   // Pagination calculation
-  const totalPages = Math.ceil(filteredFacilities.length / itemsPerPage);
+  const totalPages = Math.ceil(sortedFacilities.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedFacilities = filteredFacilities.slice(startIndex, startIndex + itemsPerPage);
+  const paginatedFacilities = sortedFacilities.slice(startIndex, startIndex + itemsPerPage);
+
+  // Handle sort
+  const handleSort = (field: keyof EnhancedFacility) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+    
+    if (totalPages <= maxPagesToShow) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    
+    return pages;
+  };
 
   // Create facility mutation
   const createFacilityMutation = useMutation({
@@ -878,15 +962,15 @@ export default function FacilityManagementPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto px-4 py-4 md:py-8 max-w-7xl">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-2">
-            <Building2 className="h-8 w-8" />
-            Enhanced Facility Management
+          <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-2">
+            <Building2 className="h-6 md:h-8 w-6 md:w-8" />
+            <span className="hidden sm:inline">Enhanced</span> Facility Management
           </h1>
-          <p className="text-muted-foreground mt-1">
-            Comprehensive facility operations, rates, and workflow management
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
+            Comprehensive facility operations <span className="hidden sm:inline">and workflow management</span>
           </p>
         </div>
         
@@ -908,157 +992,229 @@ export default function FacilityManagementPage() {
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <Tabs defaultValue="basic" className="w-full">
-                  <TabsList className="grid w-full grid-cols-5">
+                  <TabsList className="grid w-full grid-cols-2 md:grid-cols-5 gap-1">
                     <TabsTrigger value="basic">Basic</TabsTrigger>
                     <TabsTrigger value="operations">Operations</TabsTrigger>
                     <TabsTrigger value="billing">Billing</TabsTrigger>
                     <TabsTrigger value="rates">Rates</TabsTrigger>
-                    <TabsTrigger value="workflow">Workflow</TabsTrigger>
+                    <TabsTrigger value="workflow" className="col-span-2 md:col-span-1">Workflow</TabsTrigger>
                   </TabsList>
                   
-                  <TabsContent value="basic" className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Facility Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Regional Medical Center" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="facilityType"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Facility Type</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <TabsContent value="basic" className="space-y-6 mt-6">
+                    {/* Basic Information Group */}
+                    <div className="space-y-4">
+                      <div className="pb-2 border-b">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Basic Information</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Facility Name <span className="text-red-500">*</span></FormLabel>
                               <FormControl>
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select type" />
-                                </SelectTrigger>
+                                <Input 
+                                  placeholder="Regional Medical Center" 
+                                  {...field} 
+                                  className={form.formState.errors.name ? "border-red-500" : ""}
+                                />
                               </FormControl>
-                              <SelectContent>
-                                <SelectItem value="Hospital">Hospital</SelectItem>
-                                <SelectItem value="Clinic">Clinic</SelectItem>
-                                <SelectItem value="Skilled Nursing">Skilled Nursing</SelectItem>
-                                <SelectItem value="Assisted Living">Assisted Living</SelectItem>
-                                <SelectItem value="Rehabilitation">Rehabilitation</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                              <FormDescription className="text-xs">
+                                The official name of your healthcare facility
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="facilityType"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Facility Type <span className="text-red-500">*</span></FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger className={form.formState.errors.facilityType ? "border-red-500" : ""}>
+                                    <SelectValue placeholder="Select type" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="Hospital">Hospital</SelectItem>
+                                  <SelectItem value="Clinic">Clinic</SelectItem>
+                                  <SelectItem value="Skilled Nursing">Skilled Nursing</SelectItem>
+                                  <SelectItem value="Assisted Living">Assisted Living</SelectItem>
+                                  <SelectItem value="Rehabilitation">Rehabilitation</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormDescription className="text-xs">
+                                Type of healthcare services provided
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                     </div>
                     
-                    <FormField
-                      control={form.control}
-                      name="address"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Address</FormLabel>
-                          <FormControl>
-                            <Input placeholder="1234 Medical Drive" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <div className="grid grid-cols-3 gap-4">
+                    {/* Location Information Group */}
+                    <div className="space-y-4">
+                      <div className="pb-2 border-b">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Location Details</h3>
+                      </div>
                       <FormField
                         control={form.control}
-                        name="city"
+                        name="address"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>City</FormLabel>
+                            <FormLabel>Street Address <span className="text-red-500">*</span></FormLabel>
                             <FormControl>
-                              <Input placeholder="Portland" {...field} />
+                              <Input 
+                                placeholder="1234 Medical Drive" 
+                                {...field} 
+                                className={form.formState.errors.address ? "border-red-500" : ""}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                       
-                      <FormField
-                        control={form.control}
-                        name="state"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>State</FormLabel>
-                            <FormControl>
-                              <Input placeholder="OR" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="city"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>City <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="Portland" 
+                                  {...field} 
+                                  className={form.formState.errors.city ? "border-red-500" : ""}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="state"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>State <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="OR" 
+                                  {...field} 
+                                  maxLength={2}
+                                  className={form.formState.errors.state ? "border-red-500" : ""}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="zipCode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>ZIP Code <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="97201" 
+                                  {...field} 
+                                  maxLength={10}
+                                  className={form.formState.errors.zipCode ? "border-red-500" : ""}
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Contact Information Group */}
+                    <div className="space-y-4">
+                      <div className="pb-2 border-b">
+                        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contact Information</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Phone Number <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="(503) 555-0100" 
+                                  type="tel"
+                                  {...field} 
+                                  className={form.formState.errors.phone ? "border-red-500" : ""}
+                                />
+                              </FormControl>
+                              <FormDescription className="text-xs">
+                                Main facility contact number
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        
+                        <FormField
+                          control={form.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email Address <span className="text-red-500">*</span></FormLabel>
+                              <FormControl>
+                                <Input 
+                                  placeholder="admin@facility.com" 
+                                  type="email" 
+                                  {...field} 
+                                  className={form.formState.errors.email ? "border-red-500" : ""}
+                                />
+                              </FormControl>
+                              <FormDescription className="text-xs">
+                                Primary contact email address
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
                       
+                      {/* Facility Details */}
                       <FormField
                         control={form.control}
-                        name="zipCode"
+                        name="bedCount"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>ZIP Code</FormLabel>
+                            <FormLabel>Bed Count <span className="text-red-500">*</span></FormLabel>
                             <FormControl>
-                              <Input placeholder="97201" {...field} />
+                              <Input 
+                                type="number" 
+                                min="1"
+                                placeholder="250" 
+                                {...field} 
+                                className={form.formState.errors.bedCount ? "border-red-500" : ""}
+                              />
                             </FormControl>
+                            <FormDescription className="text-xs">
+                              Total number of beds in the facility
+                            </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <FormField
-                        control={form.control}
-                        name="phone"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Phone</FormLabel>
-                            <FormControl>
-                              <Input placeholder="(503) 555-0100" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="admin@facility.com" type="email" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    </div>
-                    
-                    <FormField
-                      control={form.control}
-                      name="bedCount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bed Count</FormLabel>
-                          <FormControl>
-                            <Input type="number" placeholder="250" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
                   </TabsContent>
                   
                   <TabsContent value="operations" className="space-y-4">
@@ -1560,25 +1716,31 @@ export default function FacilityManagementPage() {
 
       {/* Filters */}
       <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <Label htmlFor="search">Search Facilities</Label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  id="search"
-                  placeholder="Search by name, city, or team..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+        <CardHeader className="pb-4">
+          <CardTitle className="text-base">Search & Filter</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Search Bar - Full width on all screens */}
+          <div>
+            <Label htmlFor="search" className="text-sm">Search Facilities</Label>
+            <div className="relative mt-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                id="search"
+                placeholder="Search by name, city, or team..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
+          </div>
+          
+          {/* Filter Grid - Responsive columns */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <Label htmlFor="state">Filter by State</Label>
+              <Label htmlFor="state" className="text-sm">Filter by State</Label>
               <Select value={filterState} onValueChange={setFilterState}>
-                <SelectTrigger>
+                <SelectTrigger className="mt-1">
                   <SelectValue placeholder="All states" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1590,10 +1752,11 @@ export default function FacilityManagementPage() {
                 </SelectContent>
               </Select>
             </div>
+            
             <div>
-              <Label htmlFor="type">Filter by Type</Label>
+              <Label htmlFor="type" className="text-sm">Filter by Type</Label>
               <Select value={filterType} onValueChange={setFilterType}>
-                <SelectTrigger>
+                <SelectTrigger className="mt-1">
                   <SelectValue placeholder="All types" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1607,9 +1770,9 @@ export default function FacilityManagementPage() {
             </div>
             
             <div>
-              <Label htmlFor="team-filter">Filter by Team</Label>
+              <Label htmlFor="team-filter" className="text-sm">Filter by Team</Label>
               <Select value={filterTeam} onValueChange={setFilterTeam}>
-                <SelectTrigger>
+                <SelectTrigger className="mt-1">
                   <SelectValue placeholder="All teams" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1623,30 +1786,36 @@ export default function FacilityManagementPage() {
                 </SelectContent>
               </Select>
             </div>
-            
-            <div className="flex items-end gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setSearchTerm("");
-                  setFilterState("all");
-                  setFilterType("all");
-                  setFilterTeam("all");
-                }}
-              >
-                Clear Filters
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
-                  queryClient.refetchQueries({ queryKey: ["/api/facilities"] });
-                  toast({ title: "Refreshed", description: "Facility list updated" });
-                }}
-              >
-                Refresh
-              </Button>
-            </div>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              variant="outline" 
+              className="w-full sm:w-auto"
+              onClick={() => {
+                setSearchTerm("");
+                setFilterState("all");
+                setFilterType("all");
+                setFilterTeam("all");
+                setCurrentPage(1);
+              }}
+            >
+              <X className="h-4 w-4 mr-2" />
+              Clear Filters
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                queryClient.invalidateQueries({ queryKey: ["/api/facilities"] });
+                queryClient.refetchQueries({ queryKey: ["/api/facilities"] });
+                toast({ title: "Refreshed", description: "Facility list updated" });
+              }}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Refresh
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -1715,12 +1884,84 @@ export default function FacilityManagementPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Facility Name</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Location</TableHead>
-                  <TableHead>Team</TableHead>
-                  <TableHead>Beds</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('name')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Facility Name
+                      {sortField === 'name' ? (
+                        sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('facilityType')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Type
+                      {sortField === 'facilityType' ? (
+                        sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('city')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Location
+                      {sortField === 'city' ? (
+                        sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('teamId')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Team
+                      {sortField === 'teamId' ? (
+                        sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('bedCount')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Beds
+                      {sortField === 'bedCount' ? (
+                        sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableHead>
+                  <TableHead 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleSort('isActive')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Status
+                      {sortField === 'isActive' ? (
+                        sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronsUpDown className="h-4 w-4 text-muted-foreground" />
+                      )}
+                    </div>
+                  </TableHead>
                   <TableHead>EMR</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -1857,44 +2098,81 @@ export default function FacilityManagementPage() {
         </div>
       )}
 
-      {/* Pagination */}
+      {/* Enhanced Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-6">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6">
           <div className="text-sm text-muted-foreground">
-            Page {currentPage} of {totalPages}
+            Page {currentPage} of {totalPages} ({sortedFacilities.length} total facilities)
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            {/* First & Previous buttons */}
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
+              className="h-8 w-8"
               onClick={() => setCurrentPage(1)}
               disabled={currentPage === 1}
             >
-              First
+              <ChevronsLeft className="h-4 w-4" />
+              <span className="sr-only">First page</span>
             </Button>
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
+              className="h-8 w-8"
               onClick={() => setCurrentPage(currentPage - 1)}
               disabled={currentPage === 1}
             >
-              Previous
+              <ChevronLeft className="h-4 w-4" />
+              <span className="sr-only">Previous page</span>
             </Button>
+            
+            {/* Page numbers */}
+            <div className="hidden sm:flex items-center gap-1">
+              {getPageNumbers().map((pageNumber, index) => (
+                pageNumber === '...' ? (
+                  <span key={`ellipsis-${index}`} className="px-2 text-muted-foreground">...</span>
+                ) : (
+                  <Button
+                    key={pageNumber}
+                    variant={currentPage === pageNumber ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => setCurrentPage(pageNumber as number)}
+                  >
+                    {pageNumber}
+                  </Button>
+                )
+              ))}
+            </div>
+            
+            {/* Mobile page indicator */}
+            <div className="flex sm:hidden items-center gap-2 px-2">
+              <span className="text-sm font-medium">{currentPage}</span>
+              <span className="text-sm text-muted-foreground">/</span>
+              <span className="text-sm text-muted-foreground">{totalPages}</span>
+            </div>
+            
+            {/* Next & Last buttons */}
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
+              className="h-8 w-8"
               onClick={() => setCurrentPage(currentPage + 1)}
               disabled={currentPage === totalPages}
             >
-              Next
+              <ChevronRight className="h-4 w-4" />
+              <span className="sr-only">Next page</span>
             </Button>
             <Button
               variant="outline"
-              size="sm"
+              size="icon"
+              className="h-8 w-8"
               onClick={() => setCurrentPage(totalPages)}
               disabled={currentPage === totalPages}
             >
-              Last
+              <ChevronsRight className="h-4 w-4" />
+              <span className="sr-only">Last page</span>
             </Button>
           </div>
         </div>
