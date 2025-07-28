@@ -151,7 +151,6 @@ export function ProductTour() {
   const { user } = useAuth();
   const [location, setLocation] = useLocation();
   const [run, setRun] = useState(false);
-  const [stepIndex, setStepIndex] = useState(0);
 
   // Check if user has completed the tour before
   useEffect(() => {
@@ -171,15 +170,18 @@ export function ProductTour() {
   // Listen for custom event to start tour
   useEffect(() => {
     const handleStartTour = () => {
+      // Always start tour from dashboard
+      if (!location.includes("dashboard") && location !== "/") {
+        setLocation("/");
+      }
       setRun(true);
-      setStepIndex(0);
     };
 
     window.addEventListener("startProductTour", handleStartTour);
     return () => {
       window.removeEventListener("startProductTour", handleStartTour);
     };
-  }, []);
+  }, [location, setLocation]);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, type, index, action } = data;
@@ -191,54 +193,43 @@ export function ProductTour() {
         localStorage.setItem(`nexspace_tour_completed_${user.id}`, "true");
       }
       setRun(false);
-      setStepIndex(0);
-    } else if (type === "step:before" && action === "next") {
-      // Navigate before showing the next step
-      const nextStep = tourSteps[index + 1];
-      
-      if (nextStep) {
-        // Navigate based on the current step we're leaving
-        if (index === 1) { // Leaving dashboard step, going to calendar step
-          console.log("Tour: Navigating to calendar for step 2");
-          setLocation("/enhanced-calendar");
-          // Delay step advancement to allow navigation
-          setTimeout(() => {
-            setStepIndex(index + 1);
-          }, 800);
-          return;
-        } else if (index === 2) { // Leaving calendar step, going to messaging step  
-          console.log("Tour: Navigating to messaging for step 3");
-          setLocation("/messaging");
-          setTimeout(() => {
-            setStepIndex(index + 1);
-          }, 800);
-          return;
-        } else if (index === 3) { // Leaving messaging step, going to staff step
-          console.log("Tour: Navigating to staff for step 4");
-          setLocation("/staff-directory");
-          setTimeout(() => {
-            setStepIndex(index + 1);
-          }, 800);
-          return;
-        } else if (index === 5) { // Going to analytics step
-          console.log("Tour: Navigating to analytics for step 6");
-          setLocation("/analytics");
-          setTimeout(() => {
-            setStepIndex(index + 1);
-          }, 800);
-          return;
-        }
+      // Return to dashboard after tour
+      if (!location.includes("dashboard") && location !== "/") {
+        setLocation("/");
       }
-      
-      setStepIndex(index + 1);
     } else if (type === "step:after" && action === "next") {
-      setStepIndex(index + 1);
+      // Navigate to the right page for specific steps AFTER the current step is done
+      const nextIndex = index + 1;
+      
+      // Step 2 (index 2) is the calendar step
+      if (nextIndex === 2 && !location.includes("calendar") && !location.includes("schedule")) {
+        console.log("Tour: Navigating to calendar page");
+        setLocation("/enhanced-calendar");
+      }
+      // Step 3 (index 3) is the messaging step  
+      else if (nextIndex === 3 && !location.includes("messaging")) {
+        console.log("Tour: Navigating to messaging page");
+        setLocation("/messaging");
+      }
+      // Step 4 (index 4) is the staff step
+      else if (nextIndex === 4 && !location.includes("staff")) {
+        console.log("Tour: Navigating to staff page");
+        setLocation("/staff-directory");
+      }
+      // Step 6 (index 6) is the analytics step
+      else if (nextIndex === 6 && !location.includes("analytics")) {
+        console.log("Tour: Navigating to analytics page");
+        setLocation("/analytics");
+      }
     }
   };
 
   const startTour = () => {
+    // Always start tour from dashboard
+    if (!location.includes("dashboard") && location !== "/") {
+      setLocation("/");
+    }
     setRun(true);
-    setStepIndex(0);
   };
 
   return (
@@ -250,7 +241,7 @@ export function ProductTour() {
         scrollToFirstStep
         showProgress
         showSkipButton
-        stepIndex={stepIndex}
+
         steps={tourSteps}
         styles={{
           options: {
