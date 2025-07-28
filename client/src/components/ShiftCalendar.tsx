@@ -1,12 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Loader2 } from 'lucide-react';
 import ShiftCalendarCell from './ShiftCalendarCell';
 import ShiftDetailModal from './ShiftDetailModal';
-import { useShiftManagement } from '../hooks/useShiftManagement';
-import { mockFacilities } from '../data';
+import { useShiftsWithAssignments } from '../hooks/useShiftsWithAssignments';
 import { addDays, formatDate } from '../utils';
+import { useQuery } from '@tanstack/react-query';
 
 const ShiftCalendar: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -17,8 +17,19 @@ const ShiftCalendar: React.FC = () => {
     getShiftsForDate,
     assignWorker,
     unassignWorker,
-    getDashboardStats
-  } = useShiftManagement();
+    getDashboardStats,
+    isLoading
+  } = useShiftsWithAssignments();
+
+  // Fetch facilities data
+  const { data: facilities = [] } = useQuery({
+    queryKey: ['/api/facilities'],
+    queryFn: async () => {
+      const response = await fetch('/api/facilities', { credentials: 'include' });
+      if (!response.ok) throw new Error('Failed to fetch facilities');
+      return response.json();
+    },
+  });
 
   // Get current week dates
   const weekDates = useMemo(() => {
@@ -49,8 +60,8 @@ const ShiftCalendar: React.FC = () => {
 
   const selectedFacility = useMemo(() => {
     if (!selectedShiftData?.shift) return null;
-    return mockFacilities.find(f => f.id === selectedShiftData.shift.facilityId) || null;
-  }, [selectedShiftData]);
+    return facilities.find((f: any) => f.id === selectedShiftData.shift.facilityId) || null;
+  }, [selectedShiftData, facilities]);
 
   const dashboardStats = getDashboardStats;
 
@@ -92,22 +103,35 @@ const ShiftCalendar: React.FC = () => {
 
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[600px]">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Loading shift calendar...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Dashboard Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Shifts
+              Active Staff
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{dashboardStats.totalShifts}</div>
+            <div className="text-2xl font-bold text-primary">
+              {dashboardStats.activeStaff || 0}
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
               Open Shifts
@@ -115,33 +139,33 @@ const ShiftCalendar: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-orange-600">
-              {dashboardStats.openShifts}
+              {dashboardStats.openShifts || 0}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Fill Rate
+              Compliance Rate
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              {dashboardStats.fillRate}%
+              {dashboardStats.complianceRate || 0}%
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="hover:shadow-md transition-shadow">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              Pending Requests
+              Monthly Hours
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
-              {dashboardStats.pendingRequests}
+              {Math.round(dashboardStats.monthlyHours || 0)}
             </div>
           </CardContent>
         </Card>
@@ -184,51 +208,64 @@ const ShiftCalendar: React.FC = () => {
         </CardHeader>
 
         <CardContent>
-          {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-4">
-            {/* Day Headers */}
-            {dayNames.map((dayName, index) => {
-              const date = weekDates[index];
-              const isToday = date === new Date().toISOString().split('T')[0];
-              
-              return (
-                <div key={dayName} className="text-center">
-                  <div className={`font-medium ${isToday ? 'text-blue-600' : 'text-muted-foreground'}`}>
-                    {dayName}
+          {/* Calendar Grid - Mobile Responsive */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 md:gap-4">
+            {/* Day Headers - Hidden on mobile, shown on larger screens */}
+            <div className="hidden lg:contents">
+              {dayNames.map((dayName, index) => {
+                const date = weekDates[index];
+                const isToday = date === new Date().toISOString().split('T')[0];
+                
+                return (
+                  <div key={dayName} className="text-center">
+                    <div className={`font-medium ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {dayName}
+                    </div>
+                    <div className={`text-lg font-bold ${isToday ? 'text-primary' : ''}`}>
+                      {new Date(date).getDate()}
+                    </div>
                   </div>
-                  <div className={`text-lg font-bold ${isToday ? 'text-blue-600' : ''}`}>
-                    {new Date(date).getDate()}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
 
             {/* Calendar Cells with Shifts */}
-            {weeklyShifts.map(({ date, shifts }) => {
+            {weeklyShifts.map(({ date, shifts }, dayIndex) => {
               const isToday = date === new Date().toISOString().split('T')[0];
+              const dayName = dayNames[dayIndex];
               
               return (
                 <div
                   key={date}
-                  className={`min-h-[200px] border rounded-lg p-2 space-y-2 ${
-                    isToday ? 'bg-blue-50 border-blue-200' : 'bg-gray-50'
+                  className={`min-h-[150px] md:min-h-[200px] border rounded-lg p-2 space-y-2 ${
+                    isToday ? 'bg-primary/5 border-primary/20' : 'bg-muted/30'
                   }`}
                 >
+                  {/* Mobile day header */}
+                  <div className="lg:hidden text-center mb-2">
+                    <div className={`font-medium text-sm ${isToday ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {dayName}
+                    </div>
+                    <div className={`text-base font-bold ${isToday ? 'text-primary' : ''}`}>
+                      {new Date(date).getDate()}
+                    </div>
+                  </div>
+                  
                   {shifts.length === 0 ? (
-                    <div className="text-center text-muted-foreground text-sm py-8">
+                    <div className="text-center text-muted-foreground text-sm py-4 md:py-8">
                       No shifts scheduled
                     </div>
                   ) : (
-                    shifts.map(shiftData => {
+                    shifts.map((shiftData, shiftIndex) => {
                       if (!shiftData) return null;
                       
                       return (
                         <ShiftCalendarCell
-                          key={`${date}-${shiftData.shift.id}-${shiftData.shift.startTime}-${shiftData.shift.specialty}`}
+                          key={`shift-${shiftData.shift.id}-${date}-${shiftIndex}`}
                           shift={shiftData.shift}
                           assignedWorkers={shiftData.assignedWorkers}
                           requestedWorkers={shiftData.requestedWorkers}
-                          onShiftClick={() => handleShiftClick(shiftData.shift.id)}
+                          onShiftClick={() => handleShiftClick(shiftData.shift.id.toString())}
                           className="w-full"
                         />
                       );

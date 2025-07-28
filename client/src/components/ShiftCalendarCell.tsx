@@ -20,21 +20,23 @@ const ShiftCalendarCell: React.FC<ShiftCalendarCellProps> = ({
   onShiftClick,
   className = ''
 }) => {
-  const staffingInfo = getShiftStaffingRatio(shift);
-  const actualAssigned = assignedWorkers.length;
+  // Use backend data for accurate staffing information
+  const actualAssigned = shift.filledPositions || assignedWorkers.length;
+  const totalRequired = shift.totalPositions || shift.requiredWorkers || 1;
   const hasRequests = requestedWorkers.length > 0;
-  const isUnderstaffed = actualAssigned < shift.requiredWorkers;
-  const isFullyStaffed = actualAssigned >= shift.requiredWorkers;
+  const isUnderstaffed = actualAssigned < totalRequired;
+  const isFullyStaffed = actualAssigned >= totalRequired;
 
   const getStatusColor = () => {
-    if (isFullyStaffed) return 'bg-green-100 border-green-300 text-green-800';
-    if (isUnderstaffed && hasRequests) return 'bg-orange-100 border-orange-300 text-orange-800';
-    if (isUnderstaffed) return 'bg-red-100 border-red-300 text-red-800';
-    return 'bg-gray-100 border-gray-300 text-gray-800';
+    if (isFullyStaffed) return 'bg-green-100 hover:bg-green-200 border-green-300 text-green-800';
+    if (isUnderstaffed && hasRequests) return 'bg-orange-100 hover:bg-orange-200 border-orange-300 text-orange-800';
+    if (isUnderstaffed) return 'bg-red-100 hover:bg-red-200 border-red-300 text-red-800';
+    return 'bg-gray-100 hover:bg-gray-200 border-gray-300 text-gray-800';
   };
 
   const getStaffingDisplay = () => {
-    return `${actualAssigned}/${shift.requiredWorkers}`;
+    // Display format: "CNA 2/4 filled"
+    return `${shift.specialty} ${actualAssigned}/${totalRequired} filled`;
   };
 
   return (
@@ -46,12 +48,9 @@ const ShiftCalendarCell: React.FC<ShiftCalendarCellProps> = ({
         ${getStatusColor()} ${className}
       `}
     >
-      {/* Header with specialty and staffing */}
+      {/* Header with staffing info */}
       <div className="flex items-center justify-between w-full">
         <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-xs">
-            {shift.specialty}
-          </Badge>
           <span className="font-semibold text-sm">
             {getStaffingDisplay()}
           </span>
@@ -60,15 +59,15 @@ const ShiftCalendarCell: React.FC<ShiftCalendarCellProps> = ({
         {/* Status indicators */}
         <div className="flex items-center gap-1">
           {hasRequests && !isFullyStaffed && (
-            <Badge variant="outline" className="text-xs bg-blue-50">
-              {requestedWorkers.length} requests
+            <Badge variant="outline" className="text-xs bg-primary/10 text-primary border-primary/20">
+              {requestedWorkers.length} request{requestedWorkers.length > 1 ? 's' : ''}
             </Badge>
           )}
-          {isUnderstaffed && (
-            <AlertTriangle className="h-3 w-3 text-orange-500" />
+          {isUnderstaffed && !hasRequests && (
+            <AlertTriangle className="h-4 w-4 text-orange-500" />
           )}
           {isFullyStaffed && (
-            <Users className="h-3 w-3 text-green-500" />
+            <Users className="h-4 w-4 text-green-600" />
           )}
         </div>
       </div>
