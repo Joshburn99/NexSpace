@@ -334,6 +334,17 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
             <span className={cn("ml-3", !expanded && "sr-only")}>Settings</span>
           </button>
         </Link>
+        <Link href="/user-profile">
+          <button
+            className={cn(
+              "w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors mt-1",
+              isActive("/user-profile") ? "text-blue-700 bg-blue-50" : "text-gray-700 hover:bg-gray-100"
+            )}
+          >
+            <Users className="w-5 h-5" />
+            <span className={cn("ml-3", !expanded && "sr-only")}>My Profile</span>
+          </button>
+        </Link>
       </div>
 
       {/* User Profile */}

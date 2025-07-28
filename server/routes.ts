@@ -86,10 +86,11 @@ export function registerRoutes(app: Express): Server {
       fileSize: 10 * 1024 * 1024, // 10MB limit
     },
     fileFilter: (req, file, cb) => {
-      if (file.mimetype === "application/pdf") {
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+      if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
       } else {
-        cb(new Error("Only PDF files are allowed"));
+        cb(new Error("Only JPEG, PNG, and PDF files are allowed"));
       }
     },
   });
@@ -180,6 +181,160 @@ export function registerRoutes(app: Express): Server {
       res.json(safeUser);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // User Profile API
+  app.get("/api/user/profile", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      // For staff users, get additional information
+      let profileData: any = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role,
+        status: user.status || "active",
+      };
+
+      // Check if this is a staff member
+      const [staffMember] = await db
+        .select()
+        .from(staff)
+        .where(eq(staff.email, user.email))
+        .limit(1);
+        
+      if (staffMember) {
+        profileData = {
+          ...profileData,
+          phone: staffMember.phone,
+          address: staffMember.address,
+          city: staffMember.city,
+          state: staffMember.state,
+          zipCode: staffMember.zipCode,
+          specialty: staffMember.specialty,
+          department: staffMember.department,
+          employmentType: staffMember.employmentType,
+          hireDate: staffMember.hireDate,
+          emergencyContact: staffMember.emergencyContact,
+          emergencyPhone: staffMember.emergencyPhone,
+          bio: staffMember.bio,
+          facilities: staffMember.associatedFacilities || [],
+          credentials: staffMember.credentials || [],
+        };
+      } else if (user.role !== 'super_admin') {
+        // For facility users, get their facility associations
+        const [facilityUser] = await db
+          .select()
+          .from(facilityUsers)
+          .where(eq(facilityUsers.email, user.email))
+          .limit(1);
+          
+        if (facilityUser) {
+          profileData.facilities = facilityUser.associatedFacilityIds || [];
+          profileData.primaryFacilityId = facilityUser.primaryFacilityId;
+          profileData.title = facilityUser.title;
+          profileData.department = facilityUser.department;
+        }
+      }
+
+      res.json(profileData);
+    } catch (error) {
+      console.error('User profile fetch error:', error);
+      res.status(500).json({ message: "Failed to fetch user profile" });
+    }
+  });
+
+  app.patch("/api/user/profile", requireAuth, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const updates = req.body;
+      
+      // Update user basic info
+      if (updates.firstName || updates.lastName || updates.email) {
+        await storage.updateUser(userId, {
+          firstName: updates.firstName,
+          lastName: updates.lastName,
+          email: updates.email,
+        });
+      }
+
+      // For staff members, update additional fields
+      const [staffMember] = await db
+        .select()
+        .from(staff)
+        .where(eq(staff.email, req.user.email))
+        .limit(1);
+        
+      if (staffMember) {
+        await db
+          .update(staff)
+          .set({
+            phone: updates.phone,
+            address: updates.address,
+            city: updates.city,
+            state: updates.state,
+            zipCode: updates.zipCode,
+            emergencyContact: updates.emergencyContact,
+            emergencyPhone: updates.emergencyPhone,
+            bio: updates.bio,
+            updatedAt: new Date(),
+          })
+          .where(eq(staff.id, staffMember.id));
+      }
+
+      res.json({ message: "Profile updated successfully" });
+    } catch (error) {
+      console.error('User profile update error:', error);
+      res.status(500).json({ message: "Failed to update user profile" });
+    }
+  });
+
+  // Credential upload endpoint
+  app.post("/api/user/credentials/upload", requireAuth, upload.single('file'), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+
+      const file = req.file;
+      if (!file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      // Here you would typically upload the file to a storage service
+      // For now, we'll just save the file info
+      const credentialData = {
+        userId,
+        fileName: file.originalname,
+        fileType: file.mimetype,
+        fileSize: file.size,
+        uploadedAt: new Date(),
+      };
+
+      // In a real implementation, save this to database
+      console.log('Credential uploaded:', credentialData);
+
+      res.json({ message: "Credential uploaded successfully", data: credentialData });
+    } catch (error) {
+      console.error('Credential upload error:', error);
+      res.status(500).json({ message: "Failed to upload credential" });
     }
   });
 

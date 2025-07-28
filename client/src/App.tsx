@@ -84,6 +84,7 @@ import JobPostingsPage from "@/pages/JobPostingsPage";
 import CreateJobPostingPage from "@/pages/CreateJobPostingPage";
 import ReferralSystemPage from "@/pages/ReferralSystemPage";
 import WorkflowAutomationPage from "@/pages/WorkflowAutomationPage";
+import UserProfilePage from "@/pages/user-profile-page";
 import AttendancePage from "@/pages/AttendancePage";
 import OvertimeReportPage from "@/pages/OvertimeReportPage";
 import FloatPoolAnalyticsPage from "@/pages/FloatPoolAnalyticsPage";
@@ -140,6 +141,7 @@ function AppContent() {
       <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />
       <ProtectedRoute path="/profile" component={SettingsPage} />
       <ProtectedRoute path="/my-profile" component={EnhancedProfilePage} />
+      <ProtectedRoute path="/user-profile" component={UserProfilePage} />
       <ProtectedRoute path="/teams" component={EnhancedStaffPage} />
       <ProtectedRoute path="/my-requests" component={WorkerMyRequestsPage} />
       <ProtectedRoute path="/my-schedule" component={MySchedulePage} />

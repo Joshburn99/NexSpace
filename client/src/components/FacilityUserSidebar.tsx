@@ -249,6 +249,13 @@ const SIDEBAR_ITEMS: SidebarItem[] = [
     icon: Shield,
     permissions: ['view_audit_logs'],
     description: 'View activity history'
+  },
+  {
+    label: 'My Profile',
+    href: '/user-profile',
+    icon: Users,
+    permissions: [],
+    description: 'View and edit your profile'
   }
 ];
 
