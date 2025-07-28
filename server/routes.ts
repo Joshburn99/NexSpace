@@ -2947,30 +2947,8 @@ export function registerRoutes(app: Express): Server {
   // Staff profile endpoints
   app.get("/api/staff", requireAuth, requirePermission("staff.view"), async (req: any, res) => {
     try {
-      // Get staff data directly from database to include associatedFacilities
-      let dbStaffData = await db
-        .select({
-          id: staff.id,
-          firstName: staff.firstName,
-          lastName: staff.lastName,
-          email: staff.email,
-          phone: staff.phone,
-          specialty: staff.specialty,
-          department: staff.department,
-          employmentType: staff.employmentType,
-          profilePhoto: staff.profilePhoto,
-          associatedFacilities: staff.associatedFacilities,
-          isActive: staff.isActive,
-          hourlyRate: staff.hourlyRate,
-          location: staff.location,
-          bio: staff.bio,
-          certifications: staff.certifications,
-          reliabilityScore: staff.reliabilityScore,
-          createdAt: staff.createdAt,
-          updatedAt: staff.updatedAt,
-        })
-        .from(staff)
-        .where(eq(staff.isActive, true));
+      // Get staff data using storage method
+      let dbStaffData = await storage.getAllStaff();
 
       // Format staff data for consistency with frontend expectations
       dbStaffData = dbStaffData.map((staffMember) => {
@@ -6779,9 +6757,16 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Create new facility
+  // Create new facility - Restricted to superusers only
   app.post("/api/facilities", requireAuth, async (req, res) => {
     try {
+      // Check if user is a superuser
+      if (req.user?.role !== "super_admin") {
+        return res.status(403).json({ 
+          message: "Access denied. Only superusers can create facilities." 
+        });
+      }
+      
       const newFacility = {
         id: Date.now(),
         ...req.body,
@@ -6838,8 +6823,14 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Import facility from external source
+  // Import facility from external source - Restricted to superusers only
   app.post("/api/facilities/import", requireAuth, async (req, res) => {
+    // Check if user is a superuser
+    if (req.user?.role !== "super_admin") {
+      return res.status(403).json({ 
+        message: "Access denied. Only superusers can import facilities." 
+      });
+    }
     try {
       const { cmsId } = req.body;
       const importedFacility = {

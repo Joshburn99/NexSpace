@@ -13,6 +13,19 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 28, 2025 - Facility Creation Security Enhancement
+- **Superuser-Only Facility Creation**: Implemented comprehensive security restrictions for facility creation
+  - Frontend: OnboardingWizard now only shows "Create a new facility" option to superusers
+  - Non-superusers can only join existing facilities with appropriate messaging  
+  - Backend: Added authorization checks to POST /api/facilities endpoint to reject non-superuser attempts
+  - Enhanced security for facility import endpoints with same superuser restriction
+- **Sign-In Option for Onboarding**: Added "Already have an account? Sign in" link to onboarding wizard
+  - Allows existing users to skip onboarding and go directly to login
+  - Prevents duplicate account creation for existing users
+- **Database Query Fix**: Fixed staff data fetching error by using storage method instead of raw DB query
+  - Resolved "Cannot convert undefined or null to object" error in getAllStaff()
+  - Maintains proper facility-based access control for staff data
+
 ### July 28, 2025 - External Calendar Sync Implementation
 - **iCal Feed Integration**: Users can now generate unique iCal feed URLs to subscribe to their NexSpace schedule in any calendar app
   - Toggle switch to enable/disable iCal feed generation in Settings > Calendar Sync

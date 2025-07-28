@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Loader2, User, Building, UserPlus, Calendar, X, ChevronRight, Check } from "lucide-react";
+import { useLocation } from "wouter";
 
 interface OnboardingData {
   // Step 1: Profile
@@ -92,12 +93,13 @@ const shiftSchema = z.object({
 });
 
 export function OnboardingWizard() {
-  const { user, updateUser } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState<OnboardingData>({});
   const [isExiting, setIsExiting] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
 
   // Check if user needs onboarding
   useEffect(() => {
@@ -127,7 +129,7 @@ export function OnboardingWizard() {
       return response.json();
     },
     onSuccess: (data) => {
-      updateUser(data);
+      // Refresh user data
       queryClient.invalidateQueries({ queryKey: ["/api/me"] });
     },
   });
@@ -147,6 +149,12 @@ export function OnboardingWizard() {
   // Exit onboarding
   const handleExit = () => {
     setIsExiting(true);
+  };
+
+  // Sign in with existing account
+  const handleSignIn = () => {
+    // Log out the current session to go back to auth page
+    logoutMutation.mutate();
   };
 
   // Navigate between steps
@@ -185,7 +193,15 @@ export function OnboardingWizard() {
           </div>
 
           <CardTitle>Welcome to NexSpace!</CardTitle>
-          <CardDescription>Let's get you set up in just a few steps</CardDescription>
+          <CardDescription>
+            Let's get you set up in just a few steps.{" "}
+            <button
+              onClick={handleSignIn}
+              className="text-primary hover:underline font-medium"
+            >
+              Already have an account? Sign in
+            </button>
+          </CardDescription>
 
           {/* Progress indicator */}
           <div className="mt-4 space-y-4">
@@ -408,6 +424,9 @@ function FacilityStep({
   const { user } = useAuth();
   const { toast } = useToast();
   const [isCreatingNew, setIsCreatingNew] = useState(false);
+  
+  // Only superusers can create new facilities
+  const canCreateFacility = user?.role === "super_admin";
 
   const form = useForm({
     resolver: zodResolver(facilitySchema),
@@ -465,15 +484,22 @@ function FacilityStep({
             />
             <span>Join an existing facility</span>
           </label>
-          <label className="flex items-center space-x-2">
-            <input
-              type="radio"
-              checked={isCreatingNew}
-              onChange={() => setIsCreatingNew(true)}
-              className="text-primary"
-            />
-            <span>Create a new facility</span>
-          </label>
+          {canCreateFacility && (
+            <label className="flex items-center space-x-2">
+              <input
+                type="radio"
+                checked={isCreatingNew}
+                onChange={() => setIsCreatingNew(true)}
+                className="text-primary"
+              />
+              <span>Create a new facility</span>
+            </label>
+          )}
+          {!canCreateFacility && facilities.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              Please contact a system administrator to create a facility for you.
+            </p>
+          )}
         </div>
       </div>
 
