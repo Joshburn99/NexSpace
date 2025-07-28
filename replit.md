@@ -13,6 +13,24 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 28, 2025 - Emergency Platform Fixes and Database Stabilization
+- **Critical Database Column Fixes**: Added missing database columns to resolve application failures
+  - Added onboarding_completed and onboarding_step columns to users table
+  - Added account_status column to staff table with 'active' default
+  - Added address_type column to facility_addresses table with 'primary' default
+  - Fixed column name mismatches preventing core functionality
+- **Enhanced Facilities Routes Temporary Disable**: Disabled complex enhanced facilities routes due to schema conflicts
+  - Created working basic facilities API endpoint using actual database structure
+  - Resolved "Failed to Load Facilities" error in facility management pages
+  - Maintains core facility listing functionality while schema issues are resolved
+- **Navigation Structure Optimization**: Moved Calendar from top-level to Scheduling dropdown as requested
+  - Calendar now properly accessible under Scheduling > Calendar pointing to enhanced calendar page
+  - Improved logical organization of navigation hierarchy for better user experience
+- **Facility Management Restoration**: Created SimpleFacilityManagement component with functional list view
+  - Replaced broken complex facility management with working table-based interface
+  - Includes search, filtering, and basic facility information display
+  - Provides stable foundation for facility management functionality
+
 ### July 28, 2025 - Critical Bug Fixes and Database Schema Alignment
 - **Fixed Staff API Database Column Mismatch**: Resolved critical issue where staff queries were failing due to snake_case vs camelCase column naming
   - Added mapping in getAllStaff storage method to convert snake_case database columns to camelCase TypeScript interface fields

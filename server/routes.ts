@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
-import { createEnhancedFacilitiesRoutes } from "./enhanced-facilities-routes";
+// import { createEnhancedFacilitiesRoutes } from "./enhanced-facilities-routes"; // DISABLED
 import { sql } from "drizzle-orm";
 import { format } from "date-fns";
 
@@ -246,13 +246,39 @@ export function registerRoutes(app: Express): Server {
     };
   };
 
-  // Mount enhanced facility routes
-  const enhancedFacilityRoutes = createEnhancedFacilitiesRoutes(
-    requireAuth,
-    requirePermission,
-    auditLog
-  );
-  app.use("/api/facilities", enhancedFacilityRoutes);
+  // Mount enhanced facility routes - TEMPORARILY DISABLED due to database schema issues
+  // const enhancedFacilityRoutes = createEnhancedFacilitiesRoutes(
+  //   requireAuth,
+  //   requirePermission,
+  //   auditLog
+  // );
+  // app.use("/api/facilities", enhancedFacilityRoutes);
+
+  // Basic facilities endpoint with actual database structure
+  app.get("/api/facilities", requireAuth, async (req, res) => {
+    try {
+      const facilitiesData = await db.select({
+        id: facilities.id,
+        name: facilities.name,
+        facilityType: facilities.facilityType,
+        bedCount: facilities.bedCount,
+        isActive: facilities.isActive,
+        phone: facilities.phone,
+        email: facilities.email,
+        address: facilities.address,
+        city: facilities.city,
+        state: facilities.state,
+        zipCode: facilities.zipCode,
+        createdAt: facilities.createdAt,
+        updatedAt: facilities.updatedAt,
+      }).from(facilities);
+      
+      res.json(facilitiesData);
+    } catch (error) {
+      console.error("Error fetching facilities:", error);
+      res.status(500).json({ message: "Failed to fetch facilities" });
+    }
+  });
 
   // Security audit endpoint (development only)
   if (process.env.NODE_ENV === "development") {
