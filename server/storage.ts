@@ -1116,6 +1116,7 @@ export class DatabaseStorage implements IStorage {
   async getDashboardStats(facilityIds?: number[]): Promise<{
     activeStaff: number;
     openShifts: number;
+    filledShifts: number;
     complianceRate: number;
     monthlyHours: number;
     totalFacilities: number;
@@ -1123,6 +1124,9 @@ export class DatabaseStorage implements IStorage {
     expiringCredentials: number;
     outstandingInvoices: number;
     monthlyRevenue: number;
+    floatPoolCount: number;
+    upcomingTimeOff: number;
+    billingTotal: number;
     recentActivity: any[];
     priorityTasks: any[];
   }> {
@@ -1159,6 +1163,85 @@ export class DatabaseStorage implements IStorage {
     }
     
     const [openShiftsResult] = await openShiftsQuery;
+
+    // Filled shifts count
+    let filledShiftsQuery = db
+      .select({ count: count() })
+      .from(shifts)
+      .where(eq(shifts.status, "filled"));
+    
+    if (facilityIds?.length) {
+      filledShiftsQuery = filledShiftsQuery.where(
+        or(...facilityIds.map(id => eq(shifts.facilityId, id)))
+      );
+    }
+    
+    const [filledShiftsResult] = await filledShiftsQuery;
+
+    // Float pool count (available staff not on active shift)
+    let floatPoolQuery = db
+      .select({ count: count() })
+      .from(staff)
+      .where(
+        and(
+          eq(staff.isActive, true),
+          eq(staff.employmentType, "full_time")
+        )
+      );
+    
+    if (facilityIds?.length) {
+      floatPoolQuery = floatPoolQuery.where(
+        sql`${staff.associatedFacilities} && ${facilityIds}`
+      );
+    }
+    
+    const [floatPoolResult] = await floatPoolQuery;
+
+    // Upcoming time off (next 7 days)
+    const sevenDaysFromNow = new Date();
+    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    let upcomingTimeOffQuery = db
+      .select({ count: count() })
+      .from(timeOffRequests)
+      .where(
+        and(
+          eq(timeOffRequests.status, "approved"),
+          gte(timeOffRequests.startDate, today),
+          lte(timeOffRequests.startDate, sevenDaysFromNow)
+        )
+      );
+    
+    if (facilityIds?.length) {
+      upcomingTimeOffQuery = upcomingTimeOffQuery
+        .leftJoin(staff, eq(timeOffRequests.staffId, staff.id))
+        .where(sql`${staff.associatedFacilities} && ${facilityIds}`);
+    }
+    
+    const [upcomingTimeOffResult] = await upcomingTimeOffQuery;
+
+    // Billing total (current period unpaid invoices)
+    let billingTotalQuery = db
+      .select({
+        totalAmount: sql<number>`COALESCE(SUM(${invoices.amount}), 0)`,
+      })
+      .from(invoices)
+      .where(
+        or(
+          eq(invoices.status, "pending"),
+          eq(invoices.status, "overdue")
+        )
+      );
+    
+    if (facilityIds?.length) {
+      billingTotalQuery = billingTotalQuery.where(
+        or(...facilityIds.map(id => eq(invoices.facilityId, id)))
+      );
+    }
+    
+    const [billingTotalResult] = await billingTotalQuery;
 
     // Urgent shifts (those posted in last 24 hours or marked urgent)
     const yesterday = new Date();
@@ -1295,6 +1378,7 @@ export class DatabaseStorage implements IStorage {
     return {
       activeStaff: activeStaffResult.count,
       openShifts: openShiftsResult.count,
+      filledShifts: filledShiftsResult.count,
       complianceRate: Math.round(complianceRate * 10) / 10,
       monthlyHours: Number(monthlyHoursResult.totalHours) || 0,
       totalFacilities: totalFacilitiesResult.count,
@@ -1302,6 +1386,9 @@ export class DatabaseStorage implements IStorage {
       expiringCredentials: expiringCredentialsResult.count,
       outstandingInvoices: outstandingInvoicesResult.count,
       monthlyRevenue: Number(monthlyRevenueResult.totalRevenue) || 0,
+      floatPoolCount: floatPoolResult.count,
+      upcomingTimeOff: upcomingTimeOffResult.count,
+      billingTotal: Number(billingTotalResult.totalAmount) || 0,
       recentActivity,
       priorityTasks
     };

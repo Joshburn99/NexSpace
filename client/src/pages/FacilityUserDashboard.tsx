@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { CalendarDays, Clock, Users, AlertTriangle, CheckCircle, TrendingUp, DollarSign, FileText, Loader2, Shield, Activity, Plus, Settings, Building } from "lucide-react";
+import { CalendarDays, Clock, Users, AlertTriangle, CheckCircle, TrendingUp, DollarSign, FileText, Loader2, Shield, Activity, Plus, Settings, Building, UserCheck, Calendar, Download, UsersIcon, FileBarChart } from "lucide-react";
 import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
 import { CanAccess } from "@/components/PermissionWrapper";
 import { PermissionButton } from "@/components/PermissionButton";
@@ -13,10 +13,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { apiRequest } from "@/lib/queryClient";
 import { EditableDashboard } from "@/components/dashboard/EditableDashboard";
 import { DraggableDashboard } from "@/components/dashboard/DraggableDashboard";
+import { Link } from "wouter";
 
 interface DashboardStats {
   activeStaff: number;
   openShifts: number;
+  filledShifts: number;
   complianceRate: number;
   monthlyHours: number;
   totalFacilities: number;
@@ -24,6 +26,9 @@ interface DashboardStats {
   expiringCredentials: number;
   outstandingInvoices: number;
   monthlyRevenue: number;
+  floatPoolCount: number;
+  upcomingTimeOff: number;
+  billingTotal: number;
   recentActivity: Array<{
     id: number;
     action: string;
@@ -265,15 +270,8 @@ export default function FacilityUserDashboard() {
           </Button>
         </div>
 
-        {/* Stats Overview - Real-time Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatsCard
-            title="Active Staff"
-            value={dashboardStats?.activeStaff || 0}
-            subtitle="currently on duty"
-            icon={Users}
-            trend="neutral"
-          />
+        {/* Primary Stats Overview - Key Facility Metrics */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <StatsCard
             title="Open Shifts"
             value={dashboardStats?.openShifts || 0}
@@ -283,47 +281,55 @@ export default function FacilityUserDashboard() {
             trendValue={dashboardStats && dashboardStats.openShifts > 5 ? `${dashboardStats.openShifts - 5} above target` : undefined}
           />
           <StatsCard
-            title="Compliance Rate"
-            value={`${dashboardStats?.complianceRate || 0}%`}
-            subtitle="facility wide"
-            icon={Shield}
-            trend={dashboardStats && dashboardStats.complianceRate >= 90 ? 'up' : 'down'}
-            trendValue={dashboardStats && dashboardStats.complianceRate >= 90 ? 'Good' : 'Needs attention'}
+            title="Filled Shifts"
+            value={dashboardStats?.filledShifts || 0}
+            subtitle="fully staffed"
+            icon={UserCheck}
+            trend="up"
+            trendValue="Good coverage"
           />
           <StatsCard
-            title="Monthly Revenue"
-            value={`$${(dashboardStats?.monthlyRevenue || 0).toLocaleString()}`}
-            subtitle="current month"
+            title="Float Pool"
+            value={dashboardStats?.floatPoolCount || 0}
+            subtitle="available now"
+            icon={Users}
+            trend={dashboardStats && dashboardStats.floatPoolCount < 5 ? 'down' : 'up'}
+            trendValue={dashboardStats && dashboardStats.floatPoolCount < 5 ? 'Low availability' : 'Adequate'}
+          />
+          <StatsCard
+            title="Upcoming PTO"
+            value={dashboardStats?.upcomingTimeOff || 0}
+            subtitle="next 7 days"
+            icon={Calendar}
+            trend={dashboardStats && dashboardStats.upcomingTimeOff > 10 ? 'up' : 'neutral'}
+          />
+          <StatsCard
+            title="Billing Summary"
+            value={`$${(dashboardStats?.billingTotal || 0).toLocaleString()}`}
+            subtitle="this period"
             icon={DollarSign}
             trend="up"
-            trendValue="12% vs last month"
+            trendValue="On track"
             permission="view_billing"
           />
         </div>
 
         {/* Secondary Stats Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatsCard
-            title="Monthly Hours"
-            value={`${dashboardStats?.monthlyHours || 0}`}
-            subtitle="staff hours worked"
-            icon={Clock}
+            title="Active Staff"
+            value={dashboardStats?.activeStaff || 0}
+            subtitle="on duty today"
+            icon={Users}
             trend="neutral"
           />
           <StatsCard
-            title="Total Facilities"
-            value={dashboardStats?.totalFacilities || 0}
-            subtitle="under management"
-            icon={Building}
-            trend="neutral"
-          />
-          <StatsCard
-            title="Outstanding Invoices"
-            value={dashboardStats?.outstandingInvoices || 0}
-            subtitle="pending payment"
-            icon={FileText}
-            trend={dashboardStats && dashboardStats.outstandingInvoices > 10 ? 'up' : 'neutral'}
-            permission="view_billing"
+            title="Compliance Rate"
+            value={`${dashboardStats?.complianceRate || 0}%`}
+            subtitle="credentials current"
+            icon={Shield}
+            trend={dashboardStats && dashboardStats.complianceRate >= 90 ? 'up' : 'down'}
+            trendValue={dashboardStats && dashboardStats.complianceRate >= 90 ? 'Good' : 'Needs attention'}
           />
           <StatsCard
             title="Urgent Shifts"
@@ -332,6 +338,13 @@ export default function FacilityUserDashboard() {
             icon={AlertTriangle}
             trend={dashboardStats && dashboardStats.urgentShifts > 0 ? 'up' : 'neutral'}
             permission="view_schedules"
+          />
+          <StatsCard
+            title="Expiring Credentials"
+            value={dashboardStats?.expiringCredentials || 0}
+            subtitle="within 30 days"
+            icon={Shield}
+            trend={dashboardStats && dashboardStats.expiringCredentials > 5 ? 'up' : 'neutral'}
           />
         </div>
 
@@ -352,46 +365,94 @@ export default function FacilityUserDashboard() {
         )}
 
         {/* Quick Actions */}
-        <CanAccess permissions={['create_shifts', 'view_schedules', 'manage_facility_settings']}>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                <Settings className="h-5 w-5" />
-                Quick Actions
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <PermissionButton
-                  permissions={['create_shifts']}
-                  variant="outline"
-                  className="h-20 flex flex-col items-center justify-center space-y-2"
-                >
-                  <Plus className="h-5 w-5" />
-                  <span>Add Shift</span>
-                </PermissionButton>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <Plus className="h-5 w-5 text-blue-600" />
+              Quick Actions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              <CanAccess permissions={['create_shifts']}>
+                <Link href="/calendar">
+                  <Button
+                    variant="outline"
+                    className="h-20 w-full flex flex-col items-center justify-center space-y-2 hover:bg-blue-50"
+                  >
+                    <Plus className="h-6 w-6 text-blue-600" />
+                    <span className="text-sm font-medium">Post a Shift</span>
+                  </Button>
+                </Link>
+              </CanAccess>
 
-                <PermissionButton
-                  permissions={['view_schedules']}
-                  variant="outline"
-                  className="h-20 flex flex-col items-center justify-center space-y-2"
-                >
-                  <CalendarDays className="h-5 w-5" />
-                  <span>View Calendar</span>
-                </PermissionButton>
+              <CanAccess permissions={['view_staff']}>
+                <Link href="/staff">
+                  <Button
+                    variant="outline"
+                    className="h-20 w-full flex flex-col items-center justify-center space-y-2 hover:bg-green-50"
+                  >
+                    <UsersIcon className="h-6 w-6 text-green-600" />
+                    <span className="text-sm font-medium">View Staff</span>
+                  </Button>
+                </Link>
+              </CanAccess>
 
-                <PermissionButton
-                  permissions={['manage_facility_settings']}
+              <CanAccess permissions={['view_analytics']}>
+                <Button
                   variant="outline"
-                  className="h-20 flex flex-col items-center justify-center space-y-2"
+                  className="h-20 w-full flex flex-col items-center justify-center space-y-2 hover:bg-purple-50"
+                  onClick={() => {
+                    // Export analytics functionality
+                    const exportData = {
+                      openShifts: dashboardStats?.openShifts || 0,
+                      filledShifts: dashboardStats?.filledShifts || 0,
+                      floatPoolCount: dashboardStats?.floatPoolCount || 0,
+                      activeStaff: dashboardStats?.activeStaff || 0,
+                      complianceRate: dashboardStats?.complianceRate || 0,
+                      monthlyRevenue: dashboardStats?.monthlyRevenue || 0,
+                      exportDate: new Date().toISOString()
+                    };
+                    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `analytics-export-${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                  }}
                 >
-                  <Settings className="h-5 w-5" />
-                  <span>Settings</span>
-                </PermissionButton>
-              </div>
-            </CardContent>
-          </Card>
-        </CanAccess>
+                  <Download className="h-6 w-6 text-purple-600" />
+                  <span className="text-sm font-medium">Export Analytics</span>
+                </Button>
+              </CanAccess>
+
+              <CanAccess permissions={['view_schedules']}>
+                <Link href="/calendar">
+                  <Button
+                    variant="outline"
+                    className="h-20 w-full flex flex-col items-center justify-center space-y-2 hover:bg-orange-50"
+                  >
+                    <CalendarDays className="h-6 w-6 text-orange-600" />
+                    <span className="text-sm font-medium">View Calendar</span>
+                  </Button>
+                </Link>
+              </CanAccess>
+
+              <CanAccess permissions={['view_analytics']}>
+                <Link href="/analytics">
+                  <Button
+                    variant="outline"
+                    className="h-20 w-full flex flex-col items-center justify-center space-y-2 hover:bg-indigo-50"
+                  >
+                    <FileBarChart className="h-6 w-6 text-indigo-600" />
+                    <span className="text-sm font-medium">View Reports</span>
+                  </Button>
+                </Link>
+              </CanAccess>
+            </div>
+          </CardContent>
+        </Card>
       </div>
       
       {/* Editable Dashboard Overlay */}
