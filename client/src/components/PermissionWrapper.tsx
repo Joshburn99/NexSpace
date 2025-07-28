@@ -53,6 +53,7 @@ export function CanAccess({
     : hasAnyPermission(permissionsToCheck);
 
   // Debug logging for permission checks
+  console.log("PermissionWrapper - access check:", {
     permissionsToCheck,
     requireAll,
     hasAccess,

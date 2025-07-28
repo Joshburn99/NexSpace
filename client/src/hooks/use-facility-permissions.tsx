@@ -243,6 +243,7 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
     if (!user) return null;
 
     // Debug logging to understand what data we have
+    console.log("[FACILITY PERMISSIONS] User data:", {
       userEmail: user.email,
       userRole: user.role,
       userId: user.id,
@@ -291,6 +292,7 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
     const rolePermissions = ROLE_PERMISSIONS[facilityRole] || ROLE_PERMISSIONS[user.role] || [];
 
     // Debug logging for permissions
+    console.log("[FACILITY PERMISSIONS] Getting user permissions:", {
       userRole: user.role,
       facilityRole,
       userPermissions,
@@ -320,6 +322,7 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
     const userPermissions = getUserPermissions();
     const hasAccess = userPermissions.includes(permission);
 
+    console.log(`[FACILITY PERMISSIONS] Checking permission '${permission}':`, {
       userEmail: user.email,
       userRole: user.role,
       userPermissions,

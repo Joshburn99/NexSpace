@@ -2178,6 +2178,7 @@ export class DatabaseStorage implements IStorage {
         { id: "shift-coverage", title: "Shift Coverage", visible: false, category: "operations" },
       ];
 
+      console.log(
         `[STORAGE] Returning default dashboard config for user ${userId} - ${defaultWidgets.length} total widgets`
       );
       return {
@@ -2192,6 +2193,7 @@ export class DatabaseStorage implements IStorage {
 
   async saveDashboardWidgets(userId: number, widgets: any): Promise<void> {
     try {
+      console.log(`[STORAGE] Saving dashboard widgets for user ${userId}`, {
         widgetCount: widgets?.length || 0,
         visibleWidgets: widgets?.filter((w: any) => w.visible)?.length || 0,
       });
@@ -2671,6 +2673,7 @@ export class DatabaseStorage implements IStorage {
         .from(shiftAssignments)
         .where(and(eq(shiftAssignments.shiftId, shiftId), eq(shiftAssignments.status, "assigned")));
 
+      console.log(
         `[DEBUG] Found ${assignments.length} assignments for shift ${shiftId}:`,
         assignments
       );

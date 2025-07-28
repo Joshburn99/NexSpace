@@ -141,6 +141,7 @@ export default function FacilityProfilePage() {
   const queryClient = useQueryClient();
 
   // Debug logging
+  console.log("FacilityProfilePage - permissions and state:", {
     facilityId,
     hasPermission: hasPermission("view_facility_profile"),
     permissions,
@@ -155,6 +156,7 @@ export default function FacilityProfilePage() {
     enabled: !!facilityId && hasPermission("view_facility_profile"),
   });
 
+  console.log("FacilityProfilePage - query state:", {
     facility,
     isLoading,
     error,

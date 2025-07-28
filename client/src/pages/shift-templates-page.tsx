@@ -442,6 +442,7 @@ export default function ShiftTemplatesPage() {
       // Force re-render of all form controls
       templateForm.trigger();
 
+      console.log("Template form values after edit:", {
         name: templateForm.watch("name"),
         department: templateForm.watch("department"),
         specialty: templateForm.watch("specialty"),

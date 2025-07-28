@@ -399,6 +399,7 @@ export default function EnhancedCalendarPage() {
         if (updatedShifts && selectedShift) {
           const updatedShift = updatedShifts.find((s) => s.id === selectedShift.id);
           if (updatedShift) {
+            console.log("Assignment - updated shift data:", {
               id: updatedShift.id,
               assignedStaff: (updatedShift as any).assignedStaff,
               filledPositions: updatedShift.filledPositions,
@@ -456,6 +457,7 @@ export default function EnhancedCalendarPage() {
         if (updatedShifts && selectedShift) {
           const updatedShift = updatedShifts.find((s) => s.id === selectedShift.id);
           if (updatedShift) {
+            console.log("Unassignment - updated shift data:", {
               id: updatedShift.id,
               assignedStaff: (updatedShift as any).assignedStaff,
               filledPositions: updatedShift.filledPositions,

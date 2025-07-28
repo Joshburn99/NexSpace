@@ -536,7 +536,6 @@ export function registerRoutes(app: Express): Server {
             sql`LOWER(${facilities.type}) LIKE ${searchTerm}`,
             sql`LOWER(${facilities.city}) LIKE ${searchTerm}`,
             sql`CAST(${facilities.id} AS TEXT) LIKE ${searchTerm}`
-            );
           )
         )
         .limit(5);
@@ -559,7 +558,6 @@ export function registerRoutes(app: Express): Server {
               sql`LOWER(${jobs.description}) LIKE ${searchTerm}`,
               sql`LOWER(${jobs.location}) LIKE ${searchTerm}`,
               sql`CAST(${jobs.id} AS TEXT) LIKE ${searchTerm}`
-              );
             ),
             eq(jobs.status, "active")
           )
@@ -802,8 +800,7 @@ export function registerRoutes(app: Express): Server {
           }
         } catch (error) {
           console.error(
-            console.log(
-                `[FACILITY FILTER] Error fetching facility associations for ${user.email}:`,
+            `[FACILITY FILTER] Error fetching facility associations for ${user.email}:`,
             error
           );
         }
@@ -889,7 +886,6 @@ export function registerRoutes(app: Express): Server {
           assignedStaffId: filteredStaff[0]?.id || 3,
           assignedStaffName: filteredStaff[0]
             ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
-            );
             : "Alice Smith",
           assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
           assignedStaffPhone: "(503) 555-0123",
@@ -1151,7 +1147,6 @@ export function registerRoutes(app: Express): Server {
               id: filteredStaff[0]?.id || 3,
               name: filteredStaff[0]
                 ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
-                );
                 : "Alice Smith",
               email: filteredStaff[0]?.email || "alice.smith@nexspace.com",
               specialty: filteredStaff[0]?.specialty || "LPN",
@@ -1161,7 +1156,6 @@ export function registerRoutes(app: Express): Server {
               id: filteredStaff[1]?.id || 4,
               name: filteredStaff[1]
                 ? `${filteredStaff[1].firstName} ${filteredStaff[1].lastName}`
-                );
                 : "Bob Johnson",
               email: filteredStaff[1]?.email || "bob.johnson@nexspace.com",
               specialty: filteredStaff[1]?.specialty || "RN",
@@ -1172,7 +1166,6 @@ export function registerRoutes(app: Express): Server {
           assignedStaffId: filteredStaff[0]?.id || 3,
           assignedStaffName: filteredStaff[0]
             ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
-            );
             : "Alice Smith",
           assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
           assignedStaffSpecialty: filteredStaff[0]?.specialty || "LPN",
@@ -1210,7 +1203,6 @@ export function registerRoutes(app: Express): Server {
           assignedStaffId: filteredStaff[0]?.id || 3,
           assignedStaffName: filteredStaff[0]
             ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
-            );
             : "Alice Smith",
           assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
           assignedStaffSpecialty: filteredStaff[0]?.specialty || "RN",
@@ -1233,7 +1225,6 @@ export function registerRoutes(app: Express): Server {
           assignedStaffId: filteredStaff[1]?.id || 4,
           assignedStaffName: filteredStaff[1]
             ? `${filteredStaff[1].firstName} ${filteredStaff[1].lastName}`
-            );
             : "Bob Johnson",
           assignedStaffEmail: filteredStaff[1]?.email || "bob.johnson@nexspace.com",
           assignedStaffSpecialty: filteredStaff[1]?.specialty || "RN",
@@ -1259,7 +1250,6 @@ export function registerRoutes(app: Express): Server {
           assignedStaffId: filteredStaff[0]?.id || 3,
           assignedStaffName: filteredStaff[0]
             ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
-            );
             : "Alice Smith",
           assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
           assignedStaffSpecialty: filteredStaff[0]?.specialty || "RN",
@@ -1582,9 +1572,8 @@ export function registerRoutes(app: Express): Server {
       }
 
       console.log(
-        console.log(
-            `[SHIFT REQUESTS] Shift ${shiftId}: ${currentAssignments.length}/${maxCapacity} filled, returning ${shiftRequests.length} available workers`
-            );
+        `[SHIFT REQUESTS] Shift ${shiftId}: ${currentAssignments.length}/${maxCapacity} filled, returning ${shiftRequests.length} available workers`
+      );
       res.json(shiftRequests);
     } catch (error) {
       console.error("Error fetching shift requests:", error);
@@ -1743,9 +1732,8 @@ export function registerRoutes(app: Express): Server {
           3; // Default to 3 for multi-worker shifts instead of 1
 
         console.log(
-          console.log(
-              `[CAPACITY CHECK] Shift ${shiftId}: maxCapacity=${maxCapacity}, currentAssignments=${currentAssignments.length}`
-              );
+          `[CAPACITY CHECK] Shift ${shiftId}: maxCapacity=${maxCapacity}, currentAssignments=${currentAssignments.length}`
+        );
         if (currentAssignments.length >= maxCapacity) {
           return res.status(400).json({
             message: `Shift is at full capacity (${currentAssignments.length}/${maxCapacity})`,
@@ -1791,9 +1779,8 @@ export function registerRoutes(app: Express): Server {
         }
 
         console.log(
-          console.log(
-              `[ASSIGNMENT SUCCESS] Worker ${workerId} (${worker.firstName} ${worker.lastName}) assigned to shift ${shiftId}. Total: ${updatedAssignments.length}/${maxCapacity}`
-              );
+          `[ASSIGNMENT SUCCESS] Worker ${workerId} (${worker.firstName} ${worker.lastName}) assigned to shift ${shiftId}. Total: ${updatedAssignments.length}/${maxCapacity}`
+        );
 
         res.json({
           success: true,
@@ -3014,9 +3001,8 @@ export function registerRoutes(app: Express): Server {
 
       if (facilityUserRoles.includes(req.user.role) && req.user.facility_id) {
         console.log(
-          console.log(
-              `[STAFF ACCESS CONTROL] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) requesting staff data for facility ${req.user.facility_id}`
-              );
+          `[STAFF ACCESS CONTROL] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) requesting staff data for facility ${req.user.facility_id}`
+        );
 
         // For facility users, only return staff associated with their facilities
         // Since staff table doesn't have facility_id, we'll filter by similar locations or other criteria
@@ -3046,21 +3032,18 @@ export function registerRoutes(app: Express): Server {
 
           dbStaffData = facilityStaffMapping[userFacilityId] || dbStaffData.slice(0, 5);
           console.log(
-            console.log(
-                `[STAFF ACCESS CONTROL] Returning ${dbStaffData.length} staff members for facility ${userFacilityId}`
-                );
+            `[STAFF ACCESS CONTROL] Returning ${dbStaffData.length} staff members for facility ${userFacilityId}`
+          );
         }
       } else if (req.user.role === "super_admin") {
         console.log(
-          console.log(
-              `[STAFF ACCESS CONTROL] Super admin ${req.user.firstName} ${req.user.lastName} accessing all staff data`
-              );
+          `[STAFF ACCESS CONTROL] Super admin ${req.user.firstName} ${req.user.lastName} accessing all staff data`
+        );
         // Super admins can see all staff
       } else {
         console.log(
-          console.log(
-              `[STAFF ACCESS CONTROL] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) has limited staff access`
-              );
+          `[STAFF ACCESS CONTROL] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) has limited staff access`
+        );
         // Other users get limited access
         dbStaffData = dbStaffData.slice(0, 5);
       }
@@ -3161,9 +3144,8 @@ export function registerRoutes(app: Express): Server {
       }
 
         console.log(
-          console.log(
-              `[FACILITY USERS] Super admin ${req.user.firstName} ${req.user.lastName} accessing facility users`
-              );
+          `[FACILITY USERS] Super admin ${req.user.firstName} ${req.user.lastName} accessing facility users`
+        );
 
       // Get facility users data from unified service
       const facilityUsersData = await unifiedDataService.getFacilityUsersWithAssociations();
@@ -3355,7 +3337,6 @@ export function registerRoutes(app: Express): Server {
           and(
             eq(staff.isActive, true),
             sql`${staff.location} LIKE '%${facilityId === 1 ? "Portland" : facilityId === 2 ? "Beaverton" : "Hillsboro"}%'`
-            );
           )
         );
 
@@ -6217,9 +6198,8 @@ export function registerRoutes(app: Express): Server {
       }
 
         console.log(
-          console.log(
-              `[SHIFT TEMPLATES API] Fetching templates for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
-              );
+          `[SHIFT TEMPLATES API] Fetching templates for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
+        );
 
       // Get all templates from database
       const allTemplates = await db.select().from(shiftTemplates);
@@ -6407,9 +6387,8 @@ export function registerRoutes(app: Express): Server {
     const daysToGenerate = template.daysPostedOut || 7;
 
       console.log(
-        console.log(
-            `[SHIFT GENERATION] Generating ${daysToGenerate} days of shifts for template ${template.name}`
-            );
+        `[SHIFT GENERATION] Generating ${daysToGenerate} days of shifts for template ${template.name}`
+      );
 
     const generatedCount = await db
       .select({ count: sql`count(*)` })
@@ -6417,8 +6396,7 @@ export function registerRoutes(app: Express): Server {
       .where(eq(generatedShifts.templateId, template.id));
 
       console.log(
-        console.log(
-            `[SHIFT GENERATION] Current shifts for template ${template.id}:`,
+        `[SHIFT GENERATION] Current shifts for template ${template.id}:`,
         generatedCount[0]?.count || 0
       );
 
@@ -6460,9 +6438,8 @@ export function registerRoutes(app: Express): Server {
           try {
             await db.insert(generatedShifts).values(shiftData).onConflictDoNothing();
               console.log(
-                console.log(
-                    `[SHIFT GENERATION] Created shift ${shiftId} for ${date.toISOString().split("T")[0]}`
-                    );
+                `[SHIFT GENERATION] Created shift ${shiftId} for ${date.toISOString().split("T")[0]}`
+              );
           } catch (error) {
             console.error(`Error inserting shift ${shiftId}:`, error);
           }
@@ -6482,9 +6459,8 @@ export function registerRoutes(app: Express): Server {
       .where(eq(shiftTemplates.id, template.id));
 
       console.log(
-        console.log(
-            `[SHIFT GENERATION] Template ${template.id} now has ${newCount[0]?.count || 0} total shifts`
-            );
+        `[SHIFT GENERATION] Template ${template.id} now has ${newCount[0]?.count || 0} total shifts`
+      );
   }
 
   function calculateShiftHours(startTime: string, endTime: string): number {
@@ -7393,9 +7369,8 @@ export function registerRoutes(app: Express): Server {
       }
 
         console.log(
-          console.log(
-              `[STAFF API] Fetching staff for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
-              );
+          `[STAFF API] Fetching staff for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
+        );
 
       // Get staff from database
       const allStaff = await db.select().from(staff);
@@ -7537,6 +7512,7 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/stop-impersonation", requireAuth, async (req, res) => {
     try {
+      console.log("Stop impersonation debug:", {
         hasOriginalUser: !!(req.session as any).originalUser,
         hasImpersonatedUserId: !!(req.session as any).impersonatedUserId,
       });
@@ -9132,9 +9108,8 @@ export function registerRoutes(app: Express): Server {
       }
 
         console.log(
-          console.log(
-              `[SHIFTS API] Fetching shifts for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
-              );
+          `[SHIFTS API] Fetching shifts for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
+        );
 
       // Generate comprehensive 12-month shift data for 100-bed skilled nursing facility
       const generateShifts = () => {
@@ -9229,9 +9204,8 @@ export function registerRoutes(app: Express): Server {
       }
 
         console.log(
-          console.log(
-              `[SHIFTS API] Returning ${shifts.length} shifts for user ${effectiveUser?.email}`
-              );
+          `[SHIFTS API] Returning ${shifts.length} shifts for user ${effectiveUser?.email}`
+        );
       res.json(shifts);
     } catch (error) {
       console.error("Error fetching shifts:", error);
@@ -9681,9 +9655,8 @@ export function registerRoutes(app: Express): Server {
         );
 
         console.log(
-          console.log(
-              `[REGENERATE] Generated ${regeneratedShifts.length} shifts for template "${template.name}" (ID: ${templateId})`
-              );
+          `[REGENERATE] Generated ${regeneratedShifts.length} shifts for template "${template.name}" (ID: ${templateId})`
+        );
 
       res.json({
         message: `Successfully regenerated ${regeneratedShifts.length} future shifts from template "${template.name}"`,
@@ -11189,7 +11162,6 @@ export function registerRoutes(app: Express): Server {
         .leftJoin(facilities, eq(users.facilityId, facilities.id))
         .where(
           sql`${users.role} IN ('facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing', 'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin')`
-          );
         )
         .orderBy(users.lastName, users.firstName);
 
