@@ -3,7 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/hooks/use-auth";
+import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { SessionProvider } from "@/contexts/SessionContext";
 import { ProtectedRoute } from "./lib/protected-route";
 import { FacilityPermissionsProvider } from "@/hooks/use-facility-permissions";
@@ -66,6 +66,7 @@ import PTOPage from "@/pages/pto-page";
 import EnhancedProfilePage from "@/pages/enhanced-profile-page";
 import EnhancedMessagingPage from "@/pages/enhanced-messaging-page";
 import EnhancedRealTimeMessagingPage from "@/pages/enhanced-real-time-messaging";
+import { OnboardingWizard } from "@/components/OnboardingWizard";
 import MySchedulePage from "@/pages/MySchedulePage";
 import EnhancedCalendarPage from "@/pages/enhanced-calendar-page";
 import SchedulingTemplatesPage from "@/pages/scheduling-templates-page";
@@ -97,6 +98,12 @@ import NotFound from "@/pages/not-found";
 function AppContent() {
   const [location] = useLocation();
   const isAuthPage = location === "/auth";
+  const { user } = useAuth();
+
+  // Show onboarding wizard for new users who haven't completed it
+  if (user && !user.onboardingCompleted && !isAuthPage) {
+    return <OnboardingWizard />;
+  }
 
   const router = (
     <Switch>

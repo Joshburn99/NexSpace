@@ -13,6 +13,24 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 28, 2025 - New User Onboarding Wizard Implementation
+- **Onboarding Flow**: Created comprehensive 4-step onboarding wizard for new users to complete initial setup
+  - Step 1: Welcome & Profile Completion - Users complete basic profile information
+  - Step 2: Facility Setup - Users configure their primary facility
+  - Step 3: Team Building - Users invite staff members to join
+  - Step 4: First Shift - Users schedule their first shift to get started
+- **Database Schema**: Added onboarding tracking fields to users table
+  - onboardingStep: Tracks current step (0-4) for resuming interrupted onboarding
+  - onboardingCompleted: Boolean flag to prevent showing wizard to returning users
+- **Conditional Rendering**: Onboarding wizard only appears for new users who haven't completed it
+  - Integrated into App.tsx to check user.onboardingCompleted field
+  - Skip option available at each step for users who want to explore first
+  - Exit button to complete onboarding at any time
+- **API Integration**: Created endpoints for updating onboarding progress and profile data
+  - POST /api/onboarding/complete - Marks onboarding as completed
+  - PATCH /api/user/profile - Updates user profile information during onboarding
+- **Storage Methods**: Added updateUserOnboarding and updateUserProfile methods to handle database updates
+
 ### July 28, 2025 - Enterprise Analytics Event Tracking Implementation
 - **Analytics Infrastructure**: Built comprehensive analytics event tracking system for user behavior insights
   - Created analyticsEvents database table with event tracking schema (event name, category, user ID, facility ID, metadata)

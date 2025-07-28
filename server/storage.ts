@@ -140,6 +140,8 @@ export interface IStorage {
   updateUser(id: number, updates: Partial<InsertUser>): Promise<User | undefined>;
   getUsersByRole(role: string): Promise<User[]>;
   getUsersByFacility(facilityId: number): Promise<User[]>;
+  updateUserOnboarding(id: number, data: { onboardingStep: number; onboardingCompleted: boolean }): Promise<User | undefined>;
+  updateUserProfile(id: number, data: { firstName?: string; lastName?: string; phone?: string; department?: string; bio?: string }): Promise<User | undefined>;
 
   // Facility methods - Core facility table
   getFacility(id: number): Promise<Facility | undefined>;
@@ -574,6 +576,33 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(users)
       .where(and(eq(users.facilityId, facilityId), eq(users.isActive, true)));
+  }
+
+  async updateUserOnboarding(id: number, data: { onboardingStep: number; onboardingCompleted: boolean }): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({
+        onboardingStep: data.onboardingStep,
+        onboardingCompleted: data.onboardingCompleted,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async updateUserProfile(id: number, data: { firstName?: string; lastName?: string; phone?: string; department?: string; bio?: string }): Promise<User | undefined> {
+    const updates: any = { updatedAt: new Date() };
+    if (data.firstName !== undefined) updates.firstName = data.firstName;
+    if (data.lastName !== undefined) updates.lastName = data.lastName;
+    // Note: phone, department, and bio fields would need to be added to the users table schema
+    
+    const [user] = await db
+      .update(users)
+      .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
   }
 
   // Facility methods

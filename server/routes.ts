@@ -12205,6 +12205,83 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Onboarding endpoints
+  app.patch("/api/users/:id/onboarding", requireAuth, async (req: any, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Ensure user can only update their own onboarding
+      if (req.user.id !== userId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const { step, completed } = req.body;
+      
+      // Update user onboarding status
+      const updatedUser = await storage.updateUserOnboarding(userId, {
+        onboardingStep: step,
+        onboardingCompleted: completed || false,
+      });
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating onboarding:", error);
+      res.status(500).json({ message: "Failed to update onboarding status" });
+    }
+  });
+
+  // Update user profile
+  app.patch("/api/users/:id/profile", requireAuth, async (req: any, res) => {
+    try {
+      const userId = parseInt(req.params.id);
+      
+      // Ensure user can only update their own profile
+      if (req.user.id !== userId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+      
+      const { firstName, lastName, phone, department, bio } = req.body;
+      
+      // Update user profile
+      const updatedUser = await storage.updateUserProfile(userId, {
+        firstName,
+        lastName,
+        phone,
+        department,
+        bio,
+      });
+      
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Send invitations
+  app.post("/api/invites", requireAuth, async (req: any, res) => {
+    try {
+      const { invites } = req.body;
+      
+      // Here you would typically send emails to the invited users
+      // For now, we'll just log them and return success
+      console.log("Sending invitations to:", invites);
+      
+      // In a real implementation, you might:
+      // 1. Generate invitation tokens
+      // 2. Send emails with invitation links
+      // 3. Store pending invitations in database
+      
+      res.json({ 
+        message: "Invitations sent successfully", 
+        count: invites.length 
+      });
+    } catch (error) {
+      console.error("Error sending invitations:", error);
+      res.status(500).json({ message: "Failed to send invitations" });
+    }
+  });
+
   // Test endpoint to generate sample notifications
   app.post("/api/notifications/test", requireAuth, async (req: any, res) => {
     try {

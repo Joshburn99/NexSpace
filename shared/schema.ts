@@ -165,6 +165,8 @@ export const users = pgTable("users", {
   associatedFacilities: jsonb("associated_facilities"), // Array of facility IDs for workers
   availabilityStatus: text("availability_status").default("available"), // available, unavailable, busy
   dashboardPreferences: jsonb("dashboard_preferences"), // stores widget layout and preferences
+  onboardingCompleted: boolean("onboarding_completed").default(false),
+  onboardingStep: integer("onboarding_step").default(0), // Track current step in onboarding process
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
