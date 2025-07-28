@@ -257,22 +257,8 @@ export function registerRoutes(app: Express): Server {
   // Basic facilities endpoint with actual database structure
   app.get("/api/facilities", requireAuth, async (req, res) => {
     try {
-      const facilitiesData = await db.select({
-        id: facilities.id,
-        name: facilities.name,
-        facilityType: facilities.facilityType,
-        bedCount: facilities.bedCount,
-        isActive: facilities.isActive,
-        phone: facilities.phone,
-        email: facilities.email,
-        address: facilities.address,
-        city: facilities.city,
-        state: facilities.state,
-        zipCode: facilities.zipCode,
-        createdAt: facilities.createdAt,
-        updatedAt: facilities.updatedAt,
-      }).from(facilities);
-      
+      // Use storage method instead of direct db query
+      const facilitiesData = await storage.getAllFacilities();
       res.json(facilitiesData);
     } catch (error) {
       console.error("Error fetching facilities:", error);
