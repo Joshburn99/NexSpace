@@ -183,6 +183,7 @@ function AppContent() {
         component={CompliancePage}
         requiredPermissions={["compliance.view"]}
       />
+      <ProtectedRoute path="/analytics/insights" component={AnalyticsPage} />
       <ProtectedRoute path="/compliance" component={CompliancePage} />
       <ProtectedRoute path="/messages" component={MessagesPage} />
       <ProtectedRoute path="/messaging" component={EnhancedRealTimeMessagingPage} />
@@ -207,6 +208,7 @@ function AppContent() {
       <AdminRoute path="/admin/users" component={AdminUserManagementPage} />
       <AdminRoute path="/admin/teams" component={AdminTeamsPage} />
       <AdminRoute path="/admin/audit" component={AdminAuditLogsPage} />
+      <AdminRoute path="/admin/audit-logs" component={AdminAuditLogsPage} />
       <AdminRoute path="/admin/database" component={AdminDatabaseConsolePage} />
       <AdminRoute path="/admin/analytics" component={AdminAnalytics} />
       <AdminRoute path="/admin/roles" component={RoleManagementPage} />
@@ -244,6 +246,18 @@ function AppContent() {
       <ProtectedRoute path="/float-pool-analytics" component={FloatPoolAnalyticsPage} />
       <ProtectedRoute path="/agency-usage" component={AgencyUsagePage} />
       <ProtectedRoute path="/job-posting" component={EnhancedJobPostingPage} />
+      
+      {/* Additional facility user routes */}
+      <ProtectedRoute path="/billing-professional-invoices" component={InvoicesPage} />
+      <ProtectedRoute path="/billing-vendor-invoices" component={VendorInvoicesPage} />
+      <ProtectedRoute path="/analytics-dashboard" component={AnalyticsPage} />
+      <ProtectedRoute path="/custom-reports" component={ReportsPage} />
+      <ProtectedRoute path="/reports/attendance" component={AttendancePage} />
+      <ProtectedRoute path="/reports/overtime" component={OvertimeReportPage} />
+      <ProtectedRoute path="/reports/float-pool-savings" component={FloatPoolAnalyticsPage} />
+      <ProtectedRoute path="/reports/agency-usage" component={AgencyUsagePage} />
+      <ProtectedRoute path="/enhanced-facilities" component={FacilityManagementPage} />
+      <ProtectedRoute path="/time-off-management" component={PTOPage} />
       <ProtectedRoute path="/clinician-dashboard" component={ClinicianDashboardWrapper} />
       <ProtectedRoute path="/employee-dashboard" component={EmployeeDashboardWrapper} />
       <ProtectedRoute path="/contractor-dashboard" component={ContractorDashboardWrapper} />
