@@ -4,7 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useFacilities, useFacility, getFacilityDisplayName, getFacilityTimezone } from "@/hooks/use-facility";
-import { useRBAC, PermissionAction, PermissionGate, useRBACContext } from "@/hooks/use-rbac";
+import { useRBAC, PermissionAction, PermissionGate } from "@/hooks/use-rbac";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -154,7 +154,7 @@ const getStatusIconSVG = (status: string) => {
 
 export default function EnhancedCalendarPage() {
   const { user, impersonatedUser } = useAuth();
-  const { hasPermission } = useRBACContext();
+  const { hasPermission } = useRBAC();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   

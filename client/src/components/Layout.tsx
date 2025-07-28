@@ -1,4 +1,5 @@
 import { UnifiedHeader } from "./UnifiedHeader";
+import { ProductTour } from "./ProductTour";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </div>
       </main>
+      <ProductTour />
     </div>
   );
 };

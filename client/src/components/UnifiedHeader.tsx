@@ -40,7 +40,8 @@ import {
   Briefcase,
   Clock,
   UserCheck,
-  Home
+  Home,
+  HelpCircle
 } from 'lucide-react';
 import { GlobalSearch } from './GlobalSearch';
 import { NotificationDropdown } from './NotificationDropdown';
@@ -303,6 +304,20 @@ export function UnifiedHeader() {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-2 sm:gap-4">
+            {/* Help Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => {
+                // Dispatch custom event to trigger tour
+                window.dispatchEvent(new CustomEvent('startProductTour'));
+              }}
+              title="Start product tour"
+            >
+              <HelpCircle className="h-5 w-5" />
+            </Button>
+
             {/* Notifications */}
             <NotificationDropdown />
 
@@ -410,6 +425,21 @@ export function UnifiedHeader() {
                     </Link>
                   ) : null
                 ))}
+                
+                {/* Help Button in Mobile Menu */}
+                <div className="mt-4 pt-4 border-t">
+                  <Button
+                    variant="ghost"
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md w-full text-left"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      window.dispatchEvent(new CustomEvent('startProductTour'));
+                    }}
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    Start Product Tour
+                  </Button>
+                </div>
               </div>
             </nav>
           </div>
