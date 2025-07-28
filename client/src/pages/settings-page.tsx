@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { Settings, Bell, Moon, Globe, Save } from "lucide-react";
+import { Settings, Bell, Moon, Globe, Save, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@shared/schema";
 import { hasPermission } from "@/lib/permissions";
@@ -48,7 +48,12 @@ export default function SettingsPage() {
   // Role update mutation
   const updateRoleMutation = useMutation({
     mutationFn: async (newRole: string) => {
-      return apiRequest("PATCH", `/api/user/${user!.id}`, { role: newRole });
+      const response = await apiRequest("PATCH", `/api/user/${user!.id}`, { role: newRole });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update user role');
+      }
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -58,9 +63,10 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
     },
     onError: (error: any) => {
+      console.error('Role update error:', error);
       toast({
         title: "Update Failed",
-        description: error.message || "Failed to update user role.",
+        description: error.message || "Failed to update user role. Please check your connection and try again.",
         variant: "destructive",
       });
       setSelectedRole(user?.role || ""); // Reset to original role on error

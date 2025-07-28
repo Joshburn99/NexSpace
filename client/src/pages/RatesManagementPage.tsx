@@ -22,7 +22,8 @@ import {
   Calendar,
   Users,
   TrendingUp,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from 'lucide-react';
 
 const rateSchema = z.object({
@@ -138,7 +139,12 @@ export default function RatesManagementPage() {
     mutationFn: async (data: z.infer<typeof rateSchema>) => {
       const endpoint = editingRate ? `/api/billing/rates/${editingRate.id}` : '/api/billing/rates';
       const method = editingRate ? 'PATCH' : 'POST';
-      return apiRequest(method, endpoint, data);
+      const response = await apiRequest(method, endpoint, data);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `Failed to ${editingRate ? 'update' : 'create'} rate`);
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/billing/rates'] });
@@ -150,10 +156,11 @@ export default function RatesManagementPage() {
         description: `Rate ${editingRate ? 'updated' : 'created'} successfully`,
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Rate mutation error:', error);
       toast({
         title: "Error",
-        description: `Failed to ${editingRate ? 'update' : 'create'} rate`,
+        description: error.message || `Failed to ${editingRate ? 'update' : 'create'} rate. Please check your connection and try again.`,
         variant: "destructive",
       });
     }
@@ -519,7 +526,14 @@ export default function RatesManagementPage() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={rateMutation.isPending}>
-                  {editingRate ? 'Update' : 'Create'} Rate
+                  {rateMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {editingRate ? 'Updating...' : 'Creating...'}
+                    </>
+                  ) : (
+                    `${editingRate ? 'Update' : 'Create'} Rate`
+                  )}
                 </Button>
               </div>
             </form>

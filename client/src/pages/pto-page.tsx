@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Plus } from "lucide-react";
+import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function PTOPage() {
@@ -42,6 +42,7 @@ export default function PTOPage() {
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
   const [isEmergency, setIsEmergency] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const userBalance = user ? getEmployeeBalance(user.id) : null;
   const userRequests = user ? getEmployeeRequests(user.id) : [];
@@ -56,29 +57,38 @@ export default function PTOPage() {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   };
 
-  const handleSubmitRequest = () => {
+  const handleSubmitRequest = async () => {
     if (!user || !requestType || !startDate || !endDate) return;
 
-    const totalDays = calculateDays(startDate, endDate);
+    setIsSubmitting(true);
     
-    submitPTORequest({
-      employeeId: user.id,
-      employeeName: `${user.firstName} ${user.lastName}`,
-      requestType: requestType as any,
-      startDate,
-      endDate,
-      totalDays,
-      reason,
-      isEmergency
-    });
+    try {
+      const totalDays = calculateDays(startDate, endDate);
+      
+      await submitPTORequest({
+        employeeId: user.id,
+        employeeName: `${user.firstName} ${user.lastName}`,
+        requestType: requestType as any,
+        startDate,
+        endDate,
+        totalDays,
+        reason,
+        isEmergency
+      });
 
-    // Reset form
-    setRequestType("");
-    setStartDate("");
-    setEndDate("");
-    setReason("");
-    setIsEmergency(false);
-    setIsSubmitDialogOpen(false);
+      // Reset form on success
+      setRequestType("");
+      setStartDate("");
+      setEndDate("");
+      setReason("");
+      setIsEmergency(false);
+      setIsSubmitDialogOpen(false);
+    } catch (error) {
+      console.error('PTO submission error:', error);
+      // Error handling could be enhanced here with toast notifications
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -191,10 +201,17 @@ export default function PTOPage() {
                 </div>
 
                 <div className="flex gap-2 pt-4">
-                  <Button onClick={handleSubmitRequest} className="flex-1">
-                    Submit Request
+                  <Button onClick={handleSubmitRequest} disabled={isSubmitting} className="flex-1">
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Submitting...
+                      </>
+                    ) : (
+                      "Submit Request"
+                    )}
                   </Button>
-                  <Button variant="outline" onClick={() => setIsSubmitDialogOpen(false)} className="flex-1">
+                  <Button variant="outline" onClick={() => setIsSubmitDialogOpen(false)} disabled={isSubmitting} className="flex-1">
                     Cancel
                   </Button>
                 </div>

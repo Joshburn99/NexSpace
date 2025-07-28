@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, Upload, CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
+import { Shield, Upload, CheckCircle, XCircle, Clock, AlertTriangle, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,13 @@ export default function CredentialsPage() {
   const { user } = useAuth();
   const { credentials, alerts, getActiveCredentials, getExpiringCredentials, getExpiredCredentials, getComplianceRate, addCredential, updateCredential, isLoading } = useCredentials();
   const [showAddCredential, setShowAddCredential] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [credentialForm, setCredentialForm] = useState({
+    type: "",
+    name: "",
+    issuingAuthority: "",
+    expiryDate: "",
+  });
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -54,6 +61,40 @@ export default function CredentialsPage() {
     return diffDays;
   };
 
+  const handleSaveCredential = async () => {
+    if (!user || !credentialForm.type || !credentialForm.name || !credentialForm.expiryDate) {
+      // Could add toast notification for validation error
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      await addCredential({
+        employeeId: user.id,
+        type: credentialForm.type,
+        name: credentialForm.name,
+        issuingAuthority: credentialForm.issuingAuthority,
+        expiryDate: credentialForm.expiryDate,
+        status: 'pending',
+      });
+
+      // Reset form on success
+      setCredentialForm({
+        type: "",
+        name: "",
+        issuingAuthority: "",
+        expiryDate: "",
+      });
+      setShowAddCredential(false);
+    } catch (error) {
+      console.error('Credential submission error:', error);
+      // Error handling could be enhanced here with toast notifications
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -80,7 +121,7 @@ export default function CredentialsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="credentialType">Credential Type</Label>
-                <Select>
+                <Select value={credentialForm.type} onValueChange={(value) => setCredentialForm({ ...credentialForm, type: value })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select credential type" />
                   </SelectTrigger>
@@ -94,15 +135,27 @@ export default function CredentialsPage() {
               </div>
               <div>
                 <Label htmlFor="credentialName">Credential Name</Label>
-                <Input placeholder="e.g., RN License, CPR Certification" />
+                <Input 
+                  placeholder="e.g., RN License, CPR Certification" 
+                  value={credentialForm.name}
+                  onChange={(e) => setCredentialForm({ ...credentialForm, name: e.target.value })}
+                />
               </div>
               <div>
                 <Label htmlFor="issuingAuthority">Issuing Authority</Label>
-                <Input placeholder="e.g., State Board of Nursing" />
+                <Input 
+                  placeholder="e.g., State Board of Nursing" 
+                  value={credentialForm.issuingAuthority}
+                  onChange={(e) => setCredentialForm({ ...credentialForm, issuingAuthority: e.target.value })}
+                />
               </div>
               <div>
                 <Label htmlFor="expiryDate">Expiry Date</Label>
-                <Input type="date" />
+                <Input 
+                  type="date" 
+                  value={credentialForm.expiryDate}
+                  onChange={(e) => setCredentialForm({ ...credentialForm, expiryDate: e.target.value })}
+                />
               </div>
             </div>
             <div>
@@ -110,8 +163,17 @@ export default function CredentialsPage() {
               <Input type="file" accept=".pdf,.jpg,.jpeg,.png" />
             </div>
             <div className="flex gap-2">
-              <Button>Save Credential</Button>
-              <Button variant="outline" onClick={() => setShowAddCredential(false)}>
+              <Button onClick={handleSaveCredential} disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save Credential"
+                )}
+              </Button>
+              <Button variant="outline" onClick={() => setShowAddCredential(false)} disabled={isSubmitting}>
                 Cancel
               </Button>
             </div>

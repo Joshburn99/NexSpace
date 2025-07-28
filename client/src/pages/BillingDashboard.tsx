@@ -27,7 +27,8 @@ import {
   Plus,
   Edit,
   Eye,
-  Download
+  Download,
+  Loader2
 } from 'lucide-react';
 
 // Schema for invoice creation/editing
@@ -140,7 +141,12 @@ export default function BillingDashboard() {
     mutationFn: async (data: z.infer<typeof invoiceSchema>) => {
       const endpoint = editingInvoice ? `/api/billing/invoices/${editingInvoice.id}` : '/api/billing/invoices';
       const method = editingInvoice ? 'PATCH' : 'POST';
-      return apiRequest(method, endpoint, data);
+      const response = await apiRequest(method, endpoint, data);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || `Failed to ${editingInvoice ? 'update' : 'create'} invoice`);
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/billing/invoices'] });
@@ -152,10 +158,11 @@ export default function BillingDashboard() {
         description: `Invoice ${editingInvoice ? 'updated' : 'created'} successfully`,
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Invoice mutation error:', error);
       toast({
         title: "Error",
-        description: `Failed to ${editingInvoice ? 'update' : 'create'} invoice`,
+        description: error.message || `Failed to ${editingInvoice ? 'update' : 'create'} invoice. Please check your connection and try again.`,
         variant: "destructive",
       });
     }
@@ -164,7 +171,12 @@ export default function BillingDashboard() {
   // Mutation for approving invoices
   const approveMutation = useMutation({
     mutationFn: async (invoiceId: number) => {
-      return apiRequest('PATCH', `/api/billing/invoices/${invoiceId}/approve`, {});
+      const response = await apiRequest('PATCH', `/api/billing/invoices/${invoiceId}/approve`, {});
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to approve invoice');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/billing/invoices'] });
@@ -173,10 +185,11 @@ export default function BillingDashboard() {
         description: "Invoice approved successfully",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Approval error:', error);
       toast({
         title: "Error",
-        description: "Failed to approve invoice",
+        description: error.message || "Failed to approve invoice. Please check your connection and try again.",
         variant: "destructive",
       });
     }
@@ -342,8 +355,13 @@ export default function BillingDashboard() {
                             variant="ghost"
                             size="sm"
                             onClick={() => handleApproveInvoice(invoice.id)}
+                            disabled={approveMutation.isPending}
                           >
-                            <CheckCircle className="h-4 w-4" />
+                            {approveMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <CheckCircle className="h-4 w-4" />
+                            )}
                           </Button>
                         )}
                         <Button variant="ghost" size="sm">
@@ -466,7 +484,14 @@ export default function BillingDashboard() {
                   Cancel
                 </Button>
                 <Button type="submit" disabled={invoiceMutation.isPending}>
-                  {editingInvoice ? 'Update' : 'Create'} Invoice
+                  {invoiceMutation.isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {editingInvoice ? 'Updating...' : 'Creating...'}
+                    </>
+                  ) : (
+                    `${editingInvoice ? 'Update' : 'Create'} Invoice`
+                  )}
                 </Button>
               </div>
             </form>

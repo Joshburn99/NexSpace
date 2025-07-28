@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
-import { Settings, Play, Pause, Plus, Edit, Trash2, Clock, Users, CheckCircle, AlertCircle } from 'lucide-react';
+import { Settings, Play, Pause, Plus, Edit, Trash2, Clock, Users, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
 import { useToast } from '@/hooks/use-toast';
 import { apiRequest } from '@/lib/queryClient';
@@ -102,7 +102,12 @@ export default function WorkflowAutomationPage() {
 
   const createAutomation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest('POST', '/api/workflow-automations', data);
+      const response = await apiRequest('POST', '/api/workflow-automations', data);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create workflow automation');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/workflow-automations'] });
@@ -113,10 +118,11 @@ export default function WorkflowAutomationPage() {
         description: "Workflow automation created successfully",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Create automation error:', error);
       toast({
         title: "Error",
-        description: "Failed to create workflow automation",
+        description: error.message || "Failed to create workflow automation. Please check your connection and try again.",
         variant: "destructive",
       });
     },
@@ -124,7 +130,12 @@ export default function WorkflowAutomationPage() {
 
   const updateAutomation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest('PATCH', `/api/workflow-automations/${data.id}`, data);
+      const response = await apiRequest('PATCH', `/api/workflow-automations/${data.id}`, data);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update workflow automation');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/workflow-automations'] });
@@ -135,10 +146,11 @@ export default function WorkflowAutomationPage() {
         description: "Workflow automation updated successfully",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Update automation error:', error);
       toast({
         title: "Error",
-        description: "Failed to update workflow automation",
+        description: error.message || "Failed to update workflow automation. Please check your connection and try again.",
         variant: "destructive",
       });
     },
@@ -146,7 +158,12 @@ export default function WorkflowAutomationPage() {
 
   const toggleAutomation = useMutation({
     mutationFn: async ({ id, isActive }: { id: number; isActive: boolean }) => {
-      return apiRequest('PATCH', `/api/workflow-automations/${id}`, { isActive });
+      const response = await apiRequest('PATCH', `/api/workflow-automations/${id}`, { isActive });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update automation status');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/workflow-automations'] });
@@ -155,10 +172,11 @@ export default function WorkflowAutomationPage() {
         description: "Automation status updated",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Toggle automation error:', error);
       toast({
         title: "Error",
-        description: "Failed to update automation status",
+        description: error.message || "Failed to update automation status. Please check your connection and try again.",
         variant: "destructive",
       });
     },
@@ -356,7 +374,14 @@ export default function WorkflowAutomationPage() {
                     Cancel
                   </Button>
                   <Button onClick={handleSubmit} disabled={createAutomation.isPending || updateAutomation.isPending}>
-                    {editingAutomation ? 'Update' : 'Create'} Automation
+                    {(createAutomation.isPending || updateAutomation.isPending) ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        {editingAutomation ? 'Updating...' : 'Creating...'}
+                      </>
+                    ) : (
+                      `${editingAutomation ? 'Update' : 'Create'} Automation`
+                    )}
                   </Button>
                 </div>
               </div>

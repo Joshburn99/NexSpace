@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertCircle, Settings, Clock, Users, Shield, DollarSign, Save } from 'lucide-react';
+import { AlertCircle, Settings, Clock, Users, Shield, DollarSign, Save, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
 import { useToast } from '@/hooks/use-toast';
@@ -75,7 +75,12 @@ export default function FacilitySettingsPage() {
 
   const updateSettings = useMutation({
     mutationFn: async (data: Partial<FacilitySettings>) => {
-      return apiRequest('PATCH', `/api/facilities/${facilityId}/settings`, data);
+      const response = await apiRequest('PATCH', `/api/facilities/${facilityId}/settings`, data);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update settings');
+      }
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/facilities', facilityId, 'settings'] });
@@ -85,10 +90,11 @@ export default function FacilitySettingsPage() {
         description: "Settings updated successfully",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Settings update error:', error);
       toast({
         title: "Error",
-        description: "Failed to update settings",
+        description: error.message || "Failed to update settings. Please check your connection and try again.",
         variant: "destructive",
       });
     },
@@ -144,8 +150,17 @@ export default function FacilitySettingsPage() {
         </div>
         {hasChanges && (
           <Button onClick={handleSave} disabled={updateSettings.isPending}>
-            <Save className="h-4 w-4 mr-2" />
-            Save Changes
+            {updateSettings.isPending ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Save Changes
+              </>
+            )}
           </Button>
         )}
       </div>

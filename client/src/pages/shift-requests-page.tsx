@@ -16,7 +16,8 @@ import {
   Search,
   Calendar,
   DollarSign,
-  AlertCircle
+  AlertCircle,
+  Loader2
 } from 'lucide-react';
 
 interface ShiftRequest {
@@ -57,19 +58,24 @@ export default function ShiftRequestsPage() {
   const approveRequestMutation = useMutation({
     mutationFn: async (requestId: number) => {
       const response = await apiRequest('POST', `/api/shift-requests/${requestId}/approve`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to approve request');
+      }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, requestId) => {
       queryClient.invalidateQueries({ queryKey: ['/api/shift-requests'] });
       toast({
         title: 'Request Approved',
-        description: 'The shift request has been approved successfully.',
+        description: 'The shift request has been approved and shift created successfully.',
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Approval error:', error);
       toast({
         title: 'Approval Failed',
-        description: 'Failed to approve the request. Please try again.',
+        description: error.message || 'Failed to approve the request. Please check your connection and try again.',
         variant: 'destructive',
       });
     },
@@ -79,19 +85,24 @@ export default function ShiftRequestsPage() {
   const denyRequestMutation = useMutation({
     mutationFn: async (requestId: number) => {
       const response = await apiRequest('POST', `/api/shift-requests/${requestId}/deny`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to deny request');
+      }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data, requestId) => {
       queryClient.invalidateQueries({ queryKey: ['/api/shift-requests'] });
       toast({
         title: 'Request Denied',
-        description: 'The shift request has been denied.',
+        description: 'The shift request has been denied and requester notified.',
       });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Denial error:', error);
       toast({
         title: 'Denial Failed',
-        description: 'Failed to deny the request. Please try again.',
+        description: error.message || 'Failed to deny the request. Please check your connection and try again.',
         variant: 'destructive',
       });
     },
@@ -205,20 +216,38 @@ export default function ShiftRequestsPage() {
                           <Button
                             size="sm"
                             onClick={() => approveRequestMutation.mutate(request.id)}
-                            disabled={approveRequestMutation.isPending}
+                            disabled={approveRequestMutation.isPending || denyRequestMutation.isPending}
                             className="bg-green-600 hover:bg-green-700"
                           >
-                            <Check className="h-4 w-4 mr-1" />
-                            Approve
+                            {approveRequestMutation.isPending ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                Approving...
+                              </>
+                            ) : (
+                              <>
+                                <Check className="h-4 w-4 mr-1" />
+                                Approve
+                              </>
+                            )}
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
                             onClick={() => denyRequestMutation.mutate(request.id)}
-                            disabled={denyRequestMutation.isPending}
+                            disabled={denyRequestMutation.isPending || approveRequestMutation.isPending}
                           >
-                            <X className="h-4 w-4 mr-1" />
-                            Deny
+                            {denyRequestMutation.isPending ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                Denying...
+                              </>
+                            ) : (
+                              <>
+                                <X className="h-4 w-4 mr-1" />
+                                Deny
+                              </>
+                            )}
                           </Button>
                         </div>
                       )}

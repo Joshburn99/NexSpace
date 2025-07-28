@@ -42,10 +42,12 @@ import {
   Check,
   X,
   Upload,
+  Loader2,
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { format } from "date-fns";
 import PDFDropzone from "@/components/PDFDropzone";
+import { useToast } from "@/hooks/use-toast";
 
 interface VendorInvoice {
   id: number;
@@ -63,10 +65,12 @@ interface VendorInvoice {
 }
 
 export default function VendorInvoicesPage() {
+  const { toast } = useToast();
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedVendorType, setSelectedVendorType] = useState<string>("all");
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [extractedData, setExtractedData] = useState<any>(null);
+  const [updatingInvoiceId, setUpdatingInvoiceId] = useState<number | null>(null);
 
   const { data: vendorInvoices = [], isLoading } = useQuery({
     queryKey: ["/api/vendor-invoices"],
@@ -83,21 +87,56 @@ export default function VendorInvoicesPage() {
   const createInvoiceMutation = useMutation({
     mutationFn: async (invoiceData: any) => {
       const response = await apiRequest("POST", "/api/vendor-invoices", invoiceData);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create invoice');
+      }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/vendor-invoices"] });
       setIsCreateDialogOpen(false);
+      toast({
+        title: "Invoice Created",
+        description: "The vendor invoice has been created successfully.",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Create invoice error:', error);
+      toast({
+        title: "Creation Failed",
+        description: error.message || "Failed to create vendor invoice. Please check your connection and try again.",
+        variant: "destructive",
+      });
     },
   });
 
   const updateInvoiceStatusMutation = useMutation({
     mutationFn: async ({ id, status }: { id: number; status: string }) => {
+      setUpdatingInvoiceId(id);
       const response = await apiRequest("PATCH", `/api/vendor-invoices/${id}`, { status });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update invoice status');
+      }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/vendor-invoices"] });
+      toast({
+        title: "Status Updated",
+        description: `Invoice status has been updated to ${variables.status}.`,
+      });
+      setUpdatingInvoiceId(null);
+    },
+    onError: (error: any) => {
+      console.error('Update invoice status error:', error);
+      toast({
+        title: "Update Failed",
+        description: error.message || "Failed to update invoice status. Please try again.",
+        variant: "destructive",
+      });
+      setUpdatingInvoiceId(null);
     },
   });
 
@@ -344,7 +383,14 @@ export default function VendorInvoicesPage() {
                     <Input id="description" name="description" />
                   </div>
                   <Button type="submit" disabled={createInvoiceMutation.isPending}>
-                    {createInvoiceMutation.isPending ? "Creating..." : "Create Invoice"}
+                    {createInvoiceMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating...
+                      </>
+                    ) : (
+                      "Create Invoice"
+                    )}
                   </Button>
                 </form>
               </DialogContent>
@@ -416,6 +462,7 @@ export default function VendorInvoicesPage() {
                                 <Button
                                   size="sm"
                                   variant="default"
+                                  disabled={updatingInvoiceId === invoice.id}
                                   onClick={() =>
                                     updateInvoiceStatusMutation.mutate({
                                       id: invoice.id,
@@ -423,11 +470,16 @@ export default function VendorInvoicesPage() {
                                     })
                                   }
                                 >
-                                  <Check className="h-3 w-3" />
+                                  {updatingInvoiceId === invoice.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <Check className="h-3 w-3" />
+                                  )}
                                 </Button>
                                 <Button
                                   size="sm"
                                   variant="destructive"
+                                  disabled={updatingInvoiceId === invoice.id}
                                   onClick={() =>
                                     updateInvoiceStatusMutation.mutate({
                                       id: invoice.id,
@@ -435,7 +487,11 @@ export default function VendorInvoicesPage() {
                                     })
                                   }
                                 >
-                                  <X className="h-3 w-3" />
+                                  {updatingInvoiceId === invoice.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <X className="h-3 w-3" />
+                                  )}
                                 </Button>
                               </>
                             )}

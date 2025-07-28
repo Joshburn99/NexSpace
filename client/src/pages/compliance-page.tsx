@@ -8,6 +8,7 @@ import {
   Users,
   Clock,
   CheckCircle,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -126,6 +127,7 @@ export default function CompliancePage() {
   const [credentialType, setCredentialType] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [generatingReport, setGeneratingReport] = useState<string | null>(null);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -188,11 +190,26 @@ export default function CompliancePage() {
   const expired = mockComplianceData.filter((c) => c.status === "expired").length;
   const totalIssues = complianceIssues.length;
 
-  const generateReport = (type: string) => {
-    toast({
-      title: `${type} report generated`,
-      description: "Report has been generated and will be emailed to you shortly.",
-    });
+  const generateReport = async (type: string) => {
+    setGeneratingReport(type);
+    
+    try {
+      // Simulate API call to generate report
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      toast({
+        title: `${type} report generated`,
+        description: "Report has been generated and will be emailed to you shortly.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error generating report",
+        description: "Failed to generate report. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setGeneratingReport(null);
+    }
   };
 
   return (
@@ -207,17 +224,55 @@ export default function CompliancePage() {
               </p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => generateReport("Weekly")}>
-                <FileText className="w-4 h-4 mr-2" />
-                Weekly Report
+              <Button 
+                variant="outline" 
+                onClick={() => generateReport("Weekly")}
+                disabled={generatingReport !== null}
+              >
+                {generatingReport === "Weekly" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-4 h-4 mr-2" />
+                    Weekly Report
+                  </>
+                )}
               </Button>
-              <Button variant="outline" onClick={() => generateReport("Monthly")}>
-                <Calendar className="w-4 h-4 mr-2" />
-                Monthly Report
+              <Button 
+                variant="outline" 
+                onClick={() => generateReport("Monthly")}
+                disabled={generatingReport !== null}
+              >
+                {generatingReport === "Monthly" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Calendar className="w-4 h-4 mr-2" />
+                    Monthly Report
+                  </>
+                )}
               </Button>
-              <Button onClick={() => generateReport("Custom")}>
-                <Download className="w-4 h-4 mr-2" />
-                Export Data
+              <Button 
+                onClick={() => generateReport("Custom")}
+                disabled={generatingReport !== null}
+              >
+                {generatingReport === "Custom" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Exporting...
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Data
+                  </>
+                )}
               </Button>
             </div>
           </div>
