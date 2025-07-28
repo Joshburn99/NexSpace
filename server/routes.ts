@@ -7314,9 +7314,166 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Admin API endpoints
-  app.get("/api/admin/users", requireAuth, async (req, res) => {
+  app.get("/api/admin/users", requireAuth, requirePermission("system.manage_permissions"), async (req: any, res) => {
     try {
-      // Return comprehensive user data for admin management
+      // Get all users from database
+      const allUsers = await storage.getAllUsers();
+      const facilityUsers = await storage.getAllFacilityUsers();
+      const facilities = await storage.getFacilities();
+      
+      // Map users to include role information
+      const mappedUsers = allUsers.map(user => {
+        // Check if user is a facility user to get facility associations
+        const facilityUser = facilityUsers.find(fu => fu.email === user.email);
+        let facilityName = null;
+        let facilityId = null;
+        
+        if (facilityUser && facilityUser.associatedFacilityIds?.length > 0) {
+          const facility = facilities.find(f => f.id === facilityUser.associatedFacilityIds[0]);
+          if (facility) {
+            facilityName = facility.name;
+            facilityId = facility.id;
+          }
+        }
+        
+        // Determine the system role based on user.role
+        let systemRole: SystemRole = 'viewer'; // default
+        
+        if (user.role === 'super_admin') {
+          systemRole = 'super_admin';
+        } else if (user.role === 'internal_employee') {
+          systemRole = 'staff';
+        } else if (user.role === 'contractor_1099') {
+          systemRole = 'staff';
+        } else if (facilityUser) {
+          // Map facility user roles to system roles
+          switch (facilityUser.role) {
+            case 'facility_admin':
+              systemRole = 'facility_admin';
+              break;
+            case 'scheduling_coordinator':
+              systemRole = 'scheduling_coordinator';
+              break;
+            case 'hr_manager':
+              systemRole = 'hr_manager';
+              break;
+            case 'billing':
+              systemRole = 'billing_manager';
+              break;
+            case 'supervisor':
+              systemRole = 'supervisor';
+              break;
+            case 'director_of_nursing':
+              systemRole = 'director_of_nursing';
+              break;
+            case 'corporate':
+              systemRole = 'corporate';
+              break;
+            case 'regional_director':
+              systemRole = 'regional_director';
+              break;
+            default:
+              systemRole = 'viewer';
+          }
+        }
+        
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email,
+          role: systemRole,
+          facilityName,
+          facilityId,
+          createdAt: user.createdAt,
+          lastLogin: user.lastLogin,
+          status: user.status || 'active'
+        };
+      });
+      
+      res.json(mappedUsers);
+    } catch (error) {
+      console.error("Error fetching admin users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+  
+  // Update user role endpoint
+  app.patch("/api/admin/users/:id/role",
+    requireAuth,
+    requirePermission("system.manage_permissions"),
+    auditLog("UPDATE", "user_role"),
+    async (req: any, res) => {
+      try {
+        const userId = parseInt(req.params.id);
+        const { role } = req.body;
+        
+        if (!role) {
+          return res.status(400).json({ message: "Role is required" });
+        }
+        
+        // Get the user to determine if they are a facility user
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        
+        // Check if this is a facility user
+        const facilityUser = await storage.getFacilityUserByEmail(user.email);
+        
+        if (facilityUser) {
+          // Map system role to facility user role
+          let facilityRole = 'viewer';
+          switch (role) {
+            case 'facility_admin':
+              facilityRole = 'facility_admin';
+              break;
+            case 'scheduling_coordinator':
+              facilityRole = 'scheduling_coordinator';
+              break;
+            case 'hr_manager':
+              facilityRole = 'hr_manager';
+              break;
+            case 'billing_manager':
+              facilityRole = 'billing';
+              break;
+            case 'supervisor':
+              facilityRole = 'supervisor';
+              break;
+            case 'director_of_nursing':
+              facilityRole = 'director_of_nursing';
+              break;
+            case 'corporate':
+              facilityRole = 'corporate';
+              break;
+            case 'regional_director':
+              facilityRole = 'regional_director';
+              break;
+            default:
+              facilityRole = 'viewer';
+          }
+          
+          // Update facility user role
+          await storage.updateFacilityUserRole(facilityUser.id, facilityRole);
+        } else {
+          // Update regular user role
+          if (role === 'super_admin' || role === 'staff') {
+            const userRole = role === 'super_admin' ? 'super_admin' : 'internal_employee';
+            await storage.updateUserRole(userId, userRole);
+          }
+        }
+        
+        res.json({ success: true, message: "Role updated successfully" });
+      } catch (error) {
+        console.error("Error updating user role:", error);
+        res.status(500).json({ message: "Failed to update user role" });
+      }
+    }
+  );
+
+  // Placeholder for other admin user endpoints (from hardcoded data)
+  app.get("/api/admin/users/placeholder", requireAuth, async (req, res) => {
+    try {
+      // This preserves the old hardcoded data for reference
       const users = [
         {
           id: 1,
@@ -7324,42 +7481,6 @@ export function registerRoutes(app: Express): Server {
           username: "joshburn",
           email: "joshburn@nexspace.com",
           role: "super_admin",
-          status: "active",
-          facilityId: null,
-          facilityName: null,
-          createdAt: "2025-01-15T00:00:00Z",
-          lastLogin: "2025-06-21T02:58:00Z"
-        },
-        {
-          id: 2,
-          name: "Sarah Johnson",
-          username: "sarah.johnson",
-          email: "sarah.johnson@portlandgeneral.com",
-          role: "facility_manager",
-          status: "active",
-          facilityId: 1,
-          facilityName: "Portland General Hospital",
-          createdAt: "2025-02-01T00:00:00Z",
-          lastLogin: "2025-06-20T18:45:00Z"
-        },
-        {
-          id: 3,
-          name: "Josh Burn",
-          username: "JoshBurn",
-          email: "joshburn@gmail.com",
-          role: "employee",
-          status: "active",
-          facilityId: 1,
-          facilityName: "Portland General Hospital",
-          createdAt: "2025-02-15T00:00:00Z",
-          lastLogin: "2025-06-20T16:30:00Z"
-        },
-        {
-          id: 4,
-          name: "Mike Davis",
-          username: "mike.davis",
-          email: "mike.davis@contractor.com",
-          role: "contractor",
           status: "active",
           facilityId: null,
           facilityName: null,

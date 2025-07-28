@@ -142,6 +142,8 @@ export interface IStorage {
   getUsersByFacility(facilityId: number): Promise<User[]>;
   updateUserOnboarding(id: number, data: { onboardingStep: number; onboardingCompleted: boolean }): Promise<User | undefined>;
   updateUserProfile(id: number, data: { firstName?: string; lastName?: string; phone?: string; department?: string; bio?: string }): Promise<User | undefined>;
+  getAllUsers(): Promise<User[]>;
+  updateUserRole(id: number, role: string): Promise<User | undefined>;
 
   // Facility methods - Core facility table
   getFacility(id: number): Promise<Facility | undefined>;
@@ -275,6 +277,10 @@ export interface IStorage {
   getUserPermissions(role: string): Promise<string[]>;
   hasPermission(role: string, permission: string): Promise<boolean>;
   getFacilityUserRoleTemplate(role: string): Promise<any | undefined>;
+
+  // Facility User methods
+  getAllFacilityUsers(): Promise<FacilityUser[]>;
+  updateFacilityUserRole(id: number, role: string): Promise<FacilityUser | undefined>;
 
   // Dashboard analytics - Enhanced
   getDashboardStats(facilityIds?: number[]): Promise<{
@@ -600,6 +606,19 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db
       .update(users)
       .set(updates)
+      .where(eq(users.id, id))
+      .returning();
+    return user || undefined;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return await db.select().from(users);
+  }
+
+  async updateUserRole(id: number, role: string): Promise<User | undefined> {
+    const [user] = await db
+      .update(users)
+      .set({ role, updatedAt: new Date() })
       .where(eq(users.id, id))
       .returning();
     return user || undefined;
@@ -1482,6 +1501,24 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(facilityUsers)
       .where(eq(facilityUsers.email, email));
+    return facilityUser || undefined;
+  }
+
+  async getAllFacilityUsers(): Promise<any[]> {
+    const { facilityUsers } = await import("@shared/schema");
+    return await db
+      .select()
+      .from(facilityUsers)
+      .orderBy(facilityUsers.email);
+  }
+
+  async updateFacilityUserRole(id: number, role: string): Promise<any | undefined> {
+    const { facilityUsers } = await import("@shared/schema");
+    const [facilityUser] = await db
+      .update(facilityUsers)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(facilityUsers.id, id))
+      .returning();
     return facilityUser || undefined;
   }
 

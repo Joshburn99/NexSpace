@@ -93,6 +93,7 @@ import AttendancePage from "@/pages/AttendancePage";
 import OvertimeReportPage from "@/pages/OvertimeReportPage";
 import FloatPoolAnalyticsPage from "@/pages/FloatPoolAnalyticsPage";
 import AgencyUsagePage from "@/pages/AgencyUsagePage";
+import RoleManagementPage from "@/pages/RoleManagementPage";
 import NotFound from "@/pages/not-found";
 
 function AppContent() {
@@ -168,6 +169,7 @@ function AppContent() {
       <ProtectedRoute path="/admin/audit" component={AdminAuditLogsPage} />
       <ProtectedRoute path="/admin/database" component={AdminDatabaseConsolePage} />
       <ProtectedRoute path="/admin/analytics" component={AdminAnalytics} />
+      <ProtectedRoute path="/admin/roles" component={RoleManagementPage} />
       <ProtectedRoute path="/facility-management" component={FacilityManagementPage} />
       <ProtectedRoute path="/facility-profile" component={FacilityProfilePage} />
       <ProtectedRoute path="/facility-settings" component={FacilitySettingsPage} />
