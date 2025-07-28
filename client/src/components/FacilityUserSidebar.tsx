@@ -3,6 +3,7 @@ import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
 import { CanAccess } from './PermissionWrapper';
+// Using direct URL for logo
 import {
   Calendar,
   Users,
@@ -379,15 +380,11 @@ export function FacilityUserSidebar({ expanded = true, onToggle }: FacilityUserS
       <div className={cn("p-6", !expanded && "p-3")}>
         {/* Header with toggle */}
         <div className={cn("flex items-center mb-8", expanded ? "space-x-2" : "justify-center")}>
-          <div className="h-8 w-8 bg-blue-600 rounded flex items-center justify-center">
-            <span className="text-white font-bold text-sm">N</span>
-          </div>
-          {expanded && (
-            <div>
-              <h1 className="text-lg font-bold text-gray-900 dark:text-white">NexSpace</h1>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Facility Portal</p>
-            </div>
-          )}
+          <img 
+            src="/assets/ChatGPT%20Image%20Jun%2017,%202025,%2001_56_58%20PM_1753685377411.png" 
+            alt="NexSpace" 
+            className={cn("object-contain", expanded ? "h-10 w-auto" : "h-8 w-8")}
+          />
           {onToggle && (
             <button
               onClick={onToggle}

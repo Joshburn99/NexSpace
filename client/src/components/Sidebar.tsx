@@ -304,22 +304,11 @@ export default function Sidebar({ expanded = true, onToggle }: SidebarProps) {
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        {expanded ? (
-          <div className="flex items-center justify-center w-full">
-            <div className="text-center">
-              <div className="flex items-center justify-center mb-1">
-                <span className="text-3xl font-bold">
-                  <span className="text-blue-500">N</span>
-                  <span className="text-black">exSpace</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="w-8 h-8 bg-blue-500 rounded flex items-center justify-center">
-            <span className="text-white font-bold text-lg">N</span>
-          </div>
-        )}
+        <img 
+          src="/assets/ChatGPT%20Image%20Jun%2017,%202025,%2001_56_58%20PM_1753685377411.png" 
+          alt="NexSpace" 
+          className={cn("object-contain", expanded ? "h-10 w-auto" : "h-8 w-8")}
+        />
         {onToggle && (
           <Button variant="ghost" size="sm" onClick={onToggle} className="p-1">
             <Menu className="w-4 h-4" />

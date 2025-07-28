@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import { useFacilityPermissions } from '@/hooks/use-facility-permissions';
 import { CanAccess } from '@/components/PermissionWrapper';
-import { PriorityTasksList } from '@/components/PriorityTasks';
+// PriorityTasksList is defined inline in FacilityUserDashboard.tsx
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import 'react-grid-layout/css/styles.css';
@@ -184,7 +184,36 @@ export function DraggableDashboard({ isEditMode, dashboardStats }: DraggableDash
       title: 'Priority Tasks',
       type: 'activity',
       icon: AlertTriangle,
-      content: <PriorityTasksList tasks={dashboardStats?.priorityTasks || []} />,
+      content: (
+        <div className="space-y-3">
+          {(dashboardStats?.priorityTasks || []).map((task: any) => (
+            <div key={task.id} className="flex items-center justify-between p-3 border rounded-lg">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-medium">{task.title}</span>
+                  <Badge className={
+                    task.type === 'urgent' ? 'bg-red-100 text-red-800' :
+                    task.type === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-blue-100 text-blue-800'
+                  }>
+                    {task.type.toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className="text-2xl font-bold">{task.count}</span>
+              </div>
+            </div>
+          ))}
+          {(!dashboardStats?.priorityTasks || dashboardStats.priorityTasks.length === 0) && (
+            <div className="text-center py-8 text-gray-500">
+              <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-600" />
+              <p className="text-lg font-medium">All caught up!</p>
+              <p className="text-sm">No urgent tasks require attention.</p>
+            </div>
+          )}
+        </div>
+      ),
     },
     {
       id: 'recent-activity',
