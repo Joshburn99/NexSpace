@@ -32,6 +32,13 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
   - Smooth animations and transitions optimized for mobile performance
   - Responsive typography that scales appropriately across device sizes
   - Mobile-optimized form controls with larger input fields and better touch interaction
+- **Mobile Agenda View for Calendar**: Implemented alternative list-based agenda view for mobile devices
+  - Auto-switches to agenda view on screens smaller than 768px for better mobile UX
+  - View toggle buttons (Grid/List) shown only on mobile to switch between calendar and agenda views
+  - Shifts displayed as touch-friendly cards grouped by date with "Today", "Tomorrow" labels
+  - Each shift card shows all key information: specialty color, status, urgency, facility, department, staffing ratio, and hourly rate
+  - Touch-optimized cards with visual feedback on tap and proper 44px minimum touch targets
+  - Maintains all filtering and search functionality from calendar view
 
 ### July 28, 2025 - Comprehensive Security Audit & RBAC Enforcement Implementation
 - **Enhanced Security Middleware**: Created comprehensive authorization system with role-based access control and resource protection

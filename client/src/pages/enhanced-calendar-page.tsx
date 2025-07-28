@@ -53,9 +53,11 @@ import {
   XCircle,
   Star,
   PlayCircle,
-  Plus
+  Plus,
+  List,
+  Grid
 } from "lucide-react";
-import { format, addDays, startOfWeek } from "date-fns";
+import { format, addDays, startOfWeek, isToday, isTomorrow, isPast, isSameDay } from "date-fns";
 
 interface EnhancedShift {
   id: number;
@@ -193,9 +195,29 @@ export default function EnhancedCalendarPage() {
   const calendarRef = useRef<FullCalendar>(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"dayGridMonth" | "timeGridWeek" | "timeGridDay">("dayGridMonth");
+  const [viewType, setViewType] = useState<"calendar" | "agenda">("calendar");
   const [selectedShift, setSelectedShift] = useState<EnhancedShift | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  
+  // Automatically switch to agenda view on mobile
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  
+  // Effect to handle responsive view switching
+  React.useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 768;
+      if (mobile && viewType === "calendar") {
+        setViewType("agenda");
+      }
+    };
+    
+    // Set initial view based on screen size
+    handleResize();
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [showAddShiftDialog, setShowAddShiftDialog] = useState(false);
   const [shiftFormData, setShiftFormData] = useState({
     title: '',
@@ -706,6 +728,179 @@ export default function EnhancedCalendarPage() {
     filters.statuses.length + 
     filters.workers.length;
 
+  // Mobile Agenda View Component
+  const MobileAgendaView = ({ shifts, onShiftClick }: { shifts: any[], onShiftClick: (shift: any) => void }) => {
+    // Group shifts by date
+    const groupedShifts = useMemo(() => {
+      const groups: { [key: string]: any[] } = {};
+      
+      shifts.forEach(shift => {
+        const date = shift.date;
+        if (!groups[date]) {
+          groups[date] = [];
+        }
+        groups[date].push(shift);
+      });
+      
+      // Sort dates
+      const sortedDates = Object.keys(groups).sort();
+      
+      return sortedDates.map(date => ({
+        date,
+        shifts: groups[date].sort((a, b) => a.startTime.localeCompare(b.startTime))
+      }));
+    }, [shifts]);
+    
+    const getDateLabel = (dateStr: string) => {
+      const date = new Date(dateStr);
+      if (isToday(date)) return "Today";
+      if (isTomorrow(date)) return "Tomorrow";
+      if (isPast(date)) return format(date, "EEEE, MMM d") + " (Past)";
+      return format(date, "EEEE, MMM d");
+    };
+    
+    const getShiftStatusBadge = (status: string) => {
+      const statusInfo = statusConfig[status as keyof typeof statusConfig] || statusConfig.open;
+      const StatusIcon = statusInfo.icon;
+      
+      return (
+        <Badge 
+          variant="outline" 
+          className="text-xs flex items-center gap-1"
+          style={{ 
+            borderColor: statusInfo.color,
+            color: statusInfo.color,
+            backgroundColor: `${statusInfo.color}10`
+          }}
+        >
+          <StatusIcon className="h-3 w-3" />
+          {status.charAt(0).toUpperCase() + status.slice(1)}
+        </Badge>
+      );
+    };
+    
+    const getUrgencyBadge = (urgency: string) => {
+      const urgencyConfig = {
+        low: { color: '#10b981', text: 'Low' },
+        medium: { color: '#f59e0b', text: 'Medium' },
+        high: { color: '#ef4444', text: 'High' },
+        critical: { color: '#dc2626', text: 'Critical' }
+      };
+      
+      const config = urgencyConfig[urgency as keyof typeof urgencyConfig] || urgencyConfig.medium;
+      
+      return (
+        <Badge 
+          variant="outline" 
+          className="text-xs"
+          style={{ 
+            borderColor: config.color,
+            color: config.color,
+            backgroundColor: `${config.color}10`
+          }}
+        >
+          {config.text}
+        </Badge>
+      );
+    };
+    
+    return (
+      <div className="space-y-4 p-4">
+        {groupedShifts.length === 0 ? (
+          <Card>
+            <CardContent className="text-center py-8">
+              <Calendar className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <p className="text-muted-foreground">No shifts found</p>
+            </CardContent>
+          </Card>
+        ) : (
+          groupedShifts.map(({ date, shifts }) => (
+            <div key={date} className="space-y-2">
+              <h3 className="text-sm font-semibold text-muted-foreground sticky top-0 bg-background py-2">
+                {getDateLabel(date)}
+              </h3>
+              {shifts.map((shift: any) => {
+                const specialtyColor = getCalendarColor(shift.specialty);
+                const isGrouped = (shift as any).shifts?.length > 0;
+                const assignedCount = isGrouped 
+                  ? (shift as any).shifts.filter((s: any) => s.assignedStaffId).length 
+                  : (shift.assignedStaffId ? 1 : 0);
+                const totalSlots = isGrouped ? (shift as any).shifts.length : 1;
+                
+                return (
+                  <Card 
+                    key={shift.id}
+                    className="cursor-pointer transition-all duration-200 hover:shadow-md active:scale-[0.98] mobile-touch"
+                    onClick={() => onShiftClick(shift)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div className="flex-1">
+                          <h4 className="font-medium text-base flex items-center gap-2">
+                            <div 
+                              className="w-3 h-3 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: specialtyColor }}
+                            />
+                            {shift.title || `${shift.specialty} - ${shift.department}`}
+                          </h4>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            <Clock className="inline h-3 w-3 mr-1" />
+                            {shift.startTime} - {shift.endTime}
+                          </p>
+                        </div>
+                        <div className="flex flex-col gap-1 items-end">
+                          {getShiftStatusBadge(shift.status)}
+                          {shift.urgency && getUrgencyBadge(shift.urgency)}
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Building className="h-3 w-3 text-muted-foreground" />
+                          <span>{shift.facilityName}</span>
+                        </div>
+                        
+                        {shift.department && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-3 w-3 text-muted-foreground" />
+                            <span>{shift.department}</span>
+                          </div>
+                        )}
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Users className="h-3 w-3 text-muted-foreground" />
+                            <span>
+                              {assignedCount}/{totalSlots} filled
+                            </span>
+                          </div>
+                          
+                          {shift.rate && (
+                            <div className="flex items-center gap-1 text-green-600">
+                              <DollarSign className="h-3 w-3" />
+                              <span className="font-medium">${shift.rate}/hr</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        {shift.assignedStaffName && (
+                          <div className="flex items-center gap-2 mt-2 pt-2 border-t">
+                            <User className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-xs">Assigned: {shift.assignedStaffName}</span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          ))
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className="w-full space-y-4 md:space-y-6">
       {/* Header - Mobile Responsive */}
@@ -736,6 +931,26 @@ export default function EnhancedCalendarPage() {
       {/* Filter Controls - Mobile Responsive */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
         <div className="flex items-center gap-2">
+          {/* View Toggle - Show on mobile only */}
+          <div className="flex items-center gap-1 md:hidden bg-muted p-1 rounded-md">
+            <Button
+              variant={viewType === "calendar" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewType("calendar")}
+              className="min-h-[32px] px-3"
+            >
+              <Grid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant={viewType === "agenda" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewType("agenda")}
+              className="min-h-[32px] px-3"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+          
           <Button
             variant={showFilters ? "default" : "outline"}
             onClick={() => setShowFilters(!showFilters)}
@@ -1005,16 +1220,32 @@ export default function EnhancedCalendarPage() {
         </Card>
       </div>
 
-      {/* Calendar */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Shift Calendar
-            {isLoading && <Badge variant="secondary">Loading...</Badge>}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      {/* Calendar / Agenda View */}
+      {viewType === "agenda" && isMobile ? (
+        <MobileAgendaView 
+          shifts={processedShifts} 
+          onShiftClick={(shift) => {
+            // Convert shift to the format expected by handleEventClick
+            const fakeInfo = {
+              event: {
+                extendedProps: {
+                  shift: shift
+                }
+              }
+            };
+            handleEventClick(fakeInfo);
+          }}
+        />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Shift Calendar
+              {isLoading && <Badge variant="secondary">Loading...</Badge>}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
           {/* Calendar Legend */}
           <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -1172,6 +1403,7 @@ export default function EnhancedCalendarPage() {
           />
         </CardContent>
       </Card>
+      )}
 
       {/* Shift Detail Modal - Mobile Responsive */}
       <Dialog open={!!selectedShift} onOpenChange={() => setSelectedShift(null)}>
