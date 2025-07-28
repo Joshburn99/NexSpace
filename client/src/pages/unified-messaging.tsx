@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { apiRequest } from "@/lib/queryClient";
 import { useWebSocket, useChatMessages } from "@/lib/websocket";
+import { useToast } from "@/hooks/use-toast";
 
 interface Conversation {
   id: number;
@@ -68,24 +69,28 @@ interface Message {
 export default function UnifiedMessagingPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [selectedParticipants, setSelectedParticipants] = useState<number[]>([]);
   const [conversationSubject, setConversationSubject] = useState("");
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { subscribe } = useWebSocket();
+  const { subscribe, isConnected } = useWebSocket();
 
   // Fetch conversations
   const { data: conversations = [], isLoading: loadingConversations } = useQuery<Conversation[]>({
     queryKey: ['/api/conversations'],
   });
 
-  // Fetch messages for selected conversation
+  // Fetch messages for selected conversation with polling fallback
   const { data: messages = [], isLoading: loadingMessages } = useQuery<Message[]>({
     queryKey: [`/api/conversations/${selectedConversation}/messages`],
     enabled: !!selectedConversation,
+    // Poll every 5 seconds if WebSocket is disconnected
+    refetchInterval: !isConnected ? 5000 : false,
   });
 
   // Fetch staff for new conversation dialog
@@ -131,27 +136,56 @@ export default function UnifiedMessagingPage() {
     },
   });
 
+  // Merge local messages with fetched messages
+  useEffect(() => {
+    setLocalMessages(messages);
+  }, [messages]);
+
   // WebSocket subscription for real-time updates
   useEffect(() => {
     const unsubscribe = subscribe('new_message', (data) => {
-      // Refresh messages if it's for the current conversation
+      const newMsg = data.data;
+      
+      // Add message to local state immediately for instant UI update
       if (data.conversationId === selectedConversation) {
-        queryClient.invalidateQueries({ 
-          queryKey: [`/api/conversations/${selectedConversation}/messages`] 
+        setLocalMessages(prev => {
+          // Check if message already exists to avoid duplicates
+          if (prev.some(m => m.id === newMsg.id)) {
+            return prev;
+          }
+          return [...prev, newMsg];
         });
       }
-      // Always refresh conversation list to update last message
+      
+      // Show toast notification for new messages (not from current user)
+      if (newMsg.senderId !== user?.id) {
+        toast({
+          title: "New message",
+          description: `${newMsg.senderName}: ${newMsg.content.substring(0, 50)}${newMsg.content.length > 50 ? '...' : ''}`,
+        });
+      }
+      
+      // Refresh conversation list to update last message
       queryClient.invalidateQueries({ queryKey: ['/api/conversations'] });
       queryClient.invalidateQueries({ queryKey: ['/api/messages/unread-count'] });
+      
+      // Also refresh messages from server after a short delay to ensure consistency
+      setTimeout(() => {
+        if (data.conversationId === selectedConversation) {
+          queryClient.invalidateQueries({ 
+            queryKey: [`/api/conversations/${selectedConversation}/messages`] 
+          });
+        }
+      }, 500);
     });
 
     return unsubscribe;
-  }, [selectedConversation, queryClient, subscribe]);
+  }, [selectedConversation, queryClient, subscribe, user?.id, toast]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [localMessages]);
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedConversation) return;
@@ -217,8 +251,24 @@ export default function UnifiedMessagingPage() {
       <div className="w-80 border-r flex flex-col">
         <div className="p-4 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">Messages</h2>
-            <Dialog open={showNewConversation} onOpenChange={setShowNewConversation}>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold">Messages</h2>
+              {totalUnreadCount > 0 && (
+                <Badge variant="destructive">{totalUnreadCount}</Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {/* Connection Status Indicator */}
+              <div className="flex items-center gap-1">
+                <div className={cn(
+                  "w-2 h-2 rounded-full",
+                  isConnected ? "bg-green-500" : "bg-red-500"
+                )} />
+                <span className="text-xs text-gray-500">
+                  {isConnected ? "Live" : "Offline"}
+                </span>
+              </div>
+              <Dialog open={showNewConversation} onOpenChange={setShowNewConversation}>
               <DialogTrigger asChild>
                 <Button size="sm">
                   <Plus className="w-4 h-4 mr-1" />
@@ -299,6 +349,7 @@ export default function UnifiedMessagingPage() {
                 </div>
               </DialogContent>
             </Dialog>
+            </div>
           </div>
           
           <div className="relative">
@@ -401,11 +452,11 @@ export default function UnifiedMessagingPage() {
           <ScrollArea className="flex-1 p-4">
             {loadingMessages ? (
               <div className="text-center text-gray-500">Loading messages...</div>
-            ) : messages.length === 0 ? (
+            ) : localMessages.length === 0 ? (
               <div className="text-center text-gray-500">No messages yet. Start the conversation!</div>
             ) : (
               <div className="space-y-4">
-                {messages.map((message) => {
+                {localMessages.map((message) => {
                   const isOwn = message.senderId === user?.id;
                   
                   return (

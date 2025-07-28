@@ -3,7 +3,9 @@ import { useAuth } from "@/hooks/use-auth";
 
 export interface WebSocketMessage {
   type: string;
-  data: any;
+  data?: any;
+  conversationId?: number;
+  userId?: number;
   timestamp?: string;
 }
 
@@ -32,12 +34,28 @@ class WebSocketManager {
   private reconnectDelay = 1000;
   private listeners: Map<string, Set<(data: any) => void>> = new Map();
   private isConnected = false;
+  private userId: number | null = null;
+  private isAuthenticated = false;
 
   constructor() {
-    this.connect();
+    // Don't auto-connect, wait for user to be available
+  }
+
+  public setUserId(userId: number | null) {
+    this.userId = userId;
+    if (userId && !this.isConnected) {
+      this.connect();
+    } else if (!userId && this.isConnected) {
+      this.disconnect();
+    }
   }
 
   private connect() {
+    if (!this.userId) {
+      console.warn("Cannot connect WebSocket without user ID");
+      return;
+    }
+
     try {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const wsUrl = `${protocol}//${window.location.host}/ws`;
@@ -45,16 +63,31 @@ class WebSocketManager {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
-        console.log("WebSocket connected");
+        console.log("WebSocket connected, authenticating...");
         this.isConnected = true;
         this.reconnectAttempts = 0;
-        this.notifyListeners("connection", { status: "connected" });
+        
+        // Send authentication message immediately
+        if (this.userId) {
+          this.send({
+            type: "authenticate",
+            userId: this.userId
+          });
+        }
       };
 
       this.ws.onmessage = (event) => {
         try {
           const message: WebSocketMessage = JSON.parse(event.data);
-          this.handleMessage(message);
+          
+          // Handle authentication response
+          if (message.type === "authenticated") {
+            console.log("WebSocket authenticated for user:", message.userId);
+            this.isAuthenticated = true;
+            this.notifyListeners("connection", { status: "connected" });
+          } else {
+            this.handleMessage(message);
+          }
         } catch (error) {
           console.error("Failed to parse WebSocket message:", error);
         }
@@ -63,8 +96,11 @@ class WebSocketManager {
       this.ws.onclose = () => {
         console.log("WebSocket disconnected");
         this.isConnected = false;
+        this.isAuthenticated = false;
         this.notifyListeners("connection", { status: "disconnected" });
-        this.handleReconnect();
+        if (this.userId) {
+          this.handleReconnect();
+        }
       };
 
       this.ws.onerror = (error) => {
@@ -182,6 +218,15 @@ export function useWebSocket() {
   const [connectionStatus, setConnectionStatus] = useState<
     "connecting" | "connected" | "disconnected" | "failed"
   >("connecting");
+
+  useEffect(() => {
+    // Set user ID when user is available
+    if (user?.id) {
+      wsManager.setUserId(user.id);
+    } else {
+      wsManager.setUserId(null);
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     const unsubscribe = wsManager.subscribe("connection", ({ status }) => {

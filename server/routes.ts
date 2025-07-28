@@ -2738,22 +2738,28 @@ export function registerRoutes(app: Express): Server {
         messageType
       });
       
-      // Broadcast via WebSocket
+      // Broadcast via WebSocket to conversation participants
       const enrichedMessage = {
         ...message,
         senderName: `${req.user.firstName} ${req.user.lastName}`,
         senderRole: req.user.role
       };
       
-      wss.clients.forEach((client: WebSocket) => {
-        if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({
-            type: 'new_message',
-            conversationId,
-            data: enrichedMessage
-          }));
+      // Send to all participants in the conversation
+      for (const participant of participants) {
+        const userSockets = userConnections.get(participant.userId);
+        if (userSockets) {
+          userSockets.forEach((socket) => {
+            if (socket.readyState === WebSocket.OPEN) {
+              socket.send(JSON.stringify({
+                type: 'new_message',
+                conversationId,
+                data: enrichedMessage
+              }));
+            }
+          });
         }
-      });
+      }
       
       res.status(201).json(enrichedMessage);
     } catch (error) {
@@ -10406,8 +10412,15 @@ export function registerRoutes(app: Express): Server {
   // Initialize unified data service with WebSocket support
   unifiedDataService = new UnifiedDataService(wss);
 
-  wss.on("connection", (ws: WebSocket, req) => {
+  // Track authenticated WebSocket connections
+  const userConnections = new Map<number, Set<WebSocket>>();
+
+  wss.on("connection", (ws: WebSocket & { userId?: number, isAlive?: boolean }, req) => {
     console.log("WebSocket connection established");
+    
+    // Set up heartbeat to detect disconnected clients
+    ws.isAlive = true;
+    ws.on('pong', () => { ws.isAlive = true; });
 
     ws.on("message", async (data) => {
       try {
@@ -10415,21 +10428,27 @@ export function registerRoutes(app: Express): Server {
 
         // Handle different message types
         switch (message.type) {
-          // The new conversation-based messaging is handled via REST API endpoints
-          // which already broadcast WebSocket events
-          
-          case "new_message":
-            // Broadcast new messages to all connected clients
-            wss.clients.forEach((client) => {
-              if (client.readyState === WebSocket.OPEN) {
-                client.send(
-                  JSON.stringify({
-                    type: "new_message",
-                    data: message.data,
-                  })
-                );
+          case "authenticate":
+            // Authenticate WebSocket connection with user ID
+            if (message.userId && typeof message.userId === 'number') {
+              ws.userId = message.userId;
+              
+              // Add to user connections map
+              if (!userConnections.has(message.userId)) {
+                userConnections.set(message.userId, new Set());
               }
-            });
+              userConnections.get(message.userId)!.add(ws);
+              
+              ws.send(JSON.stringify({
+                type: "authenticated",
+                userId: message.userId
+              }));
+              console.log(`WebSocket authenticated for user ${message.userId}`);
+            }
+            break;
+            
+          case "new_message":
+            // This is now handled by the REST API which broadcasts properly
             break;
             
           case "shift_update":
@@ -10445,6 +10464,11 @@ export function registerRoutes(app: Express): Server {
               }
             });
             break;
+            
+          case "ping":
+            // Handle ping/pong for connection health
+            ws.send(JSON.stringify({ type: "pong" }));
+            break;
         }
       } catch (error) {
         console.error("WebSocket message error:", error);
@@ -10453,7 +10477,35 @@ export function registerRoutes(app: Express): Server {
 
     ws.on("close", () => {
       console.log("WebSocket connection closed");
+      
+      // Remove from user connections
+      if (ws.userId && userConnections.has(ws.userId)) {
+        userConnections.get(ws.userId)!.delete(ws);
+        if (userConnections.get(ws.userId)!.size === 0) {
+          userConnections.delete(ws.userId);
+        }
+      }
     });
+
+    ws.on("error", (error) => {
+      console.error("WebSocket error:", error);
+    });
+  });
+  
+  // Heartbeat interval to detect stale connections
+  const heartbeatInterval = setInterval(() => {
+    wss.clients.forEach((ws: WebSocket & { isAlive?: boolean }) => {
+      if (ws.isAlive === false) {
+        return ws.terminate();
+      }
+      ws.isAlive = false;
+      ws.ping();
+    });
+  }, 30000); // 30 seconds
+
+  // Clean up on server shutdown
+  wss.on('close', () => {
+    clearInterval(heartbeatInterval);
   });
 
   // Shift template routes - replaces in-memory template storage
