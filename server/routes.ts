@@ -338,6 +338,113 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Global Search API
+  app.get("/api/search", requireAuth, async (req: any, res) => {
+    try {
+      const query = req.query.q as string;
+      if (!query || query.trim().length < 2) {
+        return res.json({ results: [] });
+      }
+
+      const searchTerm = `%${query.toLowerCase()}%`;
+      const results: any[] = [];
+
+      // Search staff
+      const staffResults = await db
+        .select({
+          id: staff.id,
+          type: sql<string>`'staff'`,
+          title: staff.name,
+          subtitle: staff.specialty,
+          description: sql<string>`COALESCE(${staff.department}, '')`,
+          route: sql<string>`'/staff'`,
+        })
+        .from(staff)
+        .where(
+          or(
+            sql`LOWER(${staff.name}) LIKE ${searchTerm}`,
+            sql`LOWER(${staff.specialty}) LIKE ${searchTerm}`,
+            sql`LOWER(${staff.email}) LIKE ${searchTerm}`,
+            sql`CAST(${staff.id} AS TEXT) LIKE ${searchTerm}`
+          )
+        )
+        .limit(5);
+
+      // Search shifts
+      const shiftResults = await db
+        .select({
+          id: shifts.id,
+          type: sql<string>`'shift'`,
+          title: shifts.title,
+          subtitle: sql<string>`${shifts.date} || ' - ' || ${shifts.specialty}`,
+          description: sql<string>`COALESCE(${shifts.description}, '')`,
+          route: sql<string>`'/schedule'`,
+        })
+        .from(shifts)
+        .where(
+          or(
+            sql`LOWER(${shifts.title}) LIKE ${searchTerm}`,
+            sql`LOWER(${shifts.specialty}) LIKE ${searchTerm}`,
+            sql`CAST(${shifts.id} AS TEXT) LIKE ${searchTerm}`
+          )
+        )
+        .limit(5);
+
+      // Search facilities
+      const facilityResults = await db
+        .select({
+          id: facilities.id,
+          type: sql<string>`'facility'`,
+          title: facilities.name,
+          subtitle: facilities.type,
+          description: sql<string>`COALESCE(${facilities.city} || ', ' || ${facilities.state}, '')`,
+          route: sql<string>`'/facilities'`,
+        })
+        .from(facilities)
+        .where(
+          or(
+            sql`LOWER(${facilities.name}) LIKE ${searchTerm}`,
+            sql`LOWER(${facilities.type}) LIKE ${searchTerm}`,
+            sql`LOWER(${facilities.city}) LIKE ${searchTerm}`,
+            sql`CAST(${facilities.id} AS TEXT) LIKE ${searchTerm}`
+          )
+        )
+        .limit(5);
+
+      // Search jobs
+      const jobResults = await db
+        .select({
+          id: jobs.id,
+          type: sql<string>`'job'`,
+          title: jobs.title,
+          subtitle: sql<string>`${jobs.location} || ' - ' || ${jobs.type}`,
+          description: jobs.description,
+          route: sql<string>`'/job-board'`,
+        })
+        .from(jobs)
+        .where(
+          and(
+            or(
+              sql`LOWER(${jobs.title}) LIKE ${searchTerm}`,
+              sql`LOWER(${jobs.description}) LIKE ${searchTerm}`,
+              sql`LOWER(${jobs.location}) LIKE ${searchTerm}`,
+              sql`CAST(${jobs.id} AS TEXT) LIKE ${searchTerm}`
+            ),
+            eq(jobs.status, 'active')
+          )
+        )
+        .limit(5);
+
+      // Combine all results
+      results.push(...staffResults, ...shiftResults, ...facilityResults, ...jobResults);
+
+      res.json({ results });
+    } catch (error) {
+      console.error('Search error:', error);
+      res.status(500).json({ error: 'Failed to perform search' });
+    }
+  });
+
   // Dashboard API - Enhanced with comprehensive statistics and facility filtering
   app.get("/api/dashboard/stats", requireAuth, async (req: any, res) => {
     try {

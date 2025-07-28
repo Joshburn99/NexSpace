@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { LogOut, User } from 'lucide-react';
+import { GlobalSearch } from './GlobalSearch';
 
 export function TopBar() {
   const { user, impersonatedUser, quitImpersonation, originalUser } = useAuth();
@@ -33,6 +34,11 @@ export function TopBar() {
              'NexSpace'}
           </h1>
         </div>
+      </div>
+
+      {/* Global Search */}
+      <div className="flex-1 max-w-md mx-4">
+        <GlobalSearch />
       </div>
       
       <div className="flex items-center space-x-4">

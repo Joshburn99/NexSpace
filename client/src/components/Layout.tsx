@@ -5,6 +5,7 @@ import { TopBar } from "./TopBar";
 import { TopLine } from "./TopLine";
 import { RoleBasedSidebar } from "./RoleBasedSidebar";
 import { FacilityUserSidebar } from "./FacilityUserSidebar";
+import { GlobalSearch } from "./GlobalSearch";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
@@ -88,7 +89,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <span className="font-semibold">NexSpace</span>
         </div>
         
-        <div className="w-10" /> {/* Spacer for centering */}
+        <GlobalSearch />
       </div>
       
       {showTopLine ? (
@@ -134,13 +135,38 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </div>
         </>
       ) : (
-        <div className="flex flex-1 relative">
-          {/* Desktop Sidebar */}
-          <div className="hidden md:block">
-            {renderSidebar()}
+        <>
+          {/* Desktop Header for Admin/Facility Users */}
+          <div className="hidden md:flex items-center justify-between bg-white dark:bg-gray-900 px-6 py-4 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-4">
+              <img src="/nexspace-logo.png" alt="NexSpace" className="h-8" />
+            </div>
+            
+            <div className="flex-1 max-w-2xl mx-8">
+              <GlobalSearch />
+            </div>
+            
+            <div className="flex items-center gap-4">
+              {impersonatedUser && (
+                <div className="flex items-center gap-2 px-3 py-1 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
+                  <span className="text-sm text-yellow-700 dark:text-yellow-300">
+                    Viewing as {currentUser?.firstName} {currentUser?.lastName}
+                  </span>
+                </div>
+              )}
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                {currentUser?.firstName} {currentUser?.lastName}
+              </div>
+            </div>
           </div>
           
-          {/* Mobile Sidebar Overlay */}
+          <div className="flex flex-1 relative">
+            {/* Desktop Sidebar */}
+            <div className="hidden md:block">
+              {renderSidebar()}
+            </div>
+            
+            {/* Mobile Sidebar Overlay */}
           {mobileMenuOpen && (
             <div className="md:hidden fixed inset-0 z-50 bg-black bg-opacity-50">
               <div className="mobile-sidebar absolute left-0 top-0 h-full w-64 bg-white dark:bg-gray-900 shadow-xl">
@@ -169,6 +195,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </div>
           </main>
         </div>
+        </>
       )}
     </div>
   );
