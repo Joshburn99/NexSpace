@@ -18,23 +18,100 @@ import { apiRequest } from '@/lib/queryClient';
 interface Facility {
   id: number;
   name: string;
-  type: string;
   address: string;
   city: string;
   state: string;
   zipCode: string;
   phone: string;
   email: string;
-  bedCount: number;
+  website?: string;
+  
+  // CMS & Regulatory
+  cmsId?: string;
+  npiNumber?: string;
+  facilityType?: string;
+  bedCount?: number;
+  privateRooms?: number;
+  semiPrivateRooms?: number;
+  overallRating?: number;
+  healthInspectionRating?: number;
+  qualityMeasureRating?: number;
+  staffingRating?: number;
+  rnStaffingRating?: number;
+  ownershipType?: string;
+  certificationDate?: string;
+  participatesMedicare?: boolean;
+  participatesMedicaid?: boolean;
+  
+  // Operations
   isActive: boolean;
   timezone: string;
   autoAssignmentEnabled?: boolean;
+  teamId?: number;
   emrSystem?: string;
+  specialtyServices?: string[];
+  languagesSpoken?: string[];
+  
+  // Billing & Rates
   netTerms?: string;
   billingContactName?: string;
   billingContactEmail?: string;
+  floatPoolMargins?: Record<string, number>;
+  billRates?: Record<string, number>;
+  payRates?: Record<string, number>;
+  
+  // Workflow & Settings
+  workflowAutomationConfig?: {
+    autoApproveShifts?: boolean;
+    autoNotifyManagers?: boolean;
+    autoGenerateInvoices?: boolean;
+    requireManagerApproval?: boolean;
+    enableOvertimeAlerts?: boolean;
+    autoAssignBySpecialty?: boolean;
+  };
+  shiftManagementSettings?: {
+    overtimeThreshold?: number;
+    maxConsecutiveShifts?: number;
+    minHoursBetweenShifts?: number;
+    allowBackToBackShifts?: boolean;
+    requireManagerApprovalForOvertime?: boolean;
+    autoCalculateOvertime?: boolean;
+  };
+  
+  // Staffing & Rules
+  staffingTargets?: Record<string, any>;
+  customRules?: {
+    floatPoolRules?: any;
+    overtimeRules?: any;
+    attendanceRules?: any;
+    requiredDocuments?: string[];
+  };
+  
+  // Compliance
+  regulatoryDocs?: any[];
+  lastInspectionDate?: string;
+  deficiencyCount?: number;
+  complaintsCount?: number;
+  finesTotal?: number;
+  
+  // Contract & Admin
   contractStartDate?: string;
   contractEndDate?: string;
+  adminName?: string;
+  adminTitle?: string;
+  medicalDirector?: string;
+  payrollProviderId?: number;
+  
+  // Location
+  latitude?: number;
+  longitude?: number;
+  
+  // Metadata
+  autoImported?: boolean;
+  lastDataUpdate?: string;
+  dataSource?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export default function FacilityProfilePage() {
@@ -196,11 +273,15 @@ export default function FacilityProfilePage() {
       </div>
 
       <Tabs defaultValue="basic" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="basic">Basic Information</TabsTrigger>
-          <TabsTrigger value="contact">Contact Details</TabsTrigger>
+        <TabsList className="grid grid-cols-4 md:grid-cols-8 gap-2">
+          <TabsTrigger value="basic">Basic Info</TabsTrigger>
+          <TabsTrigger value="contact">Contact</TabsTrigger>
           <TabsTrigger value="operations">Operations</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
+          <TabsTrigger value="billing">Billing & Rates</TabsTrigger>
+          <TabsTrigger value="compliance">Compliance</TabsTrigger>
+          <TabsTrigger value="workflow">Workflow</TabsTrigger>
+          <TabsTrigger value="shifts">Shift Rules</TabsTrigger>
+          <TabsTrigger value="staffing">Staffing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="basic">
@@ -226,8 +307,8 @@ export default function FacilityProfilePage() {
                   <Label>Facility Type</Label>
                   {isEditing ? (
                     <Select
-                      value={editedFacility.type || ''}
-                      onValueChange={(value) => handleFieldChange('type', value)}
+                      value={editedFacility.facilityType || ''}
+                      onValueChange={(value) => handleFieldChange('facilityType', value)}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -235,17 +316,45 @@ export default function FacilityProfilePage() {
                       <SelectContent>
                         <SelectItem value="hospital">Hospital</SelectItem>
                         <SelectItem value="nursing_home">Nursing Home</SelectItem>
+                        <SelectItem value="assisted_living">Assisted Living</SelectItem>
+                        <SelectItem value="rehab_center">Rehabilitation Center</SelectItem>
                         <SelectItem value="clinic">Clinic</SelectItem>
-                        <SelectItem value="rehabilitation">Rehabilitation Center</SelectItem>
                       </SelectContent>
                     </Select>
                   ) : (
-                    <p className="text-lg font-medium">{facility.type}</p>
+                    <p className="text-lg font-medium">{facility.facilityType || 'Not specified'}</p>
                   )}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>CMS ID</Label>
+                  {isEditing ? (
+                    <Input
+                      value={editedFacility.cmsId || ''}
+                      onChange={(e) => handleFieldChange('cmsId', e.target.value)}
+                      placeholder="CMS Certification Number"
+                    />
+                  ) : (
+                    <p className="text-lg font-medium">{facility.cmsId || 'Not specified'}</p>
+                  )}
+                </div>
+                <div>
+                  <Label>NPI Number</Label>
+                  {isEditing ? (
+                    <Input
+                      value={editedFacility.npiNumber || ''}
+                      onChange={(e) => handleFieldChange('npiNumber', e.target.value)}
+                      placeholder="National Provider Identifier"
+                    />
+                  ) : (
+                    <p className="text-lg font-medium">{facility.npiNumber || 'Not specified'}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label>Bed Count</Label>
                   {isEditing ? (
@@ -255,7 +364,27 @@ export default function FacilityProfilePage() {
                       onChange={(e) => handleFieldChange('bedCount', parseInt(e.target.value))}
                     />
                   ) : (
-                    <p className="text-lg font-medium">{facility.bedCount}</p>
+                    <p className="text-lg font-medium">{facility.bedCount || 0}</p>
+                  )}
+                </div>
+                <div>
+                  <Label>Ownership Type</Label>
+                  {isEditing ? (
+                    <Select
+                      value={editedFacility.ownershipType || ''}
+                      onValueChange={(value) => handleFieldChange('ownershipType', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="for-profit">For Profit</SelectItem>
+                        <SelectItem value="non-profit">Non Profit</SelectItem>
+                        <SelectItem value="government">Government</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-lg font-medium">{facility.ownershipType || 'Not specified'}</p>
                   )}
                 </div>
                 <div>
@@ -263,7 +392,7 @@ export default function FacilityProfilePage() {
                   <div className="flex items-center gap-2 mt-1">
                     {isEditing ? (
                       <Switch
-                        checked={editedFacility.isActive}
+                        checked={editedFacility.isActive !== false}
                         onCheckedChange={(checked) => handleFieldChange('isActive', checked)}
                       />
                     ) : (
@@ -271,6 +400,54 @@ export default function FacilityProfilePage() {
                         {facility.isActive ? "Active" : "Inactive"}
                       </Badge>
                     )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Team Assignment</Label>
+                  {isEditing ? (
+                    <Input
+                      type="number"
+                      value={editedFacility.teamId || ''}
+                      onChange={(e) => handleFieldChange('teamId', e.target.value ? parseInt(e.target.value) : null)}
+                      placeholder="Team ID"
+                    />
+                  ) : (
+                    <p className="text-lg font-medium">{facility.teamId ? `Team ${facility.teamId}` : 'No team assigned'}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Label>Medicare</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      {isEditing ? (
+                        <Switch
+                          checked={editedFacility.participatesMedicare || false}
+                          onCheckedChange={(checked) => handleFieldChange('participatesMedicare', checked)}
+                        />
+                      ) : (
+                        <Badge variant={facility.participatesMedicare ? "default" : "secondary"}>
+                          {facility.participatesMedicare ? "Yes" : "No"}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <Label>Medicaid</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      {isEditing ? (
+                        <Switch
+                          checked={editedFacility.participatesMedicaid || false}
+                          onCheckedChange={(checked) => handleFieldChange('participatesMedicaid', checked)}
+                        />
+                      ) : (
+                        <Badge variant={facility.participatesMedicaid ? "default" : "secondary"}>
+                          {facility.participatesMedicaid ? "Yes" : "No"}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -455,59 +632,63 @@ export default function FacilityProfilePage() {
         <TabsContent value="billing">
           <Card>
             <CardHeader>
-              <CardTitle>Billing Information</CardTitle>
-              <CardDescription>Payment terms and billing contacts</CardDescription>
+              <CardTitle>Billing & Rates Configuration</CardTitle>
+              <CardDescription>Financial settings, rates, and billing information</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
+              {/* Billing Contact Information */}
               <div>
-                <Label>Payment Terms</Label>
-                {isEditing ? (
-                  <Select
-                    value={editedFacility.netTerms || 'net30'}
-                    onValueChange={(value) => handleFieldChange('netTerms', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="net15">Net 15</SelectItem>
-                      <SelectItem value="net30">Net 30</SelectItem>
-                      <SelectItem value="net45">Net 45</SelectItem>
-                      <SelectItem value="net60">Net 60</SelectItem>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <p className="text-lg font-medium">{facility.netTerms || 'Net 30'}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Billing Contact Name</Label>
-                  {isEditing ? (
-                    <Input
-                      value={editedFacility.billingContactName || ''}
-                      onChange={(e) => handleFieldChange('billingContactName', e.target.value)}
-                    />
-                  ) : (
-                    <p className="text-lg font-medium">{facility.billingContactName || 'Not set'}</p>
-                  )}
-                </div>
-                <div>
-                  <Label>Billing Contact Email</Label>
-                  {isEditing ? (
-                    <Input
-                      type="email"
-                      value={editedFacility.billingContactEmail || ''}
-                      onChange={(e) => handleFieldChange('billingContactEmail', e.target.value)}
-                    />
-                  ) : (
-                    <p className="text-lg font-medium">{facility.billingContactEmail || 'Not set'}</p>
-                  )}
+                <h3 className="text-lg font-semibold mb-3">Billing Contact</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Billing Contact Name</Label>
+                    {isEditing ? (
+                      <Input
+                        value={editedFacility.billingContactName || ''}
+                        onChange={(e) => handleFieldChange('billingContactName', e.target.value)}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">{facility.billingContactName || 'Not set'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>Billing Contact Email</Label>
+                    {isEditing ? (
+                      <Input
+                        type="email"
+                        value={editedFacility.billingContactEmail || ''}
+                        onChange={(e) => handleFieldChange('billingContactEmail', e.target.value)}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">{facility.billingContactEmail || 'Not set'}</p>
+                    )}
+                  </div>
                 </div>
               </div>
 
+              {/* Payment Terms */}
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Payment Terms</Label>
+                  {isEditing ? (
+                    <Select
+                      value={editedFacility.netTerms || 'Net 30'}
+                      onValueChange={(value) => handleFieldChange('netTerms', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Net 15">Net 15</SelectItem>
+                        <SelectItem value="Net 30">Net 30</SelectItem>
+                        <SelectItem value="Net 45">Net 45</SelectItem>
+                        <SelectItem value="Net 60">Net 60</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <p className="text-lg font-medium">{facility.netTerms || 'Net 30'}</p>
+                  )}
+                </div>
                 <div>
                   <Label>Contract Start Date</Label>
                   {isEditing ? (
@@ -522,20 +703,569 @@ export default function FacilityProfilePage() {
                     </p>
                   )}
                 </div>
-                <div>
-                  <Label>Contract End Date</Label>
+              </div>
+
+              {/* Float Pool Margins */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Float Pool Margins by Specialty</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {['RN', 'LPN', 'CNA', 'RT', 'PT', 'OT'].map((specialty) => (
+                    <div key={specialty}>
+                      <Label>{specialty} Margin ($)</Label>
+                      {isEditing ? (
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={editedFacility.floatPoolMargins?.[specialty] || ''}
+                          onChange={(e) => {
+                            const value = parseFloat(e.target.value) || 0;
+                            handleFieldChange('floatPoolMargins', {
+                              ...(editedFacility.floatPoolMargins || {}),
+                              [specialty]: value
+                            });
+                          }}
+                          placeholder="0.00"
+                        />
+                      ) : (
+                        <p className="text-lg font-medium">
+                          ${facility.floatPoolMargins?.[specialty]?.toFixed(2) || '0.00'}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Bill Rates */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Bill Rates by Specialty</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {['RN', 'LPN', 'CNA', 'RT', 'PT', 'OT'].map((specialty) => (
+                    <div key={specialty}>
+                      <Label>{specialty} Bill Rate ($/hr)</Label>
+                      {isEditing ? (
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={editedFacility.billRates?.[specialty] || ''}
+                          onChange={(e) => {
+                            const value = parseFloat(e.target.value) || 0;
+                            handleFieldChange('billRates', {
+                              ...(editedFacility.billRates || {}),
+                              [specialty]: value
+                            });
+                          }}
+                          placeholder="0.00"
+                        />
+                      ) : (
+                        <p className="text-lg font-medium">
+                          ${facility.billRates?.[specialty]?.toFixed(2) || '0.00'}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Pay Rates */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Pay Rates by Specialty</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {['RN', 'LPN', 'CNA', 'RT', 'PT', 'OT'].map((specialty) => (
+                    <div key={specialty}>
+                      <Label>{specialty} Pay Rate ($/hr)</Label>
+                      {isEditing ? (
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={editedFacility.payRates?.[specialty] || ''}
+                          onChange={(e) => {
+                            const value = parseFloat(e.target.value) || 0;
+                            handleFieldChange('payRates', {
+                              ...(editedFacility.payRates || {}),
+                              [specialty]: value
+                            });
+                          }}
+                          placeholder="0.00"
+                        />
+                      ) : (
+                        <p className="text-lg font-medium">
+                          ${facility.payRates?.[specialty]?.toFixed(2) || '0.00'}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="compliance">
+          <Card>
+            <CardHeader>
+              <CardTitle>Compliance & Regulatory Information</CardTitle>
+              <CardDescription>Inspection history, deficiencies, and regulatory compliance</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* CMS Ratings */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">CMS Ratings</h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <Label>Overall Rating</Label>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        min="1"
+                        max="5"
+                        value={editedFacility.overallRating || ''}
+                        onChange={(e) => handleFieldChange('overallRating', parseInt(e.target.value))}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">{facility.overallRating ? `${facility.overallRating} ⭐` : 'Not rated'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>Health Inspection</Label>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        min="1"
+                        max="5"
+                        value={editedFacility.healthInspectionRating || ''}
+                        onChange={(e) => handleFieldChange('healthInspectionRating', parseInt(e.target.value))}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">{facility.healthInspectionRating ? `${facility.healthInspectionRating} ⭐` : 'Not rated'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>Quality Measures</Label>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        min="1"
+                        max="5"
+                        value={editedFacility.qualityMeasureRating || ''}
+                        onChange={(e) => handleFieldChange('qualityMeasureRating', parseInt(e.target.value))}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">{facility.qualityMeasureRating ? `${facility.qualityMeasureRating} ⭐` : 'Not rated'}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>Staffing Rating</Label>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        min="1"
+                        max="5"
+                        value={editedFacility.staffingRating || ''}
+                        onChange={(e) => handleFieldChange('staffingRating', parseInt(e.target.value))}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">{facility.staffingRating ? `${facility.staffingRating} ⭐` : 'Not rated'}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Inspection & Compliance */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Inspection & Compliance</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Last Inspection Date</Label>
+                    {isEditing ? (
+                      <Input
+                        type="date"
+                        value={editedFacility.lastInspectionDate || ''}
+                        onChange={(e) => handleFieldChange('lastInspectionDate', e.target.value)}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">
+                        {facility.lastInspectionDate ? new Date(facility.lastInspectionDate).toLocaleDateString() : 'Not recorded'}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>Certification Date</Label>
+                    {isEditing ? (
+                      <Input
+                        type="date"
+                        value={editedFacility.certificationDate || ''}
+                        onChange={(e) => handleFieldChange('certificationDate', e.target.value)}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">
+                        {facility.certificationDate ? new Date(facility.certificationDate).toLocaleDateString() : 'Not recorded'}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Deficiencies & Complaints */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Deficiencies & Complaints</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <Label>Deficiency Count</Label>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        min="0"
+                        value={editedFacility.deficiencyCount || ''}
+                        onChange={(e) => handleFieldChange('deficiencyCount', parseInt(e.target.value))}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">{facility.deficiencyCount || 0}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>Complaints Count</Label>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        min="0"
+                        value={editedFacility.complaintsCount || ''}
+                        onChange={(e) => handleFieldChange('complaintsCount', parseInt(e.target.value))}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">{facility.complaintsCount || 0}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>Total Fines ($)</Label>
+                    {isEditing ? (
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={editedFacility.finesTotal || ''}
+                        onChange={(e) => handleFieldChange('finesTotal', parseFloat(e.target.value))}
+                      />
+                    ) : (
+                      <p className="text-lg font-medium">${facility.finesTotal?.toFixed(2) || '0.00'}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="workflow">
+          <Card>
+            <CardHeader>
+              <CardTitle>Workflow Automation Configuration</CardTitle>
+              <CardDescription>Configure automated workflows and approval processes</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label>Auto-Approve Shifts</Label>
+                    <p className="text-sm text-gray-600">Automatically approve shift requests that meet criteria</p>
+                  </div>
                   {isEditing ? (
-                    <Input
-                      type="date"
-                      value={editedFacility.contractEndDate || ''}
-                      onChange={(e) => handleFieldChange('contractEndDate', e.target.value)}
+                    <Switch
+                      checked={editedFacility.workflowAutomationConfig?.autoApproveShifts || false}
+                      onCheckedChange={(checked) => handleFieldChange('workflowAutomationConfig', {
+                        ...(editedFacility.workflowAutomationConfig || {}),
+                        autoApproveShifts: checked
+                      })}
                     />
                   ) : (
-                    <p className="text-lg font-medium">
-                      {facility.contractEndDate ? new Date(facility.contractEndDate).toLocaleDateString() : 'Not set'}
-                    </p>
+                    <Badge variant={facility.workflowAutomationConfig?.autoApproveShifts ? "default" : "secondary"}>
+                      {facility.workflowAutomationConfig?.autoApproveShifts ? "Enabled" : "Disabled"}
+                    </Badge>
                   )}
                 </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label>Auto-Notify Managers</Label>
+                    <p className="text-sm text-gray-600">Send notifications to managers for important events</p>
+                  </div>
+                  {isEditing ? (
+                    <Switch
+                      checked={editedFacility.workflowAutomationConfig?.autoNotifyManagers || false}
+                      onCheckedChange={(checked) => handleFieldChange('workflowAutomationConfig', {
+                        ...(editedFacility.workflowAutomationConfig || {}),
+                        autoNotifyManagers: checked
+                      })}
+                    />
+                  ) : (
+                    <Badge variant={facility.workflowAutomationConfig?.autoNotifyManagers ? "default" : "secondary"}>
+                      {facility.workflowAutomationConfig?.autoNotifyManagers ? "Enabled" : "Disabled"}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label>Auto-Generate Invoices</Label>
+                    <p className="text-sm text-gray-600">Generate invoices automatically based on worked shifts</p>
+                  </div>
+                  {isEditing ? (
+                    <Switch
+                      checked={editedFacility.workflowAutomationConfig?.autoGenerateInvoices || false}
+                      onCheckedChange={(checked) => handleFieldChange('workflowAutomationConfig', {
+                        ...(editedFacility.workflowAutomationConfig || {}),
+                        autoGenerateInvoices: checked
+                      })}
+                    />
+                  ) : (
+                    <Badge variant={facility.workflowAutomationConfig?.autoGenerateInvoices ? "default" : "secondary"}>
+                      {facility.workflowAutomationConfig?.autoGenerateInvoices ? "Enabled" : "Disabled"}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label>Require Manager Approval</Label>
+                    <p className="text-sm text-gray-600">Require manager approval for all shift changes</p>
+                  </div>
+                  {isEditing ? (
+                    <Switch
+                      checked={editedFacility.workflowAutomationConfig?.requireManagerApproval || false}
+                      onCheckedChange={(checked) => handleFieldChange('workflowAutomationConfig', {
+                        ...(editedFacility.workflowAutomationConfig || {}),
+                        requireManagerApproval: checked
+                      })}
+                    />
+                  ) : (
+                    <Badge variant={facility.workflowAutomationConfig?.requireManagerApproval ? "default" : "secondary"}>
+                      {facility.workflowAutomationConfig?.requireManagerApproval ? "Enabled" : "Disabled"}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label>Enable Overtime Alerts</Label>
+                    <p className="text-sm text-gray-600">Alert managers when staff approach overtime thresholds</p>
+                  </div>
+                  {isEditing ? (
+                    <Switch
+                      checked={editedFacility.workflowAutomationConfig?.enableOvertimeAlerts || false}
+                      onCheckedChange={(checked) => handleFieldChange('workflowAutomationConfig', {
+                        ...(editedFacility.workflowAutomationConfig || {}),
+                        enableOvertimeAlerts: checked
+                      })}
+                    />
+                  ) : (
+                    <Badge variant={facility.workflowAutomationConfig?.enableOvertimeAlerts ? "default" : "secondary"}>
+                      {facility.workflowAutomationConfig?.enableOvertimeAlerts ? "Enabled" : "Disabled"}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label>Auto-Assign by Specialty</Label>
+                    <p className="text-sm text-gray-600">Match staff to shifts based on their specialties</p>
+                  </div>
+                  {isEditing ? (
+                    <Switch
+                      checked={editedFacility.workflowAutomationConfig?.autoAssignBySpecialty || false}
+                      onCheckedChange={(checked) => handleFieldChange('workflowAutomationConfig', {
+                        ...(editedFacility.workflowAutomationConfig || {}),
+                        autoAssignBySpecialty: checked
+                      })}
+                    />
+                  ) : (
+                    <Badge variant={facility.workflowAutomationConfig?.autoAssignBySpecialty ? "default" : "secondary"}>
+                      {facility.workflowAutomationConfig?.autoAssignBySpecialty ? "Enabled" : "Disabled"}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="shifts">
+          <Card>
+            <CardHeader>
+              <CardTitle>Shift Management Settings</CardTitle>
+              <CardDescription>Configure shift rules and overtime policies</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Overtime Threshold (hours)</Label>
+                  {isEditing ? (
+                    <Input
+                      type="number"
+                      value={editedFacility.shiftManagementSettings?.overtimeThreshold || ''}
+                      onChange={(e) => handleFieldChange('shiftManagementSettings', {
+                        ...(editedFacility.shiftManagementSettings || {}),
+                        overtimeThreshold: parseInt(e.target.value)
+                      })}
+                      placeholder="40"
+                    />
+                  ) : (
+                    <p className="text-lg font-medium">{facility.shiftManagementSettings?.overtimeThreshold || 40} hours</p>
+                  )}
+                </div>
+                <div>
+                  <Label>Max Consecutive Shifts</Label>
+                  {isEditing ? (
+                    <Input
+                      type="number"
+                      value={editedFacility.shiftManagementSettings?.maxConsecutiveShifts || ''}
+                      onChange={(e) => handleFieldChange('shiftManagementSettings', {
+                        ...(editedFacility.shiftManagementSettings || {}),
+                        maxConsecutiveShifts: parseInt(e.target.value)
+                      })}
+                      placeholder="5"
+                    />
+                  ) : (
+                    <p className="text-lg font-medium">{facility.shiftManagementSettings?.maxConsecutiveShifts || 5} shifts</p>
+                  )}
+                </div>
+                <div>
+                  <Label>Min Hours Between Shifts</Label>
+                  {isEditing ? (
+                    <Input
+                      type="number"
+                      value={editedFacility.shiftManagementSettings?.minHoursBetweenShifts || ''}
+                      onChange={(e) => handleFieldChange('shiftManagementSettings', {
+                        ...(editedFacility.shiftManagementSettings || {}),
+                        minHoursBetweenShifts: parseInt(e.target.value)
+                      })}
+                      placeholder="8"
+                    />
+                  ) : (
+                    <p className="text-lg font-medium">{facility.shiftManagementSettings?.minHoursBetweenShifts || 8} hours</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label>Allow Back-to-Back Shifts</Label>
+                    <p className="text-sm text-gray-600">Allow staff to work consecutive shifts without break</p>
+                  </div>
+                  {isEditing ? (
+                    <Switch
+                      checked={editedFacility.shiftManagementSettings?.allowBackToBackShifts || false}
+                      onCheckedChange={(checked) => handleFieldChange('shiftManagementSettings', {
+                        ...(editedFacility.shiftManagementSettings || {}),
+                        allowBackToBackShifts: checked
+                      })}
+                    />
+                  ) : (
+                    <Badge variant={facility.shiftManagementSettings?.allowBackToBackShifts ? "default" : "secondary"}>
+                      {facility.shiftManagementSettings?.allowBackToBackShifts ? "Allowed" : "Not Allowed"}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label>Require Manager Approval for Overtime</Label>
+                    <p className="text-sm text-gray-600">Manager must approve shifts that result in overtime</p>
+                  </div>
+                  {isEditing ? (
+                    <Switch
+                      checked={editedFacility.shiftManagementSettings?.requireManagerApprovalForOvertime || false}
+                      onCheckedChange={(checked) => handleFieldChange('shiftManagementSettings', {
+                        ...(editedFacility.shiftManagementSettings || {}),
+                        requireManagerApprovalForOvertime: checked
+                      })}
+                    />
+                  ) : (
+                    <Badge variant={facility.shiftManagementSettings?.requireManagerApprovalForOvertime ? "default" : "secondary"}>
+                      {facility.shiftManagementSettings?.requireManagerApprovalForOvertime ? "Required" : "Not Required"}
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div className="space-y-1">
+                    <Label>Auto-Calculate Overtime</Label>
+                    <p className="text-sm text-gray-600">Automatically calculate overtime based on threshold</p>
+                  </div>
+                  {isEditing ? (
+                    <Switch
+                      checked={editedFacility.shiftManagementSettings?.autoCalculateOvertime || false}
+                      onCheckedChange={(checked) => handleFieldChange('shiftManagementSettings', {
+                        ...(editedFacility.shiftManagementSettings || {}),
+                        autoCalculateOvertime: checked
+                      })}
+                    />
+                  ) : (
+                    <Badge variant={facility.shiftManagementSettings?.autoCalculateOvertime ? "default" : "secondary"}>
+                      {facility.shiftManagementSettings?.autoCalculateOvertime ? "Enabled" : "Disabled"}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="staffing">
+          <Card>
+            <CardHeader>
+              <CardTitle>Staffing Targets & Custom Rules</CardTitle>
+              <CardDescription>Define staffing requirements and facility-specific rules</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Staffing Targets */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Staffing Targets by Shift</h3>
+                <p className="text-sm text-gray-600 mb-4">Configure minimum staffing requirements for each shift type</p>
+                {isEditing ? (
+                  <Textarea
+                    value={JSON.stringify(editedFacility.staffingTargets || {}, null, 2)}
+                    onChange={(e) => {
+                      try {
+                        const parsed = JSON.parse(e.target.value);
+                        handleFieldChange('staffingTargets', parsed);
+                      } catch (err) {
+                        // Invalid JSON, ignore
+                      }
+                    }}
+                    rows={6}
+                    placeholder='{\n  "dayShift": { "RN": 2, "CNA": 4 },\n  "nightShift": { "RN": 1, "CNA": 2 }\n}'
+                  />
+                ) : (
+                  <pre className="bg-gray-50 p-3 rounded-md text-sm">
+                    {JSON.stringify(facility.staffingTargets || {}, null, 2)}
+                  </pre>
+                )}
+              </div>
+
+              {/* Custom Rules */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Custom Rules</h3>
+                <p className="text-sm text-gray-600 mb-4">Facility-specific rules for float pool, overtime, and attendance</p>
+                {isEditing ? (
+                  <Textarea
+                    value={JSON.stringify(editedFacility.customRules || {}, null, 2)}
+                    onChange={(e) => {
+                      try {
+                        const parsed = JSON.parse(e.target.value);
+                        handleFieldChange('customRules', parsed);
+                      } catch (err) {
+                        // Invalid JSON, ignore
+                      }
+                    }}
+                    rows={8}
+                    placeholder='{\n  "floatPoolRules": {},\n  "overtimeRules": {},\n  "attendanceRules": {},\n  "requiredDocuments": ["BLS", "TB Test"]\n}'
+                  />
+                ) : (
+                  <pre className="bg-gray-50 p-3 rounded-md text-sm">
+                    {JSON.stringify(facility.customRules || {}, null, 2)}
+                  </pre>
+                )}
               </div>
             </CardContent>
           </Card>

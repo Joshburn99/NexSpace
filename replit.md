@@ -13,6 +13,20 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 28, 2025 - Facility Profile as Single Source of Truth
+- **Comprehensive Facility Profile Enhancement**: Enhanced FacilityProfilePage to serve as the single source of truth for all facility data across the platform
+  - Added 8 specialized tabs for complete facility management: Basic Info, Contact Details, Operations, Billing & Rates, Compliance, Workflow Automation, Shift Rules, and Staffing Targets & Custom Rules
+  - Implemented comprehensive field coverage including CMS ID, NPI Number, team assignment, ownership type, float pool margins, bill rates, pay rates, CMS ratings, inspection history, and deficiencies
+  - Created centralized facility management hub with role-based access control for superusers
+- **Backend PATCH Support**: Enhanced facilities routes with comprehensive PATCH endpoint supporting all new facility fields
+  - Added support for updating JSON fields: floatPoolMargins, billRates, payRates, workflowAutomationConfig, shiftManagementSettings, staffingTargets, customRules
+  - Implemented business rule validations for rate configurations and staffing targets
+  - Team synchronization support for proper facility-team associations
+- **Architectural Pattern**: All platform modules now pull facility data from the profile instead of duplicating state
+  - Facility profile serves as centralized data repository for all facility-related information
+  - Eliminates data duplication and ensures consistency across all platform features
+  - Enhanced facilities routes module provides comprehensive field validation and update capabilities
+
 ### July 28, 2025 - Reverted to Enhanced Messaging Page
 - **Messaging System Reversion**: Reverted from the unified messaging system back to the enhanced messaging page per user request
   - Updated navigation links in both FacilityUserSidebar and Sidebar components to use `/messaging` instead of `/unified-messaging`
