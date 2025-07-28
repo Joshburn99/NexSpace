@@ -37,6 +37,7 @@ import OpenShiftsPage from "@/pages/shifts-open-page";
 import ShiftRequestsPage from "@/pages/shift-requests-page";
 import EnhancedStaffPage from "@/pages/enhanced-staff-page";
 import StaffDirectory from "@/pages/StaffDirectory";
+import AllStaffPage from "@/pages/all-staff-page";
 import TimeClockPage from "@/pages/time-clock-page";
 import InvoicesPage from "@/pages/invoices-page";
 import EnhancedReferralPage from "@/pages/enhanced-referral-page";
@@ -138,7 +139,7 @@ function AppContent() {
       />
       <ProtectedRoute
         path="/staff-directory"
-        component={EnhancedStaffPage}
+        component={AllStaffPage}
         requiredPermissions={["staff.view"]}
       />
       <ProtectedRoute
@@ -257,6 +258,8 @@ function AppContent() {
       <ProtectedRoute path="/reports/float-pool-savings" component={FloatPoolAnalyticsPage} />
       <ProtectedRoute path="/reports/agency-usage" component={AgencyUsagePage} />
       <ProtectedRoute path="/enhanced-facilities" component={FacilityManagementPage} />
+      <ProtectedRoute path="/all-facilities" component={FacilityManagementPage} />
+      <ProtectedRoute path="/facility-profiles" component={FacilityManagementPage} />
 
       <ProtectedRoute path="/clinician-dashboard" component={ClinicianDashboardWrapper} />
       <ProtectedRoute path="/employee-dashboard" component={EmployeeDashboardWrapper} />

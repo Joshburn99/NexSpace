@@ -1051,46 +1051,49 @@ export class DatabaseStorage implements IStorage {
 
   // Staff methods
   async getAllStaff(): Promise<Staff[]> {
-    const staffData = await db.select().from(staff).where(eq(staff.isActive, true));
-    // Map snake_case database fields to camelCase TypeScript interface
-    return staffData.map(s => ({
-      ...s,
-      firstName: s.first_name,
-      lastName: s.last_name,
-      profilePhoto: s.profile_photo,
-      employmentType: s.employment_type,
-      hourlyRate: s.hourly_rate,
-      accountStatus: s.account_status,
-      availabilityStatus: s.availability_status,
-      licenseNumber: s.license_number,
-      licenseExpirationDate: s.license_expiration_date,
-      homeAddress: s.home_address,
-      homeCity: s.home_city,
-      homeState: s.home_state,
-      homeZipCode: s.home_zip_code,
-      currentLocation: s.current_location,
-      backgroundCheckDate: s.background_check_date,
-      drugTestDate: s.drug_test_date,
-      covidVaccinationStatus: s.covid_vaccination_status,
-      totalWorkedShifts: s.total_worked_shifts,
-      reliabilityScore: s.reliability_score,
-      lateArrivalCount: s.late_arrival_count,
-      noCallNoShowCount: s.no_call_no_show_count,
-      lastWorkDate: s.last_work_date,
-      preferredShiftTypes: s.preferred_shift_types,
-      weeklyAvailability: s.weekly_availability,
-      emergencyContactName: s.emergency_contact_name,
-      emergencyContactPhone: s.emergency_contact_phone,
-      emergencyContactRelationship: s.emergency_contact_relationship,
-      emergencyContactEmail: s.emergency_contact_email,
-      directDepositBankName: s.direct_deposit_bank_name,
-      directDepositRoutingNumber: s.direct_deposit_routing_number,
-      directDepositAccountNumber: s.direct_deposit_account_number,
-      directDepositAccountType: s.direct_deposit_account_type,
-      userId: s.user_id,
-      createdAt: s.created_at,
-      updatedAt: s.updated_at
-    } as any));
+    console.log("[STORAGE] Getting all staff");
+    try {
+      const staffData = await db.select().from(staff).where(eq(staff.isActive, true));
+      
+      console.log(`[STORAGE] Found ${staffData.length} staff members`);
+      
+      // Map database fields to TypeScript interface
+      return staffData.map(s => {
+        // Split name into first and last name if needed
+        const nameParts = (s.name || '').split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
+        
+        return {
+          id: s.id,
+          firstName: firstName,
+          lastName: lastName,
+          name: s.name || '',
+          email: s.email,
+          phone: s.phone,
+          profilePhoto: s.profilePhoto,
+          bio: s.bio,
+          specialty: s.specialty,
+          department: s.department,
+          employmentType: s.employmentType,
+          hourlyRate: s.hourlyRate ? parseFloat(s.hourlyRate) : 0,
+          isActive: s.isActive,
+          availabilityStatus: s.availabilityStatus,
+          licenseNumber: s.licenseNumber,
+          licenseExpiry: s.licenseExpiry,
+          certifications: s.certifications,
+          languages: s.languages,
+          location: s.location,
+          reliabilityScore: s.reliabilityScore || 0,
+          userId: s.userId,
+          createdAt: s.createdAt,
+          updatedAt: s.updatedAt
+        };
+      });
+    } catch (error) {
+      console.error("[STORAGE] Error in getAllStaff:", error);
+      throw error;
+    }
   }
 
   async getStaffMember(id: number): Promise<Staff | undefined> {
