@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Joyride, { CallBackProps, STATUS, Step } from "react-joyride";
+import Joyride, { CallBackProps, STATUS, Step, ACTIONS } from "react-joyride";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 
@@ -182,7 +182,7 @@ export function ProductTour() {
   }, []);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
-    const { status, type, index } = data;
+    const { status, type, index, action } = data;
     const finishedStatuses: string[] = [STATUS.FINISHED, STATUS.SKIPPED];
 
     if (finishedStatuses.includes(status)) {
@@ -192,23 +192,46 @@ export function ProductTour() {
       }
       setRun(false);
       setStepIndex(0);
-    } else if (type === "step:after") {
-      // Handle navigation for certain steps
-      const step = tourSteps[index];
-
-      // Navigate to appropriate page if needed
-      if (typeof step.target === "string") {
-        if (step.target.includes("calendar") && !location.includes("calendar")) {
+    } else if (type === "step:before" && action === "next") {
+      // Navigate before showing the next step
+      const nextStep = tourSteps[index + 1];
+      
+      if (nextStep) {
+        // Navigate based on the current step we're leaving
+        if (index === 1) { // Leaving dashboard step, going to calendar step
+          console.log("Tour: Navigating to calendar for step 2");
           setLocation("/enhanced-calendar");
-        } else if (step.target.includes("messaging") && !location.includes("messaging")) {
+          // Delay step advancement to allow navigation
+          setTimeout(() => {
+            setStepIndex(index + 1);
+          }, 800);
+          return;
+        } else if (index === 2) { // Leaving calendar step, going to messaging step  
+          console.log("Tour: Navigating to messaging for step 3");
           setLocation("/messaging");
-        } else if (step.target.includes("staff") && !location.includes("staff")) {
+          setTimeout(() => {
+            setStepIndex(index + 1);
+          }, 800);
+          return;
+        } else if (index === 3) { // Leaving messaging step, going to staff step
+          console.log("Tour: Navigating to staff for step 4");
           setLocation("/staff-directory");
-        } else if (step.target.includes("analytics") && !location.includes("analytics")) {
+          setTimeout(() => {
+            setStepIndex(index + 1);
+          }, 800);
+          return;
+        } else if (index === 5) { // Going to analytics step
+          console.log("Tour: Navigating to analytics for step 6");
           setLocation("/analytics");
+          setTimeout(() => {
+            setStepIndex(index + 1);
+          }, 800);
+          return;
         }
       }
-
+      
+      setStepIndex(index + 1);
+    } else if (type === "step:after" && action === "next") {
       setStepIndex(index + 1);
     }
   };
