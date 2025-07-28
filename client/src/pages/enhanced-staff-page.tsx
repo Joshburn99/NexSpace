@@ -64,6 +64,7 @@ import {
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { useRBAC, PermissionAction, PermissionGate } from "@/hooks/use-rbac";
 
 interface StaffMember {
   id: number;
@@ -515,11 +516,17 @@ function EnhancedStaffPageContent() {
           </div>
           <Dialog open={showAddStaffDialog} onOpenChange={setShowAddStaffDialog}>
             <DialogTrigger asChild>
-              <Button className="gap-2 min-h-[44px] touch-manipulation">
-                <UserPlus className="h-4 w-4" />
-                <span className="hidden md:inline">Add Staff Member</span>
-                <span className="md:hidden">Add Staff</span>
-              </Button>
+              <PermissionAction
+                permission="create_staff"
+                action="Add Staff Member"
+                fallback={null}
+              >
+                <Button className="gap-2 min-h-[44px] touch-manipulation">
+                  <UserPlus className="h-4 w-4" />
+                  <span className="hidden md:inline">Add Staff Member</span>
+                  <span className="md:hidden">Add Staff</span>
+                </Button>
+              </PermissionAction>
             </DialogTrigger>
             <DialogContent className="max-w-2xl w-[95vw] md:w-full max-h-[90vh] overflow-y-auto">
               <DialogHeader>
@@ -1077,13 +1084,19 @@ function EnhancedStaffPageContent() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button
-                    variant={profileEditMode ? "default" : "outline"}
-                    onClick={() => setProfileEditMode(!profileEditMode)}
+                  <PermissionAction
+                    permission="update_staff"
+                    action="Edit Staff Profile"
+                    fallback={null}
                   >
-                    <Edit className="h-4 w-4 mr-2" />
-                    {profileEditMode ? "Save" : "Edit"}
-                  </Button>
+                    <Button
+                      variant={profileEditMode ? "default" : "outline"}
+                      onClick={() => setProfileEditMode(!profileEditMode)}
+                    >
+                      <Edit className="h-4 w-4 mr-2" />
+                      {profileEditMode ? "Save" : "Edit"}
+                    </Button>
+                  </PermissionAction>
                 </div>
               </div>
             </DialogHeader>

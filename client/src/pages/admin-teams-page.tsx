@@ -15,6 +15,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus, Users, Trash2, Edit, UserPlus, Search, Eye } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useRBAC, PermissionAction } from "@/hooks/use-rbac";
 
 // Team types
 interface TeamMember {
@@ -262,10 +263,12 @@ export default function AdminTeamsPage() {
         </div>
         <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Team
-            </Button>
+            <PermissionAction permission="manage_teams">
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Team
+              </Button>
+            </PermissionAction>
           </DialogTrigger>
           <DialogContent className="max-w-md">
             <DialogHeader>
@@ -430,28 +433,32 @@ export default function AdminTeamsPage() {
                             <Eye className="w-4 h-4 mr-2" />
                             Details
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedTeam(team);
-                              setShowMemberModal(true);
-                            }}
-                          >
-                            <UserPlus className="w-4 h-4 mr-2" />
-                            Add Member
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedTeam(team);
-                              setShowFacilityModal(true);
-                            }}
-                          >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Add Facility
-                          </Button>
+                          <PermissionAction permission="manage_teams">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTeam(team);
+                                setShowMemberModal(true);
+                              }}
+                            >
+                              <UserPlus className="w-4 h-4 mr-2" />
+                              Add Member
+                            </Button>
+                          </PermissionAction>
+                          <PermissionAction permission="manage_teams">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedTeam(team);
+                                setShowFacilityModal(true);
+                              }}
+                            >
+                              <Plus className="w-4 h-4 mr-2" />
+                              Add Facility
+                            </Button>
+                          </PermissionAction>
                         </div>
                       </TableCell>
                     </TableRow>

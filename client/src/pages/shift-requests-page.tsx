@@ -15,6 +15,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { useRBAC, PermissionAction, PermissionGate } from '@/hooks/use-rbac';
 import { 
   Clock, 
   MapPin, 
@@ -254,42 +255,54 @@ export default function ShiftRequestsPage() {
                       </div>
                       {request.status === 'pending' && (
                         <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            onClick={() => setConfirmApproveId(request.id)}
-                            disabled={approveRequestMutation.isPending || denyRequestMutation.isPending}
-                            className="bg-green-600 hover:bg-green-700"
+                          <PermissionAction
+                            permission="approve_shift_requests"
+                            action="Approve Shift Request"
+                            fallback={null}
                           >
-                            {approveRequestMutation.isPending && confirmApproveId === request.id ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                Approving...
-                              </>
-                            ) : (
-                              <>
-                                <Check className="h-4 w-4 mr-1" />
-                                Approve
-                              </>
-                            )}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => setConfirmDenyId(request.id)}
-                            disabled={denyRequestMutation.isPending || approveRequestMutation.isPending}
+                            <Button
+                              size="sm"
+                              onClick={() => setConfirmApproveId(request.id)}
+                              disabled={approveRequestMutation.isPending || denyRequestMutation.isPending}
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              {approveRequestMutation.isPending && confirmApproveId === request.id ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                  Approving...
+                                </>
+                              ) : (
+                                <>
+                                  <Check className="h-4 w-4 mr-1" />
+                                  Approve
+                                </>
+                              )}
+                            </Button>
+                          </PermissionAction>
+                          <PermissionAction
+                            permission="deny_shift_requests"
+                            action="Deny Shift Request"
+                            fallback={null}
                           >
-                            {denyRequestMutation.isPending && confirmDenyId === request.id ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                Denying...
-                              </>
-                            ) : (
-                              <>
-                                <X className="h-4 w-4 mr-1" />
-                                Deny
-                              </>
-                            )}
-                          </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => setConfirmDenyId(request.id)}
+                              disabled={denyRequestMutation.isPending || approveRequestMutation.isPending}
+                            >
+                              {denyRequestMutation.isPending && confirmDenyId === request.id ? (
+                                <>
+                                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                                  Denying...
+                                </>
+                              ) : (
+                                <>
+                                  <X className="h-4 w-4 mr-1" />
+                                  Deny
+                                </>
+                              )}
+                            </Button>
+                          </PermissionAction>
                         </div>
                       )}
                     </div>

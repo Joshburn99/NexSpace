@@ -33,6 +33,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { UserRole } from "@shared/schema";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { useRBAC, PermissionAction } from "@/hooks/use-rbac";
 
 export default function AdminUserManagementPage() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -327,10 +328,12 @@ export default function AdminUserManagementPage() {
         </Button>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create User
-            </Button>
+            <PermissionAction action="manage_users">
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create User
+              </Button>
+            </PermissionAction>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
@@ -448,20 +451,26 @@ export default function AdminUserManagementPage() {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => setSelectedUser(user)}>
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleEditPermissions(user)}>
-                          <Shield className="h-3 w-3" />
-                        </Button>
-                        {user.isActive && (
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => deactivateUserMutation.mutate(user.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
+                        <PermissionAction action="manage_users">
+                          <Button size="sm" variant="outline" onClick={() => setSelectedUser(user)}>
+                            <Edit className="h-3 w-3" />
                           </Button>
+                        </PermissionAction>
+                        <PermissionAction action="manage_users">
+                          <Button size="sm" variant="outline" onClick={() => handleEditPermissions(user)}>
+                            <Shield className="h-3 w-3" />
+                          </Button>
+                        </PermissionAction>
+                        {user.isActive && (
+                          <PermissionAction action="manage_users">
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => deactivateUserMutation.mutate(user.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </PermissionAction>
                         )}
                       </div>
                     </TableCell>

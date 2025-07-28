@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useFacilities, getFacilityDisplayName } from "@/hooks/use-facility";
+import { useRBAC, PermissionAction, PermissionGate } from "@/hooks/use-rbac";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -515,31 +516,37 @@ export default function ShiftTemplatesPage() {
           }
         }}>
           <DialogTrigger asChild>
-            <Button onClick={() => {
-              setEditingTemplate(null);
-              templateForm.reset({
-                name: "",
-                department: "",
-                specialty: "",
-                facilityId: 0,
-                facilityName: "",
-                buildingId: "",
-                buildingName: "",
-                minStaff: 1,
-                maxStaff: 1,
-                shiftType: "day",
-                startTime: "07:00",
-                endTime: "19:00",
-                daysOfWeek: [1, 2, 3, 4, 5],
-                isActive: true,
-                hourlyRate: 0,
-                daysPostedOut: 7,
-                notes: "",
-              });
-            }}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Template
-            </Button>
+            <PermissionAction
+              permission="shifts.manage_templates"
+              action="Create Shift Template"
+              fallback={null}
+            >
+              <Button onClick={() => {
+                setEditingTemplate(null);
+                templateForm.reset({
+                  name: "",
+                  department: "",
+                  specialty: "",
+                  facilityId: 0,
+                  facilityName: "",
+                  buildingId: "",
+                  buildingName: "",
+                  minStaff: 1,
+                  maxStaff: 1,
+                  shiftType: "day",
+                  startTime: "07:00",
+                  endTime: "19:00",
+                  daysOfWeek: [1, 2, 3, 4, 5],
+                  isActive: true,
+                  hourlyRate: 0,
+                  daysPostedOut: 7,
+                  notes: "",
+                });
+              }}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Template
+              </Button>
+            </PermissionAction>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -1026,13 +1033,15 @@ export default function ShiftTemplatesPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <Switch
-                            checked={template.isActive}
-                            onCheckedChange={(checked) => 
-                              toggleStatusMutation.mutate({ id: template.id, isActive: checked })
-                            }
-                            disabled={toggleStatusMutation.isPending}
-                          />
+                          <PermissionGate permission="shifts.manage_templates">
+                            <Switch
+                              checked={template.isActive}
+                              onCheckedChange={(checked) => 
+                                toggleStatusMutation.mutate({ id: template.id, isActive: checked })
+                              }
+                              disabled={toggleStatusMutation.isPending}
+                            />
+                          </PermissionGate>
                           {template.isActive ? (
                             <CheckCircle className="h-4 w-4 text-green-500" />
                           ) : (
@@ -1048,24 +1057,30 @@ export default function ShiftTemplatesPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEditTemplate(template)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit Template
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => regenerateShiftsMutation.mutate(template.id)}
-                              disabled={regenerateShiftsMutation.isPending}
-                            >
-                              <RefreshCw className="h-4 w-4 mr-2" />
-                              Regenerate Shifts
-                            </DropdownMenuItem>
-                            <DropdownMenuItem 
-                              onClick={() => setDeleteTemplate(template)}
-                              className="text-red-600"
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete Template
-                            </DropdownMenuItem>
+                            <PermissionGate permission="shifts.manage_templates">
+                              <DropdownMenuItem onClick={() => handleEditTemplate(template)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Template
+                              </DropdownMenuItem>
+                            </PermissionGate>
+                            <PermissionGate permission="shifts.manage_templates">
+                              <DropdownMenuItem 
+                                onClick={() => regenerateShiftsMutation.mutate(template.id)}
+                                disabled={regenerateShiftsMutation.isPending}
+                              >
+                                <RefreshCw className="h-4 w-4 mr-2" />
+                                Regenerate Shifts
+                              </DropdownMenuItem>
+                            </PermissionGate>
+                            <PermissionGate permission="shifts.manage_templates">
+                              <DropdownMenuItem 
+                                onClick={() => setDeleteTemplate(template)}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Template
+                              </DropdownMenuItem>
+                            </PermissionGate>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

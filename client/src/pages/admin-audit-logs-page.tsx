@@ -21,19 +21,34 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { FileText, Search, ArrowLeft, Home, Clock, User, Activity } from "lucide-react";
+import { FileText, Search, ArrowLeft, Home, Clock, User, Activity, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
+import { useAuth } from "@/hooks/use-auth";
+import { useRBAC } from "@/hooks/use-rbac";
+
+interface AuditLog {
+  id: number;
+  action: string;
+  resource: string;
+  username: string;
+  userId: number;
+  timestamp: string;
+  details?: string;
+  ipAddress?: string;
+}
 
 export default function AdminAuditLogsPage() {
+  const { user } = useAuth();
+  const { hasPermission } = useRBAC();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedAction, setSelectedAction] = useState<string>("all");
   const [selectedResource, setSelectedResource] = useState<string>("all");
 
-  const { data: auditLogs = [], isLoading } = useQuery({
+  const { data: auditLogs = [], isLoading } = useQuery<AuditLog[]>({
     queryKey: ["/api/admin/audit-logs"],
   });
 
-  const filteredLogs = auditLogs.filter((log: any) => {
+  const filteredLogs = auditLogs.filter((log) => {
     const matchesSearch =
       log.action?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       log.resource?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -60,8 +75,33 @@ export default function AdminAuditLogsPage() {
     }
   };
 
-  const uniqueActions = [...new Set(auditLogs.map((log: any) => log.action))];
-  const uniqueResources = [...new Set(auditLogs.map((log: any) => log.resource))];
+  const uniqueActions = Array.from(new Set(auditLogs.map((log) => log.action)));
+  const uniqueResources = Array.from(new Set(auditLogs.map((log) => log.resource)));
+
+  // Only users with audit log permissions should have access
+  if (!hasPermission('system.view_audit_logs') && user?.role !== 'super_admin') {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-600">
+              <ShieldAlert className="h-5 w-5" />
+              Access Denied
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <p className="text-gray-600">You don't have permission to view audit logs.</p>
+            <Link href="/">
+              <Button variant="outline" className="mt-4">
+                <Home className="h-4 w-4 mr-2" />
+                Return to Dashboard
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

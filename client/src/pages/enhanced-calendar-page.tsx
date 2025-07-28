@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useFacilities, useFacility, getFacilityDisplayName, getFacilityTimezone } from "@/hooks/use-facility";
+import { useRBAC, PermissionAction, PermissionGate } from "@/hooks/use-rbac";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -655,14 +656,16 @@ export default function EnhancedCalendarPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
+          <PermissionAction
+            permission="shifts.create"
             onClick={() => setShowAddShiftDialog(true)}
             className="bg-blue-600 hover:bg-blue-700 text-white min-h-[44px] touch-manipulation"
+            tooltipText="Only users with shift creation permissions can add shifts"
           >
             <Plus className="h-4 w-4 md:mr-2" />
             <span className="hidden md:inline">Add Shift</span>
             <span className="md:hidden">Add</span>
-          </Button>
+          </PermissionAction>
         </div>
       </div>
 

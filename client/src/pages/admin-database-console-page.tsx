@@ -15,10 +15,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Database, Play, ArrowLeft, Home, AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { Database, Play, ArrowLeft, Home, AlertTriangle, CheckCircle, Info, ShieldAlert } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
+import { useRBAC } from "@/hooks/use-rbac";
 
 export default function AdminDatabaseConsolePage() {
+  const { user } = useAuth();
+  const { hasPermission } = useRBAC();
   const [sqlQuery, setSqlQuery] = useState("");
   const [queryResult, setQueryResult] = useState<any>(null);
   const [queryError, setQueryError] = useState<string | null>(null);
@@ -127,6 +131,31 @@ export default function AdminDatabaseConsolePage() {
       </div>
     );
   };
+
+  // Only super admins should have access to the database console
+  if (user?.role !== 'super_admin') {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-600">
+              <ShieldAlert className="h-5 w-5" />
+              Access Denied
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <p className="text-gray-600">Only super administrators can access the database console.</p>
+            <Link href="/">
+              <Button variant="outline" className="mt-4">
+                <Home className="h-4 w-4 mr-2" />
+                Return to Dashboard
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -1197,30 +1197,9 @@ export class DatabaseStorage implements IStorage {
     
     const [floatPoolResult] = await floatPoolQuery;
 
-    // Upcoming time off (next 7 days)
-    const sevenDaysFromNow = new Date();
-    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    let upcomingTimeOffQuery = db
-      .select({ count: count() })
-      .from(timeOffRequests)
-      .where(
-        and(
-          eq(timeOffRequests.status, "approved"),
-          gte(timeOffRequests.startDate, today),
-          lte(timeOffRequests.startDate, sevenDaysFromNow)
-        )
-      );
-    
-    if (facilityIds?.length) {
-      upcomingTimeOffQuery = upcomingTimeOffQuery
-        .leftJoin(staff, eq(timeOffRequests.staffId, staff.id))
-        .where(sql`${staff.associatedFacilities} && ${facilityIds}`);
-    }
-    
-    const [upcomingTimeOffResult] = await upcomingTimeOffQuery;
+    // Upcoming time off (next 7 days) - placeholder for now
+    // TODO: Implement when timeOffRequests table is added
+    const upcomingTimeOffResult = { count: 0 };
 
     // Billing total (current period unpaid invoices)
     let billingTotalQuery = db

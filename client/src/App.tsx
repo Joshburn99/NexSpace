@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { SessionProvider } from "@/contexts/SessionContext";
 import { ProtectedRoute } from "./lib/protected-route";
 import { FacilityPermissionsProvider } from "@/hooks/use-facility-permissions";
+import { RBACProvider } from "@/hooks/use-rbac";
 import Layout from "@/components/Layout";
 import { ShiftProvider } from "@/contexts/ShiftContext";
 import { TimeClockProvider } from "@/contexts/TimeClockContext";
@@ -193,8 +194,9 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <SessionProvider>
-          <FacilityPermissionsProvider>
-            <NotificationProvider>
+          <RBACProvider>
+            <FacilityPermissionsProvider>
+              <NotificationProvider>
               <ShiftProvider>
               <TimeClockProvider>
                 <StaffProvider>
@@ -231,6 +233,7 @@ function App() {
           </ShiftProvider>
         </NotificationProvider>
           </FacilityPermissionsProvider>
+          </RBACProvider>
         </SessionProvider>
       </AuthProvider>
     </QueryClientProvider>
