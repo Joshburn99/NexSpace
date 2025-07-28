@@ -57,6 +57,7 @@ import AdminUserManagementPage from "@/pages/admin-user-management-page";
 import AdminTeamsPage from "@/pages/admin-teams-page";
 import AdminAuditLogsPage from "@/pages/admin-audit-logs-page";
 import AdminDatabaseConsolePage from "@/pages/admin-database-console-page";
+import AdminAnalytics from "@/pages/AdminAnalytics";
 import SystemSettingsPage from "@/pages/system-settings-page";
 import DetailedShiftAnalyticsPage from "@/pages/detailed-shift-analytics-page";
 import SchedulingConfigPage from "@/pages/scheduling-config-page";
@@ -159,6 +160,7 @@ function AppContent() {
       <ProtectedRoute path="/admin/teams" component={AdminTeamsPage} />
       <ProtectedRoute path="/admin/audit" component={AdminAuditLogsPage} />
       <ProtectedRoute path="/admin/database" component={AdminDatabaseConsolePage} />
+      <ProtectedRoute path="/admin/analytics" component={AdminAnalytics} />
       <ProtectedRoute path="/facility-management" component={FacilityManagementPage} />
       <ProtectedRoute path="/facility-profile" component={FacilityProfilePage} />
       <ProtectedRoute path="/facility-settings" component={FacilitySettingsPage} />

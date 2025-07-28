@@ -5,6 +5,7 @@ import { setupAuth } from "./auth";
 import { storage } from "./storage";
 import { createEnhancedFacilitiesRoutes } from "./enhanced-facilities-routes";
 import { sql } from "drizzle-orm";
+import { format } from "date-fns";
 
 
 // Remove in-memory storage - using database as single source of truth
@@ -11997,6 +11998,210 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error fetching analytics:", error);
       res.status(500).json({ message: "Failed to fetch analytics data" });
+    }
+  });
+
+  // Analytics summary endpoint
+  app.get("/api/analytics/summary", requireAuth, async (req: any, res) => {
+    try {
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Super admin required" });
+      }
+      
+      const { startDate, endDate, facilityId } = req.query;
+      
+      // Get total counts from database
+      const [usersCount] = await db.select({ count: sql<number>`count(*)::int` }).from(users);
+      const [facilitiesCount] = await db.select({ count: sql<number>`count(*)::int` }).from(facilities);
+      const [shiftsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(shifts);
+      const [messagesCount] = await db.select({ count: sql<number>`count(*)::int` }).from(messages);
+      
+      // Get today's active users
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+      
+      const activeUsersToday = await storage.getAnalyticsEvents({
+        eventCategory: 'auth',
+        eventName: 'user_login',
+        startDate: todayStart,
+        facilityId: facilityId ? parseInt(facilityId) : undefined
+      });
+      
+      // Get today's shifts created
+      const shiftsCreatedToday = await storage.getAnalyticsEvents({
+        eventCategory: 'shifts',
+        eventName: 'shift_create',
+        startDate: todayStart,
+        facilityId: facilityId ? parseInt(facilityId) : undefined
+      });
+      
+      res.json({
+        totalUsers: usersCount.count,
+        totalFacilities: facilitiesCount.count,
+        totalShifts: shiftsCount.count,
+        totalMessages: messagesCount.count,
+        activeUsersToday: [...new Set(activeUsersToday.map(e => e.userId))].length,
+        shiftsCreatedToday: shiftsCreatedToday.length
+      });
+    } catch (error) {
+      console.error('Error fetching analytics summary:', error);
+      res.status(500).json({ message: "Failed to fetch analytics summary" });
+    }
+  });
+  
+  // User activity over time
+  app.get("/api/analytics/user-activity", requireAuth, async (req: any, res) => {
+    try {
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Super admin required" });
+      }
+      
+      const { startDate, endDate, facilityId } = req.query;
+      
+      const loginEvents = await storage.getAnalyticsEvents({
+        eventCategory: 'auth',
+        eventName: 'user_login',
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+        facilityId: facilityId !== 'all' ? parseInt(facilityId) : undefined
+      });
+      
+      // Group by date
+      const activityByDate: { [date: string]: Set<number> } = {};
+      
+      loginEvents.forEach(event => {
+        const date = format(new Date(event.timestamp), 'yyyy-MM-dd');
+        if (!activityByDate[date]) {
+          activityByDate[date] = new Set();
+        }
+        if (event.userId) {
+          activityByDate[date].add(event.userId);
+        }
+      });
+      
+      // Convert to array format
+      const result = Object.entries(activityByDate).map(([date, users]) => ({
+        date,
+        value: users.size
+      })).sort((a, b) => a.date.localeCompare(b.date));
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching user activity:', error);
+      res.status(500).json({ message: "Failed to fetch user activity" });
+    }
+  });
+  
+  // Shift analytics over time
+  app.get("/api/analytics/shifts", requireAuth, async (req: any, res) => {
+    try {
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Super admin required" });
+      }
+      
+      const { startDate, endDate, facilityId } = req.query;
+      
+      const shiftEvents = await storage.getAnalyticsEvents({
+        eventCategory: 'shifts',
+        eventName: 'shift_create',
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+        facilityId: facilityId !== 'all' ? parseInt(facilityId) : undefined
+      });
+      
+      // Group by date
+      const shiftsByDate: { [date: string]: number } = {};
+      
+      shiftEvents.forEach(event => {
+        const date = format(new Date(event.timestamp), 'yyyy-MM-dd');
+        shiftsByDate[date] = (shiftsByDate[date] || 0) + 1;
+      });
+      
+      // Convert to array format
+      const result = Object.entries(shiftsByDate).map(([date, count]) => ({
+        date,
+        value: count
+      })).sort((a, b) => a.date.localeCompare(b.date));
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching shift analytics:', error);
+      res.status(500).json({ message: "Failed to fetch shift analytics" });
+    }
+  });
+  
+  // Message analytics over time
+  app.get("/api/analytics/messages", requireAuth, async (req: any, res) => {
+    try {
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Super admin required" });
+      }
+      
+      const { startDate, endDate, facilityId } = req.query;
+      
+      const messageEvents = await storage.getAnalyticsEvents({
+        eventCategory: 'messaging',
+        eventName: 'message_send',
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+        facilityId: facilityId !== 'all' ? parseInt(facilityId) : undefined
+      });
+      
+      // Group by date
+      const messagesByDate: { [date: string]: number } = {};
+      
+      messageEvents.forEach(event => {
+        const date = format(new Date(event.timestamp), 'yyyy-MM-dd');
+        messagesByDate[date] = (messagesByDate[date] || 0) + 1;
+      });
+      
+      // Convert to array format
+      const result = Object.entries(messagesByDate).map(([date, count]) => ({
+        date,
+        value: count
+      })).sort((a, b) => a.date.localeCompare(b.date));
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching message analytics:', error);
+      res.status(500).json({ message: "Failed to fetch message analytics" });
+    }
+  });
+  
+  // Event category breakdown
+  app.get("/api/analytics/categories", requireAuth, async (req: any, res) => {
+    try {
+      if (req.user.role !== 'super_admin') {
+        return res.status(403).json({ message: "Access denied: Super admin required" });
+      }
+      
+      const { startDate, endDate, facilityId } = req.query;
+      
+      const events = await storage.getAnalyticsEvents({
+        startDate: startDate ? new Date(startDate) : undefined,
+        endDate: endDate ? new Date(endDate) : undefined,
+        facilityId: facilityId !== 'all' ? parseInt(facilityId) : undefined
+      });
+      
+      // Group by category
+      const categoryCount: { [category: string]: number } = {};
+      
+      events.forEach(event => {
+        if (event.eventCategory) {
+          categoryCount[event.eventCategory] = (categoryCount[event.eventCategory] || 0) + 1;
+        }
+      });
+      
+      // Convert to array format
+      const result = Object.entries(categoryCount).map(([category, count]) => ({
+        category,
+        count
+      }));
+      
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching category breakdown:', error);
+      res.status(500).json({ message: "Failed to fetch category breakdown" });
     }
   });
 

@@ -180,6 +180,11 @@ const navigationItems: NavItem[] = [
         href: "/admin/database",
         icon: <FileText className="w-4 h-4" />,
       },
+      {
+        label: "Analytics Dashboard",
+        href: "/admin/analytics",
+        icon: <BarChart3 className="w-4 h-4" />,
+      },
     ],
   },
 ];
