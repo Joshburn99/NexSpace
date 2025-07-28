@@ -64,6 +64,7 @@ import NotificationsPage from "@/pages/notifications-page";
 import PTOPage from "@/pages/pto-page";
 import EnhancedProfilePage from "@/pages/enhanced-profile-page";
 import EnhancedMessagingPage from "@/pages/enhanced-messaging-page";
+import EnhancedRealTimeMessagingPage from "@/pages/enhanced-real-time-messaging";
 import MySchedulePage from "@/pages/MySchedulePage";
 import EnhancedCalendarPage from "@/pages/enhanced-calendar-page";
 import SchedulingTemplatesPage from "@/pages/scheduling-templates-page";
@@ -135,7 +136,7 @@ function AppContent() {
       <ProtectedRoute path="/analytics/compliance" component={CompliancePage} />
       <ProtectedRoute path="/compliance" component={CompliancePage} />
       <ProtectedRoute path="/messages" component={MessagesPage} />
-      <ProtectedRoute path="/messaging" component={EnhancedMessagingPage} />
+      <ProtectedRoute path="/messaging" component={EnhancedRealTimeMessagingPage} />
       <ProtectedRoute path="/unified-messaging" component={UnifiedMessagingPage} />
       <ProtectedRoute path="/reports" component={ReportsPage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />

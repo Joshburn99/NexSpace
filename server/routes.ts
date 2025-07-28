@@ -10318,6 +10318,20 @@ export function registerRoutes(app: Express): Server {
           // The new conversation-based messaging is handled via REST API endpoints
           // which already broadcast WebSocket events
           
+          case "new_message":
+            // Broadcast new messages to all connected clients
+            wss.clients.forEach((client) => {
+              if (client.readyState === WebSocket.OPEN) {
+                client.send(
+                  JSON.stringify({
+                    type: "new_message",
+                    data: message.data,
+                  })
+                );
+              }
+            });
+            break;
+            
           case "shift_update":
             // Broadcast shift updates to facility staff
             wss.clients.forEach((client) => {
