@@ -536,6 +536,7 @@ export function registerRoutes(app: Express): Server {
             sql`LOWER(${facilities.type}) LIKE ${searchTerm}`,
             sql`LOWER(${facilities.city}) LIKE ${searchTerm}`,
             sql`CAST(${facilities.id} AS TEXT) LIKE ${searchTerm}`
+            );
           )
         )
         .limit(5);
@@ -558,6 +559,7 @@ export function registerRoutes(app: Express): Server {
               sql`LOWER(${jobs.description}) LIKE ${searchTerm}`,
               sql`LOWER(${jobs.location}) LIKE ${searchTerm}`,
               sql`CAST(${jobs.id} AS TEXT) LIKE ${searchTerm}`
+              );
             ),
             eq(jobs.status, "active")
           )
@@ -800,7 +802,8 @@ export function registerRoutes(app: Express): Server {
           }
         } catch (error) {
           console.error(
-            `[FACILITY FILTER] Error fetching facility associations for ${user.email}:`,
+            console.log(
+                `[FACILITY FILTER] Error fetching facility associations for ${user.email}:`,
             error
           );
         }
@@ -886,6 +889,7 @@ export function registerRoutes(app: Express): Server {
           assignedStaffId: filteredStaff[0]?.id || 3,
           assignedStaffName: filteredStaff[0]
             ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
+            );
             : "Alice Smith",
           assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
           assignedStaffPhone: "(503) 555-0123",
@@ -1147,6 +1151,7 @@ export function registerRoutes(app: Express): Server {
               id: filteredStaff[0]?.id || 3,
               name: filteredStaff[0]
                 ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
+                );
                 : "Alice Smith",
               email: filteredStaff[0]?.email || "alice.smith@nexspace.com",
               specialty: filteredStaff[0]?.specialty || "LPN",
@@ -1156,6 +1161,7 @@ export function registerRoutes(app: Express): Server {
               id: filteredStaff[1]?.id || 4,
               name: filteredStaff[1]
                 ? `${filteredStaff[1].firstName} ${filteredStaff[1].lastName}`
+                );
                 : "Bob Johnson",
               email: filteredStaff[1]?.email || "bob.johnson@nexspace.com",
               specialty: filteredStaff[1]?.specialty || "RN",
@@ -1166,6 +1172,7 @@ export function registerRoutes(app: Express): Server {
           assignedStaffId: filteredStaff[0]?.id || 3,
           assignedStaffName: filteredStaff[0]
             ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
+            );
             : "Alice Smith",
           assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
           assignedStaffSpecialty: filteredStaff[0]?.specialty || "LPN",
@@ -1203,6 +1210,7 @@ export function registerRoutes(app: Express): Server {
           assignedStaffId: filteredStaff[0]?.id || 3,
           assignedStaffName: filteredStaff[0]
             ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
+            );
             : "Alice Smith",
           assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
           assignedStaffSpecialty: filteredStaff[0]?.specialty || "RN",
@@ -1225,6 +1233,7 @@ export function registerRoutes(app: Express): Server {
           assignedStaffId: filteredStaff[1]?.id || 4,
           assignedStaffName: filteredStaff[1]
             ? `${filteredStaff[1].firstName} ${filteredStaff[1].lastName}`
+            );
             : "Bob Johnson",
           assignedStaffEmail: filteredStaff[1]?.email || "bob.johnson@nexspace.com",
           assignedStaffSpecialty: filteredStaff[1]?.specialty || "RN",
@@ -1250,6 +1259,7 @@ export function registerRoutes(app: Express): Server {
           assignedStaffId: filteredStaff[0]?.id || 3,
           assignedStaffName: filteredStaff[0]
             ? `${filteredStaff[0].firstName} ${filteredStaff[0].lastName}`
+            );
             : "Alice Smith",
           assignedStaffEmail: filteredStaff[0]?.email || "alice.smith@nexspace.com",
           assignedStaffSpecialty: filteredStaff[0]?.specialty || "RN",
@@ -1571,8 +1581,10 @@ export function registerRoutes(app: Express): Server {
           }));
       }
 
-        `[SHIFT REQUESTS] Shift ${shiftId}: ${currentAssignments.length}/${maxCapacity} filled, returning ${shiftRequests.length} available workers`
-      );
+      console.log(
+        console.log(
+            `[SHIFT REQUESTS] Shift ${shiftId}: ${currentAssignments.length}/${maxCapacity} filled, returning ${shiftRequests.length} available workers`
+            );
       res.json(shiftRequests);
     } catch (error) {
       console.error("Error fetching shift requests:", error);
@@ -1730,8 +1742,10 @@ export function registerRoutes(app: Express): Server {
           generatedShift?.totalPositions ||
           3; // Default to 3 for multi-worker shifts instead of 1
 
-          `[CAPACITY CHECK] Shift ${shiftId}: maxCapacity=${maxCapacity}, currentAssignments=${currentAssignments.length}`
-        );
+        console.log(
+          console.log(
+              `[CAPACITY CHECK] Shift ${shiftId}: maxCapacity=${maxCapacity}, currentAssignments=${currentAssignments.length}`
+              );
         if (currentAssignments.length >= maxCapacity) {
           return res.status(400).json({
             message: `Shift is at full capacity (${currentAssignments.length}/${maxCapacity})`,
@@ -1776,8 +1790,10 @@ export function registerRoutes(app: Express): Server {
           });
         }
 
-          `[ASSIGNMENT SUCCESS] Worker ${workerId} (${worker.firstName} ${worker.lastName}) assigned to shift ${shiftId}. Total: ${updatedAssignments.length}/${maxCapacity}`
-        );
+        console.log(
+          console.log(
+              `[ASSIGNMENT SUCCESS] Worker ${workerId} (${worker.firstName} ${worker.lastName}) assigned to shift ${shiftId}. Total: ${updatedAssignments.length}/${maxCapacity}`
+              );
 
         res.json({
           success: true,
@@ -1823,8 +1839,9 @@ export function registerRoutes(app: Express): Server {
         // Get updated assignments (only active ones)
         const updatedAssignments = await storage.getShiftAssignments(shiftId);
 
+        console.log(
           `Worker ${workerId} unassigned from shift ${shiftId}. Total assigned: ${updatedAssignments.length}`
-        );
+          );
 
         res.json({
           success: true,
@@ -1907,8 +1924,9 @@ export function registerRoutes(app: Express): Server {
         }
       });
 
+      console.log(
         `Worker ${workerId} assigned to shift ${shiftId}. Total assigned: ${filledPositions}/${maxCapacity}`
-      );
+        );
 
       res.json({
         success: true,
@@ -2995,8 +3013,10 @@ export function registerRoutes(app: Express): Server {
       ];
 
       if (facilityUserRoles.includes(req.user.role) && req.user.facility_id) {
-          `[STAFF ACCESS CONTROL] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) requesting staff data for facility ${req.user.facility_id}`
-        );
+        console.log(
+          console.log(
+              `[STAFF ACCESS CONTROL] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) requesting staff data for facility ${req.user.facility_id}`
+              );
 
         // For facility users, only return staff associated with their facilities
         // Since staff table doesn't have facility_id, we'll filter by similar locations or other criteria
@@ -3025,16 +3045,22 @@ export function registerRoutes(app: Express): Server {
           };
 
           dbStaffData = facilityStaffMapping[userFacilityId] || dbStaffData.slice(0, 5);
-            `[STAFF ACCESS CONTROL] Returning ${dbStaffData.length} staff members for facility ${userFacilityId}`
-          );
+          console.log(
+            console.log(
+                `[STAFF ACCESS CONTROL] Returning ${dbStaffData.length} staff members for facility ${userFacilityId}`
+                );
         }
       } else if (req.user.role === "super_admin") {
-          `[STAFF ACCESS CONTROL] Super admin ${req.user.firstName} ${req.user.lastName} accessing all staff data`
-        );
+        console.log(
+          console.log(
+              `[STAFF ACCESS CONTROL] Super admin ${req.user.firstName} ${req.user.lastName} accessing all staff data`
+              );
         // Super admins can see all staff
       } else {
-          `[STAFF ACCESS CONTROL] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) has limited staff access`
-        );
+        console.log(
+          console.log(
+              `[STAFF ACCESS CONTROL] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) has limited staff access`
+              );
         // Other users get limited access
         dbStaffData = dbStaffData.slice(0, 5);
       }
@@ -3134,8 +3160,10 @@ export function registerRoutes(app: Express): Server {
         return res.status(403).json({ message: "Access denied: Super admin required" });
       }
 
-        `[FACILITY USERS] Super admin ${req.user.firstName} ${req.user.lastName} accessing facility users`
-      );
+        console.log(
+          console.log(
+              `[FACILITY USERS] Super admin ${req.user.firstName} ${req.user.lastName} accessing facility users`
+              );
 
       // Get facility users data from unified service
       const facilityUsersData = await unifiedDataService.getFacilityUsersWithAssociations();
@@ -3327,6 +3355,7 @@ export function registerRoutes(app: Express): Server {
           and(
             eq(staff.isActive, true),
             sql`${staff.location} LIKE '%${facilityId === 1 ? "Portland" : facilityId === 2 ? "Beaverton" : "Hillsboro"}%'`
+            );
           )
         );
 
@@ -6187,8 +6216,10 @@ export function registerRoutes(app: Express): Server {
         }
       }
 
-        `[SHIFT TEMPLATES API] Fetching templates for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
-      );
+        console.log(
+          console.log(
+              `[SHIFT TEMPLATES API] Fetching templates for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
+              );
 
       // Get all templates from database
       const allTemplates = await db.select().from(shiftTemplates);
@@ -6375,17 +6406,21 @@ export function registerRoutes(app: Express): Server {
     const today = new Date();
     const daysToGenerate = template.daysPostedOut || 7;
 
-      `[SHIFT GENERATION] Generating ${daysToGenerate} days of shifts for template ${template.name}`
-    );
+      console.log(
+        console.log(
+            `[SHIFT GENERATION] Generating ${daysToGenerate} days of shifts for template ${template.name}`
+            );
 
     const generatedCount = await db
       .select({ count: sql`count(*)` })
       .from(generatedShifts)
       .where(eq(generatedShifts.templateId, template.id));
 
-      `[SHIFT GENERATION] Current shifts for template ${template.id}:`,
-      generatedCount[0]?.count || 0
-    );
+      console.log(
+        console.log(
+            `[SHIFT GENERATION] Current shifts for template ${template.id}:`,
+        generatedCount[0]?.count || 0
+      );
 
     for (let i = 0; i < daysToGenerate; i++) {
       const date = new Date(today);
@@ -6424,8 +6459,10 @@ export function registerRoutes(app: Express): Server {
 
           try {
             await db.insert(generatedShifts).values(shiftData).onConflictDoNothing();
-              `[SHIFT GENERATION] Created shift ${shiftId} for ${date.toISOString().split("T")[0]}`
-            );
+              console.log(
+                console.log(
+                    `[SHIFT GENERATION] Created shift ${shiftId} for ${date.toISOString().split("T")[0]}`
+                    );
           } catch (error) {
             console.error(`Error inserting shift ${shiftId}:`, error);
           }
@@ -6444,8 +6481,10 @@ export function registerRoutes(app: Express): Server {
       .set({ generatedShiftsCount: parseInt(newCount[0]?.count?.toString() || "0") })
       .where(eq(shiftTemplates.id, template.id));
 
-      `[SHIFT GENERATION] Template ${template.id} now has ${newCount[0]?.count || 0} total shifts`
-    );
+      console.log(
+        console.log(
+            `[SHIFT GENERATION] Template ${template.id} now has ${newCount[0]?.count || 0} total shifts`
+            );
   }
 
   function calculateShiftHours(startTime: string, endTime: string): number {
@@ -7353,8 +7392,10 @@ export function registerRoutes(app: Express): Server {
         }
       }
 
-        `[STAFF API] Fetching staff for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
-      );
+        console.log(
+          console.log(
+              `[STAFF API] Fetching staff for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
+              );
 
       // Get staff from database
       const allStaff = await db.select().from(staff);
@@ -7415,7 +7456,8 @@ export function registerRoutes(app: Express): Server {
             // Use individual permissions from the database if available
             if (facilityUser.permissions && facilityUser.permissions.length > 0) {
               (targetUser as any).permissions = facilityUser.permissions;
-                `[IMPERSONATION] Set individual permissions for ${targetUser.email}:`,
+                console.log(
+                    `[IMPERSONATION] Set individual permissions for ${targetUser.email}:`,
                 facilityUser.permissions
               );
             } else {
@@ -7423,7 +7465,8 @@ export function registerRoutes(app: Express): Server {
               const roleTemplate = await storage.getFacilityUserRoleTemplate(targetUser.role);
               if (roleTemplate && roleTemplate.permissions) {
                 (targetUser as any).permissions = roleTemplate.permissions;
-                  `[IMPERSONATION] Set role template permissions for ${targetUser.email}:`,
+                  console.log(
+                      `[IMPERSONATION] Set role template permissions for ${targetUser.email}:`,
                   roleTemplate.permissions
                 );
               }
@@ -7433,24 +7476,28 @@ export function registerRoutes(app: Express): Server {
             if (facilityUser.associated_facility_ids) {
               (targetUser as any).associatedFacilityIds = facilityUser.associated_facility_ids;
               (targetUser as any).associatedFacilities = facilityUser.associated_facility_ids; // Keep both for compatibility
-                `[IMPERSONATION] Set associatedFacilityIds for ${targetUser.email}:`,
+                console.log(
+                    `[IMPERSONATION] Set associatedFacilityIds for ${targetUser.email}:`,
                 facilityUser.associated_facility_ids
               );
             }
 
             // Include facility user role for proper permission handling
             (targetUser as any).facilityRole = facilityUser.role;
-              `[IMPERSONATION] Set facility role for ${targetUser.email}:`,
+              console.log(
+                  `[IMPERSONATION] Set facility role for ${targetUser.email}:`,
               facilityUser.role
             );
           } else {
             // If not in facility_users table, check if user has associated_facilities in users table
-              `[IMPERSONATION] User not found in facility_users, checking users table data`
-            );
+              console.log(
+                  `[IMPERSONATION] User not found in facility_users, checking users table data`
+                  );
 
             if (targetUser.associated_facilities && targetUser.associated_facilities.length > 0) {
               (targetUser as any).associatedFacilities = targetUser.associated_facilities;
-                `[IMPERSONATION] Set associatedFacilities from users table for ${targetUser.email}:`,
+                console.log(
+                    `[IMPERSONATION] Set associatedFacilities from users table for ${targetUser.email}:`,
                 targetUser.associated_facilities
               );
             }
@@ -7459,14 +7506,16 @@ export function registerRoutes(app: Express): Server {
             const roleTemplate = await storage.getFacilityUserRoleTemplate(targetUser.role);
             if (roleTemplate && roleTemplate.permissions) {
               (targetUser as any).permissions = roleTemplate.permissions;
-                `[IMPERSONATION] Set role template permissions for ${targetUser.email}:`,
+                console.log(
+                    `[IMPERSONATION] Set role template permissions for ${targetUser.email}:`,
                 roleTemplate.permissions
               );
             }
 
             // Set facility role to user's role
             (targetUser as any).facilityRole = targetUser.role;
-              `[IMPERSONATION] Set facility role for ${targetUser.email}:`,
+              console.log(
+                  `[IMPERSONATION] Set facility role for ${targetUser.email}:`,
               targetUser.role
             );
           }
@@ -9082,8 +9131,10 @@ export function registerRoutes(app: Express): Server {
         }
       }
 
-        `[SHIFTS API] Fetching shifts for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
-      );
+        console.log(
+          console.log(
+              `[SHIFTS API] Fetching shifts for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
+              );
 
       // Generate comprehensive 12-month shift data for 100-bed skilled nursing facility
       const generateShifts = () => {
@@ -9177,8 +9228,10 @@ export function registerRoutes(app: Express): Server {
         }
       }
 
-        `[SHIFTS API] Returning ${shifts.length} shifts for user ${effectiveUser?.email}`
-      );
+        console.log(
+          console.log(
+              `[SHIFTS API] Returning ${shifts.length} shifts for user ${effectiveUser?.email}`
+              );
       res.json(shifts);
     } catch (error) {
       console.error("Error fetching shifts:", error);
@@ -9627,8 +9680,10 @@ export function registerRoutes(app: Express): Server {
           )
         );
 
-        `[REGENERATE] Generated ${regeneratedShifts.length} shifts for template "${template.name}" (ID: ${templateId})`
-      );
+        console.log(
+          console.log(
+              `[REGENERATE] Generated ${regeneratedShifts.length} shifts for template "${template.name}" (ID: ${templateId})`
+              );
 
       res.json({
         message: `Successfully regenerated ${regeneratedShifts.length} future shifts from template "${template.name}"`,
@@ -9781,7 +9836,7 @@ export function registerRoutes(app: Express): Server {
           const dateStr = date.toISOString().split("T")[0].replace(/-/g, "");
           const shiftId = parseInt(
             `${template.id}${dateStr}${staffCount.toString().padStart(2, "0")}`
-          );
+            );
           shifts.push({
             id: shiftId,
             templateId: template.id,
@@ -10148,6 +10203,7 @@ export function registerRoutes(app: Express): Server {
         // For demo purposes, simulate PDF text extraction
         // In production, you would use a proper PDF parsing library
         const simulatedPdfText = `
+       );
         INVOICE
         
         From: MedSupply Plus Corp
@@ -11133,6 +11189,7 @@ export function registerRoutes(app: Express): Server {
         .leftJoin(facilities, eq(users.facilityId, facilities.id))
         .where(
           sql`${users.role} IN ('facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing', 'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin')`
+          );
         )
         .orderBy(users.lastName, users.firstName);
 
