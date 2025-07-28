@@ -637,7 +637,8 @@ export const shiftTemplates = pgTable("shift_templates", {
 
 // Generated shifts from templates - replaces global templateGeneratedShifts
 export const generatedShifts = pgTable("generated_shifts", {
-  id: text("id").primaryKey(), // stable ID format: templateId + date + position
+  id: serial("id").primaryKey(),
+  uniqueId: text("unique_id").notNull().unique(), // deterministic ID: templateId-date-position
   templateId: integer("template_id").notNull(),
   title: text("title").notNull(),
   date: text("date").notNull(),
@@ -653,7 +654,9 @@ export const generatedShifts = pgTable("generated_shifts", {
   rate: decimal("rate", { precision: 10, scale: 2 }).notNull(),
   urgency: text("urgency").default("medium"),
   description: text("description"),
-  requiredWorkers: integer("required_workers").default(1),
+  requiredStaff: integer("required_staff").default(1), // how many workers needed
+  shiftPosition: integer("shift_position").notNull().default(0), // which position this is (0, 1, 2, etc.)
+  assignedStaffIds: jsonb("assigned_staff_ids").default([]).$type<number[]>(), // array of assigned staff IDs
   minStaff: integer("min_staff").default(1),
   maxStaff: integer("max_staff").default(1),
   totalHours: integer("total_hours").default(8),
@@ -1353,6 +1356,8 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
   createdAt: true,
   updatedAt: true,
 });
+
+
 
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
