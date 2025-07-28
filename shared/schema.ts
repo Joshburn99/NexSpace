@@ -818,12 +818,13 @@ export const shiftHistory = pgTable("shift_history", {
   newStatus: text("new_status"),
 });
 
-// Staff table - refactored for better consistency and normalization
+// Staff table - matches actual database structure
 export const staff = pgTable("staff", {
   id: serial("id").primaryKey(),
-  // Basic Information - normalized name fields
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
+  // Basic Information - using actual database structure
+  name: text("name").notNull(),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   email: text("email").notNull().unique(),
   phone: text("phone"),
   profilePhoto: text("profile_photo"),

@@ -45,6 +45,7 @@ import CompliancePage from "@/pages/compliance-page";
 import SettingsPage from "@/pages/settings-page";
 import AdminImpersonationPage from "@/pages/admin-impersonation-page";
 import FacilityManagementPage from "@/pages/facility-management-page";
+import SimpleFacilityManagement from "@/pages/simple-facility-management";
 import EnhancedJobPostingPage from "@/pages/enhanced-job-posting-page";
 
 import ClinicianDashboardWrapper from "@/pages/clinician-dashboard-wrapper";
@@ -257,9 +258,10 @@ function AppContent() {
       <ProtectedRoute path="/reports/overtime" component={OvertimeReportPage} />
       <ProtectedRoute path="/reports/float-pool-savings" component={FloatPoolAnalyticsPage} />
       <ProtectedRoute path="/reports/agency-usage" component={AgencyUsagePage} />
-      <ProtectedRoute path="/enhanced-facilities" component={FacilityManagementPage} />
-      <ProtectedRoute path="/all-facilities" component={FacilityManagementPage} />
-      <ProtectedRoute path="/facility-profiles" component={FacilityManagementPage} />
+      <ProtectedRoute path="/enhanced-facilities" component={SimpleFacilityManagement} />
+      <ProtectedRoute path="/all-facilities" component={SimpleFacilityManagement} />
+      <ProtectedRoute path="/facility-profiles" component={SimpleFacilityManagement} />
+      <ProtectedRoute path="/facility-management" component={SimpleFacilityManagement} />
 
       <ProtectedRoute path="/clinician-dashboard" component={ClinicianDashboardWrapper} />
       <ProtectedRoute path="/employee-dashboard" component={EmployeeDashboardWrapper} />

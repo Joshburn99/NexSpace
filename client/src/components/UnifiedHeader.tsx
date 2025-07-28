@@ -78,12 +78,11 @@ const getNavigationItems = (user: any): NavigationItem[] => {
   if (isAdmin) {
     return [
       { label: "Dashboard", href: "/", icon: Home },
-      { label: "Calendar", href: "/calendar-view", icon: Calendar },
       {
         label: "Facilities",
         icon: Building2,
         items: [
-          { label: "All Facilities", href: "/facility-management" },
+          { label: "All Facilities", href: "/enhanced-facilities" },
           { label: "Facility Profiles", href: "/enhanced-facilities" },
           { label: "Teams", href: "/admin/teams" },
         ],
@@ -92,7 +91,7 @@ const getNavigationItems = (user: any): NavigationItem[] => {
         label: "Workforce",
         icon: Users,
         items: [
-          { label: "Staff Directory", href: "/enhanced-staff" },
+          { label: "Staff Directory", href: "/staff-directory" },
           { label: "Staff Management", href: "/staff" },
           { label: "Shift Requests", href: "/shift-requests" },
           { label: "Credentials", href: "/credentials" },
@@ -103,6 +102,7 @@ const getNavigationItems = (user: any): NavigationItem[] => {
         label: "Scheduling",
         icon: Calendar,
         items: [
+          { label: "Calendar", href: "/enhanced-calendar" },
           { label: "Shift Templates", href: "/scheduling" },
           { label: "Open Shifts", href: "/shifts-open" },
           { label: "Time Clock", href: "/time-clock" },
