@@ -102,27 +102,96 @@ export function registerRoutes(app: Express): Server {
     apiKey: process.env.OPENAI_API_KEY,
   });
 
+  // Enhanced security middleware
+  const requireSuperAdmin = (req: any, res: any, next: any) => {
+    if (!req.user) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    if (req.user.role !== 'super_admin' && req.user.role !== UserRole.SUPER_ADMIN) {
+      return res.status(403).json({ message: "Super admin access required" });
+    }
+    next();
+  };
+
+  const requirePermission = (permission: string) => {
+    return async (req: any, res: any, next: any) => {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      // Super admin always has access
+      if (req.user.role === 'super_admin' || req.user.role === UserRole.SUPER_ADMIN) {
+        return next();
+      }
+      const hasPermission = await storage.hasPermission(req.user.role, permission);
+      if (!hasPermission) {
+        return res.status(403).json({ 
+          message: "Insufficient permissions",
+          required: permission,
+          userRole: req.user.role
+        });
+      }
+      next();
+    };
+  };
+
+  // Facility access control
+  const requireFacilityAccess = (facilityIdParam: string = 'facilityId') => {
+    return async (req: any, res: any, next: any) => {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      // Super admin can access all facilities
+      if (req.user.role === 'super_admin' || req.user.role === UserRole.SUPER_ADMIN) {
+        return next();
+      }
+      const requestedFacilityId = parseInt(req.params[facilityIdParam] || req.body[facilityIdParam] || req.query[facilityIdParam]);
+      if (!requestedFacilityId) {
+        return res.status(400).json({ message: "Facility ID required" });
+      }
+      const userFacilityIds = req.user.associatedFacilityIds || req.user.associatedFacilities || [];
+      const hasAccess = userFacilityIds.includes(requestedFacilityId) || req.user.facilityId === requestedFacilityId;
+      if (!hasAccess) {
+        return res.status(403).json({ 
+          message: "Access denied to this facility",
+          requestedFacility: requestedFacilityId,
+          userFacilities: userFacilityIds
+        });
+      }
+      next();
+    };
+  };
+
+  // Resource ownership validation
+  const requireResourceOwnership = (userIdParam: string = 'userId') => {
+    return (req: any, res: any, next: any) => {
+      if (!req.user) {
+        return res.status(401).json({ message: "Authentication required" });
+      }
+      // Super admin can access all resources
+      if (req.user.role === 'super_admin' || req.user.role === UserRole.SUPER_ADMIN) {
+        return next();
+      }
+      const requestedUserId = parseInt(req.params[userIdParam] || req.body[userIdParam] || req.query[userIdParam]);
+      if (!requestedUserId) {
+        return res.status(400).json({ message: "User ID required" });
+      }
+      if (req.user.id !== requestedUserId) {
+        return res.status(403).json({ 
+          message: "Access denied - can only access your own resources",
+          requestedUser: requestedUserId,
+          currentUser: req.user.id
+        });
+      }
+      next();
+    };
+  };
+
   // Middleware to check authentication
   const requireAuth = (req: any, res: any, next: any) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Authentication required" });
     }
     next();
-  };
-
-  // Middleware to check permissions
-  const requirePermission = (permission: string) => {
-    return async (req: any, res: any, next: any) => {
-      if (!req.user) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
-      const hasPermission = await storage.hasPermission(req.user.role, permission);
-      if (!hasPermission && req.user.role !== UserRole.SUPER_ADMIN) {
-        return res.status(403).json({ message: "Insufficient permissions" });
-      }
-      next();
-    };
   };
 
   // Data access control middleware
@@ -168,8 +237,45 @@ export function registerRoutes(app: Express): Server {
   const enhancedFacilityRoutes = createEnhancedFacilitiesRoutes(requireAuth, requirePermission, auditLog);
   app.use("/api/facilities", enhancedFacilityRoutes);
 
-  // Users API
-  app.get("/api/users/:id", requireAuth, async (req: any, res) => {
+  // Security audit endpoint (development only)
+  if (process.env.NODE_ENV === 'development') {
+    app.get("/api/security/audit", requireAuth, requireSuperAdmin, async (req, res) => {
+      try {
+        const { securityTests } = await import("./security-audit-tests.js");
+        await securityTests.runFullAudit();
+        res.json({ 
+          status: "completed", 
+          message: "Security audit completed successfully",
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error("Security audit failed:", error);
+        res.status(500).json({ 
+          status: "failed", 
+          message: "Security audit failed",
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
+      }
+    });
+
+    app.get("/api/security/quick-check", requireAuth, requireSuperAdmin, async (req, res) => {
+      try {
+        const { securityTests } = await import("./security-audit-tests.js");
+        await securityTests.quickCheck();
+        res.json({ 
+          status: "completed", 
+          message: "Quick security check completed",
+          timestamp: new Date().toISOString()
+        });
+      } catch (error) {
+        console.error("Quick security check failed:", error);
+        res.status(500).json({ message: "Security check failed" });
+      }
+    });
+  }
+
+  // Users API - Only super admin or resource owner can access
+  app.get("/api/users/:id", requireAuth, requireResourceOwnership("id"), async (req: any, res) => {
     try {
       const userId = parseInt(req.params.id);
       const user = await storage.getUser(userId);
@@ -341,7 +447,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Global Search API
-  app.get("/api/search", requireAuth, async (req: any, res) => {
+  app.get("/api/search", requireAuth, requirePermission("staff.view"), async (req: any, res) => {
     try {
       const query = req.query.q as string;
       if (!query || query.trim().length < 2) {
@@ -448,7 +554,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Dashboard API - Enhanced with comprehensive statistics and facility filtering
-  app.get("/api/dashboard/stats", requireAuth, async (req: any, res) => {
+  app.get("/api/dashboard/stats", requireAuth, requirePermission("analytics.view"), async (req: any, res) => {
     try {
       console.log(`[ROUTES] Dashboard stats request from user ${req.user.id}, role: ${req.user.role}`);
       console.log(`[ROUTES] User facility data:`, {
@@ -548,7 +654,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Jobs API
-  app.get("/api/jobs", requireAuth, async (req: any, res) => {
+  app.get("/api/jobs", requireAuth, requirePermission("jobs.view"), async (req: any, res) => {
     try {
       const jobs = req.user.facilityId
         ? await storage.getJobsByFacility(req.user.facilityId)
@@ -668,7 +774,7 @@ export function registerRoutes(app: Express): Server {
   );
 
   // Shifts API with example data showing various statuses
-  app.get("/api/shifts", requireAuth, async (req: any, res) => {
+  app.get("/api/shifts", requireAuth, requirePermission("shifts.view"), async (req: any, res) => {
     try {
       // Get user's facility associations if facility user
       const user = req.user;
@@ -1438,7 +1544,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Shift assignment endpoint
-  app.post("/api/shifts/:shiftId/assign", requireAuth, async (req, res) => {
+  app.post("/api/shifts/:shiftId/assign", requireAuth, requirePermission("shifts.assign"), async (req, res) => {
     try {
       const shiftId = req.params.shiftId;
       const { workerId } = req.body;
@@ -1634,7 +1740,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Shift unassignment endpoint
-  app.post("/api/shifts/:shiftId/unassign", requireAuth, async (req, res) => {
+  app.post("/api/shifts/:shiftId/unassign", requireAuth, requirePermission("shifts.assign"), async (req, res) => {
     try {
       const shiftId = req.params.shiftId;
       const { workerId } = req.body;
@@ -1887,7 +1993,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Worker's assigned shifts API
+  // Worker's assigned shifts API - Users can only access their own shifts
   app.get("/api/shifts/my-shifts", requireAuth, async (req: any, res) => {
     try {
       const user = req.user;
@@ -2752,7 +2858,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Staff profile endpoints
-  app.get("/api/staff", requireAuth, async (req: any, res) => {
+  app.get("/api/staff", requireAuth, requirePermission("staff.view"), async (req: any, res) => {
     try {
       // Get staff data directly from database to include associatedFacilities
       let dbStaffData = await db.select({
@@ -3121,7 +3227,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Individual staff profile route
-  app.get("/api/staff/:id", requireAuth, async (req, res) => {
+  app.get("/api/staff/:id", requireAuth, requirePermission("staff.view"), async (req, res) => {
     try {
       const staffId = parseInt(req.params.id);
       const dbStaffData = await unifiedDataService.getStaffWithAssociations();
@@ -6323,7 +6429,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Admin shift requests API with worker details for management view
-  app.get("/api/admin/shift-requests", requireAuth, async (req, res) => {
+  app.get("/api/admin/shift-requests", requireAuth, requireSuperAdmin, async (req, res) => {
     try {
       const shiftRequests = [
         {
@@ -7595,7 +7701,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/admin/audit-logs", requireAuth, async (req, res) => {
+  app.get("/api/admin/audit-logs", requireAuth, requirePermission("system.view_audit_logs"), async (req, res) => {
     try {
       const logs = await storage.getAuditLogs();
       res.json(logs);
