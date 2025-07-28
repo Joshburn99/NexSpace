@@ -44,4 +44,4 @@ waitForPort = 5000
 defaultBucketID = "replit-objstore-3f462d7a-f0ac-4ae3-bce3-dbf9170bdf36"
 
 [agent]
-integrations = ["javascript_websocket==1.0.0"]
+integrations = ["javascript_sendgrid==1.0.0", "javascript_websocket==1.0.0"]

@@ -487,6 +487,23 @@ export interface IStorage {
   }): Promise<{ date: string; count: number; category?: string }[]>;
   getRecentAnalyticsEvents(limit: number, offset: number, category?: string): Promise<AnalyticsEvent[]>;
   getAnalyticsEventCounts(): Promise<{ [category: string]: number }>;
+  
+  // Calendar sync methods
+  getUserAssignedShifts(userId: number): Promise<Shift[]>;
+  saveUserCalendarTokens(userId: number, tokens: {
+    provider: string;
+    accessToken: string;
+    refreshToken?: string;
+    expiryDate?: number;
+  }): Promise<void>;
+  getUserCalendarTokens(userId: number, provider: string): Promise<{
+    accessToken: string;
+    refreshToken?: string;
+    expiryDate?: number;
+  } | null>;
+  deleteUserCalendarTokens(userId: number, provider: string): Promise<void>;
+  saveUserCalendarFeedToken(userId: number, token: string): Promise<void>;
+  getUserCalendarFeedToken(userId: number): Promise<string | null>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3049,6 +3066,98 @@ export class DatabaseStorage implements IStorage {
       .orderBy(sql`TO_CHAR(${analyticsEvents.timestamp}, ${dateFormat})`);
     
     return results;
+  }
+  
+  // Calendar sync methods implementation
+  async getUserAssignedShifts(userId: number): Promise<Shift[]> {
+    try {
+      // Get staff member by user ID
+      const staffMember = await db
+        .select()
+        .from(staff)
+        .where(eq(staff.userId, userId))
+        .limit(1);
+      
+      if (!staffMember.length) {
+        return [];
+      }
+      
+      const staffId = staffMember[0].id;
+      
+      // Get shifts where this staff member is assigned
+      const assignedShifts = await db
+        .select({
+          id: shifts.id,
+          title: shifts.title,
+          facilityId: shifts.facilityId,
+          date: shifts.date,
+          startTime: shifts.startTime,
+          endTime: shifts.endTime,
+          specialty: shifts.specialty,
+          department: shifts.department,
+          requiredWorkers: shifts.requiredWorkers,
+          assignedStaffIds: shifts.assignedStaffIds,
+          hourlyRate: shifts.hourlyRate,
+          urgency: shifts.urgency,
+          status: shifts.status,
+          description: shifts.description,
+          facilityName: facilities.name,
+        })
+        .from(shifts)
+        .leftJoin(facilities, eq(shifts.facilityId, facilities.id))
+        .where(
+          and(
+            sql`${staffId} = ANY(${shifts.assignedStaffIds})`,
+            gte(shifts.date, new Date().toISOString().split('T')[0]) // Only future shifts
+          )
+        )
+        .orderBy(asc(shifts.date), asc(shifts.startTime));
+      
+      return assignedShifts as any[];
+    } catch (error) {
+      console.error('Error fetching user assigned shifts:', error);
+      return [];
+    }
+  }
+  
+  async saveUserCalendarTokens(userId: number, tokens: {
+    provider: string;
+    accessToken: string;
+    refreshToken?: string;
+    expiryDate?: number;
+  }): Promise<void> {
+    // In a production app, you would create a calendar_tokens table
+    // For now, we'll store this in user metadata or a temporary implementation
+    console.log('Saving calendar tokens for user:', userId, 'provider:', tokens.provider);
+    // TODO: Implement calendar_tokens table
+  }
+  
+  async getUserCalendarTokens(userId: number, provider: string): Promise<{
+    accessToken: string;
+    refreshToken?: string;
+    expiryDate?: number;
+  } | null> {
+    // TODO: Implement calendar_tokens table lookup
+    console.log('Getting calendar tokens for user:', userId, 'provider:', provider);
+    return null;
+  }
+  
+  async deleteUserCalendarTokens(userId: number, provider: string): Promise<void> {
+    // TODO: Implement calendar_tokens table deletion
+    console.log('Deleting calendar tokens for user:', userId, 'provider:', provider);
+  }
+  
+  async saveUserCalendarFeedToken(userId: number, token: string): Promise<void> {
+    // Update user record with calendar feed token
+    await db
+      .update(users)
+      .set({ calendarFeedToken: token })
+      .where(eq(users.id, userId));
+  }
+  
+  async getUserCalendarFeedToken(userId: number): Promise<string | null> {
+    const user = await this.getUser(userId);
+    return user?.calendarFeedToken || null;
   }
 }
 

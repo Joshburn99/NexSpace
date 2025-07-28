@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,10 +23,12 @@ import { hasPermission } from "@/lib/permissions";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import CalendarSyncSettings from "@/components/CalendarSyncSettings";
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [location, setLocation] = useLocation();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [selectedRole, setSelectedRole] = useState(user?.role || "");
   const [notifications, setNotifications] = useState({
@@ -44,6 +47,30 @@ export default function SettingsPage() {
     autoRefresh: true,
     soundAlerts: true,
   });
+
+  // Check for Google Calendar callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const calendarConnected = params.get('calendar_connected');
+    const calendarError = params.get('calendar_error');
+    
+    if (calendarConnected === 'true') {
+      toast({
+        title: "Calendar Connected",
+        description: "Your Google Calendar has been successfully connected.",
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (calendarError === 'true') {
+      toast({
+        title: "Connection Failed",
+        description: "Failed to connect to Google Calendar. Please try again.",
+        variant: "destructive",
+      });
+      // Clean up URL
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [toast]);
 
   // Role update mutation
   const updateRoleMutation = useMutation({
@@ -405,6 +432,9 @@ export default function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Calendar Sync Settings */}
+        <CalendarSyncSettings />
       </div>
     </div>
   );

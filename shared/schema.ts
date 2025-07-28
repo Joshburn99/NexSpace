@@ -167,6 +167,7 @@ export const users = pgTable("users", {
   dashboardPreferences: jsonb("dashboard_preferences"), // stores widget layout and preferences
   onboardingCompleted: boolean("onboarding_completed").default(false),
   onboardingStep: integer("onboarding_step").default(0), // Track current step in onboarding process
+  calendarFeedToken: text("calendar_feed_token"), // Unique token for calendar sync
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -293,15 +294,36 @@ export const notifications = pgTable("notifications", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").references(() => users.id, { onDelete: 'cascade' }),
   facilityUserId: integer("facility_user_id").references(() => facilityUsers.id, { onDelete: 'cascade' }),
-  type: text("type").notNull(), // shift_request, shift_approved, shift_denied, shift_cancelled, message_received, etc.
+  type: text("type").notNull(), // shift_assigned, shift_changed, shift_cancelled, message_received, approval_pending, etc.
   title: text("title").notNull(),
   message: text("message").notNull(),
   link: text("link"), // optional link to the relevant page/item
   isRead: boolean("is_read").notNull().default(false),
+  emailSent: boolean("email_sent").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   readAt: timestamp("read_at"),
   // Additional context data
-  metadata: jsonb("metadata"), // store related IDs, shift details, etc.
+  metadata: jsonb("metadata").$type<{
+    shiftId?: number;
+    messageId?: number;
+    senderId?: number;
+    facilityId?: number;
+    oldValues?: any;
+    newValues?: any;
+  }>(), // store related IDs, shift details, etc.
+});
+
+// Notification Preferences table
+export const notificationPreferences = pgTable('notification_preferences', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').unique().references(() => users.id, { onDelete: 'cascade' }),
+  facilityUserId: integer('facility_user_id').unique().references(() => facilityUsers.id, { onDelete: 'cascade' }),
+  emailNotifications: boolean('email_notifications').default(true).notNull(),
+  shiftAssignments: boolean('shift_assignments').default(true).notNull(),
+  shiftChanges: boolean('shift_changes').default(true).notNull(),
+  newMessages: boolean('new_messages').default(true).notNull(),
+  approvals: boolean('approvals').default(true).notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // Facilities table - Simplified core facility information
@@ -1494,6 +1516,15 @@ export const insertNotificationSchema = createInsertSchema(notifications).omit({
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
 export type Notification = typeof notifications.$inferSelect;
 
+// Notification Preferences schemas and types
+export const insertNotificationPreferencesSchema = createInsertSchema(notificationPreferences).omit({
+  id: true,
+  updatedAt: true,
+});
+
+export type InsertNotificationPreferences = z.infer<typeof insertNotificationPreferencesSchema>;
+export type NotificationPreferences = typeof notificationPreferences.$inferSelect;
+
 // Facility schemas and types
 // Note: insertFacilitySchema is already defined above with the facilities table
 
@@ -1547,6 +1578,8 @@ export type InsertFacilityStaffingTargets = z.infer<typeof insertFacilityStaffin
 export type FacilityStaffingTargets = typeof facilityStaffingTargets.$inferSelect;
 export type InsertFacilityDocuments = z.infer<typeof insertFacilityDocumentsSchema>;
 export type FacilityDocuments = typeof facilityDocuments.$inferSelect;
+
+
 
 // Analytics Events Table
 export const analyticsEvents = pgTable("analytics_events", {

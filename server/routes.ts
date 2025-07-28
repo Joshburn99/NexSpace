@@ -66,9 +66,11 @@ import { eq, sql, and, inArray } from "drizzle-orm";
 import { recommendationEngine } from "./recommendation-engine";
 import type { RecommendationCriteria } from "./recommendation-engine";
 import { UnifiedDataService } from "./unified-data-service";
+import { NotificationService } from './services/notification-service';
 import multer from "multer";
 import OpenAI from "openai";
 import dashboardPreferencesRoutes from "./dashboard-preferences-routes";
+import calendarSyncRoutes from "./calendar-sync-routes";
 import { analytics } from "./analytics-tracker";
 
 export function registerRoutes(app: Express): Server {
@@ -78,8 +80,14 @@ export function registerRoutes(app: Express): Server {
   // Dashboard preferences routes
   app.use(dashboardPreferencesRoutes);
   
+  // Calendar sync routes
+  app.use('/api/calendar-sync', calendarSyncRoutes);
+  
   // Initialize unified data service (will be properly initialized with WebSocket later)
   let unifiedDataService: UnifiedDataService;
+  
+  // Initialize notification service
+  const notificationService = new NotificationService(storage);
 
   // Configure multer for file uploads
   const upload = multer({
@@ -11903,17 +11911,19 @@ export function registerRoutes(app: Express): Server {
       
       // Create notification for the worker
       try {
-        await storage.createNotification({
+        await notificationService.createNotification({
+          recipientId: workerId,
           type: 'shift_approved',
           title: 'Shift Request Approved',
-          message: 'Your shift request has been approved! You have been assigned to the shift.',
+          message: `Your shift request for ${shift.title} on ${shift.date} has been approved! You have been assigned to the shift.`,
           link: '/my-schedule',
-          isRead: false,
-          userId: workerId,
           metadata: {
             requestId: requestId,
             approvedBy: user.id,
-            shiftId: shiftId
+            shiftId: shiftId,
+            shiftTitle: shift.title,
+            shiftDate: shift.date,
+            shiftTime: `${shift.startTime} - ${shift.endTime}`
           }
         });
       } catch (notificationError) {
@@ -11937,6 +11947,7 @@ export function registerRoutes(app: Express): Server {
       const requestId = parseInt(req.params.id);
       const user = req.user;
       const reason = req.body.reason || 'No reason provided';
+      const { workerId } = req.body;
       
       // Check permissions
       if (user.role !== 'super_admin' && user.role !== 'admin' && 
@@ -11948,13 +11959,12 @@ export function registerRoutes(app: Express): Server {
       
       // Create notification for the worker
       try {
-        await storage.createNotification({
+        await notificationService.createNotification({
+          recipientId: workerId,
           type: 'shift_denied',
           title: 'Shift Request Denied',
           message: `Your shift request has been denied. Reason: ${reason}`,
           link: '/my-requests',
-          isRead: false,
-          userId: 45, // In production, this would be the actual requester's ID
           metadata: {
             requestId: requestId,
             deniedBy: user.id,
@@ -12085,14 +12095,12 @@ export function registerRoutes(app: Express): Server {
       
       // Create notification for the recipient
       try {
-        await storage.createNotification({
+        await notificationService.createNotification({
+          recipientId: recipientId,
           type: 'message_received',
           title: 'New Message',
           message: `${user.firstName} ${user.lastName} sent you a message: ${subject}`,
           link: '/messaging',
-          isRead: false,
-          userId: recipientId, // For regular users
-          facilityUserId: recipientId, // For facility users (in production, determine which to use)
           metadata: {
             messageId: newMessage.id,
             senderId: user.id,

@@ -13,6 +13,28 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 28, 2025 - External Calendar Sync Implementation
+- **iCal Feed Integration**: Users can now generate unique iCal feed URLs to subscribe to their NexSpace schedule in any calendar app
+  - Toggle switch to enable/disable iCal feed generation in Settings > Calendar Sync
+  - Secure token-based feed URLs that work with Google Calendar, Apple Calendar, Outlook, etc.
+  - Read-only feed that automatically updates when shifts change in NexSpace
+  - Feed includes shift title, time, facility location, department, and staffing details
+- **Google Calendar OAuth Integration**: Two-way sync capability with Google Calendar
+  - OAuth2 authentication flow for secure Google account connection
+  - Automatic sync of assigned shifts to Google Calendar
+  - Manual sync button to trigger immediate updates
+  - Disconnect option to revoke access at any time
+- **Backend Infrastructure**: Complete calendar sync service architecture
+  - CalendarSyncService handles iCal generation and Google Calendar API integration
+  - Calendar sync routes with authentication middleware
+  - Database schema updated with calendarFeedToken field in users table
+  - Storage methods for managing calendar tokens and OAuth credentials
+- **UI Components**: Professional calendar sync settings interface
+  - CalendarSyncSettings component in settings page
+  - Copy-to-clipboard functionality for iCal URLs
+  - Clear instructions for both sync methods
+  - Success/error handling for OAuth callbacks
+
 ### July 28, 2025 - Shift Conflict Detection Implementation
 - **Frontend Conflict Detection**: Added real-time shift conflict detection when employees request shifts
   - Checks for overlapping shifts on the same date and time when Request Shift button is clicked
