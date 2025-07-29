@@ -91,6 +91,7 @@ export default function JobBoardPage() {
   });
 
   // Upload file mutation
+  // TODO-JOBFLOW-20250729: File upload endpoint /api/upload not implemented
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       const formData = new FormData();
@@ -388,6 +389,7 @@ export default function JobBoardPage() {
                 {resumeUrl && (
                   <p className="text-sm text-green-600 mt-2">Resume uploaded successfully!</p>
                 )}
+                {/* TODO-JOBFLOW-20250729: Resume upload shows success but /api/upload endpoint returns 404 */}
               </div>
             </div>
           </div>
