@@ -1184,6 +1184,27 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // File Upload API
+  app.post("/api/upload", requireAuth, async (req: any, res) => {
+    try {
+      // In a real app, you would:
+      // 1. Use multer or similar for file handling
+      // 2. Upload to S3, Cloudinary, or similar service
+      // 3. Store the URL in the database
+      
+      // For now, we'll simulate a successful upload
+      const mockUrl = `https://storage.example.com/resumes/${Date.now()}_${req.user.id}.pdf`;
+      
+      res.json({
+        url: mockUrl,
+        message: "File uploaded successfully",
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      res.status(500).json({ message: "Failed to upload file" });
+    }
+  });
+
   // Shifts API with example data showing various statuses
   app.get("/api/shifts", requireAuth, requirePermission("shifts.view"), async (req: any, res) => {
     try {

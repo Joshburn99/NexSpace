@@ -31,6 +31,7 @@ import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
 import JobBoard from "@/pages/job-board";
 import EnhancedJobBoard from "@/pages/enhanced-job-board";
+import JobBoardPage from "@/pages/JobBoardPage";
 import UnifiedCalendarPage from "@/pages/unified-calendar-page";
 import MessagingPage from "@/pages/messaging-page";
 import AnalyticsPage from "@/pages/analytics-page";
@@ -194,7 +195,7 @@ function AppContent() {
       <ProtectedRoute path="/unified-messaging" component={UnifiedMessagingPage} />
       <ProtectedRoute path="/reports" component={ReportsPage} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
-      <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />
+      <ProtectedRoute path="/job-board" component={JobBoardPage} />
       <ProtectedRoute path="/profile" component={SettingsPage} />
       <ProtectedRoute path="/my-profile" component={EnhancedProfilePage} />
       <ProtectedRoute path="/user-profile" component={UserProfilePage} />
