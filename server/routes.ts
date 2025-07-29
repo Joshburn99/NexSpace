@@ -353,7 +353,7 @@ export function registerRoutes(app: Express): Server {
   // app.use("/api/facilities", enhancedFacilityRoutes);
 
   // Basic facilities endpoint with actual database structure
-  app.get("/api/facilities", requireAuth, async (req, res) => {
+  app.get("/api/facilities", requireAuth, handleImpersonation, async (req, res) => {
     try {
       // Use storage method instead of direct db query
       const facilitiesData = await storage.getAllFacilities();
@@ -402,7 +402,7 @@ export function registerRoutes(app: Express): Server {
   }
 
   // Users API - Only super admin or resource owner can access
-  app.get("/api/users/:id", requireAuth, requireResourceOwnership("id"), async (req: any, res) => {
+  app.get("/api/users/:id", requireAuth, handleImpersonation, requireResourceOwnership("id"), async (req: any, res) => {
     try {
       const userId = parseInt(req.params.id);
       const user = await storage.getUser(userId);
@@ -439,7 +439,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // User Profile API
-  app.get("/api/user/profile", requireAuth, async (req: any, res) => {
+  app.get("/api/user/profile", requireAuth, handleImpersonation, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -510,7 +510,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/user/profile", requireAuth, async (req: any, res) => {
+  app.patch("/api/user/profile", requireAuth, handleImpersonation, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -722,7 +722,7 @@ export function registerRoutes(app: Express): Server {
   );
 
   // Dashboard widget configuration API
-  app.get("/api/dashboard/widgets", requireAuth, async (req: any, res) => {
+  app.get("/api/dashboard/widgets", requireAuth, handleImpersonation, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       if (!userId) {
@@ -753,7 +753,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/dashboard/recent-activity", requireAuth, async (req: any, res) => {
+  app.get("/api/dashboard/recent-activity", requireAuth, handleImpersonation, async (req: any, res) => {
     try {
       const facilityId = req.user.facilityId;
       if (!facilityId) {
@@ -889,7 +889,7 @@ export function registerRoutes(app: Express): Server {
   );
 
   // Job Postings API
-  app.get("/api/job-postings", requireAuth, async (req: any, res) => {
+  app.get("/api/job-postings", requireAuth, handleImpersonation, async (req: any, res) => {
     try {
       const { facilityId, status, search } = req.query;
       
@@ -1125,7 +1125,7 @@ export function registerRoutes(app: Express): Server {
     }
   );
 
-  app.get("/api/job-applications", requireAuth, async (req: any, res) => {
+  app.get("/api/job-applications", requireAuth, handleImpersonation, async (req: any, res) => {
     try {
       const { staffId, facilityId } = req.query;
       
@@ -2529,7 +2529,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/shifts/open", requireAuth, async (req: any, res) => {
+  app.get("/api/shifts/open", requireAuth, handleImpersonation, async (req: any, res) => {
     try {
       const facilityId = req.user.role === UserRole.SUPER_ADMIN ? undefined : req.user.facilityId;
       const shifts = await storage.getOpenShifts(facilityId);
@@ -2663,7 +2663,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Worker's assigned shifts API - Users can only access their own shifts
-  app.get("/api/shifts/my-shifts", requireAuth, async (req: any, res) => {
+  app.get("/api/shifts/my-shifts", requireAuth, handleImpersonation, async (req: any, res) => {
     try {
       const user = req.user;
 
