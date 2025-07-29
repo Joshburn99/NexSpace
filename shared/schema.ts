@@ -251,7 +251,7 @@ export const facilityUserRoleTemplates = pgTable("facility_user_role_templates",
 // Facility User to Facility Association - many-to-many relationship
 export const facilityUserFacilityAssociations = pgTable("facility_user_facility_associations", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  facilityUserId: integer("facility_user_id").notNull(),
   facilityId: integer("facility_id").notNull(),
   isPrimary: boolean("is_primary").default(false), // One primary facility per user
   teamId: integer("team_id"), // Associated team for this facility
