@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { Briefcase, Plus, Edit, Trash2, Calendar, CheckCircle, XCircle, Clock, Users } from "lucide-react";
+import { Briefcase, Plus, Edit, Trash2, Calendar, CheckCircle, XCircle, Clock, Users, UserPlus } from "lucide-react";
 import type { JobPosting } from "@shared/schema/job";
 
 interface JobApplication {
@@ -225,7 +225,7 @@ export default function FacilityJobsPage() {
       title: posting.title,
       description: posting.description,
       requirements: Array.isArray(posting.requirements) ? posting.requirements.join("\n") : 
-        typeof posting.requirements === 'object' ? Object.entries(posting.requirements).map(([k, v]) => `${k}: ${v}`).join("\n") : "",
+        (posting.requirements && typeof posting.requirements === 'object') ? Object.entries(posting.requirements).map(([k, v]) => `${k}: ${v}`).join("\n") : "",
       scheduleType: posting.scheduleType,
       payRate: posting.payRate.toString(),
       status: posting.status,
@@ -377,7 +377,10 @@ export default function FacilityJobsPage() {
                       </TableHeader>
                       <TableBody>
                         {apps.map((application) => (
-                          <TableRow key={application.id}>
+                          <TableRow 
+                            key={application.id}
+                            className={application.status === "hired" ? "bg-green-50 dark:bg-green-900/20" : ""}
+                          >
                             <TableCell className="font-medium">
                               {application.staff?.firstName} {application.staff?.lastName}
                             </TableCell>
@@ -387,9 +390,10 @@ export default function FacilityJobsPage() {
                               <div className="flex items-center gap-2">
                                 {application.status === "pending" && <Clock className="h-4 w-4 text-yellow-500" />}
                                 {application.status === "reviewed" && <Clock className="h-4 w-4 text-blue-500" />}
+                                {application.status === "interview_completed" && <Users className="h-4 w-4 text-purple-500" />}
                                 {application.status === "hired" && <CheckCircle className="h-4 w-4 text-green-500" />}
                                 {application.status === "rejected" && <XCircle className="h-4 w-4 text-red-500" />}
-                                <span className="capitalize">{application.status}</span>
+                                <span className="capitalize">{application.status.replace('_', ' ')}</span>
                               </div>
                             </TableCell>
                             <TableCell>
@@ -419,6 +423,16 @@ export default function FacilityJobsPage() {
                                   >
                                     <Calendar className="h-4 w-4 mr-2" />
                                     Schedule Interview
+                                  </Button>
+                                )}
+                                {application.status === "interview_completed" && (
+                                  <Button
+                                    size="sm"
+                                    variant="default"
+                                    onClick={() => updateApplicationMutation.mutate({ id: application.id, status: "hired" })}
+                                  >
+                                    <UserPlus className="h-4 w-4 mr-2" />
+                                    Hire
                                   </Button>
                                 )}
                               </div>

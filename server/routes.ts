@@ -1065,8 +1065,8 @@ export function registerRoutes(app: Express): Server {
         const applicationId = parseInt(req.params.id);
         const { status } = req.body;
         
-        if (!['hired', 'rejected'].includes(status)) {
-          return res.status(400).json({ message: "Status must be 'hired' or 'rejected'" });
+        if (!['hired', 'rejected', 'interview_completed'].includes(status)) {
+          return res.status(400).json({ message: "Status must be 'hired', 'rejected', or 'interview_completed'" });
         }
         
         // Get application with job posting info
@@ -1099,6 +1099,45 @@ export function registerRoutes(app: Express): Server {
           })
           .where(eq(jobApplications.id, applicationId))
           .returning();
+          
+        // If hiring, create facility association and notify staff
+        if (status === 'hired') {
+          // Create staff-facility association
+          await db.insert(staffFacilityAssociations).values({
+            staffId: applicationData.application.applicantId,
+            facilityId: applicationData.jobPosting!.facilityId,
+            isPrimary: false,
+            status: 'active',
+            startDate: new Date(),
+          });
+          
+          // Get staff details for notification
+          const [staffMember] = await db
+            .select({ 
+              id: staff.id, 
+              firstName: staff.firstName, 
+              lastName: staff.lastName 
+            })
+            .from(staff)
+            .where(eq(staff.id, applicationData.application.applicantId));
+          
+          // Emit WebSocket notification to the hired staff member
+          if (wss) {
+            const staffName = staffMember ? `${staffMember.firstName} ${staffMember.lastName}` : 'Staff member';
+            wss.clients.forEach((client) => {
+              client.send(JSON.stringify({
+                type: 'staffHired',
+                data: {
+                  staffId: applicationData.application.applicantId,
+                  staffName,
+                  facilityId: applicationData.jobPosting!.facilityId,
+                  jobTitle: applicationData.jobPosting!.title,
+                  message: `Congratulations! You have been hired for ${applicationData.jobPosting!.title}`,
+                }
+              }));
+            });
+          }
+        }
           
         res.json(updatedApplication);
       } catch (error) {
