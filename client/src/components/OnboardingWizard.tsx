@@ -90,9 +90,17 @@ const facilitySchema = z
     facilityId: z.number().optional(),
     facilityName: z.string().optional(),
     teamName: z.string().optional(),
+    isCreatingNew: z.boolean().optional(),
   })
-  .refine((data) => data.facilityId || data.facilityName || data.teamName, {
-    message: "Please select an existing facility or provide facility/team information",
+  .refine((data) => {
+    // If creating new, facility name is required
+    if (data.isCreatingNew) {
+      return data.facilityName && data.facilityName.trim().length > 0;
+    }
+    // If joining existing, facility ID is required
+    return data.facilityId !== undefined && data.facilityId !== null;
+  }, {
+    message: "Please select a facility or provide a facility name",
   });
 
 const inviteSchema = z.object({
@@ -108,9 +116,22 @@ const inviteSchema = z.object({
 });
 
 const shiftSchema = z.object({
-  shiftTitle: z.string().min(1, "Shift title is required"),
-  shiftDate: z.string().min(1, "Date is required"),
-  shiftTime: z.string().min(1, "Time is required"),
+  shiftTitle: z.string()
+    .min(1, "Shift title is required")
+    .max(100, "Shift title must be less than 100 characters"),
+  shiftDate: z.string()
+    .min(1, "Date is required")
+    .refine((date) => {
+      const selectedDate = new Date(date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return selectedDate >= today;
+    }, "Please select a future date"),
+  shiftTime: z.string()
+    .min(1, "Start time is required")
+    .refine((time) => {
+      return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(time);
+    }, "Please enter a valid time format (HH:MM)"),
 });
 
 export function OnboardingWizard() {
@@ -506,6 +527,7 @@ function FacilityStep({
       facilityId: initialData.facilityId,
       facilityName: initialData.facilityName || "",
       teamName: initialData.teamName || "",
+      isCreatingNew: false,
     },
   });
 
@@ -551,7 +573,10 @@ function FacilityStep({
             <input
               type="radio"
               checked={!isCreatingNew}
-              onChange={() => setIsCreatingNew(false)}
+              onChange={() => {
+                setIsCreatingNew(false);
+                form.setValue("isCreatingNew", false);
+              }}
               className="text-primary"
             />
             <span>Join an existing facility</span>
@@ -561,7 +586,10 @@ function FacilityStep({
               <input
                 type="radio"
                 checked={isCreatingNew}
-                onChange={() => setIsCreatingNew(true)}
+                onChange={() => {
+                  setIsCreatingNew(true);
+                  form.setValue("isCreatingNew", true);
+                }}
                 className="text-primary"
               />
               <span>Create a new facility</span>
@@ -577,31 +605,41 @@ function FacilityStep({
 
       {!isCreatingNew ? (
         <div>
-          <Label htmlFor="facility">Select Facility</Label>
+          <Label htmlFor="facility">Select Facility <span className="text-red-500">*</span></Label>
           <Select
-            onValueChange={(value) => form.setValue("facilityId", parseInt(value))}
+            onValueChange={(value) => {
+              form.setValue("facilityId", parseInt(value));
+              form.clearErrors("root");
+            }}
             defaultValue={form.getValues("facilityId")?.toString()}
           >
             <SelectTrigger>
               <SelectValue placeholder="Choose a facility" />
             </SelectTrigger>
             <SelectContent>
-              {facilities.map((facility) => (
-                <SelectItem key={facility.id} value={facility.id.toString()}>
-                  {facility.name}
+              {facilities && facilities.length > 0 ? (
+                facilities.map((facility) => (
+                  <SelectItem key={facility.id} value={facility.id.toString()}>
+                    {facility.name}
+                  </SelectItem>
+                ))
+              ) : (
+                <SelectItem value="no-facilities" disabled>
+                  No facilities available
                 </SelectItem>
-              ))}
+              )}
             </SelectContent>
           </Select>
         </div>
       ) : (
         <>
           <div>
-            <Label htmlFor="facilityName">Facility Name</Label>
+            <Label htmlFor="facilityName">Facility Name <span className="text-red-500">*</span></Label>
             <Input
               id="facilityName"
               {...form.register("facilityName")}
               placeholder="e.g., City General Hospital"
+              onChange={(e) => form.clearErrors("root")}
             />
           </div>
           <div>
@@ -691,6 +729,18 @@ function InviteStep({
 
   const handleSubmit = async () => {
     const validInvites = invites.filter((invite) => invite.email && invite.role && invite.name);
+    
+    // Check for duplicate emails
+    const emails = validInvites.map(inv => inv.email.toLowerCase());
+    const uniqueEmails = new Set(emails);
+    if (emails.length !== uniqueEmails.size) {
+      toast({
+        title: "Duplicate emails",
+        description: "Please ensure each email address is unique.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     if (validInvites.length > 0) {
       await sendInvites.mutateAsync(validInvites);
