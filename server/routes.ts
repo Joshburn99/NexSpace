@@ -69,6 +69,8 @@ import OpenAI from "openai";
 import dashboardPreferencesRoutes from "./dashboard-preferences-routes";
 import calendarSyncRoutes from "./calendar-sync-routes";
 import { analytics } from "./analytics-tracker";
+import { insertJobPostingSchema, jobPostings, type JobPosting } from "@shared/schema";
+import { updateJobPostingSchema } from "@shared/schema/job";
 
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
@@ -765,6 +767,169 @@ export function registerRoutes(app: Express): Server {
         res.json(application);
       } catch (error) {
         res.status(500).json({ message: "Failed to update application" });
+      }
+    }
+  );
+
+  // Job Postings API
+  app.get("/api/job-postings", requireAuth, async (req: any, res) => {
+    try {
+      const { facilityId, status, search } = req.query;
+      
+      // Build filter conditions
+      const conditions = [];
+      
+      // Filter by facility if not super admin
+      if (req.user.role !== "super_admin" && req.user.facilityId) {
+        conditions.push(eq(jobPostings.facilityId, req.user.facilityId));
+      } else if (facilityId) {
+        conditions.push(eq(jobPostings.facilityId, parseInt(facilityId as string)));
+      }
+      
+      // Filter by status
+      if (status && status !== 'all') {
+        conditions.push(eq(jobPostings.status, status as string));
+      }
+      
+      // Search by title
+      if (search) {
+        conditions.push(sql`${jobPostings.title} ILIKE ${`%${search}%`}`);
+      }
+      
+      // Fetch job postings with filters
+      const postings = await db
+        .select()
+        .from(jobPostings)
+        .where(conditions.length > 0 ? and(...conditions) : undefined)
+        .orderBy(sql`${jobPostings.createdAt} DESC`);
+        
+      res.json(postings);
+    } catch (error) {
+      console.error("Error fetching job postings:", error);
+      res.status(500).json({ message: "Failed to fetch job postings" });
+    }
+  });
+
+  app.post(
+    "/api/job-postings",
+    requireAuth,
+    auditLog("CREATE", "job_posting"),
+    async (req: any, res) => {
+      try {
+        // Check if user is facility user or super admin
+        if (req.user.role !== "super_admin" && !req.user.facilityId) {
+          return res.status(403).json({ message: "Only facility users and super admins can create job postings" });
+        }
+        
+        // Validate input data
+        const postingData = insertJobPostingSchema.parse({
+          ...req.body,
+          facilityId: req.user.facilityId || req.body.facilityId,
+        });
+        
+        // Create job posting
+        const [newPosting] = await db
+          .insert(jobPostings)
+          .values(postingData)
+          .returning();
+          
+        res.status(201).json(newPosting);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          res.status(400).json({ message: "Invalid job posting data", errors: error.errors });
+        } else {
+          console.error("Error creating job posting:", error);
+          res.status(500).json({ message: "Failed to create job posting" });
+        }
+      }
+    }
+  );
+
+  app.patch(
+    "/api/job-postings/:id",
+    requireAuth,
+    auditLog("UPDATE", "job_posting"),
+    async (req: any, res) => {
+      try {
+        const postingId = parseInt(req.params.id);
+        
+        // Fetch existing posting to check ownership
+        const [existingPosting] = await db
+          .select()
+          .from(jobPostings)
+          .where(eq(jobPostings.id, postingId));
+          
+        if (!existingPosting) {
+          return res.status(404).json({ message: "Job posting not found" });
+        }
+        
+        // Check if user has permission to update
+        if (req.user.role !== "super_admin" && req.user.facilityId !== existingPosting.facilityId) {
+          return res.status(403).json({ message: "You can only update job postings from your facility" });
+        }
+        
+        // Validate update data
+        const updateData = updateJobPostingSchema.parse(req.body);
+        
+        // Update job posting
+        const [updatedPosting] = await db
+          .update(jobPostings)
+          .set({
+            ...updateData,
+            updatedAt: new Date(),
+          })
+          .where(eq(jobPostings.id, postingId))
+          .returning();
+          
+        res.json(updatedPosting);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          res.status(400).json({ message: "Invalid update data", errors: error.errors });
+        } else {
+          console.error("Error updating job posting:", error);
+          res.status(500).json({ message: "Failed to update job posting" });
+        }
+      }
+    }
+  );
+
+  app.delete(
+    "/api/job-postings/:id",
+    requireAuth,
+    auditLog("DELETE", "job_posting"),
+    async (req: any, res) => {
+      try {
+        const postingId = parseInt(req.params.id);
+        
+        // Fetch existing posting to check ownership
+        const [existingPosting] = await db
+          .select()
+          .from(jobPostings)
+          .where(eq(jobPostings.id, postingId));
+          
+        if (!existingPosting) {
+          return res.status(404).json({ message: "Job posting not found" });
+        }
+        
+        // Check if user has permission to delete
+        if (req.user.role !== "super_admin" && req.user.facilityId !== existingPosting.facilityId) {
+          return res.status(403).json({ message: "You can only delete job postings from your facility" });
+        }
+        
+        // Soft delete by updating status
+        const [deletedPosting] = await db
+          .update(jobPostings)
+          .set({
+            status: 'inactive',
+            updatedAt: new Date(),
+          })
+          .where(eq(jobPostings.id, postingId))
+          .returning();
+          
+        res.json({ message: "Job posting deleted successfully", posting: deletedPosting });
+      } catch (error) {
+        console.error("Error deleting job posting:", error);
+        res.status(500).json({ message: "Failed to delete job posting" });
       }
     }
   );
