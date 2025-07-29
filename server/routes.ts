@@ -10661,24 +10661,93 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/impersonate/stop", requireAuth, async (req, res) => {
     try {
+      console.log("[IMPERSONATION STOP] Starting impersonation cleanup...");
+      
+      // Log current session state before cleanup
+      console.log("[IMPERSONATION STOP] Current session state:", {
+        sessionId: req.sessionID,
+        isImpersonating: (req.session as any).isImpersonating,
+        impersonatedUserId: (req.session as any).impersonatedUserId,
+        impersonatedUserType: (req.session as any).impersonatedUserType,
+        hasOriginalUser: !!(req.session as any).originalUser,
+        currentUserId: req.user?.id,
+      });
+
       if (!(req.session as any).isImpersonating || !(req.session as any).originalUser) {
+        console.log("[IMPERSONATION STOP] No active impersonation session found");
         return res.status(400).json({ message: "No active impersonation session" });
       }
 
       const originalUser = (req.session as any).originalUser;
+      console.log(`[IMPERSONATION STOP] Restoring original user: ${originalUser.email} (ID: ${originalUser.id})`);
 
-      // Restore original user
+      // Clear ALL impersonation-related session data
       (req.session as any).user = originalUser;
       delete (req.session as any).originalUser;
       delete (req.session as any).isImpersonating;
       delete (req.session as any).impersonatedUserId;
       delete (req.session as any).impersonatedUserType;
+      
+      // Clear any other potential impersonation data
+      delete (req.session as any).impersonationStartTime;
+      delete (req.session as any).impersonationContext;
 
-      res.json({
-        message: "Impersonation ended successfully",
-        originalUser: originalUser,
+      // Log session state after cleanup
+      console.log("[IMPERSONATION STOP] Session state after cleanup:", {
+        sessionId: req.sessionID,
+        userId: (req.session as any).user?.id,
+        userEmail: (req.session as any).user?.email,
+        isImpersonating: (req.session as any).isImpersonating,
+        impersonatedUserId: (req.session as any).impersonatedUserId,
+        hasOriginalUser: !!(req.session as any).originalUser,
+      });
+
+      // Explicitly save the session to ensure changes persist
+      req.session.save((err) => {
+        if (err) {
+          console.error("[IMPERSONATION STOP] Error saving session after cleanup:", err);
+          return res.status(500).json({ message: "Failed to save session after ending impersonation" });
+        }
+        
+        console.log("[IMPERSONATION STOP] Session saved successfully");
+        
+        // Regenerate session ID to ensure clean session
+        req.session.regenerate((regenerateErr) => {
+          if (regenerateErr) {
+            console.error("[IMPERSONATION STOP] Error regenerating session:", regenerateErr);
+            // Still return success since the impersonation was cleared
+            res.json({
+              message: "Impersonation ended successfully",
+              originalUser: originalUser,
+              sessionCleared: true,
+            });
+          } else {
+            console.log("[IMPERSONATION STOP] Session regenerated with new ID:", req.sessionID);
+            // Properly re-authenticate the original user after regeneration
+            req.login(originalUser, (loginErr) => {
+              if (loginErr) {
+                console.error("[IMPERSONATION STOP] Error re-authenticating user:", loginErr);
+              } else {
+                console.log("[IMPERSONATION STOP] User re-authenticated successfully");
+              }
+              
+              req.session.save((saveErr) => {
+                if (saveErr) {
+                  console.error("[IMPERSONATION STOP] Error saving regenerated session:", saveErr);
+                }
+                
+                res.json({
+                  message: "Impersonation ended successfully",
+                  originalUser: originalUser,
+                  sessionCleared: true,
+                });
+              });
+            });
+          }
+        });
       });
     } catch (error) {
+      console.error("[IMPERSONATION STOP] Error:", error);
       res.status(500).json({ message: "Failed to stop impersonation" });
     }
   });

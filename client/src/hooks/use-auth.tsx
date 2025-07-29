@@ -279,16 +279,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await apiRequest("POST", "/api/impersonate/stop");
       const data = await response.json();
       
-      // Clear impersonation state
+      // Clear ALL impersonation-related state
       setImpersonationState({
         isImpersonating: false,
         originalUser: null,
         impersonatedUser: null,
       });
       
-      // Force query client to refetch the user data
-      // This will cause the backend to return the original user data
+      // Clear ALL localStorage items related to impersonation
+      console.log("[IMPERSONATION] Clearing localStorage...");
+      localStorage.removeItem("nexspace_impersonation_state");
+      localStorage.removeItem("impersonateUserId");
+      localStorage.removeItem("originalUserId");
+      localStorage.removeItem("nexspace_quick_auth"); // Clear auto-restore if it was for impersonation
+      
+      // Clear any other potential cached data
+      Object.keys(localStorage).forEach(key => {
+        if (key.includes("impersonat") || key.includes("originalUser")) {
+          console.log(`[IMPERSONATION] Removing localStorage key: ${key}`);
+          localStorage.removeItem(key);
+        }
+      });
+      
+      // Invalidate ALL queries to ensure fresh data
+      console.log("[IMPERSONATION] Invalidating all queries...");
+      await queryClient.invalidateQueries();
+      
+      // Force refetch user data specifically
       await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      
+      // Clear any cached query data
+      queryClient.clear();
       
       toast({
         title: "Impersonation Ended",
