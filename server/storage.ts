@@ -809,8 +809,106 @@ export class DatabaseStorage implements IStorage {
     id: number,
     updates: Partial<InsertFacility>
   ): Promise<Facility | undefined> {
-    // Remove fields that don't exist in the database
-    const { updatedAt, ...validUpdates } = updates as any;
+    // Extract only fields that exist in the facilities table
+    const {
+      name,
+      facilityType,
+      cmsId,
+      npiNumber,
+      bedCount,
+      privateRooms,
+      semiPrivateRooms,
+      overallRating,
+      healthInspectionRating,
+      qualityMeasureRating,
+      staffingRating,
+      rnStaffingRating,
+      ownershipType,
+      certificationDate,
+      participatesMedicare,
+      participatesMedicaid,
+      isActive,
+      timezone,
+      autoAssignmentEnabled,
+      teamId,
+      emrSystem,
+      specialtyServices,
+      languagesSpoken,
+      netTerms,
+      billingContactName,
+      billingContactEmail,
+      floatPoolMargins,
+      billRates,
+      payRates,
+      workflowAutomationConfig,
+      shiftManagementSettings,
+      staffingTargets,
+      customRules,
+      regulatoryDocs,
+      lastInspectionDate,
+      deficiencyCount,
+      complaintsCount,
+      finesTotal,
+      contractStartDate,
+      contractEndDate,
+      adminName,
+      adminTitle,
+      medicalDirector,
+      payrollProviderId,
+    } = updates as any;
+
+    // Build updates object with only defined values
+    const validUpdates: any = {};
+    if (name !== undefined) validUpdates.name = name;
+    if (facilityType !== undefined) validUpdates.facilityType = facilityType;
+    if (cmsId !== undefined) validUpdates.cmsId = cmsId;
+    if (npiNumber !== undefined) validUpdates.npiNumber = npiNumber;
+    if (bedCount !== undefined) validUpdates.bedCount = bedCount;
+    if (privateRooms !== undefined) validUpdates.privateRooms = privateRooms;
+    if (semiPrivateRooms !== undefined) validUpdates.semiPrivateRooms = semiPrivateRooms;
+    if (overallRating !== undefined) validUpdates.overallRating = overallRating;
+    if (healthInspectionRating !== undefined) validUpdates.healthInspectionRating = healthInspectionRating;
+    if (qualityMeasureRating !== undefined) validUpdates.qualityMeasureRating = qualityMeasureRating;
+    if (staffingRating !== undefined) validUpdates.staffingRating = staffingRating;
+    if (rnStaffingRating !== undefined) validUpdates.rnStaffingRating = rnStaffingRating;
+    if (ownershipType !== undefined) validUpdates.ownershipType = ownershipType;
+    if (certificationDate !== undefined) validUpdates.certificationDate = certificationDate;
+    if (participatesMedicare !== undefined) validUpdates.participatesMedicare = participatesMedicare;
+    if (participatesMedicaid !== undefined) validUpdates.participatesMedicaid = participatesMedicaid;
+    if (isActive !== undefined) validUpdates.isActive = isActive;
+    if (timezone !== undefined) validUpdates.timezone = timezone;
+    if (autoAssignmentEnabled !== undefined) validUpdates.autoAssignmentEnabled = autoAssignmentEnabled;
+    if (teamId !== undefined) validUpdates.teamId = teamId;
+    if (emrSystem !== undefined) validUpdates.emrSystem = emrSystem;
+    if (specialtyServices !== undefined) validUpdates.specialtyServices = specialtyServices;
+    if (languagesSpoken !== undefined) validUpdates.languagesSpoken = languagesSpoken;
+    if (netTerms !== undefined) validUpdates.netTerms = netTerms;
+    if (billingContactName !== undefined) validUpdates.billingContactName = billingContactName;
+    if (billingContactEmail !== undefined) validUpdates.billingContactEmail = billingContactEmail;
+    if (floatPoolMargins !== undefined) validUpdates.floatPoolMargins = floatPoolMargins;
+    if (billRates !== undefined) validUpdates.billRates = billRates;
+    if (payRates !== undefined) validUpdates.payRates = payRates;
+    if (workflowAutomationConfig !== undefined) validUpdates.workflowAutomationConfig = workflowAutomationConfig;
+    if (shiftManagementSettings !== undefined) validUpdates.shiftManagementSettings = shiftManagementSettings;
+    if (staffingTargets !== undefined) validUpdates.staffingTargets = staffingTargets;
+    if (customRules !== undefined) validUpdates.customRules = customRules;
+    if (regulatoryDocs !== undefined) validUpdates.regulatoryDocs = regulatoryDocs;
+    if (lastInspectionDate !== undefined) validUpdates.lastInspectionDate = lastInspectionDate;
+    if (deficiencyCount !== undefined) validUpdates.deficiencyCount = deficiencyCount;
+    if (complaintsCount !== undefined) validUpdates.complaintsCount = complaintsCount;
+    if (finesTotal !== undefined) validUpdates.finesTotal = finesTotal;
+    if (contractStartDate !== undefined) validUpdates.contractStartDate = contractStartDate;
+    if (contractEndDate !== undefined) validUpdates.contractEndDate = contractEndDate;
+    if (adminName !== undefined) validUpdates.adminName = adminName;
+    if (adminTitle !== undefined) validUpdates.adminTitle = adminTitle;
+    if (medicalDirector !== undefined) validUpdates.medicalDirector = medicalDirector;
+    if (payrollProviderId !== undefined) validUpdates.payrollProviderId = payrollProviderId;
+
+    // Check if there are any updates
+    if (Object.keys(validUpdates).length === 0) {
+      // If no valid updates, just return existing facility
+      return await this.getFacility(id);
+    }
 
     const [facility] = await db
       .update(facilities)
