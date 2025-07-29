@@ -1397,18 +1397,23 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Shifts API with example data showing various statuses
+  // Shifts API - Fixed to use unified data source and auto-generate from templates
   app.get("/api/shifts", requireAuth, handleImpersonation, requirePermission("view_schedules"), async (req: any, res) => {
     try {
-      // Get user's facility associations if facility user
-      const user = req.user;
+      const { getUnifiedShifts } = await import("./fix-shifts-api");
+      return await getUnifiedShifts(req, res);
+    } catch (error) {
+      console.error("[SHIFTS API] Error importing unified shifts API:", error);
+      
+      // Fallback to original logic if import fails
+      try {
+        const user = req.user;
       const isFacilityUser = user.role && user.role !== "super_admin";
       let userAssociatedFacilities: number[] = [];
 
       if (isFacilityUser && user.associatedFacilities) {
         userAssociatedFacilities = user.associatedFacilities;
       } else if (isFacilityUser) {
-        // If no associatedFacilities in user object, try to fetch from facility_users table
         try {
           const facilityUser = await storage.getFacilityUserByEmail(user.email);
           if (facilityUser && facilityUser.associatedFacilityIds) {
@@ -2009,8 +2014,10 @@ export function registerRoutes(app: Express): Server {
       }
 
       res.json(filteredShifts);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch shifts" });
+      } catch (fallbackError) {
+        console.error("[SHIFTS API] Fallback logic failed:", fallbackError);
+        res.status(500).json({ message: "Failed to fetch shifts" });
+      }
     }
   });
 
