@@ -28,6 +28,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { ShiftManagementSettings as ShiftManagementSettingsComponent } from "@/components/ShiftManagementSettings";
 
 interface WorkflowAutomationConfig {
   autoApproveShifts: boolean;
@@ -306,119 +307,10 @@ export default function FacilitySettingsPage() {
         </TabsContent>
 
         <TabsContent value="shifts">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Shift Management Rules
-              </CardTitle>
-              <CardDescription>
-                Define shift scheduling constraints and requirements
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Minimum Shift Length (hours)</Label>
-                  <Input
-                    type="number"
-                    value={settings.shiftManagementSettings?.minShiftLength || 4}
-                    onChange={(e) =>
-                      updateShiftSettings("minShiftLength", parseInt(e.target.value))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Maximum Shift Length (hours)</Label>
-                  <Input
-                    type="number"
-                    value={settings.shiftManagementSettings?.maxShiftLength || 12}
-                    onChange={(e) =>
-                      updateShiftSettings("maxShiftLength", parseInt(e.target.value))
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Break Required After (hours)</Label>
-                  <Input
-                    type="number"
-                    value={settings.shiftManagementSettings?.breakRequiredAfterHours || 6}
-                    onChange={(e) =>
-                      updateShiftSettings("breakRequiredAfterHours", parseInt(e.target.value))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Break Duration (minutes)</Label>
-                  <Input
-                    type="number"
-                    value={settings.shiftManagementSettings?.breakDurationMinutes || 30}
-                    onChange={(e) =>
-                      updateShiftSettings("breakDurationMinutes", parseInt(e.target.value))
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Max Consecutive Days</Label>
-                  <Input
-                    type="number"
-                    value={settings.shiftManagementSettings?.maxConsecutiveDays || 6}
-                    onChange={(e) =>
-                      updateShiftSettings("maxConsecutiveDays", parseInt(e.target.value))
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Min Rest Between Shifts (hours)</Label>
-                  <Input
-                    type="number"
-                    value={settings.shiftManagementSettings?.minRestBetweenShifts || 8}
-                    onChange={(e) =>
-                      updateShiftSettings("minRestBetweenShifts", parseInt(e.target.value))
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4 pt-4 border-t">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Allow Double Booking</Label>
-                    <p className="text-sm text-gray-600">
-                      Allow staff to be scheduled for overlapping shifts
-                    </p>
-                  </div>
-                  <Switch
-                    checked={settings.shiftManagementSettings?.allowDoubleBooking || false}
-                    onCheckedChange={(checked) =>
-                      updateShiftSettings("allowDoubleBooking", checked)
-                    }
-                  />
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label>Require Float Pool Approval</Label>
-                    <p className="text-sm text-gray-600">
-                      Require approval to use float pool staff
-                    </p>
-                  </div>
-                  <Switch
-                    checked={settings.shiftManagementSettings?.requireFloatPoolApproval || false}
-                    onCheckedChange={(checked) =>
-                      updateShiftSettings("requireFloatPoolApproval", checked)
-                    }
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <ShiftManagementSettingsComponent 
+            facilityId={facilityId || 0} 
+            canEdit={hasPermission("manage_teams")}
+          />
         </TabsContent>
 
         <TabsContent value="staffing">

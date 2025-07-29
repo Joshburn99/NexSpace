@@ -430,6 +430,91 @@ export function createEnhancedFacilitiesRoutes(
     }
   );
 
+  // GET /api/facilities/:id/settings - Get facility settings
+  router.get("/:id/settings", requireAuth, async (req, res) => {
+    try {
+      const facilityId = parseInt(req.params.id);
+      
+      const [settings] = await db
+        .select()
+        .from(facilitySettings)
+        .where(eq(facilitySettings.facilityId, facilityId));
+      
+      if (!settings) {
+        // Return default settings if none exist
+        return res.json({
+          shiftManagementSettings: {
+            autoApproveShifts: false,
+            requireManagerApproval: true,
+            allowSelfCancellation: true,
+            cancellationDeadlineHours: 24,
+            defaultShiftDurationHours: 8,
+            overtimeThresholdHours: 40,
+          }
+        });
+      }
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching facility settings:", error);
+      res.status(500).json({ message: "Failed to fetch facility settings" });
+    }
+  });
+
+  // PATCH /api/facilities/:id/settings - Update facility settings
+  router.patch("/:id/settings", requireAuth, requirePermission("manage_teams"), async (req: any, res) => {
+    try {
+      const facilityId = parseInt(req.params.id);
+      const { shiftManagementSettings } = req.body;
+      
+      // Check if facility exists
+      const [facility] = await db
+        .select()
+        .from(facilities)
+        .where(eq(facilities.id, facilityId));
+      
+      if (!facility) {
+        return res.status(404).json({ message: "Facility not found" });
+      }
+      
+      // Check if settings exist
+      const [existingSettings] = await db
+        .select()
+        .from(facilitySettings)
+        .where(eq(facilitySettings.facilityId, facilityId));
+      
+      if (existingSettings) {
+        // Update existing settings
+        const [updatedSettings] = await db
+          .update(facilitySettings)
+          .set({
+            shiftManagementSettings,
+            updatedAt: new Date(),
+          })
+          .where(eq(facilitySettings.facilityId, facilityId))
+          .returning();
+        
+        res.json(updatedSettings);
+      } else {
+        // Create new settings
+        const [newSettings] = await db
+          .insert(facilitySettings)
+          .values({
+            facilityId,
+            shiftManagementSettings,
+            autoAssignmentEnabled: false,
+            netTerms: "Net 30",
+          })
+          .returning();
+        
+        res.json(newSettings);
+      }
+    } catch (error) {
+      console.error("Error updating facility settings:", error);
+      res.status(500).json({ message: "Failed to update facility settings" });
+    }
+  });
+
   // PATCH /api/facilities/:id - Partial update facility
   router.patch(
     "/:id",
