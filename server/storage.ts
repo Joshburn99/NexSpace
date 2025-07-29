@@ -733,9 +733,10 @@ export class DatabaseStorage implements IStorage {
     }
   ): Promise<User | undefined> {
     const updates: any = { updatedAt: new Date() };
-    if (data.firstName !== undefined) updates.firstName = data.firstName;
-    if (data.lastName !== undefined) updates.lastName = data.lastName;
-    // Note: phone, department, and bio fields would need to be added to the users table schema
+    if (data.firstName !== undefined) updates.first_name = data.firstName; // Note: DB uses snake_case
+    if (data.lastName !== undefined) updates.last_name = data.lastName;   // Note: DB uses snake_case
+    // Note: phone, department, and bio fields don't exist in users table
+    // For now, we'll only update firstName and lastName
 
     const [user] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
     return user || undefined;

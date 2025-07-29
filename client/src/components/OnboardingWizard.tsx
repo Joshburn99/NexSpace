@@ -321,7 +321,10 @@ function ProfileStep({
         credentials: "include",
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Failed to update profile");
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to update profile");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -330,11 +333,30 @@ function ProfileStep({
         description: "Your profile information has been saved.",
       });
     },
+    onError: (error: any) => {
+      console.error("[ONBOARDING] Profile mutation error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update profile",
+        variant: "destructive",
+      });
+    },
   });
 
   const onSubmit = async (data: any) => {
-    await updateProfile.mutateAsync(data);
-    onNext(data);
+    try {
+      console.log("[ONBOARDING] Submitting profile data:", data);
+      await updateProfile.mutateAsync(data);
+      console.log("[ONBOARDING] Profile update successful, calling onNext");
+      onNext(data);
+    } catch (error) {
+      console.error("[ONBOARDING] Profile update failed:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (

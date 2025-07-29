@@ -207,6 +207,13 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
   - Click outside to close functionality for better user experience
 - **Fixed Database Issue**: Commented out missing "last_work_date" column in staff table schema that was causing query errors
 
+### July 29, 2025 - Onboarding Wizard Next Button Fix
+- **Issue**: Next button in facility user onboarding wizard wasn't working when submitting profile information
+- **Root Cause**: The `updateUserProfile` storage method was trying to update fields (phone, department, bio) that don't exist in the users table
+- **Solution**: Modified updateUserProfile to only update existing fields (firstName/lastName) using proper snake_case column names
+- **Added Debugging**: Enhanced error handling and console logging in onboarding wizard for better troubleshooting
+- **Note**: Phone, department, and bio fields would need to be added to users table schema for full profile functionality
+
 ### July 29, 2025 - Job Management Tables Implementation
 - **Database Schema Enhancement**: Successfully added job management functionality with new tables
   - Created job_postings table with fields: facilityId, title, description, requirements (JSONB), scheduleType, payRate, status
