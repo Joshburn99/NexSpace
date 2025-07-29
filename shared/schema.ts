@@ -869,15 +869,15 @@ export const staff = pgTable("staff", {
   // lastWorkDate: timestamp("last_work_date"), // Column doesn't exist in database yet
   
   // Preferences
-  preferredShiftTypes: jsonb("preferred_shift_types"), // ['day', 'night', 'weekend', 'on_call']
-  weeklyAvailability: jsonb("weekly_availability"), // { monday: { available: boolean, startTime: string, endTime: string }, ... }
+  // preferredShiftTypes: jsonb("preferred_shift_types"), // Column doesn't exist in database yet
+  // weeklyAvailability: jsonb("weekly_availability"), // Column doesn't exist in database yet
   languages: text("languages").array(),
   
   // Emergency Contact Information
-  emergencyContactName: text("emergency_contact_name"),
-  emergencyContactPhone: text("emergency_contact_phone"),
-  emergencyContactRelationship: text("emergency_contact_relationship"),
-  emergencyContactEmail: text("emergency_contact_email"),
+  // emergencyContactName: text("emergency_contact_name"), // Column doesn't exist in database yet
+  // emergencyContactPhone: text("emergency_contact_phone"), // Column doesn't exist in database yet
+  // emergencyContactRelationship: text("emergency_contact_relationship"), // Column doesn't exist in database yet
+  // emergencyContactEmail: text("emergency_contact_email"), // Column doesn't exist in database yet
   
   // Financial Information (encrypted in production)
   directDepositBankName: text("direct_deposit_bank_name"),
@@ -1143,6 +1143,31 @@ export const insertTimeOffPolicySchema = createInsertSchema(timeOffPolicies).omi
 export type InsertTimeOffPolicy = z.infer<typeof insertTimeOffPolicySchema>;
 export type TimeOffPolicy = typeof timeOffPolicies.$inferSelect;
 
+// Job Management Tables
+export const jobPostings = pgTable("job_postings", {
+  id: serial("id").primaryKey(),
+  facilityId: integer("facility_id").notNull().references(() => facilities.id, { onDelete: 'cascade' }),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  requirements: jsonb("requirements").$type<string[]>(), // Array of requirement strings
+  scheduleType: text("schedule_type").notNull(), // 'full_time', 'part_time', 'contract', 'per_diem'
+  payRate: decimal("pay_rate", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").notNull().default("active"), // 'active', 'inactive', 'filled', 'cancelled'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const interviewSchedules = pgTable("interview_schedules", {
+  id: serial("id").primaryKey(),
+  applicationId: integer("application_id").notNull().references(() => jobApplications.id, { onDelete: 'cascade' }),
+  start: timestamp("start").notNull(),
+  end: timestamp("end").notNull(),
+  meetingUrl: text("meeting_url"),
+  status: text("status").notNull().default("scheduled"), // 'scheduled', 'completed', 'cancelled', 'no_show'
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ one, many }) => ({
   facility: one(facilities, { fields: [users.facilityId], references: [facilities.id] }),
@@ -1195,6 +1220,23 @@ export const jobsRelations = relations(jobs, ({ one, many }) => ({
   facility: one(facilities, { fields: [jobs.facilityId], references: [facilities.id] }),
   postedBy: one(users, { fields: [jobs.postedById], references: [users.id] }),
   applications: many(jobApplications),
+}));
+
+// Job Posting Relations
+export const jobPostingsRelations = relations(jobPostings, ({ one, many }) => ({
+  facility: one(facilities, { fields: [jobPostings.facilityId], references: [facilities.id] }),
+  applications: many(jobApplications),
+}));
+
+export const jobApplicationsRelations = relations(jobApplications, ({ one, many }) => ({
+  job: one(jobs, { fields: [jobApplications.jobId], references: [jobs.id] }),
+  applicant: one(users, { fields: [jobApplications.applicantId], references: [users.id] }),
+  reviewer: one(users, { fields: [jobApplications.reviewedById], references: [users.id] }),
+  interviews: many(interviewSchedules),
+}));
+
+export const interviewSchedulesRelations = relations(interviewSchedules, ({ one }) => ({
+  application: one(jobApplications, { fields: [interviewSchedules.applicationId], references: [jobApplications.id] }),
 }));
 
 export const shiftsRelations = relations(shifts, ({ one, many }) => ({
@@ -1324,6 +1366,19 @@ export const insertShiftRequestSchema = createInsertSchema(shiftRequests).omit({
   processedAt: true,
 });
 
+// Job Management Insert Schemas
+export const insertJobPostingSchema = createInsertSchema(jobPostings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertInterviewScheduleSchema = createInsertSchema(interviewSchedules).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertShiftHistorySchema = createInsertSchema(shiftHistory).omit({
   id: true,
   timestamp: true,
@@ -1412,6 +1467,12 @@ export type Message = typeof messages.$inferSelect;
 export type InsertStaff = z.infer<typeof insertStaffSchema>;
 export type Staff = typeof staff.$inferSelect;
 export type InsertStaffFacilityAssociation = z.infer<typeof insertStaffFacilityAssociationSchema>;
+
+// Job Management Types
+export type InsertJobPosting = z.infer<typeof insertJobPostingSchema>;
+export type JobPosting = typeof jobPostings.$inferSelect;
+export type InsertInterviewSchedule = z.infer<typeof insertInterviewScheduleSchema>;
+export type InterviewSchedule = typeof interviewSchedules.$inferSelect;
 export type StaffFacilityAssociation = typeof staffFacilityAssociations.$inferSelect;
 export type InsertStaffCredential = z.infer<typeof insertStaffCredentialSchema>;
 export type StaffCredential = typeof staffCredentials.$inferSelect;
