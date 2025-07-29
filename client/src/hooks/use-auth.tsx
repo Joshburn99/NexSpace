@@ -162,21 +162,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
 
   // Impersonation functions
-  const startImpersonation = async (userToImpersonate: SelectUser) => {
+  const startImpersonation = async (targetUserId: number | SelectUser, userType: string = "user") => {
     if (!effectiveUser) return;
 
+    // Handle both old signature (user object) and new signature (userId, userType)
+    let userId: number;
+    let type: string;
+    
+    if (typeof targetUserId === "object") {
+      // Old signature - user object
+      userId = targetUserId.id;
+      type = "user";
+    } else {
+      // New signature - userId and userType
+      userId = targetUserId;
+      type = userType;
+    }
 
     try {
       // Call backend to properly start impersonation and get enhanced user data
-      const response = await apiRequest("POST", "/api/impersonate", {
-        userId: userToImpersonate.id,
+      const response = await apiRequest("POST", "/api/impersonate/start", {
+        targetUserId: userId,
+        userType: type,
       });
       const impersonationData = await response.json();
 
-
-      if (impersonationData.success && impersonationData.impersonatedUser) {
+      if (impersonationData.impersonatedUser) {
         const enhancedUser = impersonationData.impersonatedUser;
-
 
         setOriginalUser(effectiveUser);
         setCurrentUser(enhancedUser);
@@ -186,11 +198,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Force query client to update the user data with enhanced data
         queryClient.setQueryData(["/api/user"], enhancedUser);
+        
+        toast({
+          title: "Impersonation Started",
+          description: `Now viewing as ${enhancedUser.firstName} ${enhancedUser.lastName}`,
+        });
       } else {
         console.error(
-          "[IMPERSONATION] No success or impersonated user in response:",
+          "[IMPERSONATION] No impersonated user in response:",
           impersonationData
         );
+        throw new Error("Failed to start impersonation");
       }
     } catch (error) {
       console.error("Failed to start impersonation:", error);
@@ -202,16 +220,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const quitImpersonation = () => {
-    const origId = localStorage.getItem("originalUserId");
-    if (origId && originalUser) {
-      setCurrentUser(originalUser);
+  const quitImpersonation = async () => {
+    try {
+      // Call backend to stop impersonation
+      const response = await apiRequest("POST", "/api/impersonate/stop");
+      const data = await response.json();
+      
+      if (data.originalUser) {
+        // Update state with original user
+        setCurrentUser(data.originalUser);
+        queryClient.setQueryData(["/api/user"], data.originalUser);
+      }
+      
+      setOriginalUser(null);
+      setImpersonatedUser(null);
+      localStorage.removeItem("originalUserId");
+      localStorage.removeItem("impersonateUserId");
+      
+      toast({
+        title: "Impersonation Ended",
+        description: "Returned to your original account",
+      });
+      
+      navigate("/admin/impersonation");
+    } catch (error) {
+      console.error("Failed to stop impersonation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to stop impersonation. Please try again.",
+        variant: "destructive",
+      });
     }
-    setOriginalUser(null);
-    setImpersonatedUser(null);
-    localStorage.removeItem("originalUserId");
-    localStorage.removeItem("impersonateUserId");
-    navigate("/admin/impersonation");
   };
 
   return (

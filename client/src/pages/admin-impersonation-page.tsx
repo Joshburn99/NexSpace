@@ -76,44 +76,15 @@ export default function AdminImpersonationPage() {
   });
 
   const handleImpersonate = async (targetUser: SelectUser) => {
-    await startImpersonation(targetUser);
-    // Navigate to appropriate dashboard based on role
-    switch (targetUser.role) {
-      case "clinician":
-        navigate("/clinician-dashboard");
-        break;
-      case "employee":
-        navigate("/employee-dashboard");
-        break;
-      case "contractor":
-        navigate("/contractor-dashboard");
-        break;
-      case "manager":
-        navigate("/dashboard");
-        break;
-      default:
-        navigate("/dashboard");
-    }
+    // For staff members, pass userType as "staff"
+    await startImpersonation(targetUser.id, "staff");
+    // Navigate to appropriate dashboard
+    navigate("/dashboard");
   };
 
   const handleImpersonateFacilityUser = async (targetUser: any) => {
-    // Convert facility user to impersonation format
-    const impersonationUser = {
-      id: targetUser.id,
-      username: targetUser.username,
-      email: targetUser.email,
-      firstName: targetUser.firstName,
-      lastName: targetUser.lastName,
-      role: targetUser.role,
-      avatar: targetUser.avatar,
-      isActive: targetUser.isActive,
-      facilityId: targetUser.primaryFacilityId,
-      createdAt: targetUser.createdAt,
-      updatedAt: targetUser.updatedAt,
-      userType: "facility_user", // Mark as facility user
-    };
-
-    await startImpersonation(impersonationUser);
+    // For facility users, pass userType as "facility_user"
+    await startImpersonation(targetUser.id, "facility_user");
     // Navigate to facility dashboard
     navigate("/dashboard");
   };

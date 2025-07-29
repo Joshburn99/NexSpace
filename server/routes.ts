@@ -10388,17 +10388,97 @@ export function registerRoutes(app: Express): Server {
         return res.status(403).json({ message: "Superuser access required" });
       }
 
-      const { targetUserId } = req.body;
+      const { targetUserId, userType = "user" } = req.body;
+      let targetUser: any = null;
 
-      // Get target user from database
-      const targetUser = await storage.getUser(targetUserId);
-      if (!targetUser) {
-        return res.status(404).json({ message: "User not found" });
+      console.log(`[IMPERSONATION] Starting impersonation for ${userType} with ID ${targetUserId}`);
+
+      // Handle different user types
+      if (userType === "facility_user") {
+        // Get facility user from facility_users table
+        const [facilityUser] = await db
+          .select()
+          .from(facilityUsers)
+          .where(eq(facilityUsers.id, targetUserId))
+          .limit(1);
+
+        if (!facilityUser) {
+          return res.status(404).json({ message: "Facility user not found" });
+        }
+
+        targetUser = {
+          id: facilityUser.id,
+          username: facilityUser.username,
+          email: facilityUser.email,
+          password: facilityUser.password,
+          firstName: facilityUser.firstName,
+          lastName: facilityUser.lastName,
+          role: facilityUser.role,
+          avatar: facilityUser.avatar,
+          isActive: facilityUser.isActive,
+          facilityId: facilityUser.primaryFacilityId,
+          permissions: facilityUser.permissions || [],
+          associatedFacilityIds: facilityUser.associatedFacilityIds || [],
+          associatedFacilities: facilityUser.associatedFacilityIds || [],
+          phone: facilityUser.phone,
+          title: facilityUser.title,
+          department: facilityUser.department,
+          userType: "facility_user",
+          createdAt: facilityUser.createdAt,
+          updatedAt: facilityUser.updatedAt,
+        };
+
+        // Get role template permissions if user has none
+        if (!targetUser.permissions || targetUser.permissions.length === 0) {
+          const roleTemplate = await storage.getFacilityUserRoleTemplate(facilityUser.role);
+          if (roleTemplate && roleTemplate.permissions) {
+            targetUser.permissions = roleTemplate.permissions;
+          }
+        }
+      } else if (userType === "staff") {
+        // Get staff member from staff table
+        const [staffMember] = await db
+          .select()
+          .from(staff)
+          .where(eq(staff.id, targetUserId))
+          .limit(1);
+
+        if (!staffMember) {
+          return res.status(404).json({ message: "Staff member not found" });
+        }
+
+        targetUser = {
+          id: staffMember.id,
+          username: `${staffMember.firstName.toLowerCase()}${staffMember.lastName.toLowerCase()}`,
+          email: staffMember.email,
+          password: "", // Not needed for impersonation
+          firstName: staffMember.firstName,
+          lastName: staffMember.lastName,
+          role: staffMember.role || "staff",
+          avatar: staffMember.avatar,
+          isActive: staffMember.status === "Active",
+          facilityId: staffMember.primaryFacilityId,
+          associatedFacilityIds: staffMember.associatedFacilities || [],
+          associatedFacilities: staffMember.associatedFacilities || [],
+          specialty: staffMember.specialty,
+          department: staffMember.department,
+          userType: "staff",
+          createdAt: staffMember.createdAt,
+          updatedAt: staffMember.updatedAt,
+        };
+      } else {
+        // Get regular user from users table
+        targetUser = await storage.getUser(targetUserId);
+        if (!targetUser) {
+          return res.status(404).json({ message: "User not found" });
+        }
+        targetUser.userType = "user";
       }
 
       // Store original user in session
       (req.session as any).originalUser = req.user;
       (req.session as any).isImpersonating = true;
+      (req.session as any).impersonatedUserType = userType;
 
       // Set impersonated user as current user
       (req.session as any).user = {
@@ -10407,13 +10487,15 @@ export function registerRoutes(app: Express): Server {
         canImpersonate: true,
       };
 
+      console.log(`[IMPERSONATION] Successfully impersonating ${targetUser.email} (${userType})`);
+
       res.json({
         message: "Impersonation started successfully",
         impersonatedUser: targetUser,
         originalUser: (req.session as any).originalUser,
       });
     } catch (error) {
-      console.error("Error starting impersonation:", error);
+      console.error("[IMPERSONATION] Error:", error);
       res.status(500).json({ message: "Failed to start impersonation" });
     }
   });

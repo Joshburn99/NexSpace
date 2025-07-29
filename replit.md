@@ -13,6 +13,31 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 29, 2025 - Comprehensive Impersonation System Fix
+- **Unified Impersonation API**: Consolidated multiple duplicate impersonation endpoints into a single working solution
+  - Fixed `/api/impersonate/start` endpoint to properly handle all user types (regular users, staff members, facility users)
+  - Backend now correctly fetches users from appropriate tables based on userType parameter
+  - Staff members fetched from staff table with proper field mapping and permissions
+  - Facility users fetched from facility_users table with role-based permissions
+  - Regular users fetched from users table with standard user permissions
+- **Frontend Integration**: Updated admin impersonation page to work with all user types
+  - Modified handleImpersonate functions to pass userType ("staff" or "facility_user") along with user ID
+  - Updated useAuth hook to support both legacy (user object) and new (userId, userType) signatures
+  - Enhanced startImpersonation function to properly call backend with correct parameters
+  - Fixed quitImpersonation to call backend endpoint for proper session cleanup
+- **Session Management**: Improved impersonation session handling
+  - Backend stores original user, impersonated user ID, and user type in session
+  - Frontend maintains impersonation state with proper user data updates
+  - Added toast notifications for successful impersonation start/stop
+  - Proper navigation to dashboard after impersonation starts
+- **User Experience**: Enhanced impersonation workflow
+  - "Viewing as" indicator properly shows for all impersonated user types
+  - Quit impersonation button always visible when in impersonation mode
+  - Smooth transitions between original and impersonated user states
+  - Proper error handling with user-friendly messages
+
+## Recent Changes
+
 ### July 28, 2025 - Comprehensive UX/UI Enhancement Implementation
 - **Phase 1: Core Navigation Simplification COMPLETED**: Implemented enhanced mobile navigation with better UX patterns
   - Created EnhancedMobileNavigation component with collapsible sections, user info display, and touch-friendly interactions
