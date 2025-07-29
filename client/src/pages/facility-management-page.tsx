@@ -87,7 +87,11 @@ import {
 } from "lucide-react";
 
 // Enhanced Facility Types
-interface EnhancedFacility {
+// Use the centralized EnhancedFacility type from the hooks
+import { EnhancedFacility } from "@/hooks/use-facility";
+
+// Backup interface for development (remove once centralized type is stable)
+interface LocalEnhancedFacility {
   id: number;
   name: string;
   facilityType: string;
@@ -309,12 +313,12 @@ export default function FacilityManagementPage() {
         const matchesSearch =
           searchTerm === "" ||
           facility.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          facility.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          facility.state.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (facility.address?.city || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (facility.address?.state || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
           getTeamName(facility.teamId).toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesState =
-          filterState === "" || filterState === "all" || facility.state === filterState;
+          filterState === "" || filterState === "all" || (facility.address?.state || "") === filterState;
         const matchesType =
           filterType === "" || filterType === "all" || facility.facilityType === filterType;
         const matchesTeam =
@@ -332,10 +336,16 @@ export default function FacilityManagementPage() {
     let aValue = a[sortField];
     let bValue = b[sortField];
 
-    // Handle special cases
+    // Handle special cases for nested fields
     if (sortField === "teamId") {
       aValue = getTeamName(a.teamId);
       bValue = getTeamName(b.teamId);
+    } else if (sortField === "city") {
+      aValue = a.address?.city || "";
+      bValue = b.address?.city || "";
+    } else if (sortField === "state") {
+      aValue = a.address?.state || "";
+      bValue = b.address?.state || "";
     }
 
     // Handle null/undefined values

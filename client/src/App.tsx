@@ -217,7 +217,7 @@ function AppContent() {
       <AdminRoute path="/admin/analytics" component={AdminAnalytics} />
       <AdminRoute path="/admin/roles" component={RoleManagementPage} />
       <FacilityRoute
-        path="/facility-management"
+        path="/admin/facility-management"
         component={FacilityManagementPage}
         requiredPermissions={["facilities.view"]}
       />
@@ -260,10 +260,11 @@ function AppContent() {
       <ProtectedRoute path="/reports/overtime" component={OvertimeReportPage} />
       <ProtectedRoute path="/reports/float-pool-savings" component={FloatPoolAnalyticsPage} />
       <ProtectedRoute path="/reports/agency-usage" component={AgencyUsagePage} />
-      <ProtectedRoute path="/enhanced-facilities" component={SimpleFacilityManagement} />
-      <ProtectedRoute path="/all-facilities" component={SimpleFacilityManagement} />
-      <ProtectedRoute path="/facility-profiles" component={SimpleFacilityManagement} />
-      <ProtectedRoute path="/facility-management" component={SimpleFacilityManagement} />
+      <ProtectedRoute path="/facilities" component={FacilityManagementPage} />
+      <ProtectedRoute path="/enhanced-facilities" component={FacilityManagementPage} />
+      <ProtectedRoute path="/all-facilities" component={FacilityManagementPage} />
+      <ProtectedRoute path="/facility-profiles" component={FacilityManagementPage} />
+      <ProtectedRoute path="/facility-management" component={FacilityManagementPage} />
 
       <ProtectedRoute path="/clinician-dashboard" component={ClinicianDashboardWrapper} />
       <ProtectedRoute path="/employee-dashboard" component={EmployeeDashboardWrapper} />
