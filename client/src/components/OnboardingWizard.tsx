@@ -222,38 +222,38 @@ export function OnboardingWizard() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-hidden">
-        <CardHeader className="relative">
-          <div className="absolute right-4 top-4 flex gap-2">
-            <Button variant="ghost" size="sm" onClick={handleSkip}>
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-4">
+      <Card className="w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden">
+        <CardHeader className="relative pb-2 sm:pb-6">
+          <div className="absolute right-2 top-2 sm:right-4 sm:top-4 flex gap-1 sm:gap-2">
+            <Button variant="ghost" size="sm" onClick={handleSkip} className="text-xs sm:text-sm">
               Skip
             </Button>
-            <Button variant="ghost" size="icon" onClick={handleExit}>
-              <X className="h-4 w-4" />
+            <Button variant="ghost" size="icon" onClick={handleExit} className="h-8 w-8 sm:h-9 sm:w-9">
+              <X className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </div>
 
-          <CardTitle>Welcome to NexSpace!</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-lg sm:text-2xl">Welcome to NexSpace!</CardTitle>
+          <CardDescription className="text-xs sm:text-sm pr-16 sm:pr-0">
             Let's get you set up in just a few steps.{" "}
             <button
               onClick={handleSignIn}
-              className="text-primary hover:underline font-medium"
+              className="text-primary hover:underline font-medium block sm:inline mt-1 sm:mt-0"
             >
               Already have an account? Sign in
             </button>
           </CardDescription>
 
           {/* Progress indicator */}
-          <div className="mt-4 space-y-4">
-            <Progress value={(currentStep / 4) * 100} className="h-2" />
-            <div className="flex justify-between">
+          <div className="mt-3 sm:mt-4 space-y-3 sm:space-y-4">
+            <Progress value={(currentStep / 4) * 100} className="h-1.5 sm:h-2" />
+            <div className="flex justify-between px-2 sm:px-0">
               {steps.map((step) => (
                 <button
                   key={step.id}
                   onClick={() => goToStep(step.id)}
-                  className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+                  className={`flex flex-col items-center gap-1 p-1 sm:p-2 rounded-lg transition-colors ${
                     step.id === currentStep
                       ? "text-primary"
                       : step.id < currentStep
@@ -262,7 +262,7 @@ export function OnboardingWizard() {
                   }`}
                 >
                   <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
+                    className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border-2 ${
                       step.id === currentStep
                         ? "border-primary bg-primary text-white"
                         : step.id < currentStep
@@ -271,19 +271,19 @@ export function OnboardingWizard() {
                     }`}
                   >
                     {step.id < currentStep ? (
-                      <Check className="h-5 w-5" />
+                      <Check className="h-4 w-4 sm:h-5 sm:w-5" />
                     ) : (
-                      <step.icon className="h-5 w-5" />
+                      <step.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                     )}
                   </div>
-                  <span className="text-xs font-medium hidden sm:block">{step.title}</span>
+                  <span className="text-[10px] sm:text-xs font-medium hidden sm:block">{step.title}</span>
                 </button>
               ))}
             </div>
           </div>
         </CardHeader>
 
-        <CardContent className="overflow-y-auto max-h-[calc(90vh-200px)]">
+        <CardContent className="overflow-y-auto max-h-[calc(95vh-160px)] sm:max-h-[calc(90vh-200px)] px-4 sm:px-6">
           {currentStep === 1 && (
             <ProfileStep
               onNext={(data) => {
@@ -412,16 +412,16 @@ function ProfileStep({
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <Label htmlFor="firstName">First Name</Label>
+          <Label htmlFor="firstName" className="text-sm sm:text-base">First Name <span className="text-red-500">*</span></Label>
           <Input id="firstName" {...form.register("firstName")} />
           {form.formState.errors.firstName && (
             <p className="text-sm text-red-500 mt-1">{form.formState.errors.firstName.message}</p>
           )}
         </div>
         <div>
-          <Label htmlFor="lastName">Last Name</Label>
+          <Label htmlFor="lastName" className="text-sm sm:text-base">Last Name <span className="text-red-500">*</span></Label>
           <Input id="lastName" {...form.register("lastName")} />
           {form.formState.errors.lastName && (
             <p className="text-sm text-red-500 mt-1">{form.formState.errors.lastName.message}</p>
@@ -430,7 +430,7 @@ function ProfileStep({
       </div>
 
       <div>
-        <Label htmlFor="phone">Phone Number</Label>
+        <Label htmlFor="phone" className="text-sm sm:text-base">Phone Number</Label>
         <Input 
           id="phone" 
           type="tel" 
@@ -444,7 +444,7 @@ function ProfileStep({
       </div>
 
       <div>
-        <Label htmlFor="department">Department</Label>
+        <Label htmlFor="department" className="text-sm sm:text-base">Department</Label>
         <Select
           onValueChange={(value) => form.setValue("department", value)}
           defaultValue={form.getValues("department")}
@@ -483,17 +483,17 @@ function ProfileStep({
         </div>
       )}
 
-      <div className="flex justify-end">
-        <Button type="submit" disabled={updateProfile.isPending}>
+      <div className="flex justify-end mt-6">
+        <Button type="submit" disabled={updateProfile.isPending} className="text-xs sm:text-sm">
           {updateProfile.isPending ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
               Saving...
             </>
           ) : (
             <>
               Next
-              <ChevronRight className="ml-2 h-4 w-4" />
+              <ChevronRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
             </>
           )}
         </Button>
@@ -657,20 +657,20 @@ function FacilityStep({
         <p className="text-sm text-red-500">{form.formState.errors.root.message}</p>
       )}
 
-      <div className="flex justify-between">
-        <Button type="button" variant="outline" onClick={onBack}>
+      <div className="flex justify-between mt-6">
+        <Button type="button" variant="outline" onClick={onBack} className="text-xs sm:text-sm">
           Back
         </Button>
-        <Button type="submit" disabled={createFacility.isPending}>
+        <Button type="submit" disabled={createFacility.isPending} className="text-xs sm:text-sm">
           {createFacility.isPending ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
               Creating...
             </>
           ) : (
             <>
               Next
-              <ChevronRight className="ml-2 h-4 w-4" />
+              <ChevronRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
             </>
           )}
         </Button>
