@@ -20,7 +20,16 @@ export type UpdateJobPosting = z.infer<typeof updateJobPostingSchema>;
 export type JobPosting = typeof jobPostings.$inferSelect;
 
 // Job Application schemas (existing job applications table)
-export const jobApplicationSchema = createInsertSchema(jobApplications);
+export const insertJobApplicationSchema = createInsertSchema(jobApplications).omit({
+  id: true,
+  appliedAt: true,
+  reviewedAt: true,
+});
+
+export const updateJobApplicationSchema = insertJobApplicationSchema.partial();
+
+export type InsertJobApplication = z.infer<typeof insertJobApplicationSchema>;
+export type UpdateJobApplication = z.infer<typeof updateJobApplicationSchema>;
 export type JobApplication = typeof jobApplications.$inferSelect;
 
 // Interview Schedule schemas (new interview schedules table)

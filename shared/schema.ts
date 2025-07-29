@@ -880,10 +880,10 @@ export const staff = pgTable("staff", {
   // emergencyContactEmail: text("emergency_contact_email"), // Column doesn't exist in database yet
   
   // Financial Information (encrypted in production)
-  directDepositBankName: text("direct_deposit_bank_name"),
-  directDepositRoutingNumber: text("direct_deposit_routing_number"),
-  directDepositAccountNumber: text("direct_deposit_account_number"),
-  directDepositAccountType: text("direct_deposit_account_type"), // checking, savings
+  // directDepositBankName: text("direct_deposit_bank_name"), // Column doesn't exist in database yet
+  // directDepositRoutingNumber: text("direct_deposit_routing_number"), // Column doesn't exist in database yet
+  // directDepositAccountNumber: text("direct_deposit_account_number"), // Column doesn't exist in database yet
+  // directDepositAccountType: text("direct_deposit_account_type"), // Column doesn't exist in database yet // checking, savings
   
   // Authentication link (optional - only for staff with login access)
   userId: integer("user_id").unique(), // Reference to users table for authentication

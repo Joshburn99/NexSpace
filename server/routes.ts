@@ -69,8 +69,8 @@ import OpenAI from "openai";
 import dashboardPreferencesRoutes from "./dashboard-preferences-routes";
 import calendarSyncRoutes from "./calendar-sync-routes";
 import { analytics } from "./analytics-tracker";
-import { insertJobPostingSchema, jobPostings, type JobPosting } from "@shared/schema";
-import { updateJobPostingSchema } from "@shared/schema/job";
+import { insertJobPostingSchema, jobPostings, type JobPosting, jobApplications, interviewSchedules } from "@shared/schema";
+import { updateJobPostingSchema, insertJobApplicationSchema, insertInterviewScheduleSchema } from "@shared/schema/job";
 
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
@@ -933,6 +933,256 @@ export function registerRoutes(app: Express): Server {
       }
     }
   );
+
+  // Job Applications API (New endpoints for job applications)
+  app.post(
+    "/api/job-applications",
+    requireAuth,
+    auditLog("CREATE", "job_application"),
+    async (req: any, res) => {
+      try {
+        // Staff can only apply for jobs
+        if (!req.user.id) {
+          return res.status(403).json({ message: "Must be logged in to apply for jobs" });
+        }
+        
+        const { jobPostingId, coverLetter, resumeUrl } = req.body;
+        
+        if (!jobPostingId) {
+          return res.status(400).json({ message: "Job posting ID is required" });
+        }
+        
+        // Check if job posting exists
+        const [jobPosting] = await db
+          .select()
+          .from(jobPostings)
+          .where(eq(jobPostings.id, jobPostingId));
+          
+        if (!jobPosting) {
+          return res.status(404).json({ message: "Job posting not found" });
+        }
+        
+        // Check if already applied
+        const [existingApplication] = await db
+          .select()
+          .from(jobApplications)
+          .where(
+            and(
+              eq(jobApplications.jobId, jobPostingId),
+              eq(jobApplications.applicantId, req.user.id)
+            )
+          );
+          
+        if (existingApplication) {
+          return res.status(400).json({ message: "You have already applied for this job" });
+        }
+        
+        // Create application
+        const applicationData = insertJobApplicationSchema.parse({
+          jobId: jobPostingId,
+          applicantId: req.user.id,
+          status: 'pending',
+          coverLetter,
+          resume: resumeUrl,
+        });
+        
+        const [newApplication] = await db
+          .insert(jobApplications)
+          .values(applicationData)
+          .returning();
+          
+        res.status(201).json(newApplication);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          res.status(400).json({ message: "Invalid application data", errors: error.errors });
+        } else {
+          console.error("Error creating job application:", error);
+          res.status(500).json({ message: "Failed to submit application" });
+        }
+      }
+    }
+  );
+
+  app.get("/api/job-applications", requireAuth, async (req: any, res) => {
+    try {
+      const { staffId, facilityId } = req.query;
+      
+      let applications;
+      
+      if (staffId) {
+        // Staff viewing their own applications
+        const requestedStaffId = parseInt(staffId as string);
+        if (req.user.id !== requestedStaffId && req.user.role !== 'super_admin') {
+          return res.status(403).json({ message: "You can only view your own applications" });
+        }
+        
+        applications = await db
+          .select({
+            application: jobApplications,
+            jobPosting: jobPostings,
+          })
+          .from(jobApplications)
+          .leftJoin(jobPostings, eq(jobApplications.jobId, jobPostings.id))
+          .where(eq(jobApplications.applicantId, requestedStaffId))
+          .orderBy(sql`${jobApplications.appliedAt} DESC`);
+          
+      } else if (facilityId) {
+        // Facility viewing applications for their jobs
+        const requestedFacilityId = parseInt(facilityId as string);
+        if (req.user.facilityId !== requestedFacilityId && req.user.role !== 'super_admin') {
+          return res.status(403).json({ message: "You can only view applications for your facility" });
+        }
+        
+        applications = await db
+          .select({
+            application: jobApplications,
+            jobPosting: jobPostings,
+            staff: staff,
+          })
+          .from(jobApplications)
+          .leftJoin(jobPostings, eq(jobApplications.jobId, jobPostings.id))
+          .leftJoin(staff, eq(jobApplications.applicantId, staff.id))
+          .where(eq(jobPostings.facilityId, requestedFacilityId))
+          .orderBy(sql`${jobApplications.appliedAt} DESC`);
+          
+      } else {
+        return res.status(400).json({ message: "staffId or facilityId query parameter is required" });
+      }
+      
+      res.json(applications);
+    } catch (error) {
+      console.error("Error fetching job applications:", error);
+      res.status(500).json({ message: "Failed to fetch applications" });
+    }
+  });
+
+  app.patch(
+    "/api/job-applications/:id/status",
+    requireAuth,
+    auditLog("UPDATE", "job_application_status"),
+    async (req: any, res) => {
+      try {
+        const applicationId = parseInt(req.params.id);
+        const { status } = req.body;
+        
+        if (!['hired', 'rejected'].includes(status)) {
+          return res.status(400).json({ message: "Status must be 'hired' or 'rejected'" });
+        }
+        
+        // Get application with job posting info
+        const [applicationData] = await db
+          .select({
+            application: jobApplications,
+            jobPosting: jobPostings,
+          })
+          .from(jobApplications)
+          .leftJoin(jobPostings, eq(jobApplications.jobId, jobPostings.id))
+          .where(eq(jobApplications.id, applicationId));
+          
+        if (!applicationData) {
+          return res.status(404).json({ message: "Application not found" });
+        }
+        
+        // Check if user has permission
+        if (req.user.role !== 'super_admin' && 
+            req.user.facilityId !== applicationData.jobPosting?.facilityId) {
+          return res.status(403).json({ message: "You can only update applications for your facility" });
+        }
+        
+        // Update application status
+        const [updatedApplication] = await db
+          .update(jobApplications)
+          .set({
+            status,
+            reviewedAt: new Date(),
+            reviewedById: req.user.id,
+          })
+          .where(eq(jobApplications.id, applicationId))
+          .returning();
+          
+        res.json(updatedApplication);
+      } catch (error) {
+        console.error("Error updating application status:", error);
+        res.status(500).json({ message: "Failed to update application status" });
+      }
+    }
+  );
+
+  // Interview Schedule API
+  app.post(
+    "/api/interviews",
+    requireAuth,
+    auditLog("CREATE", "interview_schedule"),
+    async (req: any, res) => {
+      try {
+        const { applicationId, start, end, meetingUrl } = req.body;
+        
+        // Verify application exists
+        const [application] = await db
+          .select({
+            application: jobApplications,
+            jobPosting: jobPostings,
+          })
+          .from(jobApplications)
+          .leftJoin(jobPostings, eq(jobApplications.jobId, jobPostings.id))
+          .where(eq(jobApplications.id, applicationId));
+          
+        if (!application) {
+          return res.status(404).json({ message: "Application not found" });
+        }
+        
+        // Check permission
+        if (req.user.role !== 'super_admin' && 
+            req.user.facilityId !== application.jobPosting?.facilityId) {
+          return res.status(403).json({ message: "You can only schedule interviews for your facility" });
+        }
+        
+        // Create interview
+        const interviewData = insertInterviewScheduleSchema.parse({
+          applicationId,
+          start: new Date(start),
+          end: new Date(end),
+          meetingUrl,
+          status: 'scheduled',
+        });
+        
+        const [newInterview] = await db
+          .insert(interviewSchedules)
+          .values(interviewData)
+          .returning();
+          
+        res.status(201).json(newInterview);
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          res.status(400).json({ message: "Invalid interview data", errors: error.errors });
+        } else {
+          console.error("Error creating interview:", error);
+          res.status(500).json({ message: "Failed to schedule interview" });
+        }
+      }
+    }
+  );
+
+  app.get("/api/interviews", requireAuth, async (req: any, res) => {
+    try {
+      const { applicationId } = req.query;
+      
+      if (!applicationId) {
+        return res.status(400).json({ message: "applicationId query parameter is required" });
+      }
+      
+      const interviews = await db
+        .select()
+        .from(interviewSchedules)
+        .where(eq(interviewSchedules.applicationId, parseInt(applicationId as string)))
+        .orderBy(sql`${interviewSchedules.start} ASC`);
+        
+      res.json(interviews);
+    } catch (error) {
+      console.error("Error fetching interviews:", error);
+      res.status(500).json({ message: "Failed to fetch interviews" });
+    }
+  });
 
   // Shifts API with example data showing various statuses
   app.get("/api/shifts", requireAuth, requirePermission("shifts.view"), async (req: any, res) => {
