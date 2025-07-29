@@ -129,6 +129,25 @@ export function registerRoutes(app: Express): Server {
       if (req.user.role === "super_admin" || req.user.role === UserRole.SUPER_ADMIN) {
         return next();
       }
+      
+      // Check if user has permissions array (facility users during impersonation)
+      if (req.user.permissions && Array.isArray(req.user.permissions)) {
+        console.log(`[PERMISSION CHECK] User ${req.user.email} checking permission: ${permission}`);
+        console.log(`[PERMISSION CHECK] User permissions:`, req.user.permissions);
+        const hasPermission = req.user.permissions.includes(permission);
+        if (!hasPermission) {
+          console.log(`[PERMISSION CHECK] DENIED - User lacks ${permission} permission`);
+          return res.status(403).json({
+            message: "Insufficient permissions",
+            required: permission,
+            userPermissions: req.user.permissions,
+          });
+        }
+        console.log(`[PERMISSION CHECK] GRANTED - User has ${permission} permission`);
+        return next();
+      }
+      
+      // Fall back to role-based permission check
       const hasPermission = await storage.hasPermission(req.user.role, permission);
       if (!hasPermission) {
         return res.status(403).json({
@@ -203,6 +222,85 @@ export function registerRoutes(app: Express): Server {
   const requireAuth = (req: any, res: any, next: any) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ message: "Authentication required" });
+    }
+    next();
+  };
+
+  // Middleware to handle impersonation - swaps req.user when impersonating
+  const handleImpersonation = async (req: any, res: any, next: any) => {
+    if ((req.session as any).impersonatedUserId) {
+      const impersonatedId = (req.session as any).impersonatedUserId;
+      const userType = (req.session as any).impersonatedUserType || 'user';
+      
+      console.log(`[IMPERSONATION MIDDLEWARE] Loading impersonated ${userType} with ID ${impersonatedId}`);
+      
+      try {
+        let impersonatedUser;
+        
+        if (userType === 'facility_user') {
+          // Get facility user
+          const [facilityUser] = await db
+            .select()
+            .from(facilityUsers)
+            .where(eq(facilityUsers.id, impersonatedId))
+            .limit(1);
+            
+          if (facilityUser) {
+            impersonatedUser = {
+              ...facilityUser,
+              userType: 'facility_user',
+              associatedFacilityIds: facilityUser.associatedFacilityIds || [],
+              associatedFacilities: facilityUser.associatedFacilityIds || [],
+            };
+            
+            // Get role template permissions
+            const roleTemplate = await storage.getFacilityUserRoleTemplate(facilityUser.role);
+            if (roleTemplate && roleTemplate.permissions) {
+              impersonatedUser.permissions = roleTemplate.permissions;
+              console.log(`[IMPERSONATION MIDDLEWARE] Loaded permissions for ${facilityUser.email}:`, roleTemplate.permissions);
+            }
+          }
+        } else if (userType === 'staff') {
+          // Get staff member
+          const [staffMember] = await db
+            .select()
+            .from(staff)
+            .where(eq(staff.id, impersonatedId))
+            .limit(1);
+            
+          if (staffMember) {
+            impersonatedUser = {
+              id: staffMember.id,
+              username: `${staffMember.firstName.toLowerCase()}${staffMember.lastName.toLowerCase()}`,
+              email: staffMember.email,
+              password: "",
+              firstName: staffMember.firstName,
+              lastName: staffMember.lastName,
+              role: staffMember.role || "staff",
+              avatar: staffMember.avatar,
+              isActive: staffMember.status === "Active",
+              facilityId: staffMember.primaryFacilityId,
+              associatedFacilityIds: staffMember.associatedFacilities || [],
+              associatedFacilities: staffMember.associatedFacilities || [],
+              permissions: ["view_schedules", "view_staff"], // Basic staff permissions
+              userType: "staff",
+            };
+          }
+        } else {
+          // Regular user
+          impersonatedUser = await storage.getUser(impersonatedId);
+          if (impersonatedUser) {
+            impersonatedUser.userType = 'user';
+          }
+        }
+        
+        if (impersonatedUser) {
+          console.log(`[IMPERSONATION MIDDLEWARE] Replacing req.user with impersonated user ${impersonatedUser.email}`);
+          req.user = impersonatedUser;
+        }
+      } catch (error) {
+        console.error(`[IMPERSONATION MIDDLEWARE] Error loading impersonated user:`, error);
+      }
     }
     next();
   };
@@ -319,6 +417,25 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch user" });
     }
+  });
+
+  // Session debug endpoint - check current permissions
+  app.get("/api/debug/session", requireAuth, async (req: any, res) => {
+    const sessionData = {
+      userId: req.user?.id,
+      username: req.user?.username,
+      role: req.user?.role,
+      permissions: (req.user as any)?.permissions || [],
+      associatedFacilities: (req.user as any)?.associatedFacilities || [],
+      facilityId: req.user?.facilityId,
+      isImpersonating: !!(req.session as any).originalUser,
+      originalUser: (req.session as any).originalUser ? {
+        id: (req.session as any).originalUser.id,
+        username: (req.session as any).originalUser.username,
+        role: (req.session as any).originalUser.role
+      } : null
+    };
+    res.json(sessionData);
   });
 
   // User Profile API
@@ -480,7 +597,7 @@ export function registerRoutes(app: Express): Server {
   );
 
   // Global Search API
-  app.get("/api/search", requireAuth, requirePermission("staff.view"), async (req: any, res) => {
+  app.get("/api/search", requireAuth, handleImpersonation, requirePermission("staff.view"), async (req: any, res) => {
     try {
       const query = req.query.q as string;
       if (!query || query.trim().length < 2) {
@@ -652,7 +769,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Jobs API
-  app.get("/api/jobs", requireAuth, requirePermission("jobs.view"), async (req: any, res) => {
+  app.get("/api/jobs", requireAuth, handleImpersonation, requirePermission("jobs.view"), async (req: any, res) => {
     try {
       const jobs = req.user.facilityId
         ? await storage.getJobsByFacility(req.user.facilityId)
@@ -1267,7 +1384,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Shifts API with example data showing various statuses
-  app.get("/api/shifts", requireAuth, requirePermission("shifts.view"), async (req: any, res) => {
+  app.get("/api/shifts", requireAuth, handleImpersonation, requirePermission("shifts.view"), async (req: any, res) => {
     try {
       // Get user's facility associations if facility user
       const user = req.user;
@@ -3430,7 +3547,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Staff profile endpoints
-  app.get("/api/staff", requireAuth, requirePermission("staff.view"), async (req: any, res) => {
+  app.get("/api/staff", requireAuth, handleImpersonation, requirePermission("staff.view"), async (req: any, res) => {
     try {
       // Get staff data using storage method
       let dbStaffData = await storage.getAllStaff();
@@ -3821,7 +3938,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Individual staff profile route
-  app.get("/api/staff/:id", requireAuth, requirePermission("staff.view"), async (req, res) => {
+  app.get("/api/staff/:id", requireAuth, handleImpersonation, requirePermission("staff.view"), async (req, res) => {
     try {
       const staffId = parseInt(req.params.id);
       const dbStaffData = await unifiedDataService.getStaffWithAssociations();
@@ -10479,6 +10596,7 @@ export function registerRoutes(app: Express): Server {
       (req.session as any).originalUser = req.user;
       (req.session as any).isImpersonating = true;
       (req.session as any).impersonatedUserType = userType;
+      (req.session as any).impersonatedUserId = targetUserId;
 
       // Set impersonated user as current user
       (req.session as any).user = {
@@ -10512,6 +10630,8 @@ export function registerRoutes(app: Express): Server {
       (req.session as any).user = originalUser;
       delete (req.session as any).originalUser;
       delete (req.session as any).isImpersonating;
+      delete (req.session as any).impersonatedUserId;
+      delete (req.session as any).impersonatedUserType;
 
       res.json({
         message: "Impersonation ended successfully",
@@ -12361,7 +12481,8 @@ export function registerRoutes(app: Express): Server {
   // ==================== BILLING API ROUTES ====================
 
   // Get invoices for a facility
-  app.get("/api/billing/invoices/:facilityId?", requireAuth, async (req, res) => {
+  app.get("/api/billing/invoices/:facilityId?", requireAuth, handleImpersonation, requirePermission("view_billing"), async (req, res) => {
+    console.log("[BILLING ENDPOINT] User accessing billing invoices:", req.user.email, req.user.permissions);
     try {
       const facilityId = req.params.facilityId
         ? parseInt(req.params.facilityId)
@@ -12424,7 +12545,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Create new invoice
-  app.post("/api/billing/invoices", requireAuth, async (req, res) => {
+  app.post("/api/billing/invoices", requireAuth, handleImpersonation, requirePermission("manage_billing"), async (req, res) => {
     try {
       const invoiceData = req.body;
 
@@ -12444,7 +12565,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Update invoice
-  app.patch("/api/billing/invoices/:id", requireAuth, async (req, res) => {
+  app.patch("/api/billing/invoices/:id", requireAuth, handleImpersonation, requirePermission("manage_billing"), async (req, res) => {
     try {
       const invoiceId = parseInt(req.params.id);
       const updateData = req.body;
@@ -12464,7 +12585,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Approve invoice
-  app.patch("/api/billing/invoices/:id/approve", requireAuth, async (req, res) => {
+  app.patch("/api/billing/invoices/:id/approve", requireAuth, handleImpersonation, requirePermission("approve_invoices"), async (req, res) => {
     try {
       const invoiceId = parseInt(req.params.id);
 
@@ -12484,7 +12605,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Get billing rates for a facility
-  app.get("/api/billing/rates/:facilityId?", requireAuth, async (req, res) => {
+  app.get("/api/billing/rates/:facilityId?", requireAuth, handleImpersonation, requirePermission("view_rates"), async (req, res) => {
     try {
       const facilityId = req.params.facilityId
         ? parseInt(req.params.facilityId)
@@ -12592,7 +12713,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Create new billing rate
-  app.post("/api/billing/rates", requireAuth, async (req, res) => {
+  app.post("/api/billing/rates", requireAuth, handleImpersonation, requirePermission("edit_rates"), async (req, res) => {
     try {
       const rateData = req.body;
 
@@ -12612,7 +12733,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Update billing rate
-  app.patch("/api/billing/rates/:id", requireAuth, async (req, res) => {
+  app.patch("/api/billing/rates/:id", requireAuth, handleImpersonation, requirePermission("edit_rates"), async (req, res) => {
     try {
       const rateId = parseInt(req.params.id);
       const updateData = req.body;

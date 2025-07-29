@@ -13,6 +13,19 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
 
 ## Recent Changes
 
+### July 29, 2025 - Critical Security Fix for Impersonation Permissions
+- **Security Vulnerability Fixed**: Resolved critical issue where impersonated users could access resources beyond their permissions
+  - Problem: Backend was checking permissions based on the original super admin user instead of the impersonated user
+  - Solution: Created handleImpersonation middleware that properly swaps req.user to the impersonated user before permission checks
+  - Added impersonatedUserId storage in session during impersonation start
+  - Updated all protected endpoints to use: requireAuth → handleImpersonation → requirePermission middleware chain
+- **Comprehensive Testing**: Verified supervisor with limited permissions cannot access billing data (403 Forbidden)
+- **Permission Enforcement**: Billing manager with proper permissions can access billing data (200 OK)
+- **Middleware Architecture**: Impersonation is now handled via middleware instead of passport.deserializeUser
+  - More flexible and maintainable approach
+  - Properly loads permissions for facility users, staff members, and regular users
+  - Logs all permission checks for security auditing
+
 ### July 29, 2025 - Comprehensive Impersonation System Fix
 - **Unified Impersonation API**: Consolidated multiple duplicate impersonation endpoints into a single working solution
   - Fixed `/api/impersonate/start` endpoint to properly handle all user types (regular users, staff members, facility users)

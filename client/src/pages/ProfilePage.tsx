@@ -1,4 +1,4 @@
-import { Layout } from "@/components/Layout";
+import Layout from "@/components/Layout";
 import { ProfileEditor } from "@/components/ProfileEditor";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent } from "@/components/ui/card";

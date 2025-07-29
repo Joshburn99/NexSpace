@@ -113,13 +113,14 @@ export function setupAuth(app: Express) {
             (user as any).permissions = roleTemplate.permissions;
           }
 
-          // Get facility user data to include associated facilities
-          const facilityUser = await storage.getFacilityUserByEmail(user.email);
-          if (facilityUser && facilityUser.associated_facility_ids) {
-            (user as any).associatedFacilities = facilityUser.associated_facility_ids;
+          // Get facility associations for facility users
+          const facilityAssociations = await storage.getFacilityUserAssociations(id);
+          if (facilityAssociations && facilityAssociations.length > 0) {
+            (user as any).associatedFacilityIds = facilityAssociations.map((a: any) => a.facilityId);
+            (user as any).associatedFacilities = facilityAssociations.map((a: any) => a.facilityId);
           }
         } catch (error) {
-          console.error("Error fetching user permissions during deserialization:", error);
+          console.error("Error fetching user permissions:", error);
         }
       }
 
