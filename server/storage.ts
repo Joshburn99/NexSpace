@@ -156,6 +156,16 @@ export interface IStorage {
       bio?: string;
     }
   ): Promise<User | undefined>;
+  updateFacilityUserProfile(
+    id: number,
+    data: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      department?: string;
+      title?: string;
+    }
+  ): Promise<FacilityUser | undefined>;
   getAllUsers(): Promise<User[]>;
   updateUserRole(id: number, role: string): Promise<User | undefined>;
 
@@ -740,6 +750,35 @@ export class DatabaseStorage implements IStorage {
 
     const [user] = await db.update(users).set(updates).where(eq(users.id, id)).returning();
     return user || undefined;
+  }
+
+  async updateFacilityUserProfile(
+    id: number,
+    data: {
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      department?: string;
+      title?: string;
+    }
+  ): Promise<FacilityUser | undefined> {
+    const updates: any = { updatedAt: new Date() };
+    if (data.firstName !== undefined) updates.first_name = data.firstName;
+    if (data.lastName !== undefined) updates.last_name = data.lastName;
+    if (data.phone !== undefined) updates.phone = data.phone;
+    if (data.department !== undefined) updates.department = data.department;
+    if (data.title !== undefined) updates.title = data.title;
+
+    console.log("[STORAGE] Updating facility user profile:", { id, updates });
+    
+    const [facilityUser] = await db
+      .update(facilityUsers)
+      .set(updates)
+      .where(eq(facilityUsers.id, id))
+      .returning();
+    
+    console.log("[STORAGE] Facility user profile updated:", facilityUser);
+    return facilityUser || undefined;
   }
 
   async getAllUsers(): Promise<User[]> {

@@ -34,6 +34,7 @@ export interface User {
   role: UserRole;
   specialty?: Specialty;
   facilityIds: string[]; // Array of facility IDs user is associated with
+  facilityUserId?: number; // ID from facility_users table for facility users
   isActive: boolean;
   phoneNumber?: string;
   avatar?: string;

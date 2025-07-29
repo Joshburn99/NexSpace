@@ -13416,6 +13416,8 @@ export function registerRoutes(app: Express): Server {
 
       const { firstName, lastName, phone, department, bio } = req.body;
 
+      console.log("[PROFILE UPDATE] User type:", req.user.role, "User ID:", userId);
+
       // Update user profile
       const updatedUser = await storage.updateUserProfile(userId, {
         firstName,
@@ -13429,6 +13431,66 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Error updating profile:", error);
       res.status(500).json({ message: "Failed to update profile" });
+    }
+  });
+
+  // Update facility user profile
+  app.patch("/api/facility-users/:id/profile", requireAuth, async (req: any, res) => {
+    try {
+      const facilityUserId = parseInt(req.params.id);
+
+      // Ensure facility user can only update their own profile
+      if (req.user.role !== "facility_user" || req.user.facilityUserId !== facilityUserId) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const { firstName, lastName, phone, department, title } = req.body;
+
+      console.log("[FACILITY USER PROFILE UPDATE] ID:", facilityUserId, "Data:", req.body);
+
+      // Update facility user profile
+      const updatedFacilityUser = await storage.updateFacilityUserProfile(facilityUserId, {
+        firstName,
+        lastName,
+        phone,
+        department,
+        title,
+      });
+
+      console.log("[FACILITY USER PROFILE UPDATE] Result:", updatedFacilityUser);
+
+      res.json(updatedFacilityUser);
+    } catch (error) {
+      console.error("Error updating facility user profile:", error);
+      res.status(500).json({ message: "Failed to update facility user profile" });
+    }
+  });
+
+  // Get facility user profile
+  app.get("/api/facility-users/:id/profile", requireAuth, async (req: any, res) => {
+    try {
+      const facilityUserId = parseInt(req.params.id);
+
+      // Allow facility users to view their own profile or super admins to view any profile
+      if (
+        req.user.role !== "super_admin" &&
+        (req.user.role !== "facility_user" || req.user.facilityUserId !== facilityUserId)
+      ) {
+        return res.status(403).json({ message: "Unauthorized" });
+      }
+
+      const facilityUser = await storage.getFacilityUser(facilityUserId);
+      
+      if (!facilityUser) {
+        return res.status(404).json({ message: "Facility user not found" });
+      }
+
+      console.log("[FACILITY USER PROFILE GET] ID:", facilityUserId, "Result:", facilityUser);
+
+      res.json(facilityUser);
+    } catch (error) {
+      console.error("Error fetching facility user profile:", error);
+      res.status(500).json({ message: "Failed to fetch facility user profile" });
     }
   });
 

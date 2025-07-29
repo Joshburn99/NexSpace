@@ -315,7 +315,15 @@ function ProfileStep({
 
   const updateProfile = useMutation({
     mutationFn: async (data: any) => {
-      const response = await fetch(`/api/users/${user?.id}/profile`, {
+      // Determine which endpoint to use based on user type
+      const isFacilityUser = user?.role === "facility_user";
+      const endpoint = isFacilityUser 
+        ? `/api/facility-users/${user?.facilityUserId}/profile`
+        : `/api/users/${user?.id}/profile`;
+      
+      console.log("[ONBOARDING] Using endpoint:", endpoint, "IsFacilityUser:", isFacilityUser);
+      
+      const response = await fetch(endpoint, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -327,7 +335,8 @@ function ProfileStep({
       }
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log("[ONBOARDING] Profile update successful:", data);
       toast({
         title: "Profile updated",
         description: "Your profile information has been saved.",
