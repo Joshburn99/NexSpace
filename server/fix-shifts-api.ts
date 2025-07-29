@@ -51,25 +51,25 @@ export async function getUnifiedShifts(req: Request, res: Response) {
 
     console.log(`[UNIFIED SHIFTS API] Database stats: ${dbGeneratedShifts.length} generated, ${dbManualShifts.length} manual`);
 
-    // Convert generated shifts to unified format
-    const unifiedGeneratedShifts: UnifiedShiftData[] = dbGeneratedShifts.map((shift) => ({
+    // Convert generated shifts to unified format (using actual database column names)
+    const unifiedGeneratedShifts: UnifiedShiftData[] = dbGeneratedShifts.map((shift: any) => ({
       id: shift.id,
       title: shift.title || "Untitled Shift",
       date: shift.date || new Date().toISOString().split("T")[0],
-      startTime: shift.startTime || "08:00",
-      endTime: shift.endTime || "16:00",
+      startTime: shift.start_time || "08:00",
+      endTime: shift.end_time || "16:00",
       department: shift.department || "General",
       specialty: shift.specialty || "General",
-      facilityId: shift.facilityId || 1,
-      facilityName: shift.facilityName || "Unknown Facility",
+      facilityId: shift.facility_id || 1,
+      facilityName: shift.facility_name || "Unknown Facility",
       status: shift.status || "open",
       rate: parseFloat(shift.rate?.toString() || "40.0"),
       urgency: shift.urgency || "medium",
       description: shift.description || "Generated shift",
-      requiredWorkers: shift.requiredWorkers || 1,
-      totalPositions: shift.maxStaff || shift.requiredWorkers || 1,
+      requiredWorkers: shift.required_workers || 1,
+      totalPositions: shift.max_staff || shift.required_workers || 1,
       source: 'generated' as const,
-      templateId: shift.templateId,
+      templateId: shift.template_id,
     }));
 
     // Convert manual shifts to unified format

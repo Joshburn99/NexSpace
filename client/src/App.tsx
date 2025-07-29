@@ -73,6 +73,10 @@ import EnhancedProfilePage from "@/pages/enhanced-profile-page";
 import EnhancedMessagingPage from "@/pages/enhanced-messaging-page";
 import EnhancedRealTimeMessagingPage from "@/pages/enhanced-real-time-messaging";
 import { OnboardingWizard } from "@/components/OnboardingWizard";
+import { FacilityDashboardLayout } from "@/layouts/FacilityDashboardLayout";
+import { FacilityDashboard } from "@/pages/facility/FacilityDashboard";
+import { FacilityShifts } from "@/pages/facility/FacilityShifts";
+import { FacilityStaff } from "@/pages/facility/FacilityStaff";
 import MySchedulePage from "@/pages/MySchedulePage";
 import EnhancedCalendarPage from "@/pages/enhanced-calendar-page";
 import SchedulingTemplatesPage from "@/pages/scheduling-templates-page";
@@ -286,7 +290,33 @@ function AppContent() {
       <ProtectedRoute path="/reports/overtime" component={OvertimeReportPage} />
       <ProtectedRoute path="/reports/float-pool-savings" component={FloatPoolAnalyticsPage} />
       <ProtectedRoute path="/reports/agency-usage" component={AgencyUsagePage} />
-      <ProtectedRoute path="/facilities" component={FacilityManagementPage} />
+      {/* Facility Dashboard Routes with Layout */}
+      <ProtectedRoute path="/facilities" component={() => (
+        <FacilityDashboardLayout>
+          <FacilityDashboard />
+        </FacilityDashboardLayout>
+      )} />
+      <ProtectedRoute path="/facilities/shifts" component={() => (
+        <FacilityDashboardLayout>
+          <FacilityShifts />
+        </FacilityDashboardLayout>
+      )} />
+      <ProtectedRoute path="/facilities/staff" component={() => (
+        <FacilityDashboardLayout>
+          <FacilityStaff />
+        </FacilityDashboardLayout>
+      )} />
+      <ProtectedRoute path="/facilities/analytics" component={() => (
+        <FacilityDashboardLayout>
+          <FacilityAnalytics />
+        </FacilityDashboardLayout>
+      )} />
+      <ProtectedRoute path="/facilities/settings" component={() => (
+        <FacilityDashboardLayout>
+          <FacilitySettings />
+        </FacilityDashboardLayout>
+      )} />
+      
       <ProtectedRoute path="/enhanced-facilities" component={FacilityManagementPage} />
       <ProtectedRoute path="/all-facilities" component={FacilityManagementPage} />
       <ProtectedRoute path="/facility-profiles" component={FacilityManagementPage} />

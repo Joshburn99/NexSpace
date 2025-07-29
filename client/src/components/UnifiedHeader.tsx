@@ -84,6 +84,7 @@ const getNavigationItems = (user: any): NavigationItem[] => {
         label: "Facilities",
         icon: Building2,
         items: [
+          { label: "Facility Dashboard", href: "/facilities" },
           { label: "All Facilities", href: "/enhanced-facilities" },
           { label: "Facility Profiles", href: "/enhanced-facilities" },
           { label: "Teams", href: "/admin/teams" },

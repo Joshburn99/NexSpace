@@ -625,8 +625,7 @@ export const shiftTemplates = pgTable("shift_templates", {
 
 // Generated shifts from templates - replaces global templateGeneratedShifts
 export const generatedShifts = pgTable("generated_shifts", {
-  id: serial("id").primaryKey(),
-  uniqueId: text("unique_id").notNull().unique(), // deterministic ID: templateId-date-position
+  id: text("id").primaryKey(), // Changed to text to match actual database
   templateId: integer("template_id").notNull(),
   title: text("title").notNull(),
   date: text("date").notNull(),
@@ -642,7 +641,7 @@ export const generatedShifts = pgTable("generated_shifts", {
   rate: decimal("rate", { precision: 10, scale: 2 }).notNull(),
   urgency: text("urgency").default("medium"),
   description: text("description"),
-  requiredStaff: integer("required_staff").default(1), // how many workers needed
+  requiredWorkers: integer("required_workers").default(1), // how many workers needed - renamed to match DB
   shiftPosition: integer("shift_position").notNull().default(0), // which position this is (0, 1, 2, etc.)
   assignedStaffIds: jsonb("assigned_staff_ids").default([]).$type<number[]>(), // array of assigned staff IDs
   minStaff: integer("min_staff").default(1),

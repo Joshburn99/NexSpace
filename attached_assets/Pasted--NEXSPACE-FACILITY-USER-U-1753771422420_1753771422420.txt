@@ -1,0 +1,104 @@
+######################################################################
+#  NEXSPACE ‣ FACILITY USER UI/UX “SUPER-PROMPT”  (copy-paste ready) #
+######################################################################
+
+🔑 **PURPOSE**
+
+You are Replit’s AI code assistant on the **NexSpace** codebase.  
+Your mission is to DESIGN & IMPLEMENT the **Facility-side user experience** (web + responsive mobile) so that facility managers / administrators can:
+
+1. See a real-time overview of their facility (shifts, staff, quality metrics)  
+2. Create, edit, publish, and template shifts  
+3. Manage staff associations & impersonate staff (with “end impersonation” safety net)  
+4. Audit staffing analytics & compliance docs  
+5. Collaborate with workers through messages / announcements  
+6. Toggle multi-facility context (for regional managers) seamlessly  
+
+You will **build UI, UX flows, route guards, state logic, tests, and docs**.  
+Use the **attached 4 screenshots** only as **stylistic inspiration**—do **NOT** replicate them 1-to-1; instead extend & polish them to meet facility-user needs.
+
+---
+
+## 🗂  BIG-PICTURE REQUIREMENTS
+
+| Area | Must do |
+|------|---------|
+| **Architecture** | • Maintain the existing **/src/routes/facilities/** area.  <br>• Create a **FacilityDashboardLayout** that wraps all facility pages; include left sidebar, top breadcrumb, and right contextual drawer.  <br>• Centralise API calls with **useQuery / useMutation** (TanStack).  |
+| **Navigation & Routing** | • Role-based guard: only users where `user.role ∈ {super_admin, facility_manager, admin}` may hit these routes.  <br>• Deep-linking: `#/facilities/:id/(overview|shifts|staff|analytics|settings)` must render tabbed content without reload.  <br>• If facility ID is missing, show multi-facility selector. |
+| **UI Components** | • Use **Shadcn/ui + Tailwind** design framework; follow existing code style (2xl rounded, soft shadows).  <br>• Create reusable components: `<FacilityCard>`, `<ShiftTable>`, `<ComplianceBadge>`, `<StaffMiniCard>`, etc.  |
+| **State & Context** | • Extend `contexts/SessionContext.tsx` with `activeFacilityId`, persisted in localStorage.  <br>• Provide `FacilityProvider` that feeds downstream queries the current facility scope. |
+| **Major Screens** | 1. **Overview** – mini-metrics (open shifts, filled %, avg. rating), capacity widget (beds, occupancy), quality stars. <br>2. **Shifts** – calendar view (month/week/day), mass-template scheduler, bulk edit. <br>3. **Staff** – directory grid, facility association manager, impersonate button, reliability heat map. <br>4. **Analytics** – time-series staffing cost chart, cancellations by reason, export CSV. <br>5. **Settings** – facility profile, contact info, active toggle, CMS sync panel. |
+| **End-Impersonation UX** | • Sticky top bar with role badge & “End impersonation” button; hitting it clears `impersonationToken` and redirects to super-admin dashboard.  |
+| **Accessibility (a11y)** | • All interactive elements keyboard-navigable; WCAG AA color contrast.  |
+| **Testing** | • Write **Playwright** e2e “facility-flow.spec.ts” that: <br>   – logs in as facility_manager <br>   – creates shift template, schedules two weeks <br>   – verifies calendar events render <br>   – edits facility phone in settings and asserts persistence. |
+| **Documentation** | • Update `README.md` with “Facility UX” section (architectural diagram + runbook). |
+
+---
+
+## 🔧  IMPLEMENTATION STEPS (ordered)
+
+1. **Scaffold routes**  
+   `routes/facilities/+layout.tsx` → sets `FacilityDashboardLayout`  
+   Each tab gets its own **lazy-loaded** sub-route.
+
+2. **Design tokens**  
+   Add Tailwind `theme.extend.colors.facility = { primary: '#2563eb', accent: '#eab308' }`.
+
+3. **Sidebar**  
+   Left side: facility avatar, quick stats, nav buttons with Lucide icons.  
+   Hover-collapse on small screens.
+
+4. **Overview widgets**  
+   Create `<StatCard>` generic component.  
+   Use TanStack query `/api/facilities/:id/stats` (mock until BE ready).
+
+5. **Shift calendar**  
+   Reuse existing FullCalendar logic from worker view; add facility filters (team, status).  
+   Implement **multi-create** modal: pick template + date range + staff tiers.
+
+6. **Staff directory**  
+   Virtualised grid (react-window) for large rosters.  
+   Chip filters: status, specialty, reliability bucket.  
+   Drawer shows staff profile, “Remove association” & “Impersonate”.
+
+7. **Analytics**  
+   Use React-Recharts single-series line + bar charts; SSR safe.  
+   Endpoints: `/api/facilities/:id/analytics?metric=cost&range=90d`.  
+   Download CSV button utilises `FileSaver.js`.
+
+8. **End-impersonation**  
+   Implement helper `endImpersonation()` in `SessionContext` → clears store + navigate to `/admin`.  
+   Add Playwright test.
+
+9. **Accessibility pass & visual polish**  
+   Run `npm run lint:accessibility`.  
+   Ensure focus rings; test in dark mode.
+
+10. **Docs & commit**  
+    Update UML diagram (`/docs/facility-flow.drawio`).  
+    Commit message format:  
+    ```
+    feat(facility): scaffold dashboard & routes  
+    ```
+
+---
+
+## 🖼  USING THE ATTACHED IMAGES
+
+*Embed them in Figma (or Replit’s workspace) merely as **mood boards**.*  
+Pay special attention to:  
+• The clean top-bar & modular stat-cards in **Image 1**.  
+• The dense but readable calendar in **Image 2**.  
+• The mobile “quick action” bottom bar in **Image 3**.  
+
+**Do not** copy the layout pixel-for-pixel; extrapolate and elevate for a facility persona.
+
+---
+
+### ✅  DEFINITION OF DONE
+
+* A facility manager logs in and can: view overview, schedule shifts, manage staff, export analytics, and update settings—**all without page reloads**.  
+* Impersonation routes the manager to the correct staff/facility dashboards and can be ended from any page.  
+* Playwright tests green; `npm run typecheck` passes; lighthouse a11y ≥ 90.  
+
+Good luck—build a delightful, performant facility experience! 🚀
