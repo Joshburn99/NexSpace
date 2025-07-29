@@ -183,8 +183,8 @@ const getNavigationItems = (user: any): NavigationItem[] => {
     if (user?.permissions?.includes("view_job_openings")) {
       jobBoardItems.push({ label: "View Postings", href: "/job-postings" });
     }
-    if (user?.permissions?.includes("manage_job_openings")) {
-      jobBoardItems.push({ label: "Create Posting", href: "/create-job-posting" });
+    if (user?.permissions?.includes("manage_job_openings") || user?.permissions?.includes("jobs.manage")) {
+      jobBoardItems.push({ label: "Manage Jobs", href: "/facility/jobs" });
     }
     if (jobBoardItems.length > 0) {
       items.push({

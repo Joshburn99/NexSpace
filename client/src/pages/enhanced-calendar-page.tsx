@@ -24,6 +24,7 @@ import {
   getFacilityTimezone,
 } from "@/hooks/use-facility";
 import { useRBAC, PermissionAction, PermissionGate } from "@/hooks/use-rbac";
+import { useWebSocket } from "@/lib/websocket";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -206,6 +207,7 @@ export default function EnhancedCalendarPage() {
   const { hasPermission } = useRBAC();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { subscribe } = useWebSocket();
 
   // Determine current user and their facility access
   const currentUser = impersonatedUser || user;
@@ -267,6 +269,34 @@ export default function EnhancedCalendarPage() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // WebSocket listener for interview updates
+  React.useEffect(() => {
+    const unsubscribe = subscribe('interviewCreated', (data) => {
+      // Refetch interviews when a new interview is created
+      queryClient.invalidateQueries({ queryKey: ["/api/interviews", user?.id, user?.facilityId] });
+      toast({
+        title: "New Interview Scheduled",
+        description: `Interview scheduled with ${data.interview?.applicantName || 'applicant'}`,
+      });
+    });
+
+    return unsubscribe;
+  }, [subscribe, queryClient, user, toast]);
+
+  // Listen for WebSocket interview events
+  React.useEffect(() => {
+    const unsubscribe = subscribe('interviewCreated', (data: any) => {
+      // Invalidate interviews query to refetch and show new interview
+      queryClient.invalidateQueries({ queryKey: ["/api/interviews"] });
+      toast({
+        title: "New Interview Scheduled",
+        description: `Interview scheduled with ${data.interview?.applicantName || 'applicant'}`,
+      });
+    });
+
+    return unsubscribe;
+  }, [subscribe, queryClient, toast]);
   const [showAddShiftDialog, setShowAddShiftDialog] = useState(false);
   const [shiftFormData, setShiftFormData] = useState({
     title: "",
@@ -333,6 +363,21 @@ export default function EnhancedCalendarPage() {
   // Fetch staff for filters
   const { data: staff = [] } = useQuery({
     queryKey: ["/api/staff"],
+  });
+
+  // Fetch interviews for calendar display
+  const { data: interviews = [] } = useQuery({
+    queryKey: ["/api/interviews", user?.id, user?.facilityId],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (user?.facilityId) params.append('facilityId', user.facilityId.toString());
+      if (user?.id) params.append('staffId', user.id.toString());
+      
+      const response = await fetch(`/api/interviews?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch interviews');
+      return response.json();
+    },
+    enabled: !!user,
   });
 
   // Fetch shift requests for selected shift
@@ -645,8 +690,8 @@ export default function EnhancedCalendarPage() {
 
   const groupedShifts = groupShiftsByDay(processedShifts);
 
-  // Convert to calendar events with enhanced grouping
-  const calendarEvents = Object.entries(groupedShifts).flatMap(([date, dayGroups]) => {
+  // Convert shifts to calendar events with enhanced grouping
+  const shiftEvents = Object.entries(groupedShifts).flatMap(([date, dayGroups]) => {
     return dayGroups.map((group: any[], groupIndex: number) => {
       const firstShift = group[0];
       const specialty = firstShift.specialty;
@@ -706,8 +751,45 @@ export default function EnhancedCalendarPage() {
     });
   });
 
+  // Convert interviews to calendar events
+  const interviewEvents = (interviews || []).map((interview: any) => {
+    const startDate = new Date(interview.scheduledStart);
+    const endDate = new Date(interview.scheduledEnd);
+    
+    return {
+      id: `interview-${interview.id}`,
+      title: `Interview - ${interview.applicantName || 'Unknown Applicant'}`,
+      start: interview.scheduledStart,
+      end: interview.scheduledEnd,
+      backgroundColor: "#9333ea", // Purple for interviews
+      borderColor: "#7e22ce",
+      textColor: "#fff",
+      extendedProps: {
+        type: "interview",
+        interview: interview,
+        jobTitle: interview.jobTitle,
+        applicantName: interview.applicantName,
+        meetingUrl: interview.meetingUrl,
+        status: interview.status,
+      },
+    };
+  });
+
+  // Combine shift and interview events
+  const calendarEvents = [...shiftEvents, ...interviewEvents];
+
   const handleEventClick = (info: any) => {
-    setSelectedShift(info.event.extendedProps.shift);
+    if (info.event.extendedProps.type === "interview") {
+      // Handle interview click - show interview details
+      const interview = info.event.extendedProps.interview;
+      toast({
+        title: `Interview with ${interview.applicantName}`,
+        description: `${interview.jobTitle} - ${format(new Date(interview.scheduledStart), "MMM dd, h:mm a")}${interview.meetingUrl ? ` - Meeting URL: ${interview.meetingUrl}` : ""}`,
+      });
+    } else {
+      // Handle shift click
+      setSelectedShift(info.event.extendedProps.shift);
+    }
   };
 
   const handleFilterChange = (filterType: keyof CalendarFilter, value: any) => {

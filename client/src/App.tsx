@@ -32,6 +32,7 @@ import AuthPage from "@/pages/auth-page";
 import JobBoard from "@/pages/job-board";
 import EnhancedJobBoard from "@/pages/enhanced-job-board";
 import JobBoardPage from "@/pages/JobBoardPage";
+import FacilityJobsPage from "@/pages/FacilityJobsPage";
 import UnifiedCalendarPage from "@/pages/unified-calendar-page";
 import MessagingPage from "@/pages/messaging-page";
 import AnalyticsPage from "@/pages/analytics-page";
@@ -244,6 +245,11 @@ function AppContent() {
       />
       <ProtectedRoute path="/job-postings" component={JobPostingsPage} />
       <ProtectedRoute path="/create-job-posting" component={CreateJobPostingPage} />
+      <FacilityRoute 
+        path="/facility/jobs" 
+        component={FacilityJobsPage}
+        requiredPermissions={["manage_job_openings"]} 
+      />
       <ProtectedRoute path="/referral-system" component={ReferralSystemPage} />
       <ProtectedRoute path="/workflow-automation" component={WorkflowAutomationPage} />
       <ProtectedRoute path="/attendance" component={AttendancePage} />
@@ -251,6 +257,11 @@ function AppContent() {
       <ProtectedRoute path="/float-pool-analytics" component={FloatPoolAnalyticsPage} />
       <ProtectedRoute path="/agency-usage" component={AgencyUsagePage} />
       <ProtectedRoute path="/job-posting" component={EnhancedJobPostingPage} />
+      <FacilityRoute 
+        path="/facility/jobs" 
+        component={FacilityJobsPage}
+        requiredPermissions={["manage_job_openings"]}
+      />
       
       {/* Additional facility user routes */}
       <ProtectedRoute path="/billing-professional-invoices" component={InvoicesPage} />

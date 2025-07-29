@@ -1151,6 +1151,23 @@ export function registerRoutes(app: Express): Server {
           .values(interviewData)
           .returning();
           
+        // Emit WebSocket event for real-time updates
+        wss.clients.forEach((client: WebSocket) => {
+          if (client.readyState === WebSocket.OPEN) {
+            client.send(
+              JSON.stringify({
+                type: 'interviewCreated',
+                interview: {
+                  ...newInterview,
+                  applicantName: application.application.candidateName,
+                  jobTitle: application.jobPosting?.title,
+                  facilityId: application.jobPosting?.facilityId,
+                },
+              })
+            );
+          }
+        });
+          
         res.status(201).json(newInterview);
       } catch (error) {
         if (error instanceof z.ZodError) {
