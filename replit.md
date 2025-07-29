@@ -19,6 +19,11 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
   - Solution: Created handleImpersonation middleware that properly swaps req.user to the impersonated user before permission checks
   - Added impersonatedUserId storage in session during impersonation start
   - Updated all protected endpoints to use: requireAuth → handleImpersonation → requirePermission middleware chain
+- **Permission Restoration Fix**: Fixed security issue where impersonated users retained superuser access to admin endpoints
+  - Added handleImpersonation middleware to all superuser-only endpoints (/api/security/*, /api/analytics/*)
+  - Verified that during impersonation, limited users receive 403 Forbidden on admin endpoints
+  - Confirmed that after ending impersonation, superuser permissions are fully restored
+  - Session regeneration with proper user re-authentication ensures clean permission restoration
 - **Comprehensive Testing**: Verified supervisor with limited permissions cannot access billing data (403 Forbidden)
 - **Permission Enforcement**: Billing manager with proper permissions can access billing data (200 OK)
 - **Middleware Architecture**: Impersonation is now handled via middleware instead of passport.deserializeUser

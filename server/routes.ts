@@ -382,7 +382,7 @@ export function registerRoutes(app: Express): Server {
 
   // Security audit endpoint (development only)
   if (process.env.NODE_ENV === "development") {
-    app.get("/api/security/audit", requireAuth, requireSuperAdmin, async (req, res) => {
+    app.get("/api/security/audit", requireAuth, handleImpersonation, requireSuperAdmin, async (req, res) => {
       try {
         const { securityTests } = await import("./security-audit-tests.js");
         await securityTests.runFullAudit();
@@ -401,7 +401,7 @@ export function registerRoutes(app: Express): Server {
       }
     });
 
-    app.get("/api/security/quick-check", requireAuth, requireSuperAdmin, async (req, res) => {
+    app.get("/api/security/quick-check", requireAuth, handleImpersonation, requireSuperAdmin, async (req, res) => {
       try {
         const { securityTests } = await import("./security-audit-tests.js");
         await securityTests.quickCheck();
@@ -13490,7 +13490,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Analytics endpoint for super admins to view events
-  app.get("/api/analytics/events", requireAuth, async (req: any, res) => {
+  app.get("/api/analytics/events", requireAuth, handleImpersonation, async (req: any, res) => {
     try {
       // Only super admins can view analytics
       if (req.user.role !== "super_admin") {
@@ -13521,7 +13521,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Analytics summary endpoint
-  app.get("/api/analytics/summary", requireAuth, async (req: any, res) => {
+  app.get("/api/analytics/summary", requireAuth, handleImpersonation, async (req: any, res) => {
     try {
       if (req.user.role !== "super_admin") {
         return res.status(403).json({ message: "Access denied: Super admin required" });
