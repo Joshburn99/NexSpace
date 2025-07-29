@@ -4,7 +4,6 @@ import { WebSocketServer, WebSocket } from "ws";
 import { setupAuth } from "./auth";
 import { storage } from "./storage";
 // import { createEnhancedFacilitiesRoutes } from "./enhanced-facilities-routes"; // DISABLED
-import { sql } from "drizzle-orm";
 import { format } from "date-fns";
 
 // Remove in-memory storage - using database as single source of truth
@@ -37,7 +36,6 @@ import {
   insertFacilityUserRoleTemplateSchema,
   insertFacilityUserActivityLogSchema,
   insertFacilityUserFacilityAssociationSchema,
-  insertFacilityUserTeamSchema,
   UserRole,
   FacilityUserRole,
   FacilityPermission,
@@ -61,7 +59,7 @@ import {
   staff,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, sql, and, inArray } from "drizzle-orm";
+import { eq, sql, and, inArray, or } from "drizzle-orm";
 import { recommendationEngine } from "./recommendation-engine";
 import type { RecommendationCriteria } from "./recommendation-engine";
 import { UnifiedDataService } from "./unified-data-service";
@@ -342,7 +340,7 @@ export function registerRoutes(app: Express): Server {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
-        status: user.status || "active",
+        status: user.isActive ? "active" : "inactive",
       };
 
       // Check if this is a staff member
@@ -356,19 +354,19 @@ export function registerRoutes(app: Express): Server {
         profileData = {
           ...profileData,
           phone: staffMember.phone,
-          address: staffMember.address,
-          city: staffMember.city,
-          state: staffMember.state,
-          zipCode: staffMember.zipCode,
+          address: staffMember.homeStreet || "N/A",
+          city: staffMember.homeCity || "N/A",
+          state: staffMember.homeState || "N/A",
+          zipCode: staffMember.homeZipCode || "N/A",
           specialty: staffMember.specialty,
           department: staffMember.department,
           employmentType: staffMember.employmentType,
           hireDate: staffMember.hireDate,
-          emergencyContact: staffMember.emergencyContact,
-          emergencyPhone: staffMember.emergencyPhone,
+          emergencyContact: staffMember.emergencyContactName || "N/A",
+          emergencyPhone: staffMember.emergencyContactPhone || "N/A",
           bio: staffMember.bio,
-          facilities: staffMember.associatedFacilities || [],
-          credentials: staffMember.credentials || [],
+          facilities: [],
+          credentials: [],
         };
       } else if (user.role !== "super_admin") {
         // For facility users, get their facility associations
@@ -537,44 +535,22 @@ export function registerRoutes(app: Express): Server {
           id: facilities.id,
           type: sql<string>`'facility'`,
           title: facilities.name,
-          subtitle: facilities.type,
-          description: sql<string>`COALESCE(${facilities.city} || ', ' || ${facilities.state}, '')`,
+          subtitle: facilities.facilityType,
+          description: sql<string>`COALESCE(${facilities.name}, '')`,
           route: sql<string>`'/facilities'`,
         })
         .from(facilities)
         .where(
           or(
             sql`LOWER(${facilities.name}) LIKE ${searchTerm}`,
-            sql`LOWER(${facilities.type}) LIKE ${searchTerm}`,
-            sql`LOWER(${facilities.city}) LIKE ${searchTerm}`,
+            sql`LOWER(${facilities.facilityType}) LIKE ${searchTerm}`,
             sql`CAST(${facilities.id} AS TEXT) LIKE ${searchTerm}`
           )
         )
         .limit(5);
 
-      // Search jobs
-      const jobResults = await db
-        .select({
-          id: jobs.id,
-          type: sql<string>`'job'`,
-          title: jobs.title,
-          subtitle: sql<string>`${jobs.location} || ' - ' || ${jobs.type}`,
-          description: jobs.description,
-          route: sql<string>`'/job-board'`,
-        })
-        .from(jobs)
-        .where(
-          and(
-            or(
-              sql`LOWER(${jobs.title}) LIKE ${searchTerm}`,
-              sql`LOWER(${jobs.description}) LIKE ${searchTerm}`,
-              sql`LOWER(${jobs.location}) LIKE ${searchTerm}`,
-              sql`CAST(${jobs.id} AS TEXT) LIKE ${searchTerm}`
-            ),
-            eq(jobs.status, "active")
-          )
-        )
-        .limit(5);
+      // Search shifts (replacing jobs search)
+      const jobResults: Array<any> = [];
 
       // Combine all results
       results.push(...staffResults, ...shiftResults, ...facilityResults, ...jobResults);

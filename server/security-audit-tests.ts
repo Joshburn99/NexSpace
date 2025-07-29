@@ -150,6 +150,7 @@ export async function testPermissionBasedActions() {
     const hasPermission = await storage.hasPermission(scenario.user.role, scenario.permission);
     const result = scenario.shouldFail ? !hasPermission : hasPermission;
 
+    console.log(
       `${result ? "✅" : "❌"} ${scenario.action} for role ${scenario.user.role}: ${hasPermission ? "ALLOWED" : "DENIED"}`
     );
   }

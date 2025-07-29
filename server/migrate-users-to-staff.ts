@@ -41,6 +41,7 @@ export async function migrateUsersToStaff() {
       };
 
       await db.insert(staff).values(staffData);
+      console.log(
         `Migrated user ${user.firstName} ${user.lastName} (${user.email}) to staff table`
       );
     }
@@ -62,6 +63,7 @@ export async function migrateUsersToStaff() {
     const remainingUsers = await db.select().from(users);
     const totalStaff = await db.select().from(staff);
 
+    console.log(
       `Remaining users in users table: ${remainingUsers.length} (should only be super_admins and facility users)`
     );
 

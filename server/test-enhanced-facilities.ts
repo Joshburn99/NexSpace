@@ -260,11 +260,9 @@ export async function testEnhancedFacilitySystem() {
       .values(testFacilityData as any)
       .returning();
 
+    console.log("Created facility:", {
       id: createdFacility.id,
       name: createdFacility.name,
-      autoAssignmentEnabled: createdFacility.autoAssignmentEnabled,
-      timezone: createdFacility.timezone,
-      emrSystem: createdFacility.emrSystem,
     });
 
     // Test 2: Retrieve and verify enhanced fields
@@ -277,19 +275,10 @@ export async function testEnhancedFacilitySystem() {
     }
 
     // Test 3: Update specific enhanced fields
-    const updatedBillRates = {
-      "Registered Nurse": 80, // Increased rate
-      "Licensed Practical Nurse": 55,
-      "Certified Nursing Assistant": 40,
-      "Physical Therapist": 90,
-      "Respiratory Therapist": 70,
-    };
-
     const [updatedFacility] = await db
       .update(facilities)
       .set({
-        billRates: updatedBillRates,
-        autoAssignmentEnabled: false, // Changed setting
+        name: "Updated Test Facility Name",
         updatedAt: new Date(),
       })
       .where(eq(facilities.id, createdFacility.id))

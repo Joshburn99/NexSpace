@@ -286,12 +286,6 @@ export function FacilityUserSidebar({ expanded = true, onToggle }: FacilityUserS
         const hasAccess =
           item.permissions.length === 0 || hasAnyPermission(item.permissions as any[]);
 
-          required: item.permissions,
-          hasAccess,
-          userPermissions: getUserPermissions(),
-          userPermissionsCount: getUserPermissions().length,
-        });
-
         // If item has children, filter them recursively
         if (item.children) {
           const accessibleChildren = filterSidebarItems(item.children);

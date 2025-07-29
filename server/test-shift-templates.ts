@@ -51,7 +51,7 @@ export class ShiftTemplateTestSuite {
         notes: "Test template for ICU coverage",
       };
 
-      const [createdTemplate] = await db.insert(shiftTemplates).values(testTemplate).returning();
+      const [createdTemplate] = await db.insert(shiftTemplates).values([testTemplate]).returning();
 
       if (!createdTemplate || !createdTemplate.id) {
         return {
@@ -81,7 +81,7 @@ export class ShiftTemplateTestSuite {
 
       const updates = {
         name: "Updated ICU Day Shift",
-        hourlyRate: 48.0,
+        hourlyRate: "48.0",
         maxStaff: 5,
         notes: "Updated template with enhanced facility data",
         updatedAt: new Date(),
@@ -143,7 +143,7 @@ export class ShiftTemplateTestSuite {
       while (currentDate <= endDate) {
         const dayOfWeek = currentDate.getDay();
 
-        if (template.daysOfWeek.includes(dayOfWeek)) {
+        if ((template.daysOfWeek as number[])?.includes(dayOfWeek)) {
           const shiftData = {
             templateId: template.id,
             title: template.name,
@@ -155,11 +155,12 @@ export class ShiftTemplateTestSuite {
             startTime: template.startTime,
             endTime: template.endTime,
             requiredStaff: template.minStaff,
-            hourlyRate: template.hourlyRate,
+            rate: template.hourlyRate || "0",
+            uniqueId: `${template.id}-${currentDate.toISOString().split("T")[0]}`,
             status: "open" as const,
             urgency: "medium" as const,
             description: `Generated from template: ${template.name}`,
-            assignedStaffIds: [] as number[],
+            assignedStaffIds: [],
             createdAt: new Date(),
             updatedAt: new Date(),
           };
@@ -246,6 +247,7 @@ export class ShiftTemplateTestSuite {
         };
       }
 
+      console.log(
         `✅ Facility integration validated for ${templatesWithFacilities.length} templates`
       );
       return {

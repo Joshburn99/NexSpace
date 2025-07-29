@@ -604,7 +604,7 @@ function EnhancedStaffPageContent() {
           </div>
           <Dialog open={showAddStaffDialog} onOpenChange={setShowAddStaffDialog}>
             <DialogTrigger asChild>
-              <PermissionAction permission="create_staff" action="Add Staff Member" fallback={null}>
+              <PermissionAction permission="staff.create" fallback={null}>
                 <Button className="gap-2 min-h-[44px] touch-manipulation">
                   <UserPlus className="h-4 w-4" />
                   <span className="hidden md:inline">Add Staff Member</span>
@@ -927,7 +927,7 @@ function EnhancedStaffPageContent() {
                         </h3>
                         <p className="text-sm text-muted-foreground">
                           {staff.specialty?.replace("_", " ") || "N/A"} •{" "}
-                          {staff.department || "N/A"}
+                          {staff.employmentType || "N/A"}
                         </p>
                       </div>
                     </div>
@@ -1235,14 +1235,13 @@ function EnhancedStaffPageContent() {
                     </DialogTitle>
                     <DialogDescription className="text-base">
                       {selectedStaff.specialty?.replace("_", " ") || "N/A"} •{" "}
-                      {workerTypeLabels[selectedStaff.workerType]}
+                      {selectedStaff.employmentType || "N/A"}
                     </DialogDescription>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <PermissionAction
-                    permission="update_staff"
-                    action="Edit Staff Profile"
+                    permission="staff.edit"
                     fallback={null}
                   >
                     <Button

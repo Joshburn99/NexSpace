@@ -289,16 +289,17 @@ export function DashboardCustomization({ onLayoutChange }: DashboardCustomizatio
   const { data: currentLayout, isLoading } = useQuery<DashboardLayout>({
     queryKey: ["/api/dashboard/widgets"],
     retry: false,
-    onSuccess: (data) => {
-      if (data?.widgets) {
-        const states: Record<string, boolean> = {};
-        data.widgets.forEach((widget: any) => {
-          states[widget.id] = widget.visible;
-        });
-        setWidgetStates(states);
-      }
-    },
   });
+
+  React.useEffect(() => {
+    if (currentLayout?.widgets) {
+      const states: Record<string, boolean> = {};
+      currentLayout.widgets.forEach((widget: any) => {
+        states[widget.id] = widget.visible;
+      });
+      setWidgetStates(states);
+    }
+  }, [currentLayout]);
 
   // Save widget configuration
   const saveLayoutMutation = useMutation({
@@ -349,6 +350,7 @@ export function DashboardCustomization({ onLayoutChange }: DashboardCustomizatio
       ...widget,
       visible: widgetStates[widget.id] ?? widget.visible,
     }));
+    console.log(
       "Updated widgets to save:",
       updatedWidgets.map((w) => ({ id: w.id, visible: w.visible }))
     );
