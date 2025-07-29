@@ -115,6 +115,8 @@ import {
   type InsertTimeOffPolicy,
   type AnalyticsEvent,
   type InsertAnalyticsEvent,
+  type FacilityUser,
+  type InsertFacilityUser,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc, gte, lte, lt, gt, count, sql, or, ilike } from "drizzle-orm";
@@ -915,7 +917,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteFacilityContact(id: number): Promise<boolean> {
     const result = await db.delete(facilityContacts).where(eq(facilityContacts.id, id));
-    return result.count > 0;
+    return result.rowCount > 0;
   }
 
   // Facility Settings methods
@@ -1046,7 +1048,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteFacilityDocument(id: number): Promise<boolean> {
     const result = await db.delete(facilityDocuments).where(eq(facilityDocuments.id, id));
-    return result.count > 0;
+    return result.rowCount > 0;
   }
 
   // Staff methods
@@ -2676,29 +2678,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getFacilitiesWithinRadius(
-    lat: number,
-    lng: number,
-    radiusMiles: number
-  ): Promise<Facility[]> {
-    try {
-      // Simple distance-based filtering for now
-      const allFacilities = await this.getAllFacilities();
-      return allFacilities.filter((facility) => {
-        if (!facility.latitude || !facility.longitude) return false;
 
-        // Simple distance calculation (not precise but functional)
-        const latDiff = parseFloat(facility.latitude.toString()) - lat;
-        const lngDiff = parseFloat(facility.longitude.toString()) - lng;
-        const distance = Math.sqrt(latDiff * latDiff + lngDiff * lngDiff) * 69; // Rough miles conversion
-
-        return distance <= radiusMiles;
-      });
-    } catch (error: any) {
-      console.error("Error in getFacilitiesWithinRadius:", error);
-      return [];
-    }
-  }
 
   // Shift assignment methods
   async getShiftAssignments(

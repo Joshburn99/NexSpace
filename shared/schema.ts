@@ -374,6 +374,10 @@ export const facilities = pgTable("facilities", {
   emrSystem: text("emr_system"), // EMR/PMS system name
   isActive: boolean("is_active").default(true),
   
+  // Location coordinates
+  latitude: decimal("latitude", { precision: 10, scale: 8 }),
+  longitude: decimal("longitude", { precision: 11, scale: 8 }),
+  
   // Team/Organization
   teamId: integer("team_id").references(() => teams.id),
   
@@ -1387,8 +1391,6 @@ export const insertPaymentSchema = createInsertSchema(payments).omit({
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
-export type InsertFacility = z.infer<typeof insertFacilitySchema>;
-export type Facility = typeof facilities.$inferSelect;
 export type InsertJob = z.infer<typeof insertJobSchema>;
 export type Job = typeof jobs.$inferSelect;
 export type InsertJobApplication = z.infer<typeof insertJobApplicationSchema>;
