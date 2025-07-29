@@ -17,6 +17,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
+import { useShifts } from "@/contexts/ShiftContext";
 import {
   useFacilities,
   useFacility,
@@ -232,6 +233,13 @@ export default function EnhancedCalendarPage() {
     return Math.round(diffHours * 10) / 10; // Round to 1 decimal place
   };
 
+  // Fetch shifts using the ShiftContext hook - moved above conditional to ensure it always fires
+  const {
+    shifts = [],
+    isLoading,
+    refreshShifts: refetchShifts,
+  } = useShifts();
+
   // Redirect workers to their Open Shifts list view
   const isWorker = user?.role === "internal_employee" || user?.role === "contractor_1099";
 
@@ -336,17 +344,7 @@ export default function EnhancedCalendarPage() {
     return initialFilters;
   });
 
-  // Fetch shifts with filters
-  const {
-    data: shifts = [],
-    isLoading,
-    refetch: refetchShifts,
-  } = useQuery<EnhancedShift[]>({
-    queryKey: ["/api/shifts", filters, searchTerm],
-    staleTime: 0, // Always fetch fresh data
-    refetchOnWindowFocus: true,
-    refetchOnMount: true,
-  });
+
 
   // Fetch facilities for filters using centralized hook
   const { data: allFacilities = [] } = useFacilities({ isActive: true });

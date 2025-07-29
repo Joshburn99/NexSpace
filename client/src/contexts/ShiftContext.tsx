@@ -364,6 +364,7 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
+      console.log("[SHIFTS] Fetching /api/shifts…", new Date().toISOString());
       // Fetch all shift categories in parallel
       const [openResponse, requestedResponse, bookedResponse, historyResponse] = await Promise.all([
         fetch("/api/shifts?status=open", { credentials: "include" }),
