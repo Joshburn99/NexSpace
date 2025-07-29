@@ -47,6 +47,7 @@ import { GlobalSearch } from "./GlobalSearch";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { ImpersonationIndicator } from "./ImpersonationIndicator";
 import { EnhancedMobileNavigation } from "./enhanced-mobile-navigation";
+import { CompactNavigationDropdown } from "./CompactNavigationDropdown";
 
 // Type for navigation items
 type NavigationItem = {
@@ -281,6 +282,7 @@ export function UnifiedHeader() {
   const { user, impersonatedUser, quitImpersonation, originalUser, logoutMutation } = useAuth();
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
 
   const currentUser = impersonatedUser || user;
   const isImpersonating = !!impersonatedUser && !!originalUser;
@@ -313,62 +315,19 @@ export function UnifiedHeader() {
             </Link>
           </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden lg:flex flex-1 items-center gap-1">
-            {navigationItems.map((item) =>
-              item.items ? (
-                <DropdownMenu key={item.label}>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className={cn(
-                        "gap-1.5 px-3 h-9 font-medium text-sm transition-all",
-                        item.items.some((subItem) => isActiveRoute(subItem.href))
-                          ? "bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400"
-                          : "text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800"
-                      )}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
-                      <ChevronDown className="h-3 w-3 opacity-60" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56">
-                    {item.items.map((subItem) => (
-                      <DropdownMenuItem key={subItem.href} asChild>
-                        <Link
-                          href={subItem.href}
-                          className={cn(
-                            "w-full cursor-pointer",
-                            isActiveRoute(subItem.href) && "bg-gray-100 dark:bg-gray-800"
-                          )}
-                        >
-                          {subItem.label}
-                        </Link>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : item.href ? (
-                <Link key={item.label} href={item.href}>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={cn(
-                      "gap-1.5 px-3 h-9 font-medium text-sm transition-all",
-                      isActiveRoute(item.href)
-                        ? "bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400"
-                        : "text-gray-600 hover:text-gray-900 hover:bg-gray-50 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-800"
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                  </Button>
-                </Link>
-              ) : null
-            )}
-          </nav>
+          {/* Desktop Navigation Button */}
+          <div className="hidden lg:flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setDesktopMenuOpen(!desktopMenuOpen)}
+              className="gap-2 px-3 h-9 font-medium text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50"
+            >
+              <Menu className="h-4 w-4" />
+              Menu
+              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", desktopMenuOpen && "rotate-180")} />
+            </Button>
+          </div>
 
           {/* Search - Hidden on small screens */}
           <div className="flex-1 max-w-md mx-4 hidden lg:block">
@@ -530,6 +489,14 @@ export function UnifiedHeader() {
           </div>
         )}
       </header>
+
+      {/* Compact Navigation Dropdown */}
+      {desktopMenuOpen && (
+        <CompactNavigationDropdown
+          navigationItems={navigationItems}
+          onClose={() => setDesktopMenuOpen(false)}
+        />
+      )}
     </>
   );
 }

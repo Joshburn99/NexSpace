@@ -866,7 +866,7 @@ export const staff = pgTable("staff", {
   reliabilityScore: decimal("reliability_score", { precision: 3, scale: 2 }).default("0.00"), // 0.00 to 5.00
   lateArrivalCount: integer("late_arrival_count").default(0),
   noCallNoShowCount: integer("no_call_no_show_count").default(0),
-  lastWorkDate: timestamp("last_work_date"),
+  // lastWorkDate: timestamp("last_work_date"), // Column doesn't exist in database yet
   
   // Preferences
   preferredShiftTypes: jsonb("preferred_shift_types"), // ['day', 'night', 'weekend', 'on_call']
