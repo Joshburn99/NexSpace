@@ -13414,17 +13414,18 @@ export function registerRoutes(app: Express): Server {
         return res.status(403).json({ message: "Unauthorized" });
       }
 
-      const { firstName, lastName, phone, department, bio } = req.body;
+      const { firstName, lastName, phone, department, title } = req.body;
 
       console.log("[PROFILE UPDATE] User type:", req.user.role, "User ID:", userId);
+      console.log("[PROFILE UPDATE] Data received:", { firstName, lastName, phone, department, title });
 
-      // Update user profile
+      // For regular users, only update firstName and lastName
       const updatedUser = await storage.updateUserProfile(userId, {
         firstName,
         lastName,
-        phone,
-        department,
-        bio,
+        phone, // Will be ignored for regular users
+        department, // Will be ignored for regular users  
+        bio: undefined, // Remove bio field
       });
 
       res.json(updatedUser);

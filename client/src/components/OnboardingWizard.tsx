@@ -28,7 +28,7 @@ interface OnboardingData {
   lastName?: string;
   phone?: string;
   department?: string;
-  bio?: string;
+  title?: string;
 
   // Step 2: Facility/Team
   facilityId?: number;
@@ -57,11 +57,32 @@ const steps = [
 
 // Form schemas for each step
 const profileSchema = z.object({
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().min(1, "Last name is required"),
-  phone: z.string().optional(),
-  department: z.string().optional(),
-  bio: z.string().optional(),
+  firstName: z.string()
+    .min(1, "First name is required")
+    .max(50, "First name must be less than 50 characters")
+    .regex(/^[a-zA-Z\s'-]+$/, "First name can only contain letters, spaces, hyphens, and apostrophes"),
+  lastName: z.string()
+    .min(1, "Last name is required")
+    .max(50, "Last name must be less than 50 characters")
+    .regex(/^[a-zA-Z\s'-]+$/, "Last name can only contain letters, spaces, hyphens, and apostrophes"),
+  phone: z.string()
+    .optional()
+    .refine((val) => !val || /^\+?[\d\s()-]+$/.test(val), {
+      message: "Please enter a valid phone number",
+    })
+    .refine((val) => !val || val.replace(/\D/g, '').length >= 10, {
+      message: "Phone number must have at least 10 digits",
+    }),
+  department: z.string()
+    .optional()
+    .refine((val) => !val || val.length <= 100, {
+      message: "Department must be less than 100 characters",
+    }),
+  title: z.string()
+    .optional()
+    .refine((val) => !val || val.length <= 100, {
+      message: "Title must be less than 100 characters",
+    }),
 });
 
 const facilitySchema = z
@@ -309,7 +330,7 @@ function ProfileStep({
       lastName: initialData.lastName || user?.lastName || "",
       phone: initialData.phone || "",
       department: initialData.department || "",
-      bio: initialData.bio || "",
+      title: initialData.title || "",
     },
   });
 
@@ -389,7 +410,16 @@ function ProfileStep({
 
       <div>
         <Label htmlFor="phone">Phone Number</Label>
-        <Input id="phone" type="tel" {...form.register("phone")} placeholder="+1 (555) 123-4567" />
+        <Input 
+          id="phone" 
+          type="tel" 
+          {...form.register("phone")} 
+          placeholder="+1 (555) 123-4567"
+          className={form.formState.errors.phone ? "border-red-500" : ""}
+        />
+        {form.formState.errors.phone && (
+          <p className="text-sm text-red-500 mt-1">{form.formState.errors.phone.message}</p>
+        )}
       </div>
 
       <div>
@@ -398,7 +428,7 @@ function ProfileStep({
           onValueChange={(value) => form.setValue("department", value)}
           defaultValue={form.getValues("department")}
         >
-          <SelectTrigger>
+          <SelectTrigger className={form.formState.errors.department ? "border-red-500" : ""}>
             <SelectValue placeholder="Select your department" />
           </SelectTrigger>
           <SelectContent>
@@ -407,19 +437,30 @@ function ProfileStep({
             <SelectItem value="hr">Human Resources</SelectItem>
             <SelectItem value="operations">Operations</SelectItem>
             <SelectItem value="clinical">Clinical</SelectItem>
+            <SelectItem value="finance">Finance</SelectItem>
+            <SelectItem value="it">Information Technology</SelectItem>
+            <SelectItem value="facilities">Facilities Management</SelectItem>
           </SelectContent>
         </Select>
+        {form.formState.errors.department && (
+          <p className="text-sm text-red-500 mt-1">{form.formState.errors.department.message}</p>
+        )}
       </div>
 
-      <div>
-        <Label htmlFor="bio">Bio (Optional)</Label>
-        <Textarea
-          id="bio"
-          {...form.register("bio")}
-          placeholder="Tell us a bit about yourself..."
-          rows={3}
-        />
-      </div>
+      {user?.role === "facility_user" && (
+        <div>
+          <Label htmlFor="title">Job Title</Label>
+          <Input 
+            id="title" 
+            {...form.register("title")} 
+            placeholder="e.g., Nursing Director, Operations Manager"
+            className={form.formState.errors.title ? "border-red-500" : ""}
+          />
+          {form.formState.errors.title && (
+            <p className="text-sm text-red-500 mt-1">{form.formState.errors.title.message}</p>
+          )}
+        </div>
+      )}
 
       <div className="flex justify-end">
         <Button type="submit" disabled={updateProfile.isPending}>
