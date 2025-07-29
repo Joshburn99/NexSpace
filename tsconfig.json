@@ -1,23 +1,49 @@
 {
-  "include": ["client/src/**/*", "shared/**/*", "server/**/*"],
+  // ------------------------------------------------------------------
+  // BASE FILES TO COMPILE
+  // ------------------------------------------------------------------
+  "include": [
+    "client/src/**/*",
+    "shared/**/*",
+    "server/**/*",
+    "scripts/**/*" /* <- added so ts-node can “see” your CLI scripts */
+  ],
   "exclude": ["node_modules", "build", "dist", "**/*.test.ts"],
+
+  // ------------------------------------------------------------------
+  // COMPILER OPTIONS – still geared for your Vite/ESM frontend build
+  // ------------------------------------------------------------------
   "compilerOptions": {
     "incremental": true,
     "tsBuildInfoFile": "./node_modules/typescript/tsbuildinfo",
-    "noEmit": true,
+    "noEmit": true, // build tools handle emitting
     "module": "ESNext",
+    "moduleResolution": "bundler",
+    "target": "ES2020",
     "strict": true,
     "lib": ["esnext", "dom", "dom.iterable"],
     "jsx": "preserve",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
-    "moduleResolution": "bundler",
     "baseUrl": ".",
     "types": ["node", "vite/client"],
     "paths": {
       "@/*": ["./client/src/*"],
       "@shared/*": ["./shared/*"]
+    }
+  },
+
+  // ------------------------------------------------------------------
+  // ts-node OVERRIDES  – only applied when you invoke `ts-node …`
+  // ------------------------------------------------------------------
+  "ts-node": {
+    "esm": true /* register its ESM loader   */,
+    "experimentalSpecifierResolution": "node",
+    "transpileOnly": true,
+    "compilerOptions": {
+      "module": "CommonJS" /* transpile scripts for Node */,
+      "moduleResolution": "node"
     }
   }
 }

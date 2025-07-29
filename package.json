@@ -4,14 +4,14 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "NODE_ENV=development tsx server/index.ts",
-    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
-    "start": "NODE_ENV=production node dist/index.js",
-    "check": "tsc",
-    "db:push": "drizzle-kit push",
-    "lint": "eslint . --ext .ts,.tsx",
-    "format": "prettier --write ."
-  },
+      "dev": "kill-port 5000 && NODE_ENV=development tsx server/index.ts",
+      "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+      "start": "NODE_ENV=production node dist/index.js",
+      "check": "tsc",
+      "db:push": "drizzle-kit push",
+      "lint": "eslint . --ext .ts,.tsx",
+      "format": "prettier --write ."
+    },
   "dependencies": {
     "@fullcalendar/daygrid": "^6.1.17",
     "@fullcalendar/interaction": "^6.1.17",
@@ -53,7 +53,6 @@
     "@types/connect-pg-simple": "^7.0.3",
     "@types/memoizee": "^0.4.12",
     "@types/multer": "^1.4.13",
-    "@types/node": "^24.0.3",
     "@types/passport": "^1.0.17",
     "@types/passport-local": "^1.0.38",
     "@types/react-dom": "^18.3.7",
@@ -114,24 +113,31 @@
     "zod-validation-error": "^3.4.0"
   },
   "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.21.4",
     "@replit/vite-plugin-cartographer": "^0.2.7",
     "@replit/vite-plugin-runtime-error-modal": "^0.0.3",
     "@tailwindcss/typography": "^0.5.15",
     "@tailwindcss/vite": "^4.1.3",
     "@types/express": "4.17.21",
     "@types/express-session": "^1.18.0",
+    "@types/node": "^24.1.0",
     "@types/react": "^18.3.11",
+    "@types/swagger-ui-express": "^4.1.8",
     "@types/ws": "^8.5.13",
     "@vitejs/plugin-react": "^4.3.2",
     "autoprefixer": "^10.4.20",
-    "drizzle-kit": "^0.30.4",
+    "drizzle-kit": "^0.31.4",
     "esbuild": "^0.25.0",
     "kill-port": "^2.0.1",
+    "openapi-diff": "^0.23.7",
+    "openapi-types": "^12.1.3",
     "postcss": "^8.4.47",
+    "swagger-ui-express": "^5.0.1",
     "tailwindcss": "^3.4.17",
+    "ts-node": "^10.9.2",
     "tsx": "^4.19.1",
-    "typescript": "5.6.3",
-    "vite": "^5.4.14"
+    "typescript": "^5.6.3",
+    "vite": "^7.0.6"
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
