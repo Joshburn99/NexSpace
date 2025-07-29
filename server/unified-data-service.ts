@@ -25,6 +25,13 @@ export class UnifiedDataService {
   }
 
   /**
+   * Set the WebSocket server for real-time updates
+   */
+  setWebSocketServer(wss: WebSocketServer) {
+    this.wss = wss;
+  }
+
+  /**
    * Staff Management - Single Source of Truth (Actual Staff Only)
    */
   async getStaffWithAssociations() {

@@ -62,7 +62,7 @@ import { db } from "./db";
 import { eq, sql, and, inArray, or } from "drizzle-orm";
 import { recommendationEngine } from "./recommendation-engine";
 import type { RecommendationCriteria } from "./recommendation-engine";
-import { UnifiedDataService } from "./unified-data-service";
+import { UnifiedDataService, unifiedDataService } from "./unified-data-service";
 import { NotificationService } from "./services/notification-service";
 import multer from "multer";
 import OpenAI from "openai";
@@ -73,8 +73,87 @@ import { insertJobPostingSchema, jobPostings, type JobPosting, jobApplications, 
 import { updateJobPostingSchema, insertJobApplicationSchema, insertInterviewScheduleSchema } from "@shared/schema/job";
 
 export function registerRoutes(app: Express): Server {
-  // Setup authentication routes
-  setupAuth(app);
+  // Define handleImpersonation middleware early so it can be passed to setupAuth
+  const handleImpersonation = async (req: any, res: any, next: any) => {
+    if ((req.session as any).impersonatedUserId) {
+      const impersonatedId = (req.session as any).impersonatedUserId;
+      const userType = (req.session as any).impersonatedUserType || 'user';
+      
+      console.log(`[IMPERSONATION MIDDLEWARE] Loading impersonated ${userType} with ID ${impersonatedId}`);
+      
+      try {
+        let impersonatedUser;
+        
+        if (userType === 'facility_user') {
+          // Get facility user
+          const [facilityUser] = await db
+            .select()
+            .from(facilityUsers)
+            .where(eq(facilityUsers.id, impersonatedId))
+            .limit(1);
+            
+          if (facilityUser) {
+            impersonatedUser = {
+              ...facilityUser,
+              userType: 'facility_user',
+              associatedFacilityIds: facilityUser.associatedFacilityIds || [],
+              associatedFacilities: facilityUser.associatedFacilityIds || [],
+            };
+            
+            // Get role template permissions
+            const roleTemplate = await storage.getFacilityUserRoleTemplate(facilityUser.role);
+            if (roleTemplate && roleTemplate.permissions) {
+              impersonatedUser.permissions = roleTemplate.permissions;
+              console.log(`[IMPERSONATION MIDDLEWARE] Loaded permissions for ${facilityUser.email}:`, roleTemplate.permissions);
+            }
+          }
+        } else if (userType === 'staff') {
+          // Get staff member
+          const [staffMember] = await db
+            .select()
+            .from(staff)
+            .where(eq(staff.id, impersonatedId))
+            .limit(1);
+            
+          if (staffMember) {
+            impersonatedUser = {
+              id: staffMember.id,
+              username: `${staffMember.firstName.toLowerCase()}${staffMember.lastName.toLowerCase()}`,
+              email: staffMember.email,
+              password: "",
+              firstName: staffMember.firstName,
+              lastName: staffMember.lastName,
+              role: staffMember.role || "staff",
+              avatar: staffMember.avatar,
+              isActive: staffMember.status === "Active",
+              facilityId: staffMember.primaryFacilityId,
+              associatedFacilityIds: staffMember.associatedFacilities || [],
+              associatedFacilities: staffMember.associatedFacilities || [],
+              permissions: ["view_schedules", "view_staff"], // Basic staff permissions
+              userType: "staff",
+            };
+          }
+        } else {
+          // Regular user
+          impersonatedUser = await storage.getUser(impersonatedId);
+          if (impersonatedUser) {
+            impersonatedUser.userType = 'user';
+          }
+        }
+        
+        if (impersonatedUser) {
+          console.log(`[IMPERSONATION MIDDLEWARE] Replacing req.user with impersonated user ${impersonatedUser.email}`);
+          req.user = impersonatedUser;
+        }
+      } catch (error) {
+        console.error(`[IMPERSONATION MIDDLEWARE] Error loading impersonated user:`, error);
+      }
+    }
+    next();
+  };
+
+  // Setup authentication routes with handleImpersonation middleware
+  setupAuth(app, handleImpersonation);
 
   // Dashboard preferences routes
   app.use(dashboardPreferencesRoutes);
@@ -83,7 +162,7 @@ export function registerRoutes(app: Express): Server {
   app.use("/api/calendar-sync", calendarSyncRoutes);
 
   // Initialize unified data service (will be properly initialized with WebSocket later)
-  let unifiedDataService: UnifiedDataService;
+
 
   // Initialize notification service
   const notificationService = new NotificationService(storage);
@@ -226,84 +305,7 @@ export function registerRoutes(app: Express): Server {
     next();
   };
 
-  // Middleware to handle impersonation - swaps req.user when impersonating
-  const handleImpersonation = async (req: any, res: any, next: any) => {
-    if ((req.session as any).impersonatedUserId) {
-      const impersonatedId = (req.session as any).impersonatedUserId;
-      const userType = (req.session as any).impersonatedUserType || 'user';
-      
-      console.log(`[IMPERSONATION MIDDLEWARE] Loading impersonated ${userType} with ID ${impersonatedId}`);
-      
-      try {
-        let impersonatedUser;
-        
-        if (userType === 'facility_user') {
-          // Get facility user
-          const [facilityUser] = await db
-            .select()
-            .from(facilityUsers)
-            .where(eq(facilityUsers.id, impersonatedId))
-            .limit(1);
-            
-          if (facilityUser) {
-            impersonatedUser = {
-              ...facilityUser,
-              userType: 'facility_user',
-              associatedFacilityIds: facilityUser.associatedFacilityIds || [],
-              associatedFacilities: facilityUser.associatedFacilityIds || [],
-            };
-            
-            // Get role template permissions
-            const roleTemplate = await storage.getFacilityUserRoleTemplate(facilityUser.role);
-            if (roleTemplate && roleTemplate.permissions) {
-              impersonatedUser.permissions = roleTemplate.permissions;
-              console.log(`[IMPERSONATION MIDDLEWARE] Loaded permissions for ${facilityUser.email}:`, roleTemplate.permissions);
-            }
-          }
-        } else if (userType === 'staff') {
-          // Get staff member
-          const [staffMember] = await db
-            .select()
-            .from(staff)
-            .where(eq(staff.id, impersonatedId))
-            .limit(1);
-            
-          if (staffMember) {
-            impersonatedUser = {
-              id: staffMember.id,
-              username: `${staffMember.firstName.toLowerCase()}${staffMember.lastName.toLowerCase()}`,
-              email: staffMember.email,
-              password: "",
-              firstName: staffMember.firstName,
-              lastName: staffMember.lastName,
-              role: staffMember.role || "staff",
-              avatar: staffMember.avatar,
-              isActive: staffMember.status === "Active",
-              facilityId: staffMember.primaryFacilityId,
-              associatedFacilityIds: staffMember.associatedFacilities || [],
-              associatedFacilities: staffMember.associatedFacilities || [],
-              permissions: ["view_schedules", "view_staff"], // Basic staff permissions
-              userType: "staff",
-            };
-          }
-        } else {
-          // Regular user
-          impersonatedUser = await storage.getUser(impersonatedId);
-          if (impersonatedUser) {
-            impersonatedUser.userType = 'user';
-          }
-        }
-        
-        if (impersonatedUser) {
-          console.log(`[IMPERSONATION MIDDLEWARE] Replacing req.user with impersonated user ${impersonatedUser.email}`);
-          req.user = impersonatedUser;
-        }
-      } catch (error) {
-        console.error(`[IMPERSONATION MIDDLEWARE] Error loading impersonated user:`, error);
-      }
-    }
-    next();
-  };
+
 
   // Data access control middleware
   const enforceDataAccess = (req: any, res: any, next: any) => {
@@ -1398,7 +1400,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Shifts API with example data showing various statuses
-  app.get("/api/shifts", requireAuth, handleImpersonation, requirePermission("shifts.view"), async (req: any, res) => {
+  app.get("/api/shifts", requireAuth, handleImpersonation, requirePermission("view_schedules"), async (req: any, res) => {
     try {
       // Get user's facility associations if facility user
       const user = req.user;
@@ -10619,12 +10621,37 @@ export function registerRoutes(app: Express): Server {
         canImpersonate: true,
       };
 
+      // Debug log session values before save
+      console.log(`[IMPERSONATION] Session values before save:`, {
+        isImpersonating: (req.session as any).isImpersonating,
+        impersonatedUserId: (req.session as any).impersonatedUserId,
+        impersonatedUserType: (req.session as any).impersonatedUserType,
+        hasOriginalUser: !!(req.session as any).originalUser,
+        originalUserId: (req.session as any).originalUser?.id,
+      });
+
       console.log(`[IMPERSONATION] Successfully impersonating ${targetUser.email} (${userType})`);
 
-      res.json({
-        message: "Impersonation started successfully",
-        impersonatedUser: targetUser,
-        originalUser: (req.session as any).originalUser,
+      // Explicitly save the session
+      req.session.save((err) => {
+        if (err) {
+          console.error("[IMPERSONATION] Error saving session:", err);
+          return res.status(500).json({ message: "Failed to save impersonation session" });
+        }
+        
+        // Debug log session values after save
+        console.log(`[IMPERSONATION] Session values after save:`, {
+          isImpersonating: (req.session as any).isImpersonating,
+          impersonatedUserId: (req.session as any).impersonatedUserId,
+          impersonatedUserType: (req.session as any).impersonatedUserType,
+          hasOriginalUser: !!(req.session as any).originalUser,
+        });
+        
+        res.json({
+          message: "Impersonation started successfully",
+          impersonatedUser: targetUser,
+          originalUser: (req.session as any).originalUser,
+        });
       });
     } catch (error) {
       console.error("[IMPERSONATION] Error:", error);
@@ -11270,8 +11297,8 @@ export function registerRoutes(app: Express): Server {
   // WebSocket setup for real-time messaging
   const wss = new WebSocketServer({ server: httpServer, path: "/ws" });
 
-  // Initialize unified data service with WebSocket support
-  unifiedDataService = new UnifiedDataService(wss);
+  // Set WebSocket server on the existing unified data service instance
+  unifiedDataService.setWebSocketServer(wss);
 
   // Track authenticated WebSocket connections
   const userConnections = new Map<number, Set<WebSocket>>();

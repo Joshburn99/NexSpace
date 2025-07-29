@@ -5,8 +5,10 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as SelectUser } from "@shared/schema";
+import { User as SelectUser, staff, users, facilityUsers, facilityUserTeamMemberships, facilities } from "@shared/schema";
 import { analytics } from "./analytics-tracker";
+import { db } from "./db";
+import { eq, inArray } from "drizzle-orm";
 
 declare global {
   namespace Express {
@@ -29,7 +31,7 @@ async function comparePasswords(supplied: string, stored: string) {
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
-export function setupAuth(app: Express) {
+export function setupAuth(app: Express, handleImpersonation?: any) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET!,
     resave: false,
@@ -340,9 +342,76 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.get("/api/user", (req, res) => {
+  // Create the route handler for /api/user
+  const userHandler = async (req: any, res: any) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);
-    res.json(req.user);
+    
+    console.log(`[/api/user] Session state:`, {
+      impersonatedUserId: (req.session as any).impersonatedUserId,
+      impersonatedUserType: (req.session as any).impersonatedUserType,
+      isImpersonating: (req.session as any).isImpersonating,
+    });
+    
+    // The handleImpersonation middleware should have already swapped req.user
+    // with the impersonated user if we're in impersonation mode
+    console.log(`[/api/user] Returning user:`, {
+      id: req.user?.id,
+      email: req.user?.email,
+      role: req.user?.role,
+      isImpersonating: (req.user as any)?.isImpersonating,
+      originalUserId: (req.user as any)?.originalUserId,
+    });
+    
+    // If impersonating, add the impersonation flags to the response
+    const userResponse = {
+      ...req.user,
+      isImpersonating: !!(req.session as any).isImpersonating,
+      originalUserId: (req.session as any).originalUser?.id,
+      userType: (req.user as any)?.userType || 'user'
+    };
+    
+    res.json(userResponse);
+  };
+  
+  // Apply middleware chain based on whether handleImpersonation is provided
+  if (handleImpersonation) {
+    app.get("/api/user", handleImpersonation, userHandler);
+  } else {
+    app.get("/api/user", userHandler);
+  }
+
+  // Debug endpoint to check session contents
+  app.get("/api/debug/session", (req, res) => {
+    if (!req.isAuthenticated()) return res.sendStatus(401);
+    
+    const session = req.session as any;
+    
+    // Get all session keys
+    const sessionKeys = Object.keys(session).filter(key => key !== 'cookie');
+    const sessionData: any = {};
+    
+    sessionKeys.forEach(key => {
+      if (key === 'originalUser' || key === 'user') {
+        sessionData[key] = {
+          id: session[key]?.id,
+          username: session[key]?.username,
+          role: session[key]?.role,
+        };
+      } else {
+        sessionData[key] = session[key];
+      }
+    });
+    
+    res.json({
+      sessionId: req.sessionID,
+      isAuthenticated: req.isAuthenticated(),
+      currentUserId: req.user?.id,
+      currentUserEmail: req.user?.email,
+      sessionData: sessionData,
+      impersonatedUserId: session.impersonatedUserId,
+      impersonatedUserType: session.impersonatedUserType,
+      isImpersonating: session.isImpersonating,
+    });
   });
 
   // Role switching endpoint for super admin

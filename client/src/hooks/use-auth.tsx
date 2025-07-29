@@ -47,33 +47,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Rehydrate impersonation state on load
   useEffect(() => {
-    const origId = localStorage.getItem("originalUserId");
-    const impId = localStorage.getItem("impersonateUserId");
-
-    if (origId && impId && user) {
-      // If we have stored impersonation data and a user, check if we need to restore state
-      const originalUserId = parseInt(origId);
-      const impersonatedUserId = parseInt(impId);
-
-      if (user.id === originalUserId) {
-        // We're logged in as the original user, need to fetch impersonated user
-        fetchUserById(impersonatedUserId).then((impUser) => {
-          if (impUser) {
-            setOriginalUser(user);
-            setCurrentUser(impUser);
-            setImpersonatedUser(impUser);
-          }
-        });
-      } else if (user.id === impersonatedUserId) {
-        // We're already showing as the impersonated user
+    // Check if the user returned from the backend has isImpersonating flag
+    if (user && (user as any).isImpersonating) {
+      // Backend returned impersonated user data
+      setImpersonatedUser(user);
+      setCurrentUser(user);
+      
+      // If we have the original user ID in the response, fetch it
+      const originalUserId = (user as any).originalUserId;
+      if (originalUserId) {
         fetchUserById(originalUserId).then((origUser) => {
           if (origUser) {
             setOriginalUser(origUser);
-            setCurrentUser(user);
-            setImpersonatedUser(user);
           }
         });
       }
+    } else {
+      // Not impersonating - clear impersonation state
+      setOriginalUser(null);
+      setImpersonatedUser(null);
+      setCurrentUser(null);
+      localStorage.removeItem("originalUserId");
+      localStorage.removeItem("impersonateUserId");
     }
   }, [user]);
 
