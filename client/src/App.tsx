@@ -109,7 +109,12 @@ function AppContent() {
   const { user } = useAuth();
 
   // Show onboarding wizard for new users who haven't completed it
-  if (user && !user.onboardingCompleted && !isAuthPage) {
+  // Skip onboarding for impersonated users, staff members, and facility users
+  if (user && !user.onboardingCompleted && !isAuthPage && 
+      !user.isImpersonating && 
+      user.userType !== 'staff' && 
+      user.userType !== 'facility_user' &&
+      user.role !== 'staff') {
     return <OnboardingWizard />;
   }
 

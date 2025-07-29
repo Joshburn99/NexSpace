@@ -94,6 +94,7 @@ export function registerRoutes(app: Express): Server {
               userType: 'facility_user',
               associatedFacilityIds: facilityUser.associatedFacilityIds || [],
               associatedFacilities: facilityUser.associatedFacilityIds || [],
+              onboardingCompleted: true, // Facility users don't need onboarding
             };
             
             // Get role template permissions
@@ -127,6 +128,7 @@ export function registerRoutes(app: Express): Server {
               associatedFacilities: staffMember.associatedFacilities || [],
               permissions: ["view_schedules", "view_staff"], // Basic staff permissions
               userType: "staff",
+              onboardingCompleted: true, // Staff members don't need onboarding
             };
           }
         } else {
