@@ -35,6 +35,22 @@ NexSpace is an advanced healthcare workforce management platform that optimizes 
   - Facility updates, profile updates, shift management, and staff operations all function properly
   - No frontend JavaScript blocks prevent form submissions during impersonation
 
+### July 29, 2025 - Database Schema Cleanup & User Table Enhancement
+- **Database Redundancy Elimination**: Successfully removed 4 unused tables from database schema
+  - Dropped `facility_user_permissions` table (152 unused legacy records)
+  - Dropped `facility_user_facility_associations` table (4 records, data duplicated in JSONB)
+  - Dropped `facility_user_teams` table (0 records, empty duplicate table)
+  - Dropped `user_dashboard_widgets` table (0 records, completely unused)
+- **User Table Enhancement**: Added missing columns to users table to support form functionality
+  - Added `phone` column for user contact information
+  - Added `department` column for organizational structure
+  - Added `bio` column for user profile descriptions
+- **Schema Consolidation Benefits**: Improved performance and reduced maintenance complexity
+  - Streamlined from 15 user-related tables to 11 actively used tables
+  - Eliminated data duplication between normalized tables and JSONB fields
+  - Fixed form persistence issues caused by missing database fields
+- **Code Cleanup**: Updated shared/schema.ts to remove dropped table definitions
+
 ### July 29, 2025 - Comprehensive User Forms Audit
 - **Forms Testing Results**: Conducted systematic testing of 7 critical user form categories with 43% pass rate
   - ✅ PASSED: Onboarding profile form - data saves and persists correctly

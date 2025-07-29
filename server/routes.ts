@@ -32,10 +32,8 @@ import {
   insertTeamMemberSchema,
   insertTeamFacilitySchema,
   insertFacilityUserSchema,
-  insertFacilityUserPermissionSchema,
   insertFacilityUserRoleTemplateSchema,
   insertFacilityUserActivityLogSchema,
-  insertFacilityUserFacilityAssociationSchema,
   UserRole,
   FacilityUserRole,
   FacilityPermission,
@@ -51,10 +49,8 @@ import {
   teamMembers,
   teamFacilities,
   facilityUsers,
-  facilityUserPermissions,
   facilityUserRoleTemplates,
   facilityUserActivityLog,
-  facilityUserFacilityAssociations,
   facilityUserTeamMemberships,
   staff,
 } from "@shared/schema";
@@ -11755,26 +11751,7 @@ export function registerRoutes(app: Express): Server {
           })
           .returning();
 
-        // Also create record in facility user associations for compatibility
-        const facilityUser = await db
-          .select()
-          .from(facilityUsers)
-          .where(eq(facilityUsers.id, userId))
-          .limit(1);
-        if (facilityUser.length > 0) {
-          const user = facilityUser[0];
-          await db
-            .insert(facilityUserFacilityAssociations)
-            .values({
-              userId: userId,
-              facilityId: user.primaryFacilityId,
-              isPrimary: true,
-              assignedById: req.user?.id || 1,
-              isActive: true,
-              facilitySpecificPermissions: user.permissions,
-            })
-            .onConflictDoNothing();
-        }
+        // Facility associations are now stored in facilityUsers.associatedFacilityIds JSONB field
 
         res.json({
           id: facilityUserTeam.id,
@@ -12489,7 +12466,6 @@ export function registerRoutes(app: Express): Server {
 
       // Clear existing facility users first
       await db.delete(facilityUserActivityLog);
-      await db.delete(facilityUserFacilityAssociations);
       await db.delete(facilityUsers);
 
       // Create facility users
@@ -12515,17 +12491,7 @@ export function registerRoutes(app: Express): Server {
             isActive: facilityUsers.isActive,
           });
 
-        // Create facility associations
-        for (const facilityId of userData.associatedFacilityIds) {
-          await db.insert(facilityUserFacilityAssociations).values({
-            userId: newUser.id,
-            facilityId: facilityId,
-            isPrimary: facilityId === userData.primaryFacilityId,
-            assignedById: req.user?.id || 1,
-            isActive: true,
-            facilitySpecificPermissions: userData.permissions,
-          });
-        }
+        // Facility associations are already stored in the associatedFacilityIds JSONB field
 
         // Log activity
         await db.insert(facilityUserActivityLog).values({

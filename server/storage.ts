@@ -377,9 +377,7 @@ export interface IStorage {
   }>;
   getRecentActivity(facilityId: number, limit?: number): Promise<AuditLog[]>;
 
-  // Dashboard customization
-  getUserDashboardWidgets(userId: number): Promise<any>;
-  saveDashboardWidgets(userId: number, widgets: any): Promise<void>;
+
 
   // Payroll system methods
   createPayrollProvider(provider: InsertPayrollProvider): Promise<PayrollProvider>;
@@ -2336,126 +2334,7 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
-  // Dashboard customization methods
-  async getUserDashboardWidgets(userId: number): Promise<any> {
-    try {
-      // Try to get existing user configuration from users table
-      const user = await this.db
-        .select({ dashboardPreferences: schema.users.dashboardPreferences })
-        .from(schema.users)
-        .where(eq(schema.users.id, userId))
-        .limit(1);
 
-      if (user.length > 0 && user[0].dashboardPreferences) {
-        return user[0].dashboardPreferences;
-      }
-
-      // Return default widget configuration if none exists
-      const defaultWidgets = [
-        // Core Stats Widgets
-        { id: "active-staff", title: "Active Staff", visible: true, category: "stats" },
-        { id: "open-shifts", title: "Open Shifts", visible: true, category: "stats" },
-        { id: "compliance-rate", title: "Compliance Rate", visible: true, category: "stats" },
-        { id: "monthly-revenue", title: "Monthly Revenue", visible: false, category: "stats" },
-        { id: "monthly-hours", title: "Monthly Hours", visible: false, category: "stats" },
-        { id: "total-facilities", title: "Total Facilities", visible: false, category: "stats" },
-        {
-          id: "outstanding-invoices",
-          title: "Outstanding Invoices",
-          visible: false,
-          category: "stats",
-        },
-        { id: "urgent-shifts", title: "Urgent Shifts", visible: false, category: "stats" },
-        {
-          id: "expiring-credentials",
-          title: "Expiring Credentials",
-          visible: false,
-          category: "stats",
-        },
-
-        // Activity & Communication Widgets
-        { id: "priority-tasks", title: "Priority Tasks", visible: true, category: "activity" },
-        { id: "recent-activity", title: "Recent Activity", visible: true, category: "activity" },
-        { id: "notifications", title: "Notifications", visible: false, category: "activity" },
-        { id: "message-center", title: "Message Center", visible: false, category: "activity" },
-
-        // Analytics & Reporting Widgets
-        {
-          id: "performance-trends",
-          title: "Performance Trends",
-          visible: false,
-          category: "analytics",
-        },
-        {
-          id: "capacity-planning",
-          title: "Capacity Planning",
-          visible: false,
-          category: "analytics",
-        },
-        {
-          id: "financial-summary",
-          title: "Financial Summary",
-          visible: false,
-          category: "analytics",
-        },
-        {
-          id: "schedule-overview",
-          title: "Schedule Overview",
-          visible: false,
-          category: "analytics",
-        },
-
-        // Operations Widgets
-        { id: "facility-map", title: "Facility Map", visible: false, category: "operations" },
-        { id: "quick-actions", title: "Quick Actions", visible: false, category: "operations" },
-        {
-          id: "staff-availability",
-          title: "Staff Availability",
-          visible: false,
-          category: "operations",
-        },
-        { id: "shift-coverage", title: "Shift Coverage", visible: false, category: "operations" },
-      ];
-
-      console.log(
-        `[STORAGE] Returning default dashboard config for user ${userId} - ${defaultWidgets.length} total widgets`
-      );
-      return {
-        layout: "grid",
-        widgets: defaultWidgets,
-      };
-    } catch (error) {
-      console.error(`[STORAGE] Error getting dashboard widgets for user ${userId}:`, error);
-      throw error;
-    }
-  }
-
-  async saveDashboardWidgets(userId: number, widgets: any): Promise<void> {
-    try {
-      console.log(`[STORAGE] Saving dashboard widgets for user ${userId}`, {
-        widgetCount: widgets?.length || 0,
-        visibleWidgets: widgets?.filter((w: any) => w.visible)?.length || 0,
-      });
-
-      const widgetConfiguration = {
-        layout: "grid",
-        widgets: widgets,
-      };
-
-      // Update user's dashboard preferences
-      await this.db
-        .update(schema.users)
-        .set({
-          dashboardPreferences: widgetConfiguration,
-          updatedAt: new Date(),
-        })
-        .where(eq(schema.users.id, userId));
-
-    } catch (error) {
-      console.error(`[STORAGE] Error saving dashboard widgets for user ${userId}:`, error);
-      throw error;
-    }
-  }
 
   // Payroll Provider methods
   async createPayrollProvider(insertProvider: InsertPayrollProvider): Promise<PayrollProvider> {

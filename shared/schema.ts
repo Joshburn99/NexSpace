@@ -211,24 +211,7 @@ export const facilityUsers = pgTable("facility_users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Facility User Permissions table - tracks specific permissions per facility
-export const facilityUserPermissions = pgTable("facility_user_permissions", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  facilityId: integer("facility_id").notNull(),
-  permission: text("permission").notNull(), // FacilityPermission enum value
-  grantedById: integer("granted_by_id").notNull(), // Who granted this permission
-  grantedAt: timestamp("granted_at").defaultNow(),
-  isActive: boolean("is_active").default(true),
-  
-  // Optional constraints/limitations
-  constraints: jsonb("constraints"), // e.g., { "departments": ["ICU", "ER"], "maxShifts": 50 }
-  expiresAt: timestamp("expires_at"), // Optional expiration date
-  
-  notes: text("notes"), // Reason for granting/specific conditions
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+
 
 // Facility User Role Templates - predefined permission sets
 export const facilityUserRoleTemplates = pgTable("facility_user_role_templates", {
@@ -248,23 +231,7 @@ export const facilityUserRoleTemplates = pgTable("facility_user_role_templates",
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-// Facility User to Facility Association - many-to-many relationship
-export const facilityUserFacilityAssociations = pgTable("facility_user_facility_associations", {
-  id: serial("id").primaryKey(),
-  facilityUserId: integer("facility_user_id").notNull(),
-  facilityId: integer("facility_id").notNull(),
-  isPrimary: boolean("is_primary").default(false), // One primary facility per user
-  teamId: integer("team_id"), // Associated team for this facility
-  assignedById: integer("assigned_by_id"), // Who assigned this association
-  assignedAt: timestamp("assigned_at").defaultNow(),
-  isActive: boolean("is_active").default(true),
-  
-  // Role-specific permissions for this facility
-  facilitySpecificPermissions: jsonb("facility_specific_permissions").default([]),
-  
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+
 
 // Junction table for facility user team membership  
 export const facilityUserTeamMemberships = pgTable("facility_user_team_memberships", {
@@ -493,14 +460,7 @@ export const rolePermissions = pgTable("role_permissions", {
   permissionId: integer("permission_id").notNull(),
 });
 
-// User dashboard widget configurations
-export const userDashboardWidgets = pgTable("user_dashboard_widgets", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  widget_configuration: jsonb("widget_configuration").notNull(), // stores widget states and layout
-  createdAt: timestamp("created_at").defaultNow(),
-  updatedAt: timestamp("updated_at").defaultNow(),
-});
+
 
 // Jobs table
 export const jobs = pgTable("jobs", {
@@ -1533,11 +1493,7 @@ export const insertFacilityUserSchema = createInsertSchema(facilityUsers).omit({
   updatedAt: true,
 });
 
-export const insertFacilityUserPermissionSchema = createInsertSchema(facilityUserPermissions).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
+
 
 export const insertFacilityUserRoleTemplateSchema = createInsertSchema(facilityUserRoleTemplates).omit({
   id: true,
@@ -1549,11 +1505,7 @@ export const insertFacilityUserActivityLogSchema = createInsertSchema(facilityUs
   id: true,
 });
 
-export const insertFacilityUserFacilityAssociationSchema = createInsertSchema(facilityUserFacilityAssociations).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
+
 
 export const insertFacilityUserTeamMembershipSchema = createInsertSchema(facilityUserTeamMemberships).omit({
   id: true,
@@ -1563,14 +1515,10 @@ export const insertFacilityUserTeamMembershipSchema = createInsertSchema(facilit
 
 export type InsertFacilityUser = z.infer<typeof insertFacilityUserSchema>;
 export type FacilityUser = typeof facilityUsers.$inferSelect;
-export type InsertFacilityUserPermission = z.infer<typeof insertFacilityUserPermissionSchema>;
-export type FacilityUserPermission = typeof facilityUserPermissions.$inferSelect;
 export type InsertFacilityUserRoleTemplate = z.infer<typeof insertFacilityUserRoleTemplateSchema>;
 export type FacilityUserRoleTemplate = typeof facilityUserRoleTemplates.$inferSelect;
 export type InsertFacilityUserActivityLog = z.infer<typeof insertFacilityUserActivityLogSchema>;
 export type FacilityUserActivityLog = typeof facilityUserActivityLog.$inferSelect;
-export type InsertFacilityUserFacilityAssociation = z.infer<typeof insertFacilityUserFacilityAssociationSchema>;
-export type FacilityUserFacilityAssociation = typeof facilityUserFacilityAssociations.$inferSelect;
 export type InsertFacilityUserTeamMembership = z.infer<typeof insertFacilityUserTeamMembershipSchema>;
 export type FacilityUserTeamMembership = typeof facilityUserTeamMemberships.$inferSelect;
 
