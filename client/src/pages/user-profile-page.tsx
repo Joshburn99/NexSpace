@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -121,19 +121,38 @@ export default function UserProfilePage() {
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      firstName: profile?.firstName || "",
-      lastName: profile?.lastName || "",
-      email: profile?.email || "",
-      phone: profile?.phone || "",
-      address: profile?.address || "",
-      city: profile?.city || "",
-      state: profile?.state || "",
-      zipCode: profile?.zipCode || "",
-      emergencyContact: profile?.emergencyContact || "",
-      emergencyPhone: profile?.emergencyPhone || "",
-      bio: profile?.bio || "",
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      address: "",
+      city: "",
+      state: "",
+      zipCode: "",
+      emergencyContact: "",
+      emergencyPhone: "",
+      bio: "",
     },
   });
+
+  // Reset form when profile data loads
+  useEffect(() => {
+    if (profile) {
+      form.reset({
+        firstName: profile.firstName || "",
+        lastName: profile.lastName || "",
+        email: profile.email || "",
+        phone: profile.phone || "",
+        address: profile.address || "",
+        city: profile.city || "",
+        state: profile.state || "",
+        zipCode: profile.zipCode || "",
+        emergencyContact: profile.emergencyContact || "",
+        emergencyPhone: profile.emergencyPhone || "",
+        bio: profile.bio || "",
+      });
+    }
+  }, [profile, form]);
 
   // Update profile mutation
   const updateProfileMutation = useMutation({
