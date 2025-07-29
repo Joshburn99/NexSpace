@@ -1059,37 +1059,41 @@ export class DatabaseStorage implements IStorage {
       
       console.log(`[STORAGE] Found ${staffData.length} staff members`);
       
-      // Map database fields to TypeScript interface
+      // Map database fields (snake_case) to TypeScript interface (camelCase)
       return staffData.map(s => {
-        // Split name into first and last name if needed
-        const nameParts = (s.name || '').split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
+        // Use actual database first_name and last_name if available, fallback to splitting name
+        const firstName = s.first_name || (s.name || '').split(' ')[0] || '';
+        const lastName = s.last_name || (s.name || '').split(' ').slice(1).join(' ') || '';
         
         return {
           id: s.id,
           firstName: firstName,
           lastName: lastName,
-          name: s.name || '',
+          name: s.name || `${firstName} ${lastName}`.trim(),
           email: s.email,
           phone: s.phone,
-          profilePhoto: s.profilePhoto,
+          profilePhoto: s.profile_photo, // snake_case column
           bio: s.bio,
           specialty: s.specialty,
           department: s.department,
-          employmentType: s.employmentType,
-          hourlyRate: s.hourlyRate ? parseFloat(s.hourlyRate) : 0,
-          isActive: s.isActive,
-          availabilityStatus: s.availabilityStatus,
-          licenseNumber: s.licenseNumber,
-          licenseExpiry: s.licenseExpiry,
+          employmentType: s.employment_type, // snake_case column
+          hourlyRate: s.hourly_rate ? parseFloat(s.hourly_rate.toString()) : 0, // snake_case column
+          isActive: s.is_active ?? true, // snake_case column
+          availabilityStatus: s.availability_status, // snake_case column
+          licenseNumber: s.license_number, // snake_case column
+          licenseExpirationDate: s.license_expiry, // snake_case column
           certifications: s.certifications || [],
           languages: s.languages || [],
           location: s.location,
-          reliabilityScore: s.reliabilityScore || 0,
-          userId: s.userId,
-          createdAt: s.createdAt,
-          updatedAt: s.updatedAt
+          reliabilityScore: s.reliability_score ? parseFloat(s.reliability_score.toString()) : 0, // snake_case column
+          userId: s.user_id, // snake_case column
+          createdAt: s.created_at, // snake_case column
+          updatedAt: s.updated_at, // snake_case column
+          accountStatus: s.account_status || 'active', // snake_case column
+          homeAddress: s.home_address, // snake_case column
+          homeCity: s.home_city, // snake_case column
+          homeState: s.home_state, // snake_case column
+          associatedFacilities: s.associated_facilities || []
         };
       });
     } catch (error) {
