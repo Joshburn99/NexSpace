@@ -779,6 +779,11 @@ export function registerRoutes(app: Express): Server {
       // Build filter conditions
       const conditions = [];
       
+      // For staff users, show only active postings
+      if (!req.user.facilityId && req.user.role !== "super_admin") {
+        conditions.push(eq(jobPostings.status, 'active'));
+      }
+      
       // Filter by facility if not super admin
       if (req.user.role !== "super_admin" && req.user.facilityId) {
         conditions.push(eq(jobPostings.facilityId, req.user.facilityId));
