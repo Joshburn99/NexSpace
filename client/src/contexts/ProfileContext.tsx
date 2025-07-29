@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 export interface UserProfile {
   userId: number;
@@ -182,7 +182,7 @@ interface ProfileContextType {
 const ProfileContext = createContext<ProfileContextType | null>(null);
 
 export const ProfileProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user } = useCurrentUser();
   const [profile, setProfile] = useState<UserProfile | null>(user?.id === 3 ? sampleProfile : null);
   const [isLoading, setIsLoading] = useState(false);
 

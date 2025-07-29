@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
 type AuthContextType = {
-  user: SelectUser | null;
+  user: SelectUser | null; // Always returns the current user (impersonated or original)
   isLoading: boolean;
   error: Error | null;
   loginMutation: UseMutationResult<SelectUser, Error, LoginData>;
@@ -17,10 +17,12 @@ type AuthContextType = {
     Error,
     { username: string }
   >;
-  startImpersonation: (user: SelectUser) => Promise<void>;
-  quitImpersonation: () => void;
-  impersonatedUser: SelectUser | null;
-  originalUser: SelectUser | null;
+  startImpersonation: (targetUserId: number | SelectUser, userType?: string) => Promise<void>;
+  quitImpersonation: () => Promise<void>;
+  // Clear impersonation state properties
+  isImpersonating: boolean;
+  originalUser: SelectUser | null; // Only set when impersonating
+  impersonatedUser: SelectUser | null; // Only set when impersonating
 };
 
 type LoginData = Pick<InsertUser, "username" | "password">;
@@ -29,12 +31,21 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [, navigate] = useLocation();
-  const [originalUser, setOriginalUser] = useState<SelectUser | null>(null);
-  const [impersonatedUser, setImpersonatedUser] = useState<SelectUser | null>(null);
-  const [currentUser, setCurrentUser] = useState<SelectUser | null>(null);
+  
+  // Simplified state management
+  const [impersonationState, setImpersonationState] = useState<{
+    isImpersonating: boolean;
+    originalUser: SelectUser | null;
+    impersonatedUser: SelectUser | null;
+  }>({
+    isImpersonating: false,
+    originalUser: null,
+    impersonatedUser: null,
+  });
 
+  // Fetch the current user from the backend
   const {
-    data: user,
+    data: backendUser,
     error,
     isLoading,
   } = useQuery<SelectUser | undefined, Error>({
@@ -42,35 +53,62 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryFn: getQueryFn({ on401: "returnNull" }),
   });
 
-  // Use current user if impersonating, otherwise use fetched user
-  const effectiveUser = currentUser || user || null;
+  // The current user is either the impersonated user (if impersonating) or the backend user
+  const currentUser = impersonationState.isImpersonating 
+    ? impersonationState.impersonatedUser 
+    : backendUser || null;
 
-  // Rehydrate impersonation state on load
+  // Sync impersonation state with backend response
   useEffect(() => {
-    // Check if the user returned from the backend has isImpersonating flag
-    if (user && (user as any).isImpersonating) {
-      // Backend returned impersonated user data
-      setImpersonatedUser(user);
-      setCurrentUser(user);
-      
-      // If we have the original user ID in the response, fetch it
-      const originalUserId = (user as any).originalUserId;
-      if (originalUserId) {
-        fetchUserById(originalUserId).then((origUser) => {
-          if (origUser) {
-            setOriginalUser(origUser);
-          }
+    if (!backendUser) {
+      // No user logged in - clear impersonation state only if we have one
+      if (impersonationState.isImpersonating) {
+        setImpersonationState({
+          isImpersonating: false,
+          originalUser: null,
+          impersonatedUser: null,
         });
       }
-    } else {
-      // Not impersonating - clear impersonation state
-      setOriginalUser(null);
-      setImpersonatedUser(null);
-      setCurrentUser(null);
-      localStorage.removeItem("originalUserId");
-      localStorage.removeItem("impersonateUserId");
+      return;
     }
-  }, [user]);
+
+    // Check if the backend indicates we're impersonating
+    const backendIsImpersonating = (backendUser as any).isImpersonating;
+    const backendOriginalUserId = (backendUser as any).originalUserId;
+    
+    if (backendIsImpersonating) {
+      // Backend says we're impersonating - update our state to match
+      if (!impersonationState.isImpersonating || 
+          impersonationState.impersonatedUser?.id !== backendUser.id) {
+        // Need to fetch the original user data
+        if (backendOriginalUserId) {
+          fetchUserById(backendOriginalUserId).then((origUser) => {
+            if (origUser) {
+              setImpersonationState({
+                isImpersonating: true,
+                originalUser: origUser,
+                impersonatedUser: backendUser,
+              });
+            }
+          });
+        } else {
+          // No original user ID - just set the impersonated user
+          setImpersonationState({
+            isImpersonating: true,
+            originalUser: null,
+            impersonatedUser: backendUser,
+          });
+        }
+      }
+    } else if (impersonationState.isImpersonating) {
+      // Backend says we're NOT impersonating but our state says we are - clear it
+      setImpersonationState({
+        isImpersonating: false,
+        originalUser: null,
+        impersonatedUser: null,
+      });
+    }
+  }, [backendUser, impersonationState.isImpersonating, impersonationState.impersonatedUser?.id]);
 
   // Helper function to fetch user by ID
   const fetchUserById = async (userId: number): Promise<SelectUser | null> => {
@@ -158,7 +196,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Impersonation functions
   const startImpersonation = async (targetUserId: number | SelectUser, userType: string = "user") => {
-    if (!effectiveUser) return;
+    if (!currentUser) {
+      console.error("[IMPERSONATION] No current user - cannot start impersonation");
+      return;
+    }
 
     // Handle both old signature (user object) and new signature (userId, userType)
     let userId: number;
@@ -175,6 +216,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
+      console.log(`[IMPERSONATION] Starting impersonation for user ${userId} (type: ${type})`);
+      
       // Call backend to properly start impersonation and get enhanced user data
       const response = await apiRequest("POST", "/api/impersonate/start", {
         targetUserId: userId,
@@ -184,20 +227,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (impersonationData.impersonatedUser) {
         const enhancedUser = impersonationData.impersonatedUser;
+        const originalUserData = impersonationData.originalUser || currentUser;
 
-        setOriginalUser(effectiveUser);
-        setCurrentUser(enhancedUser);
-        setImpersonatedUser(enhancedUser);
-        localStorage.setItem("originalUserId", effectiveUser.id.toString());
-        localStorage.setItem("impersonateUserId", enhancedUser.id.toString());
+        console.log(`[IMPERSONATION] Received impersonated user:`, enhancedUser);
 
-        // Force query client to update the user data with enhanced data
-        queryClient.setQueryData(["/api/user"], enhancedUser);
+        // Update our state to reflect impersonation
+        setImpersonationState({
+          isImpersonating: true,
+          originalUser: originalUserData,
+          impersonatedUser: enhancedUser,
+        });
+
+        // Force query client to refetch the user data
+        // This will cause the backend to return the impersonated user data
+        await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
         
         toast({
           title: "Impersonation Started",
-          description: `Now viewing as ${enhancedUser.firstName} ${enhancedUser.lastName}`,
+          description: `Now viewing as ${enhancedUser.firstName || enhancedUser.username} ${enhancedUser.lastName || ''}`.trim(),
         });
+        
+        // Navigate to dashboard after successful impersonation
+        navigate("/dashboard");
       } else {
         console.error(
           "[IMPERSONATION] No impersonated user in response:",
@@ -216,27 +267,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const quitImpersonation = async () => {
+    if (!impersonationState.isImpersonating) {
+      console.warn("[IMPERSONATION] Tried to quit impersonation when not impersonating");
+      return;
+    }
+
     try {
+      console.log("[IMPERSONATION] Stopping impersonation");
+      
       // Call backend to stop impersonation
       const response = await apiRequest("POST", "/api/impersonate/stop");
       const data = await response.json();
       
-      if (data.originalUser) {
-        // Update state with original user
-        setCurrentUser(data.originalUser);
-        queryClient.setQueryData(["/api/user"], data.originalUser);
-      }
+      // Clear impersonation state
+      setImpersonationState({
+        isImpersonating: false,
+        originalUser: null,
+        impersonatedUser: null,
+      });
       
-      setOriginalUser(null);
-      setImpersonatedUser(null);
-      localStorage.removeItem("originalUserId");
-      localStorage.removeItem("impersonateUserId");
+      // Force query client to refetch the user data
+      // This will cause the backend to return the original user data
+      await queryClient.invalidateQueries({ queryKey: ["/api/user"] });
       
       toast({
         title: "Impersonation Ended",
         description: "Returned to your original account",
       });
       
+      // Navigate back to impersonation page
       navigate("/admin/impersonation");
     } catch (error) {
       console.error("Failed to stop impersonation:", error);
@@ -251,7 +310,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider
       value={{
-        user: effectiveUser,
+        user: currentUser,
         isLoading,
         error,
         loginMutation,
@@ -260,8 +319,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         forgotPasswordMutation,
         startImpersonation,
         quitImpersonation,
-        impersonatedUser,
-        originalUser,
+        isImpersonating: impersonationState.isImpersonating,
+        originalUser: impersonationState.originalUser,
+        impersonatedUser: impersonationState.impersonatedUser,
       }}
     >
       {children}

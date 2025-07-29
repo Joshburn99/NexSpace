@@ -365,10 +365,19 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
     // If impersonating, add the impersonation flags to the response
     const userResponse = {
       ...req.user,
-      isImpersonating: !!(req.session as any).isImpersonating,
+      isImpersonating: !!(req.session as any).isImpersonating || !!(req.session as any).impersonatedUserId,
       originalUserId: (req.session as any).originalUser?.id,
       userType: (req.user as any)?.userType || 'user'
     };
+    
+    console.log(`[/api/user] Sending response with impersonation flags:`, {
+      id: userResponse.id,
+      email: userResponse.email,
+      isImpersonating: userResponse.isImpersonating,
+      originalUserId: userResponse.originalUserId,
+      hasSession: !!req.session,
+      sessionId: req.sessionID
+    });
     
     res.json(userResponse);
   };

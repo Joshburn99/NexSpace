@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { useCurrentUser } from "@/hooks/use-current-user";
 
 // Define all possible facility user permissions
 export type FacilityPermission =
@@ -237,7 +237,7 @@ interface FacilityPermissionsContextType {
 const FacilityPermissionsContext = createContext<FacilityPermissionsContextType | null>(null);
 
 export function FacilityPermissionsProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth();
+  const { user } = useCurrentUser();
 
   const getFacilityId = (): number | null => {
     if (!user) return null;
