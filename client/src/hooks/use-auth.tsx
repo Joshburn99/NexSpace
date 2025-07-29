@@ -4,6 +4,8 @@ import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { getDashboardPathByRole } from "@/utils/routes";
+import type { SystemRole } from "@shared/rbac";
 
 type AuthContextType = {
   user: SelectUser | null; // Always returns the current user (impersonated or original)
@@ -247,8 +249,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           description: `Now viewing as ${enhancedUser.firstName || enhancedUser.username} ${enhancedUser.lastName || ''}`.trim(),
         });
         
-        // Navigate to dashboard after successful impersonation
-        navigate("/dashboard");
+        // Navigate to role-specific dashboard after successful impersonation
+        const targetRole = enhancedUser.role as SystemRole;
+        const dashboardPath = getDashboardPathByRole(targetRole);
+        console.log(`[IMPERSONATION] Navigating to role-specific dashboard: ${dashboardPath} for role: ${targetRole}`);
+        navigate(dashboardPath, { replace: true });
       } else {
         console.error(
           "[IMPERSONATION] No impersonated user in response:",

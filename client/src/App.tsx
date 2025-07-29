@@ -121,6 +121,13 @@ function AppContent() {
   const router = (
     <Switch>
       <ProtectedRoute path="/" component={HomePage} />
+      
+      {/* Main Role-Based Dashboard Routes */}
+      <AdminRoute path="/admin" component={AdminAnalytics} />
+      <ProtectedRoute path="/facility" component={FacilityUserDashboard} />
+      <ProtectedRoute path="/staff" component={EnhancedStaffPage} />
+      
+      {/* Legacy Dashboard Routes */}
       <ProtectedRoute path="/dashboard" component={HomePage} />
       <ProtectedRoute path="/facility-dashboard" component={FacilityUserDashboard} />
       <ProtectedRoute path="/workforce" component={EnhancedStaffPage} />
