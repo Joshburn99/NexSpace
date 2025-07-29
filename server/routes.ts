@@ -11823,10 +11823,12 @@ export function registerRoutes(app: Express): Server {
 
   // ===== FACILITY USER MANAGEMENT API =====
 
-  // Get all facility users from users table
+  // Get all facility users from users table - with proper data filtering
   app.get("/api/facility-users", requireAuth, async (req, res) => {
     try {
-      const facilityUsersData = await db
+      console.log(`[FACILITY USERS ACCESS] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) requesting facility users`);
+      
+      let query = db
         .select({
           id: users.id,
           username: users.username,
@@ -11851,11 +11853,49 @@ export function registerRoutes(app: Express): Server {
           facilityName: facilities.name,
         })
         .from(users)
-        .leftJoin(facilities, eq(users.facilityId, facilities.id))
-        .where(
+        .leftJoin(facilities, eq(users.facilityId, facilities.id));
+
+      // Apply role-based filtering
+      if (req.user.role === "super_admin") {
+        // Super admins see all facility users
+        console.log(`[FACILITY USERS ACCESS] Super admin accessing all facility users`);
+        query = query.where(
           sql`${users.role} IN ('facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing', 'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin')`
-        )
-        .orderBy(users.lastName, users.firstName);
+        );
+      } else if (req.user.role === "facility_user" || req.user.associatedFacilityIds) {
+        // Facility users only see users from their associated facilities
+        const userFacilityIds = req.user.associatedFacilityIds || req.user.associatedFacilities || 
+                               (req.user.facilityId ? [req.user.facilityId] : []);
+        
+        console.log(`[FACILITY USERS ACCESS] Facility user with facilities: ${userFacilityIds.join(', ')}`);
+        
+        if (userFacilityIds.length === 0) {
+          console.log(`[FACILITY USERS ACCESS] User has no facility associations, returning empty`);
+          return res.json([]);
+        }
+        
+        // Only show facility users from the same facilities
+        query = query.where(
+          and(
+            sql`${users.role} IN ('facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing', 'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin')`,
+            or(
+              // Users whose primary facility matches
+              inArray(users.facilityId, userFacilityIds),
+              // Or users who have overlapping associated facilities
+              sql`EXISTS (
+                SELECT 1 FROM jsonb_array_elements_text(${users.associatedFacilities}) AS facility_id
+                WHERE facility_id::integer = ANY(ARRAY[${sql.join(userFacilityIds, sql`, `)}])
+              )`
+            )
+          )
+        );
+      } else {
+        // Other users (staff, etc) shouldn't see facility users
+        console.log(`[FACILITY USERS ACCESS] User role ${req.user.role} has no access to facility users`);
+        return res.json([]);
+      }
+      
+      const facilityUsersData = await query.orderBy(users.lastName, users.firstName);
 
       res.json(facilityUsersData);
     } catch (error) {
