@@ -339,9 +339,12 @@ export interface IStorage {
     oldValues?: any,
     newValues?: any,
     ipAddress?: string,
-    userAgent?: string
+    userAgent?: string,
+    originalUserId?: number,
+    isImpersonated?: boolean,
+    impersonationContext?: any
   ): Promise<AuditLog>;
-  getAuditLogs(userId?: number, resource?: string): Promise<AuditLog[]>;
+  getAuditLogs(userId?: number, resource?: string): Promise<any[]>;
 
   // Permission methods
   getUserPermissions(role: string): Promise<string[]>;
@@ -1876,7 +1879,10 @@ export class DatabaseStorage implements IStorage {
     oldValues?: any,
     newValues?: any,
     ipAddress?: string,
-    userAgent?: string
+    userAgent?: string,
+    originalUserId?: number,
+    isImpersonated?: boolean,
+    impersonationContext?: any
   ): Promise<AuditLog> {
     const [auditLog] = await db
       .insert(auditLogs)
@@ -1889,21 +1895,68 @@ export class DatabaseStorage implements IStorage {
         newValues,
         ipAddress,
         userAgent,
+        originalUserId,
+        isImpersonated,
+        impersonationContext,
       })
       .returning();
     return auditLog;
   }
 
-  async getAuditLogs(userId?: number, resource?: string): Promise<AuditLog[]> {
+  async getAuditLogs(userId?: number, resource?: string): Promise<any[]> {
     const whereConditions = [];
     if (userId) whereConditions.push(eq(auditLogs.userId, userId));
     if (resource) whereConditions.push(eq(auditLogs.resource, resource));
 
-    return await db
-      .select()
+    const logs = await db
+      .select({
+        id: auditLogs.id,
+        action: auditLogs.action,
+        resource: auditLogs.resource,
+        resourceId: auditLogs.resourceId,
+        oldValues: auditLogs.oldValues,
+        newValues: auditLogs.newValues,
+        ipAddress: auditLogs.ipAddress,
+        userAgent: auditLogs.userAgent,
+        userId: auditLogs.userId,
+        username: users.email,
+        userFirstName: users.firstName,
+        userLastName: users.lastName,
+        originalUserId: auditLogs.originalUserId,
+        isImpersonated: auditLogs.isImpersonated,
+        impersonationContext: auditLogs.impersonationContext,
+        timestamp: auditLogs.createdAt,
+      })
       .from(auditLogs)
+      .leftJoin(users, eq(auditLogs.userId, users.id))
       .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
-      .orderBy(desc(auditLogs.createdAt));
+      .orderBy(desc(auditLogs.createdAt))
+      .limit(100);
+
+    // For impersonated actions, also fetch the original user info
+    const enhancedLogs = await Promise.all(
+      logs.map(async (log) => {
+        let originalUserInfo = null;
+        if (log.isImpersonated && log.originalUserId) {
+          const [originalUser] = await db
+            .select({
+              id: users.id,
+              email: users.email,
+              firstName: users.firstName,
+              lastName: users.lastName,
+            })
+            .from(users)
+            .where(eq(users.id, log.originalUserId));
+          originalUserInfo = originalUser;
+        }
+        return {
+          ...log,
+          originalUserInfo,
+        };
+      })
+    );
+
+    return enhancedLogs;
   }
 
   // Permission methods

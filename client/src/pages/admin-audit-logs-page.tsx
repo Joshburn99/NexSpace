@@ -44,6 +44,19 @@ interface AuditLog {
   timestamp: string;
   details?: string;
   ipAddress?: string;
+  isImpersonated?: boolean;
+  originalUserId?: number;
+  originalUserInfo?: {
+    id: number;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+  };
+  impersonationContext?: {
+    userType: string;
+    originalEmail: string;
+    impersonatedEmail: string;
+  };
 }
 
 export default function AdminAuditLogsPage() {
@@ -261,9 +274,9 @@ export default function AdminAuditLogsPage() {
                   <TableRow key={log.id}>
                     <TableCell>
                       <div className="text-sm">
-                        {format(new Date(log.createdAt), "MMM dd, yyyy")}
+                        {format(new Date(log.timestamp || log.createdAt), "MMM dd, yyyy")}
                         <div className="text-xs text-muted-foreground">
-                          {format(new Date(log.createdAt), "HH:mm:ss")}
+                          {format(new Date(log.timestamp || log.createdAt), "HH:mm:ss")}
                         </div>
                       </div>
                     </TableCell>
@@ -271,6 +284,13 @@ export default function AdminAuditLogsPage() {
                       <div>
                         <div className="font-medium">{log.username || "System"}</div>
                         <div className="text-xs text-muted-foreground">ID: {log.userId}</div>
+                        {log.isImpersonated && log.originalUserInfo && (
+                          <div className="mt-1 p-1 bg-orange-50 dark:bg-orange-900/20 rounded">
+                            <span className="text-xs text-orange-600 dark:text-orange-400">
+                              Impersonated by: {log.originalUserInfo.email}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>

@@ -327,6 +327,17 @@ export function registerRoutes(app: Express): Server {
       res.json = function (data: any) {
         // Log successful operations
         if (res.statusCode < 400 && req.user) {
+          // Check if this is an impersonated action
+          const isImpersonated = !!(req.session as any).originalUser;
+          const originalUserId = isImpersonated ? (req.session as any).originalUser.id : undefined;
+          const impersonationContext = isImpersonated
+            ? {
+                userType: (req.session as any).impersonatedUserType || "user",
+                originalEmail: (req.session as any).originalUser.email,
+                impersonatedEmail: req.user.email,
+              }
+            : undefined;
+
           storage.createAuditLog(
             req.user.id,
             action,
@@ -335,7 +346,10 @@ export function registerRoutes(app: Express): Server {
             undefined,
             data,
             req.ip,
-            req.get("User-Agent")
+            req.get("User-Agent"),
+            originalUserId,
+            isImpersonated,
+            impersonationContext
           );
         }
         return originalSend.call(this, data);

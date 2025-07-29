@@ -794,6 +794,10 @@ export const auditLogs = pgTable("audit_logs", {
   newValues: jsonb("new_values"),
   ipAddress: text("ip_address"),
   userAgent: text("user_agent"),
+  // Impersonation tracking fields
+  originalUserId: integer("original_user_id"), // ID of the super admin who initiated impersonation
+  isImpersonated: boolean("is_impersonated").default(false), // Whether this action was performed during impersonation
+  impersonationContext: jsonb("impersonation_context"), // Additional context like userType
   createdAt: timestamp("created_at").defaultNow(),
 });
 
