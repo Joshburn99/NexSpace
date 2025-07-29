@@ -8,11 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Briefcase, DollarSign, Calendar, MapPin, Search, Upload } from "lucide-react";
+import { Briefcase, DollarSign, Calendar, MapPin, Search, Upload, CheckCircle, Clock, XCircle } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
 import type { JobPosting } from "@shared/schema/job";
 
 export default function JobBoardPage() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [facilityFilter, setFacilityFilter] = useState("all");
@@ -22,6 +26,8 @@ export default function JobBoardPage() {
   const [coverLetter, setCoverLetter] = useState("");
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeUrl, setResumeUrl] = useState<string>("");
+  const [selectedApplication, setSelectedApplication] = useState<any>(null);
+  const [showTimeline, setShowTimeline] = useState(false);
 
   // Fetch job postings
   const { data: jobPostings = [], isLoading } = useQuery<JobPosting[]>({
@@ -36,6 +42,18 @@ export default function JobBoardPage() {
   // Fetch facilities for filter
   const { data: facilities = [] } = useQuery<any[]>({
     queryKey: ["/api/facilities"],
+  });
+
+  // Fetch user's applications
+  const { data: myApplications = [], isLoading: isLoadingApplications } = useQuery<any[]>({
+    queryKey: ["/api/job-applications", user?.id],
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const response = await fetch(`/api/job-applications?staffId=${user.id}`);
+      if (!response.ok) throw new Error("Failed to fetch applications");
+      return response.json();
+    },
+    enabled: !!user?.id,
   });
 
   // Apply for job mutation
@@ -143,12 +161,52 @@ export default function JobBoardPage() {
     });
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "pending":
+        return <Clock className="h-4 w-4 text-yellow-500" />;
+      case "reviewed":
+        return <Clock className="h-4 w-4 text-blue-500" />;
+      case "hired":
+      case "accepted":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "rejected":
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Clock className="h-4 w-4 text-gray-500" />;
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "Submitted";
+      case "reviewed":
+        return "Under Review";
+      case "hired":
+      case "accepted":
+        return "Hired";
+      case "rejected":
+        return "Not Selected";
+      default:
+        return status;
+    }
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Job Board</h1>
         <p className="text-muted-foreground">Find your next opportunity in healthcare</p>
       </div>
+
+      <Tabs defaultValue="browse" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 max-w-md">
+          <TabsTrigger value="browse">Browse Jobs</TabsTrigger>
+          <TabsTrigger value="applications">My Applications</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="browse" className="space-y-4">
 
       {/* Search and Filters */}
       <div className="mb-6 space-y-4">
@@ -346,6 +404,148 @@ export default function JobBoardPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="applications" className="space-y-4">
+          {isLoadingApplications ? (
+            <div className="text-center py-8">Loading your applications...</div>
+          ) : myApplications.length === 0 ? (
+            <Card className="p-8 text-center">
+              <p className="text-muted-foreground">You haven't applied to any jobs yet.</p>
+              <Button
+                onClick={() => {
+                  const tabsList = document.querySelector('[role="tablist"]');
+                  const browseTab = tabsList?.querySelector('[value="browse"]') as HTMLButtonElement;
+                  browseTab?.click();
+                }}
+                className="mt-4"
+              >
+                Browse Available Jobs
+              </Button>
+            </Card>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Applications</CardTitle>
+                <CardDescription>Track the status of your job applications</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Job Title</TableHead>
+                      <TableHead>Facility</TableHead>
+                      <TableHead>Applied On</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {myApplications.map((application) => (
+                      <TableRow
+                        key={application.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => {
+                          setSelectedApplication(application);
+                          setShowTimeline(true);
+                        }}
+                      >
+                        <TableCell className="font-medium">
+                          {application.jobPosting?.title || 'Position'}
+                        </TableCell>
+                        <TableCell>
+                          {facilities.find(f => f.id === application.jobPosting?.facilityId)?.name || 'Facility'}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(application.appliedAt).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            {getStatusIcon(application.status)}
+                            <span>{getStatusLabel(application.status)}</span>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Application Timeline Modal */}
+          <Dialog open={showTimeline} onOpenChange={setShowTimeline}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Application Timeline</DialogTitle>
+                <DialogDescription>
+                  {selectedApplication?.jobPosting?.title} at {facilities.find(f => f.id === selectedApplication?.jobPosting?.facilityId)?.name}
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-6 py-4">
+                {/* Submitted */}
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <CheckCircle className="h-8 w-8 text-green-500" />
+                    <div className="w-0.5 h-16 bg-gray-300 mt-2"></div>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold">Application Submitted</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedApplication && new Date(selectedApplication.appliedAt).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Interview Scheduled */}
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    {selectedApplication?.status === 'reviewed' || selectedApplication?.status === 'hired' ? (
+                      <CheckCircle className="h-8 w-8 text-green-500" />
+                    ) : (
+                      <Clock className="h-8 w-8 text-gray-400" />
+                    )}
+                    <div className="w-0.5 h-16 bg-gray-300 mt-2"></div>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold">Interview Scheduled</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedApplication?.status === 'reviewed' || selectedApplication?.status === 'hired'
+                        ? 'Interview completed'
+                        : 'Pending review'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Hired/Rejected */}
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    {selectedApplication?.status === 'hired' ? (
+                      <CheckCircle className="h-8 w-8 text-green-500" />
+                    ) : selectedApplication?.status === 'rejected' ? (
+                      <XCircle className="h-8 w-8 text-red-500" />
+                    ) : (
+                      <Clock className="h-8 w-8 text-gray-400" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold">Final Decision</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedApplication?.status === 'hired'
+                        ? 'Congratulations! You have been hired.'
+                        : selectedApplication?.status === 'rejected'
+                        ? 'Thank you for your interest. We have decided to move forward with other candidates.'
+                        : 'Pending decision'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={() => setShowTimeline(false)}>Close</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
