@@ -10,7 +10,7 @@ import { format } from "date-fns";
 import { z } from "zod";
 import {
   insertJobSchema,
-  insertJobApplicationSchema,
+
   insertShiftSchema,
   insertInvoiceSchema,
   insertWorkLogSchema,
@@ -66,7 +66,7 @@ import dashboardPreferencesRoutes from "./dashboard-preferences-routes";
 import calendarSyncRoutes from "./calendar-sync-routes";
 import { analytics } from "./analytics-tracker";
 import { insertJobPostingSchema, jobPostings, type JobPosting, jobApplications, interviewSchedules } from "@shared/schema";
-import { updateJobPostingSchema, insertJobApplicationSchema, insertInterviewScheduleSchema } from "@shared/schema/job";
+import { updateJobPostingSchema, insertInterviewScheduleSchema } from "@shared/schema/job";
 
 export function registerRoutes(app: Express): Server {
   // Define handleImpersonation middleware early so it can be passed to setupAuth
@@ -115,17 +115,17 @@ export function registerRoutes(app: Express): Server {
           if (staffMember) {
             impersonatedUser = {
               id: staffMember.id,
-              username: `${staffMember.firstName.toLowerCase()}${staffMember.lastName.toLowerCase()}`,
+              username: `${(staffMember.firstName || 'staff').toLowerCase()}${(staffMember.lastName || staffMember.id).toString().toLowerCase()}`,
               email: staffMember.email,
               password: "",
               firstName: staffMember.firstName,
               lastName: staffMember.lastName,
-              role: staffMember.role || "staff",
-              avatar: staffMember.avatar,
-              isActive: staffMember.status === "Active",
-              facilityId: staffMember.primaryFacilityId,
-              associatedFacilityIds: staffMember.associatedFacilities || [],
-              associatedFacilities: staffMember.associatedFacilities || [],
+              role: staffMember.employmentType || "staff",
+              avatar: staffMember.profilePhoto || null,
+              isActive: staffMember.isActive ?? true,
+              facilityId: staffMember.primaryFacilityId || null,
+              associatedFacilityIds: (staffMember as any).associatedFacilities || [],
+              associatedFacilities: (staffMember as any).associatedFacilities || [],
               permissions: ["view_schedules", "view_staff"], // Basic staff permissions
               userType: "staff",
               onboardingCompleted: true, // Staff members don't need onboarding
@@ -135,7 +135,7 @@ export function registerRoutes(app: Express): Server {
           // Regular user
           impersonatedUser = await storage.getUser(impersonatedId);
           if (impersonatedUser) {
-            impersonatedUser.userType = 'user';
+            (impersonatedUser as any).userType = 'user';
           }
         }
         
@@ -3642,7 +3642,7 @@ export function registerRoutes(app: Express): Server {
       dbStaffData = dbStaffData.map((staffMember) => {
         return {
           ...staffMember,
-          name: `${staffMember.firstName} ${staffMember.lastName}`, // Create full name for backward compatibility
+          name: `${staffMember.firstName || ''} ${staffMember.lastName || ''}`.trim(), // Create full name for backward compatibility
           role: staffMember.employmentType || "unknown",
           associatedFacilities: Array.isArray(staffMember.associatedFacilities)
             ? staffMember.associatedFacilities

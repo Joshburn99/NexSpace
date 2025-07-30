@@ -41,22 +41,49 @@ import { initializeTimeOffData } from "./init-timeoff-data";
   /* ---------------------------------------------------------------------- */
   /*  2.  ONE-OFF INITIALISATION TASKS                                     */
   /* ---------------------------------------------------------------------- */
+  // Initialize each component separately with individual error handling
   try {
     await setupFacilityUserRoleTemplates();
+    log("Facility user role templates initialized");
+  } catch (err) {
+    log(`Warning: Facility role templates failed to initialize: ${err instanceof Error ? err.message : err}`);
+  }
+
+  try {
     await initializeTimeOffData();
     log("Time-off data initialized");
-
-    // Uncomment if/when schema is stable
-    // await createEnhancedStaffProfiles();
-    // await generateComprehensiveSampleData();
   } catch (err) {
-    log(`Initialisation error: ${err instanceof Error ? err.message : err}`);
+    log(`Warning: Time-off data failed to initialize: ${err instanceof Error ? err.message : err}`);
   }
+
+  // Uncomment if/when schema is stable
+  // try {
+  //   await createEnhancedStaffProfiles();
+  //   log("Enhanced staff profiles created");
+  // } catch (err) {
+  //   log(`Warning: Enhanced staff profiles failed: ${err instanceof Error ? err.message : err}`);
+  // }
+
+  // try {
+  //   await generateComprehensiveSampleData();
+  //   log("Sample data generated");
+  // } catch (err) {
+  //   log(`Warning: Sample data generation failed: ${err instanceof Error ? err.message : err}`);
+  // }
 
   /* ---------------------------------------------------------------------- */
   /*  3.  ROUTES & ASSETS                                                  */
   /* ---------------------------------------------------------------------- */
-  const server = await registerRoutes(app); // returns the http.Server instance
+  let server: any;
+  try {
+    server = await registerRoutes(app); // returns the http.Server instance
+    log("Routes registered successfully");
+  } catch (err) {
+    log(`Route registration error: ${err instanceof Error ? err.message : err}`);
+    // Create a basic HTTP server if route registration fails
+    const { createServer } = await import("http");
+    server = createServer(app);
+  }
 
   // Error handler (must be after routes)
   app.use(

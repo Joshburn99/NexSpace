@@ -44,10 +44,22 @@ export default function AuthPage() {
     facilityId: 1,
   });
 
-  // Redirect if already logged in
+  // Redirect if already logged in - use role-based routing
   useEffect(() => {
     if (user) {
-      setLocation("/");
+      try {
+        // Import the getDashboardPathByRole function dynamically to avoid import issues
+        import("@/utils/routes").then(({ getDashboardPathByRole }) => {
+          const dashboardPath = getDashboardPathByRole(user.role as any);
+          setLocation(dashboardPath);
+        }).catch(() => {
+          // Fallback to home if there's an issue with role-based routing
+          setLocation("/");
+        });
+      } catch (error) {
+        // Fallback to home
+        setLocation("/");
+      }
     }
   }, [user, setLocation]);
 
