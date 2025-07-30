@@ -215,7 +215,9 @@ export default function EnhancedCalendarPage() {
   // Determine current user and their facility access
   const currentUser = impersonatedUser || user;
   const isFacilityUser = currentUser?.role?.includes("facility_");
-  const userAssociatedFacilities = currentUser?.associatedFacilities || [];
+  const userAssociatedFacilities = Array.isArray(currentUser?.associatedFacilities) 
+    ? currentUser.associatedFacilities 
+    : [];
 
   // Helper function to calculate hours between two times
   const calculateHoursBetween = (startTime: string, endTime: string): number => {
@@ -353,7 +355,7 @@ export default function EnhancedCalendarPage() {
 
   // Filter facilities based on user associations
   const facilities = useMemo(() => {
-    if (!isFacilityUser || !userAssociatedFacilities.length) {
+    if (!isFacilityUser || !Array.isArray(userAssociatedFacilities) || userAssociatedFacilities.length === 0) {
       return allFacilities;
     }
     // For facility users, only show facilities they are associated with
@@ -642,7 +644,8 @@ export default function EnhancedCalendarPage() {
         (shift as any).assignedStaff.some((staff: any) =>
           filters.workers.includes(staff.id?.toString() || staff.workerId?.toString())
         )) ||
-      (shift.assignedStaffId && filters.workers.includes(shift.assignedStaffId.toString()));
+      (shift.assignedStaffIds && Array.isArray(shift.assignedStaffIds) && 
+        shift.assignedStaffIds.some((staffId: number) => filters.workers.includes(staffId.toString())));
 
     return matchesSearch && matchesFacility && matchesSpecialty && matchesStatus && matchesWorker;
   });
@@ -1363,7 +1366,7 @@ export default function EnhancedCalendarPage() {
                 <p className="text-sm text-muted-foreground">Filled Shifts</p>
                 <p className="text-2xl font-bold text-green-600">
                   {
-                    filteredShifts.filter((s) => s.status === "filled" || s.status === "confirmed")
+                    filteredShifts.filter((s) => s.status === "filled" || s.status === "assigned")
                       .length
                   }
                 </p>
@@ -2166,7 +2169,8 @@ export default function EnhancedCalendarPage() {
                               // Check if user has any shifts on the same date
                               const userShifts = shifts.filter(
                                 (s) =>
-                                  s.assignedStaffId === user.id &&
+                                  ((s as any).assignedStaffIds && Array.isArray((s as any).assignedStaffIds) && 
+                                   (s as any).assignedStaffIds.includes(user.id)) &&
                                   s.date === selectedShift.date &&
                                   s.id !== selectedShift.id
                               );
