@@ -204,6 +204,8 @@ const getCalendarColor = (specialty: string): string => {
 };
 
 export default function EnhancedCalendarPage() {
+  console.log("[ENHANCED CAL] mounting", { route: "enhanced-calendar" });
+  
   const { user, impersonatedUser } = useAuth();
   const { hasPermission } = useRBAC();
   const { toast } = useToast();
@@ -1520,6 +1522,9 @@ export default function EnhancedCalendarPage() {
               expandRows={true}
               dayHeaderClassNames="text-xs md:text-sm font-medium"
               slotLabelClassNames="text-xs md:text-sm"
+              // Note: lazyFetching is enabled by default in FullCalendar
+              // This means events are only fetched when the date range changes
+              lazyFetching={true}
               eventClassNames={(arg) => {
                 const baseClasses =
                   "cursor-pointer transition-transform hover:scale-[1.02] shadow-sm hover:shadow-md";

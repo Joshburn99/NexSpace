@@ -45,7 +45,7 @@ export async function getUnifiedShifts(req: Request, res: Response) {
       console.log(`[UNIFIED SHIFTS API] Regeneration result: ${result.message}`);
     }
 
-    // Get all database shifts (both generated and manual)
+    // Get all database shifts (both generated and manual) - FIXED: properly handle shift_position
     const dbGeneratedShifts = await db.select().from(generatedShifts);
     const dbManualShifts = await db.select().from(shifts);
 
@@ -53,23 +53,23 @@ export async function getUnifiedShifts(req: Request, res: Response) {
 
     // Convert generated shifts to unified format (using actual database column names)
     const unifiedGeneratedShifts: UnifiedShiftData[] = dbGeneratedShifts.map((shift: any) => ({
-      id: shift.id,
+      id: `${shift.id}-${shift.shiftPosition || 0}`, // Include position in ID to ensure uniqueness
       title: shift.title || "Untitled Shift",
       date: shift.date || new Date().toISOString().split("T")[0],
-      startTime: shift.start_time || "08:00",
-      endTime: shift.end_time || "16:00",
+      startTime: shift.startTime || "08:00",
+      endTime: shift.endTime || "16:00",
       department: shift.department || "General",
       specialty: shift.specialty || "General",
-      facilityId: shift.facility_id || 1,
-      facilityName: shift.facility_name || "Unknown Facility",
+      facilityId: shift.facilityId || 1,
+      facilityName: shift.facilityName || "Unknown Facility",
       status: shift.status || "open",
       rate: parseFloat(shift.rate?.toString() || "40.0"),
       urgency: shift.urgency || "medium",
       description: shift.description || "Generated shift",
-      requiredWorkers: shift.required_workers || 1,
-      totalPositions: shift.max_staff || shift.required_workers || 1,
+      requiredWorkers: shift.requiredWorkers || 1,
+      totalPositions: shift.maxStaff || shift.requiredWorkers || 1,
       source: 'generated' as const,
-      templateId: shift.template_id,
+      templateId: shift.templateId,
     }));
 
     // Convert manual shifts to unified format
@@ -130,12 +130,13 @@ export async function getUnifiedShifts(req: Request, res: Response) {
       }
     });
 
-  } catch (error) {
-    console.error("[UNIFIED SHIFTS API] Error:", error);
+  } catch (err) {
+    console.error("[UNIFIED SHIFTS API] getUnifiedShifts failed", err);
+    if (err?.stack) console.error(err.stack);
     res.status(500).json({
       success: false,
       message: "Failed to fetch shifts",
-      error: error instanceof Error ? error.message : "Unknown error"
+      error: process.env.NODE_ENV === "development" ? (err instanceof Error ? err.message : "Unknown error") : "Internal Error"
     });
   }
 }

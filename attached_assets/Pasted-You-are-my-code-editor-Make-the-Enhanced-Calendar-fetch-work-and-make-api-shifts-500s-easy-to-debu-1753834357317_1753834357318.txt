@@ -1,0 +1,55 @@
+You are my code editor. Make the Enhanced Calendar fetch work and make /api/shifts 500s easy to debug.
+
+### 1) BACKEND DIAGNOSTICS & FIXES
+
+A. server/fix-shifts-api.ts
+- Find getUnifiedShifts(). Wrap its main query in try/catch.
+- In catch: console.error("[UNIFIED SHIFTS API] getUnifiedShifts failed", err); if (err?.stack) console.error(err.stack); rethrow.
+- In the SELECT, if any column is referenced that does not exist in the current schema (e.g., shifts.shift_position), replace with the correct column from our Drizzle schema (shared/schema.ts). If the real column is `position` or `role_id`, then select it as an alias:
+  - Example: `shifts.position.as("shift_position")` (or `shifts.role_id.as("shift_position")`).
+- Do not change business logic; only fix column names / aliases and add try/catch logging.
+
+B. server/routes.ts
+- Locate the /api/shifts GET route.
+- At the start of the handler, log: console.log("[/api/shifts] query:", req.query);
+- Parse optional req.query.start and req.query.end (ISO date strings).
+- Pass them to getUnifiedShifts({ start, end }) if the function supports args; otherwise filter in this route with a WHERE between start_time and end_time.
+- Wrap the whole handler in try/catch. On error:
+  - console.error("[/api/shifts] error", err); if (err?.stack) console.error(err.stack);
+  - If process.env.NODE_ENV === "development", respond with res.status(500).json({ message: err?.message || "Internal Error" });
+  - Else keep current behaviour.
+
+C. Add a lightweight health/diag endpoint
+- In server/routes.ts add:
+  GET /api/shifts/health  → returns { count, columns, sample }:
+    - SELECT COUNT(*) FROM shifts
+    - SELECT column_name FROM information_schema.columns WHERE table_name = 'shifts' ORDER BY ordinal_position
+    - SELECT id, start_time, end_time FROM shifts ORDER BY start_time DESC LIMIT 3
+  - Wrap in try/catch like above and log errors.
+
+D. Optional: script for column introspection
+- Create scripts/dev-diagnostics.ts (Node ESM) that:
+  - Connects via our existing Drizzle/Neon client
+  - Prints the `shifts` table columns and first 3 rows
+  - Exits cleanly
+- Keep it simple; I’ll run it with `node scripts/dev-diagnostics.ts`.
+
+### 2) FRONTEND – ENSURE FETCH ACTUALLY RUNS
+
+A. src/pages/enhanced-calendar-page.tsx (or wherever the EnhancedCalendarPage component lives)
+- Confirm we call our shifts data hook (useShifts / useEnhancedShifts / useUnifiedShifts).
+- Add a temporary console.log at first render: console.log("[ENHANCED CAL] mounting", { route: "enhanced-calendar" });
+- If the React Query call uses `enabled: ...` with a facility filter (e.g., enabled: !!selectedFacilityId), temporarily set `enabled: true` so it always fires while we debug. Leave a TODO comment to restore the guard.
+
+B. src/contexts/ShiftContext.tsx (or the file that defines the actual fetcher used by EnhancedCalendarPage)
+- In the fetch function that calls /api/shifts, insert the first line:
+  console.log("[SHIFTS] Fetching /api/shifts…", new Date().toISOString());
+- Do not change anything else in this file.
+
+C. Optional lazy range (prep only, do not wire yet)
+- In the EnhancedCalendarPage FullCalendar config, add a TODO comment showing how we will switch `events` to the function form with `info.startStr` and `info.endStr`. Do NOT change behaviour now; just place the comment block for later.
+
+### 3) HOUSEKEEPING
+
+- src/components/UnifiedHeader.tsx: Remove duplicate link that produces a duplicate key for "/enhanced-facilities".
+- Make no other changes. Show me diffs for each file and wait for approval.

@@ -1400,10 +1400,18 @@ export function registerRoutes(app: Express): Server {
   // Shifts API - Fixed to use unified data source and auto-generate from templates
   app.get("/api/shifts", requireAuth, handleImpersonation, requirePermission("view_schedules"), async (req: any, res) => {
     try {
+      console.log("[/api/shifts] query:", req.query);
+      
+      // Parse optional start and end date parameters
+      const { start, end } = req.query;
+      if (start) req.query.startDate = start;
+      if (end) req.query.endDate = end;
+      
       const { getUnifiedShifts } = await import("./fix-shifts-api");
       return await getUnifiedShifts(req, res);
-    } catch (error) {
-      console.error("[SHIFTS API] Error importing unified shifts API:", error);
+    } catch (err) {
+      console.error("[/api/shifts] error", err);
+      if (err?.stack) console.error(err.stack);
       
       // Fallback to original logic if import fails
       try {
@@ -2016,7 +2024,64 @@ export function registerRoutes(app: Express): Server {
       res.json(filteredShifts);
       } catch (fallbackError) {
         console.error("[SHIFTS API] Fallback logic failed:", fallbackError);
-        res.status(500).json({ message: "Failed to fetch shifts" });
+        if (fallbackError?.stack) console.error(fallbackError.stack);
+        if (process.env.NODE_ENV === "development") {
+          res.status(500).json({ 
+            message: fallbackError?.message || "Failed to fetch shifts",
+            error: "Both unified API and fallback failed"
+          });
+        } else {
+          res.status(500).json({ message: "Failed to fetch shifts" });
+        }
+      }
+    }
+  });
+
+  // Health/diagnostic endpoint for shifts
+  app.get("/api/shifts/health", requireAuth, async (req: any, res) => {
+    try {
+      console.log("[/api/shifts/health] Health check requested");
+      
+      // Get count using Drizzle ORM
+      const countResult = await db.select().from(shifts);
+      const count = countResult.length;
+      
+      // Get column info (simplified for Drizzle)
+      const columns = Object.keys(shifts).filter(key => !key.startsWith('_'));
+      
+      // Get sample data using Drizzle ORM
+      const sampleResult = await db.select({
+        id: shifts.id,
+        title: shifts.title,
+        startTime: shifts.startTime,
+        endTime: shifts.endTime,
+        status: shifts.status,
+        createdAt: shifts.createdAt
+      }).from(shifts).limit(3);
+      
+      res.json({
+        success: true,
+        count,
+        columns,
+        sample: sampleResult,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (err) {
+      console.error("[/api/shifts/health] error", err);
+      if (err?.stack) console.error(err.stack);
+      
+      if (process.env.NODE_ENV === "development") {
+        res.status(500).json({ 
+          success: false,
+          message: err?.message || "Health check failed",
+          error: "Database query failed"
+        });
+      } else {
+        res.status(500).json({ 
+          success: false,
+          message: "Health check failed" 
+        });
       }
     }
   });
