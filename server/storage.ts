@@ -660,7 +660,7 @@ export class DatabaseStorage implements IStorage {
           lastName: facilityUser.lastName,
           role: facilityUser.role,
           isActive: facilityUser.isActive,
-          facilityId: facilityUser.facilityId,
+          primaryFacilityId: facilityUser.facilityId,
           avatar: facilityUser.avatar,
           createdAt: facilityUser.createdAt,
           updatedAt: facilityUser.updatedAt,
@@ -1200,7 +1200,7 @@ export class DatabaseStorage implements IStorage {
       
       // Map database fields (snake_case) to TypeScript interface (camelCase)
       return staffData.map(s => {
-        // Use actual database first_name and last_name if available, fallback to splitting name
+        // Use actual database fields (snake_case from database)
         const firstName = s.first_name || (s.name || '').split(' ')[0] || '';
         const lastName = s.last_name || (s.name || '').split(' ').slice(1).join(' ') || '';
         
@@ -1211,27 +1211,27 @@ export class DatabaseStorage implements IStorage {
           name: s.name || `${firstName} ${lastName}`.trim(),
           email: s.email,
           phone: s.phone,
-          profilePhoto: s.profile_photo, // snake_case column
+          profilePhoto: s.profile_photo,
           bio: s.bio,
           specialty: s.specialty,
           department: s.department,
-          employmentType: s.employment_type, // snake_case column
-          hourlyRate: s.hourly_rate ? parseFloat(s.hourly_rate.toString()) : 0, // snake_case column
-          isActive: s.is_active ?? true, // snake_case column
-          availabilityStatus: s.availability_status, // snake_case column
-          licenseNumber: s.license_number, // snake_case column
-          licenseExpirationDate: s.license_expiry, // snake_case column
+          employmentType: s.employment_type,
+          hourlyRate: s.hourly_rate ? parseFloat(s.hourly_rate.toString()) : 0,
+          isActive: s.is_active ?? true,
+          availabilityStatus: s.availability_status,
+          licenseNumber: s.license_number,
+          licenseExpirationDate: s.license_expiry,
           certifications: s.certifications || [],
           languages: s.languages || [],
           location: s.location,
-          reliabilityScore: s.reliability_score ? parseFloat(s.reliability_score.toString()) : 0, // snake_case column
-          userId: s.user_id, // snake_case column
-          createdAt: s.created_at, // snake_case column
-          updatedAt: s.updated_at, // snake_case column
-          accountStatus: s.account_status || 'active', // snake_case column
-          homeAddress: s.home_address, // snake_case column
-          homeCity: s.home_city, // snake_case column
-          homeState: s.home_state, // snake_case column
+          reliabilityScore: s.reliability_score ? parseFloat(s.reliability_score.toString()) : 0,
+          userId: s.user_id,
+          createdAt: s.created_at,
+          updatedAt: s.updated_at,
+          accountStatus: s.account_status || 'active',
+          homeAddress: s.home_address,
+          homeCity: s.home_city,
+          homeState: s.home_state,
           associatedFacilities: s.associated_facilities || []
         };
       });
