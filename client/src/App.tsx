@@ -115,9 +115,6 @@ function AppContent() {
   // Show onboarding wizard for new users who haven't completed it
   // Skip onboarding for impersonated users, staff members, and facility users
   if (user && !user.onboardingCompleted && !isAuthPage && 
-      !user.isImpersonating && 
-      user.userType !== 'staff' && 
-      user.userType !== 'facility_user' &&
       user.role !== 'staff') {
     return <OnboardingWizard />;
   }
@@ -266,7 +263,7 @@ function AppContent() {
       <FacilityRoute 
         path="/facility/jobs" 
         component={FacilityJobsPage}
-        requiredPermissions={["manage_job_openings"]} 
+        requiredPermissions={["shifts.create"]} 
       />
       <ProtectedRoute path="/referral-system" component={ReferralSystemPage} />
       <ProtectedRoute path="/workflow-automation" component={WorkflowAutomationPage} />
@@ -276,9 +273,9 @@ function AppContent() {
       <ProtectedRoute path="/agency-usage" component={AgencyUsagePage} />
       <ProtectedRoute path="/job-posting" component={EnhancedJobPostingPage} />
       <FacilityRoute 
-        path="/facility/jobs" 
+        path="/facility/jobs-alt" 
         component={FacilityJobsPage}
-        requiredPermissions={["manage_job_openings"]}
+        requiredPermissions={["shifts.create"]}
       />
       
       {/* Additional facility user routes */}
@@ -308,12 +305,12 @@ function AppContent() {
       )} />
       <ProtectedRoute path="/facilities/analytics" component={() => (
         <FacilityDashboardLayout>
-          <FacilityAnalytics />
+          <AnalyticsPage />
         </FacilityDashboardLayout>
       )} />
       <ProtectedRoute path="/facilities/settings" component={() => (
         <FacilityDashboardLayout>
-          <FacilitySettings />
+          <FacilitySettingsPage />
         </FacilityDashboardLayout>
       )} />
       
