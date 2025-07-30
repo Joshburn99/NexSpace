@@ -1366,7 +1366,7 @@ export default function EnhancedCalendarPage() {
                 <p className="text-sm text-muted-foreground">Filled Shifts</p>
                 <p className="text-2xl font-bold text-green-600">
                   {
-                    filteredShifts.filter((s) => s.status === "filled" || s.status === "assigned")
+                    filteredShifts.filter((s) => s.status === "assigned" || s.status === "completed")
                       .length
                   }
                 </p>
