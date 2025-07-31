@@ -5,8 +5,12 @@ import { createEnhancedStaffProfiles } from "./enhanced-staff-data";
 import { generateComprehensiveSampleData } from "./sample-data-generator";
 import { setupFacilityUserRoleTemplates } from "./facility-user-roles-setup";
 import { initializeTimeOffData } from "./init-timeoff-data";
+import { config, validateConfig } from "./config";
 
 (async () => {
+  // Validate configuration on startup
+  validateConfig();
+  
   /* ---------------------------------------------------------------------- */
   /*  1.  APP & MIDDLEWARE                                                 */
   /* ---------------------------------------------------------------------- */
@@ -105,7 +109,7 @@ import { initializeTimeOffData } from "./init-timeoff-data";
   /* ---------------------------------------------------------------------- */
   /*  4.  START LISTENING                                                  */
   /* ---------------------------------------------------------------------- */
-  const PORT = Number(process.env.PORT) || 5000;
+  const PORT = config.server.port;
   server.listen(PORT, "0.0.0.0", () => log(`🚀  Server listening on ${PORT}`));
 })().catch((err) => {
 

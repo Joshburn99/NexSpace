@@ -456,39 +456,66 @@ export default function ShiftTemplatesPage() {
 
   // Component return statement
   return (
-                      {facilities.map((facility) => (
-                        <SelectItem key={facility.id} value={facility.id.toString()}>
-                          {getFacilityDisplayName(facility)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Shift Templates</h1>
+          <p className="text-muted-foreground">
+            Create and manage recurring shift patterns for your facilities.
+          </p>
+        </div>
 
+        <Dialog open={isTemplateDialogOpen} onOpenChange={setIsTemplateDialogOpen}>
+          <DialogTrigger asChild>
+            <Button
+              onClick={() => {
+                setEditingTemplate(null);
+                templateForm.reset({
+                  name: "",
+                  department: "",
+                  specialty: "",
+                  facilityId: 0,
+                  facilityName: "",
+                  buildingId: "",
+                  buildingName: "",
+                  minStaff: 1,
+                  maxStaff: 1,
+                  shiftType: "day",
+                  startTime: "07:00",
+                  endTime: "19:00",
+                  daysOfWeek: [1, 2, 3, 4, 5],
+                  isActive: true,
+                  hourlyRate: 0,
+                  daysPostedOut: 7,
+                  notes: "",
+                });
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Create Template
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingTemplate ? "Edit Shift Template" : "Create New Shift Template"}
+              </DialogTitle>
+              <DialogDescription>
+                Define a recurring shift pattern that can be used to generate shifts automatically.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={templateForm.handleSubmit(handleSaveTemplate)} className="space-y-4">
               <div>
-                <Label>Building/Unit</Label>
-                <Select
-                  value={templateForm.watch("buildingId") || ""}
-                  onValueChange={(value) => {
-                    templateForm.setValue("buildingId", value);
-                    templateForm.setValue("buildingName", value ? `Building ${value}` : "");
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select building or unit" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="main">Main Building</SelectItem>
-                    <SelectItem value="east">East Wing</SelectItem>
-                    <SelectItem value="west">West Wing</SelectItem>
-                    <SelectItem value="north">North Tower</SelectItem>
-                    <SelectItem value="south">South Tower</SelectItem>
-                    <SelectItem value="icu">ICU Unit</SelectItem>
-                    <SelectItem value="er">Emergency Unit</SelectItem>
-                    <SelectItem value="pediatric">Pediatric Unit</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Template Name</Label>
+                <Input
+                  value={templateForm.watch("name") || ""}
+                  onChange={(e) => templateForm.setValue("name", e.target.value)}
+                  placeholder="e.g., ICU Night Shift"
+                  className={templateForm.formState.errors.name ? "border-red-500" : ""}
+                />
+                {templateForm.formState.errors.name && (
+                  <p className="text-sm text-red-500 mt-1">{templateForm.formState.errors.name.message}</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -647,6 +674,56 @@ export default function ShiftTemplatesPage() {
                 <p className="text-xs text-muted-foreground mt-1">
                   How many days in advance shifts are automatically posted
                 </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Facility</Label>
+                  <Select
+                    value={templateForm.watch("facilityId")?.toString() || ""}
+                    onValueChange={(value) => {
+                      const facilityId = parseInt(value);
+                      const facility = facilities.find((f) => f.id === facilityId);
+                      templateForm.setValue("facilityId", facilityId);
+                      templateForm.setValue("facilityName", facility?.name || "");
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select facility" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {facilities.map((facility) => (
+                        <SelectItem key={facility.id} value={facility.id.toString()}>
+                          {getFacilityDisplayName(facility)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Building/Unit</Label>
+                  <Select
+                    value={templateForm.watch("buildingId") || ""}
+                    onValueChange={(value) => {
+                      templateForm.setValue("buildingId", value);
+                      templateForm.setValue("buildingName", value ? `Building ${value}` : "");
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select building or unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="main">Main Building</SelectItem>
+                      <SelectItem value="east">East Wing</SelectItem>
+                      <SelectItem value="west">West Wing</SelectItem>
+                      <SelectItem value="north">North Tower</SelectItem>
+                      <SelectItem value="south">South Tower</SelectItem>
+                      <SelectItem value="icu">ICU Unit</SelectItem>
+                      <SelectItem value="er">Emergency Unit</SelectItem>
+                      <SelectItem value="pediatric">Pediatric Unit</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               {/* Hourly Rate - Only visible to superusers */}

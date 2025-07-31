@@ -78,7 +78,7 @@ import { FacilityDashboard } from "@/pages/facility/FacilityDashboard";
 import { FacilityShifts } from "@/pages/facility/FacilityShifts";
 import { FacilityStaff } from "@/pages/facility/FacilityStaff";
 import MySchedulePage from "@/pages/MySchedulePage";
-import EnhancedCalendarPage from "@/pages/enhanced-calendar-page";
+import EnhancedCalendarPage from "@/pages/enhanced-calendar-page-minimal";
 import SchedulingTemplatesPage from "@/pages/scheduling-templates-page";
 import ShiftTemplatesPage from "@/pages/shift-templates-page";
 import AdvancedSchedulingPage from "@/pages/advanced-scheduling-page";
