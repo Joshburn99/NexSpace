@@ -98,7 +98,7 @@ export async function createExampleFacilities() {
     const createdFacilities = await db.insert(facilities).values(facilityData).returning();
     return createdFacilities;
   } catch (error) {
-    console.error("Error creating example facilities:", error);
+
     throw error;
   }
 }

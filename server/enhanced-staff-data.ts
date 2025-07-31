@@ -459,6 +459,6 @@ export async function createEnhancedStaffProfiles() {
     }
 
   } catch (error) {
-    console.error("Error creating staff profiles:", error);
+
   }
 }

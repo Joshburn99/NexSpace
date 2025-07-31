@@ -181,7 +181,7 @@ export default function RatesManagementPage() {
       });
     },
     onError: (error: any) => {
-      console.error("Rate mutation error:", error);
+
       toast({
         title: "Error",
         description:

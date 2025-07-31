@@ -229,7 +229,7 @@ export default function ShiftTemplatesPage() {
       });
     },
     onError: (error: any) => {
-      console.error("Create template error:", error);
+
       toast({
         title: "Template Creation Failed",
         description:
@@ -286,7 +286,7 @@ export default function ShiftTemplatesPage() {
       });
     },
     onError: (error: any) => {
-      console.error("Update template error:", error);
+
       toast({
         title: "Update Failed",
         description:
@@ -419,7 +419,6 @@ export default function ShiftTemplatesPage() {
       notes: template.notes || "",
     };
 
-
     // Reset form with the template data
     templateForm.reset(formData);
 
@@ -441,162 +440,22 @@ export default function ShiftTemplatesPage() {
 
       // Force re-render of all form controls
       templateForm.trigger();
-
-      console.log("Template form values after edit:", {
-        name: templateForm.watch("name"),
-        department: templateForm.watch("department"),
-        specialty: templateForm.watch("specialty"),
-        facilityId: templateForm.watch("facilityId"),
-        shiftType: templateForm.watch("shiftType"),
-        minStaff: templateForm.watch("minStaff"),
-      });
-    }, 300);
-
-    // Dialog is opened above in the timeout
+    }, 100);
   };
 
-  const handleTemplateSubmit = (data: z.infer<typeof templateSchema>) => {
-
+  const handleSaveTemplate = async (data: ShiftTemplateFormData) => {
     if (editingTemplate) {
-      updateTemplateMutation.mutate({ id: editingTemplate.id, ...data });
+      updateTemplateMutation.mutate({
+        id: editingTemplate.id,
+        ...data,
+      });
     } else {
       createTemplateMutation.mutate(data);
     }
   };
 
-  const getShiftTypeColor = (shiftType: string) => {
-    switch (shiftType) {
-      case "day":
-        return "bg-green-100 text-green-800";
-      case "evening":
-        return "bg-orange-100 text-orange-800";
-      case "night":
-        return "bg-blue-100 text-blue-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
+  // Component return statement
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Shift Templates</h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Manage reusable shift templates that automatically generate facility schedules
-          </p>
-        </div>
-        <Dialog
-          open={isTemplateDialogOpen}
-          onOpenChange={(open) => {
-            setIsTemplateDialogOpen(open);
-            if (!open) {
-              setEditingTemplate(null);
-              templateForm.reset({
-                name: "",
-                department: "",
-                specialty: "",
-                facilityId: 0,
-                facilityName: "",
-                buildingId: "",
-                buildingName: "",
-                minStaff: 1,
-                maxStaff: 1,
-                shiftType: "day",
-                startTime: "07:00",
-                endTime: "19:00",
-                daysOfWeek: [1, 2, 3, 4, 5],
-                isActive: true,
-                hourlyRate: 0,
-                daysPostedOut: 7,
-                notes: "",
-              });
-            }
-          }}
-        >
-          <DialogTrigger asChild>
-            <PermissionAction
-              permission="shifts.manage_templates"
-              action="Create Shift Template"
-              fallback={null}
-            >
-              <Button
-                onClick={() => {
-                  setEditingTemplate(null);
-                  templateForm.reset({
-                    name: "",
-                    department: "",
-                    specialty: "",
-                    facilityId: 0,
-                    facilityName: "",
-                    buildingId: "",
-                    buildingName: "",
-                    minStaff: 1,
-                    maxStaff: 1,
-                    shiftType: "day",
-                    startTime: "07:00",
-                    endTime: "19:00",
-                    daysOfWeek: [1, 2, 3, 4, 5],
-                    isActive: true,
-                    hourlyRate: 0,
-                    daysPostedOut: 7,
-                    notes: "",
-                  });
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Template
-              </Button>
-            </PermissionAction>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>
-                {editingTemplate ? "Edit Shift Template" : "Create Shift Template"}
-              </DialogTitle>
-            </DialogHeader>
-            {editingTemplate && (
-              <div className="text-sm text-gray-600 mb-4">Editing: {editingTemplate.name}</div>
-            )}
-            <form
-              onSubmit={templateForm.handleSubmit(handleTemplateSubmit)}
-              className="space-y-4 max-h-[70vh] overflow-y-auto pr-2"
-            >
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Template Name</Label>
-                  <Input
-                    placeholder="ICU Day Shift RN"
-                    value={templateForm.watch("name") || ""}
-                    onChange={(e) => templateForm.setValue("name", e.target.value)}
-                  />
-                  {templateForm.formState.errors.name && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {templateForm.formState.errors.name.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label>Facility</Label>
-                  <Select
-                    value={templateForm.watch("facilityId")?.toString() || ""}
-                    onValueChange={(value) => {
-                      templateForm.setValue("facilityId", parseInt(value));
-                      // Also set facilityName for consistency
-                      const selectedFacility = facilities.find((f) => f.id === parseInt(value));
-                      if (selectedFacility) {
-                        templateForm.setValue(
-                          "facilityName",
-                          getFacilityDisplayName(selectedFacility)
-                        );
-                      }
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select facility" />
-                    </SelectTrigger>
-                    <SelectContent>
                       {facilities.map((facility) => (
                         <SelectItem key={facility.id} value={facility.id.toString()}>
                           {getFacilityDisplayName(facility)}

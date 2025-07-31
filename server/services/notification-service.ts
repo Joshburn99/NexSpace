@@ -68,7 +68,7 @@ export class NotificationService {
         // Mark email as sent - we'll need to add a method to update notification emailSent status
         // For now, the notification was created with emailSent: true if email was sent successfully
       } catch (error) {
-        console.error("Failed to send email notification:", error);
+
       }
     }
 

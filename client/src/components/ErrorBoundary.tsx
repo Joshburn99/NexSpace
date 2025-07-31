@@ -44,7 +44,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
 
     // Log error for debugging
-    console.error("Error Boundary caught an error:", error, errorInfo);
+
   }
 
   handleRetry = () => {
@@ -119,7 +119,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 // Hook version for functional components
 export function useErrorHandler() {
   return (error: Error, errorInfo?: any) => {
-    console.error("Error caught by error handler:", error, errorInfo);
+
     // Additional error handling logic can be added here
   };
 }

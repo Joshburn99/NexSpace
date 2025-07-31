@@ -77,7 +77,7 @@ export default function JobBoard() {
       applicationForm.reset();
     },
     onError: (error: any) => {
-      console.error("Job application error:", error);
+
       toast({
         title: "Application Failed",
         description: error.message || "Failed to submit your application. Please try again.",
@@ -105,7 +105,7 @@ export default function JobBoard() {
       jobForm.reset();
     },
     onError: (error: any) => {
-      console.error("Job creation error:", error);
+
       toast({
         title: "Job Creation Failed",
         description:

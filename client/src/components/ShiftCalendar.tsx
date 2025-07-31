@@ -87,7 +87,7 @@ const ShiftCalendar: React.FC = () => {
     try {
       await assignWorker(shiftId, workerId);
     } catch (error) {
-      console.error("Failed to assign worker:", error);
+
       // In a real app, you'd show a toast notification here
     }
   };
@@ -96,7 +96,7 @@ const ShiftCalendar: React.FC = () => {
     try {
       await unassignWorker(shiftId, workerId);
     } catch (error) {
-      console.error("Failed to unassign worker:", error);
+
       // In a real app, you'd show a toast notification here
     }
   };

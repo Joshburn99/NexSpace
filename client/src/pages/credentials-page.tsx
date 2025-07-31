@@ -98,7 +98,7 @@ export default function CredentialsPage() {
       });
       setShowAddCredential(false);
     } catch (error) {
-      console.error("Credential submission error:", error);
+
       // Error handling could be enhanced here with toast notifications
     } finally {
       setIsSubmitting(false);

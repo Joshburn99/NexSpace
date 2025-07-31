@@ -192,7 +192,7 @@ export default function EnhancedProfilePage() {
       await updateStaffMember(user.id, updates);
       setIsEditing(false);
     } catch (error) {
-      console.error("Failed to update profile:", error);
+
     }
   };
 

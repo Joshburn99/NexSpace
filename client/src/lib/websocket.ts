@@ -52,7 +52,7 @@ class WebSocketManager {
 
   private connect() {
     if (!this.userId) {
-      console.warn("Cannot connect WebSocket without user ID");
+
       return;
     }
 
@@ -87,7 +87,7 @@ class WebSocketManager {
             this.handleMessage(message);
           }
         } catch (error) {
-          console.error("Failed to parse WebSocket message:", error);
+
         }
       };
 
@@ -101,11 +101,11 @@ class WebSocketManager {
       };
 
       this.ws.onerror = (error) => {
-        console.error("WebSocket error:", error);
+
         this.notifyListeners("error", { error });
       };
     } catch (error) {
-      console.error("Failed to connect to WebSocket:", error);
+
       this.handleReconnect();
     }
   }
@@ -117,15 +117,12 @@ class WebSocketManager {
   private handleReconnect() {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
-      console.log(
-        `Attempting to reconnect (${this.reconnectAttempts}/${this.maxReconnectAttempts})...`
-      );
 
       setTimeout(() => {
         this.connect();
       }, this.reconnectDelay * this.reconnectAttempts);
     } else {
-      console.error("Max reconnection attempts reached");
+
       this.notifyListeners("connection", { status: "failed" });
     }
   }
@@ -160,7 +157,7 @@ class WebSocketManager {
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
     } else {
-      console.warn("WebSocket is not connected. Message not sent:", message);
+
     }
   }
 
@@ -239,7 +236,7 @@ export function useWebSocket() {
     shiftId?: number
   ) => {
     if (!user) {
-      console.warn("Cannot send message: user not authenticated");
+
       return;
     }
     wsManager.sendChatMessage(recipientId, content, conversationId, shiftId);

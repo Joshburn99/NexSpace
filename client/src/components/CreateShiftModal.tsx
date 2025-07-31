@@ -79,7 +79,7 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
 
       onClose();
     } catch (error) {
-      console.error("Failed to create shift:", error);
+
     } finally {
       setIsSubmitting(false);
     }

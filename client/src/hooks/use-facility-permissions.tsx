@@ -241,139 +241,80 @@ export function FacilityPermissionsProvider({ children }: { children: ReactNode 
 
   const getFacilityId = (): number | null => {
     if (!user) return null;
-
-    // Debug logging to understand what data we have
-    console.log("[FACILITY PERMISSIONS] User data:", {
-      userEmail: user.email,
-      userRole: user.role,
-      userId: user.id,
-      facilityId: user.facilityId,
-      associatedFacilities: (user as any).associatedFacilities,
-      availableProps: Object.keys(user),
-      hasAssociatedFacilities:
-        !!(user as any).associatedFacilities && (user as any).associatedFacilities.length > 0,
-    });
-
-    // Check if user has associated facilities (for facility users)
-    const associatedFacilities = (user as any).associatedFacilities;
-    if (associatedFacilities && associatedFacilities.length > 0) {
-      return associatedFacilities[0]; // Use first associated facility
-    }
-
-    // For facility users, try to get from user's direct facilityId
-    if (user.facilityId) {
+    
+    // Check if user has facilityId property
+    if ('facilityId' in user && typeof user.facilityId === 'number') {
       return user.facilityId;
     }
-
-    // Special case: If this is an impersonated facility user (executive@nexspacecorp.com) with ID 9559
-    // and no associatedFacilities, use facility ID 19 (Test Squad Skilled Nursing)
-    if (user.email === "executive@nexspacecorp.com" && user.id === 9559) {
-      return 19;
+    
+    // Check facilities array
+    if ('facilities' in user && Array.isArray(user.facilities) && user.facilities.length > 0) {
+      const firstFacility = user.facilities[0];
+      if (typeof firstFacility === 'object' && 'id' in firstFacility) {
+        return firstFacility.id;
+      }
+      if (typeof firstFacility === 'number') {
+        return firstFacility;
+      }
     }
-
-    // For super admins during impersonation, they might not have a facilityId
-    // Try to get from impersonated user data if available
-    if (user.role === "super_admin") {
-      return null;
-    }
-
+    
     return null;
   };
 
   const getUserPermissions = (): FacilityPermission[] => {
-    if (!user || user.role === "super_admin") {
-      // Super admins have all permissions
-      return Object.values(ROLE_PERMISSIONS).flat();
+    if (!user) return [];
+    
+    // Super admin gets all permissions
+    if (user.role === 'super_admin') {
+      return Object.values(PAGE_PERMISSIONS).flat();
     }
-
-    // Get permissions from user's role and explicit permissions
-    const userPermissions = (user as any).permissions || [];
-    const facilityRole = (user as any).facilityRole || user.role;
-    const rolePermissions = ROLE_PERMISSIONS[facilityRole] || ROLE_PERMISSIONS[user.role] || [];
-
-    // Debug logging for permissions
-    console.log("[FACILITY PERMISSIONS] Getting user permissions:", {
-      userRole: user.role,
-      facilityRole,
-      userPermissions,
-      rolePermissions,
-      availableRoles: Object.keys(ROLE_PERMISSIONS),
-      hasUserPermissions: userPermissions && userPermissions.length > 0,
-      userPermissionsLength: userPermissions?.length || 0,
-      finalPermissions:
-        userPermissions && userPermissions.length > 0 ? userPermissions : rolePermissions,
-    });
-
-    // If user has explicit permissions from backend (login/impersonation), use those
-    if (userPermissions && userPermissions.length > 0) {
-      return userPermissions as FacilityPermission[];
+    
+    // Check role-based permissions
+    const userRole = user.role as keyof typeof ROLE_PERMISSIONS;
+    if (userRole in ROLE_PERMISSIONS) {
+      return ROLE_PERMISSIONS[userRole];
     }
-
-    // Otherwise fallback to role-based permissions
-    return rolePermissions as FacilityPermission[];
+    
+    // Check custom permissions
+    if ('permissions' in user && Array.isArray(user.permissions)) {
+      return user.permissions as FacilityPermission[];
+    }
+    
+    return [];
   };
 
   const hasPermission = (permission: FacilityPermission): boolean => {
-    if (!user) return false;
-
-    // Super admins have all permissions
-    if (user.role === "super_admin") return true;
-
-    const userPermissions = getUserPermissions();
-    const hasAccess = userPermissions.includes(permission);
-
-    console.log(`[FACILITY PERMISSIONS] Checking permission '${permission}':`, {
-      userEmail: user.email,
-      userRole: user.role,
-      userPermissions,
-      hasAccess,
-      permissionExists: userPermissions.includes(permission),
-    });
-
-    return hasAccess;
+    const permissions = getUserPermissions();
+    return permissions.includes(permission);
   };
 
   const hasAnyPermission = (permissions: FacilityPermission[]): boolean => {
-    if (!permissions || permissions.length === 0) {
-      return false;
-    }
-    return permissions.some((permission) => hasPermission(permission));
+    const userPermissions = getUserPermissions();
+    return permissions.some(permission => userPermissions.includes(permission));
   };
 
   const hasAllPermissions = (permissions: FacilityPermission[]): boolean => {
-    return permissions.every((permission) => hasPermission(permission));
+    const userPermissions = getUserPermissions();
+    return permissions.every(permission => userPermissions.includes(permission));
   };
 
   const canAccessPage = (page: string): boolean => {
-    const pagePermissions: Record<string, FacilityPermission[]> = {
-      dashboard: ["view_schedules", "view_staff", "view_reports"],
-      schedule: ["view_schedules"],
-      staff: ["view_staff"],
-      billing: ["view_billing"],
-      reports: ["view_reports"],
-      analytics: ["view_analytics"],
-      compliance: ["manage_compliance"],
-      settings: ["view_facility_profile"],
-      users: ["manage_facility_users"],
-    };
+    const pagePermissions = PAGE_PERMISSIONS[page as keyof typeof PAGE_PERMISSIONS];
+    if (!pagePermissions) return true; // No restrictions for unknown pages
+    return hasAnyPermission(pagePermissions);
+  };
 
-    const requiredPermissions = pagePermissions[page];
-    if (!requiredPermissions) return true; // Unknown pages are accessible by default
-
-    return hasAnyPermission(requiredPermissions);
+  const value: FacilityPermissionsContextType = {
+    hasPermission,
+    hasAnyPermission,
+    hasAllPermissions,
+    getUserPermissions,
+    canAccessPage,
+    facilityId: getFacilityId(),
   };
 
   return (
-    <FacilityPermissionsContext.Provider
-      value={{
-        hasPermission,
-        hasAnyPermission,
-        hasAllPermissions,
-        getUserPermissions,
-        canAccessPage,
-        facilityId: getFacilityId(),
-      }}
-    >
+    <FacilityPermissionsContext.Provider value={value}>
       {children}
     </FacilityPermissionsContext.Provider>
   );

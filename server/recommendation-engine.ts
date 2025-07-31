@@ -290,7 +290,7 @@ export class LocationBasedRecommendationEngine {
       // Return top 10 recommendations
       return recommendations.slice(0, 10);
     } catch (error) {
-      console.error("Error generating recommendations:", error);
+
       throw error;
     }
   }

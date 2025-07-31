@@ -364,7 +364,7 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      console.log("[SHIFTS] Fetching /api/shifts…", new Date().toISOString());
+
       // Fetch all shift categories in parallel
       const [openResponse, requestedResponse, bookedResponse, historyResponse] = await Promise.all([
         fetch("/api/shifts?status=open", { credentials: "include" }),
@@ -404,7 +404,7 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
         setHistory(sampleShifts.filter((s) => s.status === "completed"));
       }
     } catch (error) {
-      console.error("Failed to load shifts:", error);
+
       setError("Failed to load shifts");
 
       // Fallback to sample data
@@ -442,7 +442,7 @@ export function ShiftProvider({ children }: { children: ReactNode }) {
         setHistory(sampleShifts.filter((s) => s.status === "completed"));
       }
     } catch (err) {
-      console.error("Failed to fetch shift history:", err);
+
       setHistory(sampleShifts.filter((s) => s.status === "completed"));
     }
   };

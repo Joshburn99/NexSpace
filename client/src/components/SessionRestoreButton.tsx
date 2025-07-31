@@ -30,7 +30,7 @@ export function SessionRestoreButton() {
       await restoreSession(username, password, impersonationData?.impersonatedUserId);
       setIsOpen(false);
     } catch (error) {
-      console.error("Failed to restore session:", error);
+
     } finally {
       setIsLoading(false);
     }
@@ -40,7 +40,7 @@ export function SessionRestoreButton() {
     try {
       await stopImpersonation();
     } catch (error) {
-      console.error("Failed to stop impersonation:", error);
+
     }
   };
 

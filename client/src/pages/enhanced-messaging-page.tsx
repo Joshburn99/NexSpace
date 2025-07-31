@@ -241,7 +241,7 @@ export default function EnhancedMessagingPage() {
       setIsMassMessage(false);
       setIsComposeOpen(false);
     } catch (error) {
-      console.error("Error sending message:", error);
+
       toast({
         title: "Failed to send message",
         description: "Please try again. If the problem persists, contact support.",

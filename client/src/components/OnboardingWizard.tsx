@@ -362,9 +362,7 @@ function ProfileStep({
       const endpoint = isFacilityUser 
         ? `/api/facility-users/${user?.facilityUserId}/profile`
         : `/api/users/${user?.id}/profile`;
-      
-      console.log("[ONBOARDING] Using endpoint:", endpoint, "IsFacilityUser:", isFacilityUser);
-      
+
       const response = await fetch(endpoint, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -378,14 +376,14 @@ function ProfileStep({
       return response.json();
     },
     onSuccess: (data) => {
-      console.log("[ONBOARDING] Profile update successful:", data);
+
       toast({
         title: "Profile updated",
         description: "Your profile information has been saved.",
       });
     },
     onError: (error: any) => {
-      console.error("[ONBOARDING] Profile mutation error:", error);
+
       toast({
         title: "Error",
         description: error.message || "Failed to update profile",
@@ -396,12 +394,12 @@ function ProfileStep({
 
   const onSubmit = async (data: any) => {
     try {
-      console.log("[ONBOARDING] Submitting profile data:", data);
+
       await updateProfile.mutateAsync(data);
-      console.log("[ONBOARDING] Profile update successful, calling onNext");
+
       onNext(data);
     } catch (error) {
-      console.error("[ONBOARDING] Profile update failed:", error);
+
       toast({
         title: "Error",
         description: "Failed to update profile. Please try again.",

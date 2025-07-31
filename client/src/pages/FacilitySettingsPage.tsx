@@ -107,7 +107,7 @@ export default function FacilitySettingsPage() {
       });
     },
     onError: (error: any) => {
-      console.error("Settings update error:", error);
+
       toast({
         title: "Error",
         description:

@@ -202,7 +202,7 @@ export function useRealTimeData<T>(
       const ws = new WebSocket(wsUrl);
       
       ws.onopen = () => {
-        console.log(`Connected to real-time updates for ${eventType}`);
+
       };
       
       ws.onmessage = (event) => {
@@ -213,19 +213,19 @@ export function useRealTimeData<T>(
             queryClient.invalidateQueries({ queryKey: [endpoint] });
           }
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+
         }
       };
       
       ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+
       };
       
       return () => {
         ws.close();
       };
     } catch (error) {
-      console.error('Failed to establish WebSocket connection:', error);
+
     }
   }, [endpoint, eventType, enabled, queryClient]);
 

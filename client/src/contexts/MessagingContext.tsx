@@ -83,7 +83,7 @@ export const MessagingProvider: React.FC<{ children: ReactNode }> = ({ children 
         const parsedMessages = JSON.parse(savedMessages);
         setMessages([...sampleMessages, ...parsedMessages]);
       } catch (error) {
-        console.error("Error parsing saved messages:", error);
+
         setMessages(sampleMessages);
       }
     } else {

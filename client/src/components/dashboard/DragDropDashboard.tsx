@@ -257,7 +257,7 @@ export function DragDropDashboard({ onLayoutChange }: DragDropDashboardProps) {
       setIsCustomizing(false);
     },
     onError: (error) => {
-      console.error("Failed to save dashboard:", error);
+
       toast({
         title: "Save Failed",
         description: "Could not save dashboard layout. Please try again.",

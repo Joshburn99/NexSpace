@@ -196,6 +196,6 @@ export async function setupFacilityUserRoleTemplates() {
     }
 
   } catch (error) {
-    console.error("Error setting up facility user role templates:", error);
+
   }
 }

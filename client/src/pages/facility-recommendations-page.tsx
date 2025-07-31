@@ -167,7 +167,7 @@ export default function FacilityRecommendationsPage() {
         }
       }
     } catch (error) {
-      console.error("Geocoding error:", error);
+
     }
   };
 

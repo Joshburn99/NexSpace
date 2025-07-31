@@ -197,7 +197,7 @@ export default function BillingDashboard() {
       });
     },
     onError: (error: any) => {
-      console.error("Invoice mutation error:", error);
+
       toast({
         title: "Error",
         description:
@@ -226,7 +226,7 @@ export default function BillingDashboard() {
       });
     },
     onError: (error: any) => {
-      console.error("Approval error:", error);
+
       toast({
         title: "Error",
         description:

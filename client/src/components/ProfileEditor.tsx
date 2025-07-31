@@ -123,8 +123,7 @@ export function ProfileEditor() {
           const userData = await userResponse.json();
           if (userData.facilityUserId) {
             const endpoint = `/api/facility-users/${userData.facilityUserId}/profile`;
-            console.log("[PROFILE EDITOR] Updating facility user profile:", { endpoint, data });
-            
+
             const response = await fetch(endpoint, {
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
@@ -144,8 +143,7 @@ export function ProfileEditor() {
       
       // Regular user update
       const endpoint = `/api/users/${user?.id}/profile`;
-      console.log("[PROFILE EDITOR] Updating user profile:", { endpoint, data });
-      
+
       const response = await fetch(endpoint, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -161,14 +159,14 @@ export function ProfileEditor() {
       return response.json();
     },
     onSuccess: (data) => {
-      console.log("[PROFILE EDITOR] Profile updated successfully:", data);
+
       toast({
         title: "Success",
         description: "Your profile has been updated.",
       });
     },
     onError: (error: any) => {
-      console.error("[PROFILE EDITOR] Update failed:", error);
+
       toast({
         title: "Error",
         description: error.message || "Failed to update profile",

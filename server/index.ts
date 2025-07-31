@@ -1,5 +1,5 @@
 import express, { type Request, type Response, type NextFunction } from "express";
-import { registerRoutes } from "./routes";
+import { registerRoutes } from "./routes/index";
 import { setupVite, serveStatic, log } from "./vite";
 import { createEnhancedStaffProfiles } from "./enhanced-staff-data";
 import { generateComprehensiveSampleData } from "./sample-data-generator";
@@ -108,6 +108,6 @@ import { initializeTimeOffData } from "./init-timeoff-data";
   const PORT = Number(process.env.PORT) || 5000;
   server.listen(PORT, "0.0.0.0", () => log(`🚀  Server listening on ${PORT}`));
 })().catch((err) => {
-  console.error("Fatal startup error:", err);
+
   process.exit(1);
 });

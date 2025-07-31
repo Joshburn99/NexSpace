@@ -32,24 +32,20 @@ interface UnifiedShiftData {
 
 export async function getUnifiedShifts(req: Request, res: Response) {
   try {
-    console.log("[UNIFIED SHIFTS API] Starting unified shifts fetch...");
-    
+
     // Check if we need to regenerate template shifts
     const generatedShiftsCount = await db.select().from(generatedShifts);
-    console.log(`[UNIFIED SHIFTS API] Found ${generatedShiftsCount.length} generated shifts in database`);
-    
+
     // If no generated shifts exist, regenerate from active templates
     if (generatedShiftsCount.length === 0) {
-      console.log("[UNIFIED SHIFTS API] No generated shifts found, regenerating from templates...");
+
       const result = await regenerateAllActiveTemplateShifts();
-      console.log(`[UNIFIED SHIFTS API] Regeneration result: ${result.message}`);
+
     }
 
     // Get all database shifts (both generated and manual) - FIXED: properly handle shift_position
     const dbGeneratedShifts = await db.select().from(generatedShifts);
     const dbManualShifts = await db.select().from(shifts);
-
-    console.log(`[UNIFIED SHIFTS API] Database stats: ${dbGeneratedShifts.length} generated, ${dbManualShifts.length} manual`);
 
     // Convert generated shifts to unified format (using actual database column names)
     const unifiedGeneratedShifts: UnifiedShiftData[] = dbGeneratedShifts.map((shift: any) => ({
@@ -105,7 +101,7 @@ export async function getUnifiedShifts(req: Request, res: Response) {
       filteredShifts = allShifts.filter(shift => 
         associatedFacilityIds.includes(shift.facilityId)
       );
-      console.log(`[UNIFIED SHIFTS API] Facility filtering: ${allShifts.length} → ${filteredShifts.length} shifts`);
+
     }
 
     // Sort by date and time
@@ -115,8 +111,6 @@ export async function getUnifiedShifts(req: Request, res: Response) {
       }
       return a.startTime.localeCompare(b.startTime);
     });
-
-    console.log(`[UNIFIED SHIFTS API] Returning ${filteredShifts.length} unified shifts`);
 
     res.json({
       success: true,
@@ -131,7 +125,7 @@ export async function getUnifiedShifts(req: Request, res: Response) {
     });
 
   } catch (err) {
-    console.error("[UNIFIED SHIFTS API] getUnifiedShifts failed", err);
+
     if (err?.stack) console.error(err.stack);
     res.status(500).json({
       success: false,

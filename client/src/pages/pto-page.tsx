@@ -84,7 +84,7 @@ export default function PTOPage() {
       setIsEmergency(false);
       setIsSubmitDialogOpen(false);
     } catch (error) {
-      console.error("PTO submission error:", error);
+
       // Error handling could be enhanced here with toast notifications
     } finally {
       setIsSubmitting(false);

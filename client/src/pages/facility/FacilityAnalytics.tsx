@@ -79,7 +79,7 @@ export function FacilityAnalytics() {
   });
 
   const handleExportCSV = () => {
-    console.log('Exporting data as CSV...');
+
   };
 
   if (isLoading) {

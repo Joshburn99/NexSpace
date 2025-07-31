@@ -116,7 +116,7 @@ export default function TimeClockPage() {
       setShowClockOutDialog(false);
       setIsClockingOut(false);
     } catch (error) {
-      console.error("Error clocking out:", error);
+
       toast({
         title: "Clock Out Failed",
         description: "Failed to record your time. Please try again.",

@@ -254,7 +254,7 @@ export const auditLog = (action: string, resource: string) => {
             impersonationContext
           )
           .catch((error) => {
-            console.error("Audit log failed:", error);
+
           });
       }
       return originalSend.call(this, data);

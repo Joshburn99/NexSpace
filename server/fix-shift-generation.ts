@@ -16,16 +16,13 @@ interface GenerateShiftsResult {
 
 export async function regenerateAllActiveTemplateShifts(): Promise<GenerateShiftsResult> {
   try {
-    console.log("[SHIFT GENERATION FIX] Starting regeneration of all active template shifts...");
-    
+
     // Get all active templates
     const activeTemplates = await db
       .select()
       .from(shiftTemplates)
       .where(eq(shiftTemplates.isActive, true));
 
-    console.log(`[SHIFT GENERATION FIX] Found ${activeTemplates.length} active templates`);
-    
     let totalShiftsGenerated = 0;
     let templatesProcessed = 0;
 
@@ -34,14 +31,12 @@ export async function regenerateAllActiveTemplateShifts(): Promise<GenerateShift
         const shiftsGenerated = await generateShiftsForTemplate(template);
         totalShiftsGenerated += shiftsGenerated;
         templatesProcessed++;
-        console.log(`[SHIFT GENERATION FIX] Template ${template.id} (${template.name}): Generated ${shiftsGenerated} shifts`);
+
       } catch (error) {
-        console.error(`[SHIFT GENERATION FIX] Error processing template ${template.id}:`, error);
+
       }
     }
 
-    console.log(`[SHIFT GENERATION FIX] Complete: ${totalShiftsGenerated} shifts generated from ${templatesProcessed} templates`);
-    
     return {
       success: true,
       message: `Successfully generated ${totalShiftsGenerated} shifts from ${templatesProcessed} active templates`,
@@ -49,7 +44,7 @@ export async function regenerateAllActiveTemplateShifts(): Promise<GenerateShift
       templatesProcessed
     };
   } catch (error) {
-    console.error("[SHIFT GENERATION FIX] Critical error:", error);
+
     return {
       success: false,
       message: `Failed to regenerate shifts: ${error}`,
@@ -123,7 +118,7 @@ async function generateShiftsForTemplate(template: any): Promise<number> {
           await db.insert(generatedShifts).values(shiftData).onConflictDoNothing();
           shiftsGenerated++;
         } catch (error) {
-          console.error(`[SHIFT GENERATION FIX] Error inserting shift ${uniqueId}:`, error);
+
         }
       }
     }

@@ -246,7 +246,7 @@ function EnhancedStaffPageContent() {
       if (Array.isArray(data)) {
         return data;
       }
-      console.error("Staff API returned non-array data:", data);
+
       return [];
     },
   });
@@ -267,7 +267,7 @@ function EnhancedStaffPageContent() {
         }
       }
     } catch (error) {
-      console.error("Error handling profile URL parameter:", error);
+
     }
   }, [staffMembers]);
 
@@ -325,7 +325,7 @@ function EnhancedStaffPageContent() {
   // Filter staff members with comprehensive null safety and exclude superusers
   const filteredStaff = React.useMemo(() => {
     if (!Array.isArray(staffMembers)) {
-      console.error("staffMembers is not an array:", staffMembers);
+
       return [];
     }
 
@@ -356,7 +356,7 @@ function EnhancedStaffPageContent() {
 
         return matchesSearch && matchesWorkerType && matchesSpecialty && matchesStatus;
       } catch (error) {
-        console.error("Error filtering staff member:", error, staff);
+
         return false;
       }
     });
@@ -1937,7 +1937,7 @@ export default function EnhancedStaffPage() {
         </div>
       }
       onError={(error, errorInfo) => {
-        console.error("EnhancedStaffPage Error:", error, errorInfo);
+
       }}
     >
       <EnhancedStaffPageContent />

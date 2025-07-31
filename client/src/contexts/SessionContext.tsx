@@ -104,7 +104,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
               impersonationData?.impersonatedUserId
             );
           } catch (error) {
-            console.error("Failed to auto-restore session:", error);
+
             // Clear invalid stored data
             localStorage.removeItem(STORAGE_KEYS.QUICK_AUTH);
             localStorage.removeItem(STORAGE_KEYS.IMPERSONATION_STATE);

@@ -96,7 +96,7 @@ export async function initializeTimeOffData() {
       await db.insert(timeOffPolicies).values(defaultPolicy);
     }
   } catch (error) {
-    console.error("Error initializing time-off data:", error);
+
     throw error;
   }
 }

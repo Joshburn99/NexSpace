@@ -82,7 +82,7 @@ export function createEnhancedFacilitiesRoutes(
 
       res.json(facilitiesData);
     } catch (error) {
-      console.error("Error fetching facilities:", error);
+
       res.status(500).json({ message: "Failed to fetch facilities" });
     }
   });
@@ -145,7 +145,7 @@ export function createEnhancedFacilitiesRoutes(
 
       res.json(facilityData);
     } catch (error) {
-      console.error("Error fetching facility:", error);
+
       res.status(500).json({ message: "Failed to fetch facility" });
     }
   });
@@ -322,7 +322,6 @@ export function createEnhancedFacilitiesRoutes(
           res.status(201).json(completeData);
         });
       } catch (error) {
-        console.error("Error creating facility:", error);
 
         if (error instanceof z.ZodError) {
           const fieldErrors = error.errors.map((err) => ({
@@ -410,7 +409,6 @@ export function createEnhancedFacilitiesRoutes(
 
         res.json(updatedFacility);
       } catch (error) {
-        console.error("Error updating facility:", error);
 
         if (error instanceof z.ZodError) {
           const fieldErrors = error.errors.map((err) => ({
@@ -456,7 +454,7 @@ export function createEnhancedFacilitiesRoutes(
       
       res.json(settings);
     } catch (error) {
-      console.error("Error fetching facility settings:", error);
+
       res.status(500).json({ message: "Failed to fetch facility settings" });
     }
   });
@@ -510,7 +508,7 @@ export function createEnhancedFacilitiesRoutes(
         res.json(newSettings);
       }
     } catch (error) {
-      console.error("Error updating facility settings:", error);
+
       res.status(500).json({ message: "Failed to update facility settings" });
     }
   });
@@ -687,7 +685,6 @@ export function createEnhancedFacilitiesRoutes(
           res.json(completeData);
         });
       } catch (error) {
-        console.error("Error updating facility:", error);
 
         if (error instanceof z.ZodError) {
           const fieldErrors = error.errors.map((err) => ({
@@ -729,7 +726,7 @@ export function createEnhancedFacilitiesRoutes(
 
         res.json({ message: "Facility deactivated successfully" });
       } catch (error) {
-        console.error("Error deactivating facility:", error);
+
         res.status(500).json({ message: "Failed to deactivate facility" });
       }
     }
@@ -777,7 +774,7 @@ export function createEnhancedFacilitiesRoutes(
           floatPoolMargins: updatedFacility.floatPoolMargins,
         });
       } catch (error) {
-        console.error("Error updating facility rates:", error);
+
         res.status(500).json({ message: "Failed to update rates" });
       }
     }
@@ -820,7 +817,7 @@ export function createEnhancedFacilitiesRoutes(
           staffingTargets: updatedFacility.staffingTargets,
         });
       } catch (error) {
-        console.error("Error updating staffing targets:", error);
+
         res.status(500).json({ message: "Failed to update staffing targets" });
       }
     }
@@ -855,7 +852,7 @@ export function createEnhancedFacilitiesRoutes(
           workflowAutomationConfig: updatedFacility.workflowAutomationConfig,
         });
       } catch (error) {
-        console.error("Error updating workflow configuration:", error);
+
         res.status(500).json({ message: "Failed to update workflow configuration" });
       }
     }

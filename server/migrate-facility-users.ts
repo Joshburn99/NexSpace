@@ -25,7 +25,6 @@ async function migrateFacilityUsers() {
       .from(users)
       .where(inArray(users.role, facilityUserRoles));
 
-
     // Check for existing emails in facility_users to avoid duplicates
     const existingFacilityUsers = await db
       .select({ email: facilityUsers.email })
@@ -87,7 +86,7 @@ async function migrateFacilityUsers() {
     }
 
   } catch (error) {
-    console.error("Migration failed:", error);
+
     throw error;
   }
 }
@@ -172,6 +171,6 @@ function getDefaultPermissionsForRole(role: string): string[] {
 migrateFacilityUsers()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error(error);
+
     process.exit(1);
   });

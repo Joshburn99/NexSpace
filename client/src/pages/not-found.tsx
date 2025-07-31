@@ -17,9 +17,7 @@ export default function NotFound() {
       const hasAccess = validateRoleRouteAccess(userRole, location);
       
       if (!hasAccess) {
-        console.log(`[ROUTE GUARD] Impersonated user (${userRole}) attempted to access unauthorized route: ${location}`);
-        console.log(`[ROUTE GUARD] Redirecting to role-specific dashboard`);
-        
+
         // Redirect to appropriate dashboard for this role
         const fallbackRoute = getDashboardPathByRole(userRole);
         navigate(fallbackRoute, { replace: true });

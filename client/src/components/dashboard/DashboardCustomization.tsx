@@ -320,7 +320,7 @@ export function DashboardCustomization({ onLayoutChange }: DashboardCustomizatio
       }
     },
     onError: (error) => {
-      console.error("Failed to save dashboard widgets:", error);
+
       toast({
         title: "Save Failed",
         description: "Could not save dashboard layout. Please try again.",
@@ -350,10 +350,6 @@ export function DashboardCustomization({ onLayoutChange }: DashboardCustomizatio
       ...widget,
       visible: widgetStates[widget.id] ?? widget.visible,
     }));
-    console.log(
-      "Updated widgets to save:",
-      updatedWidgets.map((w) => ({ id: w.id, visible: w.visible }))
-    );
 
     // Save all widgets (not just visible ones) to maintain state
     saveLayoutMutation.mutate(updatedWidgets);

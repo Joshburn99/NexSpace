@@ -98,7 +98,7 @@ export class CalendarSyncService {
 
       return icalContent.join("\r\n");
     } catch (error) {
-      console.error("Error generating iCal feed:", error);
+
       throw new Error("Failed to generate calendar feed");
     }
   }
@@ -155,7 +155,7 @@ export class CalendarSyncService {
         expiryDate: tokens.expiry_date || undefined,
       });
     } catch (error) {
-      console.error("Error handling Google OAuth callback:", error);
+
       throw new Error("Failed to authenticate with Google Calendar");
     }
   }
@@ -224,12 +224,12 @@ export class CalendarSyncService {
               requestBody: googleEvent,
             });
           } else {
-            console.error(`Error syncing shift ${shift.id} to Google Calendar:`, error);
+
           }
         }
       }
     } catch (error) {
-      console.error("Error syncing to Google Calendar:", error);
+
       throw error;
     }
   }
@@ -248,7 +248,7 @@ export class CalendarSyncService {
       // Remove tokens from database
       await this.storage.deleteUserCalendarTokens(userId, "google");
     } catch (error) {
-      console.error("Error disconnecting Google Calendar:", error);
+
       throw new Error("Failed to disconnect Google Calendar");
     }
   }

@@ -36,7 +36,7 @@ router.get("/status", requireAuth, async (req: any, res) => {
       },
     });
   } catch (error) {
-    console.error("Error fetching calendar sync status:", error);
+
     res.status(500).json({ message: "Failed to fetch calendar sync status" });
   }
 });
@@ -60,7 +60,7 @@ router.post("/ical/enable", requireAuth, async (req: any, res) => {
       token,
     });
   } catch (error) {
-    console.error("Error enabling iCal feed:", error);
+
     res.status(500).json({ message: "Failed to enable calendar feed" });
   }
 });
@@ -78,7 +78,7 @@ router.post("/ical/disable", requireAuth, async (req: any, res) => {
       message: "Calendar feed disabled",
     });
   } catch (error) {
-    console.error("Error disabling iCal feed:", error);
+
     res.status(500).json({ message: "Failed to disable calendar feed" });
   }
 });
@@ -105,7 +105,7 @@ router.get("/ical/:token", async (req, res) => {
 
     res.send(icalContent);
   } catch (error) {
-    console.error("Error generating iCal feed:", error);
+
     res.status(500).json({ message: "Failed to generate calendar feed" });
   }
 });
@@ -118,7 +118,7 @@ router.get("/google/auth", requireAuth, async (req: any, res) => {
 
     res.json({ authUrl });
   } catch (error) {
-    console.error("Error starting Google OAuth:", error);
+
     res.status(500).json({ message: "Failed to start Google Calendar authentication" });
   }
 });
@@ -140,7 +140,7 @@ router.get("/google/callback", async (req, res) => {
     // Redirect to settings page with success message
     res.redirect("/settings?calendar_connected=true");
   } catch (error) {
-    console.error("Error handling Google OAuth callback:", error);
+
     res.redirect("/settings?calendar_error=true");
   }
 });
@@ -157,7 +157,7 @@ router.post("/google/sync", requireAuth, async (req: any, res) => {
       message: "Shifts synced to Google Calendar",
     });
   } catch (error) {
-    console.error("Error syncing to Google Calendar:", error);
+
     res.status(500).json({ message: "Failed to sync with Google Calendar" });
   }
 });
@@ -174,7 +174,7 @@ router.post("/google/disconnect", requireAuth, async (req: any, res) => {
       message: "Google Calendar disconnected",
     });
   } catch (error) {
-    console.error("Error disconnecting Google Calendar:", error);
+
     res.status(500).json({ message: "Failed to disconnect Google Calendar" });
   }
 });

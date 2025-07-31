@@ -93,7 +93,7 @@ export default function ShiftRequestsPage() {
       });
     },
     onError: (error: any) => {
-      console.error("Approval error:", error);
+
       toast({
         title: "Approval Failed",
         description:
@@ -122,7 +122,7 @@ export default function ShiftRequestsPage() {
       });
     },
     onError: (error: any) => {
-      console.error("Denial error:", error);
+
       toast({
         title: "Denial Failed",
         description:
@@ -153,7 +153,7 @@ export default function ShiftRequestsPage() {
       });
     },
     onError: (error: any) => {
-      console.error("Bulk approval error:", error);
+
       toast({
         title: "Bulk Approval Failed",
         description: error.message || "Failed to bulk approve requests. Please try again.",
@@ -186,7 +186,7 @@ export default function ShiftRequestsPage() {
       });
     },
     onError: (error: any) => {
-      console.error("Bulk denial error:", error);
+
       toast({
         title: "Bulk Denial Failed",
         description: error.message || "Failed to bulk deny requests. Please try again.",

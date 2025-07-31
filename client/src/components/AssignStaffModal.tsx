@@ -46,7 +46,7 @@ export function AssignStaffModal({ shiftId, isOpen, onClose }: AssignStaffModalP
       onClose();
       setSelectedStaffId("");
     } catch (error) {
-      console.error("Failed to assign staff:", error);
+
     } finally {
       setIsAssigning(false);
     }

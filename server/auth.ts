@@ -75,7 +75,7 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
           return done(null, user);
         }
       } catch (error) {
-        console.error("Database authentication error:", error);
+
         return done(null, false);
       }
     })
@@ -122,13 +122,13 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
             (user as any).associatedFacilities = facilityAssociations.map((a: any) => a.facilityId);
           }
         } catch (error) {
-          console.error("Error fetching user permissions:", error);
+
         }
       }
 
       done(null, user);
     } catch (error) {
-      console.error("Database deserialization error:", error);
+
       done(null, null);
     }
   });
@@ -253,7 +253,7 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
               }
             }
           } catch (error) {
-            console.error("Error fetching user permissions:", error);
+
           }
         }
 
@@ -304,7 +304,7 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
         tempPassword: tempPassword, // In production, this would be sent via email
       });
     } catch (error) {
-      console.error("Password reset error:", error);
+
       res.status(500).json({ message: "Failed to reset password" });
     }
   });
@@ -369,16 +369,7 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
       originalUserId: (req.session as any).originalUser?.id,
       userType: (req.user as any)?.userType || 'user'
     };
-    
-    console.log(`[/api/user] Sending response with impersonation flags:`, {
-      id: userResponse.id,
-      email: userResponse.email,
-      isImpersonating: userResponse.isImpersonating,
-      originalUserId: userResponse.originalUserId,
-      hasSession: !!req.session,
-      sessionId: req.sessionID
-    });
-    
+
     res.json(userResponse);
   };
   
@@ -460,7 +451,7 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
         res.status(500).json({ message: "Failed to switch role" });
       }
     } catch (error) {
-      console.error("Role switching error:", error);
+
       res.status(500).json({ message: "Failed to switch role" });
     }
   });

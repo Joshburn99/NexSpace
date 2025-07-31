@@ -210,7 +210,7 @@ export const MessageProvider: React.FC<{ children: ReactNode }> = ({ children })
         );
       }
     } catch (error) {
-      console.error("Failed to send message:", error);
+
       // Fallback to local storage for development
       const newMessage: Message = {
         id: `msg-${Date.now()}`,

@@ -24,7 +24,7 @@ router.get("/api/user/dashboard-preferences", requireAuth, async (req: any, res)
 
     res.json(preferences);
   } catch (error) {
-    console.error("Error fetching dashboard preferences:", error);
+
     res.status(500).json({ error: "Failed to fetch dashboard preferences" });
   }
 });
@@ -48,10 +48,9 @@ router.post("/api/user/dashboard-preferences", requireAuth, async (req: any, res
     // Store in memory (should be persisted to database using dashboard_preferences column)
     dashboardPreferences.set(userId, preferences);
 
-
     res.json({ success: true, preferences });
   } catch (error) {
-    console.error("Error saving dashboard preferences:", error);
+
     res.status(500).json({ error: "Failed to save dashboard preferences" });
   }
 });

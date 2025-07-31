@@ -102,7 +102,7 @@ export default function VendorInvoicesPage() {
       });
     },
     onError: (error: any) => {
-      console.error("Create invoice error:", error);
+
       toast({
         title: "Creation Failed",
         description:
@@ -132,7 +132,7 @@ export default function VendorInvoicesPage() {
       setUpdatingInvoiceId(null);
     },
     onError: (error: any) => {
-      console.error("Update invoice status error:", error);
+
       toast({
         title: "Update Failed",
         description: error.message || "Failed to update invoice status. Please try again.",

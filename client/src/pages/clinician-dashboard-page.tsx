@@ -87,7 +87,7 @@ export default function ClinicianDashboardPage({
     try {
       await clockIn();
     } catch (error) {
-      console.error("Clock in failed:", error);
+
     }
   };
 
@@ -100,7 +100,7 @@ export default function ClinicianDashboardPage({
       await clockOut();
       setShowQuickClockOut(false);
     } catch (error) {
-      console.error("Clock out failed:", error);
+
     }
   };
 

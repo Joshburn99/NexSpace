@@ -70,7 +70,7 @@ export class FacilityImportService {
       const data = await response.json();
       return data.results || [];
     } catch (error) {
-      console.error("CMS API search failed:", error);
+
       throw error;
     }
   }
@@ -108,7 +108,7 @@ export class FacilityImportService {
       const data = await response.json();
       return data.results || [];
     } catch (error) {
-      console.error("CMS API search failed:", error);
+
       throw error;
     }
   }
@@ -129,7 +129,7 @@ export class FacilityImportService {
       const data = await response.json();
       return data.results && data.results.length > 0 ? data.results[0] : null;
     } catch (error) {
-      console.error("NPI API search failed:", error);
+
       return null;
     }
   }
@@ -244,7 +244,7 @@ export class FacilityImportService {
 
         importedFacilities.push(facility);
       } catch (error) {
-        console.error(`Failed to import facility ${cmsData.provider_name}:`, error);
+
         // Continue with other facilities
       }
     }
@@ -260,7 +260,7 @@ export class FacilityImportService {
       const facilities = await storage.getAllFacilities();
       return facilities.find((f) => f.cmsId === cmsId);
     } catch (error) {
-      console.error("Error finding facility by CMS ID:", error);
+
       return null;
     }
   }

@@ -428,7 +428,7 @@ export default function AdminUserManagementPage() {
               const result = await response.json();
               queryClient.invalidateQueries({ queryKey: ["/api/facility-users"] });
             } catch (error) {
-              console.error("Failed to create sample users:", error);
+
             }
           }}
           className="gap-2"

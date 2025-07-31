@@ -49,7 +49,7 @@ export const TimeClockProvider: React.FC<{ children: ReactNode }> = ({ children 
       try {
         setLogs(JSON.parse(savedLogs));
       } catch (error) {
-        console.error("Error parsing saved work logs:", error);
+
       }
     } else {
       // Add some sample logs for testing scrolling functionality

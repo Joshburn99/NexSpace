@@ -90,7 +90,7 @@ export default function SettingsPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
     },
     onError: (error: any) => {
-      console.error("Role update error:", error);
+
       toast({
         title: "Update Failed",
         description:

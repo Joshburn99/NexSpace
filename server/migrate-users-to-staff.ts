@@ -11,7 +11,6 @@ export async function migrateUsersToStaff() {
       .from(users)
       .where(or(eq(users.role, "internal_employee"), eq(users.role, "contractor_1099")));
 
-
     // Insert each user into the staff table with mapped fields
     for (const user of usersToMigrate) {
       const staffData = {
@@ -41,9 +40,7 @@ export async function migrateUsersToStaff() {
       };
 
       await db.insert(staff).values(staffData);
-      console.log(
-        `Migrated user ${user.firstName} ${user.lastName} (${user.email}) to staff table`
-      );
+
     }
 
     // Now delete the migrated users from the users table
@@ -63,10 +60,6 @@ export async function migrateUsersToStaff() {
     const remainingUsers = await db.select().from(users);
     const totalStaff = await db.select().from(staff);
 
-    console.log(
-      `Remaining users in users table: ${remainingUsers.length} (should only be super_admins and facility users)`
-    );
-
     // Show remaining users by role
     const usersByRole = remainingUsers.reduce(
       (acc, user) => {
@@ -76,7 +69,6 @@ export async function migrateUsersToStaff() {
       {} as Record<string, number>
     );
 
-
     return {
       migratedCount: usersToMigrate.length,
       remainingUsers: remainingUsers.length,
@@ -84,7 +76,7 @@ export async function migrateUsersToStaff() {
       usersByRole,
     };
   } catch (error) {
-    console.error("Migration failed:", error);
+
     throw error;
   }
 }
@@ -114,7 +106,7 @@ if (process.argv[1] === import.meta.url) {
       process.exit(0);
     })
     .catch((error) => {
-      console.error("Migration failed:", error);
+
       process.exit(1);
     });
 }

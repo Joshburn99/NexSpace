@@ -377,8 +377,6 @@ export interface IStorage {
   }>;
   getRecentActivity(facilityId: number, limit?: number): Promise<AuditLog[]>;
 
-
-
   // Payroll system methods
   createPayrollProvider(provider: InsertPayrollProvider): Promise<PayrollProvider>;
   getPayrollProviders(): Promise<PayrollProvider[]>;
@@ -674,7 +672,7 @@ export class DatabaseStorage implements IStorage {
 
       return undefined;
     } catch (error) {
-      console.error(`[STORAGE] Error in getUser:`, error);
+
       throw error;
     }
   }
@@ -770,15 +768,12 @@ export class DatabaseStorage implements IStorage {
     if (data.department !== undefined) updates.department = data.department;
     if (data.title !== undefined) updates.title = data.title;
 
-    console.log("[STORAGE] Updating facility user profile:", { id, updates });
-    
     const [facilityUser] = await db
       .update(facilityUsers)
       .set(updates)
       .where(eq(facilityUsers.id, id))
       .returning();
-    
-    console.log("[STORAGE] Facility user profile updated:", facilityUser);
+
     return facilityUser || undefined;
   }
 
@@ -1192,12 +1187,10 @@ export class DatabaseStorage implements IStorage {
 
   // Staff methods
   async getAllStaff(): Promise<Staff[]> {
-    console.log("[STORAGE] Getting all staff");
+
     try {
       const staffData = await db.select().from(staff).where(eq(staff.isActive, true));
-      
-      console.log(`[STORAGE] Found ${staffData.length} staff members`);
-      
+
       // Map database fields (snake_case) to TypeScript interface (camelCase)
       return staffData.map(s => {
         // Map database fields properly
@@ -1244,7 +1237,7 @@ export class DatabaseStorage implements IStorage {
         };
       });
     } catch (error) {
-      console.error("[STORAGE] Error in getAllStaff:", error);
+
       throw error;
     }
   }
@@ -1427,7 +1420,7 @@ export class DatabaseStorage implements IStorage {
       const [shift] = await db.select().from(generatedShifts).where(eq(generatedShifts.id, id));
       return shift || undefined;
     } catch (error) {
-      console.error(`[STORAGE] Error getting generated shift ${id}:`, error);
+
       return undefined;
     }
   }
@@ -2126,7 +2119,7 @@ export class DatabaseStorage implements IStorage {
 
     if (facilityIds?.length) {
       // Filter staff by associated facilities - simplified for now
-      console.log("[STORAGE] Filtering staff by facilities:", facilityIds);
+
     }
 
     const [activeStaffResult] = await activeStaffQuery;
@@ -2167,7 +2160,7 @@ export class DatabaseStorage implements IStorage {
 
     if (facilityIds?.length) {
       // Simplified facility filtering
-      console.log("[STORAGE] Float pool facility filter:", facilityIds);
+
     }
 
     const [floatPoolResult] = await floatPoolQuery;
@@ -2335,8 +2328,6 @@ export class DatabaseStorage implements IStorage {
       priorityTasks,
     };
   }
-
-
 
   // Payroll Provider methods
   async createPayrollProvider(insertProvider: InsertPayrollProvider): Promise<PayrollProvider> {
@@ -2754,8 +2745,6 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-
-
   // Shift assignment methods
   async getShiftAssignments(
     shiftId: string
@@ -2771,18 +2760,13 @@ export class DatabaseStorage implements IStorage {
         .from(shiftAssignments)
         .where(and(eq(shiftAssignments.shiftId, shiftId), eq(shiftAssignments.status, "assigned")));
 
-      console.log(
-        `[DEBUG] Found ${assignments.length} assignments for shift ${shiftId}:`,
-        assignments
-      );
-
       return assignments.map((a) => ({
         workerId: a.workerId,
         assignedAt: a.assignedAt?.toISOString() || new Date().toISOString(),
         status: a.status,
       }));
     } catch (error: any) {
-      console.error("Error in getShiftAssignments:", error);
+
       return [];
     }
   }
@@ -2802,7 +2786,7 @@ export class DatabaseStorage implements IStorage {
         assignedAt: new Date(),
       });
     } catch (error: any) {
-      console.error("Error in addShiftAssignment:", error);
+
       throw error;
     }
   }
@@ -2818,7 +2802,7 @@ export class DatabaseStorage implements IStorage {
         .set({ status })
         .where(and(eq(shiftAssignments.shiftId, shiftId), eq(shiftAssignments.workerId, workerId)));
     } catch (error: any) {
-      console.error("Error in updateShiftAssignmentStatus:", error);
+
       throw error;
     }
   }
@@ -3427,7 +3411,7 @@ export class DatabaseStorage implements IStorage {
 
       return assignedShifts as any[];
     } catch (error) {
-      console.error("Error fetching user assigned shifts:", error);
+
       return [];
     }
   }

@@ -64,7 +64,7 @@ export function ShiftManagementSettings({ facilityId, canEdit = true }: ShiftMan
       queryClient.invalidateQueries({ queryKey: [`/api/facilities/${facilityId}/settings`] });
     },
     onError: (error) => {
-      console.error("Failed to save settings:", error);
+
       toast({
         title: "Save failed",
         description: "Could not save shift management settings. Please try again.",

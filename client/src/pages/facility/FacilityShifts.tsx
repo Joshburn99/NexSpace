@@ -254,10 +254,10 @@ export function FacilityShifts() {
                 events={calendarEvents}
                 height="auto"
                 eventClick={(info) => {
-                  console.log('Shift clicked:', info.event.extendedProps);
+
                 }}
                 dateClick={(info) => {
-                  console.log('Date clicked:', info.dateStr);
+
                 }}
               />
             </div>

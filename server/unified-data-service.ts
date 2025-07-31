@@ -73,7 +73,7 @@ export class UnifiedDataService {
         };
       });
     } catch (error) {
-      console.error("Error fetching staff data:", error);
+
       throw new Error("Failed to fetch staff data");
     }
   }
@@ -156,7 +156,7 @@ export class UnifiedDataService {
         permissions: user.permissions,
       }));
     } catch (error) {
-      console.error("Error fetching facility users data:", error);
+
       throw new Error("Failed to fetch facility users data");
     }
   }
@@ -180,7 +180,7 @@ export class UnifiedDataService {
 
       return updatedStaff;
     } catch (error) {
-      console.error("Error updating staff facilities:", error);
+
       throw new Error("Failed to update staff facilities");
     }
   }
@@ -209,7 +209,7 @@ export class UnifiedDataService {
         return await baseQuery;
       }
     } catch (error) {
-      console.error("Error fetching shifts:", error);
+
       throw new Error("Failed to fetch shifts");
     }
   }
@@ -251,7 +251,7 @@ export class UnifiedDataService {
 
       return updatedShift;
     } catch (error) {
-      console.error("Error updating shift status:", error);
+
       throw new Error("Failed to update shift status");
     }
   }
@@ -268,7 +268,7 @@ export class UnifiedDataService {
 
       return message;
     } catch (error) {
-      console.error("Error creating message:", error);
+
       throw new Error("Failed to create message");
     }
   }
@@ -286,7 +286,7 @@ export class UnifiedDataService {
 
       return conversationMessages;
     } catch (error) {
-      console.error("Error fetching conversation messages:", error);
+
       throw new Error("Failed to fetch messages");
     }
   }
@@ -302,7 +302,7 @@ export class UnifiedDataService {
         return await db.select().from(facilities);
       }
     } catch (error) {
-      console.error("Error fetching facilities:", error);
+
       throw new Error("Failed to fetch facilities");
     }
   }
@@ -364,7 +364,7 @@ export class UnifiedDataService {
         issues,
       };
     } catch (error) {
-      console.error("Error validating data consistency:", error);
+
       return {
         isValid: false,
         issues: ["Failed to validate data consistency"],

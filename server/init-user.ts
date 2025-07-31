@@ -26,6 +26,6 @@ export async function createSuperUser() {
     });
 
   } catch (error) {
-    console.error("Error creating superuser:", error);
+
   }
 }

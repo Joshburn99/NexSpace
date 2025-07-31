@@ -736,7 +736,7 @@ export async function seedDatabase() {
     await db.insert(auditLogs).values(auditLogsData);
 
   } catch (error) {
-    console.error("❌ Error seeding database:", error);
+
     throw error;
   }
 }

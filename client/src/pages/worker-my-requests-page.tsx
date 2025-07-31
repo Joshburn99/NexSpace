@@ -77,7 +77,7 @@ export default function WorkerMyRequestsPage() {
       setWithdrawReason("");
     },
     onError: (error: any) => {
-      console.error("Withdrawal error:", error);
+
       toast({
         title: "Withdrawal Failed",
         description: error.message || "Failed to withdraw shift request. Please try again.",

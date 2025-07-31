@@ -49,7 +49,7 @@ export default function InteractiveMap({
           };
 
           script.onerror = () => {
-            console.error("Failed to load Google Maps script");
+
             setIsLoading(false);
           };
 
@@ -58,7 +58,7 @@ export default function InteractiveMap({
           createMap();
         }
       } catch (error) {
-        console.error("Error initializing map:", error);
+
         setIsLoading(false);
       }
     };
@@ -145,7 +145,7 @@ export default function InteractiveMap({
         onLocationSelect?.(location);
       }
     } catch (error) {
-      console.error("Geocoding error:", error);
+
       onLocationSelect?.(location);
     }
   };
@@ -169,7 +169,7 @@ export default function InteractiveMap({
         map.setZoom(15);
       }
     } catch (error) {
-      console.error("Geocoding error:", error);
+
     }
   };
 
@@ -193,7 +193,7 @@ export default function InteractiveMap({
         setIsLoading(false);
       },
       (error) => {
-        console.error("Geolocation error:", error);
+
         setIsLoading(false);
         alert("Unable to retrieve your location.");
       }

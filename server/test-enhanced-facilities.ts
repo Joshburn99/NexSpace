@@ -260,11 +260,6 @@ export async function testEnhancedFacilitySystem() {
       .values(testFacilityData as any)
       .returning();
 
-    console.log("Created facility:", {
-      id: createdFacility.id,
-      name: createdFacility.name,
-    });
-
     // Test 2: Retrieve and verify enhanced fields
     const [retrievedFacility] = await db
       .select()
@@ -284,13 +279,11 @@ export async function testEnhancedFacilitySystem() {
       .where(eq(facilities.id, createdFacility.id))
       .returning();
 
-
     // Test 4: Query facilities with enhanced filtering
     const activeFacilities = await db
       .select()
       .from(facilities)
       .where(eq(facilities.isActive, true));
-
 
     // Test 5: Validate JSONB field structures
     const facilityWithJsonb = activeFacilities[0];
@@ -306,10 +299,9 @@ export async function testEnhancedFacilitySystem() {
     // Test 6: Cleanup - Remove test facility
     await db.delete(facilities).where(eq(facilities.id, createdFacility.id));
 
-
     return true;
   } catch (error) {
-    console.error("❌ Enhanced Facility System test failed:", error);
+
     return false;
   }
 }
@@ -321,7 +313,7 @@ if (require.main === module) {
       process.exit(success ? 0 : 1);
     })
     .catch((error) => {
-      console.error("Test execution failed:", error);
+
       process.exit(1);
     });
 }

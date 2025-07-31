@@ -34,7 +34,7 @@ export async function generateComprehensiveSampleData() {
     await generateAuditLogs();
 
   } catch (error) {
-    console.error("Error generating sample data:", error);
+
   }
 }
 

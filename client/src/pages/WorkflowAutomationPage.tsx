@@ -143,7 +143,7 @@ export default function WorkflowAutomationPage() {
       });
     },
     onError: (error: any) => {
-      console.error("Create automation error:", error);
+
       toast({
         title: "Error",
         description:
@@ -173,7 +173,7 @@ export default function WorkflowAutomationPage() {
       });
     },
     onError: (error: any) => {
-      console.error("Update automation error:", error);
+
       toast({
         title: "Error",
         description:
@@ -201,7 +201,7 @@ export default function WorkflowAutomationPage() {
       });
     },
     onError: (error: any) => {
-      console.error("Toggle automation error:", error);
+
       toast({
         title: "Error",
         description:

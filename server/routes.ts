@@ -74,9 +74,7 @@ export function registerRoutes(app: Express): Server {
     if ((req.session as any).impersonatedUserId) {
       const impersonatedId = (req.session as any).impersonatedUserId;
       const userType = (req.session as any).impersonatedUserType || 'user';
-      
-      console.log(`[IMPERSONATION MIDDLEWARE] Loading impersonated ${userType} with ID ${impersonatedId}`);
-      
+
       try {
         let impersonatedUser;
         
@@ -101,7 +99,7 @@ export function registerRoutes(app: Express): Server {
             const roleTemplate = await storage.getFacilityUserRoleTemplate(facilityUser.role);
             if (roleTemplate && roleTemplate.permissions) {
               impersonatedUser.permissions = roleTemplate.permissions;
-              console.log(`[IMPERSONATION MIDDLEWARE] Loaded permissions for ${facilityUser.email}:`, roleTemplate.permissions);
+
             }
           }
         } else if (userType === 'staff') {
@@ -140,11 +138,11 @@ export function registerRoutes(app: Express): Server {
         }
         
         if (impersonatedUser) {
-          console.log(`[IMPERSONATION MIDDLEWARE] Replacing req.user with impersonated user ${impersonatedUser.email}`);
+
           req.user = impersonatedUser;
         }
       } catch (error) {
-        console.error(`[IMPERSONATION MIDDLEWARE] Error loading impersonated user:`, error);
+
       }
     }
     next();
@@ -160,7 +158,6 @@ export function registerRoutes(app: Express): Server {
   app.use("/api/calendar-sync", calendarSyncRoutes);
 
   // Initialize unified data service (will be properly initialized with WebSocket later)
-
 
   // Initialize notification service
   const notificationService = new NotificationService(storage);
@@ -209,18 +206,17 @@ export function registerRoutes(app: Express): Server {
       
       // Check if user has permissions array (facility users during impersonation)
       if (req.user.permissions && Array.isArray(req.user.permissions)) {
-        console.log(`[PERMISSION CHECK] User ${req.user.email} checking permission: ${permission}`);
-        console.log(`[PERMISSION CHECK] User permissions:`, req.user.permissions);
+
         const hasPermission = req.user.permissions.includes(permission);
         if (!hasPermission) {
-          console.log(`[PERMISSION CHECK] DENIED - User lacks ${permission} permission`);
+
           return res.status(403).json({
             message: "Insufficient permissions",
             required: permission,
             userPermissions: req.user.permissions,
           });
         }
-        console.log(`[PERMISSION CHECK] GRANTED - User has ${permission} permission`);
+
         return next();
       }
       
@@ -303,8 +299,6 @@ export function registerRoutes(app: Express): Server {
     next();
   };
 
-
-
   // Data access control middleware
   const enforceDataAccess = (req: any, res: any, next: any) => {
     if (!req.user) {
@@ -373,7 +367,7 @@ export function registerRoutes(app: Express): Server {
       const facilitiesData = await storage.getAllFacilities();
       res.json(facilitiesData);
     } catch (error) {
-      console.error("Error fetching facilities:", error);
+
       res.status(500).json({ message: "Failed to fetch facilities" });
     }
   });
@@ -390,7 +384,7 @@ export function registerRoutes(app: Express): Server {
           timestamp: new Date().toISOString(),
         });
       } catch (error) {
-        console.error("Security audit failed:", error);
+
         res.status(500).json({
           status: "failed",
           message: "Security audit failed",
@@ -409,7 +403,7 @@ export function registerRoutes(app: Express): Server {
           timestamp: new Date().toISOString(),
         });
       } catch (error) {
-        console.error("Quick security check failed:", error);
+
         res.status(500).json({ message: "Security check failed" });
       }
     });
@@ -519,7 +513,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(profileData);
     } catch (error) {
-      console.error("User profile fetch error:", error);
+
       res.status(500).json({ message: "Failed to fetch user profile" });
     }
   });
@@ -568,7 +562,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: "Profile updated successfully" });
     } catch (error) {
-      console.error("User profile update error:", error);
+
       res.status(500).json({ message: "Failed to update user profile" });
     }
   });
@@ -604,7 +598,7 @@ export function registerRoutes(app: Express): Server {
 
         res.json({ message: "Credential uploaded successfully", data: credentialData });
       } catch (error) {
-        console.error("Credential upload error:", error);
+
         res.status(500).json({ message: "Failed to upload credential" });
       }
     }
@@ -690,7 +684,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ results });
     } catch (error) {
-      console.error("Search error:", error);
+
       res.status(500).json({ error: "Failed to perform search" });
     }
   });
@@ -729,7 +723,7 @@ export function registerRoutes(app: Express): Server {
 
         res.json(stats);
       } catch (error) {
-        console.error("Dashboard stats error:", error);
+
         res.status(500).json({ error: "Failed to fetch dashboard statistics" });
       }
     }
@@ -746,7 +740,7 @@ export function registerRoutes(app: Express): Server {
       const widgets = await storage.getUserDashboardWidgets(userId);
       res.json(widgets);
     } catch (error) {
-      console.error("Dashboard widgets error:", error);
+
       res.status(500).json({ error: "Failed to fetch dashboard widgets" });
     }
   });
@@ -762,7 +756,7 @@ export function registerRoutes(app: Express): Server {
       await storage.saveDashboardWidgets(userId, widgets);
       res.json({ success: true, message: "Dashboard layout saved successfully" });
     } catch (error) {
-      console.error("Save dashboard widgets error:", error);
+
       res.status(500).json({ error: "Failed to save dashboard widgets" });
     }
   });
@@ -941,7 +935,7 @@ export function registerRoutes(app: Express): Server {
         
       res.json(postings);
     } catch (error) {
-      console.error("Error fetching job postings:", error);
+
       res.status(500).json({ message: "Failed to fetch job postings" });
     }
   });
@@ -974,7 +968,7 @@ export function registerRoutes(app: Express): Server {
         if (error instanceof z.ZodError) {
           res.status(400).json({ message: "Invalid job posting data", errors: error.errors });
         } else {
-          console.error("Error creating job posting:", error);
+
           res.status(500).json({ message: "Failed to create job posting" });
         }
       }
@@ -1022,7 +1016,7 @@ export function registerRoutes(app: Express): Server {
         if (error instanceof z.ZodError) {
           res.status(400).json({ message: "Invalid update data", errors: error.errors });
         } else {
-          console.error("Error updating job posting:", error);
+
           res.status(500).json({ message: "Failed to update job posting" });
         }
       }
@@ -1064,7 +1058,7 @@ export function registerRoutes(app: Express): Server {
           
         res.json({ message: "Job posting deleted successfully", posting: deletedPosting });
       } catch (error) {
-        console.error("Error deleting job posting:", error);
+
         res.status(500).json({ message: "Failed to delete job posting" });
       }
     }
@@ -1132,7 +1126,7 @@ export function registerRoutes(app: Express): Server {
         if (error instanceof z.ZodError) {
           res.status(400).json({ message: "Invalid application data", errors: error.errors });
         } else {
-          console.error("Error creating job application:", error);
+
           res.status(500).json({ message: "Failed to submit application" });
         }
       }
@@ -1187,7 +1181,7 @@ export function registerRoutes(app: Express): Server {
       
       res.json(applications);
     } catch (error) {
-      console.error("Error fetching job applications:", error);
+
       res.status(500).json({ message: "Failed to fetch applications" });
     }
   });
@@ -1277,7 +1271,7 @@ export function registerRoutes(app: Express): Server {
           
         res.json(updatedApplication);
       } catch (error) {
-        console.error("Error updating application status:", error);
+
         res.status(500).json({ message: "Failed to update application status" });
       }
     }
@@ -1348,7 +1342,7 @@ export function registerRoutes(app: Express): Server {
         if (error instanceof z.ZodError) {
           res.status(400).json({ message: "Invalid interview data", errors: error.errors });
         } else {
-          console.error("Error creating interview:", error);
+
           res.status(500).json({ message: "Failed to schedule interview" });
         }
       }
@@ -1371,7 +1365,7 @@ export function registerRoutes(app: Express): Server {
         
       res.json(interviews);
     } catch (error) {
-      console.error("Error fetching interviews:", error);
+
       res.status(500).json({ message: "Failed to fetch interviews" });
     }
   });
@@ -1392,7 +1386,7 @@ export function registerRoutes(app: Express): Server {
         message: "File uploaded successfully",
       });
     } catch (error) {
-      console.error("Upload error:", error);
+
       res.status(500).json({ message: "Failed to upload file" });
     }
   });
@@ -1400,8 +1394,7 @@ export function registerRoutes(app: Express): Server {
   // Shifts API - Fixed to use unified data source and auto-generate from templates
   app.get("/api/shifts", requireAuth, handleImpersonation, requirePermission("view_schedules"), async (req: any, res) => {
     try {
-      console.log("[/api/shifts] query:", req.query);
-      
+
       // Parse optional start and end date parameters
       const { start, end } = req.query;
       if (start) req.query.startDate = start;
@@ -1410,7 +1403,7 @@ export function registerRoutes(app: Express): Server {
       const { getUnifiedShifts } = await import("./fix-shifts-api");
       return await getUnifiedShifts(req, res);
     } catch (err) {
-      console.error("[/api/shifts] error", err);
+
       if (err?.stack) console.error(err.stack);
       
       // Fallback to original logic if import fails
@@ -1428,10 +1421,7 @@ export function registerRoutes(app: Express): Server {
             userAssociatedFacilities = facilityUser.associatedFacilityIds;
           }
         } catch (error) {
-          console.error(
-            `[FACILITY FILTER] Error fetching facility associations for ${user.email}:`,
-            error
-          );
+
         }
       }
 
@@ -1950,7 +1940,7 @@ export function registerRoutes(app: Express): Server {
 
         formattedDbShifts = [...formattedGeneratedShifts, ...formattedMainShifts];
       } catch (error) {
-        console.error("Error fetching database shifts:", error);
+
         // Continue with example shifts only if database query fails
       }
 
@@ -2023,7 +2013,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(filteredShifts);
       } catch (fallbackError) {
-        console.error("[SHIFTS API] Fallback logic failed:", fallbackError);
+
         if (fallbackError?.stack) console.error(fallbackError.stack);
         if (process.env.NODE_ENV === "development") {
           res.status(500).json({ 
@@ -2040,8 +2030,7 @@ export function registerRoutes(app: Express): Server {
   // Health/diagnostic endpoint for shifts
   app.get("/api/shifts/health", requireAuth, async (req: any, res) => {
     try {
-      console.log("[/api/shifts/health] Health check requested");
-      
+
       // Get count using Drizzle ORM
       const countResult = await db.select().from(shifts);
       const count = countResult.length;
@@ -2068,7 +2057,7 @@ export function registerRoutes(app: Express): Server {
       });
       
     } catch (err) {
-      console.error("[/api/shifts/health] error", err);
+
       if (err?.stack) console.error(err.stack);
       
       if (process.env.NODE_ENV === "development") {
@@ -2092,7 +2081,7 @@ export function registerRoutes(app: Express): Server {
       const assignments = await storage.getShiftAssignments(shiftId.toString());
       return assignments.map((a) => a.workerId);
     } catch (error) {
-      console.error(`Error fetching assignments for shift ${shiftId}:`, error);
+
       return [];
     }
   };
@@ -2110,7 +2099,7 @@ export function registerRoutes(app: Express): Server {
         status: "assigned",
       });
     } catch (error) {
-      console.error(`Error adding assignment:`, error);
+
       throw error;
     }
   };
@@ -2119,7 +2108,7 @@ export function registerRoutes(app: Express): Server {
     try {
       await storage.updateShiftAssignmentStatus(shiftId.toString(), workerId, "unassigned");
     } catch (error) {
-      console.error(`Error removing assignment:`, error);
+
       throw error;
     }
   };
@@ -2259,12 +2248,9 @@ export function registerRoutes(app: Express): Server {
           }));
       }
 
-      console.log(
-        `[SHIFT REQUESTS] Shift ${shiftId}: ${currentAssignments.length}/${maxCapacity} filled, returning ${shiftRequests.length} available workers`
-      );
       res.json(shiftRequests);
     } catch (error) {
-      console.error("Error fetching shift requests:", error);
+
       res.status(500).json({ message: "Failed to fetch shift requests" });
     }
   });
@@ -2419,9 +2405,6 @@ export function registerRoutes(app: Express): Server {
           generatedShift?.totalPositions ||
           3; // Default to 3 for multi-worker shifts instead of 1
 
-        console.log(
-          `[CAPACITY CHECK] Shift ${shiftId}: maxCapacity=${maxCapacity}, currentAssignments=${currentAssignments.length}`
-        );
         if (currentAssignments.length >= maxCapacity) {
           return res.status(400).json({
             message: `Shift is at full capacity (${currentAssignments.length}/${maxCapacity})`,
@@ -2466,10 +2449,6 @@ export function registerRoutes(app: Express): Server {
           });
         }
 
-        console.log(
-          `[ASSIGNMENT SUCCESS] Worker ${workerId} (${worker.firstName} ${worker.lastName}) assigned to shift ${shiftId}. Total: ${updatedAssignments.length}/${maxCapacity}`
-        );
-
         res.json({
           success: true,
           message: "Worker assigned successfully",
@@ -2479,7 +2458,7 @@ export function registerRoutes(app: Express): Server {
           workerName: `${worker.firstName} ${worker.lastName}`,
         });
       } catch (error) {
-        console.error("Error assigning worker:", error);
+
         res.status(500).json({ message: "Failed to assign worker" });
       }
     }
@@ -2514,10 +2493,6 @@ export function registerRoutes(app: Express): Server {
         // Get updated assignments (only active ones)
         const updatedAssignments = await storage.getShiftAssignments(shiftId);
 
-        console.log(
-          `Worker ${workerId} unassigned from shift ${shiftId}. Total assigned: ${updatedAssignments.length}`
-          );
-
         res.json({
           success: true,
           message: "Worker unassigned successfully",
@@ -2525,7 +2500,7 @@ export function registerRoutes(app: Express): Server {
           assignments: updatedAssignments,
         });
       } catch (error) {
-        console.error("Error unassigning worker:", error);
+
         res.status(500).json({ message: "Failed to unassign worker" });
       }
     }
@@ -2599,10 +2574,6 @@ export function registerRoutes(app: Express): Server {
         }
       });
 
-      console.log(
-        `Worker ${workerId} assigned to shift ${shiftId}. Total assigned: ${filledPositions}/${maxCapacity}`
-        );
-
       res.json({
         success: true,
         message: "Worker assigned successfully",
@@ -2610,7 +2581,7 @@ export function registerRoutes(app: Express): Server {
         totalCapacity: maxCapacity,
       });
     } catch (error) {
-      console.error("Error assigning worker to shift:", error);
+
       res.status(500).json({ message: "Failed to assign worker to shift" });
     }
   });
@@ -2743,7 +2714,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(filteredShifts);
     } catch (error) {
-      console.error("Error fetching worker open shifts:", error);
+
       res.status(500).json({ message: "Failed to fetch open shifts" });
     }
   });
@@ -2801,7 +2772,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(filteredShifts);
     } catch (error) {
-      console.error("Error fetching my shifts:", error);
+
       res.status(500).json({ message: "Failed to fetch shifts" });
     }
   });
@@ -2860,35 +2831,23 @@ export function registerRoutes(app: Express): Server {
           });
         }
 
-
         try {
           const shiftData = insertShiftSchema.parse(dataToValidate);
 
           const shift = await storage.createShift(shiftData);
           res.status(201).json(shift);
         } catch (dbError: any) {
-          console.error("Database insertion error:", dbError);
-          console.error("Error details:", {
-            message: dbError.message,
-            code: dbError.code,
-            detail: dbError.detail,
-            column: dbError.column,
-            table: dbError.table,
-          });
+
           throw dbError; // Re-throw to be caught by outer catch block
         }
       } catch (error) {
         if (error instanceof z.ZodError) {
-          console.error("=== ZOD VALIDATION ERRORS ===");
+
           error.errors.forEach((err, index) => {
-            console.error(`Error ${index + 1}:`);
-            console.error(`  Field: ${err.path.join(".")}`);
-            console.error(`  Message: ${err.message}`);
-            console.error(`  Code: ${err.code}`);
+
             if ("expected" in err) console.error(`  Expected: ${err.expected}`);
             if ("received" in err) console.error(`  Received: ${err.received}`);
           });
-          console.error("==============================");
 
           // Create user-friendly error messages
           const fieldErrors = error.errors.map((err) => {
@@ -2902,7 +2861,7 @@ export function registerRoutes(app: Express): Server {
             zodErrors: error.errors,
           });
         } else {
-          console.error("Shift creation error:", error);
+
           res.status(500).json({ message: "Failed to create shift" });
         }
       }
@@ -2983,7 +2942,7 @@ export function registerRoutes(app: Express): Server {
         shiftRequest,
       });
     } catch (error) {
-      console.error("Shift request error:", error);
+
       res.status(500).json({ message: "Failed to request shift" });
     }
   });
@@ -3028,7 +2987,7 @@ export function registerRoutes(app: Express): Server {
           historyEntry,
         });
       } catch (error) {
-        console.error("Shift assignment error:", error);
+
         res.status(500).json({ message: "Failed to assign shift" });
       }
     }
@@ -3104,7 +3063,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(sampleHistory);
     } catch (error) {
-      console.error("Shift history error:", error);
+
       res.status(500).json({ message: "Failed to fetch shift history" });
     }
   });
@@ -3142,7 +3101,7 @@ export function registerRoutes(app: Express): Server {
         reason: shouldAutoAssign ? "Meets auto-assignment criteria" : "Does not meet all criteria",
       };
     } catch (error) {
-      console.error("Auto-assignment criteria check error:", error);
+
       return { shouldAutoAssign: false, reason: "Error checking criteria" };
     }
   }
@@ -3335,7 +3294,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(enrichedConversations);
     } catch (error) {
-      console.error("Failed to fetch conversations:", error);
+
       res.status(500).json({ message: "Failed to fetch conversations" });
     }
   });
@@ -3371,7 +3330,7 @@ export function registerRoutes(app: Express): Server {
 
       res.status(201).json(conversation);
     } catch (error) {
-      console.error("Failed to create conversation:", error);
+
       res.status(500).json({ message: "Failed to create conversation" });
     }
   });
@@ -3395,7 +3354,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(conversation);
     } catch (error) {
-      console.error("Failed to fetch conversation:", error);
+
       res.status(500).json({ message: "Failed to fetch conversation" });
     }
   });
@@ -3437,7 +3396,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(enrichedMessages);
     } catch (error) {
-      console.error("Failed to fetch messages:", error);
+
       res.status(500).json({ message: "Failed to fetch messages" });
     }
   });
@@ -3489,7 +3448,7 @@ export function registerRoutes(app: Express): Server {
 
       res.status(201).json(enrichedMessage);
     } catch (error) {
-      console.error("Failed to send message:", error);
+
       res.status(500).json({ message: "Failed to send message" });
     }
   });
@@ -3627,7 +3586,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(updatedUser);
     } catch (error) {
-      console.error("User update error:", error);
+
       res.status(500).json({ message: "Failed to update user" });
     }
   });
@@ -3666,9 +3625,6 @@ export function registerRoutes(app: Express): Server {
       ];
 
       if (facilityUserRoles.includes(req.user.role) && req.user.facility_id) {
-        console.log(
-          `[STAFF ACCESS CONTROL] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) requesting staff data for facility ${req.user.facility_id}`
-        );
 
         // For facility users, only return staff associated with their facilities
         // Since staff table doesn't have facility_id, we'll filter by similar locations or other criteria
@@ -3697,19 +3653,13 @@ export function registerRoutes(app: Express): Server {
           };
 
           dbStaffData = facilityStaffMapping[userFacilityId] || dbStaffData.slice(0, 5);
-          console.log(
-            `[STAFF ACCESS CONTROL] Returning ${dbStaffData.length} staff members for facility ${userFacilityId}`
-          );
+
         }
       } else if (req.user.role === "super_admin") {
-        console.log(
-          `[STAFF ACCESS CONTROL] Super admin ${req.user.firstName} ${req.user.lastName} accessing all staff data`
-        );
+
         // Super admins can see all staff
       } else {
-        console.log(
-          `[STAFF ACCESS CONTROL] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) has limited staff access`
-        );
+
         // Other users get limited access
         dbStaffData = dbStaffData.slice(0, 5);
       }
@@ -3796,7 +3746,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(staffData);
     } catch (error) {
-      console.error("Error fetching staff data:", error);
+
       res.status(500).json({ message: "Failed to fetch staff data", error: error.message });
     }
   });
@@ -3808,10 +3758,6 @@ export function registerRoutes(app: Express): Server {
       if (req.user.role !== "super_admin") {
         return res.status(403).json({ message: "Access denied: Super admin required" });
       }
-
-        console.log(
-          `[FACILITY USERS] Super admin ${req.user.firstName} ${req.user.lastName} accessing facility users`
-        );
 
       // Get facility users data from unified service
       const facilityUsersData = await unifiedDataService.getFacilityUsersWithAssociations();
@@ -3845,7 +3791,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(facilityUsersFormatted);
     } catch (error) {
-      console.error("Error fetching facility users:", error);
+
       res.status(500).json({ message: "Failed to fetch facility users" });
     }
   });
@@ -3860,7 +3806,6 @@ export function registerRoutes(app: Express): Server {
 
       const userId = parseInt(req.params.id);
       const updateData = req.body;
-
 
       // Update the facility user in the facility_users table
       const updatedUser = await db
@@ -3888,7 +3833,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: "Facility user updated successfully", user: updatedUser[0] });
     } catch (error) {
-      console.error("Error updating facility user:", error);
+
       res.status(500).json({ message: "Failed to update facility user" });
     }
   });
@@ -3902,7 +3847,6 @@ export function registerRoutes(app: Express): Server {
 
       const teamId = parseInt(req.params.teamId);
       const { userId, userType, role } = req.body;
-
 
       if (userType === "facility") {
         // For facility users, create association in facility_user_team_memberships table
@@ -3937,7 +3881,7 @@ export function registerRoutes(app: Express): Server {
         res.json({ message: "User added to team successfully", teamMember: teamMember });
       }
     } catch (error) {
-      console.error("Error adding user to team:", error);
+
       res.status(500).json({ message: "Failed to add user to team" });
     }
   });
@@ -3951,7 +3895,6 @@ export function registerRoutes(app: Express): Server {
 
       const teamId = parseInt(req.params.teamId);
       const memberId = parseInt(req.params.memberId);
-
 
       // Try to remove from facility_user_team_memberships first
       const facilityUserRemoval = await db
@@ -3981,7 +3924,7 @@ export function registerRoutes(app: Express): Server {
         res.status(404).json({ message: "Team member not found" });
       }
     } catch (error) {
-      console.error("Error removing team member:", error);
+
       res.status(500).json({ message: "Failed to remove team member" });
     }
   });
@@ -4018,7 +3961,7 @@ export function registerRoutes(app: Express): Server {
         facilityUserCount: facilityUserCount[0]?.count || 0,
       });
     } catch (error) {
-      console.error("Error fetching facility counts:", error);
+
       res.status(500).json({ message: "Failed to fetch facility counts" });
     }
   });
@@ -4107,7 +4050,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(profileData);
     } catch (error) {
-      console.error("Error fetching staff profile:", error);
+
       res.status(500).json({ message: "Failed to fetch staff profile" });
     }
   });
@@ -4139,7 +4082,7 @@ export function registerRoutes(app: Express): Server {
         data: message,
       });
     } catch (error) {
-      console.error("Error sending message:", error);
+
       res.status(500).json({ message: "Failed to send message" });
     }
   });
@@ -5604,7 +5547,7 @@ export function registerRoutes(app: Express): Server {
       ];
       res.json(samplePosts);
     } catch (error) {
-      console.error("Error fetching staff posts:", error);
+
       res.status(500).json({ message: "Failed to fetch staff posts" });
     }
   });
@@ -5684,7 +5627,6 @@ export function registerRoutes(app: Express): Server {
         success: false,
       });
 
-      console.error("Profile update error:", error);
       res.status(500).json({ message: "Failed to update profile" });
     }
   });
@@ -5798,7 +5740,7 @@ export function registerRoutes(app: Express): Server {
 
         default:
           // For backwards compatibility, allow access but log the unknown role
-          console.warn("Unknown user role accessing work history:", req.user.role);
+
           break;
       }
 
@@ -5978,7 +5920,7 @@ export function registerRoutes(app: Express): Server {
         shift: shift,
       });
     } catch (error) {
-      console.error("Clock-in error:", error);
+
       res.status(500).json({ message: "Failed to clock in" });
     }
   });
@@ -6036,7 +5978,7 @@ export function registerRoutes(app: Express): Server {
         message: "Successfully clocked out",
       });
     } catch (error) {
-      console.error("Clock-out error:", error);
+
       res.status(500).json({ message: "Failed to clock out" });
     }
   });
@@ -6208,7 +6150,7 @@ export function registerRoutes(app: Express): Server {
         facilities: createdFacilities,
       });
     } catch (error) {
-      console.error("Error creating example facilities:", error);
+
       res
         .status(500)
         .json({ message: "Failed to create example facilities", error: (error as Error).message });
@@ -6276,7 +6218,7 @@ export function registerRoutes(app: Express): Server {
       const createdShifts = await db.insert(shifts).values(shiftsData).returning();
       res.json({ message: "Shifts seeded successfully", count: shiftsData.length });
     } catch (error) {
-      console.error("Seeding error:", error);
+
       res.status(500).json({ message: "Failed to seed shifts", error: (error as Error).message });
     }
   });
@@ -6696,14 +6638,13 @@ export function registerRoutes(app: Express): Server {
           .where(eq(shiftTemplates.facilityId, facilityId))
           .returning();
 
-
         res.json({
           message: `Deactivated ${result.length} shift templates for facility`,
           deactivatedTemplates: result.length,
           facilityId,
         });
       } catch (error) {
-        console.error("Error deactivating facility templates:", error);
+
         res.status(500).json({
           message: "Failed to deactivate facility templates",
           error: error instanceof Error ? error.message : String(error),
@@ -6744,7 +6685,7 @@ export function registerRoutes(app: Express): Server {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      console.error("Test execution failed:", error);
+
       res.status(500).json({
         message: "Test execution failed",
         error: error instanceof Error ? error.message : String(error),
@@ -6863,10 +6804,6 @@ export function registerRoutes(app: Express): Server {
         }
       }
 
-        console.log(
-          `[SHIFT TEMPLATES API] Fetching templates for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
-        );
-
       // Get all templates from database
       const allTemplates = await db.select().from(shiftTemplates);
 
@@ -6882,7 +6819,6 @@ export function registerRoutes(app: Express): Server {
           );
         }
       }
-
 
       // Transform database response to frontend format
       const formattedTemplates = filteredTemplates.map((template) => ({
@@ -6911,7 +6847,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(formattedTemplates);
     } catch (error) {
-      console.error("Error fetching shift templates:", error);
+
       res.status(500).json({ message: "Failed to fetch shift templates" });
     }
   });
@@ -6926,7 +6862,7 @@ export function registerRoutes(app: Express): Server {
 
       res.status(201).json(template);
     } catch (error) {
-      console.error("Error creating shift template:", error);
+
       res.status(500).json({ message: "Failed to create shift template" });
     }
   });
@@ -6977,7 +6913,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(formattedTemplate);
     } catch (error) {
-      console.error("Error updating shift template:", error);
+
       res.status(500).json({ message: "Failed to update shift template", error: error.message });
     }
   });
@@ -6994,7 +6930,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: "Template deleted successfully" });
     } catch (error) {
-      console.error("Error deleting shift template:", error);
+
       res.status(500).json({ message: "Failed to delete shift template" });
     }
   });
@@ -7012,7 +6948,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: "Shifts regenerated successfully" });
     } catch (error) {
-      console.error("Error regenerating shifts:", error);
+
       res.status(500).json({ message: "Failed to regenerate shifts" });
     }
   });
@@ -7042,7 +6978,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(template);
     } catch (error) {
-      console.error("Error updating template status:", error);
+
       res.status(500).json({ message: "Failed to update template status" });
     }
   });
@@ -7052,19 +6988,10 @@ export function registerRoutes(app: Express): Server {
     const today = new Date();
     const daysToGenerate = template.daysPostedOut || 7;
 
-      console.log(
-        `[SHIFT GENERATION] Generating ${daysToGenerate} days of shifts for template ${template.name}`
-      );
-
     const generatedCount = await db
       .select({ count: sql`count(*)` })
       .from(generatedShifts)
       .where(eq(generatedShifts.templateId, template.id));
-
-      console.log(
-        `[SHIFT GENERATION] Current shifts for template ${template.id}:`,
-        generatedCount[0]?.count || 0
-      );
 
     for (let i = 0; i < daysToGenerate; i++) {
       const date = new Date(today);
@@ -7103,11 +7030,9 @@ export function registerRoutes(app: Express): Server {
 
           try {
             await db.insert(generatedShifts).values(shiftData).onConflictDoNothing();
-              console.log(
-                `[SHIFT GENERATION] Created shift ${shiftId} for ${date.toISOString().split("T")[0]}`
-              );
+
           } catch (error) {
-            console.error(`Error inserting shift ${shiftId}:`, error);
+
           }
         }
       }
@@ -7124,9 +7049,6 @@ export function registerRoutes(app: Express): Server {
       .set({ generatedShiftsCount: parseInt(newCount[0]?.count?.toString() || "0") })
       .where(eq(shiftTemplates.id, template.id));
 
-      console.log(
-        `[SHIFT GENERATION] Template ${template.id} now has ${newCount[0]?.count || 0} total shifts`
-      );
   }
 
   function calculateShiftHours(startTime: string, endTime: string): number {
@@ -7464,7 +7386,7 @@ export function registerRoutes(app: Express): Server {
       };
       res.status(201).json(newFacility);
     } catch (error) {
-      console.error("Error creating facility:", error);
+
       res.status(500).json({ message: "Failed to create facility" });
     }
   });
@@ -7479,7 +7401,7 @@ export function registerRoutes(app: Express): Server {
       };
       res.json(updatedFacility);
     } catch (error) {
-      console.error("Error updating facility:", error);
+
       res.status(500).json({ message: "Failed to update facility" });
     }
   });
@@ -7506,7 +7428,7 @@ export function registerRoutes(app: Express): Server {
       ];
       res.json(mockResults);
     } catch (error) {
-      console.error("Error searching external facilities:", error);
+
       res.status(500).json({ message: "Failed to search external facilities" });
     }
   });
@@ -7542,7 +7464,7 @@ export function registerRoutes(app: Express): Server {
       };
       res.status(201).json(importedFacility);
     } catch (error) {
-      console.error("Error importing facility:", error);
+
       res.status(500).json({ message: "Failed to import facility" });
     }
   });
@@ -7558,7 +7480,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(facility);
     } catch (error) {
-      console.error("Error fetching facility:", error);
+
       res.status(500).json({ message: "Failed to fetch facility" });
     }
   });
@@ -7609,7 +7531,6 @@ export function registerRoutes(app: Express): Server {
         const facility = await storage.createFacility(facilityData);
         res.status(201).json(facility);
       } catch (error) {
-        console.error("Error creating facility:", error);
 
         if (error instanceof z.ZodError) {
           const fieldErrors = error.errors.map((err) => ({
@@ -7693,7 +7614,6 @@ export function registerRoutes(app: Express): Server {
 
         res.json(facility);
       } catch (error) {
-        console.error("Error updating facility:", error);
 
         if (error instanceof z.ZodError) {
           const fieldErrors = error.errors.map((err) => ({
@@ -7727,7 +7647,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(facility);
     } catch (error) {
-      console.error("Error fetching facility:", error);
+
       res.status(500).json({ message: "Failed to fetch facility" });
     }
   });
@@ -7772,7 +7692,7 @@ export function registerRoutes(app: Express): Server {
           floatPoolMargins: facility.floatPoolMargins,
         });
       } catch (error) {
-        console.error("Error updating facility rates:", error);
+
         res.status(500).json({ message: "Failed to update rates" });
       }
     }
@@ -7813,7 +7733,7 @@ export function registerRoutes(app: Express): Server {
           staffingTargets: facility.staffingTargets,
         });
       } catch (error) {
-        console.error("Error updating staffing targets:", error);
+
         res.status(500).json({ message: "Failed to update staffing targets" });
       }
     }
@@ -7843,7 +7763,7 @@ export function registerRoutes(app: Express): Server {
           workflowAutomationConfig: facility.workflowAutomationConfig,
         });
       } catch (error) {
-        console.error("Error updating workflow configuration:", error);
+
         res.status(500).json({ message: "Failed to update workflow configuration" });
       }
     }
@@ -7866,7 +7786,7 @@ export function registerRoutes(app: Express): Server {
         const facility = await facilityImportService.importFacilityByCMSId(cmsId);
         res.status(201).json(facility);
       } catch (error) {
-        console.error("Error importing facility:", error);
+
         res
           .status(400)
           .json({ message: error instanceof Error ? error.message : "Failed to import facility" });
@@ -7885,7 +7805,7 @@ export function registerRoutes(app: Express): Server {
       const results = await facilityImportService.searchByNameAndLocation(name, state, city);
       res.json(results);
     } catch (error) {
-      console.error("Error searching external facilities:", error);
+
       res
         .status(400)
         .json({ message: error instanceof Error ? error.message : "Failed to search facilities" });
@@ -7904,7 +7824,7 @@ export function registerRoutes(app: Express): Server {
         const facility = await facilityImportService.refreshFacilityData(id);
         res.json(facility);
       } catch (error) {
-        console.error("Error refreshing facility data:", error);
+
         res.status(400).json({
           message: error instanceof Error ? error.message : "Failed to refresh facility data",
         });
@@ -7925,7 +7845,7 @@ export function registerRoutes(app: Express): Server {
       const recommendations = await recommendationEngine.getRecommendations(criteria);
       res.json(recommendations);
     } catch (error) {
-      console.error("Error generating recommendations:", error);
+
       res.status(500).json({ message: "Failed to generate recommendations" });
     }
   });
@@ -7944,7 +7864,7 @@ export function registerRoutes(app: Express): Server {
       );
       res.json(recommendations);
     } catch (error) {
-      console.error("Error generating emergency recommendations:", error);
+
       res.status(500).json({ message: "Failed to generate emergency recommendations" });
     }
   });
@@ -7968,7 +7888,7 @@ export function registerRoutes(app: Express): Server {
       );
       res.json(recommendations);
     } catch (error) {
-      console.error("Error generating specialized care recommendations:", error);
+
       res.status(500).json({ message: "Failed to generate specialized care recommendations" });
     }
   });
@@ -7994,7 +7914,7 @@ export function registerRoutes(app: Express): Server {
       );
       res.json(recommendations);
     } catch (error) {
-      console.error("Error generating insurance-based recommendations:", error);
+
       res.status(500).json({ message: "Failed to generate insurance-based recommendations" });
     }
   });
@@ -8023,7 +7943,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(filteredData);
     } catch (error) {
-      console.error("Error fetching facilities:", error);
+
       res.status(500).json({ message: "Failed to fetch facilities" });
     }
   });
@@ -8047,10 +7967,6 @@ export function registerRoutes(app: Express): Server {
         }
       }
 
-        console.log(
-          `[STAFF API] Fetching staff for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
-        );
-
       // Get staff from database
       const allStaff = await db.select().from(staff);
 
@@ -8073,7 +7989,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(filteredStaff);
     } catch (error) {
-      console.error("Error fetching staff:", error);
+
       res.status(500).json({ message: "Failed to fetch staff" });
     }
   });
@@ -8083,7 +7999,6 @@ export function registerRoutes(app: Express): Server {
     try {
       const { userId } = req.body;
       const currentUser = req.user;
-
 
       if (!currentUser || currentUser.role !== "super_admin") {
         return res.status(403).json({ message: "Only super admins can impersonate users" });
@@ -8099,7 +8014,6 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "User not found" });
       }
 
-
       // If this is a facility user, fetch their permissions and facility associations
       if (targetUser.role !== "super_admin") {
         try {
@@ -8110,19 +8024,13 @@ export function registerRoutes(app: Express): Server {
             // Use individual permissions from the database if available
             if (facilityUser.permissions && facilityUser.permissions.length > 0) {
               (targetUser as any).permissions = facilityUser.permissions;
-                console.log(
-                    `[IMPERSONATION] Set individual permissions for ${targetUser.email}:`,
-                facilityUser.permissions
-              );
+
             } else {
               // Fallback to role template permissions
               const roleTemplate = await storage.getFacilityUserRoleTemplate(targetUser.role);
               if (roleTemplate && roleTemplate.permissions) {
                 (targetUser as any).permissions = roleTemplate.permissions;
-                  console.log(
-                      `[IMPERSONATION] Set role template permissions for ${targetUser.email}:`,
-                  roleTemplate.permissions
-                );
+
               }
             }
 
@@ -8130,51 +8038,33 @@ export function registerRoutes(app: Express): Server {
             if (facilityUser.associated_facility_ids) {
               (targetUser as any).associatedFacilityIds = facilityUser.associated_facility_ids;
               (targetUser as any).associatedFacilities = facilityUser.associated_facility_ids; // Keep both for compatibility
-                console.log(
-                    `[IMPERSONATION] Set associatedFacilityIds for ${targetUser.email}:`,
-                facilityUser.associated_facility_ids
-              );
+
             }
 
             // Include facility user role for proper permission handling
             (targetUser as any).facilityRole = facilityUser.role;
-              console.log(
-                  `[IMPERSONATION] Set facility role for ${targetUser.email}:`,
-              facilityUser.role
-            );
+
           } else {
             // If not in facility_users table, check if user has associated_facilities in users table
-              console.log(
-                  `[IMPERSONATION] User not found in facility_users, checking users table data`
-                  );
 
             if (targetUser.associated_facilities && targetUser.associated_facilities.length > 0) {
               (targetUser as any).associatedFacilities = targetUser.associated_facilities;
-                console.log(
-                    `[IMPERSONATION] Set associatedFacilities from users table for ${targetUser.email}:`,
-                targetUser.associated_facilities
-              );
+
             }
 
             // Get role template permissions
             const roleTemplate = await storage.getFacilityUserRoleTemplate(targetUser.role);
             if (roleTemplate && roleTemplate.permissions) {
               (targetUser as any).permissions = roleTemplate.permissions;
-                console.log(
-                    `[IMPERSONATION] Set role template permissions for ${targetUser.email}:`,
-                roleTemplate.permissions
-              );
+
             }
 
             // Set facility role to user's role
             (targetUser as any).facilityRole = targetUser.role;
-              console.log(
-                  `[IMPERSONATION] Set facility role for ${targetUser.email}:`,
-              targetUser.role
-            );
+
           }
         } catch (error) {
-          console.error("Error fetching user permissions:", error);
+
         }
       }
 
@@ -8184,251 +8074,13 @@ export function registerRoutes(app: Express): Server {
         originalUser: currentUser,
       });
     } catch (error) {
-      console.error("Error starting impersonation:", error);
+
       res.status(500).json({ message: "Failed to start impersonation" });
     }
   });
 
   app.post("/api/stop-impersonation", requireAuth, async (req, res) => {
     try {
-      console.log("Stop impersonation debug:", {
-        hasOriginalUser: !!(req.session as any).originalUser,
-        hasImpersonatedUserId: !!(req.session as any).impersonatedUserId,
-      });
-
-      if (!(req.session as any).originalUser) {
-        return res.status(400).json({ message: "No active impersonation session" });
-      }
-
-      const originalUser = (req.session as any).originalUser;
-      delete (req.session as any).originalUser;
-      delete (req.session as any).impersonatedUserId;
-
-      res.json({
-        success: true,
-        restoredUser: originalUser,
-      });
-    } catch (error) {
-      console.error("Error stopping impersonation:", error);
-      res.status(500).json({ message: "Failed to stop impersonation" });
-    }
-  });
-
-  // Shift requests API endpoint
-  app.get("/api/shift-requests/:shiftId", requireAuth, async (req, res) => {
-    try {
-      const shiftId = parseInt(req.params.shiftId);
-
-      // Mock shift requests data based on shift ID
-      const mockShiftRequests = [
-        {
-          id: 1,
-          shiftId: shiftId,
-          workerId: 3,
-          workerName: "Josh Burnett",
-          specialty: "RN",
-          reliabilityScore: 96,
-          averageRating: 4.8,
-          totalShiftsWorked: 156,
-          hourlyRate: 48,
-          requestedAt: "2025-06-23T10:30:00Z",
-          status: "pending",
-        },
-        {
-          id: 2,
-          shiftId: shiftId,
-          workerId: 4,
-          workerName: "Sarah Johnson",
-          specialty: "LPN",
-          reliabilityScore: 94,
-          averageRating: 4.7,
-          totalShiftsWorked: 142,
-          hourlyRate: 42,
-          requestedAt: "2025-06-23T11:15:00Z",
-          status: "pending",
-        },
-        {
-          id: 3,
-          shiftId: shiftId,
-          workerId: 42,
-          workerName: "Jennifer Kim",
-          specialty: "CST",
-          reliabilityScore: 98,
-          averageRating: 4.9,
-          totalShiftsWorked: 89,
-          hourlyRate: 35,
-          requestedAt: "2025-06-23T09:45:00Z",
-          status: "pending",
-        },
-      ];
-
-      res.json(mockShiftRequests);
-    } catch (error) {
-      console.error("Error fetching shift requests:", error);
-      res.status(500).json({ message: "Failed to fetch shift requests" });
-    }
-  });
-
-  app.get("/api/session-status", requireAuth, async (req, res) => {
-    try {
-      const currentUser = req.user;
-      const isImpersonating = !!(req.session as any).originalUser;
-
-      res.json({
-        user: currentUser,
-        isImpersonating,
-        originalUser: (req.session as any).originalUser || null,
-        impersonatedUserId: (req.session as any).impersonatedUserId || null,
-      });
-    } catch (error) {
-      console.error("Error getting session status:", error);
-      res.status(500).json({ message: "Failed to get session status" });
-    }
-  });
-
-  app.post("/api/restore-session", async (req, res) => {
-    try {
-      const { username, password, impersonatedUserId } = req.body;
-
-      // Quick re-authentication for development
-      if (username === "joshburn" && password === "admin123") {
-        const superUser = {
-          id: 1,
-          username: "joshburn",
-          email: "joshburn@nexspace.com",
-          role: "super_admin" as const,
-          firstName: "Josh",
-          lastName: "Burn",
-          avatar: null,
-          isActive: true,
-          facilityId: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          password: "",
-        };
-
-        // Restore session
-        (req.session as any).passport = { user: superUser.id };
-
-        // Restore impersonation if provided
-        if (impersonatedUserId) {
-          const targetUser = await storage.getUser(impersonatedUserId);
-          if (targetUser) {
-            (req.session as any).originalUser = superUser;
-            (req.session as any).impersonatedUserId = impersonatedUserId;
-
-            return res.json({
-              success: true,
-              user: targetUser,
-              isImpersonating: true,
-              originalUser: superUser,
-            });
-          }
-        }
-
-        res.json({
-          success: true,
-          user: superUser,
-          isImpersonating: false,
-        });
-      } else {
-        res.status(401).json({ message: "Invalid credentials" });
-      }
-    } catch (error) {
-      console.error("Error restoring session:", error);
-      res.status(500).json({ message: "Failed to restore session" });
-    }
-  });
-
-  // Admin API endpoints
-  app.get(
-    "/api/admin/users",
-    requireAuth,
-    requirePermission("system.manage_permissions"),
-    async (req: any, res) => {
-      try {
-        // Get all users from database
-        const allUsers = await storage.getAllUsers();
-        const facilityUsers = await storage.getAllFacilityUsers();
-        const facilities = await storage.getFacilities();
-
-        // Map users to include role information
-        const mappedUsers = allUsers.map((user) => {
-          // Check if user is a facility user to get facility associations
-          const facilityUser = facilityUsers.find((fu) => fu.email === user.email);
-          let facilityName = null;
-          let facilityId = null;
-
-          if (facilityUser && facilityUser.associatedFacilityIds?.length > 0) {
-            const facility = facilities.find((f) => f.id === facilityUser.associatedFacilityIds[0]);
-            if (facility) {
-              facilityName = facility.name;
-              facilityId = facility.id;
-            }
-          }
-
-          // Determine the system role based on user.role
-          let systemRole: SystemRole = "viewer"; // default
-
-          if (user.role === "super_admin") {
-            systemRole = "super_admin";
-          } else if (user.role === "internal_employee") {
-            systemRole = "staff";
-          } else if (user.role === "contractor_1099") {
-            systemRole = "staff";
-          } else if (facilityUser) {
-            // Map facility user roles to system roles
-            switch (facilityUser.role) {
-              case "facility_admin":
-                systemRole = "facility_admin";
-                break;
-              case "scheduling_coordinator":
-                systemRole = "scheduling_coordinator";
-                break;
-              case "hr_manager":
-                systemRole = "hr_manager";
-                break;
-              case "billing":
-                systemRole = "billing_manager";
-                break;
-              case "supervisor":
-                systemRole = "supervisor";
-                break;
-              case "director_of_nursing":
-                systemRole = "director_of_nursing";
-                break;
-              case "corporate":
-                systemRole = "corporate";
-                break;
-              case "regional_director":
-                systemRole = "regional_director";
-                break;
-              default:
-                systemRole = "viewer";
-            }
-          }
-
-          return {
-            id: user.id,
-            email: user.email,
-            name:
-              user.name || `${user.firstName || ""} ${user.lastName || ""}`.trim() || user.email,
-            role: systemRole,
-            facilityName,
-            facilityId,
-            createdAt: user.createdAt,
-            lastLogin: user.lastLogin,
-            status: user.status || "active",
-          };
-        });
-
-        res.json(mappedUsers);
-      } catch (error) {
-        console.error("Error fetching admin users:", error);
-        res.status(500).json({ message: "Failed to fetch users" });
-      }
-    }
-  );
 
   // Update user role endpoint
   app.patch(
@@ -8498,7 +8150,7 @@ export function registerRoutes(app: Express): Server {
 
         res.json({ success: true, message: "Role updated successfully" });
       } catch (error) {
-        console.error("Error updating user role:", error);
+
         res.status(500).json({ message: "Failed to update user role" });
       }
     }
@@ -8585,7 +8237,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(users);
     } catch (error) {
-      console.error("Error fetching users:", error);
+
       res.status(500).json({ message: "Failed to fetch users" });
     }
   });
@@ -8595,7 +8247,7 @@ export function registerRoutes(app: Express): Server {
       const user = await storage.createUser(req.body);
       res.json(user);
     } catch (error) {
-      console.error("Error creating user:", error);
+
       res.status(500).json({ message: "Failed to create user" });
     }
   });
@@ -8606,7 +8258,7 @@ export function registerRoutes(app: Express): Server {
       const user = await storage.updateUser(id, req.body);
       res.json(user);
     } catch (error) {
-      console.error("Error updating user:", error);
+
       res.status(500).json({ message: "Failed to update user" });
     }
   });
@@ -8624,7 +8276,7 @@ export function registerRoutes(app: Express): Server {
         permissions: permissions,
       });
     } catch (error) {
-      console.error("Error updating user permissions:", error);
+
       res.status(500).json({ message: "Failed to update permissions" });
     }
   });
@@ -8638,7 +8290,7 @@ export function registerRoutes(app: Express): Server {
         const logs = await storage.getAuditLogs();
         res.json(logs);
       } catch (error) {
-        console.error("Error fetching audit logs:", error);
+
         res.status(500).json({ message: "Failed to fetch audit logs" });
       }
     }
@@ -8665,7 +8317,7 @@ export function registerRoutes(app: Express): Server {
       const result = await db.execute(sql.raw(query));
       res.json(result);
     } catch (error: any) {
-      console.error("Database query error:", error);
+
       res.status(400).json({ message: error.message });
     }
   });
@@ -8747,7 +8399,7 @@ export function registerRoutes(app: Express): Server {
       ];
       res.json(vendorInvoices);
     } catch (error) {
-      console.error("Error fetching vendor invoices:", error);
+
       res.status(500).json({ message: "Failed to fetch vendor invoices" });
     }
   });
@@ -8762,7 +8414,7 @@ export function registerRoutes(app: Express): Server {
       };
       res.json(newInvoice);
     } catch (error) {
-      console.error("Error creating vendor invoice:", error);
+
       res.status(500).json({ message: "Failed to create vendor invoice" });
     }
   });
@@ -8773,7 +8425,7 @@ export function registerRoutes(app: Express): Server {
       // In a real app, this would update the database
       res.json({ id, ...req.body });
     } catch (error) {
-      console.error("Error updating vendor invoice:", error);
+
       res.status(500).json({ message: "Failed to update vendor invoice" });
     }
   });
@@ -8789,7 +8441,7 @@ export function registerRoutes(app: Express): Server {
       ];
       res.json(vendors);
     } catch (error) {
-      console.error("Error fetching vendors:", error);
+
       res.status(500).json({ message: "Failed to fetch vendors" });
     }
   });
@@ -9313,7 +8965,7 @@ export function registerRoutes(app: Express): Server {
       ];
       res.json(staff);
     } catch (error) {
-      console.error("Error fetching staff:", error);
+
       res.status(500).json({ message: "Failed to fetch staff" });
     }
   });
@@ -9363,7 +9015,7 @@ export function registerRoutes(app: Express): Server {
       ];
       res.json(posts);
     } catch (error) {
-      console.error("Error fetching staff posts:", error);
+
       res.status(500).json({ message: "Failed to fetch staff posts" });
     }
   });
@@ -9385,7 +9037,7 @@ export function registerRoutes(app: Express): Server {
       };
       res.json(newPost);
     } catch (error) {
-      console.error("Error creating staff post:", error);
+
       res.status(500).json({ message: "Failed to create staff post" });
     }
   });
@@ -9398,7 +9050,6 @@ export function registerRoutes(app: Express): Server {
 
       const staffIdNum = parseInt(staffId);
       const facilityIdNum = parseInt(facilityId);
-
 
       // Get current staff data from database - select specific columns to avoid issues with missing columns
       const staffData = await db
@@ -9437,7 +9088,6 @@ export function registerRoutes(app: Express): Server {
         })
         .where(eq(staff.id, staffIdNum));
 
-
       res.json({
         message: "Facility association added successfully",
         staffId: staffIdNum,
@@ -9445,7 +9095,7 @@ export function registerRoutes(app: Express): Server {
         associations: updatedAssociations,
       });
     } catch (error) {
-      console.error("Error adding facility association:", error);
+
       res.status(500).json({ message: "Failed to add facility association" });
     }
   });
@@ -9456,7 +9106,6 @@ export function registerRoutes(app: Express): Server {
 
       const staffIdNum = parseInt(staffId);
       const facilityIdNum = parseInt(facilityId);
-
 
       // Get current staff data from database - select specific columns to avoid issues with missing columns
       const staffData = await db
@@ -9491,7 +9140,6 @@ export function registerRoutes(app: Express): Server {
         })
         .where(eq(staff.id, staffIdNum));
 
-
       res.json({
         message: "Facility association removed successfully",
         staffId: staffIdNum,
@@ -9499,7 +9147,7 @@ export function registerRoutes(app: Express): Server {
         associations: updatedAssociations,
       });
     } catch (error) {
-      console.error("Error removing facility association:", error);
+
       res.status(500).json({ message: "Failed to remove facility association" });
     }
   });
@@ -9509,7 +9157,6 @@ export function registerRoutes(app: Express): Server {
     try {
       const staffId = parseInt(req.params.id);
       const updates = req.body;
-
 
       // Validate staff exists
       const existingStaff = await db
@@ -9597,13 +9244,12 @@ export function registerRoutes(app: Express): Server {
       // Fetch and return updated staff data
       const updatedStaff = await db.select().from(staff).where(eq(staff.id, staffId)).limit(1);
 
-
       res.json({
         message: "Staff profile updated successfully",
         staff: updatedStaff[0],
       });
     } catch (error) {
-      console.error("Error updating staff profile:", error);
+
       res.status(500).json({ message: "Failed to update staff profile" });
     }
   });
@@ -9615,7 +9261,7 @@ export function registerRoutes(app: Express): Server {
       const associations = await storage.getStaffFacilityAssociations(staffId);
       res.json(associations);
     } catch (error) {
-      console.error("Error fetching staff facility associations:", error);
+
       res.status(500).json({ message: "Failed to fetch facility associations" });
     }
   });
@@ -9635,7 +9281,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(association);
     } catch (error) {
-      console.error("Error adding staff facility association:", error);
+
       res.status(500).json({ message: "Failed to add facility association" });
     }
   });
@@ -9651,7 +9297,7 @@ export function registerRoutes(app: Express): Server {
         await storage.removeStaffFacilityAssociation(staffId, facilityId);
         res.json({ message: "Facility association removed successfully" });
       } catch (error) {
-        console.error("Error removing staff facility association:", error);
+
         res.status(500).json({ message: "Failed to remove facility association" });
       }
     }
@@ -9664,7 +9310,7 @@ export function registerRoutes(app: Express): Server {
       const credentials = await storage.getStaffCredentials(staffId);
       res.json(credentials);
     } catch (error) {
-      console.error("Error fetching staff credentials:", error);
+
       res.status(500).json({ message: "Failed to fetch credentials" });
     }
   });
@@ -9686,7 +9332,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(credential);
     } catch (error) {
-      console.error("Error adding staff credential:", error);
+
       res.status(500).json({ message: "Failed to add credential" });
     }
   });
@@ -9705,7 +9351,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(formattedStaff);
     } catch (error) {
-      console.error("Error fetching staff by facility:", error);
+
       res.status(500).json({ message: "Failed to fetch staff for facility" });
     }
   });
@@ -9785,10 +9431,6 @@ export function registerRoutes(app: Express): Server {
           }
         }
       }
-
-        console.log(
-          `[SHIFTS API] Fetching shifts for user ${effectiveUser?.email}, role: ${effectiveUser?.role}`
-        );
 
       // Generate comprehensive 12-month shift data for 100-bed skilled nursing facility
       const generateShifts = () => {
@@ -9882,12 +9524,9 @@ export function registerRoutes(app: Express): Server {
         }
       }
 
-        console.log(
-          `[SHIFTS API] Returning ${shifts.length} shifts for user ${effectiveUser?.email}`
-        );
       res.json(shifts);
     } catch (error) {
-      console.error("Error fetching shifts:", error);
+
       res.status(500).json({ message: "Failed to fetch shifts" });
     }
   });
@@ -9970,7 +9609,6 @@ export function registerRoutes(app: Express): Server {
         success: false,
       });
 
-      console.error("Error creating shift template:", error);
       res.status(500).json({ message: "Failed to create shift template" });
     }
   });
@@ -10017,13 +9655,11 @@ export function registerRoutes(app: Express): Server {
         notes,
       };
 
-
       const updatedTemplate = await storage.updateShiftTemplate(templateId, updateData);
 
       if (!updatedTemplate) {
         return res.status(404).json({ message: "Template not found" });
       }
-
 
       // Transform database response to camelCase for frontend
       const transformedTemplate = {
@@ -10045,7 +9681,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(transformedTemplate);
     } catch (error) {
-      console.error("Error updating shift template:", error);
+
       res.status(500).json({ message: "Failed to update shift template", error: error.message });
     }
   });
@@ -10064,7 +9700,7 @@ export function registerRoutes(app: Express): Server {
         message: "Template deleted successfully",
       });
     } catch (error) {
-      console.error("Error deleting shift template:", error);
+
       res.status(500).json({ message: "Failed to delete shift template" });
     }
   });
@@ -10167,7 +9803,7 @@ export function registerRoutes(app: Express): Server {
         },
       });
     } catch (error) {
-      console.error("Create shift error:", error);
+
       res.status(500).json({ message: "Failed to create shift" });
     }
   });
@@ -10177,7 +9813,6 @@ export function registerRoutes(app: Express): Server {
     try {
       const requestBody = req.body;
       const userId = (req as any).user?.id;
-
 
       // Extract shiftData from request body (the mutation wraps it in { shiftData })
       const shiftData = requestBody.shiftData || requestBody;
@@ -10224,7 +9859,7 @@ export function registerRoutes(app: Express): Server {
         },
       });
     } catch (error) {
-      console.error("Post shift error:", error);
+
       res.status(500).json({ message: "Failed to post shift" });
     }
   });
@@ -10251,7 +9886,6 @@ export function registerRoutes(app: Express): Server {
         preserveAssigned: true,
       });
 
-
       res.json({
         message: `Successfully created ${generatedShifts.length} shifts from template`,
         generatedShifts: generatedShifts.length,
@@ -10261,7 +9895,7 @@ export function registerRoutes(app: Express): Server {
         daysInAdvance,
       });
     } catch (error) {
-      console.error("Create shifts from template error:", error);
+
       res
         .status(500)
         .json({
@@ -10333,17 +9967,13 @@ export function registerRoutes(app: Express): Server {
           )
         );
 
-        console.log(
-          `[REGENERATE] Generated ${regeneratedShifts.length} shifts for template "${template.name}" (ID: ${templateId})`
-        );
-
       res.json({
         message: `Successfully regenerated ${regeneratedShifts.length} future shifts from template "${template.name}"`,
         regeneratedShifts: regeneratedShifts.length,
         templateName: template.name,
       });
     } catch (error) {
-      console.error("Regenerate shifts error:", error);
+
       res
         .status(500)
         .json({ message: error instanceof Error ? error.message : "Failed to regenerate shifts" });
@@ -10594,8 +10224,6 @@ export function registerRoutes(app: Express): Server {
       const { targetUserId, userType = "user" } = req.body;
       let targetUser: any = null;
 
-      console.log(`[IMPERSONATION] Starting impersonation for ${userType} with ID ${targetUserId}`);
-
       // Handle different user types
       if (userType === "facility_user") {
         // Get facility user from facility_users table
@@ -10692,435 +10320,18 @@ export function registerRoutes(app: Express): Server {
       };
 
       // Debug log session values before save
-      console.log(`[IMPERSONATION] Session values before save:`, {
-        isImpersonating: (req.session as any).isImpersonating,
-        impersonatedUserId: (req.session as any).impersonatedUserId,
-        impersonatedUserType: (req.session as any).impersonatedUserType,
-        hasOriginalUser: !!(req.session as any).originalUser,
-        originalUserId: (req.session as any).originalUser?.id,
-      });
-
-      console.log(`[IMPERSONATION] Successfully impersonating ${targetUser.email} (${userType})`);
-
-      // Explicitly save the session
-      req.session.save((err) => {
-        if (err) {
-          console.error("[IMPERSONATION] Error saving session:", err);
-          return res.status(500).json({ message: "Failed to save impersonation session" });
-        }
-        
-        // Debug log session values after save
-        console.log(`[IMPERSONATION] Session values after save:`, {
-          isImpersonating: (req.session as any).isImpersonating,
-          impersonatedUserId: (req.session as any).impersonatedUserId,
-          impersonatedUserType: (req.session as any).impersonatedUserType,
-          hasOriginalUser: !!(req.session as any).originalUser,
-        });
-        
-        res.json({
-          message: "Impersonation started successfully",
-          impersonatedUser: targetUser,
-          originalUser: (req.session as any).originalUser,
-        });
+      
+      // Save session and return success
+      res.json({
+        success: true,
+        message: "Impersonation started successfully",
+        user: targetUser
       });
     } catch (error) {
-      console.error("[IMPERSONATION] Error:", error);
+      console.error("Impersonation error:", error);
       res.status(500).json({ message: "Failed to start impersonation" });
     }
   });
-
-  app.post("/api/impersonate/stop", requireAuth, async (req, res) => {
-    try {
-      console.log("[IMPERSONATION STOP] Starting impersonation cleanup...");
-      
-      // Log current session state before cleanup
-      console.log("[IMPERSONATION STOP] Current session state:", {
-        sessionId: req.sessionID,
-        isImpersonating: (req.session as any).isImpersonating,
-        impersonatedUserId: (req.session as any).impersonatedUserId,
-        impersonatedUserType: (req.session as any).impersonatedUserType,
-        hasOriginalUser: !!(req.session as any).originalUser,
-        currentUserId: req.user?.id,
-      });
-
-      if (!(req.session as any).isImpersonating || !(req.session as any).originalUser) {
-        console.log("[IMPERSONATION STOP] No active impersonation session found");
-        return res.status(400).json({ message: "No active impersonation session" });
-      }
-
-      const originalUser = (req.session as any).originalUser;
-      console.log(`[IMPERSONATION STOP] Restoring original user: ${originalUser.email} (ID: ${originalUser.id})`);
-
-      // Clear ALL impersonation-related session data
-      (req.session as any).user = originalUser;
-      delete (req.session as any).originalUser;
-      delete (req.session as any).isImpersonating;
-      delete (req.session as any).impersonatedUserId;
-      delete (req.session as any).impersonatedUserType;
-      
-      // Clear any other potential impersonation data
-      delete (req.session as any).impersonationStartTime;
-      delete (req.session as any).impersonationContext;
-
-      // Log session state after cleanup
-      console.log("[IMPERSONATION STOP] Session state after cleanup:", {
-        sessionId: req.sessionID,
-        userId: (req.session as any).user?.id,
-        userEmail: (req.session as any).user?.email,
-        isImpersonating: (req.session as any).isImpersonating,
-        impersonatedUserId: (req.session as any).impersonatedUserId,
-        hasOriginalUser: !!(req.session as any).originalUser,
-      });
-
-      // Explicitly save the session to ensure changes persist
-      req.session.save((err) => {
-        if (err) {
-          console.error("[IMPERSONATION STOP] Error saving session after cleanup:", err);
-          return res.status(500).json({ message: "Failed to save session after ending impersonation" });
-        }
-        
-        console.log("[IMPERSONATION STOP] Session saved successfully");
-        
-        // Regenerate session ID to ensure clean session
-        req.session.regenerate((regenerateErr) => {
-          if (regenerateErr) {
-            console.error("[IMPERSONATION STOP] Error regenerating session:", regenerateErr);
-            // Still return success since the impersonation was cleared
-            res.json({
-              message: "Impersonation ended successfully",
-              originalUser: originalUser,
-              sessionCleared: true,
-            });
-          } else {
-            console.log("[IMPERSONATION STOP] Session regenerated with new ID:", req.sessionID);
-            // Properly re-authenticate the original user after regeneration
-            req.login(originalUser, (loginErr) => {
-              if (loginErr) {
-                console.error("[IMPERSONATION STOP] Error re-authenticating user:", loginErr);
-              } else {
-                console.log("[IMPERSONATION STOP] User re-authenticated successfully");
-              }
-              
-              req.session.save((saveErr) => {
-                if (saveErr) {
-                  console.error("[IMPERSONATION STOP] Error saving regenerated session:", saveErr);
-                }
-                
-                res.json({
-                  message: "Impersonation ended successfully",
-                  originalUser: originalUser,
-                  sessionCleared: true,
-                });
-              });
-            });
-          }
-        });
-      });
-    } catch (error) {
-      console.error("[IMPERSONATION STOP] Error:", error);
-      res.status(500).json({ message: "Failed to stop impersonation" });
-    }
-  });
-
-  // Block Shifts API
-  app.get("/api/block-shifts", requireAuth, async (req, res) => {
-    try {
-      const blockShifts = [
-        {
-          id: 1,
-          title: "ICU Coverage Block",
-          startDate: "2025-06-25",
-          endDate: "2025-07-01",
-          department: "Intensive Care Unit",
-          specialty: "Registered Nurse",
-          quantity: 3,
-          rate: 45,
-          description: "Week-long ICU coverage needed, multiple positions available",
-        },
-        {
-          id: 2,
-          title: "Weekend ED Block",
-          startDate: "2025-06-28",
-          endDate: "2025-06-29",
-          department: "Emergency Department",
-          specialty: "Registered Nurse",
-          quantity: 2,
-          rate: 52,
-          description: "Weekend emergency department coverage",
-        },
-        {
-          id: 3,
-          title: "Rehabilitation Week",
-          startDate: "2025-07-07",
-          endDate: "2025-07-11",
-          department: "Rehabilitation",
-          specialty: "Physical Therapist",
-          quantity: 1,
-          rate: 62,
-          description: "Full week rehabilitation services coverage",
-        },
-      ];
-      res.json(blockShifts);
-    } catch (error) {
-      console.error("Error fetching block shifts:", error);
-      res.status(500).json({ message: "Failed to fetch block shifts" });
-    }
-  });
-
-  app.post("/api/block-shifts", requireAuth, async (req, res) => {
-    try {
-      const blockShiftData = req.body;
-      const newBlockShift = {
-        id: Date.now(),
-        ...blockShiftData,
-        status: "open",
-        createdById: req.user?.id,
-        createdAt: new Date().toISOString(),
-      };
-      res.json(newBlockShift);
-    } catch (error) {
-      console.error("Error creating block shift:", error);
-      res.status(500).json({ message: "Failed to create block shift" });
-    }
-  });
-
-  // Facility Settings API
-  app.get("/api/facility-settings/:facilityId", requireAuth, async (req, res) => {
-    try {
-      const settings = {
-        id: 1,
-        facilityId: parseInt(req.params.facilityId),
-        baseRates: {
-          "Registered Nurse": 35,
-          "Licensed Practical Nurse": 28,
-          "Certified Nursing Assistant": 18,
-          "Physical Therapist": 45,
-          "Respiratory Therapist": 32,
-          "Medical Doctor": 85,
-          "Nurse Practitioner": 55,
-          "Physician Assistant": 50,
-        },
-        presetTimes: [
-          { label: "7:00 AM - 7:00 PM", start: "07:00", end: "19:00" },
-          { label: "7:00 PM - 7:00 AM", start: "19:00", end: "07:00" },
-          { label: "6:00 AM - 6:00 PM", start: "06:00", end: "18:00" },
-          { label: "6:00 PM - 6:00 AM", start: "18:00", end: "06:00" },
-          { label: "8:00 AM - 8:00 PM", start: "08:00", end: "20:00" },
-          { label: "8:00 PM - 8:00 AM", start: "20:00", end: "08:00" },
-        ],
-        allowedPremiums: {
-          min: 1.0,
-          max: 1.7,
-          step: 0.05,
-        },
-        departments: [
-          "Emergency Department",
-          "Intensive Care Unit",
-          "Medical/Surgical",
-          "Pediatrics",
-          "Oncology",
-          "Cardiology",
-          "Orthopedics",
-          "Rehabilitation",
-          "Operating Room",
-          "Labor & Delivery",
-        ],
-        specialtyServices: [
-          "Registered Nurse",
-          "Licensed Practical Nurse",
-          "Certified Nursing Assistant",
-          "Physical Therapist",
-          "Respiratory Therapist",
-          "Medical Doctor",
-          "Nurse Practitioner",
-          "Physician Assistant",
-        ],
-      };
-      res.json(settings);
-    } catch (error) {
-      console.error("Error fetching facility settings:", error);
-      res.status(500).json({ message: "Failed to fetch facility settings" });
-    }
-  });
-
-  app.put("/api/facility-settings/:facilityId", requireAuth, async (req, res) => {
-    try {
-      const updatedSettings = {
-        id: 1,
-        facilityId: parseInt(req.params.facilityId),
-        ...req.body,
-        updatedAt: new Date().toISOString(),
-      };
-      res.json(updatedSettings);
-    } catch (error) {
-      console.error("Error updating facility settings:", error);
-      res.status(500).json({ message: "Failed to update facility settings" });
-    }
-  });
-
-  app.get("/api/referrals/facilities", requireAuth, async (req, res) => {
-    try {
-      const referrals = [
-        {
-          id: 1,
-          referrerId: 1,
-          referrerName: "Sarah Johnson",
-          facilityName: "Riverside Medical Center",
-          facilityType: "hospital",
-          facilitySize: "medium",
-          contactName: "Jennifer Adams",
-          contactEmail: "jadams@riverside.com",
-          contactPhone: "(555) 999-1234",
-          estimatedBeds: 120,
-          location: "Portland, OR",
-          status: "contract_sent",
-          dateReferred: "2025-05-20T00:00:00Z",
-          dateContacted: "2025-05-25T00:00:00Z",
-          bonusAmount: 2500,
-          notes: "Looking for staffing partnership for summer months",
-        },
-      ];
-      res.json(referrals);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch facility referrals" });
-    }
-  });
-
-  app.get("/api/referral-codes", requireAuth, async (req, res) => {
-    try {
-      const codes = [
-        {
-          id: 1,
-          userId: 1,
-          userName: "Sarah Johnson",
-          code: "SJ2025REF",
-          qrCodeUrl:
-            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-          type: "both",
-          uses: 3,
-          maxUses: 50,
-          isActive: true,
-        },
-        {
-          id: 2,
-          userId: 3,
-          userName: "Dr. Emma Rodriguez",
-          code: "ER2025REF",
-          qrCodeUrl:
-            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-          type: "staff",
-          uses: 1,
-          maxUses: 25,
-          isActive: true,
-        },
-      ];
-      res.json(codes);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch referral codes" });
-    }
-  });
-
-  // PDF invoice extraction endpoint
-  app.post(
-    "/api/vendor-invoices/extract-pdf",
-    requireAuth,
-    upload.single("pdf"),
-    async (req, res) => {
-      try {
-        if (!req.file) {
-          return res.status(400).json({ message: "No PDF file uploaded" });
-        }
-
-        // For demo purposes, simulate PDF text extraction
-        // In production, you would use a proper PDF parsing library
-        const simulatedPdfText = `
-       );
-        INVOICE
-        
-        From: MedSupply Plus Corp
-        123 Healthcare Drive
-        Medical City, MC 12345
-        
-        Invoice Number: MSP-2025-001234
-        Date: June 19, 2025
-        Due Date: July 19, 2025
-        Service Period: June 1-30, 2025
-        
-        Bill To:
-        Chicago General Hospital
-        456 Medical Avenue
-        Chicago, IL 60601
-        
-        Description: Medical supplies and equipment for June 2025
-        - Surgical masks (1000 units)
-        - Disposable gloves (500 boxes)
-        - Hand sanitizer (50 gallons)
-        
-        Subtotal: $8,450.00
-        Tax: $450.50
-        Total Amount Due: $8,900.50
-        
-        Payment Terms: Net 30 days
-        Thank you for your business!
-      `;
-
-        const pdfText = simulatedPdfText;
-
-        // Use OpenAI to extract invoice data
-        // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
-        const response = await openai.chat.completions.create({
-          model: "gpt-4o",
-          messages: [
-            {
-              role: "system",
-              content: `You are an AI assistant that extracts invoice information from text. 
-            Extract the following fields from the invoice text and respond with JSON:
-            - vendorName: The company/vendor name issuing the invoice
-            - invoiceNumber: The invoice number or reference
-            - amount: The total amount due (as a number, no currency symbols)
-            - dueDate: The payment due date (in YYYY-MM-DD format)
-            - serviceDate: The service/billing period date (in YYYY-MM-DD format)
-            - description: Brief description of services/products
-            - vendorType: Categorize as one of: staffing_agency, medical_supply, equipment_rental, maintenance, consulting, it_services, or other
-            
-            If any field cannot be determined, use reasonable defaults or null.
-            Respond only with valid JSON.`,
-            },
-            {
-              role: "user",
-              content: `Extract invoice information from this text:\n\n${pdfText}`,
-            },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.1,
-        });
-
-        const extractedData = JSON.parse(response.choices[0].message.content || "{}");
-
-        // Validate and clean the extracted data
-        const cleanedData = {
-          vendorName: extractedData.vendorName || "Unknown Vendor",
-          invoiceNumber: extractedData.invoiceNumber || `INV-${Date.now()}`,
-          amount: parseFloat(extractedData.amount) || 0,
-          dueDate:
-            extractedData.dueDate ||
-            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-          serviceDate: extractedData.serviceDate || new Date().toISOString().split("T")[0],
-          description: extractedData.description || "Services provided",
-          vendorType: extractedData.vendorType || "other",
-          status: "pending",
-        };
-
-        res.json(cleanedData);
-      } catch (error: any) {
-        console.error("Error extracting PDF data:", error);
-        res.status(500).json({
-          message: "Failed to extract invoice data from PDF",
-          error: error.message,
-        });
-      }
-    }
-  );
 
   // System settings API
   app.get("/api/system-settings", requireAuth, async (req, res) => {
@@ -11149,7 +10360,7 @@ export function registerRoutes(app: Express): Server {
       };
       res.json(settings);
     } catch (error) {
-      console.error("Error fetching system settings:", error);
+
       res.status(500).json({ message: "Failed to fetch system settings" });
     }
   });
@@ -11160,7 +10371,7 @@ export function registerRoutes(app: Express): Server {
       const updatedSettings = { id: 1, ...req.body };
       res.json(updatedSettings);
     } catch (error) {
-      console.error("Error updating system settings:", error);
+
       res.status(500).json({ message: "Failed to update system settings" });
     }
   });
@@ -11426,7 +10637,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(filteredData);
     } catch (error) {
-      console.error("Error fetching shift analytics:", error);
+
       res.status(500).json({ message: "Failed to fetch shift analytics" });
     }
   });
@@ -11500,7 +10711,7 @@ export function registerRoutes(app: Express): Server {
             break;
         }
       } catch (error) {
-        console.error("WebSocket message error:", error);
+
       }
     });
 
@@ -11516,7 +10727,7 @@ export function registerRoutes(app: Express): Server {
     });
 
     ws.on("error", (error) => {
-      console.error("WebSocket error:", error);
+
     });
   });
 
@@ -11564,7 +10775,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(transformedTemplates);
     } catch (error) {
-      console.error("Error fetching shift templates:", error);
+
       res.status(500).json({ message: "Failed to fetch shift templates" });
     }
   });
@@ -11575,7 +10786,7 @@ export function registerRoutes(app: Express): Server {
       const template = await storage.createShiftTemplate(validatedTemplate);
       res.status(201).json(template);
     } catch (error) {
-      console.error("Error creating shift template:", error);
+
       res.status(500).json({ message: "Failed to create shift template" });
     }
   });
@@ -11593,7 +10804,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: "Shift template deleted successfully" });
     } catch (error) {
-      console.error("Error deleting shift template:", error);
+
       res.status(500).json({ message: "Failed to delete shift template" });
     }
   });
@@ -11612,7 +10823,7 @@ export function registerRoutes(app: Express): Server {
       const shifts = await storage.getGeneratedShifts(dateRange);
       res.json(shifts);
     } catch (error) {
-      console.error("Error fetching generated shifts:", error);
+
       res.status(500).json({ message: "Failed to fetch generated shifts" });
     }
   });
@@ -11623,7 +10834,7 @@ export function registerRoutes(app: Express): Server {
       const shift = await storage.createGeneratedShift(validatedShift);
       res.status(201).json(shift);
     } catch (error) {
-      console.error("Error creating generated shift:", error);
+
       res.status(500).json({ message: "Failed to create generated shift" });
     }
   });
@@ -11640,7 +10851,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(shift);
     } catch (error) {
-      console.error("Error updating generated shift:", error);
+
       res.status(500).json({ message: "Failed to update generated shift" });
     }
   });
@@ -11656,7 +10867,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: "Generated shift deleted successfully" });
     } catch (error) {
-      console.error("Error deleting generated shift:", error);
+
       res.status(500).json({ message: "Failed to delete generated shift" });
     }
   });
@@ -11673,7 +10884,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(session);
     } catch (error) {
-      console.error("Error fetching user session:", error);
+
       res.status(500).json({ message: "Failed to fetch user session" });
     }
   });
@@ -11689,7 +10900,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: "Session deleted successfully" });
     } catch (error) {
-      console.error("Error deleting user session:", error);
+
       res.status(500).json({ message: "Failed to delete user session" });
     }
   });
@@ -11699,7 +10910,7 @@ export function registerRoutes(app: Express): Server {
       const deletedCount = await storage.cleanupExpiredSessions();
       res.json({ message: `Cleaned up ${deletedCount} expired sessions` });
     } catch (error) {
-      console.error("Error cleaning up sessions:", error);
+
       res.status(500).json({ message: "Failed to cleanup sessions" });
     }
   });
@@ -11707,9 +10918,8 @@ export function registerRoutes(app: Express): Server {
   // Teams Management Routes
   app.get("/api/teams", requireAuth, async (req, res) => {
     try {
-      console.log("[Teams API] Starting teams fetch...");
+
       const teamsFromDB = await db.select().from(teams);
-      console.log(`[Teams API] Found ${teamsFromDB.length} teams`);
 
       // Simplified teams response to avoid complex join errors
       const teamsWithBasicDetails = teamsFromDB.map((team) => ({
@@ -11720,10 +10930,9 @@ export function registerRoutes(app: Express): Server {
         facilities: [], // Simplified to avoid join errors
       }));
 
-      console.log("[Teams API] Teams fetched successfully");
       res.json(teamsWithBasicDetails);
     } catch (error) {
-      console.error("Error fetching teams:", error);
+
       res.status(500).json({ message: "Failed to fetch teams" });
     }
   });
@@ -11739,7 +10948,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(team);
     } catch (error) {
-      console.error("Error creating team:", error);
+
       res.status(500).json({ message: "Failed to create team" });
     }
   });
@@ -11793,7 +11002,7 @@ export function registerRoutes(app: Express): Server {
         });
       }
     } catch (error) {
-      console.error("Error adding team member:", error);
+
       res.status(500).json({ message: "Failed to add team member" });
     }
   });
@@ -11834,7 +11043,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(facility);
     } catch (error) {
-      console.error("Error assigning facility to team:", error);
+
       res.status(500).json({ message: "Failed to assign facility to team" });
     }
   });
@@ -11860,7 +11069,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(updatedTeam);
     } catch (error) {
-      console.error("Error updating team:", error);
+
       res.status(500).json({ message: "Failed to update team" });
     }
   });
@@ -11884,7 +11093,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: "Facility removed from team successfully" });
     } catch (error) {
-      console.error("Error removing facility from team:", error);
+
       res.status(500).json({ message: "Failed to remove facility from team" });
     }
   });
@@ -11905,7 +11114,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: "Member removed from team successfully" });
     } catch (error) {
-      console.error("Error removing member from team:", error);
+
       res.status(500).json({ message: "Failed to remove member from team" });
     }
   });
@@ -11915,8 +11124,7 @@ export function registerRoutes(app: Express): Server {
   // Get all facility users from users table - with proper data filtering
   app.get("/api/facility-users", requireAuth, async (req, res) => {
     try {
-      console.log(`[FACILITY USERS ACCESS] User ${req.user.firstName} ${req.user.lastName} (${req.user.role}) requesting facility users`);
-      
+
       let query = db
         .select({
           id: users.id,
@@ -11947,7 +11155,7 @@ export function registerRoutes(app: Express): Server {
       // Apply role-based filtering
       if (req.user.role === "super_admin") {
         // Super admins see all facility users
-        console.log(`[FACILITY USERS ACCESS] Super admin accessing all facility users`);
+
         query = query.where(
           sql`${users.role} IN ('facility_administrator', 'scheduling_coordinator', 'hr_manager', 'billing', 'supervisor', 'director_of_nursing', 'viewer', 'corporate', 'regional_director', 'facility_admin')`
         );
@@ -11955,11 +11163,9 @@ export function registerRoutes(app: Express): Server {
         // Facility users only see users from their associated facilities
         const userFacilityIds = req.user.associatedFacilityIds || req.user.associatedFacilities || 
                                (req.user.facilityId ? [req.user.facilityId] : []);
-        
-        console.log(`[FACILITY USERS ACCESS] Facility user with facilities: ${userFacilityIds.join(', ')}`);
-        
+
         if (userFacilityIds.length === 0) {
-          console.log(`[FACILITY USERS ACCESS] User has no facility associations, returning empty`);
+
           return res.json([]);
         }
         
@@ -11980,7 +11186,7 @@ export function registerRoutes(app: Express): Server {
         );
       } else {
         // Other users (staff, etc) shouldn't see facility users
-        console.log(`[FACILITY USERS ACCESS] User role ${req.user.role} has no access to facility users`);
+
         return res.json([]);
       }
       
@@ -11988,7 +11194,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(facilityUsersData);
     } catch (error) {
-      console.error("Error fetching facility users:", error);
+
       res.status(500).json({ message: "Failed to fetch facility users" });
     }
   });
@@ -12035,7 +11241,7 @@ export function registerRoutes(app: Express): Server {
 
       res.status(201).json(newUser);
     } catch (error) {
-      console.error("Error creating facility user:", error);
+
       res.status(500).json({ message: "Failed to create facility user" });
     }
   });
@@ -12080,7 +11286,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(updatedUser);
     } catch (error) {
-      console.error("Error updating facility user:", error);
+
       res.status(500).json({ message: "Failed to update facility user" });
     }
   });
@@ -12108,7 +11314,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: "Facility user deactivated successfully" });
     } catch (error) {
-      console.error("Error deactivating facility user:", error);
+
       res.status(500).json({ message: "Failed to deactivate facility user" });
     }
   });
@@ -12532,7 +11738,7 @@ export function registerRoutes(app: Express): Server {
         count: createdUsers.length,
       });
     } catch (error) {
-      console.error("Error creating sample facility users:", error);
+
       res.status(500).json({ message: "Failed to create sample facility users" });
     }
   });
@@ -12589,7 +11795,7 @@ export function registerRoutes(app: Express): Server {
         user: updatedUser,
       });
     } catch (error) {
-      console.error("Error updating user permissions:", error);
+
       res.status(500).json({ message: "Failed to update user permissions" });
     }
   });
@@ -12605,7 +11811,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(templates);
     } catch (error) {
-      console.error("Error fetching role templates:", error);
+
       res.status(500).json({ message: "Failed to fetch role templates" });
     }
   });
@@ -12614,7 +11820,7 @@ export function registerRoutes(app: Express): Server {
 
   // Get invoices for a facility
   app.get("/api/billing/invoices/:facilityId?", requireAuth, handleImpersonation, requirePermission("view_billing"), async (req, res) => {
-    console.log("[BILLING ENDPOINT] User accessing billing invoices:", req.user.email, req.user.permissions);
+
     try {
       const facilityId = req.params.facilityId
         ? parseInt(req.params.facilityId)
@@ -12671,7 +11877,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(sampleInvoices);
     } catch (error) {
-      console.error("Error fetching invoices:", error);
+
       res.status(500).json({ message: "Failed to fetch invoices" });
     }
   });
@@ -12691,7 +11897,7 @@ export function registerRoutes(app: Express): Server {
 
       res.status(201).json(newInvoice);
     } catch (error) {
-      console.error("Error creating invoice:", error);
+
       res.status(500).json({ message: "Failed to create invoice" });
     }
   });
@@ -12711,7 +11917,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(updatedInvoice);
     } catch (error) {
-      console.error("Error updating invoice:", error);
+
       res.status(500).json({ message: "Failed to update invoice" });
     }
   });
@@ -12731,7 +11937,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(approvedInvoice);
     } catch (error) {
-      console.error("Error approving invoice:", error);
+
       res.status(500).json({ message: "Failed to approve invoice" });
     }
   });
@@ -12839,7 +12045,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(sampleRates);
     } catch (error) {
-      console.error("Error fetching billing rates:", error);
+
       res.status(500).json({ message: "Failed to fetch billing rates" });
     }
   });
@@ -12859,7 +12065,7 @@ export function registerRoutes(app: Express): Server {
 
       res.status(201).json(newRate);
     } catch (error) {
-      console.error("Error creating billing rate:", error);
+
       res.status(500).json({ message: "Failed to create billing rate" });
     }
   });
@@ -12879,7 +12085,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(updatedRate);
     } catch (error) {
-      console.error("Error updating billing rate:", error);
+
       res.status(500).json({ message: "Failed to update billing rate" });
     }
   });
@@ -12948,7 +12154,7 @@ export function registerRoutes(app: Express): Server {
       // For facility managers and admins, show all requests
       res.json(allShiftRequests);
     } catch (error) {
-      console.error("Error fetching shift requests:", error);
+
       res.status(500).json({ message: "Failed to fetch shift requests" });
     }
   });
@@ -12971,7 +12177,6 @@ export function registerRoutes(app: Express): Server {
         status: "pending",
         note: req.body.note || "",
       };
-
 
       // Create notification for facility managers
       let shift = null;
@@ -12996,10 +12201,7 @@ export function registerRoutes(app: Express): Server {
           });
         }
       } catch (notificationError) {
-        console.error(
-          "[NOTIFICATION] Failed to create shift request notification:",
-          notificationError
-        );
+
       }
 
       // Track successful shift request
@@ -13034,7 +12236,6 @@ export function registerRoutes(app: Express): Server {
         success: false,
       });
 
-      console.error("Error requesting shift:", error);
       res.status(500).json({ message: "Failed to request shift" });
     }
   });
@@ -13044,7 +12245,6 @@ export function registerRoutes(app: Express): Server {
     try {
       const requestId = parseInt(req.params.id);
       const user = req.user;
-
 
       // Create notification for facility managers about withdrawal
       try {
@@ -13061,10 +12261,7 @@ export function registerRoutes(app: Express): Server {
           },
         });
       } catch (notificationError) {
-        console.error(
-          "[NOTIFICATION] Failed to create withdrawal notification:",
-          notificationError
-        );
+
       }
 
       res.json({
@@ -13072,7 +12269,7 @@ export function registerRoutes(app: Express): Server {
         message: "Shift request withdrawn successfully",
       });
     } catch (error) {
-      console.error("Error withdrawing request:", error);
+
       res.status(500).json({ message: "Failed to withdraw request" });
     }
   });
@@ -13130,7 +12327,6 @@ export function registerRoutes(app: Express): Server {
 
       await storage.assignStaffToShift(shiftId, updatedAssigned);
 
-
       // Create notification for the worker
       try {
         await notificationService.createNotification({
@@ -13149,7 +12345,7 @@ export function registerRoutes(app: Express): Server {
           },
         });
       } catch (notificationError) {
-        console.error("[NOTIFICATION] Failed to create approval notification:", notificationError);
+
       }
 
       res.json({
@@ -13159,7 +12355,7 @@ export function registerRoutes(app: Express): Server {
         assignedWorkerId: workerId,
       });
     } catch (error) {
-      console.error("Error approving request:", error);
+
       res.status(500).json({ message: "Failed to approve shift request" });
     }
   });
@@ -13181,7 +12377,6 @@ export function registerRoutes(app: Express): Server {
         return res.status(403).json({ message: "Not authorized to deny shift requests" });
       }
 
-
       // Create notification for the worker
       try {
         await notificationService.createNotification({
@@ -13197,7 +12392,7 @@ export function registerRoutes(app: Express): Server {
           },
         });
       } catch (notificationError) {
-        console.error("[NOTIFICATION] Failed to create denial notification:", notificationError);
+
       }
 
       res.json({
@@ -13206,7 +12401,7 @@ export function registerRoutes(app: Express): Server {
         reason,
       });
     } catch (error) {
-      console.error("Error denying request:", error);
+
       res.status(500).json({ message: "Failed to deny shift request" });
     }
   });
@@ -13336,7 +12531,7 @@ export function registerRoutes(app: Express): Server {
           },
         });
       } catch (notificationError) {
-        console.error("[NOTIFICATION] Failed to create message notification:", notificationError);
+
       }
 
       // Track successful message send
@@ -13390,7 +12585,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(notifications);
     } catch (error) {
-      console.error("Error fetching notifications:", error);
+
       res.status(500).json({ message: "Failed to fetch notifications" });
     }
   });
@@ -13408,7 +12603,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ count });
     } catch (error) {
-      console.error("Error fetching unread count:", error);
+
       res.status(500).json({ message: "Failed to fetch unread count" });
     }
   });
@@ -13419,7 +12614,7 @@ export function registerRoutes(app: Express): Server {
       await storage.markNotificationAsRead(notificationId);
       res.json({ message: "Notification marked as read" });
     } catch (error) {
-      console.error("Error marking notification as read:", error);
+
       res.status(500).json({ message: "Failed to mark notification as read" });
     }
   });
@@ -13437,7 +12632,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: "All notifications marked as read" });
     } catch (error) {
-      console.error("Error marking all as read:", error);
+
       res.status(500).json({ message: "Failed to mark all as read" });
     }
   });
@@ -13448,7 +12643,7 @@ export function registerRoutes(app: Express): Server {
       await storage.deleteNotification(notificationId);
       res.json({ message: "Notification deleted" });
     } catch (error) {
-      console.error("Error deleting notification:", error);
+
       res.status(500).json({ message: "Failed to delete notification" });
     }
   });
@@ -13466,7 +12661,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json({ message: "All notifications deleted" });
     } catch (error) {
-      console.error("Error deleting all notifications:", error);
+
       res.status(500).json({ message: "Failed to delete all notifications" });
     }
   });
@@ -13497,7 +12692,7 @@ export function registerRoutes(app: Express): Server {
         offset,
       });
     } catch (error) {
-      console.error("Error fetching analytics:", error);
+
       res.status(500).json({ message: "Failed to fetch analytics data" });
     }
   });
@@ -13547,7 +12742,7 @@ export function registerRoutes(app: Express): Server {
         shiftsCreatedToday: shiftsCreatedToday.length,
       });
     } catch (error) {
-      console.error("Error fetching analytics summary:", error);
+
       res.status(500).json({ message: "Failed to fetch analytics summary" });
     }
   });
@@ -13592,7 +12787,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(result);
     } catch (error) {
-      console.error("Error fetching user activity:", error);
+
       res.status(500).json({ message: "Failed to fetch user activity" });
     }
   });
@@ -13632,7 +12827,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(result);
     } catch (error) {
-      console.error("Error fetching shift analytics:", error);
+
       res.status(500).json({ message: "Failed to fetch shift analytics" });
     }
   });
@@ -13672,7 +12867,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(result);
     } catch (error) {
-      console.error("Error fetching message analytics:", error);
+
       res.status(500).json({ message: "Failed to fetch message analytics" });
     }
   });
@@ -13709,7 +12904,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(result);
     } catch (error) {
-      console.error("Error fetching category breakdown:", error);
+
       res.status(500).json({ message: "Failed to fetch category breakdown" });
     }
   });
@@ -13734,7 +12929,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(updatedUser);
     } catch (error) {
-      console.error("Error updating onboarding:", error);
+
       res.status(500).json({ message: "Failed to update onboarding status" });
     }
   });
@@ -13751,9 +12946,6 @@ export function registerRoutes(app: Express): Server {
 
       const { firstName, lastName, phone, department, title } = req.body;
 
-      console.log("[PROFILE UPDATE] User type:", req.user.role, "User ID:", userId);
-      console.log("[PROFILE UPDATE] Data received:", { firstName, lastName, phone, department, title });
-
       // For regular users, only update firstName and lastName
       const updatedUser = await storage.updateUserProfile(userId, {
         firstName,
@@ -13765,7 +12957,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(updatedUser);
     } catch (error) {
-      console.error("Error updating profile:", error);
+
       res.status(500).json({ message: "Failed to update profile" });
     }
   });
@@ -13782,8 +12974,6 @@ export function registerRoutes(app: Express): Server {
 
       const { firstName, lastName, phone, department, title } = req.body;
 
-      console.log("[FACILITY USER PROFILE UPDATE] ID:", facilityUserId, "Data:", req.body);
-
       // Update facility user profile
       const updatedFacilityUser = await storage.updateFacilityUserProfile(facilityUserId, {
         firstName,
@@ -13793,11 +12983,9 @@ export function registerRoutes(app: Express): Server {
         title,
       });
 
-      console.log("[FACILITY USER PROFILE UPDATE] Result:", updatedFacilityUser);
-
       res.json(updatedFacilityUser);
     } catch (error) {
-      console.error("Error updating facility user profile:", error);
+
       res.status(500).json({ message: "Failed to update facility user profile" });
     }
   });
@@ -13821,11 +13009,9 @@ export function registerRoutes(app: Express): Server {
         return res.status(404).json({ message: "Facility user not found" });
       }
 
-      console.log("[FACILITY USER PROFILE GET] ID:", facilityUserId, "Result:", facilityUser);
-
       res.json(facilityUser);
     } catch (error) {
-      console.error("Error fetching facility user profile:", error);
+
       res.status(500).json({ message: "Failed to fetch facility user profile" });
     }
   });
@@ -13848,7 +13034,7 @@ export function registerRoutes(app: Express): Server {
         count: invites.length,
       });
     } catch (error) {
-      console.error("Error sending invitations:", error);
+
       res.status(500).json({ message: "Failed to send invitations" });
     }
   });
@@ -13909,7 +13095,7 @@ export function registerRoutes(app: Express): Server {
         notifications: testNotifications,
       });
     } catch (error) {
-      console.error("Error creating test notifications:", error);
+
       res.status(500).json({ message: "Failed to create test notifications" });
     }
   });
@@ -13922,7 +13108,7 @@ export function registerRoutes(app: Express): Server {
       const types = await storage.getTimeOffTypes(true);
       res.json(types);
     } catch (error) {
-      console.error("Error fetching time-off types:", error);
+
       res.status(500).json({ message: "Failed to fetch time-off types" });
     }
   });
@@ -13955,7 +13141,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(balances);
     } catch (error) {
-      console.error("Error fetching time-off balance:", error);
+
       res.status(500).json({ message: "Failed to fetch time-off balance" });
     }
   });
@@ -14002,7 +13188,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(enrichedRequests);
     } catch (error) {
-      console.error("Error fetching time-off requests:", error);
+
       res.status(500).json({ message: "Failed to fetch time-off requests" });
     }
   });
@@ -14049,7 +13235,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(newRequest);
     } catch (error) {
-      console.error("Error creating time-off request:", error);
+
       res.status(500).json({ message: "Failed to create time-off request" });
     }
   });
@@ -14116,7 +13302,7 @@ export function registerRoutes(app: Express): Server {
 
         res.json(updatedRequest);
       } catch (error) {
-        console.error("Error reviewing time-off request:", error);
+
         res.status(500).json({ message: "Failed to review time-off request" });
       }
     }
@@ -14164,7 +13350,7 @@ export function registerRoutes(app: Express): Server {
 
       res.json(updatedRequest);
     } catch (error) {
-      console.error("Error cancelling time-off request:", error);
+
       res.status(500).json({ message: "Failed to cancel time-off request" });
     }
   });
@@ -14178,7 +13364,7 @@ export function registerRoutes(app: Express): Server {
       const policies = await storage.getTimeOffPolicies(facilityId);
       res.json(policies);
     } catch (error) {
-      console.error("Error fetching time-off policies:", error);
+
       res.status(500).json({ message: "Failed to fetch time-off policies" });
     }
   });

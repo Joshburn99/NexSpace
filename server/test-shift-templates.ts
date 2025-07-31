@@ -66,7 +66,7 @@ export class ShiftTemplateTestSuite {
         data: createdTemplate,
       };
     } catch (error) {
-      console.error("❌ Template creation failed:", error);
+
       return {
         success: false,
         message: "Template creation failed",
@@ -106,7 +106,7 @@ export class ShiftTemplateTestSuite {
         data: updatedTemplate,
       };
     } catch (error) {
-      console.error(`❌ Template update failed:`, error);
+
       return {
         success: false,
         message: "Template update failed",
@@ -199,7 +199,7 @@ export class ShiftTemplateTestSuite {
         };
       }
     } catch (error) {
-      console.error(`❌ Shift generation failed:`, error);
+
       return {
         success: false,
         message: "Shift generation failed",
@@ -234,9 +234,7 @@ export class ShiftTemplateTestSuite {
       for (const row of templatesWithFacilities) {
         if (row.facility && row.template.facilityName !== row.facility.name) {
           consistencyErrors++;
-          console.warn(
-            `⚠️ Facility name mismatch: Template "${row.template.facilityName}" vs Facility "${row.facility.name}"`
-          );
+
         }
       }
 
@@ -247,16 +245,13 @@ export class ShiftTemplateTestSuite {
         };
       }
 
-      console.log(
-        `✅ Facility integration validated for ${templatesWithFacilities.length} templates`
-      );
       return {
         success: true,
         message: "Enhanced facility integration working correctly",
         data: templatesWithFacilities,
       };
     } catch (error) {
-      console.error(`❌ Facility integration test failed:`, error);
+
       return {
         success: false,
         message: "Facility integration test failed",
@@ -297,7 +292,7 @@ export class ShiftTemplateTestSuite {
         data: { deletedTemplate: deletedTemplate[0], deletedShifts: shiftsToDelete.length },
       };
     } catch (error) {
-      console.error(`❌ Template deletion failed:`, error);
+
       return {
         success: false,
         message: "Template deletion failed",
@@ -340,7 +335,6 @@ export class ShiftTemplateTestSuite {
     // Summary
     const passed = results.filter((r) => r.success).length;
     const failed = results.filter((r) => !r.success).length;
-
 
     if (failed > 0) {
       results.forEach((result, index) => {

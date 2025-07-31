@@ -137,74 +137,42 @@ interface Facility {
 export default function FacilityProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [editedFacility, setEditedFacility] = useState<Partial<Facility>>({});
-  const { permissions, hasPermission, facilityId } = useFacilityPermissions();
+  const { hasPermission, facilityId } = useFacilityPermissions();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Debug logging
-  console.log("FacilityProfilePage - permissions and state:", {
-    facilityId,
-    hasPermission: hasPermission("view_facility_profile"),
-    permissions,
+  // Fetch facility data
+  const { data: facility, isLoading, error } = useQuery({
+    queryKey: ['/api/facilities', facilityId],
+    queryFn: () => apiRequest(`/api/facilities/${facilityId}`),
+    enabled: !!facilityId,
   });
 
-  const {
-    data: facility,
-    isLoading,
-    error,
-  } = useQuery<Facility>({
-    queryKey: ["/api/facilities", facilityId],
-    enabled: !!facilityId && hasPermission("view_facility_profile"),
-  });
-
-  console.log("FacilityProfilePage - query state:", {
-    facility,
-    isLoading,
-    error,
-    enabled: !!facilityId && hasPermission("view_facility_profile"),
-    queryKey: ["/api/facilities", facilityId],
-  });
-
+  // Update facility mutation
   const updateFacility = useMutation({
-    mutationFn: async (data: Partial<Facility>) => {
-      const response = await apiRequest("PATCH", `/api/facilities/${facilityId}`, data);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to update facility profile");
-      }
-      return response.json();
-    },
+    mutationFn: (data: Partial<Facility>) => 
+      apiRequest(`/api/facilities/${facilityId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(data),
+      }),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/facilities", facilityId] });
-      setIsEditing(false);
+      queryClient.invalidateQueries({ queryKey: ['/api/facilities', facilityId] });
       toast({
         title: "Success",
         description: "Facility profile updated successfully",
       });
+      setIsEditing(false);
     },
-    onError: (error: any) => {
-      console.error("Facility update error:", error);
+    onError: (error) => {
       toast({
         title: "Error",
-        description:
-          error.message ||
-          "Failed to update facility profile. Please check your data and try again.",
+        description: "Failed to update facility profile",
         variant: "destructive",
       });
     },
   });
 
-  if (!hasPermission("view_facility_profile")) {
-    return (
-      <div className="container mx-auto p-6">
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-gray-600">You don't have permission to view facility profiles.</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Debug logging
 
   if (!facilityId) {
     return (
@@ -233,7 +201,7 @@ export default function FacilityProfilePage() {
   }
 
   if (error) {
-    console.error("[FACILITY_PROFILE] Error fetching facility:", error);
+
     return (
       <div className="container mx-auto p-6">
         <Card>

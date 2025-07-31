@@ -26,7 +26,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("Error caught by boundary:", error, errorInfo);
+
     this.setState({
       error,
       errorInfo,
@@ -51,8 +51,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
       userAgent: navigator.userAgent,
       url: window.location.href,
     };
-    
-    console.log("Bug report:", errorReport);
+
     // Here you could send to analytics or bug tracking service
   };
 

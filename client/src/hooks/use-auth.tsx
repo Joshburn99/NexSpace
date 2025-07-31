@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await apiRequest("GET", `/api/users/${userId}`);
       return await response.json();
     } catch (error) {
-      console.error("Failed to fetch user:", error);
+
       return null;
     }
   };
@@ -199,7 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Impersonation functions
   const startImpersonation = async (targetUserId: number | SelectUser, userType: string = "user") => {
     if (!currentUser) {
-      console.error("[IMPERSONATION] No current user - cannot start impersonation");
+
       return;
     }
 
@@ -218,8 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      console.log(`[IMPERSONATION] Starting impersonation for user ${userId} (type: ${type})`);
-      
+
       // Call backend to properly start impersonation and get enhanced user data
       const response = await apiRequest("POST", "/api/impersonate/start", {
         targetUserId: userId,
@@ -230,8 +229,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (impersonationData.impersonatedUser) {
         const enhancedUser = impersonationData.impersonatedUser;
         const originalUserData = impersonationData.originalUser || currentUser;
-
-        console.log(`[IMPERSONATION] Received impersonated user:`, enhancedUser);
 
         // Update our state to reflect impersonation
         setImpersonationState({
@@ -252,17 +249,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Navigate to role-specific dashboard after successful impersonation
         const targetRole = enhancedUser.role as SystemRole;
         const dashboardPath = getDashboardPathByRole(targetRole);
-        console.log(`[IMPERSONATION] Navigating to role-specific dashboard: ${dashboardPath} for role: ${targetRole}`);
+
         navigate(dashboardPath, { replace: true });
       } else {
-        console.error(
-          "[IMPERSONATION] No impersonated user in response:",
-          impersonationData
-        );
+
         throw new Error("Failed to start impersonation");
       }
     } catch (error) {
-      console.error("Failed to start impersonation:", error);
+
       toast({
         title: "Impersonation failed",
         description: "Unable to start impersonation. Please try again.",
@@ -273,13 +267,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const quitImpersonation = async () => {
     if (!impersonationState.isImpersonating) {
-      console.warn("[IMPERSONATION] Tried to quit impersonation when not impersonating");
+
       return;
     }
 
     try {
-      console.log("[IMPERSONATION] Stopping impersonation");
-      
+
       // Call backend to stop impersonation
       const response = await apiRequest("POST", "/api/impersonate/stop");
       const data = await response.json();
@@ -292,7 +285,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       // Clear ALL localStorage items related to impersonation
-      console.log("[IMPERSONATION] Clearing localStorage...");
+
       localStorage.removeItem("nexspace_impersonation_state");
       localStorage.removeItem("impersonateUserId");
       localStorage.removeItem("originalUserId");
@@ -301,13 +294,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear any other potential cached data
       Object.keys(localStorage).forEach(key => {
         if (key.includes("impersonat") || key.includes("originalUser")) {
-          console.log(`[IMPERSONATION] Removing localStorage key: ${key}`);
+
           localStorage.removeItem(key);
         }
       });
       
       // Invalidate ALL queries to ensure fresh data
-      console.log("[IMPERSONATION] Invalidating all queries...");
+
       await queryClient.invalidateQueries();
       
       // Force refetch user data specifically
@@ -324,7 +317,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Navigate back to impersonation page
       navigate("/admin/impersonation");
     } catch (error) {
-      console.error("Failed to stop impersonation:", error);
+
       toast({
         title: "Error",
         description: "Failed to stop impersonation. Please try again.",

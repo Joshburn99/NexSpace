@@ -203,22 +203,22 @@ export function ProductTour() {
       
       // Step 2 (index 2) is the calendar step
       if (nextIndex === 2 && !location.includes("calendar") && !location.includes("schedule")) {
-        console.log("Tour: Navigating to calendar page");
+
         setLocation("/enhanced-calendar");
       }
       // Step 3 (index 3) is the messaging step  
       else if (nextIndex === 3 && !location.includes("messaging")) {
-        console.log("Tour: Navigating to messaging page");
+
         setLocation("/messaging");
       }
       // Step 4 (index 4) is the staff step
       else if (nextIndex === 4 && !location.includes("staff")) {
-        console.log("Tour: Navigating to staff page");
+
         setLocation("/staff-directory");
       }
       // Step 6 (index 6) is the analytics step
       else if (nextIndex === 6 && !location.includes("analytics")) {
-        console.log("Tour: Navigating to analytics page");
+
         setLocation("/analytics");
       }
     }
