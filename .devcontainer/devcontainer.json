@@ -1,0 +1,26 @@
+{
+  // Tell Codespaces which container image to use
+  "name": "NexSpace Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
+
+  // Forward port 3000 so your app is reachable
+  "forwardPorts": [3000],
+
+  // After the container is built, install dependencies
+  "postCreateCommand": "npm install",
+
+  // Add psql so you can run Drizzle Studio / psql directly
+  "features": {
+    "ghcr.io/devcontainers/features/postgres-cli:1": {}
+  },
+
+  // Install useful VS Code extensions
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}
