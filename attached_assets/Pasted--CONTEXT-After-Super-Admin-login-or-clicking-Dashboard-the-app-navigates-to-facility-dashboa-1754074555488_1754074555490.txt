@@ -1,0 +1,43 @@
+### CONTEXT
+After Super-Admin login or clicking “Dashboard,” the app navigates to `/facility-dashboard` and shows “Error Loading Dashboard” instead of rendering the drag-and-drop calendar at `/enhanced-calendar`.
+
+### GOAL
+1. Redirect Super-Admins to `/enhanced-calendar` after login.
+2. Update the “Dashboard” nav link to point to `/enhanced-calendar`.
+3. Ensure the React Router route for `/enhanced-calendar` is registered *before* any catch-all routes.
+4. Surface any API errors in the Facility Dashboard component by logging `error.message` and displaying a “Retry” button.
+
+### STEPS
+
+1. **Login Redirect**  
+   - Locate where you call `navigate(…)` (or `history.push`) after successful authentication (`useAuth`, `AuthProvider`, or `AppContent`).  
+   - For `user.role === 'super_admin'`, change the target path from `'/facility-dashboard'` to `'/enhanced-calendar'`.
+
+2. **Navigation Link**  
+   - In `UnifiedHeader.tsx` (or your header component), find the `<Link to="/facility-dashboard">Dashboard</Link>`.  
+   - Change it to `<Link to="/enhanced-calendar" key="enhanced-calendar">Dashboard</Link>`.  
+   - Remove any duplicate `key` warnings (no two items with the same `to`).
+
+3. **Route Registration**  
+   - In your router file (`App.tsx`, `routes.tsx`, or similar), ensure there is:  
+     ```tsx
+     <Route path="/enhanced-calendar" element={<EnhancedCalendarPage />} />
+     ```  
+   - Move this line *above* any `<Route path="*"` fallback so it matches first.
+
+4. **Facility Dashboard Error Handling (optional)**  
+   - In `FacilityDashboardPage.tsx`, wrap the data‐fetch hook in `try/catch`.  
+   - On error, call `console.error("[FACILITY DASHBOARD] error:", error.message)` and render a button:  
+     ```tsx
+     <button onClick={refetch}>Retry</button>
+     ```
+   - This ensures you see the real API error in the console.
+
+### OUTPUT
+Show me only the **diffs** for these four files:
+- `AuthProvider` or wherever the login redirect lives  
+- `src/components/UnifiedHeader.tsx`  
+- Your router file (`App.tsx` / `routes.tsx`)  
+- `FacilityDashboardPage.tsx`
+
+Do **not** change any other code.  
