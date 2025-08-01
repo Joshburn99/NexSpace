@@ -35,6 +35,18 @@ import { EditableDashboard } from "@/components/dashboard/EditableDashboard";
 import { DraggableDashboard } from "@/components/dashboard/DraggableDashboard";
 import { Link } from "wouter";
 
+// Helper to safely parse JSON responses
+const fetchJSON = async (url: string) => {
+  const res = await fetch(url, { credentials: 'include' });
+  const text = await res.text();
+  try { 
+    return JSON.parse(text); 
+  } catch {
+    console.error('[FACILITY DASHBOARD] Non-JSON:', text.slice(0, 200));
+    throw new Error('Bad JSON from ' + url);
+  }
+};
+
 interface DashboardStats {
   activeStaff: number;
   openShifts: number;
@@ -260,10 +272,25 @@ export default function FacilityUserDashboard() {
     error: statsError,
   } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
+    queryFn: () => fetchJSON('/api/dashboard/stats'),
     refetchInterval: 30000, // Refresh every 30 seconds for real-time data
   });
 
-  if (statsLoading) {
+  const { data: staffData, error: staffError, refetch: refetchStaff, isLoading: staffLoading } = useQuery({
+    queryKey: ["dashboard", "staff"],
+    queryFn: () => fetchJSON('/api/staff'),
+  });
+
+  if (staffError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen space-y-4">
+        <div className="text-red-600 text-lg">Error loading dashboard.</div>
+        <Button onClick={() => refetchStaff()}>Retry</Button>
+      </div>
+    );
+  }
+
+  if (staffLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />

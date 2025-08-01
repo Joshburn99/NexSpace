@@ -134,3 +134,37 @@ export async function getUnifiedShifts(req: Request, res: Response) {
     });
   }
 }
+export async function getUnifiedShifts({ statuses = [] } = {}) {
+  const whereSql = statuses.length
+    ? sql`WHERE shifts.status IN (${sql.join(statuses)})`
+    : sql``;
+
+  const result = await db.query(sql`
+    SELECT shifts.*, staff.name AS staff_name
+    FROM shifts
+    LEFT JOIN staff ON staff.id = shifts.staff_id
+    ${whereSql}
+  `);
+  return result.rows;
+}
+
+export async function getAllStaff() {
+  const result = await db.query(sql`
+    SELECT * FROM staff
+    ORDER BY name ASC
+  `);
+  return result.rows;
+}
+
+export async function getFacilityStaff(facilityId: number) {
+  if (!facilityId) {
+    return [];
+  }
+  
+  const result = await db.query(sql`
+    SELECT * FROM staff
+    WHERE facility_id = ${facilityId}
+    ORDER BY name ASC
+  `);
+  return result.rows;
+}
