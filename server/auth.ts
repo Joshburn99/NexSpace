@@ -116,7 +116,7 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
           }
 
           // Get facility associations for facility users
-          const facilityAssociations = await storage.getFacilityUserAssociations(id);
+          const facilityAssociations = await storage.getStaffFacilityAssociations(id);
           if (facilityAssociations && facilityAssociations.length > 0) {
             (user as any).associatedFacilityIds = facilityAssociations.map((a: any) => a.facilityId);
             (user as any).associatedFacilities = facilityAssociations.map((a: any) => a.facilityId);
@@ -169,7 +169,7 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
         // Track successful registration
         await analytics.trackAuth(
           "signup",
-          { ...context, userId: user.id, facilityId: user.facilityId },
+          { ...context, userId: user.id, facilityId: user.facilityId || undefined },
           {
             username: user.username,
             role: user.role,
@@ -197,7 +197,7 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
     const startTime = Date.now();
     const context = analytics.getContextFromRequest(req);
 
-    passport.authenticate("local", async (err, user, info) => {
+    passport.authenticate("local", async (err: any, user: any, info: any) => {
       if (err) {
         // Track authentication error
         await analytics.trackAuth("failed_login", context, {

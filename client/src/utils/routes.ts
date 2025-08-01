@@ -20,8 +20,8 @@ import type { SystemRole } from "@shared/rbac";
  */
 export function getDashboardPathByRole(role: SystemRole): string {
   const roleDashboardMap: Record<SystemRole, string> = {
-    // Super admin gets enhanced calendar (drag-and-drop dashboard)
-    super_admin: "/enhanced-calendar",
+    // Super admin gets drag-and-drop dashboard (home page)
+    super_admin: "/",
     
     // Facility-level management roles get home dashboard
     facility_admin: "/",
