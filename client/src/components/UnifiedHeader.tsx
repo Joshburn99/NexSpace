@@ -115,6 +115,7 @@ const getNavigationItems = (user: any): NavigationItem[] => {
         icon: BarChart3,
         items: [
           { label: "Dashboard", href: "/analytics" },
+          ...(isSuperAdmin ? [{ label: "Platform Engagement", href: "/admin" }] : []),
           { label: "Shift Analytics", href: "/analytics/shifts" },
           { label: "Float Pool Savings", href: "/analytics/float-pool" },
           { label: "Overtime Report", href: "/analytics/overtime" },
@@ -156,7 +157,7 @@ const getNavigationItems = (user: any): NavigationItem[] => {
   }
 
   if (isFacilityUser) {
-    const items: NavigationItem[] = [{ label: "Dashboard", href: "/facility-dashboard", icon: Home }];
+    const items: NavigationItem[] = [{ label: "Dashboard", href: "/", icon: Home }];
 
     // Schedule dropdown
     const scheduleItems: { label: string; href: string }[] = [];
