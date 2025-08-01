@@ -27,7 +27,7 @@ import {
 import { useFacilityPermissions } from "@/hooks/use-facility-permissions";
 import { CanAccess } from "@/components/PermissionWrapper";
 import { PermissionButton } from "@/components/PermissionButton";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/use-auth";
 import { Toaster } from "@/components/ui/toaster";
 import { apiRequest } from "@/lib/queryClient";
@@ -250,6 +250,7 @@ const RecentActivity: React.FC<{ activities: DashboardStats["recentActivity"] }>
 // Main dashboard component
 export default function FacilityUserDashboard() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [isEditMode, setIsEditMode] = React.useState(false);
 
   // Load dashboard statistics
@@ -271,14 +272,28 @@ export default function FacilityUserDashboard() {
   }
 
   if (statsError) {
+    console.error("[FACILITY DASHBOARD] Error loading dashboard:", statsError);
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
+        <div className="text-center max-w-md">
           <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">Error Loading Dashboard</h2>
-          <p className="text-gray-600">
-            Failed to load dashboard data. Please try refreshing the page.
+          <p className="text-gray-600 mb-4">
+            Failed to load dashboard data. {statsError instanceof Error ? statsError.message : 'Please try again.'}
           </p>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.reload()}
+            className="mr-2"
+          >
+            Refresh Page
+          </Button>
+          <Button 
+            variant="default" 
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/dashboard/stats"] })}
+          >
+            Retry
+          </Button>
         </div>
       </div>
     );

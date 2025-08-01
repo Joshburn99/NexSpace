@@ -79,7 +79,7 @@ const getNavigationItems = (user: any): NavigationItem[] => {
 
   if (isAdmin) {
     return [
-      { label: "Dashboard", href: "/", icon: Home },
+      { label: "Dashboard", href: isSuperAdmin ? "/enhanced-calendar" : "/", icon: Home },
       {
         label: "Facilities",
         icon: Building2,
