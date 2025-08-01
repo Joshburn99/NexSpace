@@ -20,20 +20,20 @@ import type { SystemRole } from "@shared/rbac";
  */
 export function getDashboardPathByRole(role: SystemRole): string {
   const roleDashboardMap: Record<SystemRole, string> = {
-    // Super admin gets full system oversight
-    super_admin: "/admin",
+    // Super admin gets full system oversight with drag-and-drop dashboard
+    super_admin: "/",
     
     // Facility-level management roles
-    facility_admin: "/facility",
-    scheduling_coordinator: "/facility", 
-    hr_manager: "/facility",
-    billing_manager: "/facility",
-    supervisor: "/facility",
-    director_of_nursing: "/facility",
+    facility_admin: "/",
+    scheduling_coordinator: "/", 
+    hr_manager: "/",
+    billing_manager: "/",
+    supervisor: "/",
+    director_of_nursing: "/",
     
     // Corporate and regional oversight
-    corporate: "/admin",
-    regional_director: "/facility",
+    corporate: "/",
+    regional_director: "/",
     
     // Healthcare workers and read-only users
     staff: "/staff",

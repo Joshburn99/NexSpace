@@ -71,7 +71,7 @@ export function FacilityOverview() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Facility Overview</h1>
-          <p className="text-muted-foreground">Welcome back, {user?.name || user?.email}</p>
+          <p className="text-muted-foreground">Welcome back, {user?.firstName ? `${user.firstName} ${user.lastName}` : user?.email}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline">View Reports</Button>
