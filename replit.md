@@ -42,6 +42,10 @@ NexSpace is an advanced healthcare workforce management platform designed to opt
 - **Job Management**: Functionality for job postings, interview scheduling, and application tracking with dedicated database tables.
 - **Security**: Strict access controls on administrative pages, systematic API security hardening, and advanced frontend route protection based on RBAC.
 
+### Recent Changes (August 2, 2025)
+- **Dashboard Loading Fix**: Fixed "Bad JSON from /api/dashboard/stats" error by adding a temporary dashboard route directly in auth.ts to bypass modular routing system issues with Vite middleware interception
+- **Super Admin Dashboard**: Changed super admin dashboard rendering from redirect-based to direct component rendering in HomePage to prevent blank screen issues
+
 ## External Dependencies
 - **PostgreSQL**: Primary database for all application data.
 - **Drizzle ORM**: Used for interacting with the PostgreSQL database.

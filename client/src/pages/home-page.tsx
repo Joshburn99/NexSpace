@@ -46,6 +46,7 @@ import { Link, useLocation } from "wouter";
 import EmployeeDashboardWrapper from "@/pages/employee-dashboard-wrapper";
 import ContractorDashboardWrapper from "@/pages/contractor-dashboard-wrapper";
 import ClinicianDashboardWrapper from "@/pages/clinician-dashboard-wrapper";
+import FacilityUserDashboard from "@/pages/FacilityUserDashboard";
 
 // Priority task interfaces
 interface PriorityTask {
@@ -280,10 +281,9 @@ export default function HomePage() {
     return null;
   }
 
-  // Redirect super admins to facility dashboard as well for consistent experience
+  // Super admins should see the facility dashboard
   if (currentUser?.role === "super_admin") {
-    setLocation("/facility-dashboard");
-    return null;
+    return <FacilityUserDashboard />;
   }
 
   const [selectedTab, setSelectedTab] = useState("overview");
