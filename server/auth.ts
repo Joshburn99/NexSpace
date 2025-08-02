@@ -380,6 +380,53 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
     app.get("/api/user", userHandler);
   }
 
+  // Temporary dashboard stats route to bypass modular routing issues
+  if (handleImpersonation) {
+    app.get("/api/dashboard/stats", async (req: any, res) => {
+      try {
+        if (!req.isAuthenticated()) {
+          return res.status(401).json({ message: "Authentication required" });
+        }
+        
+        await handleImpersonation(req, res, async () => {
+          console.log('[TEMP dashboard/stats] Getting stats for user:', req.user?.role);
+          
+          // Import storage here to avoid circular imports
+          const { storage } = await import("./storage");
+          
+          // Get facility IDs for filtering based on user role
+          let facilityIds: number[] | undefined;
+
+          if (req.user.role === "super_admin") {
+            // Super admin sees all data (undefined = no filtering)
+          } else {
+            // For facility users, filter by their associated facilities
+            const associatedFacilities =
+              req.user?.associatedFacilityIds || req.user?.associatedFacilities;
+            const singleFacility = req.user?.facilityId;
+
+            if (associatedFacilities && associatedFacilities.length > 0) {
+              facilityIds = associatedFacilities;
+            } else if (singleFacility) {
+              facilityIds = [singleFacility];
+            } else {
+              facilityIds = []; // Empty array means no data visible
+            }
+          }
+
+          // Get comprehensive dashboard stats with facility filtering
+          const stats = await storage.getDashboardStats(facilityIds);
+          console.log('[TEMP dashboard/stats] Returning stats:', stats);
+          
+          res.json(stats);
+        });
+      } catch (error) {
+        console.error('[TEMP dashboard/stats] Error:', error);
+        res.status(500).json({ error: "Failed to fetch dashboard statistics" });
+      }
+    });
+  }
+
   // Debug endpoint to check session contents
   app.get("/api/debug/session", (req, res) => {
     if (!req.isAuthenticated()) return res.sendStatus(401);

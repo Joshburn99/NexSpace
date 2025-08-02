@@ -2125,32 +2125,30 @@ export class DatabaseStorage implements IStorage {
     const [activeStaffResult] = await activeStaffQuery;
 
     // Open shifts count
-    let openShiftsQuery = db
-      .select({ count: count() })
-      .from(shifts)
-      .where(eq(shifts.status, "open"));
-
+    const openShiftsConditions = [eq(shifts.status, "open")];
     if (facilityIds?.length) {
-      openShiftsQuery = openShiftsQuery.where(
+      openShiftsConditions.push(
         or(...facilityIds.map((id) => eq(shifts.facilityId, id)))
       );
     }
 
-    const [openShiftsResult] = await openShiftsQuery;
+    const [openShiftsResult] = await db
+      .select({ count: count() })
+      .from(shifts)
+      .where(and(...openShiftsConditions));
 
     // Filled shifts count
-    let filledShiftsQuery = db
-      .select({ count: count() })
-      .from(shifts)
-      .where(eq(shifts.status, "filled"));
-
+    const filledShiftsConditions = [eq(shifts.status, "filled")];
     if (facilityIds?.length) {
-      filledShiftsQuery = filledShiftsQuery.where(
+      filledShiftsConditions.push(
         or(...facilityIds.map((id) => eq(shifts.facilityId, id)))
       );
     }
 
-    const [filledShiftsResult] = await filledShiftsQuery;
+    const [filledShiftsResult] = await db
+      .select({ count: count() })
+      .from(shifts)
+      .where(and(...filledShiftsConditions));
 
     // Float pool count (available staff not on active shift)
     let floatPoolQuery = db
@@ -2170,37 +2168,35 @@ export class DatabaseStorage implements IStorage {
     const upcomingTimeOffResult = { count: 0 };
 
     // Billing total (current period unpaid invoices)
-    let billingTotalQuery = db
-      .select({
-        totalAmount: sql<number>`COALESCE(SUM(${invoices.amount}), 0)`,
-      })
-      .from(invoices)
-      .where(or(eq(invoices.status, "pending"), eq(invoices.status, "overdue")));
-
+    const billingConditions = [or(eq(invoices.status, "pending"), eq(invoices.status, "overdue"))];
     if (facilityIds?.length) {
-      billingTotalQuery = billingTotalQuery.where(
+      billingConditions.push(
         or(...facilityIds.map((id) => eq(invoices.facilityId, id)))
       );
     }
 
-    const [billingTotalResult] = await billingTotalQuery;
+    const [billingTotalResult] = await db
+      .select({
+        totalAmount: sql<number>`COALESCE(SUM(${invoices.amount}), 0)`,
+      })
+      .from(invoices)
+      .where(and(...billingConditions));
 
     // Urgent shifts (those posted in last 24 hours or marked urgent)
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
-    let urgentShiftsQuery = db
-      .select({ count: count() })
-      .from(shifts)
-      .where(eq(shifts.status, "open")); // Simplified for now
-
+    const urgentShiftsConditions = [eq(shifts.status, "open")]; // Simplified for now
     if (facilityIds?.length) {
-      urgentShiftsQuery = urgentShiftsQuery.where(
+      urgentShiftsConditions.push(
         or(...facilityIds.map((id) => eq(shifts.facilityId, id)))
       );
     }
 
-    const [urgentShiftsResult] = await urgentShiftsQuery;
+    const [urgentShiftsResult] = await db
+      .select({ count: count() })
+      .from(shifts)
+      .where(and(...urgentShiftsConditions));
 
     // Expiring credentials (next 30 days)
     const thirtyDaysFromNow = new Date();
@@ -2302,13 +2298,17 @@ export class DatabaseStorage implements IStorage {
     ];
 
     // Total facilities count
-    let facilitiesQuery = db.select({ count: count() }).from(facilities);
+    const facilitiesConditions = [];
     if (facilityIds?.length) {
-      facilitiesQuery = facilitiesQuery.where(
+      facilitiesConditions.push(
         or(...facilityIds.map((id) => eq(facilities.id, id)))
       );
     }
-    const [totalFacilitiesResult] = await facilitiesQuery;
+    
+    const [totalFacilitiesResult] = await db
+      .select({ count: count() })
+      .from(facilities)
+      .where(facilitiesConditions.length > 0 ? and(...facilitiesConditions) : undefined);
 
     return {
       activeStaff: activeStaffResult.count,

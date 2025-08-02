@@ -9,6 +9,7 @@ import authRoutes, { handleImpersonation } from "./auth.routes";
 import facilitiesRoutes from "./facilities.routes";
 import shiftsRoutes from "./shifts.routes";
 import staffRoutes from "./staff.routes";
+import dashboardRoutes from "./dashboard.routes";
 import dashboardPreferencesRoutes from "../dashboard-preferences-routes";
 import calendarSyncRoutes from "../calendar-sync-routes";
 
@@ -24,6 +25,7 @@ export function registerRoutes(app: Express): Server {
   app.use(facilitiesRoutes);
   app.use(shiftsRoutes);
   app.use(staffRoutes);
+  app.use(dashboardRoutes);
   
   // Dashboard preferences routes
   app.use(dashboardPreferencesRoutes);
