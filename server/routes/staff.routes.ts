@@ -1,5 +1,13 @@
 import { Router } from "express";
 import { requireAuth } from "./auth.routes";
+import { 
+  setupFacilityFilter, 
+  validateResourceFacilityAccess,
+  requirePermission,
+  auditLog,
+  AuthenticatedRequest,
+  filterByFacilities
+} from "../middleware/rbac-middleware";
 import { storage } from "../storage";
 import { db } from "../db";
 import { eq, sql, and, inArray, or, like } from "drizzle-orm";
@@ -14,58 +22,87 @@ import { z } from "zod";
 
 const router = Router();
 
-// Get all staff
-router.get("/api/staff", requireAuth, async (req: any, res) => {
-  try {
-    const { facilityId, specialty, isActive, search } = req.query;
-    
-    let staffMembers;
-    if (req.user.facilityId || facilityId) {
-      const targetFacilityId = facilityId ? parseInt(facilityId) : req.user.facilityId;
-      staffMembers = await storage.getStaffByFacility(targetFacilityId);
-    } else {
-      staffMembers = await storage.getStaff();
-    }
+// Get all staff (filtered by user's facilities)
+router.get("/api/staff", 
+  requireAuth,
+  setupFacilityFilter,
+  auditLog("list", "staff"),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const { facilityId, specialty, isActive, search } = req.query;
+      
+      // If specific facility requested, validate access
+      if (facilityId && req.facilityFilter !== null) {
+        const requestedFacilityId = parseInt(facilityId as string);
+        if (!req.facilityFilter.includes(requestedFacilityId)) {
+          return res.status(403).json({ 
+            message: "Access denied to facility",
+            requestedFacility: requestedFacilityId,
+            allowedFacilities: req.facilityFilter 
+          });
+        }
+      }
+      
+      // Get all staff and filter by facilities
+      const allStaff = await storage.getStaff();
+      const accessibleStaff = filterByFacilities(allStaff, req.facilityFilter);
 
-    // Apply filters
-    if (specialty) {
-      staffMembers = staffMembers.filter(s => s.specialty === specialty);
-    }
-    if (isActive !== undefined) {
-      staffMembers = staffMembers.filter(s => s.isActive === (isActive === 'true'));
-    }
-    if (search) {
-      const searchLower = search.toLowerCase();
-      staffMembers = staffMembers.filter(s => 
-        s.firstName?.toLowerCase().includes(searchLower) ||
-        s.lastName?.toLowerCase().includes(searchLower) ||
-        s.email.toLowerCase().includes(searchLower)
-      );
-    }
+      // Apply additional filters
+      let filteredStaff = accessibleStaff;
+      
+      if (facilityId) {
+        filteredStaff = filteredStaff.filter(s => 
+          s.primaryFacilityId === parseInt(facilityId as string)
+        );
+      }
+      
+      if (specialty) {
+        filteredStaff = filteredStaff.filter(s => s.specialty === specialty);
+      }
+      
+      if (isActive !== undefined) {
+        filteredStaff = filteredStaff.filter(s => s.isActive === (isActive === 'true'));
+      }
+      
+      if (search) {
+        const searchLower = (search as string).toLowerCase();
+        filteredStaff = filteredStaff.filter(s => 
+          s.firstName?.toLowerCase().includes(searchLower) ||
+          s.lastName?.toLowerCase().includes(searchLower) ||
+          s.email.toLowerCase().includes(searchLower)
+        );
+      }
 
-    res.json(staffMembers);
-  } catch (error) {
-    console.error("Failed to fetch staff:", error);
-    res.status(500).json({ message: "Failed to fetch staff" });
+      res.json(filteredStaff);
+    } catch (error) {
+      console.error("Failed to fetch staff:", error);
+      res.status(500).json({ message: "Failed to fetch staff" });
+    }
   }
-});
+);
 
-// Get staff by ID
-router.get("/api/staff/:id", requireAuth, async (req, res) => {
-  try {
-    const staffId = parseInt(req.params.id);
-    const staffMember = await storage.getStaffMember(staffId);
-    
-    if (!staffMember) {
-      return res.status(404).json({ message: "Staff member not found" });
+// Get staff by ID (with access validation)
+router.get("/api/staff/:id", 
+  requireAuth,
+  setupFacilityFilter,
+  validateResourceFacilityAccess("staff"),
+  auditLog("view", "staff"),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const staffId = parseInt(req.params.id);
+      const staffMember = await storage.getStaffMember(staffId);
+      
+      if (!staffMember) {
+        return res.status(404).json({ message: "Staff member not found" });
+      }
+      
+      res.json(staffMember);
+    } catch (error) {
+      console.error("Failed to fetch staff member:", error);
+      res.status(500).json({ message: "Failed to fetch staff member" });
     }
-    
-    res.json(staffMember);
-  } catch (error) {
-    console.error("Failed to fetch staff member:", error);
-    res.status(500).json({ message: "Failed to fetch staff member" });
   }
-});
+);
 
 // Create staff member
 router.post("/api/staff", requireAuth, async (req: any, res) => {

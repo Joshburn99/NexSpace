@@ -46,27 +46,6 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      // Temporary superuser bypass for Joshburn
-      if (username === "joshburn" && password === "admin123") {
-        const tempUser = {
-          id: 1,
-          username: "joshburn",
-          email: "joshburn@nexspace.com",
-          password: "dummy", // Not used for temp user
-          firstName: "Josh",
-          lastName: "Burn",
-          role: "super_admin",
-          isActive: true,
-          facilityId: null,
-          avatar: null,
-          onboardingCompleted: true,
-          onboardingStep: 4,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as any;
-        return done(null, tempUser);
-      }
-
       try {
         const user = await storage.getUserByUsername(username);
         if (!user || !(await comparePasswords(password, user.password))) {
@@ -75,7 +54,7 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
           return done(null, user);
         }
       } catch (error) {
-
+        console.error('[Auth] Login error:', error);
         return done(null, false);
       }
     })
@@ -83,27 +62,6 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
 
   passport.serializeUser((user, done) => done(null, user.id));
   passport.deserializeUser(async (id: number, done) => {
-    // Handle temporary superuser
-    if (id === 1) {
-      const tempUser = {
-        id: 1,
-        username: "joshburn",
-        email: "joshburn@nexspace.com",
-        password: "dummy", // Not used for temp user
-        firstName: "Josh",
-        lastName: "Burn",
-        role: "super_admin",
-        isActive: true,
-        facilityId: null,
-        avatar: null,
-        onboardingCompleted: true,
-        onboardingStep: 4,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any;
-      return done(null, tempUser);
-    }
-
     try {
       const user = await storage.getUser(id);
 

@@ -1,5 +1,13 @@
 import { Router } from "express";
 import { requireAuth } from "./auth.routes";
+import { 
+  setupFacilityFilter, 
+  validateResourceFacilityAccess,
+  requireRole,
+  auditLog,
+  AuthenticatedRequest,
+  filterByFacilities
+} from "../middleware/rbac-middleware";
 import { storage } from "../storage";
 import { db } from "../db";
 import { eq, sql, and, inArray, or } from "drizzle-orm";
@@ -13,33 +21,50 @@ import { z } from "zod";
 
 const router = Router();
 
-// Get all facilities
-router.get("/api/facilities", requireAuth, async (req, res) => {
-  try {
-    const facilities = await storage.getFacilities();
-    res.json(facilities);
-  } catch (error) {
-    console.error("Failed to fetch facilities:", error);
-    res.status(500).json({ message: "Failed to fetch facilities" });
-  }
-});
-
-// Get facility by ID
-router.get("/api/facilities/:id", requireAuth, async (req, res) => {
-  try {
-    const facilityId = parseInt(req.params.id);
-    const facility = await storage.getFacility(facilityId);
-    
-    if (!facility) {
-      return res.status(404).json({ message: "Facility not found" });
+// Get all facilities (filtered by user's access)
+router.get("/api/facilities", 
+  requireAuth, 
+  setupFacilityFilter,
+  auditLog("list", "facilities"),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const allFacilities = await storage.getFacilities();
+      
+      // Filter facilities based on user's access
+      const accessibleFacilities = req.facilityFilter === null 
+        ? allFacilities // Super admin sees all
+        : allFacilities.filter(f => req.facilityFilter!.includes(f.id));
+      
+      res.json(accessibleFacilities);
+    } catch (error) {
+      console.error("Failed to fetch facilities:", error);
+      res.status(500).json({ message: "Failed to fetch facilities" });
     }
-    
-    res.json(facility);
-  } catch (error) {
-    console.error("Failed to fetch facility:", error);
-    res.status(500).json({ message: "Failed to fetch facility" });
   }
-});
+);
+
+// Get facility by ID (with access validation)
+router.get("/api/facilities/:id", 
+  requireAuth,
+  setupFacilityFilter,
+  validateResourceFacilityAccess("facility"),
+  auditLog("view", "facility"),
+  async (req: AuthenticatedRequest, res) => {
+    try {
+      const facilityId = parseInt(req.params.id);
+      const facility = await storage.getFacility(facilityId);
+      
+      if (!facility) {
+        return res.status(404).json({ message: "Facility not found" });
+      }
+      
+      res.json(facility);
+    } catch (error) {
+      console.error("Failed to fetch facility:", error);
+      res.status(500).json({ message: "Failed to fetch facility" });
+    }
+  }
+);
 
 // Create new facility
 router.post("/api/facilities", requireAuth, async (req: any, res) => {
