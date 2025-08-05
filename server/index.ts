@@ -112,7 +112,6 @@ import { config, validateConfig } from "./config";
   const PORT = config.server.port;
   server.listen(PORT, "0.0.0.0", () => log(`🚀  Server listening on ${PORT}`));
 })().catch((err) => {
-  log(`Fatal server error: ${err instanceof Error ? err.message : err}`);
-  console.error(err);
+
   process.exit(1);
 });

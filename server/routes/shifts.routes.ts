@@ -1,13 +1,5 @@
 import { Router } from "express";
 import { requireAuth } from "./auth.routes";
-import { 
-  setupFacilityFilter, 
-  validateResourceFacilityAccess,
-  requirePermission,
-  auditLog,
-  AuthenticatedRequest,
-  filterByFacilities
-} from "../middleware/rbac-middleware";
 import { storage } from "../storage";
 import { db } from "../db";
 import { eq, sql, and, inArray, or } from "drizzle-orm";
@@ -27,90 +19,62 @@ import type { RecommendationCriteria } from "../recommendation-engine";
 
 const router = Router();
 
-// Get shifts (filtered by user's facilities)
-router.get("/api/shifts", 
-  requireAuth,
-  setupFacilityFilter,
-  auditLog("list", "shifts"),
-  async (req: AuthenticatedRequest, res) => {
-    try {
-      const { facilityId, date, status, staffId, startDate, endDate } = req.query;
-      
-      // Validate facility access if specific facility requested
-      if (facilityId && req.facilityFilter !== null) {
-        const requestedFacilityId = parseInt(facilityId as string);
-        if (!req.facilityFilter.includes(requestedFacilityId)) {
-          return res.status(403).json({ 
-            message: "Access denied to facility",
-            requestedFacility: requestedFacilityId,
-            allowedFacilities: req.facilityFilter 
-          });
-        }
-      }
-      
-      // Get all shifts and filter by facilities
-      const allShifts = await storage.getShifts();
-      const accessibleShifts = filterByFacilities(allShifts, req.facilityFilter);
-      
-      // Apply additional filters
-      let filteredShifts = accessibleShifts;
-      
-      if (facilityId) {
-        filteredShifts = filteredShifts.filter(s => 
-          s.facilityId === parseInt(facilityId as string)
-        );
-      }
-      
-      if (date) {
-        filteredShifts = filteredShifts.filter(shift => shift.date === date);
-      }
-      
-      if (status) {
-        filteredShifts = filteredShifts.filter(shift => shift.status === status);
-      }
-      
-      if (staffId) {
-        filteredShifts = filteredShifts.filter(shift => 
-          shift.assignedStaffIds?.includes(parseInt(staffId as string))
-        );
-      }
-      
-      if (startDate && endDate) {
-        filteredShifts = filteredShifts.filter(shift => 
-          shift.date >= startDate && shift.date <= endDate
-        );
-      }
-
-      res.json(filteredShifts);
-    } catch (error) {
-      console.error("Failed to fetch shifts:", error);
-      res.status(500).json({ message: "Failed to fetch shifts" });
+// Get shifts
+router.get("/api/shifts", requireAuth, async (req: any, res) => {
+  try {
+    const { facilityId, date, status, staffId, startDate, endDate } = req.query;
+    
+    let shifts;
+    if (req.user.role === UserRole.CONTRACTOR_1099 || req.user.role === UserRole.INTERNAL_EMPLOYEE) {
+      shifts = await storage.getShiftsByStaff(req.user.id);
+    } else if (facilityId || req.user.facilityId) {
+      const targetFacilityId = facilityId ? parseInt(facilityId) : req.user.facilityId;
+      shifts = await storage.getShiftsByFacility(targetFacilityId);
+    } else {
+      shifts = await storage.getShifts();
     }
-  }
-);
 
-// Get shift by ID (with access validation)
-router.get("/api/shifts/:id", 
-  requireAuth,
-  setupFacilityFilter,
-  validateResourceFacilityAccess("shift"),
-  auditLog("view", "shift"),
-  async (req: AuthenticatedRequest, res) => {
-    try {
-      const shiftId = parseInt(req.params.id);
-      const shift = await storage.getShift(shiftId);
-      
-      if (!shift) {
-        return res.status(404).json({ message: "Shift not found" });
-      }
-      
-      res.json(shift);
-    } catch (error) {
-      console.error("Failed to fetch shift:", error);
-      res.status(500).json({ message: "Failed to fetch shift" });
+    // Apply filters
+    if (date) {
+      shifts = shifts.filter(shift => shift.date === date);
     }
+    if (status) {
+      shifts = shifts.filter(shift => shift.status === status);
+    }
+    if (staffId) {
+      shifts = shifts.filter(shift => 
+        shift.assignedStaffIds?.includes(parseInt(staffId))
+      );
+    }
+    if (startDate && endDate) {
+      shifts = shifts.filter(shift => 
+        shift.date >= startDate && shift.date <= endDate
+      );
+    }
+
+    res.json(shifts);
+  } catch (error) {
+    console.error("Failed to fetch shifts:", error);
+    res.status(500).json({ message: "Failed to fetch shifts" });
   }
-);
+});
+
+// Get shift by ID
+router.get("/api/shifts/:id", requireAuth, async (req, res) => {
+  try {
+    const shiftId = parseInt(req.params.id);
+    const shift = await storage.getShift(shiftId);
+    
+    if (!shift) {
+      return res.status(404).json({ message: "Shift not found" });
+    }
+    
+    res.json(shift);
+  } catch (error) {
+    console.error("Failed to fetch shift:", error);
+    res.status(500).json({ message: "Failed to fetch shift" });
+  }
+});
 
 // Create shift
 router.post("/api/shifts", requireAuth, async (req: any, res) => {
