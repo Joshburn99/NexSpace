@@ -225,6 +225,40 @@ const ROLE_PERMISSIONS: Record<string, FacilityPermission[]> = {
   viewer: ["view_schedules", "view_staff", "view_facility_profile", "view_billing", "view_reports"],
 };
 
+// Page-specific permission requirements
+const PAGE_PERMISSIONS: Record<string, FacilityPermission[]> = {
+  dashboard: ["view_schedules", "view_staff"],
+  schedule: ["view_schedules"],
+  shifts: ["view_schedules", "create_shifts", "edit_shifts"],
+  staff: ["view_staff"],
+  "staff-management": ["view_staff", "create_staff", "edit_staff"],
+  credentials: ["view_staff_credentials", "manage_credentials"],
+  facility: ["view_facility_profile"],
+  "facility-settings": ["view_facility_profile", "edit_facility_profile", "manage_facility_settings"],
+  billing: ["view_billing"],
+  "billing-management": ["view_billing", "manage_billing"],
+  rates: ["view_rates"],
+  "rates-management": ["view_rates", "edit_rates"],
+  invoices: ["view_billing", "approve_invoices"],
+  reports: ["view_reports"],
+  analytics: ["view_analytics"],
+  compliance: ["view_compliance"],
+  "compliance-management": ["view_compliance", "manage_compliance"],
+  users: ["manage_facility_users"],
+  permissions: ["manage_permissions"],
+  "audit-logs": ["view_audit_logs"],
+  jobs: ["view_job_openings"],
+  "job-management": ["view_job_openings", "manage_job_openings"],
+  workflow: ["view_workflow_automation"],
+  "workflow-management": ["view_workflow_automation", "manage_workflow_automation"],
+  referrals: ["view_referral_system"],
+  "referral-management": ["view_referral_system", "manage_referral_system"],
+  attendance: ["view_attendance_reports"],
+  overtime: ["view_overtime_reports"],
+  "float-pool": ["view_float_pool_savings"],
+  "agency-usage": ["view_agency_usage"],
+};
+
 interface FacilityPermissionsContextType {
   hasPermission: (permission: FacilityPermission) => boolean;
   hasAnyPermission: (permissions: FacilityPermission[]) => boolean;
