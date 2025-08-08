@@ -46,7 +46,6 @@ import {
 import { GlobalSearch } from "./GlobalSearch";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { ImpersonationIndicator } from "./ImpersonationIndicator";
-import { EnhancedMobileNavigation } from "./enhanced-mobile-navigation";
 import { CompactNavigationDropdown } from "./CompactNavigationDropdown";
 
 // Type for navigation items
@@ -282,7 +281,7 @@ const getNavigationItems = (user: any): NavigationItem[] => {
 export function UnifiedHeader() {
   const { user, impersonatedUser, quitImpersonation, originalUser, logoutMutation } = useAuth();
   const [location] = useLocation();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const [desktopMenuOpen, setDesktopMenuOpen] = useState(false);
 
   const currentUser = impersonatedUser || user;
@@ -335,14 +334,7 @@ export function UnifiedHeader() {
             <GlobalSearch />
           </div>
 
-          {/* Mobile Navigation */}
-          <div className="lg:hidden mr-2">
-            <EnhancedMobileNavigation 
-              navigationItems={navigationItems}
-              currentUser={currentUser}
-              isImpersonating={isImpersonating}
-            />
-          </div>
+
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
@@ -409,86 +401,50 @@ export function UnifiedHeader() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Mobile Menu Toggle */}
-            <Button
-              variant="ghost"
-              size="icon"
-              className="lg:hidden h-9 w-9"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </Button>
+            {/* Mobile Navigation Menu Toggle */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden h-9 w-9">
+                  <Menu className="h-4 w-4" />
+                  <span className="sr-only">Open navigation menu</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-72 max-h-[70vh] overflow-y-auto">
+                <DropdownMenuLabel>Navigation</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {navigationItems.map((item) => 
+                  item.items ? (
+                    <div key={item.label}>
+                      <DropdownMenuLabel className="text-xs text-muted-foreground uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <item.icon className="h-3.5 w-3.5" />
+                          {item.label}
+                        </div>
+                      </DropdownMenuLabel>
+                      {item.items.map((subItem) => (
+                        <DropdownMenuItem key={subItem.href} asChild>
+                          <Link href={subItem.href} className="cursor-pointer">
+                            <span className="pl-6">{subItem.label}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                      <DropdownMenuSeparator />
+                    </div>
+                  ) : (
+                    <DropdownMenuItem key={item.label} asChild>
+                      <Link href={item.href || "/"} className="cursor-pointer">
+                        <item.icon className="mr-2 h-4 w-4" />
+                        {item.label}
+                      </Link>
+                    </DropdownMenuItem>
+                  )
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden border-t">
-            <nav className="container py-4 px-4 sm:px-6">
-              <div className="space-y-1">
-                {navigationItems.map((item) =>
-                  item.items ? (
-                    <div key={item.label} className="space-y-1">
-                      <div className="px-3 py-2 text-sm font-medium text-gray-900 dark:text-gray-100">
-                        <div className="flex items-center gap-2">
-                          <item.icon className="h-4 w-4" />
-                          {item.label}
-                        </div>
-                      </div>
-                      <div className="pl-8 space-y-1">
-                        {item.items.map((subItem) => (
-                          <Link
-                            key={subItem.href}
-                            href={subItem.href}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={cn(
-                              "block px-3 py-2 text-sm rounded-md transition-colors",
-                              isActiveRoute(subItem.href)
-                                ? "bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400"
-                                : "text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
-                            )}
-                          >
-                            {subItem.label}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  ) : item.href ? (
-                    <Link
-                      key={item.label}
-                      href={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={cn(
-                        "flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors",
-                        isActiveRoute(item.href)
-                          ? "bg-gray-100 dark:bg-gray-800 text-blue-600 dark:text-blue-400"
-                          : "text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800"
-                      )}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
-                  ) : null
-                )}
 
-                {/* Help Button in Mobile Menu */}
-                <div className="mt-4 pt-4 border-t">
-                  <Button
-                    variant="ghost"
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md w-full text-left"
-                    onClick={() => {
-                      setMobileMenuOpen(false);
-                      window.dispatchEvent(new CustomEvent("startProductTour"));
-                    }}
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                    Start Product Tour
-                  </Button>
-                </div>
-              </div>
-            </nav>
-          </div>
-        )}
       </header>
 
       {/* Compact Navigation Dropdown */}
