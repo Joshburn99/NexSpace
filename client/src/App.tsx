@@ -29,6 +29,7 @@ import { MessagingProvider } from "@/contexts/MessagingContext";
 import { EnhancedDataProvider } from "@/components/enhanced-data-provider";
 import HomePage from "@/pages/home-page";
 import AuthPage from "@/pages/auth-page";
+import { QuickActionMenu } from "@/components/QuickActionMenu";
 import JobBoard from "@/pages/job-board";
 import EnhancedJobBoard from "@/pages/enhanced-job-board";
 import JobBoardPage from "@/pages/JobBoardPage";
@@ -333,7 +334,12 @@ function AppContent() {
     return router;
   }
 
-  return <Layout>{router}</Layout>;
+  return (
+    <Layout>
+      {router}
+      <QuickActionMenu />
+    </Layout>
+  );
 }
 
 function App() {
