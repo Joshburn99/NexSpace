@@ -16,7 +16,7 @@ const router = Router();
 // Get all facilities
 router.get("/api/facilities", requireAuth, async (req, res) => {
   try {
-    const facilities = await storage.getFacilities();
+    const facilities = await storage.getAllFacilities();
     res.json(facilities);
   } catch (error) {
     console.error("Failed to fetch facilities:", error);
