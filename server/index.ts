@@ -12,8 +12,22 @@ import { initializeTimeOffData } from "./init-timeoff-data";
 import { config, validateConfig } from "./config";
 import swaggerUi from "swagger-ui-express";
 import { loadOpenAPISpec, swaggerOptions } from "./swagger-config";
-import { requestIdMiddleware, loggingMiddleware, errorLoggingMiddleware } from "./middleware/logger";
+import { 
+  requestIdMiddleware as oldRequestIdMiddleware, 
+  loggingMiddleware, 
+  errorLoggingMiddleware as oldErrorLoggingMiddleware 
+} from "./middleware/logger";
 import { globalErrorHandler, notFoundHandler } from "./middleware/error-handler";
+import { 
+  requestIdMiddleware,
+  requestLoggingMiddleware,
+  errorLoggingMiddleware,
+  centralizedErrorHandler,
+  performanceLoggingMiddleware,
+  applicationLogger
+} from "./middleware/structured-logger";
+import healthRoutes from "./routes/health.routes";
+import os from "os";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import cors from "cors";
@@ -53,9 +67,10 @@ import cors from "cors";
   });
   app.use('/api', limiter);
   
-  // Logging middleware
+  // Structured logging middleware
   app.use(requestIdMiddleware);
-  app.use(loggingMiddleware);
+  app.use(requestLoggingMiddleware);
+  app.use(performanceLoggingMiddleware);
   
   // Body parsing
   app.use(express.json());
@@ -154,7 +169,7 @@ import cors from "cors";
     server = createServer(app);
   }
 
-  // Add error logging middleware
+  // Add structured error logging middleware
   app.use(errorLoggingMiddleware);
 
   if (app.get("env") === "development") {
@@ -165,7 +180,10 @@ import cors from "cors";
     serveStatic(app);
   }
 
+  // Health check routes are now registered via routes/index.ts
+
   // Error handlers (must be after all other middleware and routes)
+  app.use(centralizedErrorHandler);
   app.use(globalErrorHandler);
   // Only apply notFoundHandler for API routes
   app.use('/api', notFoundHandler);
@@ -174,7 +192,18 @@ import cors from "cors";
   /*  5.  START LISTENING                                                  */
   /* ---------------------------------------------------------------------- */
   const PORT = config.server.port;
-  server.listen(PORT, "0.0.0.0", () => log(`🚀  Server listening on ${PORT}`));
+  server.listen(PORT, "0.0.0.0", () => {
+    applicationLogger.info({
+      port: PORT,
+      environment: process.env.NODE_ENV || "development",
+      version: "1.0.0",
+      pid: process.pid,
+      hostname: os.hostname(),
+    }, `🚀 NexSpace server started successfully on port ${PORT}`);
+    
+    // Keep the original log for backward compatibility
+    log(`🚀  Server listening on ${PORT}`);
+  });
 })().catch((err) => {
 
   process.exit(1);
