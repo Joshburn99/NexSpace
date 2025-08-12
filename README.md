@@ -1,6 +1,6 @@
 # NexSpace - Healthcare Workforce Management Platform
 
-## Quick Start
+## Quick Start Run Book
 
 ### System Requirements
 - **Node.js**: v20.19.3+ (automatically provided on Replit)
@@ -9,13 +9,13 @@
 
 ### Installation & Startup
 ```bash
-# Dependencies are pre-installed, but to reinstall if needed:
+# 1. Install dependencies (if needed)
 npm install
 
-# Start development server (frontend + backend)
+# 2. Start development server (frontend + backend)
 npm run dev
 
-# Access points:
+# The application will be available at:
 # - Web UI: http://localhost:5000
 # - API Documentation: http://localhost:5000/api-docs
 ```
@@ -27,6 +27,11 @@ Password: admin123
 Role: Super Admin
 ```
 
+### Where Logs Appear
+- **Replit Console**: Structured JSON logs with request IDs
+- **Browser DevTools**: Frontend errors and API responses  
+- **API Responses**: Error details with unique request IDs for tracing
+
 ## Environment Variables
 
 ### Required Variables (Pre-configured on Replit)
@@ -34,18 +39,68 @@ Role: Super Admin
 DATABASE_URL=postgresql://...     # ✅ Already set
 NODE_ENV=development             # ✅ Default
 PORT=5000                        # ✅ Default
+SESSION_SECRET=your-secret-key   # Required for production
 ```
 
 ### Optional Variables
 ```bash
-SESSION_SECRET=your-secret-key   # For production
-CORS_ORIGIN=*                    # CORS configuration
+# Authentication
+JWT_SECRET=your-jwt-secret
+
+# Email Services (SendGrid)
+SENDGRID_API_KEY=SG.your-key-here
+SENDGRID_FROM_EMAIL=notifications@nexspace.com
+
+# Google Services (Calendar Sync)
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
+
+# AI Services
+OPENAI_API_KEY=sk-your-openai-key
+
+# Healthcare APIs
+CMS_API_KEY=your-cms-api-key
+NPI_API_KEY=your-npi-api-key
+
+# Communication
+TWILIO_ACCOUNT_SID=your-twilio-sid
+TWILIO_AUTH_TOKEN=your-twilio-token
+
+# Security & CORS
+CORS_ORIGIN=*
+RATE_LIMIT_MAX=100
 ```
 
 ### Setting Environment Variables on Replit
-1. Click "Secrets" tab in the left sidebar
-2. Add key-value pairs (e.g., `SESSION_SECRET` = `your-secret-here`)
-3. Restart the application
+
+#### Method 1: Replit Secrets (Recommended)
+1. Click **"Secrets"** tab in the left sidebar
+2. Add key-value pairs:
+   - Key: `SENDGRID_API_KEY`
+   - Value: `SG.your-sendgrid-api-key-here`
+3. Click **"Add Secret"**
+4. Restart the application
+
+#### Method 2: .env File (Development Only)
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Edit `.env` with your values
+3. **Note**: .env files are ignored by git for security
+
+#### Files That Read Environment Variables
+- **Backend**: `server/index.ts` (loads dotenv first)
+- **Backend Config**: `server/config/index.ts`
+- **Shared Config**: `shared/config/app.config.ts`
+- **Frontend**: Uses `import.meta.env.VITE_*` variables
+
+#### Environment Loading Order
+1. Replit Secrets (highest priority)
+2. .env file
+3. Default values in code
+
+**Important**: Replit Secrets override .env file values. Use Secrets for production keys.
 
 ## Database Management
 
