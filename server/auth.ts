@@ -4,11 +4,13 @@ import { Express } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
+import bcrypt from "bcryptjs";
 import { storage } from "./storage";
 import { User as SelectUser, staff, users, facilityUsers, facilityUserTeamMemberships, facilities } from "@shared/schema";
 import { analytics } from "./analytics-tracker";
 import { db } from "./db";
 import { eq, inArray } from "drizzle-orm";
+import { generateTokens } from "./middleware/auth";
 
 declare global {
   namespace Express {
@@ -46,30 +48,41 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      // Temporary superuser bypass for Joshburn
-      if (username === "joshburn" && password === "admin123") {
-        const tempUser = {
-          id: 1,
-          username: "joshburn",
-          email: "joshburn@nexspace.com",
-          password: "dummy", // Not used for temp user
-          firstName: "Josh",
-          lastName: "Burn",
-          role: "super_admin",
-          isActive: true,
-          facilityId: null,
-          avatar: null,
-          onboardingCompleted: true,
-          onboardingStep: 4,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        } as any;
-        return done(null, tempUser);
-      }
-
       try {
+        // First check if it's the admin user
+        if (username === "joshburn") {
+          const [adminUser] = await db
+            .select()
+            .from(users)
+            .where(eq(users.username, "joshburn"))
+            .limit(1);
+          
+          if (adminUser) {
+            // Use bcrypt for admin user
+            const isValid = await bcrypt.compare(password, adminUser.password);
+            if (isValid) {
+              return done(null, adminUser);
+            }
+          }
+        }
+        
+        // Regular user authentication
         const user = await storage.getUserByUsername(username);
-        if (!user || !(await comparePasswords(password, user.password))) {
+        if (!user) {
+          return done(null, false);
+        }
+        
+        // Try bcrypt first (for newer passwords), then fall back to old system
+        let isValidPassword = false;
+        if (user.password.startsWith('$2')) {
+          // Bcrypt hash
+          isValidPassword = await bcrypt.compare(password, user.password);
+        } else {
+          // Old password system
+          isValidPassword = await comparePasswords(password, user.password);
+        }
+        
+        if (!isValidPassword) {
           return done(null, false);
         } else {
           return done(null, user);
@@ -272,7 +285,13 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
           }
         );
 
-        res.status(200).json(user);
+        // Generate JWT tokens
+        const tokens = generateTokens(user.id, user.role);
+        
+        res.status(200).json({
+          ...user,
+          ...tokens
+        });
       });
     })(req, res, next);
   });
@@ -307,6 +326,39 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
 
       res.status(500).json({ message: "Failed to reset password" });
     }
+  });
+
+  // Add token refresh endpoint
+  app.post("/api/auth/refresh", async (req, res) => {
+    const { refreshToken: refreshTokenHandler } = await import('./middleware/auth');
+    return refreshTokenHandler(req, res);
+  });
+
+  // Add /api/users/me endpoint for JWT authentication
+  app.get("/api/users/me", async (req: any, res) => {
+    // Check JWT token first
+    const authHeader = req.headers.authorization;
+    const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+    
+    if (token) {
+      const { verifyToken } = await import('./middleware/auth');
+      const decoded = verifyToken(token);
+      
+      if (decoded && decoded.type === 'access') {
+        const user = await storage.getUser(decoded.userId);
+        if (user) {
+          return res.json(user);
+        }
+      }
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+    
+    // Fall back to session auth
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
+    res.json(req.user);
   });
 
   app.post("/api/logout", async (req, res, next) => {

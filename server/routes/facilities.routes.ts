@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { requireAuth } from "./auth.routes";
+import { authenticate, authorize, requirePermission, ROLES } from "../middleware/auth";
 import { storage } from "../storage";
 import { db } from "../db";
 import { eq, sql, and, inArray, or } from "drizzle-orm";
@@ -14,7 +14,7 @@ import { z } from "zod";
 const router = Router();
 
 // Get all facilities
-router.get("/api/facilities", requireAuth, async (req, res) => {
+router.get("/api/facilities", authenticate, requirePermission('facilities.view'), async (req, res) => {
   try {
     const facilities = await storage.getAllFacilities();
     res.json(facilities);
@@ -25,7 +25,7 @@ router.get("/api/facilities", requireAuth, async (req, res) => {
 });
 
 // Get facility by ID
-router.get("/api/facilities/:id", requireAuth, async (req, res) => {
+router.get("/api/facilities/:id", authenticate, requirePermission('facilities.view'), async (req, res) => {
   try {
     const facilityId = parseInt(req.params.id);
     const facility = await storage.getFacility(facilityId);
@@ -42,12 +42,8 @@ router.get("/api/facilities/:id", requireAuth, async (req, res) => {
 });
 
 // Create new facility
-router.post("/api/facilities", requireAuth, async (req: any, res) => {
+router.post("/api/facilities", authenticate, authorize(ROLES.SUPER_ADMIN), async (req: any, res) => {
   try {
-    // Only super admins can create facilities
-    if (req.user?.role !== "super_admin") {
-      return res.status(403).json({ message: "Admin access required" });
-    }
 
     const facilityData = insertFacilitySchema.parse(req.body);
     const facility = await storage.createFacility(facilityData);
@@ -63,7 +59,7 @@ router.post("/api/facilities", requireAuth, async (req: any, res) => {
 });
 
 // Update facility
-router.patch("/api/facilities/:id", requireAuth, async (req: any, res) => {
+router.patch("/api/facilities/:id", authenticate, requirePermission('facilities.edit'), async (req: any, res) => {
   try {
     const facilityId = parseInt(req.params.id);
     
@@ -87,7 +83,7 @@ router.patch("/api/facilities/:id", requireAuth, async (req: any, res) => {
 });
 
 // Delete facility
-router.delete("/api/facilities/:id", requireAuth, async (req: any, res) => {
+router.delete("/api/facilities/:id", authenticate, authorize(ROLES.SUPER_ADMIN), async (req: any, res) => {
   try {
     // Only super admins can delete facilities
     if (req.user?.role !== "super_admin") {
@@ -104,7 +100,7 @@ router.delete("/api/facilities/:id", requireAuth, async (req: any, res) => {
 });
 
 // Get facility users
-router.get("/api/facilities/:id/users", requireAuth, async (req: any, res) => {
+router.get("/api/facilities/:id/users", authenticate, requirePermission('facilities.view'), async (req: any, res) => {
   try {
     const facilityId = parseInt(req.params.id);
     
@@ -131,7 +127,7 @@ router.get("/api/facilities/:id/users", requireAuth, async (req: any, res) => {
 });
 
 // Get facility role templates
-router.get("/api/facilities/:id/role-templates", requireAuth, async (req: any, res) => {
+router.get("/api/facilities/:id/role-templates", authenticate, requirePermission('facilities.view'), async (req: any, res) => {
   try {
     const facilityId = parseInt(req.params.id);
     
@@ -148,7 +144,7 @@ router.get("/api/facilities/:id/role-templates", requireAuth, async (req: any, r
 });
 
 // Create facility role template
-router.post("/api/facilities/:id/role-templates", requireAuth, async (req: any, res) => {
+router.post("/api/facilities/:id/role-templates", authenticate, requirePermission('users.manage'), async (req: any, res) => {
   try {
     const facilityId = parseInt(req.params.id);
     
@@ -180,7 +176,7 @@ router.post("/api/facilities/:id/role-templates", requireAuth, async (req: any, 
 });
 
 // Update facility role template
-router.patch("/api/facilities/:id/role-templates/:templateId", requireAuth, async (req: any, res) => {
+router.patch("/api/facilities/:id/role-templates/:templateId", authenticate, requirePermission('users.manage'), async (req: any, res) => {
   try {
     const facilityId = parseInt(req.params.id);
     const templateId = parseInt(req.params.templateId);
@@ -222,7 +218,7 @@ router.patch("/api/facilities/:id/role-templates/:templateId", requireAuth, asyn
 });
 
 // Delete facility role template
-router.delete("/api/facilities/:id/role-templates/:templateId", requireAuth, async (req: any, res) => {
+router.delete("/api/facilities/:id/role-templates/:templateId", authenticate, requirePermission('users.manage'), async (req: any, res) => {
   try {
     const facilityId = parseInt(req.params.id);
     const templateId = parseInt(req.params.templateId);
