@@ -47,6 +47,7 @@ import { GlobalSearch } from "./GlobalSearch";
 import { NotificationDropdown } from "./NotificationDropdown";
 import { ImpersonationIndicator } from "./ImpersonationIndicator";
 import { CompactNavigationDropdown } from "./CompactNavigationDropdown";
+import { AdminBadge } from "./AdminBadge";
 
 // Type for navigation items
 type NavigationItem = {
@@ -338,6 +339,9 @@ export function UnifiedHeader() {
 
           {/* Right Side Actions */}
           <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
+            {/* Admin Badge */}
+            <AdminBadge variant="compact" />
+            
             {/* Help Button - Hidden on mobile */}
             <Button
               variant="ghost"

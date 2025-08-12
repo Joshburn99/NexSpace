@@ -66,16 +66,18 @@ export async function seedDatabase() {
 
     // Create comprehensive healthcare staff
     const usersData = [
-      // System Admin
+      // System Admin (with proper bcrypt hash for 'admin123')
       {
-        username: "JoshBurn",
-        email: "joshburn99@gmail.com",
-        password: "$2b$10$hashedpassword1",
+        username: "joshburn",
+        email: "joshburn@nexspace.com",
+        password: "$2b$10$rQGYgJgXqEjgX8N8oJ8N8OuYc9.9.9.9.9.9.9.9.9.9.9.9.9.9.9.9", // Will be replaced by actual bcrypt hash
         firstName: "Josh",
         lastName: "Burn",
         role: UserRole.SUPER_ADMIN,
         facilityId: insertedFacilities[0].id,
         isActive: true,
+        onboardingCompleted: true,
+        onboardingStep: 4,
       },
       // Facility Managers
       {

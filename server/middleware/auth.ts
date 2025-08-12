@@ -15,16 +15,26 @@ const JWT_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'fall
 const JWT_EXPIRES_IN = '24h';
 const JWT_REFRESH_EXPIRES_IN = '7d';
 
-// Generate JWT tokens
-export function generateTokens(userId: number, role: string) {
+// Generate JWT tokens with comprehensive claims
+export function generateTokens(userId: number, role: string, additionalClaims?: any) {
+  const basePayload = {
+    userId,
+    role,
+    isAdmin: role === 'super_admin',
+    isFacilityManager: role === 'facility_manager',
+    isStaff: role === 'staff' || role === 'internal_employee' || role === 'contractor_1099',
+    permissions: role === 'super_admin' ? ['*'] : [], // Super admin gets all permissions
+    ...additionalClaims
+  };
+
   const accessToken = jwt.sign(
-    { userId, role, type: 'access' },
+    { ...basePayload, type: 'access' },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES_IN }
   );
   
   const refreshToken = jwt.sign(
-    { userId, role, type: 'refresh' },
+    { ...basePayload, type: 'refresh' },
     JWT_SECRET,
     { expiresIn: JWT_REFRESH_EXPIRES_IN }
   );
