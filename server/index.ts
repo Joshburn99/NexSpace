@@ -11,7 +11,7 @@ import { setupFacilityUserRoleTemplates } from "./facility-user-roles-setup";
 import { initializeTimeOffData } from "./init-timeoff-data";
 import { config, validateConfig } from "./config";
 import swaggerUi from "swagger-ui-express";
-import { swaggerSpec } from "./openapi";
+import { loadOpenAPISpec, swaggerOptions } from "./swagger-config";
 import { requestIdMiddleware, loggingMiddleware, errorLoggingMiddleware } from "./middleware/logger";
 import { globalErrorHandler, notFoundHandler } from "./middleware/error-handler";
 import rateLimit from "express-rate-limit";
@@ -31,9 +31,18 @@ import cors from "cors";
   app.use(helmet({
     contentSecurityPolicy: false, // Disable for development
   }));
+  // Configure CORS for development
   app.use(cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5000',
+    origin: [
+      'http://localhost:5000',
+      'http://localhost:3000',
+      'https://*.replit.app',
+      'https://*.replit.dev',
+      ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : [])
+    ],
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   }));
   
   // Rate limiting
@@ -112,11 +121,24 @@ import cors from "cors";
   /* ---------------------------------------------------------------------- */
   /*  3.  API DOCUMENTATION                                                */
   /* ---------------------------------------------------------------------- */
-  // Swagger UI documentation
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-    customCss: '.swagger-ui .topbar { display: none }',
-    customSiteTitle: 'NexSpace API Documentation',
-  }));
+  try {
+    const openApiSpec = loadOpenAPISpec();
+    
+    // Swagger UI documentation at /docs
+    app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec, swaggerOptions));
+    
+    // Also serve at /api-docs for backward compatibility
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec, swaggerOptions));
+    
+    // Raw OpenAPI spec endpoint
+    app.get('/api/openapi.json', (req, res) => {
+      res.json(openApiSpec);
+    });
+    
+    log("API documentation configured at /docs and /api-docs");
+  } catch (err) {
+    log(`Warning: API documentation setup failed: ${err instanceof Error ? err.message : err}`);
+  }
 
   /* ---------------------------------------------------------------------- */
   /*  4.  ROUTES & ASSETS                                                  */

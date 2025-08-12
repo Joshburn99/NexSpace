@@ -1,0 +1,1296 @@
+openapi: 3.0.3
+info:
+  title: NexSpace Healthcare Workforce Management API
+  description: |
+    Advanced healthcare workforce management platform designed to optimize staffing, 
+    employee wellness, and operational efficiency in large healthcare facilities.
+    
+    ## Authentication
+    This API uses session-based authentication with JWT support. Include credentials in requests.
+    
+    ## Authorization
+    Most endpoints require specific permissions based on user roles:
+    - **Super Admin**: Full system access
+    - **Facility Manager**: Access to assigned facilities
+    - **Staff**: Limited access to own data
+    
+    ## Error Responses
+    All endpoints return consistent error responses with HTTP status codes and descriptive messages.
+  version: 1.0.0
+  contact:
+    name: NexSpace API Support
+    email: support@nexspace.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:5000
+    description: Development server
+  - url: https://your-production-domain.com
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: User authentication and session management
+  - name: Facilities
+    description: Healthcare facility management
+  - name: Staff
+    description: Staff member management and profiles
+  - name: Shifts
+    description: Shift scheduling and management
+  - name: Dashboard
+    description: Dashboard statistics and widgets
+
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: connect.sid
+      description: Session-based authentication cookie
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token authentication
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+        errors:
+          type: array
+          items:
+            type: object
+          description: Detailed validation errors (if applicable)
+      required:
+        - message
+
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique user identifier
+        username:
+          type: string
+          description: Username for login
+        email:
+          type: string
+          format: email
+          description: User email address
+        firstName:
+          type: string
+          description: First name
+        lastName:
+          type: string
+          description: Last name
+        role:
+          type: string
+          enum: [super_admin, facility_manager, staff, internal_employee, contractor_1099]
+          description: User role determining permissions
+        avatar:
+          type: string
+          nullable: true
+          description: URL to user's avatar image
+        isActive:
+          type: boolean
+          description: Whether the user account is active
+        facilityId:
+          type: integer
+          nullable: true
+          description: Primary facility ID for the user
+        permissions:
+          type: array
+          items:
+            type: string
+          description: List of user permissions
+        onboardingCompleted:
+          type: boolean
+          description: Whether user has completed onboarding
+
+    Facility:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique facility identifier
+        name:
+          type: string
+          description: Facility name
+        type:
+          type: string
+          enum: [hospital, clinic, nursing_home, assisted_living, home_health]
+          description: Type of healthcare facility
+        address:
+          type: string
+          description: Facility address
+        city:
+          type: string
+          description: City
+        state:
+          type: string
+          description: State
+        zip:
+          type: string
+          description: ZIP code
+        phone:
+          type: string
+          description: Primary phone number
+        email:
+          type: string
+          format: email
+          description: Primary email address
+        website:
+          type: string
+          nullable: true
+          description: Facility website URL
+        licenseNumber:
+          type: string
+          nullable: true
+          description: Facility license number
+        bedCount:
+          type: integer
+          nullable: true
+          description: Number of beds in the facility
+        departments:
+          type: array
+          items:
+            type: string
+          description: List of departments in the facility
+        isActive:
+          type: boolean
+          description: Whether the facility is active
+        createdAt:
+          type: string
+          format: date-time
+          description: Facility creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    Staff:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique staff identifier
+        firstName:
+          type: string
+          description: First name
+        lastName:
+          type: string
+          description: Last name
+        email:
+          type: string
+          format: email
+          description: Email address
+        phone:
+          type: string
+          nullable: true
+          description: Phone number
+        specialty:
+          type: string
+          nullable: true
+          description: Medical specialty (e.g., RN, LPN, CNA)
+        employmentType:
+          type: string
+          enum: [full_time, part_time, contract, per_diem]
+          nullable: true
+          description: Type of employment
+        hourlyRate:
+          type: number
+          format: decimal
+          nullable: true
+          description: Hourly pay rate
+        yearsExperience:
+          type: integer
+          nullable: true
+          description: Years of experience
+        certifications:
+          type: array
+          items:
+            type: string
+          description: Professional certifications
+        skills:
+          type: array
+          items:
+            type: string
+          description: Skills and competencies
+        isActive:
+          type: boolean
+          description: Whether the staff member is active
+        profilePhoto:
+          type: string
+          nullable: true
+          description: URL to profile photo
+        emergencyContact:
+          type: object
+          nullable: true
+          properties:
+            name:
+              type: string
+            phone:
+              type: string
+            relationship:
+              type: string
+        workHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              facility:
+                type: string
+              position:
+                type: string
+              startDate:
+                type: string
+                format: date
+              endDate:
+                type: string
+                format: date
+                nullable: true
+              description:
+                type: string
+        education:
+          type: array
+          items:
+            type: object
+            properties:
+              institution:
+                type: string
+              degree:
+                type: string
+              graduationYear:
+                type: integer
+              gpa:
+                type: number
+                nullable: true
+
+    Shift:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique shift identifier
+        facilityId:
+          type: integer
+          description: Facility where the shift takes place
+        title:
+          type: string
+          description: Shift title or description
+        date:
+          type: string
+          format: date
+          description: Shift date
+        startTime:
+          type: string
+          format: time
+          description: Shift start time
+        endTime:
+          type: string
+          format: time
+          description: Shift end time
+        department:
+          type: string
+          nullable: true
+          description: Department for the shift
+        specialty:
+          type: string
+          nullable: true
+          description: Required specialty
+        requiredWorkers:
+          type: integer
+          description: Number of workers needed
+        assignedStaffIds:
+          type: array
+          items:
+            type: integer
+          description: IDs of assigned staff members
+        status:
+          type: string
+          enum: [open, assigned, in_progress, completed, cancelled]
+          description: Current shift status
+        urgency:
+          type: string
+          enum: [low, medium, high, critical]
+          description: Shift urgency level
+        rate:
+          type: number
+          format: decimal
+          nullable: true
+          description: Pay rate for the shift
+        notes:
+          type: string
+          nullable: true
+          description: Additional notes or requirements
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    DashboardStats:
+      type: object
+      properties:
+        activeStaff:
+          type: integer
+          description: Number of active staff members
+        openShifts:
+          type: integer
+          description: Number of open shifts
+        filledShifts:
+          type: integer
+          description: Number of filled shifts
+        complianceRate:
+          type: number
+          format: decimal
+          description: Overall compliance percentage
+        monthlyHours:
+          type: number
+          format: decimal
+          description: Total monthly hours worked
+        totalFacilities:
+          type: integer
+          description: Total number of facilities
+        urgentShifts:
+          type: integer
+          description: Number of urgent shifts
+        expiringCredentials:
+          type: integer
+          description: Number of expiring credentials
+        monthlyRevenue:
+          type: number
+          format: decimal
+          description: Monthly revenue total
+        recentActivity:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+              action:
+                type: string
+              resource:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+              user:
+                type: object
+                nullable: true
+
+security:
+  - sessionAuth: []
+  - bearerAuth: []
+
+paths:
+  # Authentication Endpoints
+  /api/impersonate/start:
+    post:
+      tags:
+        - Authentication
+      summary: Start user impersonation
+      description: Begin impersonating another user (super admin only)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: integer
+                  description: ID of user to impersonate
+                userType:
+                  type: string
+                  enum: [user, facility_user, staff]
+                  description: Type of user to impersonate
+              required:
+                - userId
+                - userType
+      responses:
+        '200':
+          description: Impersonation started successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  user:
+                    $ref: '#/components/schemas/User'
+        '403':
+          description: Permission denied - super admin required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/impersonate/stop:
+    post:
+      tags:
+        - Authentication
+      summary: Stop user impersonation
+      description: End current impersonation session
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Impersonation stopped successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  user:
+                    $ref: '#/components/schemas/User'
+
+  # Facility Endpoints
+  /api/facilities:
+    get:
+      tags:
+        - Facilities
+      summary: Get all facilities
+      description: Retrieve a list of all facilities the user has access to
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: query
+          description: Filter by facility type
+          schema:
+            type: string
+            enum: [hospital, clinic, nursing_home, assisted_living, home_health]
+        - name: isActive
+          in: query
+          description: Filter by active status
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: List of facilities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Facility'
+        '401':
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Facilities
+      summary: Create new facility
+      description: Create a new healthcare facility (super admin only)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Facility name
+                type:
+                  type: string
+                  enum: [hospital, clinic, nursing_home, assisted_living, home_health]
+                address:
+                  type: string
+                city:
+                  type: string
+                state:
+                  type: string
+                zip:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                website:
+                  type: string
+                  nullable: true
+                licenseNumber:
+                  type: string
+                  nullable: true
+                bedCount:
+                  type: integer
+                  nullable: true
+              required:
+                - name
+                - type
+                - address
+                - city
+                - state
+                - zip
+                - phone
+                - email
+      responses:
+        '201':
+          description: Facility created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Facility'
+        '400':
+          description: Invalid facility data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Super admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/facilities/{id}:
+    get:
+      tags:
+        - Facilities
+      summary: Get facility by ID
+      description: Retrieve detailed information about a specific facility
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Facility ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Facility details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Facility'
+        '404':
+          description: Facility not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - Facilities
+      summary: Update facility
+      description: Update facility information (requires appropriate permissions)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Facility ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                type:
+                  type: string
+                  enum: [hospital, clinic, nursing_home, assisted_living, home_health]
+                address:
+                  type: string
+                city:
+                  type: string
+                state:
+                  type: string
+                zip:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                website:
+                  type: string
+                licenseNumber:
+                  type: string
+                bedCount:
+                  type: integer
+                isActive:
+                  type: boolean
+      responses:
+        '200':
+          description: Facility updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Facility'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Facility not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Staff Endpoints
+  /api/staff:
+    get:
+      tags:
+        - Staff
+      summary: Get all staff members
+      description: Retrieve a list of staff members with optional filtering
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: facilityId
+          in: query
+          description: Filter by facility ID
+          schema:
+            type: integer
+        - name: specialty
+          in: query
+          description: Filter by specialty
+          schema:
+            type: string
+        - name: isActive
+          in: query
+          description: Filter by active status
+          schema:
+            type: boolean
+        - name: search
+          in: query
+          description: Search by name or email
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of staff members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Staff'
+
+    post:
+      tags:
+        - Staff
+      summary: Create new staff member
+      description: Add a new staff member to the system
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                specialty:
+                  type: string
+                employmentType:
+                  type: string
+                  enum: [full_time, part_time, contract, per_diem]
+                hourlyRate:
+                  type: number
+                  format: decimal
+                yearsExperience:
+                  type: integer
+                certifications:
+                  type: array
+                  items:
+                    type: string
+                skills:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - firstName
+                - lastName
+                - email
+      responses:
+        '201':
+          description: Staff member created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+        '400':
+          description: Invalid staff data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/staff/{id}:
+    get:
+      tags:
+        - Staff
+      summary: Get staff member by ID
+      description: Retrieve detailed information about a specific staff member
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Staff ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Staff member details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+        '404':
+          description: Staff member not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - Staff
+      summary: Update staff member
+      description: Update staff member information
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Staff ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName:
+                  type: string
+                lastName:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+                specialty:
+                  type: string
+                employmentType:
+                  type: string
+                  enum: [full_time, part_time, contract, per_diem]
+                hourlyRate:
+                  type: number
+                  format: decimal
+                yearsExperience:
+                  type: integer
+                certifications:
+                  type: array
+                  items:
+                    type: string
+                skills:
+                  type: array
+                  items:
+                    type: string
+                isActive:
+                  type: boolean
+      responses:
+        '200':
+          description: Staff member updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Staff member not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  # Shift Endpoints
+  /api/shifts:
+    get:
+      tags:
+        - Shifts
+      summary: Get all shifts
+      description: Retrieve shifts with optional filtering by facility, date, status, or staff
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: facilityId
+          in: query
+          description: Filter by facility ID
+          schema:
+            type: integer
+        - name: date
+          in: query
+          description: Filter by specific date
+          schema:
+            type: string
+            format: date
+        - name: status
+          in: query
+          description: Filter by shift status
+          schema:
+            type: string
+            enum: [open, assigned, in_progress, completed, cancelled]
+        - name: staffId
+          in: query
+          description: Filter by assigned staff member ID
+          schema:
+            type: integer
+        - name: startDate
+          in: query
+          description: Filter from start date
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: Filter to end date
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: List of shifts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Shift'
+
+    post:
+      tags:
+        - Shifts
+      summary: Create new shift
+      description: Create a new shift for scheduling
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                facilityId:
+                  type: integer
+                title:
+                  type: string
+                date:
+                  type: string
+                  format: date
+                startTime:
+                  type: string
+                  format: time
+                endTime:
+                  type: string
+                  format: time
+                department:
+                  type: string
+                specialty:
+                  type: string
+                requiredWorkers:
+                  type: integer
+                urgency:
+                  type: string
+                  enum: [low, medium, high, critical]
+                rate:
+                  type: number
+                  format: decimal
+                notes:
+                  type: string
+              required:
+                - facilityId
+                - title
+                - date
+                - startTime
+                - endTime
+                - requiredWorkers
+      responses:
+        '201':
+          description: Shift created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+        '400':
+          description: Invalid shift data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/shifts/{id}:
+    get:
+      tags:
+        - Shifts
+      summary: Get shift by ID
+      description: Retrieve detailed information about a specific shift
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Shift ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Shift details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+        '404':
+          description: Shift not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - Shifts
+      summary: Update shift
+      description: Update shift information
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Shift ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                date:
+                  type: string
+                  format: date
+                startTime:
+                  type: string
+                  format: time
+                endTime:
+                  type: string
+                  format: time
+                department:
+                  type: string
+                specialty:
+                  type: string
+                requiredWorkers:
+                  type: integer
+                status:
+                  type: string
+                  enum: [open, assigned, in_progress, completed, cancelled]
+                urgency:
+                  type: string
+                  enum: [low, medium, high, critical]
+                rate:
+                  type: number
+                  format: decimal
+                notes:
+                  type: string
+      responses:
+        '200':
+          description: Shift updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+        '404':
+          description: Shift not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Shifts
+      summary: Delete shift
+      description: Delete a shift (requires appropriate permissions)
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Shift ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Shift deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '403':
+          description: Permission denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Shift not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/shifts/{id}/assign:
+    post:
+      tags:
+        - Shifts
+      summary: Assign staff to shift
+      description: Assign one or more staff members to a shift
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Shift ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                staffIds:
+                  type: array
+                  items:
+                    type: integer
+                  description: Array of staff IDs to assign
+              required:
+                - staffIds
+      responses:
+        '200':
+          description: Staff assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+        '404':
+          description: Shift not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/shifts/{id}/unassign:
+    post:
+      tags:
+        - Shifts
+      summary: Unassign staff from shift
+      description: Remove staff member assignments from a shift
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Shift ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                staffIds:
+                  type: array
+                  items:
+                    type: integer
+                  description: Array of staff IDs to unassign
+              required:
+                - staffIds
+      responses:
+        '200':
+          description: Staff unassigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+
+  # Dashboard Endpoints
+  /api/dashboard/stats:
+    get:
+      tags:
+        - Dashboard
+      summary: Get dashboard statistics
+      description: Retrieve comprehensive dashboard statistics based on user permissions
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardStats'
+
+  /api/dashboard/widgets:
+    get:
+      tags:
+        - Dashboard
+      summary: Get dashboard widgets
+      description: Retrieve user's dashboard widget configuration
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of dashboard widgets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                    type:
+                      type: string
+                    position:
+                      type: object
+                    config:
+                      type: object
+
+  /api/dashboard/recent-activity:
+    get:
+      tags:
+        - Dashboard
+      summary: Get recent activity
+      description: Retrieve recent system activity based on user permissions
+      security:
+        - sessionAuth: []
+        - bearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of activities to return
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: List of recent activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    action:
+                      type: string
+                    resource:
+                      type: string
+                    createdAt:
+                      type: string
+                      format: date-time
+                    user:
+                      type: object
+                      nullable: true
