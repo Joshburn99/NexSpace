@@ -1,9 +1,20 @@
 export const clientConfig = {
   // API configuration
   api: {
-    baseUrl: import.meta.env.VITE_API_URL || "",
-    timeout: 5000,
+    baseUrl: import.meta.env.VITE_API_URL || (import.meta.env.DEV ? "" : "https://your-production-domain.com"),
+    basePath: import.meta.env.VITE_API_BASE_URL || "/api",
+    timeout: parseInt(import.meta.env.VITE_API_TIMEOUT || "10000"),
+    retries: parseInt(import.meta.env.VITE_API_RETRIES || "3"),
   },
+
+  // WebSocket configuration
+  websocket: {
+    url: import.meta.env.VITE_WS_URL || (import.meta.env.DEV ? "/ws" : "wss://your-production-domain.com/ws"),
+  },
+
+  // Environment flags
+  isDev: import.meta.env.DEV,
+  isProd: import.meta.env.PROD,
 
   // Google Maps configuration
   google: {

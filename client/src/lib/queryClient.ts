@@ -12,7 +12,11 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined
 ): Promise<Response> {
-  const res = await fetch(url, {
+  // Build full URL with environment configuration
+  const baseUrl = import.meta.env.VITE_API_URL || '';
+  const fullUrl = baseUrl ? `${baseUrl}${url}` : url;
+
+  const res = await fetch(fullUrl, {
     method,
     headers: data ? { "Content-Type": "application/json" } : {},
     body: data ? JSON.stringify(data) : undefined,

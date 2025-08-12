@@ -58,7 +58,7 @@ class WebSocketManager {
 
     try {
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      const wsUrl = import.meta.env.VITE_WS_URL || `${protocol}//${window.location.host}/ws`;
 
       this.ws = new WebSocket(wsUrl);
 
