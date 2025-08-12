@@ -50,6 +50,10 @@ import {
   Loader2,
 } from "lucide-react";
 import { format, addDays, subDays, startOfWeek, endOfWeek } from "date-fns";
+import { CalendarSkeleton, ShiftListSkeleton } from "@/components/LoadingSkeletons";
+import { CalendarEmptyState, ErrorState } from "@/components/EmptyStates";
+import { QuickFilters, type FilterState } from "@/components/QuickFilters";
+import { formatDate as formatDateUtil, formatTime, formatDateTime, formatRelativeTime, getTimezoneInfo } from "@/lib/date-utils";
 
 // Types
 interface Shift {
@@ -251,23 +255,17 @@ export default function EnhancedCalendarPage() {
 
   if (shiftsError) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Alert className="max-w-md">
-          <AlertCircle className="h-4 w-4" />
-          <AlertDescription>
-            Failed to load calendar data. Please try refreshing the page.
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="mt-2 w-full"
-              onClick={() => refetchShifts()}
-            >
-              Retry
-            </Button>
-          </AlertDescription>
-        </Alert>
-      </div>
+      <ErrorState 
+        title="Failed to load calendar data"
+        description="Please try refreshing the page or check your connection."
+        onRetry={() => refetchShifts()}
+      />
     );
+  }
+
+  // Show loading skeleton
+  if (shiftsLoading) {
+    return <CalendarSkeleton />;
   }
 
   return (

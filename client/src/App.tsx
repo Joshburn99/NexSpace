@@ -87,6 +87,7 @@ import FacilitySchedulePage from "@/pages/facility-schedule-page";
 import WorkerOpenShiftsPage from "@/pages/worker-open-shifts-page";
 import WorkerMyRequestsPage from "@/pages/worker-my-requests-page";
 import FacilityProfilePage from "@/pages/FacilityProfilePage";
+import { UIImprovementsDemo } from "@/components/UIImprovementsDemo";
 import FacilitySettingsPage from "@/pages/FacilitySettingsPage";
 import FacilityUsersManagementPage from "@/pages/FacilityUsersManagementPage";
 import FacilityAuditLogsPage from "@/pages/FacilityAuditLogsPage";
@@ -325,6 +326,9 @@ function AppContent() {
       <ProtectedRoute path="/contractor-dashboard" component={ContractorDashboardWrapper} />
       <ProtectedRoute path="/facility-recommendations" component={FacilityRecommendationsPage} />
       <ProtectedRoute path="/detailed-shift-analytics" component={DetailedShiftAnalyticsPage} />
+      {/* UI Improvements Demo */}
+      <ProtectedRoute path="/ui-demo" component={UIImprovementsDemo} />
+      
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

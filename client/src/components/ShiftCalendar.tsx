@@ -6,6 +6,9 @@ import ShiftCalendarCell from "./ShiftCalendarCell";
 import ShiftDetailModal from "./ShiftDetailModal";
 import { useShiftsWithAssignments } from "../hooks/useShiftsWithAssignments";
 import { addDays, formatDate } from "../utils";
+import { CalendarSkeleton, ShiftListSkeleton } from "@/components/LoadingSkeletons";
+import { CalendarEmptyState, ErrorState } from "@/components/EmptyStates";
+import { formatDateTime, formatTime, getTimezoneInfo } from "@/lib/date-utils";
 import { useQuery } from "@tanstack/react-query";
 
 const ShiftCalendar: React.FC = () => {
@@ -104,14 +107,7 @@ const ShiftCalendar: React.FC = () => {
   const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[600px]">
-        <div className="text-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Loading shift calendar...</p>
-        </div>
-      </div>
-    );
+    return <CalendarSkeleton />;
   }
 
   return (

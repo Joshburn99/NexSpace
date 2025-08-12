@@ -67,6 +67,10 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { useRBAC, PermissionAction, PermissionGate } from "@/hooks/use-rbac";
+import { StaffListSkeleton } from "@/components/LoadingSkeletons";
+import { StaffEmptyState, ErrorState, SearchEmptyState } from "@/components/EmptyStates";
+import { QuickFilters, type FilterState } from "@/components/QuickFilters";
+import { formatDateTime, formatRelativeTime } from "@/lib/date-utils";
 
 interface StaffMember {
   id: number;
@@ -223,6 +227,16 @@ const specialties = [
 ];
 
 function EnhancedStaffPageContent() {
+  // Initialize filter state for QuickFilters component
+  const [filters, setFilters] = useState<FilterState>({
+    search: '',
+    facility: '',
+    role: '',
+    status: '',
+    dateRange: null,
+    specialty: '',
+    location: '',
+  });
   const { toast } = useToast();
   const { startImpersonation, sessionState } = useSession();
   const [searchTerm, setSearchTerm] = useState("");
@@ -608,49 +622,17 @@ function EnhancedStaffPageContent() {
 
   // Loading state with skeleton
   if (isLoading) {
-    return (
-      <div className="w-full space-y-4 md:space-y-6">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div>
-        </div>
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <div className="h-8 w-48 bg-gray-200 animate-pulse rounded mb-2"></div>
-            <div className="h-4 w-64 bg-gray-200 animate-pulse rounded"></div>
-          </div>
-          <div className="h-10 w-32 bg-gray-200 animate-pulse rounded"></div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-64 bg-gray-200 animate-pulse rounded"></div>
-          ))}
-        </div>
-      </div>
-    );
+    return <StaffListSkeleton />;
   }
 
   // Error state with retry button
   if (isError || error) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center space-y-4">
-          <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
-          <div>
-            <p className="text-red-500 mb-2 font-medium">Failed to load staff data</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              {error?.message || "An error occurred while fetching staff information"}
-            </p>
-            <Button 
-              onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/staff"] })}
-              variant="outline"
-              className="gap-2"
-            >
-              <Loader2 className="h-4 w-4" />
-              Retry
-            </Button>
-          </div>
-        </div>
-      </div>
+      <ErrorState 
+        title="Failed to load staff data"
+        description={error?.message || "An error occurred while fetching staff information"}
+        onRetry={() => queryClient.invalidateQueries({ queryKey: ["/api/staff"] })}
+      />
     );
   }
 
@@ -703,7 +685,7 @@ function EnhancedStaffPageContent() {
           <div>
             <h1 className="text-xl md:text-3xl font-bold">Staff Management</h1>
             <p className="text-sm md:text-base text-muted-foreground hidden md:block">
-              Comprehensive staff profiles and social features
+              Comprehensive staff profiles and social features • Times shown in {getTimezoneInfo().abbreviation}
             </p>
           </div>
           <Dialog open={showAddStaffDialog} onOpenChange={setShowAddStaffDialog}>
@@ -843,6 +825,16 @@ function EnhancedStaffPageContent() {
           </Dialog>
         </div>
       </div>
+
+      {/* Enhanced Quick Filters */}
+      <QuickFilters 
+        filters={filters}
+        onFiltersChange={setFilters}
+        facilities={[]}
+        specialties={['nursing', 'physician', 'tech', 'admin']}
+        roles={['staff', 'facility_manager', 'super_admin']}
+        statuses={['active', 'inactive', 'pending']}
+      />
 
       <Tabs defaultValue="directory" className="space-y-6">
         <TabsList>
