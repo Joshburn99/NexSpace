@@ -6,6 +6,13 @@ import { generateComprehensiveSampleData } from "./sample-data-generator";
 import { setupFacilityUserRoleTemplates } from "./facility-user-roles-setup";
 import { initializeTimeOffData } from "./init-timeoff-data";
 import { config, validateConfig } from "./config";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./openapi";
+import { requestIdMiddleware, loggingMiddleware, errorLoggingMiddleware } from "./middleware/logger";
+import { globalErrorHandler, notFoundHandler } from "./middleware/error-handler";
+import rateLimit from "express-rate-limit";
+import helmet from "helmet";
+import cors from "cors";
 
 (async () => {
   // Validate configuration on startup
@@ -15,6 +22,29 @@ import { config, validateConfig } from "./config";
   /*  1.  APP & MIDDLEWARE                                                 */
   /* ---------------------------------------------------------------------- */
   const app = express();
+  
+  // Security middleware
+  app.use(helmet({
+    contentSecurityPolicy: false, // Disable for development
+  }));
+  app.use(cors({
+    origin: process.env.CORS_ORIGIN || 'http://localhost:5000',
+    credentials: true,
+  }));
+  
+  // Rate limiting
+  const limiter = rateLimit({
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'),
+    message: 'Too many requests from this IP, please try again later.',
+  });
+  app.use('/api', limiter);
+  
+  // Logging middleware
+  app.use(requestIdMiddleware);
+  app.use(loggingMiddleware);
+  
+  // Body parsing
   app.use(express.json());
   app.use(express.urlencoded({ extended: false }));
 
@@ -76,7 +106,16 @@ import { config, validateConfig } from "./config";
   // }
 
   /* ---------------------------------------------------------------------- */
-  /*  3.  ROUTES & ASSETS                                                  */
+  /*  3.  API DOCUMENTATION                                                */
+  /* ---------------------------------------------------------------------- */
+  // Swagger UI documentation
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'NexSpace API Documentation',
+  }));
+
+  /* ---------------------------------------------------------------------- */
+  /*  4.  ROUTES & ASSETS                                                  */
   /* ---------------------------------------------------------------------- */
   let server: any;
   try {
@@ -89,14 +128,8 @@ import { config, validateConfig } from "./config";
     server = createServer(app);
   }
 
-  // Error handler (must be after routes)
-  app.use(
-    (err: any, _req: Request, res: Response, _next: NextFunction) => {
-      const status = err.status || err.statusCode || 500;
-      res.status(status).json({ message: err.message || "Internal Server Error" });
-      log(`Unhandled error → ${status} :: ${err.message}`);
-    }
-  );
+  // Add error logging middleware
+  app.use(errorLoggingMiddleware);
 
   if (app.get("env") === "development") {
     // Vite dev server middleware
@@ -106,8 +139,13 @@ import { config, validateConfig } from "./config";
     serveStatic(app);
   }
 
+  // Error handlers (must be after all other middleware and routes)
+  app.use(globalErrorHandler);
+  // Only apply notFoundHandler for API routes
+  app.use('/api', notFoundHandler);
+
   /* ---------------------------------------------------------------------- */
-  /*  4.  START LISTENING                                                  */
+  /*  5.  START LISTENING                                                  */
   /* ---------------------------------------------------------------------- */
   const PORT = config.server.port;
   server.listen(PORT, "0.0.0.0", () => log(`🚀  Server listening on ${PORT}`));

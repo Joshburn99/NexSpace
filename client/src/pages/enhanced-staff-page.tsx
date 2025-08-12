@@ -604,7 +604,7 @@ function EnhancedStaffPageContent() {
           </div>
           <Dialog open={showAddStaffDialog} onOpenChange={setShowAddStaffDialog}>
             <DialogTrigger asChild>
-              <PermissionAction permission="staff.create" fallback={null}>
+              <PermissionAction permission="staff.create">
                 <Button className="gap-2 min-h-[44px] touch-manipulation">
                   <UserPlus className="h-4 w-4" />
                   <span className="hidden md:inline">Add Staff Member</span>
@@ -1240,10 +1240,7 @@ function EnhancedStaffPageContent() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <PermissionAction
-                    permission="staff.edit"
-                    fallback={null}
-                  >
+                  <PermissionAction permission="staff.edit">
                     <Button
                       variant={profileEditMode ? "default" : "outline"}
                       onClick={() => setProfileEditMode(!profileEditMode)}

@@ -1,0 +1,78 @@
+// === NexSpace MVP tables (namespaced) ======================================
+import { date } from "drizzle-orm/pg-core";
+
+export const nxShifts = pgTable("nx_shifts", {
+  id: serial("id").primaryKey(),
+  facilityId: integer("facility_id"),
+  unit: text("unit"),
+  roleNeeded: text("role_needed"),
+  startAt: timestamp("start_at").notNull(),
+  endAt: timestamp("end_at").notNull(),
+  status: text("status").notNull().default("open"), // open|filled|cancelled
+  createdBy: integer("created_by"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const nxShiftRequests = pgTable("nx_shift_requests", {
+  id: serial("id").primaryKey(),
+  shiftId: integer("shift_id").notNull(),
+  workerId: integer("worker_id").notNull(),
+  status: text("status").notNull().default("pending"), // pending|approved|rejected
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const nxShiftAssignments = pgTable("nx_shift_assignments", {
+  id: serial("id").primaryKey(),
+  shiftId: integer("shift_id").notNull(),
+  workerId: integer("worker_id").notNull(),
+  assignedAt: timestamp("assigned_at").defaultNow(),
+});
+
+export const nxTimesheets = pgTable("nx_timesheets", {
+  id: serial("id").primaryKey(),
+  shiftId: integer("shift_id").notNull(),
+  workerId: integer("worker_id").notNull(),
+  scheduledStart: timestamp("scheduled_start").notNull(),
+  scheduledEnd: timestamp("scheduled_end").notNull(),
+  status: text("status").notNull().default("pending"), // pending|submitted|approved|paid
+});
+
+export const nxClockEvents = pgTable("nx_clock_events", {
+  id: serial("id").primaryKey(),
+  timesheetId: integer("timesheet_id").notNull(),
+  type: text("type").notNull(), // in|out
+  occurredAt: timestamp("occurred_at").defaultNow(),
+});
+
+export const nxCredentialTypes = pgTable("nx_credential_types", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),   // e.g., RN License, BLS
+  code: text("code").notNull().unique(),
+});
+
+export const nxCredentials = pgTable("nx_credentials", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  typeId: integer("type_id").notNull(),
+  number: text("number"),
+  expiresOn: date("expires_on"),
+  status: text("status").notNull().default("pending"), // pending|verified|expired
+  verifiedAt: timestamp("verified_at"),
+});
+
+export const nxCredentialDocuments = pgTable("nx_credential_documents", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  typeId: integer("type_id").notNull(),
+  filePath: text("file_path").notNull(),
+  status: text("status").notNull().default("pending_parse"), // pending_parse|pending_verify|verified|rejected
+  parsedData: jsonb("parsed_data"),
+  uploadedAt: timestamp("uploaded_at").defaultNow(),
+});
+
+export const nxUnitRoleRequirements = pgTable("nx_unit_role_requirements", {
+  id: serial("id").primaryKey(),
+  unit: text("unit").notNull(),
+  role: text("role").notNull(), // RN, CNA, etc.
+  requiredTypeId: integer("required_type_id").notNull(), // FK to nxCredentialTypes
+});

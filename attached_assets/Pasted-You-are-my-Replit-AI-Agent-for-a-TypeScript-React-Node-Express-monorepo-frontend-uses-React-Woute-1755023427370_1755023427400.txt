@@ -1,0 +1,56 @@
+You are my Replit AI Agent for a TypeScript React + Node/Express monorepo (frontend uses React/Wouter, backend uses Express under /server). Perform a comprehensive audit and then implement fixes.
+
+Goals (do these in order):
+	1.	Install & run
+
+	•	Detect Node version, install deps, run dev/build. If install fails, fix package.json scripts and tsconfig.
+	•	Output a short “Run Book” with commands to start frontend and backend.
+
+	2.	Env/secrets
+
+	•	Create .env.example with sensible defaults (DATABASE_URL, JWT_SECRET, NODE_ENV, PORT, CLIENT_URL).
+	•	Set Replit Secrets for any existing values you can infer. Never hardcode secrets.
+
+	3.	Database sanity (Prisma/Postgres expected)
+
+	•	Inspect schema (likely Prisma). Identify duplicate/unused tables and scattered role data.
+	•	Propose a simplified schema: Users, Facilities, Staff, Shifts, Roles/Permissions, Sessions.
+	•	Plan safe migrations (no data loss). Create SQL/Prisma migration(s) and data backfill scripts.
+	•	Add npm scripts: db:migrate, db:reset (with confirmation), db:seed.
+
+	4.	Auth & RBAC
+
+	•	Ensure JWT session or similar works end-to-end. Add role-based middleware (admin, manager, staff).
+	•	Protect routes in server/routes/*.routes (auth, facilities, shifts, staff). Update ProtectedRoute on frontend.
+
+	5.	API contract
+
+	•	Generate OpenAPI (YAML/JSON) for existing endpoints. Add a /docs route with Swagger UI.
+
+	6.	Fix the EnhancedStaffPage error
+
+	•	Reproduce the runtime error at src/pages/enhanced-staff-page.tsx line ~87. Add error boundaries and null checks.
+	•	Write a minimal unit/integration test to prevent regression.
+
+	7.	Unified Data Service
+
+	•	Verify ../unified-data-service import is wired. If it wraps external APIs, add config + retries + timeouts.
+
+	8.	Observability & DX
+
+	•	Add centralized error handler, request-id, and structured logging (pino) on the server.
+	•	Add lint/format/test scripts; set up Husky pre-commit for lint + typecheck.
+
+	9.	Seed and superuser
+
+	•	Create a deterministic seed: admin user (username: joshburn, password: admin123), plus sample facilities/staff/shifts.
+	•	Provide login steps and a curl example for token auth.
+
+Deliverables:
+	•	Updated code, migrations, seeds, docs.
+	•	README section: “How to run locally on Replit”, “How to reset DB”, “Seed admin login”.
+	•	Post a concise changelog summarizing every file you changed and why.
+
+After completion:
+	•	Run the app, log in with the seeded admin, navigate to the Enhanced Staff page, and confirm it renders without errors.
+	•	Paste the OpenAPI doc path and the admin login steps here.
