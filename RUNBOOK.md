@@ -1,398 +1,199 @@
-# NexSpace Platform Runbook
+# NexSpace Platform Run Book
 
-## Table of Contents
-1. [Quick Start](#quick-start)
-2. [System Requirements](#system-requirements)
-3. [Installation & Setup](#installation--setup)
-4. [Database Management](#database-management)
-5. [Authentication & Access](#authentication--access)
-6. [API Documentation](#api-documentation)
-7. [Development Workflow](#development-workflow)
-8. [Troubleshooting](#troubleshooting)
-9. [Architecture Overview](#architecture-overview)
+## System Information
+- **Platform**: NexSpace Healthcare Workforce Management
+- **Node Version**: v20.19.3+ 
+- **Database**: PostgreSQL (Neon)
+- **Framework**: React + TypeScript (Vite) / Node.js + Express
 
-## Quick Start
+## Installation Commands
 
-### 1. Start the Application
 ```bash
-# Development mode (default)
-npm run dev
+# 1. Install dependencies
+npm install
 
-# The application will be available at:
-# - Web UI: http://localhost:5000
-# - API Docs: http://localhost:5000/api-docs
-```
-
-### 2. Login Credentials
-**Admin User:**
-- Username: `joshburn`
-- Password: `admin123`
-- Role: Super Admin
-
-**Alternative Admin (existing in DB):**
-- Username: `JoshBurn`
-- Email: `joshburn99@icloud.com`
-- Role: Super Admin
-
-## System Requirements
-
-- **Node.js**: v20.19.3 or higher
-- **npm**: v10.8.2 or higher
-- **PostgreSQL**: Already provisioned (DATABASE_URL environment variable set)
-- **Memory**: Minimum 2GB RAM
-- **Disk**: 500MB free space
-
-## Installation & Setup
-
-### 1. Environment Configuration
-```bash
-# Copy the example environment file
+# 2. Copy environment configuration
 cp .env.example .env
 
-# The DATABASE_URL is already set by Replit
-# Add any additional secrets as needed
+# 3. Configure environment variables in .env or Replit Secrets
+# Required: DATABASE_URL, SESSION_SECRET
+# Optional: SENDGRID_API_KEY, OPENAI_API_KEY, etc.
 ```
 
-### 2. Install Dependencies
-```bash
-# Dependencies are already installed
-# To reinstall if needed:
-npm install
-```
-
-### 3. Database Setup
-```bash
-# Push schema to database
-npm run db:push
-
-# Seed with sample data (including admin user)
-tsx server/seed.ts
-
-# To completely reset database (CAUTION: destroys all data)
-# npm run db:reset
-```
-
-## Database Management
-
-### Available Commands
+## Startup Procedures
 
 ```bash
-# Push schema changes to database
-npm run db:push
-
-# Run seed script (creates admin user and sample data)
-tsx server/seed.ts
-
-# Reset database (DANGEROUS - will delete all data)
-echo "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" | psql $DATABASE_URL
-npm run db:push
-tsx server/seed.ts
-```
-
-### Database Schema Overview
-
-**Main Tables:**
-- `users` - System users and authentication
-- `facilities` - Healthcare facilities
-- `staff` - Staff members
-- `shifts` - Shift scheduling
-- `permissions` - RBAC permissions
-- `audit_logs` - System audit trail
-
-### Seed Data
-
-The seed script creates:
-- 1 Super Admin user (joshburn/admin123)
-- 3 Sample facilities (Hospital, Nursing Home, Rehabilitation Center)
-- 5 Sample staff members
-- 5 Sample shifts
-- 22 System permissions
-
-## Authentication & Access
-
-### Session-Based Authentication
-The system uses Passport.js with session-based authentication stored in PostgreSQL.
-
-### Login via Web UI
-1. Navigate to http://localhost:5000
-2. Click "Login" 
-3. Enter credentials:
-   - Username: `joshburn`
-   - Password: `admin123`
-
-### Login via API (cURL)
-```bash
-# Login and save session cookie
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"username":"joshburn","password":"admin123"}' \
-  -c cookies.txt
-
-# Test authenticated endpoint
-curl -X GET http://localhost:5000/api/auth/me \
-  -b cookies.txt
-
-# Get dashboard stats
-curl -X GET http://localhost:5000/api/dashboard/stats \
-  -b cookies.txt
-```
-
-### Role-Based Access Control (RBAC)
-
-**System Roles:**
-- `super_admin` - Full system access
-- `admin` - Administrative access
-- `facility_manager` - Facility management
-- `internal_employee` - Employee access
-- `contractor_1099` - Contractor access
-
-**Key Permissions:**
-- `dashboard.view` - View dashboard
-- `facilities.*` - Facility CRUD operations
-- `staff.*` - Staff management
-- `shifts.*` - Shift management
-- `settings.*` - System settings
-- `audit.view` - View audit logs
-
-## API Documentation
-
-### Swagger UI
-Access the interactive API documentation at:
-http://localhost:5000/api-docs
-
-### Main API Endpoints
-
-**Authentication:**
-- `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout
-- `GET /api/auth/me` - Current user info
-
-**Facilities:**
-- `GET /api/facilities` - List facilities
-- `POST /api/facilities` - Create facility
-- `GET /api/facilities/:id` - Get facility
-- `PUT /api/facilities/:id` - Update facility
-- `DELETE /api/facilities/:id` - Delete facility
-
-**Staff:**
-- `GET /api/staff` - List staff
-- `POST /api/staff` - Create staff member
-- `GET /api/staff/:id` - Get staff member
-- `PUT /api/staff/:id` - Update staff
-- `DELETE /api/staff/:id` - Delete staff
-
-**Shifts:**
-- `GET /api/shifts` - List shifts
-- `POST /api/shifts` - Create shift
-- `GET /api/shifts/:id` - Get shift
-- `PUT /api/shifts/:id` - Update shift
-- `DELETE /api/shifts/:id` - Delete shift
-
-**Dashboard:**
-- `GET /api/dashboard/stats` - Dashboard statistics
-- `GET /api/dashboard/analytics` - Analytics data
-
-## Development Workflow
-
-### Code Structure
-```
-/
-├── client/               # React frontend
-│   ├── src/
-│   │   ├── pages/       # Page components
-│   │   ├── components/  # Reusable components
-│   │   ├── hooks/       # Custom React hooks
-│   │   └── lib/         # Utilities
-├── server/              # Express backend
-│   ├── routes/          # API routes
-│   ├── middleware/      # Express middleware
-│   ├── auth.ts          # Authentication
-│   └── db.ts           # Database connection
-├── shared/              # Shared types/schemas
-│   └── schema.ts       # Drizzle ORM schemas
-└── migrations/          # Database migrations
-```
-
-### Development Commands
-
-```bash
-# Start dev server
+# Start development server (frontend + backend on port 5000)
 npm run dev
-
-# Type checking
-npm run check
-
-# Linting
-npm run lint
-
-# Format code
-npm run format
 
 # Build for production
 npm run build
 
 # Start production server
-npm start
+npm run start
 ```
 
-### Making Changes
-
-1. **Frontend Changes:**
-   - Edit files in `client/src/`
-   - Hot reload will update automatically
-
-2. **Backend Changes:**
-   - Edit files in `server/`
-   - Server will restart automatically
-
-3. **Database Schema Changes:**
-   - Edit `shared/schema.ts`
-   - Run `npm run db:push` to apply
-
-## Troubleshooting
-
-### Common Issues
-
-**Issue: White screen after login**
-- Solution: Check browser console for errors
-- Verify API endpoints are responding
-- Check session cookie is set
-
-**Issue: API returns 401 Unauthorized**
-- Solution: Ensure you're logged in
-- Check session cookie is being sent
-- Try logging in again
-
-**Issue: Database connection errors**
-- Solution: Verify DATABASE_URL is set
-- Check PostgreSQL is running
-- Try `npm run db:push` to sync schema
-
-**Issue: Port 5000 already in use**
-- Solution: The dev script automatically kills the port
-- If still issues: `lsof -i :5000` and `kill -9 <PID>`
-
-### Logging
-
-**Backend Logs:**
-- Uses Pino logger with pretty printing
-- Request IDs for tracing
-- Structured JSON logging
-
-**Frontend Debugging:**
-- Browser DevTools Console
-- React Developer Tools
-- Network tab for API calls
-
-### Health Checks
+## Database Commands
 
 ```bash
-# Check server is running
-curl http://localhost:5000/health
+# Push schema changes to database
+npm run db:push
+
+# Run database migrations
+tsx scripts/db-migrate.ts
+
+# Seed database with initial data
+tsx server/db-seed.ts
+
+# Reset database (WARNING: Deletes all data)
+tsx scripts/db-reset.ts
+```
+
+## Environment Variables
+
+### Required Variables
+- `DATABASE_URL` - PostgreSQL connection string
+- `SESSION_SECRET` - Session encryption key (min 32 chars)
+- `NODE_ENV` - Environment (development/production)
+- `PORT` - Server port (default: 5000)
+
+### Optional Services
+- `SENDGRID_API_KEY` - Email notifications
+- `OPENAI_API_KEY` - AI features
+- `GOOGLE_CLIENT_ID/SECRET` - Calendar sync
+- `TWILIO_ACCOUNT_SID/AUTH_TOKEN` - SMS notifications
+
+See `.env.example` for complete list with descriptions.
+
+## Access Points
+
+- **Web Application**: http://localhost:5000
+- **API Documentation**: http://localhost:5000/api-docs
+- **Admin Login**: 
+  - Username: `joshburn`
+  - Password: `admin123`
+  - Role: `super_admin`
+
+## Database Backup
+
+```bash
+# Full backup
+pg_dump $DATABASE_URL > nexspace_backup_$(date +%Y%m%d_%H%M%S).sql
+
+# Schema only
+pg_dump $DATABASE_URL --schema-only > nexspace_schema_backup.sql
+
+# Data only
+pg_dump $DATABASE_URL --data-only > nexspace_data_backup.sql
+```
+
+## Common Troubleshooting
+
+### Port Already in Use
+```bash
+# The dev script automatically kills port 5000
+npm run dev
+# Or manually:
+kill-port 5000
+```
+
+### Database Connection Issues
+1. Check DATABASE_URL in .env or Replit Secrets
+2. Verify PostgreSQL is accessible
+3. Check SSL requirements (sslmode=require)
+
+### Missing Dependencies
+```bash
+npm install
+```
+
+### Session/Authentication Issues
+1. Ensure SESSION_SECRET is set
+2. Clear browser cookies
+3. Restart server
+
+### API 500 Errors
+1. Check server logs in console
+2. Verify database migrations are run
+3. Check permissions table has data
+
+## Log Locations
+
+- **Server Logs**: Console output with structured JSON
+- **Request Logs**: Includes unique request IDs for tracing
+- **Error Logs**: Full stack traces with request context
+- **Audit Logs**: `audit_logs` table in database
+
+## Health Checks
+
+```bash
+# Check web UI
+curl http://localhost:5000/
+
+# Check API docs
+curl http://localhost:5000/api-docs/
 
 # Check database connection
-curl http://localhost:5000/api/health/db
-
-# Check authentication
-curl http://localhost:5000/api/auth/me -b cookies.txt
+tsx -e "import { db } from './server/db'; db.execute('SELECT 1').then(() => console.log('✅ DB OK')).catch(console.error)"
 ```
 
-## Architecture Overview
+## Performance Monitoring
 
-### Technology Stack
-- **Frontend:** React 18 with TypeScript, Vite, Tailwind CSS
-- **Backend:** Node.js with Express, TypeScript
-- **Database:** PostgreSQL with Drizzle ORM
-- **Authentication:** Passport.js with express-session
-- **Real-time:** WebSockets (Socket.io)
-- **API Docs:** Swagger/OpenAPI 3.0
+- Request duration logged for each API call
+- Slow query logging enabled (>100ms)
+- Analytics events tracked in `analytics_events` table
+- Dashboard provides real-time metrics
 
-### Security Features
-- Session-based authentication
-- RBAC with granular permissions
-- Rate limiting on API endpoints
-- Helmet.js for security headers
-- CORS configuration
-- Request ID tracking
-- Audit logging
+## Security Notes
 
-### Performance Optimizations
-- Database connection pooling
-- API response caching
-- Lazy loading on frontend
-- Code splitting with Vite
-- Optimized production builds
+1. **Never commit .env files** - Use Replit Secrets for production
+2. **Rotate SESSION_SECRET** regularly in production
+3. **Use strong passwords** - Minimum 8 chars, mixed case
+4. **Enable 2FA** for admin accounts when available
+5. **Review audit logs** regularly for suspicious activity
 
-## Production Deployment
+## Emergency Procedures
 
-### Environment Variables
+### Complete System Reset
 ```bash
-NODE_ENV=production
-DATABASE_URL=postgresql://...
-SESSION_SECRET=<strong-random-string>
-JWT_SECRET=<strong-random-string>
-CORS_ORIGIN=https://yourdomain.com
+# WARNING: This will delete all data!
+tsx scripts/db-reset.ts
+# Follow prompts to confirm
 ```
 
-### Build & Deploy
+### Restore from Backup
 ```bash
-# Build the application
-npm run build
-
-# Start production server
-NODE_ENV=production npm start
+# Restore full database
+psql $DATABASE_URL < nexspace_backup_YYYYMMDD_HHMMSS.sql
 ```
 
-### Monitoring
-- Request/Response logging with Pino
-- Error tracking with structured logs
-- Performance metrics in dashboard
-- Database query monitoring
+### Clear Sessions
+```sql
+-- Run in database console
+TRUNCATE TABLE session;
+TRUNCATE TABLE user_sessions;
+```
 
-## Support & Maintenance
+## Support Resources
 
-### Regular Tasks
-- Monitor error logs daily
-- Review audit logs weekly
-- Update dependencies monthly
-- Backup database regularly
-- Review security patches
+- **Documentation**: See README.md
+- **API Reference**: http://localhost:5000/api-docs
+- **Database Schema**: shared/schema.ts
+- **Migration History**: migrations/
 
-### Emergency Procedures
-1. **Database Recovery:**
-   - Restore from latest backup
-   - Run migrations if needed
-   - Verify data integrity
+## Platform Status Checklist
 
-2. **Security Breach:**
-   - Rotate all secrets immediately
-   - Review audit logs
-   - Reset all user passwords
-   - Notify affected users
-
-### Contact
-- Technical Support: support@nexspace.com
-- Documentation: http://localhost:5000/api-docs
-- Admin Dashboard: http://localhost:5000
+✅ Node.js v20.19.3+  
+✅ PostgreSQL connected  
+✅ Environment variables configured  
+✅ Dependencies installed  
+✅ Migrations run  
+✅ Admin user created  
+✅ Permissions configured  
+✅ Server running on port 5000  
 
 ---
 
-## Change Log
-
-### August 2025 - Comprehensive Audit
-- ✅ Fixed EnhancedStaffPage errors (removed invalid fallback prop)
-- ✅ Added OpenAPI/Swagger documentation
-- ✅ Implemented structured logging with Pino
-- ✅ Added rate limiting and security headers
-- ✅ Created database seed script with admin user
-- ✅ Added centralized error handling
-- ✅ Documented all API endpoints
-- ✅ Created comprehensive runbook
-
-### Known Issues
-- Some LSP diagnostics in storage.ts (non-breaking)
-- Modular routing conflicts with Vite middleware (workaround in place)
-
----
-
-*Last Updated: August 2025*
+**Last Updated**: August 12, 2025  
+**Version**: 1.0.0  
+**Maintained By**: NexSpace Development Team
