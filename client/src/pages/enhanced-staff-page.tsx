@@ -73,57 +73,78 @@ interface StaffMember {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
+  phone?: string;
   profileImage?: string;
-  specialty: string;
-  certifications: string[];
-  yearsExperience: number;
-  hourlyRate: number;
-  location: string;
-  workerType: "internal_employee" | "contractor_1099" | "agency_staff" | "float_pool";
-  employmentType: "full_time" | "part_time" | "contract";
+  specialty?: string;
+  certifications?: string[];
+  yearsExperience?: number;
+  hourlyRate?: number;
+  location?: string;
+  workerType?: "internal_employee" | "contractor_1099" | "agency_staff" | "float_pool";
+  employmentType?: "full_time" | "part_time" | "contract";
   role?: string;
-  status: "active" | "inactive" | "pending" | "suspended";
-  rating: number;
-  reliabilityScore: number;
-  totalShifts: number;
+  status?: "active" | "inactive" | "pending" | "suspended";
+  rating?: number;
+  reliabilityScore?: number;
+  totalShifts?: number;
   bio?: string;
   linkedinUrl?: string;
   portfolioUrl?: string;
-  skills: string[];
-  availability: string[];
-  emergencyContact: {
-    name: string;
-    phone: string;
-    relationship: string;
+  skills?: string[];
+  availability?: string[];
+  emergencyContact?: {
+    name?: string;
+    phone?: string;
+    relationship?: string;
   };
-  workHistory: Array<{
-    facility: string;
-    position: string;
-    startDate: string;
+  workHistory?: Array<{
+    facility?: string;
+    position?: string;
+    startDate?: string;
     endDate?: string;
-    description: string;
+    description?: string;
   }>;
-  education: Array<{
-    institution: string;
-    degree: string;
-    graduationYear: number;
+  education?: Array<{
+    institution?: string;
+    degree?: string;
+    graduationYear?: number;
     gpa?: number;
   }>;
-  documents: Array<{
-    type: string;
-    name: string;
-    uploadDate: string;
+  documents?: Array<{
+    type?: string;
+    name?: string;
+    uploadDate?: string;
     expirationDate?: string;
-    verified: boolean;
+    verified?: boolean;
   }>;
-  socialStats: {
-    profileViews: number;
-    shiftsCompleted: number;
-    ratings: number;
-    endorsements: number;
+  socialStats?: {
+    profileViews?: number;
+    shiftsCompleted?: number;
+    ratings?: number;
+    endorsements?: number;
   };
 }
+
+// Type guard to ensure staff member is properly formed
+const isValidStaffMember = (staff: any): staff is StaffMember => {
+  return (
+    staff &&
+    typeof staff === 'object' &&
+    typeof staff.id === 'number' &&
+    typeof staff.firstName === 'string' &&
+    typeof staff.lastName === 'string' &&
+    typeof staff.email === 'string'
+  );
+};
+
+// Safe accessor for staff properties with defaults
+const getStaffProperty = <T,>(staff: StaffMember | null | undefined, property: keyof StaffMember, defaultValue: T): T => {
+  if (!staff || !isValidStaffMember(staff)) {
+    return defaultValue;
+  }
+  const value = staff[property];
+  return value !== null && value !== undefined ? value as T : defaultValue;
+};
 
 interface StaffPost {
   id: number;
@@ -237,18 +258,20 @@ function EnhancedStaffPageContent() {
     data: staffMembers = [],
     isLoading,
     error,
+    isError
   } = useQuery<StaffMember[]>({
     queryKey: ["/api/staff"],
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
     select: (data) => {
-      // Ensure data is always an array
+      // Ensure data is always an array and validate each staff member
       if (Array.isArray(data)) {
-        return data;
+        return data.filter(isValidStaffMember);
       }
-
       return [];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   });
 
   // Handle profile URL parameter with error handling
@@ -324,13 +347,12 @@ function EnhancedStaffPageContent() {
 
   // Filter staff members with comprehensive null safety and exclude superusers
   const filteredStaff = React.useMemo(() => {
-    if (!Array.isArray(staffMembers)) {
-
+    if (!Array.isArray(staffMembers) || staffMembers.length === 0) {
       return [];
     }
 
     return staffMembers.filter((staff) => {
-      if (!staff) return false;
+      if (!isValidStaffMember(staff)) return false;
 
       try {
         // Exclude superusers by email (server already filters most, but double-check)
@@ -338,25 +360,34 @@ function EnhancedStaffPageContent() {
         if (superuserEmails.includes(staff.email)) return false;
 
         // Exclude by role if present
-        if (staff?.role === "super_admin" || staff?.role === "facility_manager") return false;
+        const staffRole = getStaffProperty(staff, 'role', '');
+        if (staffRole === "super_admin" || staffRole === "facility_manager") return false;
+
+        const firstName = getStaffProperty(staff, 'firstName', '');
+        const lastName = getStaffProperty(staff, 'lastName', '');
+        const email = getStaffProperty(staff, 'email', '');
+        const specialty = getStaffProperty(staff, 'specialty', '');
+        const employmentType = getStaffProperty(staff, 'employmentType', '');
+        const status = getStaffProperty(staff, 'status', '');
+
+        const fullName = `${firstName} ${lastName}`.toLowerCase();
+        const searchTermLower = searchTerm.toLowerCase();
 
         const matchesSearch =
           searchTerm === "" ||
-          `${staff.firstName || ""} ${staff.lastName || ""}`
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          (staff.email || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (staff.specialty || "").toLowerCase().includes(searchTerm.toLowerCase());
+          fullName.includes(searchTermLower) ||
+          email.toLowerCase().includes(searchTermLower) ||
+          specialty.toLowerCase().includes(searchTermLower);
 
         const matchesWorkerType =
-          selectedWorkerType === "all" || staff.employmentType === selectedWorkerType;
+          selectedWorkerType === "all" || employmentType === selectedWorkerType;
         const matchesSpecialty =
-          selectedSpecialty === "all" || staff.specialty === selectedSpecialty;
-        const matchesStatus = selectedStatus === "all" || staff.status === selectedStatus;
+          selectedSpecialty === "all" || specialty === selectedSpecialty;
+        const matchesStatus = selectedStatus === "all" || status === selectedStatus;
 
         return matchesSearch && matchesWorkerType && matchesSpecialty && matchesStatus;
       } catch (error) {
-
+        console.error('Error filtering staff member:', error, staff);
         return false;
       }
     });
@@ -369,9 +400,19 @@ function EnhancedStaffPageContent() {
   const paginatedStaff = filteredStaff.slice(startIndex, endIndex);
 
   // Get unique values for filters with null safety
-  const specialties = Array.from(
-    new Set((staffMembers || []).map((s) => s?.specialty).filter(Boolean))
-  );
+  const specialties = React.useMemo(() => {
+    if (!Array.isArray(staffMembers) || staffMembers.length === 0) {
+      return [];
+    }
+    return Array.from(
+      new Set(
+        staffMembers
+          .filter(isValidStaffMember)
+          .map((s) => getStaffProperty(s, 'specialty', ''))
+          .filter(Boolean)
+      )
+    );
+  }, [staffMembers]);
 
   const createStaffMutation = useMutation({
     mutationFn: async (staffData: any) => {
@@ -565,20 +606,83 @@ function EnhancedStaffPageContent() {
     updateStaffMutation.mutate({ id: selectedStaff.id, data: updateData });
   };
 
+  // Loading state with skeleton
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="w-full space-y-4 md:space-y-6">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div>
+        </div>
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <div className="h-8 w-48 bg-gray-200 animate-pulse rounded mb-2"></div>
+            <div className="h-4 w-64 bg-gray-200 animate-pulse rounded"></div>
+          </div>
+          <div className="h-10 w-32 bg-gray-200 animate-pulse rounded"></div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="h-64 bg-gray-200 animate-pulse rounded"></div>
+          ))}
+        </div>
       </div>
     );
   }
 
-  if (error) {
+  // Error state with retry button
+  if (isError || error) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <p className="text-red-500 mb-2">Failed to load staff data</p>
-          <p className="text-sm text-muted-foreground">Please try refreshing the page</p>
+        <div className="text-center space-y-4">
+          <AlertCircle className="h-12 w-12 text-red-500 mx-auto" />
+          <div>
+            <p className="text-red-500 mb-2 font-medium">Failed to load staff data</p>
+            <p className="text-sm text-muted-foreground mb-4">
+              {error?.message || "An error occurred while fetching staff information"}
+            </p>
+            <Button 
+              onClick={() => queryClient.invalidateQueries({ queryKey: ["/api/staff"] })}
+              variant="outline"
+              className="gap-2"
+            >
+              <Loader2 className="h-4 w-4" />
+              Retry
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state when no staff members
+  if (!isLoading && staffMembers.length === 0) {
+    return (
+      <div className="w-full space-y-4 md:space-y-6">
+        <div className="flex items-center gap-4 mb-4">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="gap-2">
+              <Home className="h-4 w-4" />
+              <span className="hidden md:inline">Dashboard</span>
+            </Button>
+          </Link>
+        </div>
+        <div className="flex flex-col items-center justify-center h-64 space-y-4">
+          <Users className="h-12 w-12 text-muted-foreground" />
+          <div className="text-center">
+            <h3 className="text-lg font-medium">No Staff Members</h3>
+            <p className="text-muted-foreground mb-4">Get started by adding your first staff member</p>
+            <Dialog open={showAddStaffDialog} onOpenChange={setShowAddStaffDialog}>
+              <DialogTrigger asChild>
+                <PermissionAction permission="staff.create">
+                  <Button className="gap-2">
+                    <UserPlus className="h-4 w-4" />
+                    Add Staff Member
+                  </Button>
+                </PermissionAction>
+              </DialogTrigger>
+              {/* Add Staff Dialog Content will be rendered below */}
+            </Dialog>
+          </div>
         </div>
       </div>
     );
@@ -1083,32 +1187,39 @@ function EnhancedStaffPageContent() {
                   <CardTitle>Top Performers</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  {(filteredStaff || [])
-                    .filter((staff) => staff && typeof staff.rating === "number")
-                    .sort((a, b) => (b?.rating || 0) - (a?.rating || 0))
+                  {filteredStaff
+                    .filter((staff) => isValidStaffMember(staff) && typeof getStaffProperty(staff, 'rating', 0) === "number")
+                    .sort((a, b) => getStaffProperty(b, 'rating', 0) - getStaffProperty(a, 'rating', 0))
                     .slice(0, 5)
-                    .map((staff) => (
-                      <div key={staff?.id || Math.random()} className="flex items-center space-x-3">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={staff?.profileImage} />
-                          <AvatarFallback className="text-xs">
-                            {staff?.firstName?.[0] || ""}
-                            {staff?.lastName?.[0] || ""}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">
-                            {staff?.firstName || ""} {staff?.lastName || ""}
-                          </p>
-                          <div className="flex items-center">
-                            <Star className="h-3 w-3 text-yellow-500 mr-1" />
-                            <span className="text-xs text-muted-foreground">
-                              {staff?.rating || 0}/5
-                            </span>
+                    .map((staff) => {
+                      const firstName = getStaffProperty(staff, 'firstName', '');
+                      const lastName = getStaffProperty(staff, 'lastName', '');
+                      const profileImage = getStaffProperty(staff, 'profileImage', '');
+                      const rating = getStaffProperty(staff, 'rating', 0);
+                      
+                      return (
+                        <div key={staff.id} className="flex items-center space-x-3">
+                          <Avatar className="h-8 w-8">
+                            <AvatarImage src={profileImage} />
+                            <AvatarFallback className="text-xs">
+                              {firstName[0] || ""}
+                              {lastName[0] || ""}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">
+                              {firstName} {lastName}
+                            </p>
+                            <div className="flex items-center">
+                              <Star className="h-3 w-3 text-yellow-500 mr-1" />
+                              <span className="text-xs text-muted-foreground">
+                                {rating}/5
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                 </CardContent>
               </Card>
 
@@ -1561,7 +1672,7 @@ function EnhancedStaffPageContent() {
                   <Card>
                     <CardContent className="p-4 text-center">
                       <div className="text-2xl font-bold">
-                        {selectedStaff.socialStats?.profileViews || 0}
+                        {getStaffProperty(selectedStaff, 'socialStats', {})?.profileViews || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Profile Views</div>
                     </CardContent>
@@ -1569,7 +1680,7 @@ function EnhancedStaffPageContent() {
                   <Card>
                     <CardContent className="p-4 text-center">
                       <div className="text-2xl font-bold">
-                        {selectedStaff.socialStats?.shiftsCompleted || 0}
+                        {getStaffProperty(selectedStaff, 'socialStats', {})?.shiftsCompleted || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Shifts Completed</div>
                     </CardContent>
@@ -1577,7 +1688,7 @@ function EnhancedStaffPageContent() {
                   <Card>
                     <CardContent className="p-4 text-center">
                       <div className="text-2xl font-bold">
-                        {selectedStaff.socialStats?.ratings || 0}
+                        {getStaffProperty(selectedStaff, 'socialStats', {})?.ratings || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Reviews</div>
                     </CardContent>
@@ -1585,7 +1696,7 @@ function EnhancedStaffPageContent() {
                   <Card>
                     <CardContent className="p-4 text-center">
                       <div className="text-2xl font-bold">
-                        {selectedStaff.socialStats?.endorsements || 0}
+                        {getStaffProperty(selectedStaff, 'socialStats', {})?.endorsements || 0}
                       </div>
                       <div className="text-sm text-muted-foreground">Endorsements</div>
                     </CardContent>
