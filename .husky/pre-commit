@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run linting and type checking before commit
+echo "🔍 Running pre-commit checks..."
+
+echo "⚡ Running ESLint..."
+npx eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=0
+
+if [ $? -ne 0 ]; then
+  echo "❌ ESLint failed. Please fix the errors and try again."
+  exit 1
+fi
+
+echo "🔍 Running TypeScript type check..."
+npx tsc --noEmit
+
+if [ $? -ne 0 ]; then
+  echo "❌ TypeScript check failed. Please fix the type errors and try again."
+  exit 1
+fi
+
+echo "✅ Pre-commit checks passed!"

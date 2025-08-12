@@ -1,0 +1,15 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run tests before push
+echo "🧪 Running pre-push tests..."
+
+echo "⚡ Running test suite..."
+npx vitest run
+
+if [ $? -ne 0 ]; then
+  echo "❌ Tests failed. Please fix the failing tests and try again."
+  exit 1
+fi
+
+echo "✅ All tests passed! Ready to push."

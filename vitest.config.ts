@@ -1,22 +1,33 @@
-import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
-import path from 'path';
+/// <reference types="vitest" />
+import { defineConfig } from 'vitest/config'
+import { resolve } from 'path'
 
 export default defineConfig({
-  plugins: [react()],
   test: {
     globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./test-setup.ts'],
+    setupFiles: ['./tests/setup.ts'],
+    include: ['tests/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
+    exclude: ['node_modules', 'dist', 'build', 'tests/impersonation.spec.ts'],
+    testTimeout: 10000,
+    coverage: {
+      reporter: ['text', 'json', 'html'],
+      exclude: [
+        'node_modules/',
+        'tests/',
+        '**/*.d.ts',
+        '**/*.config.{js,ts}',
+        '**/coverage/**',
+      ],
+    },
   },
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@/components': path.resolve(__dirname, './src/components'),
-      '@/hooks': path.resolve(__dirname, './src/hooks'),
-      '@/contexts': path.resolve(__dirname, './src/contexts'),
-      '@/lib': path.resolve(__dirname, './src/lib'),
-      '@shared': path.resolve(__dirname, './shared'),
+      '@': resolve(__dirname, './client/src'),
+      '@server': resolve(__dirname, './server'),
+      '@shared': resolve(__dirname, './shared'),
     },
   },
-});
+  define: {
+    global: 'globalThis',
+  },
+})
