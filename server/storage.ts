@@ -253,6 +253,7 @@ export interface IStorage {
   // Shift methods
   getShift(id: number): Promise<Shift | undefined>;
   createShift(shift: InsertShift): Promise<Shift>;
+  updateShift(id: number, updates: Partial<InsertShift>): Promise<Shift | undefined>;
   getShiftsByDateRange(facilityId: number, startDate: Date, endDate: Date): Promise<Shift[]>;
   getTodaysShifts(facilityId: number): Promise<Shift[]>;
   getOpenShifts(facilityId?: number): Promise<Shift[]>;
@@ -1437,6 +1438,18 @@ export class DatabaseStorage implements IStorage {
   async createShift(insertShift: InsertShift): Promise<Shift> {
     const [shift] = await db.insert(shifts).values(insertShift).returning();
     return shift;
+  }
+
+  async updateShift(id: number, updates: Partial<InsertShift>): Promise<Shift | undefined> {
+    const [shift] = await db
+      .update(shifts)
+      .set({
+        ...updates,
+        updatedAt: new Date(),
+      })
+      .where(eq(shifts.id, id))
+      .returning();
+    return shift || undefined;
   }
 
   async getShiftsByDateRange(facilityId: number, startDate: Date, endDate: Date): Promise<Shift[]> {

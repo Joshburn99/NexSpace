@@ -131,26 +131,50 @@ export default function EnhancedCalendarPage() {
     requirements: [] as string[],
   });
 
-  // Fetch shifts
+  // Get calendar date range
+  const [calendarStart, calendarEnd] = useMemo(() => {
+    const now = new Date();
+    const start = startOfWeek(subDays(now, 7));
+    const end = endOfWeek(addDays(now, 30));
+    return [
+      start.toISOString(),
+      end.toISOString()
+    ];
+  }, []);
+
+  // Fetch shifts from calendar API
   const {
-    data: shifts = [],
+    data: calendarEvents = [],
     isLoading: shiftsLoading,
     error: shiftsError,
     refetch: refetchShifts,
   } = useQuery({
-    queryKey: ["/api/shifts", { facilities: selectedFacilities, search: searchQuery }],
+    queryKey: ["/api/calendar/shifts", { 
+      start: calendarStart, 
+      end: calendarEnd,
+      facilities: selectedFacilities, 
+      search: searchQuery 
+    }],
     queryFn: async () => {
       const params = new URLSearchParams();
+      params.append("start", calendarStart);
+      params.append("end", calendarEnd);
       if (selectedFacilities.length > 0) {
-        params.append("facilities", selectedFacilities.join(","));
+        selectedFacilities.forEach(f => params.append("facilityId", f.toString()));
       }
       if (searchQuery) {
         params.append("search", searchQuery);
       }
       
-      const response = await apiRequest("GET", `/api/shifts?${params.toString()}`);
+      const response = await fetch(`/api/calendar/shifts?${params.toString()}`, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      
       if (!response.ok) {
-        throw new Error("Failed to fetch shifts");
+        throw new Error("Failed to fetch calendar events");
       }
       return response.json();
     },
@@ -207,20 +231,20 @@ export default function EnhancedCalendarPage() {
     },
   });
 
-  // Transform shifts for FullCalendar
-  const calendarEvents = useMemo(() => {
-    return shifts.map((shift: Shift) => ({
-      id: shift.id.toString(),
-      title: `${shift.title} (${shift.assignedWorkerIds.length}/${shift.requiredWorkers})`,
-      start: shift.start,
-      end: shift.end,
-      backgroundColor: getShiftColor(shift),
-      borderColor: getShiftColor(shift),
+  // Transform calendar events for FullCalendar
+  const fullCalendarEvents = useMemo(() => {
+    return calendarEvents.map((event: any) => ({
+      id: event.id.toString(),
+      title: `${event.role} (${event.assignedWorkerIds?.length || 0}/${event.requiredWorkers || 1})`,
+      start: event.startUtc,
+      end: event.endUtc,
+      backgroundColor: event.color || '#3B82F6',
+      borderColor: event.color || '#3B82F6',
       extendedProps: {
-        shift,
+        shift: event,
       },
     }));
-  }, [shifts]);
+  }, [calendarEvents]);
 
   // Handle event click
   const handleEventClick = (clickInfo: any) => {
@@ -366,7 +390,7 @@ export default function EnhancedCalendarPage() {
                 center: "title",
                 right: "dayGridMonth,timeGridWeek,timeGridDay",
               }}
-              events={calendarEvents}
+              events={fullCalendarEvents}
               eventClick={handleEventClick}
               editable={canCreateShifts}
               selectable={canCreateShifts}

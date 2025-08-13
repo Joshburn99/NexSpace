@@ -16,6 +16,7 @@ import dashboardPreferencesRoutes from "../dashboard-preferences-routes";
 import calendarSyncRoutes from "../calendar-sync-routes";
 import { createCredentialsRoutes } from "./credentials.routes";
 import { createShiftRequestRoutes } from "./shift-requests.routes";
+import calendarRoutes from "./calendar.routes";
 import { storage } from "../storage";
 
 // Track authenticated WebSocket connections
@@ -39,6 +40,9 @@ export function registerRoutes(app: Express): Server {
   
   // Calendar sync routes
   app.use("/api/calendar-sync", calendarSyncRoutes);
+  
+  // Calendar API routes
+  app.use(calendarRoutes);
   
   // MVP routes for credentials and shift requests
   app.use("/api/credentials", createCredentialsRoutes(storage));
