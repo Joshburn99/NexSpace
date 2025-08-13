@@ -1,0 +1,78 @@
+You are the Replit AI Agent. The Calendar loads but shows no events. The Shift Templates page errors. Fix both end-to-end without changing auth type (Passport sessions) or breaking SPA. ORM = current Drizzle + SQL/TS scripts.
+
+A) Diagnose (print findings first)
+	1.	Paste the exact server route the Calendar uses (URL + controller). If the FE calls /api/calendar/shifts?start=…&end=…, show that handler; if it calls something else, normalize on one canonical route.
+	2.	Run a DB count for the requested range we observed (start≈2025-08-03, end≈2025-09-14):
+	•	total shifts in range, by status; earliest & latest start_at; sample 3 rows (id, facility_id, start_at UTC).
+	3.	If counts > 0 but the calendar endpoint returns [], print the reason (wrong filter, status mismatch, facility filter, or timezone math).
+
+B) Canonical Calendar API (fast + normalized)
+
+Create/verify GET /api/calendar/shifts with query: start(ISO), end(ISO), facilityId?, role?, status?.
+Return events normalized to:
+{ id, facilityId, facilityName, role, status: ‘open’|‘pending’|‘filled’|‘cancelled’,
+startUtc, endUtc, timezone, assignedStaffId?, assignedStaffName? }
+
+Rules:
+	•	Store and query in UTC. Include timezone for display.
+	•	Add/confirm indexes: shifts(start_at), shifts(status), shifts(facility_id).
+	•	Never return HTML here; JSON only.
+	•	Map existing shift data into this format; do not rename DB columns.
+
+C) Shift Templates page & API (repair)
+	1.	Add/verify routes:
+	•	GET /api/shift-templates → list templates (id, facility_id, role_required, start_time, end_time, timezone, rrule, starts_on, ends_on, is_active).
+	•	POST /api/shift-templates / PATCH /api/shift-templates/:id / DELETE (guarded).
+	2.	Create scripts/apply-shift-templates.ts (or use the existing file if already created) that materializes active templates into shifts for the next N=21 days:
+	•	Idempotent: use a deterministic key (template_id + start_at) so re-runs don’t duplicate.
+	•	Don’t overwrite manually-created shifts.
+	•	Log: {created, skipped, range} and return counts.
+	•	Add npm script shifts:apply to run it.
+	3.	On the Templates page, add an “Apply Templates” admin/manager button that calls the endpoint/script and then refreshes the calendar.
+
+D) Frontend Calendar loader (resilient)
+	1.	On view change (week/month), compute start/end and call /api/calendar/shifts with credentials:'include'.
+	2.	Map results to the calendar lib event shape; use status colors:
+	•	open=neutral, pending=warning, filled=success, cancelled=danger
+	3.	Add guardrails: loading skeleton, empty state, error state with Retry. No events.map on undefined.
+	4.	Filters in header: facility (dropdown), role (chips), status (multi), date range presets. Append those to the query.
+
+E) Request → Approve → Assign stays consistent
+
+If not already present, add/verify:
+	•	POST /api/shifts/:id/request (staff) → sets status=‘pending’ if unassigned.
+	•	POST /api/shifts/:id/assign { staffId } (manager/admin) → sets status=‘filled’.
+	•	POST /api/shifts/:id/unassign → back to ‘open’ (if no other pending).
+	•	POST /api/shifts/:id/cancel → status ‘cancelled’.
+Ensure Calendar reflects these immediately (optimistic UI + re-fetch in background).
+
+F) Realtime
+
+Emit WebSocket events on server:
+shift.created, shift.updated, shift.assigned, shift.unassigned, shift.cancelled, shift.requested, shift.approved, shift.rejected.
+Calendar subscribes and patches events in place.
+
+G) Timezone safety
+	•	Persist UTC; include timezone on events (facility default OK).
+	•	Use one date util (dayjs/date-fns) consistently for conversion to local display.
+	•	Add a test that verifies a shift near midnight displays in the correct local day.
+
+H) Smoke tests (paste outputs)
+	1.	Show: DB counts in the observed range (start/end).
+	2.	curl -i unauth vs auth:
+	•	GET /api/calendar/shifts?start=…&end=… → 401 unauth; 200 JSON with cookies (length > 0).
+	3.	Run npm run shifts:apply (or the endpoint) → paste {created, skipped, range}.
+	4.	Hit the Calendar again → show a sample of the returned events (first 3).
+
+I) Docs & output
+	•	README → Calendar & Templates: endpoints, event shape, status colors, how to run shifts:apply, and the nightly job snippet (commented Workflow).
+	•	Paste file diffs and a concise changelog (file → why).
+	•	One short paragraph: Root cause of “Calendar shows no shifts” and the exact fix.
+
+Acceptance
+	•	Calendar renders events for the selected date range (not empty when DB has shifts).
+	•	Shift Templates page loads; “Apply Templates” populates the next 21 days idempotently.
+	•	Realtime updates visible on assign/unassign/cancel.
+	•	No console errors; typecheck/lint pass.
+
+If anything fails, fix and re-run before responding.
