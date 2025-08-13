@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { SessionProvider } from "@/contexts/SessionContext";
 import { ThemeProvider } from "@/providers/ThemeProvider";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import FloatingActionButton from "@/components/FloatingActionButton";
 import { AppShell } from "@/components/layout/AppShell";
 import { ProtectedRoute, AdminRoute, FacilityRoute } from "./lib/rbac-route-guard";
 import { FacilityPermissionsProvider } from "@/hooks/use-facility-permissions";
@@ -360,6 +361,7 @@ function AppContent() {
     <Layout>
       {router}
       <QuickActionMenu />
+      <FloatingActionButton />
     </Layout>
   );
 }

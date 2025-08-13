@@ -24,10 +24,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import CalendarSyncSettings from "@/components/CalendarSyncSettings";
+import { useTheme } from "@/providers/ThemeProvider";
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const [location, setLocation] = useLocation();
   const [sidebarExpanded, setSidebarExpanded] = useState(true);
   const [selectedRole, setSelectedRole] = useState(user?.role || "");
@@ -40,13 +42,21 @@ export default function SettingsPage() {
     systemUpdates: false,
   });
   const [preferences, setPreferences] = useState({
-    darkMode: false,
-    language: "en",
-    timezone: "America/New_York",
-    defaultCalendarView: "next7days",
-    autoRefresh: true,
-    soundAlerts: true,
+    darkMode: theme === 'dark',
+    language: localStorage.getItem('language') || "en",
+    timezone: localStorage.getItem('timezone') || "America/New_York",
+    defaultCalendarView: localStorage.getItem('defaultCalendarView') || "next7days",
+    autoRefresh: localStorage.getItem('autoRefresh') !== 'false',
+    soundAlerts: localStorage.getItem('soundAlerts') !== 'false',
   });
+
+  // Sync preferences with theme changes
+  useEffect(() => {
+    setPreferences(prev => ({
+      ...prev,
+      darkMode: theme === 'dark'
+    }));
+  }, [theme]);
 
   // Check for Google Calendar callback
   useEffect(() => {
@@ -129,6 +139,13 @@ export default function SettingsPage() {
   };
 
   const handleSaveSettings = () => {
+    // Save all preferences to localStorage
+    localStorage.setItem('language', preferences.language);
+    localStorage.setItem('timezone', preferences.timezone);
+    localStorage.setItem('defaultCalendarView', preferences.defaultCalendarView);
+    localStorage.setItem('autoRefresh', preferences.autoRefresh.toString());
+    localStorage.setItem('soundAlerts', preferences.soundAlerts.toString());
+    
     toast({
       title: "Settings Saved",
       description: "Your preferences have been updated successfully.",
@@ -333,10 +350,11 @@ export default function SettingsPage() {
                 </div>
                 <Switch
                   id="darkMode"
-                  checked={preferences.darkMode}
-                  onCheckedChange={(checked) =>
-                    setPreferences((prev) => ({ ...prev, darkMode: checked }))
-                  }
+                  checked={theme === 'dark'}
+                  onCheckedChange={(checked) => {
+                    setTheme(checked ? 'dark' : 'light');
+                    setPreferences((prev) => ({ ...prev, darkMode: checked }));
+                  }}
                 />
               </div>
 

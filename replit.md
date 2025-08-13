@@ -42,6 +42,10 @@ NexSpace is an advanced healthcare workforce management platform designed to opt
 - **Job Management**: Functionality for job postings, interview scheduling, and application tracking with dedicated database tables.
 - **Security**: Strict access controls on administrative pages, systematic API security hardening, and advanced frontend route protection based on RBAC.
 
+### Recent Changes (August 13, 2025 - Part 2)
+- **Floating Action Button (FAB) Implementation**: Added animated FAB component for quick team operations with permission-based action filtering, smooth animations using framer-motion, context-aware actions (create shift, add staff, send message, view schedule, time clock, notifications), auto-hide on scroll behavior, and responsive backdrop blur effect
+- **Dark Mode Toggle Fix**: Connected Application Preferences dark mode toggle to ThemeProvider, enabling functional theme switching that persists across sessions via localStorage
+
 ### Recent Changes (August 13, 2025)
 - **Comprehensive Design System Implementation**: Built complete Tailwind-based design system with semantic color tokens (primary, secondary, success, warning, danger, muted), responsive typography scale, and consistent spacing system
 - **UI Component Library**: Created reusable components including Button (with loading states), Badge, Input, Select, Card, Table, Tooltip, Skeleton, and EmptyState components with full accessibility support
