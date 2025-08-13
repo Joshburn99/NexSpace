@@ -1,5 +1,11 @@
 # NexSpace - Healthcare Workforce Management Platform
 
+NexSpace is a modern healthcare workforce management platform designed to optimize staffing, enhance employee wellness, and improve operational efficiency in healthcare facilities.
+
+## API Documentation
+
+The OpenAPI documentation is available at `/api-docs` when the server is running.
+
 ## Quick Start Run Book
 
 ### System Requirements

@@ -35,10 +35,16 @@ async function comparePasswords(supplied: string, stored: string) {
 
 export function setupAuth(app: Express, handleImpersonation?: any) {
   const sessionSettings: session.SessionOptions = {
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET || 'nexspace-dev-secret-change-in-production',
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production', // HTTPS in production
+      httpOnly: true,
+      sameSite: 'lax', // Same-origin protection
+      maxAge: 1000 * 60 * 60 * 24 * 7 // 7 days
+    }
   };
 
   app.set("trust proxy", 1);

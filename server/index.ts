@@ -10,6 +10,7 @@ import { generateComprehensiveSampleData } from "./sample-data-generator";
 import { setupFacilityUserRoleTemplates } from "./facility-user-roles-setup";
 import { initializeTimeOffData } from "./init-timeoff-data";
 import { config, validateConfig } from "./config";
+import { validateEnv, logEnvInventory } from "./config/env";
 import swaggerUi from "swagger-ui-express";
 import { loadOpenAPISpec, swaggerOptions } from "./swagger-config";
 import { 
@@ -31,8 +32,13 @@ import os from "os";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import cors from "cors";
+import { sessionSweeper } from "./services/session-sweeper";
 
 (async () => {
+  // Validate environment variables
+  validateEnv();
+  logEnvInventory();
+  
   // Validate configuration on startup
   validateConfig();
   
@@ -40,24 +46,43 @@ import cors from "cors";
   /*  1.  APP & MIDDLEWARE                                                 */
   /* ---------------------------------------------------------------------- */
   const app = express();
+  app.set('trust proxy', 1); // Trust first proxy (Replit's proxy)
   
   // Security middleware
   app.use(helmet({
     contentSecurityPolicy: false, // Disable for development
   }));
-  // Configure CORS for development
+  // Configure CORS for Replit environment
+  const replitUrl = process.env.REPL_SLUG && process.env.REPL_OWNER 
+    ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
+    : 'http://localhost:5000';
+  
   app.use(cors({
-    origin: [
-      'http://localhost:5000',
-      'http://localhost:3000',
-      'https://*.replit.app',
-      'https://*.replit.dev',
-      ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : [])
-    ],
+    origin: function(origin, callback) {
+      const allowedOrigins = [
+        replitUrl,
+        'http://localhost:5000',
+        'http://localhost:3000',
+        ...(process.env.CORS_ORIGIN ? [process.env.CORS_ORIGIN] : [])
+      ];
+      
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+      
+      // Check exact match or Replit pattern
+      if (allowedOrigins.includes(origin) || 
+          origin.match(/^https:\/\/.*\.replit\.(app|dev)$/)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   }));
+  
+  console.log(`CORS configured for origin: ${replitUrl}`);
   
   // Rate limiting
   const limiter = rateLimit({
@@ -200,6 +225,9 @@ import cors from "cors";
       pid: process.pid,
       hostname: os.hostname(),
     }, `🚀 NexSpace server started successfully on port ${PORT}`);
+    
+    // Start session sweeper
+    sessionSweeper.start(60 * 60 * 1000); // Run every hour
     
     // Keep the original log for backward compatibility
     log(`🚀  Server listening on ${PORT}`);

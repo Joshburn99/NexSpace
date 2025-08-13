@@ -1,5 +1,7 @@
 # NexSpace Platform Run Book
 
+> **Note**: This is a simplified runbook. For complete documentation and setup instructions, please refer to [README.md](./README.md).
+
 ## System Information
 - **Platform**: NexSpace Healthcare Workforce Management
 - **Node Version**: v20.19.3+ 

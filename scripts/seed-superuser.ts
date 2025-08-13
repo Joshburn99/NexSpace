@@ -38,7 +38,9 @@ async function seedSuperuser() {
     }
 
     // Create new superuser with bcrypt-hashed password
-    const hashedPassword = await bcrypt.hash("admin123", 10);
+    // Use environment variable for admin password or a secure default
+const adminPassword = process.env.ADMIN_PASSWORD || "NexSpace2025!Secure";
+const hashedPassword = await bcrypt.hash(adminPassword, 10);
     
     const [newUser] = await db.insert(users).values({
       username: "joshburn",
