@@ -48,10 +48,36 @@ import { sessionSweeper } from "./services/session-sweeper";
   const app = express();
   app.set('trust proxy', 1); // Trust first proxy (Replit's proxy)
   
-  // Security middleware
-  app.use(helmet({
-    contentSecurityPolicy: false, // Disable for development
-  }));
+  // Security middleware - configure for development with Vite HMR
+  if (process.env.NODE_ENV === 'development') {
+    app.use(helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", "data:", "blob:", "https:"],
+          connectSrc: ["'self'", "ws:", "wss:", "http:", "https:"],
+          fontSrc: ["'self'", "data:"],
+        },
+      },
+      crossOriginEmbedderPolicy: false, // Disable COEP for development
+    }));
+  } else {
+    // Production helmet configuration - stricter
+    app.use(helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", "data:", "https:"],
+          connectSrc: ["'self'", "wss:", "https:"],
+          fontSrc: ["'self'"],
+        },
+      },
+    }));
+  }
   // Configure CORS for Replit environment
   const replitUrl = process.env.REPL_SLUG && process.env.REPL_OWNER 
     ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
@@ -181,7 +207,110 @@ import { sessionSweeper } from "./services/session-sweeper";
   }
 
   /* ---------------------------------------------------------------------- */
-  /*  4.  ROUTES & ASSETS                                                  */
+  /*  4.  DEBUG ROUTES                                                     */
+  /* ---------------------------------------------------------------------- */
+  // Add debug authentication test page route
+  app.get('/debug/auth', (req, res) => {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Authentication Debug</title>
+        <style>
+          body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+          .section { margin: 20px 0; padding: 20px; border: 1px solid #ccc; border-radius: 5px; }
+          button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+          pre { background: #f4f4f4; padding: 10px; overflow: auto; }
+          .success { color: green; }
+          .error { color: red; }
+        </style>
+      </head>
+      <body>
+        <h1>NexSpace Authentication Debug</h1>
+        
+        <div class="section">
+          <h2>Login Test</h2>
+          <div>
+            <input type="text" id="username" placeholder="Username" value="super_admin" />
+            <input type="password" id="password" placeholder="Password" value="admin123" />
+            <button onclick="testLogin()">Test Login</button>
+          </div>
+          <pre id="loginResult"></pre>
+        </div>
+        
+        <div class="section">
+          <h2>Check Auth Status</h2>
+          <button onclick="checkAuth()">Check /api/users/me</button>
+          <pre id="authResult"></pre>
+        </div>
+        
+        <div class="section">
+          <h2>Test Logout</h2>
+          <button onclick="testLogout()">Test Logout</button>
+          <pre id="logoutResult"></pre>
+        </div>
+
+        <script>
+          async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            try {
+              const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ username, password })
+              });
+              const data = await response.json();
+              document.getElementById('loginResult').innerHTML = 
+                '<span class="' + (response.ok ? 'success' : 'error') + '">Status: ' + response.status + '</span>\\n' + 
+                JSON.stringify(data, null, 2);
+            } catch (error) {
+              document.getElementById('loginResult').innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+            }
+          }
+          
+          async function checkAuth() {
+            try {
+              const response = await fetch('/api/users/me', {
+                credentials: 'include'
+              });
+              const data = await response.text();
+              try {
+                const json = JSON.parse(data);
+                document.getElementById('authResult').innerHTML = 
+                  '<span class="' + (response.ok ? 'success' : 'error') + '">Status: ' + response.status + '</span>\\n' + 
+                  JSON.stringify(json, null, 2);
+              } catch {
+                document.getElementById('authResult').innerHTML = 
+                  '<span class="' + (response.ok ? 'success' : 'error') + '">Status: ' + response.status + '</span>\\n' + data;
+              }
+            } catch (error) {
+              document.getElementById('authResult').innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+            }
+          }
+          
+          async function testLogout() {
+            try {
+              const response = await fetch('/api/logout', {
+                method: 'POST',
+                credentials: 'include'
+              });
+              document.getElementById('logoutResult').innerHTML = 
+                '<span class="' + (response.ok ? 'success' : 'error') + '">Status: ' + response.status + '</span>\\n' +
+                (response.ok ? 'Logged out successfully' : 'Logout failed');
+            } catch (error) {
+              document.getElementById('logoutResult').innerHTML = '<span class="error">Error: ' + error.message + '</span>';
+            }
+          }
+        </script>
+      </body>
+      </html>
+    `);
+  });
+
+  /* ---------------------------------------------------------------------- */
+  /*  5.  API ROUTES & ASSETS                                              */
   /* ---------------------------------------------------------------------- */
   let server: any;
   try {
@@ -198,14 +327,12 @@ import { sessionSweeper } from "./services/session-sweeper";
   app.use(errorLoggingMiddleware);
 
   if (app.get("env") === "development") {
-    // Vite dev server middleware
+    // Vite dev server middleware (handles SPA fallback)
     await setupVite(app, server);
   } else {
     // Static build in production
     serveStatic(app);
   }
-
-  // Health check routes are now registered via routes/index.ts
 
   // Error handlers (must be after all other middleware and routes)
   app.use(centralizedErrorHandler);

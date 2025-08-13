@@ -337,8 +337,8 @@ function AppContent() {
       {/* Design System Demo */}
       <ProtectedRoute path="/design-system" component={DesignSystemDemo} />
       
-      {/* Test Page - No Protection */}
-      <Route path="/test" component={TestPage} />
+      {/* Debug Routes - No Protection */}
+      <Route path="/debug/auth" component={TestPage} />
       
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />

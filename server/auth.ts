@@ -101,7 +101,7 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
   );
 
   passport.serializeUser((user, done) => done(null, user.id));
-  passport.deserializeUser(async (id: number, done) => {
+  passport.deserializeUser((id: number, done) => {
     // Handle temporary superuser
     if (id === 1) {
       const tempUser = {
@@ -123,33 +123,34 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
       return done(null, tempUser);
     }
 
-    try {
-      const user = await storage.getUser(id);
+    // Use promise to handle async operations properly
+    storage.getUser(id)
+      .then(async (user) => {
+        // If this is a facility user, fetch their permissions and facility associations
+        if (user && user.role !== "super_admin") {
+          try {
+            const roleTemplate = await storage.getFacilityUserRoleTemplate(user.role);
+            if (roleTemplate && roleTemplate.permissions) {
+              (user as any).permissions = roleTemplate.permissions;
+            }
 
-      // If this is a facility user, fetch their permissions and facility associations
-      if (user && user.role !== "super_admin") {
-        try {
-          const roleTemplate = await storage.getFacilityUserRoleTemplate(user.role);
-          if (roleTemplate && roleTemplate.permissions) {
-            (user as any).permissions = roleTemplate.permissions;
+            // Get facility associations for facility users
+            const facilityAssociations = await storage.getStaffFacilityAssociations(id);
+            if (facilityAssociations && facilityAssociations.length > 0) {
+              (user as any).associatedFacilityIds = facilityAssociations.map((a: any) => a.facilityId);
+              (user as any).associatedFacilities = facilityAssociations.map((a: any) => a.facilityId);
+            }
+          } catch (error) {
+            console.error('Error fetching facility user data:', error);
           }
-
-          // Get facility associations for facility users
-          const facilityAssociations = await storage.getStaffFacilityAssociations(id);
-          if (facilityAssociations && facilityAssociations.length > 0) {
-            (user as any).associatedFacilityIds = facilityAssociations.map((a: any) => a.facilityId);
-            (user as any).associatedFacilities = facilityAssociations.map((a: any) => a.facilityId);
-          }
-        } catch (error) {
-
         }
-      }
-
-      done(null, user);
-    } catch (error) {
-
-      done(null, null);
-    }
+        
+        done(null, user);
+      })
+      .catch((error) => {
+        console.error('Passport deserialization error:', error);
+        done(null, null);
+      });
   });
 
   app.post("/api/register", async (req, res, next) => {
