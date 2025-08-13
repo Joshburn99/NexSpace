@@ -18,6 +18,7 @@ import {
   invoices,
   workLogs,
   credentials,
+  shiftRequests,
   conversations,
   conversationParticipants,
   messages,
@@ -295,15 +296,23 @@ export interface IStorage {
   updateWorkLogStatus(id: number, status: string, reviewerId: number): Promise<WorkLog | undefined>;
   getPendingWorkLogs(): Promise<WorkLog[]>;
 
-  // Credential methods
+  // Credential methods  
   createCredential(credential: InsertCredential): Promise<Credential>;
   getUserCredentials(userId: number): Promise<Credential[]>;
+  getStaffCredentials(staffId: number): Promise<Credential[]>;
   getExpiringCredentials(days: number): Promise<Credential[]>;
   updateCredentialStatus(
     id: number,
     status: string,
     verifierId?: number
   ): Promise<Credential | undefined>;
+  
+  // Shift Request methods
+  createShiftRequest(shiftId: number, staffId: number, message?: string): Promise<any>;
+  getShiftRequestsByFacility(facilityId: number, status?: string): Promise<any[]>;
+  getShiftRequestsByStaff(staffId: number): Promise<any[]>;
+  approveShiftRequest(requestId: number, decidedBy: number): Promise<any>;
+  rejectShiftRequest(requestId: number, decidedBy: number): Promise<any>;
 
   // Conversation methods
   createConversation(conversation: InsertConversation): Promise<Conversation>;
@@ -1673,7 +1682,15 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(credentials)
       .where(eq(credentials.userId, userId))
-      .orderBy(desc(credentials.issueDate));
+      .orderBy(desc(credentials.issuedAt));
+  }
+  
+  async getStaffCredentials(staffId: number): Promise<Credential[]> {
+    return await db
+      .select()
+      .from(credentials)
+      .where(eq(credentials.staffId, staffId))
+      .orderBy(desc(credentials.issuedAt));
   }
 
   async getExpiringCredentials(days: number): Promise<Credential[]> {
@@ -1683,7 +1700,7 @@ export class DatabaseStorage implements IStorage {
     return await db
       .select()
       .from(credentials)
-      .where(and(eq(credentials.status, "active"), lte(credentials.expirationDate, futureDate)))
+      .where(and(eq(credentials.status, "verified"), lte(credentials.expirationDate, futureDate)))
       .orderBy(asc(credentials.expirationDate));
   }
 
@@ -1695,7 +1712,7 @@ export class DatabaseStorage implements IStorage {
     const updates: any = { status };
     if (verifierId) {
       updates.verifiedAt = new Date();
-      updates.verifiedById = verifierId;
+      updates.verifiedBy = verifierId;
     }
 
     const [credential] = await db
@@ -1704,6 +1721,122 @@ export class DatabaseStorage implements IStorage {
       .where(eq(credentials.id, id))
       .returning();
     return credential || undefined;
+  }
+  
+  // Shift Request methods
+  async createShiftRequest(shiftId: number, staffId: number, message?: string): Promise<any> {
+    const [request] = await db.insert(shiftRequests).values({
+      shiftId,
+      staffId,
+      message,
+      status: "pending"
+    }).returning();
+    
+    // Update shift status to pending if it was open
+    await db.update(shifts)
+      .set({ status: "pending" })
+      .where(and(eq(shifts.id, shiftId), eq(shifts.status, "open")));
+      
+    return request;
+  }
+  
+  async getShiftRequestsByFacility(facilityId: number, status?: string): Promise<any[]> {
+    const query = db.select({
+      request: shiftRequests,
+      shift: shifts,
+      staff: staff
+    })
+    .from(shiftRequests)
+    .innerJoin(shifts, eq(shiftRequests.shiftId, shifts.id))
+    .innerJoin(staff, eq(shiftRequests.staffId, staff.id))
+    .where(eq(shifts.facilityId, facilityId));
+    
+    if (status) {
+      return await query.where(and(eq(shifts.facilityId, facilityId), eq(shiftRequests.status, status)));
+    }
+    
+    return await query;
+  }
+  
+  async getShiftRequestsByStaff(staffId: number): Promise<any[]> {
+    return await db.select({
+      request: shiftRequests,
+      shift: shifts
+    })
+    .from(shiftRequests)
+    .innerJoin(shifts, eq(shiftRequests.shiftId, shifts.id))
+    .where(eq(shiftRequests.staffId, staffId))
+    .orderBy(desc(shiftRequests.createdAt));
+  }
+  
+  async approveShiftRequest(requestId: number, decidedBy: number): Promise<any> {
+    // Get the request
+    const [request] = await db.select()
+      .from(shiftRequests)
+      .where(eq(shiftRequests.id, requestId));
+      
+    if (!request) return undefined;
+    
+    // Update request status
+    await db.update(shiftRequests)
+      .set({ 
+        status: "approved",
+        decidedAt: new Date(),
+        decidedBy
+      })
+      .where(eq(shiftRequests.id, requestId));
+      
+    // Assign staff to shift
+    await db.update(shifts)
+      .set({
+        assignedStaffId: request.staffId,
+        assignedBy: decidedBy,
+        assignedAt: new Date(),
+        status: "filled"
+      })
+      .where(eq(shifts.id, request.shiftId));
+      
+    // Reject other pending requests for this shift
+    await db.update(shiftRequests)
+      .set({ 
+        status: "rejected",
+        decidedAt: new Date(),
+        decidedBy
+      })
+      .where(and(
+        eq(shiftRequests.shiftId, request.shiftId),
+        eq(shiftRequests.status, "pending"),
+        sql`${shiftRequests.id} != ${requestId}`
+      ));
+      
+    return request;
+  }
+  
+  async rejectShiftRequest(requestId: number, decidedBy: number): Promise<any> {
+    const [request] = await db.update(shiftRequests)
+      .set({ 
+        status: "rejected",
+        decidedAt: new Date(),
+        decidedBy
+      })
+      .where(eq(shiftRequests.id, requestId))
+      .returning();
+      
+    // If no other pending requests, set shift back to open
+    const pendingCount = await db.select({ count: count() })
+      .from(shiftRequests)
+      .where(and(
+        eq(shiftRequests.shiftId, request.shiftId),
+        eq(shiftRequests.status, "pending")
+      ));
+      
+    if (pendingCount[0].count === 0) {
+      await db.update(shifts)
+        .set({ status: "open" })
+        .where(eq(shifts.id, request.shiftId));
+    }
+    
+    return request;
   }
 
   // Message methods
@@ -2206,7 +2339,7 @@ export class DatabaseStorage implements IStorage {
       .select({ count: count() })
       .from(credentials)
       .where(
-        and(eq(credentials.status, "active"), lte(credentials.expirationDate, thirtyDaysFromNow))
+        and(eq(credentials.status, "verified"), lte(credentials.expirationDate, thirtyDaysFromNow))
       );
 
     // Outstanding invoices

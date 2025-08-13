@@ -13,6 +13,9 @@ import dashboardRoutes from "./dashboard.routes";
 import healthRoutes from "./health.routes";
 import dashboardPreferencesRoutes from "../dashboard-preferences-routes";
 import calendarSyncRoutes from "../calendar-sync-routes";
+import { createCredentialsRoutes } from "./credentials.routes";
+import { createShiftRequestRoutes } from "./shift-requests.routes";
+import { storage } from "../storage";
 
 // Track authenticated WebSocket connections
 const userConnections = new Map<number, Set<WebSocket>>();
@@ -34,6 +37,10 @@ export function registerRoutes(app: Express): Server {
   
   // Calendar sync routes
   app.use("/api/calendar-sync", calendarSyncRoutes);
+  
+  // MVP routes for credentials and shift requests
+  app.use("/api/credentials", createCredentialsRoutes(storage));
+  app.use("/api/shift-requests", createShiftRequestRoutes(storage));
 
   // Create HTTP server
   const httpServer = createServer(app);

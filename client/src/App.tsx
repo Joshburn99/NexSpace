@@ -44,6 +44,8 @@ import CredentialsPage from "@/pages/credentials-page";
 import OpenShiftsPage from "@/pages/shifts-open-page";
 import ShiftRequestsPage from "@/pages/shift-requests-page";
 import EnhancedStaffPage from "@/pages/enhanced-staff-page";
+import MVPCredentialsPage from "@/pages/CredentialsPage";
+import MVPShiftRequestsPage from "@/pages/ShiftRequestsPage";
 import StaffDirectory from "@/pages/StaffDirectory";
 import AllStaffPage from "@/pages/all-staff-page";
 import TimeClockPage from "@/pages/time-clock-page";
@@ -228,6 +230,11 @@ function AppContent() {
       <ProtectedRoute path="/resources" component={CredentialsPage} />
 
       <ProtectedRoute path="/credentials" component={CredentialsPage} />
+      
+      {/* MVP Routes for Credentials and Shift Requests */}
+      <ProtectedRoute path="/mvp/credentials" component={CredentialsPage} />
+      <ProtectedRoute path="/mvp/shift-requests" component={ShiftRequestsPage} />
+      
       <ProtectedRoute path="/invoices" component={InvoicesPage} />
       <ProtectedRoute path="/vendor-invoices" component={VendorInvoicesPage} />
       <ProtectedRoute path="/settings" component={SettingsPage} />

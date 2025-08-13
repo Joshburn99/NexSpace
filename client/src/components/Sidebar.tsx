@@ -59,6 +59,12 @@ const navigationItems: NavItem[] = [
         icon: <Clock className="w-4 h-4" />,
         roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
       },
+      {
+        label: "MVP Shift Requests",
+        href: "/mvp/shift-requests",
+        icon: <Clock className="w-4 h-4" />,
+        roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
+      },
       { label: "Time Clock", href: "/time-clock", icon: <Clock className="w-4 h-4" /> },
     ],
   },
@@ -75,6 +81,7 @@ const navigationItems: NavItem[] = [
       },
       { label: "Referral System", href: "/staff/referrals", icon: <Users className="w-4 h-4" /> },
       { label: "Credentials", href: "/credentials", icon: <Shield className="w-4 h-4" /> },
+      { label: "MVP Credentials", href: "/mvp/credentials", icon: <Shield className="w-4 h-4" /> },
       {
         label: "Facility Recommendations",
         href: "/facility-recommendations",

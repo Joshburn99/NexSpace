@@ -506,15 +506,30 @@ export const shifts = pgTable("shifts", {
   endTime: text("end_time").notNull(), // HH:MM format
   rate: decimal("rate", { precision: 6, scale: 2 }).notNull(),
   premiumMultiplier: decimal("premium_multiplier", { precision: 3, scale: 2 }).default("1.00"),
-  status: text("status").notNull().default("open"), // open, assigned, requested, in_progress, completed, cancelled, ncns, facility_cancelled, pending_invoice_review
+  status: text("status").notNull().default("open"), // open, pending, filled, assigned, requested, in_progress, completed, cancelled, ncns, facility_cancelled, pending_invoice_review
   urgency: text("urgency").default("medium"), // low, medium, high, critical
   description: text("description"),
   requiredStaff: integer("required_staff").default(1),
   assignedStaffIds: integer("assigned_staff_ids").array(),
+  assignedStaffId: integer("assigned_staff_id"), // Primary assigned staff member
+  assignedBy: integer("assigned_by"), // Who made the assignment
+  assignedAt: timestamp("assigned_at"), // When the assignment was made
   specialRequirements: text("special_requirements").array(),
   createdById: integer("created_by_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Shift requests table - MVP implementation
+export const shiftRequests = pgTable("shift_requests", {
+  id: serial("id").primaryKey(),
+  shiftId: integer("shift_id").notNull().references(() => shifts.id, { onDelete: 'cascade' }),
+  staffId: integer("staff_id").notNull().references(() => staff.id, { onDelete: 'cascade' }),
+  message: text("message"),
+  status: text("status").notNull().default("pending"), // pending, approved, rejected
+  createdAt: timestamp("created_at").defaultNow(),
+  decidedAt: timestamp("decided_at"),
+  decidedBy: integer("decided_by"),
 });
 
 // Block shifts table
@@ -689,19 +704,23 @@ export const teamFacilities = pgTable("team_facilities", {
   assignedAt: timestamp("assigned_at").defaultNow(),
 });
 
-// Credentials table
+// Credentials table - Enhanced for MVP
 export const credentials = pgTable("credentials", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  credentialType: text("credential_type").notNull(), // BLS, ACLS, etc.
-  credentialNumber: text("credential_number"),
+  userId: integer("user_id"),
+  staffId: integer("staff_id").references(() => staff.id, { onDelete: 'cascade' }),
+  type: text("type").notNull(), // License, BLS, CPR, TB, Background Check, ACLS, etc.
+  number: text("number"),
   issuingAuthority: text("issuing_authority"),
-  issueDate: timestamp("issue_date"),
+  issuedAt: timestamp("issued_at"),
   expirationDate: timestamp("expiration_date"),
-  documentUrl: text("document_url"),
-  status: text("status").notNull().default("active"), // active, expired, pending
+  status: text("status").notNull().default("pending"), // verified, pending, expired
+  verifiedBy: integer("verified_by"),
   verifiedAt: timestamp("verified_at"),
-  verifiedById: integer("verified_by_id"),
+  fileUrl: text("file_url"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 // Conversations table - for threading messages
@@ -760,17 +779,7 @@ export const auditLogs = pgTable("audit_logs", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-// Shift requests table
-export const shiftRequests = pgTable("shift_requests", {
-  id: serial("id").primaryKey(),
-  shiftId: integer("shift_id").notNull(),
-  userId: integer("user_id").notNull(),
-  status: text("status").notNull().default("pending"), // pending, approved, rejected, auto_assigned
-  requestedAt: timestamp("requested_at").defaultNow(),
-  processedAt: timestamp("processed_at"),
-  processedById: integer("processed_by_id"),
-  notes: text("notes"),
-});
+
 
 // Shift history table
 export const shiftHistory = pgTable("shift_history", {
