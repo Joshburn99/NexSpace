@@ -8080,6 +8080,13 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/stop-impersonation", requireAuth, async (req, res) => {
     try {
+      // Stop impersonation logic would go here
+      // For now, just return success
+      res.json({ success: true, message: "Impersonation stopped" });
+    } catch (error) {
+      res.status(500).json({ message: "Failed to stop impersonation" });
+    }
+  });
 
   // Update user role endpoint
   app.patch(

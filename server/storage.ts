@@ -1786,12 +1786,17 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(shiftRequests.id, requestId));
       
-    // Assign staff to shift
+    // Assign staff to shift - update assignedStaffIds array
+    const [shift] = await db.select()
+      .from(shifts)
+      .where(eq(shifts.id, request.shiftId));
+      
+    const currentStaffIds = shift.assignedStaffIds || [];
+    const updatedStaffIds = [...currentStaffIds, request.staffId];
+    
     await db.update(shifts)
       .set({
-        assignedStaffId: request.staffId,
-        assignedBy: decidedBy,
-        assignedAt: new Date(),
+        assignedStaffIds: updatedStaffIds,
         status: "filled"
       })
       .where(eq(shifts.id, request.shiftId));

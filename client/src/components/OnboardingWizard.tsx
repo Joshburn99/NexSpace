@@ -302,7 +302,7 @@ export function OnboardingWizard() {
               }}
               onBack={() => goToStep(1)}
               initialData={onboardingData}
-              facilities={facilities || []}
+              facilities={Array.isArray(facilities) ? facilities : []}
             />
           )}
 
@@ -360,7 +360,7 @@ function ProfileStep({
       // Determine which endpoint to use based on user type
       const isFacilityUser = user?.role === "facility_user";
       const endpoint = isFacilityUser 
-        ? `/api/facility-users/${user?.facilityUserId}/profile`
+        ? `/api/facility-users/${user?.facilityId}/profile`
         : `/api/users/${user?.id}/profile`;
 
       const response = await fetch(endpoint, {

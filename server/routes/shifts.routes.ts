@@ -43,7 +43,9 @@ router.get("/api/shifts", requireAuth, async (req: any, res) => {
       shifts = shifts.filter((shift: any) => shift.date === date);
     }
     if (status) {
-      shifts = shifts.filter((shift: any) => shift.status === status);
+      // Handle comma-separated status values
+      const statusList = status.split(',').map((s: string) => s.trim());
+      shifts = shifts.filter((shift: any) => statusList.includes(shift.status));
     }
     if (staffId) {
       shifts = shifts.filter((shift: any) => 

@@ -59,6 +59,9 @@ export function CreateShiftModal({ date, isOpen, onClose }: CreateShiftModalProp
         status: "open",
         assignedStaffIds: [],
         createdById: 1, // Current user ID
+        // Add compatibility fields
+        hourlyRate: formData.rate, // Duplicate as hourlyRate for compatibility
+        requirements: formData.specialRequirements, // Duplicate as requirements for compatibility
       });
 
       // Reset form

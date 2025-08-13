@@ -1,0 +1,88 @@
+You are the Replit AI Agent. The Calendar page currently won’t load. Fix it end-to-end without breaking auth (Passport sessions) or SPA routing. ORM = current Drizzle + existing SQL/TS scripts.
+
+DO FIRST — DIAGNOSIS
+	1.	Print the exact console error(s) from the Calendar route and the matching server logs (stack + status).
+	2.	Verify fetch order: /api routes are registered BEFORE SPA fallback; static assets not behind auth.
+	3.	Confirm all frontend fetches include credentials:‘include’ and server CORS allows credentials from the current Replit URL.
+
+A) BACKEND: Canonical Calendar API (normalized, fast)
+Create or verify these endpoints (Express). Return JSON only.
+	•	GET /api/calendar/shifts?start=ISO&end=ISO&facilityId?=&role?=&status?=
+Returns array of events normalized as:
+{ id, facilityId, facilityName, role, status: ‘open’|‘pending’|‘filled’|‘cancelled’,
+startUtc, endUtc, timezone, assignedStaffId?, assignedStaffName? }
+Notes:
+• Query by [start,end] with an index on shifts.start_at (create if missing).
+• Store times in UTC; include timezone field for UI display.
+	•	POST /api/shifts (create)
+	•	PATCH /api/shifts/:id (update fields: start/end, role, notes, facilityId)
+	•	POST /api/shifts/:id/assign { staffId }
+	•	POST /api/shifts/:id/unassign
+	•	POST /api/shifts/:id/cancel
+	•	GET /api/shift-templates and a script/endpoint to apply templates for the next N days (default 21), idempotent (templateId+start key).
+Add light validation + 4xx/5xx error bodies; never return HTML for these routes.
+
+B) FRONTEND: Calendar data loader + resilient UI
+	1.	Fetch by visible range:
+• On view change (week/month) compute start/end and call /api/calendar/shifts… with credentials:‘include’.
+• Map API to the calendar lib event shape; color by status (open/pending/filled/cancelled).
+	2.	Robust load states:
+• Top-level error boundary for the Calendar route; show friendly fallback with “Retry”.
+• Loading skeleton and empty state; NO unguarded access to undefined.
+	3.	Filters in the header:
+• Facility (dropdown), Role (chips), Status (multi), Date range (week presets + custom).
+	4.	Event details drawer:
+• Show facility, role, start/end (in local TZ), assigned staff (if any), notes.
+• Actions:
+– Staff: “Request shift”
+– Manager/Admin: “Assign staff”, “Unassign”, “Cancel”
+• Use toasts for success/error; optimistic update and revert on failure.
+	5.	Ensure no 403/500 from fetches:
+• All requests send cookies; if 401, redirect via ProtectedRoute to /login.
+
+C) REQUEST → APPROVAL → ASSIGN (hook into existing MVP if present)
+	1.	API (if not already present, add):
+• POST /api/shifts/:id/request (role: staff) → create pending request, set status=‘pending’ if unassigned.
+• GET /api/shift-requests?facilityId=… (manager view)
+• POST /api/shift-requests/:id/approve → assigns staff, sets status=‘filled’, closes other requests
+• POST /api/shift-requests/:id/reject → sets status=‘rejected’; if no others, shift can return to ‘open’.
+	2.	Calendar wiring:
+• On “Request shift”, “Approve”, “Assign/Unassign/Cancel” update the event status immediately; re-fetch in background.
+
+D) REALTIME
+	1.	Server: emit WebSocket events shift.created, shift.updated, shift.assigned, shift.unassigned, shift.cancelled, shift.requested, shift.approved, shift.rejected.
+	2.	Client Calendar subscribes; patch events in place (no full reload).
+
+E) TIME & TZ SAFETY
+	1.	Persist UTC in DB; include timezone on events (facility or org default). Convert to local in UI.
+	2.	One date util (dayjs/date-fns) used consistently; no mixing.
+	3.	Add index: shifts(start_at), shifts(status), shifts(facility_id).
+
+F) FIX THE CURRENT BREAK (common root causes—apply as needed)
+	1.	Route order: ensure /api before SPA fallback; SPA fallback must never respond to /api/*.
+	2.	Helmet in dev must allow Vite HMR (unsafe-inline, unsafe-eval, ws/wss).
+	3.	Remove any app.get('/') test page hijacking the SPA root.
+	4.	Null guards around Calendar data; no events.map on undefined.
+	5.	CORS with credentials: origin set to current Replit URL; credentials:true; session cookie secure:true and sameSite:'lax' (or ‘none’ if cross-origin).
+
+G) SMOKE TESTS (paste outputs)
+	1.	curl unauth vs auth:
+• GET /api/calendar/shifts?start=…&end=… → 401 unauth; 200 with cookies.
+	2.	Create/assign flow (short transcript):
+• POST create shift → 201
+• POST request shift (staff) → 201 + status pending
+• POST approve → 200 + status filled
+	3.	WebSocket log: show one received event (e.g., shift.assigned).
+
+H) DOCS & OUTPUTS
+	•	README “Calendar” section: endpoints, event shape, status colors, filters, realtime.
+	•	Diffs of modified files and a concise changelog (file → why).
+	•	One short paragraph: Root cause of the Calendar not loading and the exact fix applied.
+
+ACCEPTANCE
+	•	Calendar route renders with skeleton → events visible; no console errors.
+	•	Filters work; event drawer actions (request/assign/unassign/cancel) function and update the UI.
+	•	Realtime updates reflect assignments/cancellations.
+	•	Typecheck/lint pass.
+
+If any step fails, fix and re-run before responding.

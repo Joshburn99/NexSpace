@@ -511,9 +511,6 @@ export const shifts = pgTable("shifts", {
   description: text("description"),
   requiredStaff: integer("required_staff").default(1),
   assignedStaffIds: integer("assigned_staff_ids").array(),
-  assignedStaffId: integer("assigned_staff_id"), // Primary assigned staff member
-  assignedBy: integer("assigned_by"), // Who made the assignment
-  assignedAt: timestamp("assigned_at"), // When the assignment was made
   specialRequirements: text("special_requirements").array(),
   createdById: integer("created_by_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
