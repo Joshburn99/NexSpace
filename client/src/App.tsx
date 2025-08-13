@@ -5,6 +5,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { SessionProvider } from "@/contexts/SessionContext";
+import { ThemeProvider } from "@/providers/ThemeProvider";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { AppShell } from "@/components/layout/AppShell";
 import { ProtectedRoute, AdminRoute, FacilityRoute } from "./lib/rbac-route-guard";
 import { FacilityPermissionsProvider } from "@/hooks/use-facility-permissions";
 import { RBACProvider } from "@/hooks/use-rbac";
@@ -108,6 +111,8 @@ import FloatPoolAnalyticsPage from "@/pages/FloatPoolAnalyticsPage";
 import AgencyUsagePage from "@/pages/AgencyUsagePage";
 import RoleManagementPage from "@/pages/RoleManagementPage";
 import NotFound from "@/pages/not-found";
+import DesignSystemDemo from "@/pages/design-system-demo";
+import TestPage from "@/pages/test-page";
 
 function AppContent() {
   const [location] = useLocation();
@@ -329,6 +334,12 @@ function AppContent() {
       {/* UI Improvements Demo */}
       <ProtectedRoute path="/ui-demo" component={UIImprovementsDemo} />
       
+      {/* Design System Demo */}
+      <ProtectedRoute path="/design-system" component={DesignSystemDemo} />
+      
+      {/* Test Page - No Protection */}
+      <Route path="/test" component={TestPage} />
+      
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
@@ -349,50 +360,54 @@ function AppContent() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <SessionProvider>
-          <RBACProvider>
-            <FacilityPermissionsProvider>
-              <NotificationProvider>
-                <ShiftProvider>
-                  <TimeClockProvider>
-                    <StaffProvider>
-                      <TeamProvider>
-                        <MessageProvider>
-                          <MessagingProvider>
-                            <EnhancedCredentialProvider>
-                              <CredentialVerificationProvider>
-                                <PTOProvider>
-                                  <JobProvider>
-                                    <ProfileProvider>
-                                      <CredentialsProvider>
-                                        <InsightsProvider>
-                                          <InvoiceProvider>
-                                            <DashboardProvider>
-                                              <TooltipProvider>
-                                                <Toaster />
-                                                <AppContent />
-                                              </TooltipProvider>
-                                            </DashboardProvider>
-                                          </InvoiceProvider>
-                                        </InsightsProvider>
-                                      </CredentialsProvider>
-                                    </ProfileProvider>
-                                  </JobProvider>
-                                </PTOProvider>
-                              </CredentialVerificationProvider>
-                            </EnhancedCredentialProvider>
-                          </MessagingProvider>
-                        </MessageProvider>
-                      </TeamProvider>
-                    </StaffProvider>
-                  </TimeClockProvider>
-                </ShiftProvider>
-              </NotificationProvider>
-            </FacilityPermissionsProvider>
-          </RBACProvider>
-        </SessionProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <SessionProvider>
+              <RBACProvider>
+                <FacilityPermissionsProvider>
+                  <NotificationProvider>
+                    <ShiftProvider>
+                      <TimeClockProvider>
+                        <StaffProvider>
+                          <TeamProvider>
+                                <MessageProvider>
+                                <MessagingProvider>
+                                  <EnhancedCredentialProvider>
+                                    <CredentialVerificationProvider>
+                                      <PTOProvider>
+                                        <JobProvider>
+                                          <ProfileProvider>
+                                            <CredentialsProvider>
+                                              <InsightsProvider>
+                                                <InvoiceProvider>
+                                                  <DashboardProvider>
+                                                    <TooltipProvider>
+                                                      <Toaster />
+                                                      <AppContent />
+                                                    </TooltipProvider>
+                                                  </DashboardProvider>
+                                                </InvoiceProvider>
+                                              </InsightsProvider>
+                                            </CredentialsProvider>
+                                          </ProfileProvider>
+                                        </JobProvider>
+                                      </PTOProvider>
+                                    </CredentialVerificationProvider>
+                                  </EnhancedCredentialProvider>
+                                </MessagingProvider>
+                              </MessageProvider>
+                            </TeamProvider>
+                          </StaffProvider>
+                        </TimeClockProvider>
+                      </ShiftProvider>
+                    </NotificationProvider>
+                  </FacilityPermissionsProvider>
+                </RBACProvider>
+              </SessionProvider>
+            </AuthProvider>
+          </ErrorBoundary>
+        </ThemeProvider>
     </QueryClientProvider>
   );
 }
