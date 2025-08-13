@@ -1,0 +1,72 @@
+You are the Replit AI Agent. Fix the Calendar page crash (“Invalid time value”) and overhaul the UI to use uniform, compact shift chips with a clean details modal. Keep auth (Passport sessions) and SPA routing intact. Use High Power ON + Extended Thinking ON. Tools: project-wide search, shell, package manager, test runner.
+
+Overview of desired UX:
+• Each shift displays as a fixed-height chip (not full-height by duration) with: “Specialty • 7a–3p • 0/3”.
+• Color by status: open=neutral, pending=warning, filled=success, cancelled=danger.
+• Clicking a chip opens a ShiftDetailsModal with full info and actions (Assign/Unassign/Cancel/Request).
+• No crashes on click; robust date parsing regardless of Date | ISO string | epoch | null.
+
+A) Diagnose the crash (paste findings first)
+	1.	Show the exact line(s) in src/pages/enhanced-calendar-page.tsx that call format() or toLocaleTimeString() on click (stack referenced ~line 930). Paste that snippet.
+	2.	Log one sample event object on click (id, start, end, timezone, required/filled, etc.). Identify which field is not a valid Date.
+
+B) Date safety utilities (create client/src/lib/datetime.ts)
+Implement and use everywhere in the calendar:
+• toDateSafe(v): accepts Date/ISO/epoch/null/undefined; returns Date or null (never throws).
+• safelyFormat(v, fmt): returns ‘—’ if v invalid; else format using date-fns/date-fns-tz.
+• formatRange(start, end, tz?): returns “7a–3p” style strings; handle overnight and timezone.
+Replace all direct format(new Date(…)) calls in calendar + modal with these helpers.
+
+C) Normalize event mapping
+Ensure each event mapped to the calendar has:
+id, facilityId, facilityName, role, specialty, status (‘open’|‘pending’|‘filled’|‘cancelled’), startUtc, endUtc, timezone, requiredCount, filledCount, assignedStaffId?, assignedStaffName?.
+Parse and validate dates with toDateSafe; never assume new Date(x) works.
+
+D) Uniform “ShiftChip” renderer
+Detect the calendar library (react-big-calendar or FullCalendar) and implement a custom event renderer:
+• Fixed chip height (about 28–32px), single-line content with ellipsis.
+• Left: specialty; middle: time from formatRange; right: filled/required (e.g., 1/3) in a small badge.
+• Apply status classes for background/text colors.
+• Override default “duration height” visuals so long shifts don’t consume the column.
+
+E) Click → details modal
+Create ShiftDetailsModal (client/src/components/shift/ShiftDetailsModal.tsx):
+• Fields: specialty, role, facility, start/end (formatted), duration, notes, filled/required, assigned roster if present.
+• Actions:
+– Admin/Manager: Assign staff, Unassign, Cancel (call /api/shifts/:id/assign, /unassign, /cancel).
+– Staff: Request shift (call /api/shifts/:id/request).
+• Use safelyFormat for all times; modal must not throw if any date is missing.
+• Wire calendar event click to open this modal; no reliance on native browser titles.
+
+F) Overlap handling and density
+• When many chips overlap, show a maximum of 3 chips and a “+N more” badge.
+• Clicking “+N more” opens a compact popover listing the rest (each as a chip row).
+• Add a header toggle: “Chip view” (fixed-height) vs “Duration view” (native height).
+
+G) Filters & header polish
+• Filters: facility (dropdown), role (chips), status (multi), date range presets (week/month/day).
+• Append filters to the API query; update UI without full page reload.
+• Add a small color legend under the header.
+
+H) Backend sanity for calendar data
+• Confirm/normalize the canonical endpoint GET /api/calendar/shifts with query start, end, facilityId?, role?, status?.
+• Ensure it maps existing shift rows to the normalized event shape above; returns JSON only.
+• Indexes exist on shifts(start_at), shifts(status), shifts(facility_id).
+• 401 unauth; 200 JSON with cookies.
+
+I) QA and fixes (show outputs)
+	1.	Prove the original error is gone: paste the before/after snippet where format() was crashing and the new call via safelyFormat/formatRange.
+	2.	Paste a short sample of returned events for the current week (first 3).
+	3.	Screenshot(s): new chip styling (light and dark).
+	4.	Confirm modal opens with correct times and actions work (show one assign/unassign success toast).
+	5.	Keyboard a11y: Enter/Space opens modal, Escape closes, focus trap verified.
+
+J) Deliverables
+• New/updated files: datetime utils, ShiftChip renderer, ShiftDetailsModal, calendar page refactor, minimal CSS/Tailwind tokens if needed.
+• File diffs and a concise changelog (file → why).
+• README: “Calendar UI” section describing chip pattern, status colors, time formatting rules.
+
+Acceptance
+• Calendar shows compact, uniform chips: “Specialty • Time • Filled/Required”.
+• Clicking any chip opens details modal without errors.
+• Filters work; no console errors; typecheck/lint pass.

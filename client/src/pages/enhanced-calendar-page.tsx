@@ -49,11 +49,18 @@ import {
   Save,
   Loader2,
 } from "lucide-react";
-import { format, addDays, subDays, startOfWeek, endOfWeek } from "date-fns";
+import { addDays, subDays, startOfWeek, endOfWeek } from "date-fns";
 import { CalendarSkeleton, ShiftListSkeleton } from "@/components/LoadingSkeletons";
 import { CalendarEmptyState, ErrorState } from "@/components/EmptyStates";
 import { QuickFilters, type FilterState } from "@/components/QuickFilters";
-import { formatDate as formatDateUtil, formatTime, formatDateTime, formatRelativeTime, getTimezoneInfo } from "@/lib/date-utils";
+import { ShiftDetailsModal } from "@/components/shift/ShiftDetailsModal";
+import { 
+  safelyFormat, 
+  formatRange, 
+  formatDuration,
+  getDateLabel,
+  normalizeShiftEvent
+} from "@/lib/datetime";
 
 // Types
 interface Shift {
@@ -231,19 +238,33 @@ export default function EnhancedCalendarPage() {
     },
   });
 
-  // Transform calendar events for FullCalendar
+  // Transform calendar events for FullCalendar with normalized data
   const fullCalendarEvents = useMemo(() => {
-    return calendarEvents.map((event: any) => ({
-      id: event.id.toString(),
-      title: `${event.role} (${event.assignedWorkerIds?.length || 0}/${event.requiredWorkers || 1})`,
-      start: event.startUtc,
-      end: event.endUtc,
-      backgroundColor: event.color || '#3B82F6',
-      borderColor: event.color || '#3B82F6',
-      extendedProps: {
-        shift: event,
-      },
-    }));
+    return calendarEvents.map((event: any) => {
+      const normalized = normalizeShiftEvent(event);
+      const timeRange = formatRange(normalized.startUtc, normalized.endUtc, normalized.timezone);
+      const filled = normalized.filledCount;
+      const required = normalized.requiredCount;
+      
+      // Determine color based on status
+      let backgroundColor = '#6b7280'; // gray for open
+      if (normalized.status === 'filled') backgroundColor = '#22c55e'; // green
+      else if (normalized.status === 'pending') backgroundColor = '#f59e0b'; // yellow
+      else if (normalized.status === 'cancelled') backgroundColor = '#ef4444'; // red
+      
+      return {
+        id: normalized.id.toString(),
+        title: `${normalized.specialty} • ${timeRange} • ${filled}/${required}`,
+        start: normalized.startUtc,
+        end: normalized.endUtc,
+        backgroundColor,
+        borderColor: backgroundColor,
+        classNames: ['shift-chip'],
+        extendedProps: {
+          shift: normalized,
+        },
+      };
+    });
   }, [calendarEvents]);
 
   // Handle event click
@@ -538,56 +559,15 @@ export default function EnhancedCalendarPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Shift Details Dialog */}
-      <Dialog open={isShiftDetailsOpen} onOpenChange={setIsShiftDetailsOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Shift Details</DialogTitle>
-          </DialogHeader>
-          
-          {selectedShift && (
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold">{selectedShift.title}</h3>
-                <p className="text-sm text-muted-foreground">{selectedShift.facilityName}</p>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <strong>Department:</strong> {selectedShift.department}
-                </div>
-                <div>
-                  <strong>Rate:</strong> ${selectedShift.rate}/hr
-                </div>
-                <div>
-                  <strong>Workers:</strong> {selectedShift.assignedWorkerIds.length}/{selectedShift.requiredWorkers}
-                </div>
-                <div>
-                  <strong>Status:</strong> 
-                  <Badge 
-                    variant={selectedShift.isUrgent ? "destructive" : "secondary"}
-                    className="ml-1"
-                  >
-                    {selectedShift.isUrgent ? "Urgent" : "Normal"}
-                  </Badge>
-                </div>
-              </div>
-              
-              <div>
-                <strong>Time:</strong>
-                <p className="text-sm">{format(new Date(selectedShift.start), "PPp")} - {format(new Date(selectedShift.end), "p")}</p>
-              </div>
-              
-              {selectedShift.notes && (
-                <div>
-                  <strong>Notes:</strong>
-                  <p className="text-sm text-muted-foreground">{selectedShift.notes}</p>
-                </div>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Shift Details Modal with safe date handling */}
+      <ShiftDetailsModal
+        open={isShiftDetailsOpen}
+        onOpenChange={setIsShiftDetailsOpen}
+        shift={selectedShift}
+        onSuccess={() => {
+          refetchShifts();
+        }}
+      />
     </div>
   );
 }
