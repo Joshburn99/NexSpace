@@ -55,102 +55,136 @@ export function setupAuth(app: Express, handleImpersonation?: any) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        // First check if it's the admin user
-        if (username === "joshburn") {
-          const [adminUser] = await db
-            .select()
-            .from(users)
-            .where(eq(users.username, "joshburn"))
-            .limit(1);
-          
-          if (adminUser) {
-            // Use bcrypt for admin user
-            const isValid = await bcrypt.compare(password, adminUser.password);
-            if (isValid) {
-              return done(null, adminUser);
-            }
+        // Step 1: Check users table (superusers)
+        const [superUser] = await db
+          .select()
+          .from(users)
+          .where(eq(users.username, username))
+          .limit(1);
+        
+        if (superUser && superUser.isActive) {
+          // Verify password for superuser
+          const isValid = await bcrypt.compare(password, superUser.password);
+          if (isValid) {
+            return done(null, { ...superUser, accountType: 'super' });
           }
         }
         
-        // Regular user authentication
-        const user = await storage.getUserByUsername(username);
-        if (!user) {
-          return done(null, false);
+        // Step 2: Check facility_users table (facility staff)  
+        const [facilityUser] = await db
+          .select()
+          .from(facilityUsers)
+          .where(eq(facilityUsers.username, username))
+          .limit(1);
+        
+        if (facilityUser && facilityUser.isActive) {
+          // Verify password for facility user
+          const isValid = await bcrypt.compare(password, facilityUser.password);
+          if (isValid) {
+            // Transform facility user to match expected user shape
+            const user = {
+              id: facilityUser.id,
+              username: facilityUser.username,
+              email: facilityUser.email,
+              password: facilityUser.password,
+              firstName: facilityUser.firstName,
+              lastName: facilityUser.lastName,
+              role: facilityUser.role,
+              avatar: facilityUser.avatar,
+              isActive: facilityUser.isActive,
+              facilityId: facilityUser.primaryFacilityId,
+              associatedFacilityIds: facilityUser.associatedFacilityIds || [],
+              associatedFacilities: facilityUser.associatedFacilityIds || [],
+              permissions: facilityUser.permissions || [],
+              phone: facilityUser.phone,
+              title: facilityUser.title,
+              department: facilityUser.department,
+              accountType: 'facility',
+              createdAt: facilityUser.createdAt,
+              updatedAt: facilityUser.updatedAt,
+            };
+            return done(null, user);
+          }
         }
         
-        // Try bcrypt first (for newer passwords), then fall back to old system
-        let isValidPassword = false;
-        if (user.password.startsWith('$2')) {
-          // Bcrypt hash
-          isValidPassword = await bcrypt.compare(password, user.password);
-        } else {
-          // Old password system
-          isValidPassword = await comparePasswords(password, user.password);
-        }
-        
-        if (!isValidPassword) {
-          return done(null, false);
-        } else {
-          return done(null, user);
-        }
+        // If no user found or password invalid
+        return done(null, false);
       } catch (error) {
-
+        console.error('Authentication error:', error);
         return done(null, false);
       }
     })
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
-  passport.deserializeUser((id: number, done) => {
-    // Handle temporary superuser
-    if (id === 1) {
-      const tempUser = {
-        id: 1,
-        username: "joshburn",
-        email: "joshburn@nexspace.com",
-        password: "dummy", // Not used for temp user
-        firstName: "Josh",
-        lastName: "Burn",
-        role: "super_admin",
-        isActive: true,
-        facilityId: null,
-        avatar: null,
-        onboardingCompleted: true,
-        onboardingStep: 4,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any;
-      return done(null, tempUser);
-    }
-
-    // Use promise to handle async operations properly
-    storage.getUser(id)
-      .then(async (user) => {
-        // If this is a facility user, fetch their permissions and facility associations
-        if (user && user.role !== "super_admin") {
-          try {
-            const roleTemplate = await storage.getFacilityUserRoleTemplate(user.role);
-            if (roleTemplate && roleTemplate.permissions) {
-              (user as any).permissions = roleTemplate.permissions;
-            }
-
-            // Get facility associations for facility users
-            const facilityAssociations = await storage.getStaffFacilityAssociations(id);
-            if (facilityAssociations && facilityAssociations.length > 0) {
-              (user as any).associatedFacilityIds = facilityAssociations.map((a: any) => a.facilityId);
-              (user as any).associatedFacilities = facilityAssociations.map((a: any) => a.facilityId);
-            }
-          } catch (error) {
-            console.error('Error fetching facility user data:', error);
+  passport.serializeUser((user, done) => {
+    // Store both ID and account type for deserialization
+    done(null, { id: user.id, accountType: (user as any).accountType || 'user' });
+  });
+  
+  passport.deserializeUser(async (sessionData: any, done) => {
+    try {
+      const { id, accountType } = typeof sessionData === 'object' ? sessionData : { id: sessionData, accountType: 'user' };
+      
+      // First check superusers table
+      if (accountType === 'super' || accountType === 'user') {
+        try {
+          const [superUser] = await db
+            .select()
+            .from(users)
+            .where(eq(users.id, id))
+            .limit(1);
+          
+          if (superUser) {
+            return done(null, { ...superUser, accountType: 'super', onboardingCompleted: true });
           }
+        } catch (err) {
+          console.error('Error checking superuser:', err);
         }
+      }
+      
+      // Check if it's a facility user
+      try {
+        const [facilityUser] = await db
+          .select()
+          .from(facilityUsers)
+          .where(eq(facilityUsers.id, id))
+          .limit(1);
         
-        done(null, user);
-      })
-      .catch((error) => {
-        console.error('Passport deserialization error:', error);
-        done(null, null);
-      });
+        if (facilityUser) {
+          const user = {
+            id: facilityUser.id,
+            username: facilityUser.username,
+            email: facilityUser.email,
+            password: facilityUser.password,
+            firstName: facilityUser.firstName,
+            lastName: facilityUser.lastName,
+            role: facilityUser.role,
+            avatar: facilityUser.avatar,
+            isActive: facilityUser.isActive,
+            facilityId: facilityUser.primaryFacilityId,
+            associatedFacilityIds: facilityUser.associatedFacilityIds || [],
+            associatedFacilities: facilityUser.associatedFacilityIds || [],
+            permissions: facilityUser.permissions || [],
+            phone: facilityUser.phone,
+            title: facilityUser.title,
+            department: facilityUser.department,
+            accountType: 'facility',
+            onboardingCompleted: true,
+            createdAt: facilityUser.createdAt,
+            updatedAt: facilityUser.updatedAt,
+          };
+          return done(null, user);
+        }
+      } catch (err) {
+        console.error('Error checking facility user:', err);
+      }
+      
+      // If no user found
+      done(null, null);
+    } catch (error) {
+      console.error('Passport deserialization error:', error);
+      done(null, null);
+    }
   });
 
   app.post("/api/register", async (req, res, next) => {

@@ -19,6 +19,7 @@ import {
   FileText,
   Shield,
   Clock,
+  Building,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@shared/schema";
@@ -99,6 +100,19 @@ const navigationItems: NavItem[] = [
     ],
   },
   {
+    label: "Facilities",
+    icon: <Building className="w-5 h-5" />,
+    roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
+    children: [
+      { 
+        label: "Facility Users", 
+        href: "/facilities/users", 
+        icon: <Users className="w-4 h-4" />,
+        roles: [UserRole.SUPER_ADMIN, UserRole.FACILITY_MANAGER]
+      },
+    ],
+  },
+  {
     label: "Insights",
     icon: <BarChart3 className="w-5 h-5" />,
     roles: [UserRole.FACILITY_MANAGER, UserRole.CLIENT_ADMINISTRATOR, UserRole.SUPER_ADMIN],
@@ -165,7 +179,7 @@ const navigationItems: NavItem[] = [
         href: "/admin/impersonation",
         icon: <Shield className="w-4 h-4" />,
       },
-      { label: "Facility Users", href: "/admin/users", icon: <Users className="w-4 h-4" /> },
+
       {
         label: "Facility Management",
         href: "/facility-management",

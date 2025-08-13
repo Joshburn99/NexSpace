@@ -96,6 +96,7 @@ import FacilityProfilePage from "@/pages/FacilityProfilePage";
 import { UIImprovementsDemo } from "@/components/UIImprovementsDemo";
 import FacilitySettingsPage from "@/pages/FacilitySettingsPage";
 import FacilityUsersManagementPage from "@/pages/FacilityUsersManagementPage";
+import FacilityUsersPage from "@/pages/facility-users-page";
 import FacilityAuditLogsPage from "@/pages/FacilityAuditLogsPage";
 import BillingDashboard from "@/pages/BillingDashboard";
 import RatesManagementPage from "@/pages/RatesManagementPage";
@@ -241,7 +242,20 @@ function AppContent() {
       <ProtectedRoute path="/settings" component={SettingsPage} />
       <ProtectedRoute path="/system-settings" component={SystemSettingsPage} />
       <AdminRoute path="/admin/impersonation" component={AdminImpersonationPage} />
-      <AdminRoute path="/admin/users" component={AdminUserManagementPage} />
+      {/* Redirect old admin users route to new facility users route */}
+      <Route path="/admin/users">
+        {() => {
+          window.location.href = "/facilities/users";
+          return null;
+        }}
+      </Route>
+      
+      {/* Facility Users Management */}
+      <ProtectedRoute 
+        path="/facilities/users" 
+        component={FacilityUsersPage}
+        requiredPermissions={["users.view"]} 
+      />
       <AdminRoute path="/admin/teams" component={AdminTeamsPage} />
       <AdminRoute path="/admin/audit" component={AdminAuditLogsPage} />
       <AdminRoute path="/admin/audit-logs" component={AdminAuditLogsPage} />

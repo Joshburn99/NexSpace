@@ -42,6 +42,13 @@ NexSpace is an advanced healthcare workforce management platform designed to opt
 - **Job Management**: Functionality for job postings, interview scheduling, and application tracking with dedicated database tables.
 - **Security**: Strict access controls on administrative pages, systematic API security hardening, and advanced frontend route protection based on RBAC.
 
+### Recent Changes (August 13, 2025 - Part 4)
+- **Information Architecture Consolidation**: Completed comprehensive IA restructuring by migrating 57 facility users from `users` table to dedicated `facility_users` table, maintaining 3 superusers in the original users table
+- **Facility Users Management**: Implemented full CRUD API endpoints at `/api/facility-users` with search, filtering, and pagination support
+- **Navigation Restructuring**: Moved "User Management" from ADMIN to FACILITIES group, renamed to "Facility Users" with route `/facilities/users`
+- **Auth System Update**: Modified authentication to check both `users` (superusers) and `facility_users` (facility staff) tables during login, with proper session handling and account type differentiation
+- **Frontend Component**: Created comprehensive FacilityUsersPage component with full UI for managing facility users including create, edit, delete, and search functionality
+
 ### Recent Changes (August 13, 2025 - Part 3)
 - **Critical Server Fix**: Resolved TypeScript compilation error in server/routes.ts by adding missing catch block for `/api/stop-impersonation` endpoint, fixing 500 Internal Server Errors that were preventing the application from loading
 

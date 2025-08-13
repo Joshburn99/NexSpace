@@ -7,6 +7,7 @@ import { unifiedDataService } from "../unified-data-service";
 // Import route modules
 import authRoutes, { handleImpersonation } from "./auth.routes";
 import facilitiesRoutes from "./facilities.routes";
+import facilityUsersRoutes from "./facility-users.routes";
 import shiftsRoutes from "./shifts.routes";
 import staffRoutes from "./staff.routes";
 import dashboardRoutes from "./dashboard.routes";
@@ -27,6 +28,7 @@ export function registerRoutes(app: Express): Server {
   // Register route modules
   app.use(authRoutes);
   app.use(facilitiesRoutes);
+  app.use("/api/facility-users", facilityUsersRoutes);
   app.use(shiftsRoutes);
   app.use(staffRoutes);
   app.use(dashboardRoutes);
