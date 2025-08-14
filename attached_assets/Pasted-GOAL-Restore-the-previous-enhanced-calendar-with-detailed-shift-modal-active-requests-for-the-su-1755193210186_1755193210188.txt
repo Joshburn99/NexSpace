@@ -1,0 +1,62 @@
+GOAL
+Restore the previous enhanced calendar (with detailed shift modal + active requests) for the superuser and route it as the primary Calendar page. Keep the current drag-and-drop calendar available under a separate route (e.g., “/calendar-dnd”) so nothing is lost.
+
+HARD REQUIREMENTS
+• Do not delete files. If deprecating, rename or move and update imports/routes safely.
+• Superuser calendar route should point to the detailed modal version.
+• Facility/Worker calendars (if any) must remain unchanged.
+• All list/API calls must still work; adapt event mapping if needed.
+• TypeScript must compile; keep imports tidy.
+• Report exactly what changed at the end.
+
+PHASE 1 — LOCATE CALENDAR CANDIDATES
+	1.	Search the repo for calendar implementations and list candidates with file paths and a 1-line summary each. Include:
+• Files whose path or content matches: “calendar”, “FullCalendar”, “timeGrid”, “dayGrid”, “interaction”, “drag”, “drop”, “modal”, “dialog”, “shift”, “request”, “eventClick”.
+• Typical places: src/pages, src/components, src/features, src/routes.
+	2.	For each candidate, detect quickly:
+• Uses FullCalendar (yes/no), uses drag/drop APIs (yes/no), has modal/dialog (yes/no), strings like “Shift”, “Request”, “Assign” in code (yes/no).
+	3.	Identify which calendar is currently wired to the superuser’s “Calendar” nav item or route by tracing the main router and side-nav link(s). Note the file path and exported component.
+
+PHASE 2 — PICK THE PREFERRED ENHANCED CALENDAR
+Select the candidate that best matches: “detailed shift modal pop-up with active requests available” and not drag-and-drop focused.
+Heuristics for selection (in order):
+A) Has an eventClick handler that opens a modal/dialog with multiple shift fields and request actions.
+B) Contains strings like “Shift”, “Request”, “Apply”, “Approve”, “Assign”.
+C) Minimal or no DnD code (no onDrop/Draggable/react-grid-layout).
+If more than one match, choose the one with the richer modal fields.
+
+PHASE 3 — ROUTE/EXPORT REWIRE (SUPERUSER ONLY)
+	1.	Identify where routes are registered on the client (e.g., src/App.tsx, src/router.tsx, or a routing module).
+	2.	Change the superuser’s “Calendar” route (e.g., “/calendar”) to render the preferred enhanced calendar component.
+	3.	Keep the current DnD calendar accessible under a new route (e.g., “/calendar-dnd”) and add a hidden or secondary nav link (visible only to superuser) labeled “Calendar (DnD)”.
+	4.	Ensure any role gating logic (if present) keeps facility/worker calendar routes unchanged.
+	5.	Update side-nav or header menus so superuser “Calendar” points to the restored enhanced calendar.
+
+PHASE 4 — DATA & MODAL COMPATIBILITY
+	1.	Verify the preferred calendar uses the current event source. If it expects a different shape, add a small mapping in that component:
+• id, title, start, end, unit, roleNeeded, status (map from our shifts/times data).
+	2.	Ensure eventClick opens the detailed modal. If the modal lives in a separate component, ensure it’s imported and wired.
+	3.	Confirm “active requests” are displayed and/or loadable (e.g., via /api/shifts or request endpoints). If an older endpoint name is hardcoded, update it to the current one.
+	4.	If there’s timezone logic, keep it consistent (FullCalendar options: timeZone, initialView, plugins).
+
+PHASE 5 — TYPE SAFETY + LINT
+	1.	Fix any TS errors introduced by re-wiring imports/props.
+	2.	Ensure no unused imports remain after the swap.
+	3.	Run typecheck and lint; make minor fixes as needed.
+
+PHASE 6 — SMOKE TESTS
+	1.	Start dev (npm run dev).
+	2.	Login as superuser and open “Calendar” — confirm you see the enhanced modal version (not the DnD one).
+	3.	Click an event → modal opens with detailed shift data; requests/CTA show up as expected.
+	4.	Visit “/calendar-dnd” — confirm the drag-and-drop calendar still renders and functions.
+	5.	If impersonation is active, confirm the calendar reflects the impersonated user’s view without breaking (read-only is fine for this smoke).
+
+PHASE 7 — REPORT
+Provide a concise report:
+• Which file is now the superuser calendar (path + exported component name).
+• Which file hosts the DnD calendar and its new route.
+• Any code you adjusted for event mapping and modal wiring (paths + brief notes).
+• Any role-based routing adjustments.
+• Any TODOs/risks.
+
+If any blocking ambiguity arises (e.g., two equally “enhanced” calendars), pause and list the top two candidates with features; otherwise proceed with the best match and document the choice.

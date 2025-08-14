@@ -1,0 +1,118 @@
+ROLE
+Act as a senior full-stack engineer on a TS + Vite React frontend and Express server using Drizzle ORM (Neon Postgres) and passport-local sessions.
+
+GOAL
+Deliver a working superuser impersonation feature + smoke test. Fix the UI crash:
+“TypeError: facilityUsers.filter is not a function” in src/pages/admin-impersonation-page.tsx:677.
+
+CONSTRAINTS
+	•	Do not remove existing endpoints; add surgical fixes only.
+	•	Keep return shapes stable (always arrays for list endpoints).
+	•	Preserve existing auth/session behavior; add impersonation on top.
+	•	If a step fails, stop and report what you changed and why.
+
+PHASE 1 — DIAGNOSE + HARDEN CLIENT
+	1.	Open src/pages/admin-impersonation-page.tsx. Identify where facility users and staff users are fetched (likely via fetch/axios/React Query). Confirm the response shape. The crash means facilityUsers is not an array (could be object with data/rows/items, or null/undefined).
+	2.	Add a tiny helper at top of this file:
+
+	•	name: asArray
+	•	behavior: returns [] if falsy; if Array => same; else if v.data/rows/items is Array => that; else if plain object => Object.values(v) (only if those values are the records); else [].
+
+	3.	Replace all usages of facilityUsers.filter(...) and staffUsers.filter(...) with asArray(facilityUsers).filter(...) and asArray(staffUsers).filter(...).
+	4.	Ensure any component state that stores these lists is typed as an array (e.g., any[]) to avoid future type friction.
+	5.	Add defensive optional chaining when reading properties from users (e.g., user?.id, user?.role).
+
+PHASE 2 — NORMALIZE API RESPONSES
+	1.	Find the endpoints the page calls for lists:
+
+	•	Facility users list (e.g., GET /api/facility-users or similar in server/routes/facilities.routes.ts or server/storage.ts).
+	•	Staff users list (e.g., GET /api/staff in server/routes/staff.routes.ts).
+
+	2.	Ensure these endpoints return a bare JSON array (not wrapped in {data: …}). If the underlying storage returns { rows }, change the handler to res.json(rows) (an array). If it already returns an array, leave as is.
+	3.	If there is no dedicated endpoint for facility user listing, create one:
+
+	•	Route: GET /api/facility-users
+	•	Implementation reads from facility_users via Drizzle and returns an array of users (id, username, role, names, facility refs).
+
+	4.	Confirm CORS/middleware doesn’t alter shapes. Add a minimal test in the server: curl http://localhost:5000/api/facility-users | head should show [ as the first char.
+
+PHASE 3 — (RE)WIRE IMPERSONATION SERVER FLOW
+We already have setupAuth(app, handleImpersonation) in server/routes/index.ts. Ensure the following:
+	1.	In server/auth.ts:
+
+	•	Confirm passport.deserializeUser loads a full user with .role. This is already mostly true for the temp super_admin path. Make sure non-temp path includes .role.
+	•	Add a session flag approach:
+	•	Use req.session.originalUserId to remember the true superuser once impersonation starts (only if not already set).
+	•	Use req.session.impersonatedUserId to store target user id.
+
+	2.	In server/routes/auth.routes.ts (exporting handleImpersonation):
+
+	•	Export handleImpersonation(req,res,next) middleware that runs after passport.session():
+	•	If req.session.impersonatedUserId is set, load that user via storage (users or facilityUsers, whichever table holds them) and set req.user to that user object (must include id, role, facilityId if relevant).
+	•	If not set, leave req.user as the authenticated user.
+	•	Add two endpoints:
+	•	POST /api/impersonation/start  body: { userId: number, type?: “facility” | “staff” }
+	•	Require current req.user.role === "super_admin" (or your superuser condition).
+	•	If req.session.originalUserId not set, set it to the current user’s id.
+	•	Set req.session.impersonatedUserId = userId and persist session.
+	•	Return { ok: true, impersonatedUserId: userId }.
+	•	POST /api/impersonation/stop
+	•	Clear req.session.impersonatedUserId.
+	•	Keep req.session.originalUserId so we remain logged in as superuser after stopping. (Optionally clear it here.)
+	•	Return { ok: true }.
+
+	3.	Ensure type safety minimally (ts-ignore / expect-error is acceptable around req.user mutation in middleware).
+
+PHASE 4 — FRONTEND IMPERSONATION UX
+	1.	On AdminImpersonationPage:
+
+	•	After normalizing data to arrays, render two lists or a single unified table with radio/select for “staff” vs “facility users”.
+	•	Add a “Start Impersonation” button that POSTs to /api/impersonation/start with the selected user id.
+	•	On success, reload user context (whatever your app uses: a “current user” endpoint or cookie-backed session). Minimal approach: window.location.reload().
+
+	2.	Add a global banner component (e.g., in top-level layout) that:
+
+	•	Calls a lightweight endpoint /api/me (if it exists) to detect if current user equals session.impersonatedUserId vs originalUserId.
+	•	Or, simpler: add a new endpoint /api/impersonation/status that returns { impersonating: boolean, target: { id, name, role } | null }.
+	•	If impersonating: true, display “Impersonating: {name} ({role})” with a “Stop” button that POSTs /api/impersonation/stop and then reloads.
+
+	3.	Ensure superuser-only visibility:
+
+	•	Hide impersonation actions unless current req.user.role maps to superuser.
+
+PHASE 5 — SMOKE TEST SCRIPT (local)
+	1.	Start dev: npm run dev.
+	2.	Login as super_admin (temp bypass already exists for joshburn). Navigate to the impersonation tab.
+	3.	Confirm the facility/staff users render (no crash).
+	4.	Click an entry → Start Impersonation. Verify the banner displays “Impersonating …”.
+	5.	Navigate to pages that differ by role to confirm access scoping works.
+	6.	Click Stop → back to superuser. Confirm banner disappears.
+
+PHASE 6 — REPORT
+Provide a concise report including:
+	•	What lines/files you changed.
+	•	The exact cause of facilityUsers.filter is not a function (response shape, null, or object).
+	•	The final shapes of /api/facility-users and /api/staff (confirm arrays).
+	•	The impersonation middleware and endpoints you added/modified.
+	•	Any TODOs or risks.
+
+APPENDIX — IMPLEMENTATION HINTS (use at your discretion)
+A) Safe array helper (client)
+function asArray(v) {
+if (Array.isArray(v)) return v;
+if (!v) return [];
+if (Array.isArray(v.data)) return v.data;
+if (Array.isArray(v.rows)) return v.rows;
+if (Array.isArray(v.items)) return v.items;
+if (typeof v === “object”) {
+const vals = Object.values(v);
+return vals.every(x => typeof x === “object”) ? vals : [];
+}
+return [];
+}
+
+B) Minimal status endpoint (server)
+GET /api/impersonation/status → { impersonating: boolean, target: {id, name, role} | null }
+
+C) Middleware tip
+Order matters: passport.initialize() → passport.session() → handleImpersonation middleware.

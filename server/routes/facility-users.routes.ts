@@ -101,19 +101,12 @@ router.get("/", authenticate, async (req: Request, res: Response) => {
       .limit(limitNum)
       .offset(offset);
 
-    res.json({
-      users: results.map(user => ({
-        ...user,
-        name: `${user.firstName} ${user.lastName}`,
-        primaryFacility: user.facilityName,
-      })),
-      pagination: {
-        page: pageNum,
-        limit: limitNum,
-        total: totalCount,
-        totalPages: Math.ceil(totalCount / limitNum),
-      },
-    });
+    // Return bare array for compatibility with frontend
+    res.json(results.map(user => ({
+      ...user,
+      name: `${user.firstName} ${user.lastName}`,
+      primaryFacility: user.facilityName,
+    })));
   } catch (error) {
     logger.error("Error fetching facility users", { error });
     res.status(500).json({ error: "Failed to fetch facility users" });

@@ -219,22 +219,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
 
-      // Call backend to properly start impersonation and get enhanced user data
-      const response = await apiRequest("POST", "/api/impersonate/start", {
-        targetUserId: userId,
-        userType: type,
+      // Call backend to properly start impersonation with new API endpoint
+      const response = await apiRequest("POST", "/api/impersonation/start", {
+        userId: userId,
+        type: type,
       });
       const impersonationData = await response.json();
 
-      if (impersonationData.impersonatedUser) {
-        const enhancedUser = impersonationData.impersonatedUser;
-        const originalUserData = impersonationData.originalUser || currentUser;
-
+      if (impersonationData.ok) {
         // Update our state to reflect impersonation
         setImpersonationState({
           isImpersonating: true,
-          originalUser: originalUserData,
-          impersonatedUser: enhancedUser,
+          originalUser: currentUser,
+          impersonatedUser: null, // Will be updated by backend response
         });
 
         // Force query client to refetch the user data
@@ -243,14 +240,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         
         toast({
           title: "Impersonation Started",
-          description: `Now viewing as ${enhancedUser.firstName || enhancedUser.username} ${enhancedUser.lastName || ''}`.trim(),
+          description: `Impersonation session started successfully`,
         });
         
-        // Navigate to role-specific dashboard after successful impersonation
-        const targetRole = enhancedUser.role as SystemRole;
-        const dashboardPath = getDashboardPathByRole(targetRole);
-
-        navigate(dashboardPath, { replace: true });
+        // Navigate to dashboard
+        navigate("/dashboard", { replace: true });
       } else {
 
         throw new Error("Failed to start impersonation");
@@ -274,7 +268,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
 
       // Call backend to stop impersonation
-      const response = await apiRequest("POST", "/api/impersonate/stop");
+      const response = await apiRequest("POST", "/api/impersonation/stop");
       const data = await response.json();
       
       // Clear ALL impersonation-related state

@@ -31,6 +31,20 @@ import {
 import { User as SelectUser } from "@shared/schema";
 import { useLocation, Link } from "wouter";
 
+// Safe array helper to handle various response formats
+function asArray(v: any): any[] {
+  if (Array.isArray(v)) return v;
+  if (!v) return [];
+  if (Array.isArray(v.data)) return v.data;
+  if (Array.isArray(v.rows)) return v.rows;
+  if (Array.isArray(v.items)) return v.items;
+  if (typeof v === "object") {
+    const vals = Object.values(v);
+    return vals.every(x => typeof x === "object" && x !== null) ? vals : [];
+  }
+  return [];
+}
+
 export default function AdminImpersonationPage() {
   const { user, startImpersonation, quitImpersonation, impersonatedUser, originalUser } = useAuth();
   const { staff, isLoading } = useStaff();
@@ -41,9 +55,12 @@ export default function AdminImpersonationPage() {
   const [facilityRoleFilter, setFacilityRoleFilter] = useState<string>("all");
 
   // Fetch facility users
-  const { data: facilityUsers = [], isLoading: isLoadingFacilityUsers } = useQuery({
+  const { data: facilityUsersData, isLoading: isLoadingFacilityUsers } = useQuery({
     queryKey: ["/api/facility-users"],
   });
+  
+  // Ensure facilityUsers is always an array
+  const facilityUsers = asArray(facilityUsersData);
 
   // Convert staff members to User type for impersonation
   const staffAsUsers: SelectUser[] = staff.map((s) => ({
@@ -337,7 +354,7 @@ export default function AdminImpersonationPage() {
                     create sample users.
                   </div>
                 ) : (
-                  facilityUsers
+                  asArray(facilityUsers)
                     .filter((user: any) => {
                       const searchMatch =
                         facilitySearchTerm === "" ||

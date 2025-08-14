@@ -92,13 +92,15 @@ export const handleImpersonation = async (req: any, res: any, next: any) => {
 };
 
 // Impersonation routes
-router.post("/api/impersonate/start", requireAuth, async (req, res) => {
+router.post("/api/impersonation/start", requireAuth, async (req, res) => {
   try {
     if (req.user?.role !== "super_admin") {
       return res.status(403).json({ message: "Superuser access required" });
     }
 
-    const { targetUserId, userType = "user" } = req.body;
+    const { userId, type = "facility" } = req.body;
+    const targetUserId = userId;
+    const userType = type;
     let targetUser: any = null;
 
     // Handle different user types
@@ -177,24 +179,27 @@ router.post("/api/impersonate/start", requireAuth, async (req, res) => {
       targetUser.userType = "user";
     }
 
-    // Store original user in session
-    (req.session as any).originalUser = req.user;
-    (req.session as any).isImpersonating = true;
-    (req.session as any).impersonatedUserType = userType;
+    // Store original user ID if not already set
+    if (!(req.session as any).originalUserId) {
+      (req.session as any).originalUserId = req.user?.id;
+    }
+    
+    // Set impersonation session flags
     (req.session as any).impersonatedUserId = targetUserId;
-
-    // Set impersonated user as current user
-    (req.session as any).user = {
-      ...targetUser,
-      isActive: true,
-      canImpersonate: true,
-    };
+    (req.session as any).impersonatedUserType = userType;
 
     // Save session and return success
-    res.json({
-      success: true,
-      message: "Impersonation started successfully",
-      user: targetUser
+    req.session.save((err: any) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.status(500).json({ message: "Failed to save session" });
+      }
+      
+      res.json({
+        ok: true,
+        impersonatedUserId: targetUserId,
+        message: "Impersonation started successfully"
+      });
     });
   } catch (error) {
     console.error("Impersonation error:", error);
@@ -202,32 +207,87 @@ router.post("/api/impersonate/start", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/api/impersonate/stop", requireAuth, async (req, res) => {
+router.post("/api/impersonation/stop", requireAuth, async (req, res) => {
   try {
-    if (!(req.session as any).isImpersonating) {
+    if (!(req.session as any).impersonatedUserId) {
       return res.status(400).json({ message: "Not currently impersonating" });
     }
 
-    // Restore original user
-    const originalUser = (req.session as any).originalUser;
-    if (originalUser) {
-      (req.session as any).user = originalUser;
-      delete (req.session as any).originalUser;
-      delete (req.session as any).isImpersonating;
-      delete (req.session as any).impersonatedUserType;
-      delete (req.session as any).impersonatedUserId;
-
+    // Clear impersonation flags but keep originalUserId
+    delete (req.session as any).impersonatedUserId;
+    delete (req.session as any).impersonatedUserType;
+    
+    // Save session and return success
+    req.session.save((err: any) => {
+      if (err) {
+        console.error("Session save error:", err);
+        return res.status(500).json({ message: "Failed to save session" });
+      }
+      
       res.json({
-        success: true,
-        message: "Impersonation stopped successfully",
-        user: originalUser
+        ok: true,
+        message: "Impersonation stopped successfully"
       });
-    } else {
-      res.status(500).json({ message: "Failed to restore original user" });
-    }
+    });
   } catch (error) {
     console.error("Stop impersonation error:", error);
     res.status(500).json({ message: "Failed to stop impersonation" });
+  }
+});
+
+// Get impersonation status
+router.get("/api/impersonation/status", requireAuth, async (req, res) => {
+  try {
+    const impersonatedUserId = (req.session as any).impersonatedUserId;
+    
+    if (!impersonatedUserId) {
+      return res.json({ 
+        impersonating: false, 
+        target: null 
+      });
+    }
+    
+    // Get the impersonated user details
+    const userType = (req.session as any).impersonatedUserType || 'facility';
+    let targetUser = null;
+    
+    if (userType === 'facility' || userType === 'facility_user') {
+      const [facilityUser] = await db
+        .select()
+        .from(facilityUsers)
+        .where(eq(facilityUsers.id, impersonatedUserId))
+        .limit(1);
+        
+      if (facilityUser) {
+        targetUser = {
+          id: facilityUser.id,
+          name: `${facilityUser.firstName} ${facilityUser.lastName}`,
+          role: facilityUser.role
+        };
+      }
+    } else if (userType === 'staff') {
+      const [staffMember] = await db
+        .select()
+        .from(staff)
+        .where(eq(staff.id, impersonatedUserId))
+        .limit(1);
+        
+      if (staffMember) {
+        targetUser = {
+          id: staffMember.id,
+          name: `${staffMember.firstName} ${staffMember.lastName}`,
+          role: staffMember.employmentType || 'staff'
+        };
+      }
+    }
+    
+    res.json({
+      impersonating: true,
+      target: targetUser
+    });
+  } catch (error) {
+    console.error("Get impersonation status error:", error);
+    res.status(500).json({ message: "Failed to get impersonation status" });
   }
 });
 
