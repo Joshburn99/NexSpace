@@ -1,0 +1,155 @@
+TITLE: Reorganize NexSpace routes and add Superuser “All Pages” dropdown (grouped by user types). Create all pages so none 404. Update ProtectedRoute and keep current features.
+
+OBJECTIVE
+We’re on the Replit project (not the Loveable repo). Implement a clean, scalable routing structure and a Superuser navigation dropdown that surfaces every page in the platform, grouped: Overview, Administration, Facility Management, Worker Self-Service. Ensure all routes exist and render at least a functional stub (no more 404s). Keep existing code style (Vite + wouter + React Query + Tailwind) and the error-boundary/guard patterns.
+
+SCOPE OF WORK (make these exact changes)
+	1.	Add a central route registry
+Create: src/routes/registry.ts
+
+	•	Export:
+	•	type RouteGroup = “OVERVIEW” | “ADMIN” | “FACILITY” | “WORKER”
+	•	interface RouteDef { path: string; label: string; group: RouteGroup; required?: string[]; }
+	•	routes: RouteDef[] containing all paths below.
+	•	Groups and routes (use exactly these path strings and labels):
+OVERVIEW
+• { path: “/”, label: “Dashboard”, required: [“dashboard.view”] }
+ADMIN (superuser only by default; still use required: [“admin.access”])
+• /admin/tenants  → “Tenants”
+• /admin/users    → “Users”
+• /admin/roles    → “Roles & Access”
+• /admin/compliance → “Compliance”
+• /admin/audit    → “Audit Log”
+• /admin/settings → “System Settings”
+FACILITY
+• /facility/schedule     → “Schedule”        (required: [“shift.view”])
+• /facility/assignments  → “Assignments”     ([“shift.assign”])
+• /facility/timesheets   → “Timesheets”      ([“timesheet.view”])
+• /facility/credentials  → “Credentials”     ([“credential.view”])
+• /facility/people       → “People”          ([“user.manage”])
+• /facility/financials   → “Financials”      ([“invoice.view”])
+• /facility/messages     → “Messages”        ([“message.view”])
+• /facility/reports      → “Reports”         ([“report.view”])
+WORKER
+• /worker/home        → “My Home”            ([“marketplace.view”])
+• /worker/marketplace → “Marketplace”        ([“marketplace.view”])
+• /worker/schedule    → “My Schedule”        ([“timesheet.submit”])
+• /worker/timesheets  → “My Timesheets”      ([“timesheet.submit”])
+• /worker/credentials → “My Credentials”     ([“credential.upload”])
+• /worker/messages    → “Messages”           ([“message.view”])
+• /worker/earnings    → “Earnings”           ([“invoice.view”])
+• /worker/profile     → “Profile”            ([])
+
+	2.	Create a Superuser “All Pages” dropdown
+Create: src/modules/SuperNav.tsx
+
+	•	Component SuperNav:
+	•	Fetch /api/me via React Query.
+	•	If role === "SUPERUSER" show a button labeled “All Pages”.
+	•	Clicking the button opens a dropdown panel listing all routes grouped by group (Overview, Administration, Facility Management, Worker Self-Service) with headings.
+	•	Each item is a link; clicking navigates using wouter useLocation() and closes the panel.
+	•	Keyboard: ESC closes; Tab order works; button has aria-expanded and aria-controls.
+	•	Styling: simple Tailwind + subtle shadow; fits in current header.
+
+	3.	Add an application shell that places the dropdown in the header
+Create: src/modules/AppShell.tsx
+
+	•	Props: { children: React.ReactNode }
+	•	Render a top bar with:
+	•	Left: product title “NexSpace”
+	•	Middle: breadcrumbs placeholder
+	•	Right:  and a basic user menu placeholder
+	•	Under the header, render {children} (no sidebar change required in this step).
+
+	4.	Update ProtectedRoute so SUPERUSER (or wildcard “*”) always passes
+Edit: src/modules/ProtectedRoute.tsx
+
+	•	Modify hasPermissions to:
+	•	return true if me.role === "SUPERUSER" OR me.permissions?.includes("*")
+	•	otherwise require every listed permission.
+	•	Keep the rest (loading, error fallback, safe=1 bypass).
+
+	5.	Wire all routes from the registry (no more hand-coded links)
+Edit: src/modules/App.tsx
+
+	•	Remove the current top <nav> links.
+	•	Wrap the app in <AppShell> (new).
+	•	Programmatically generate <Route> entries by iterating routes from src/routes/registry.ts. For each:
+	•	Use <Route path=... component={() => <ProtectedRoute required={def.required}><PageFor(def.path) /></ProtectedRoute>} />
+	•	Implement a PageFor(path) mapping (see step 6).
+	•	Keep existing /login and /ui-health routes intact.
+
+	6.	Provide page components for every route (stubs where needed)
+Create these files with minimal but functional content (title, description, and a few placeholder controls). Re-use existing pages where possible.
+
+Admin (new)
+	•	src/pages/admin/Tenants.tsx
+	•	src/pages/admin/Users.tsx
+	•	src/pages/admin/RolesAccess.tsx
+	•	src/pages/admin/Compliance.tsx
+	•	src/pages/admin/AuditLog.tsx
+	•	src/pages/admin/SystemSettings.tsx
+
+Facility (use wrappers to reuse existing files)
+	•	src/pages/facility/Schedule.tsx → re-export default from ../Schedule
+	•	src/pages/facility/Timesheets.tsx → re-export default from ../Timesheets
+	•	src/pages/facility/Assignments.tsx (new stub)
+	•	src/pages/facility/Credentials.tsx (new stub)
+	•	src/pages/facility/People.tsx (new stub)
+	•	src/pages/facility/Financials.tsx (new stub)
+	•	src/pages/facility/Messages.tsx (new stub)
+	•	src/pages/facility/Reports.tsx (new stub)
+
+Worker (new stubs)
+	•	src/pages/worker/Home.tsx
+	•	src/pages/worker/Marketplace.tsx
+	•	src/pages/worker/Schedule.tsx
+	•	src/pages/worker/Timesheets.tsx
+	•	src/pages/worker/Credentials.tsx
+	•	src/pages/worker/Messages.tsx
+	•	src/pages/worker/Earnings.tsx
+	•	src/pages/worker/Profile.tsx
+
+Overview (use existing)
+	•	Keep src/pages/Dashboard.tsx as the overview page.
+
+	7.	Implement the PageFor() resolver used by App.tsx
+Create: src/modules/page-map.ts
+
+	•	Export a function pageFor(path: string): React.ComponentType<any> that returns the correct component import for a given route path.
+	•	Map each path above to its component (e.g., “/admin/tenants” → Tenants, “/facility/schedule” → Facility/Schedule, etc.).
+	•	For unknown paths, return a small 404 component that links back to “/”.
+
+	8.	Update the header to show current role and quick link to Dashboard
+
+	•	In AppShell, after <SuperNav />, show a small badge with the user’s role and a “Dashboard” icon button linking to “/”.
+
+	9.	Keep everything type-safe and accessible
+
+	•	Use TypeScript types for RouteDef.
+	•	Add aria-label to the dropdown button and menu.
+	•	Ensure the dropdown is closable by clicking outside (simple onBlur/onKeyDown is fine).
+
+	10.	Acceptance criteria (must verify)
+
+	•	As SUPERUSER, clicking “All Pages” reveals a grouped list with headings:
+Overview, Administration, Facility Management, Worker Self-Service.
+	•	Clicking any item navigates to that route; no 404s. Each page renders a stub with its title and a short description.
+	•	Non-SUPERUSER users do not see the “All Pages” dropdown.
+	•	ProtectedRoute now allows SUPERUSER or permissions:["*"] to access all routes.
+	•	Existing pages (Dashboard, Schedule, Timesheets) still work exactly as before.
+
+	11.	Bonus (optional, if time allows)
+
+	•	Add a quick filter input at the top of the dropdown to type-filter routes (client-side).
+	•	Remember the last opened group and scroll on next open.
+
+NOTES
+	•	Do not change server or Prisma files.
+	•	Keep wouter, React Query, Tailwind setup as is.
+	•	Keep the global AppErrorBoundary and safe=1 guard behavior.
+
+OUTPUT
+	•	The new/updated files listed above, compiling with no type errors.
+	•	A short summary of files created/modified and where the route registry is defined.
+	•	Confirm that “All Pages” menu appears only for SUPERUSER and that every route renders.
