@@ -122,7 +122,7 @@ export default function EnhancedCalendarPage() {
   const [isAddShiftOpen, setIsAddShiftOpen] = useState(false);
   const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
   const [isShiftDetailsOpen, setIsShiftDetailsOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"dayGridMonth" | "timeGridWeek" | "timeGridDay">("dayGridMonth");
+  const [viewMode, setViewMode] = useState<"dayGridMonth" | "timeGridWeek" | "timeGridDay">("timeGridWeek");
 
   // Form state for new shift
   const [newShift, setNewShift] = useState({
@@ -149,19 +149,23 @@ export default function EnhancedCalendarPage() {
     ];
   }, []);
 
-  // Fetch shifts from API
+  // Fetch shifts from calendar API
   const {
     data: calendarEvents = [],
     isLoading: shiftsLoading,
     error: shiftsError,
     refetch: refetchShifts,
   } = useQuery({
-    queryKey: ["/api/shifts", { 
+    queryKey: ["/api/calendar/shifts", { 
+      start: calendarStart, 
+      end: calendarEnd,
       facilities: selectedFacilities, 
       search: searchQuery 
     }],
     queryFn: async () => {
       const params = new URLSearchParams();
+      params.append("start", calendarStart);
+      params.append("end", calendarEnd);
       if (selectedFacilities.length > 0) {
         selectedFacilities.forEach(f => params.append("facilityId", f.toString()));
       }
@@ -169,7 +173,7 @@ export default function EnhancedCalendarPage() {
         params.append("search", searchQuery);
       }
       
-      const response = await fetch(`/api/shifts?${params.toString()}`, {
+      const response = await fetch(`/api/calendar/shifts?${params.toString()}`, {
         credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
@@ -177,7 +181,7 @@ export default function EnhancedCalendarPage() {
       });
       
       if (!response.ok) {
-        throw new Error("Failed to fetch shifts");
+        throw new Error("Failed to fetch calendar events");
       }
       return response.json();
     },
@@ -236,64 +240,28 @@ export default function EnhancedCalendarPage() {
 
   // Transform calendar events for FullCalendar with normalized data
   const fullCalendarEvents = useMemo(() => {
-    return calendarEvents.map((shift: any) => {
-      // Convert shift date and time to ISO strings
-      const startDateTime = new Date(`${shift.date}T${shift.startTime}`);
-      const endDateTime = new Date(`${shift.date}T${shift.endTime}`);
+    return calendarEvents.map((event: any) => {
+      const normalized = normalizeShiftEvent(event);
+      const timeRange = formatRange(normalized.startUtc, normalized.endUtc, normalized.timezone);
+      const filled = normalized.filledCount;
+      const required = normalized.requiredCount;
       
-      // Handle filled/assigned status
-      const assignedCount = shift.assignedStaffIds?.length || 0;
-      const requiredCount = shift.requiredStaff || 1;
-      
-      // Determine color based on status and assignment
-      let backgroundColor = '#6366f1'; // blue for unassigned
-      let textColor = '#ffffff';
-      
-      // Check shift type/specialty for RN shifts
-      const isRN = shift.specialty?.includes('RN') || shift.specialty?.includes('Registered Nurse');
-      
-      if (isRN && assignedCount === 0) {
-        backgroundColor = '#ef4444'; // red for unassigned RN shifts
-      } else if (isRN && assignedCount > 0) {
-        backgroundColor = '#dc2626'; // darker red for assigned RN shifts
-      } else if (shift.status === 'filled' || assignedCount >= requiredCount) {
-        backgroundColor = '#22c55e'; // green for filled
-      } else if (shift.status === 'pending' || assignedCount > 0) {
-        backgroundColor = '#f59e0b'; // yellow for partially filled
-      } else if (shift.status === 'cancelled') {
-        backgroundColor = '#6b7280'; // gray for cancelled
-      } else if (shift.status === 'open') {
-        backgroundColor = '#6366f1'; // blue for open/unassigned
-      }
-      
-      // Format time for display
-      const shortTime = shift.startTime ? shift.startTime.slice(0, 5) : '';
-      const endTime = shift.endTime ? shift.endTime.slice(0, 5) : '';
-      
-      // Determine status text
-      const statusText = assignedCount === 0 ? 'Unassigned' : 
-                         assignedCount >= requiredCount ? 'Filled' : 
-                         `${assignedCount}/${requiredCount} assigned`;
-      
-      // Get specialty abbreviation
-      const specialtyAbbr = shift.specialty?.includes('Registered Nurse') ? 'RN' :
-                           shift.specialty?.includes('Licensed Practical') ? 'LPN' :
-                           shift.specialty?.includes('Certified Nursing') ? 'CNA' :
-                           shift.specialty?.includes('Physical Therapy') ? 'PT' :
-                           shift.specialty?.includes('Occupational') ? 'OT' :
-                           shift.specialty || 'STAFF';
+      // Determine color based on status
+      let backgroundColor = '#6b7280'; // gray for open
+      if (normalized.status === 'filled') backgroundColor = '#22c55e'; // green
+      else if (normalized.status === 'pending') backgroundColor = '#f59e0b'; // yellow
+      else if (normalized.status === 'cancelled') backgroundColor = '#ef4444'; // red
       
       return {
-        id: shift.id.toString(),
-        title: `${statusText} - ...\n${specialtyAbbr} - ${shortTime} - ${endTime}`,
-        start: startDateTime.toISOString(),
-        end: endDateTime.toISOString(),
+        id: normalized.id.toString(),
+        title: `${normalized.specialty} • ${timeRange} • ${filled}/${required}`,
+        start: normalized.startUtc,
+        end: normalized.endUtc,
         backgroundColor,
         borderColor: backgroundColor,
-        textColor,
-        classNames: ['shift-event'],
+        classNames: ['shift-chip'],
         extendedProps: {
-          shift: shift,
+          shift: normalized,
         },
       };
     });
@@ -435,35 +403,21 @@ export default function EnhancedCalendarPage() {
               <Loader2 className="w-8 h-8 animate-spin" />
             </div>
           ) : (
-            <div className="google-calendar-wrapper">
-              <FullCalendar
-                plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                initialView={viewMode}
-                headerToolbar={{
-                  left: "prev,next today",
-                  center: "title",
-                  right: "dayGridMonth,timeGridWeek,timeGridDay",
-                }}
-                events={fullCalendarEvents}
-                eventClick={handleEventClick}
-                editable={canCreateShifts}
-                selectable={canCreateShifts}
-                height="auto"
-                aspectRatio={1.8}
-                eventDisplay="block"
-                dayMaxEvents={3}
-                eventTimeFormat={{
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  meridiem: false
-                }}
-                slotLabelFormat={{
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  meridiem: false
-                }}
-              />
-            </div>
+            <FullCalendar
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+              initialView={viewMode}
+              headerToolbar={{
+                left: "prev,next today",
+                center: "title",
+                right: "dayGridMonth,timeGridWeek,timeGridDay",
+              }}
+              events={fullCalendarEvents}
+              eventClick={handleEventClick}
+              editable={canCreateShifts}
+              selectable={canCreateShifts}
+              height="auto"
+              aspectRatio={1.8}
+            />
           )}
         </CardContent>
       </Card>

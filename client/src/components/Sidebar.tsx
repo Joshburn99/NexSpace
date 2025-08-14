@@ -22,7 +22,7 @@ import {
   Building,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { UserRole } from "@/types";
+import { UserRole } from "@shared/schema";
 
 interface NavItem {
   label: string;
@@ -44,15 +44,9 @@ const navigationItems: NavItem[] = [
     icon: <Calendar className="w-5 h-5" />,
     children: [
       {
-        label: "Calendar",
-        href: "/calendar",
+        label: "Enhanced Calendar",
+        href: "/calendar-view",
         icon: <Calendar className="w-4 h-4" />,
-      },
-      {
-        label: "Calendar (Drag & Drop)",
-        href: "/calendar-dnd",
-        icon: <Calendar className="w-4 h-4" />,
-        roles: [UserRole.SUPER_ADMIN],
       },
       {
         label: "Shift Templates",

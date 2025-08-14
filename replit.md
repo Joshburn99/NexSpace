@@ -42,13 +42,6 @@ NexSpace is an advanced healthcare workforce management platform designed to opt
 - **Job Management**: Functionality for job postings, interview scheduling, and application tracking with dedicated database tables.
 - **Security**: Strict access controls on administrative pages, systematic API security hardening, and advanced frontend route protection based on RBAC.
 
-### Recent Changes (August 14, 2025)
-- **Calendar Route Restoration**: Successfully restored UnifiedCalendarPage as the main calendar at `/calendar` route, featuring detailed shift modals, create shift functionality, and active shift request capabilities
-- **Drag-and-Drop Calendar Preservation**: Preserved the drag-and-drop EnhancedCalendarPage on new route `/calendar-dnd` with superuser-only access
-- **Navigation Updates**: Updated sidebar to include both calendar options - main calendar for all users and drag-and-drop calendar visible only to superusers
-- **Shift Modal Integration**: Maintained ShiftDetailsModal and CreateShiftModal components with proper event handling for shift management
-- **Authentication Verified**: Confirmed backend authentication and API endpoints are functioning correctly with session-based auth
-
 ### Recent Changes (August 13, 2025 - Part 4)
 - **Information Architecture Consolidation**: Completed comprehensive IA restructuring by migrating 57 facility users from `users` table to dedicated `facility_users` table, maintaining 3 superusers in the original users table
 - **Facility Users Management**: Implemented full CRUD API endpoints at `/api/facility-users` with search, filtering, and pagination support

@@ -8,7 +8,7 @@ import {
   hasAllPermissions,
   ROLE_PERMISSIONS,
   ROLE_METADATA,
-} from "@/types";
+} from "@shared/rbac";
 
 interface RBACContextType {
   userRole: SystemRole;
@@ -16,8 +16,6 @@ interface RBACContextType {
   hasPermission: (permission: Permission) => boolean;
   hasAnyPermission: (permissions: Permission[]) => boolean;
   hasAllPermissions: (permissions: Permission[]) => boolean;
-  hasRole?: (role: SystemRole) => boolean;
-  hasAnyRole?: (roles: SystemRole[]) => boolean;
   roleMetadata: (typeof ROLE_METADATA)[SystemRole];
 }
 
@@ -38,8 +36,6 @@ export function RBACProvider({ children }: { children: ReactNode }) {
       hasPermission: (permission: Permission) => hasPermission(userRole, permission),
       hasAnyPermission: (permissions: Permission[]) => hasAnyPermission(userRole, permissions),
       hasAllPermissions: (permissions: Permission[]) => hasAllPermissions(userRole, permissions),
-      hasRole: (role: SystemRole) => userRole === role,
-      hasAnyRole: (roles: SystemRole[]) => roles.includes(userRole),
       roleMetadata,
     };
   }, [user?.role]);

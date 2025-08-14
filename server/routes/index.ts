@@ -24,25 +24,6 @@ import { storage } from "../storage";
 const userConnections = new Map<number, Set<WebSocket>>();
 
 export function registerRoutes(app: Express): Server {
-  // Development-only /api/me stub
-  if (process.env.NODE_ENV === 'development') {
-    app.get('/api/me', (req, res) => {
-      // Check if there's an existing session first
-      if (req.session?.userId || req.user) {
-        // Use existing auth if available
-        return res.json({
-          user: req.user || { id: req.session.userId, role: 'super_admin' },
-          permissions: ["dashboard.view", "shift.view", "timesheet.view", "staff.view", "analytics.view"]
-        });
-      }
-      // Fallback dev user if no session
-      res.json({
-        user: { id: "dev", name: "Dev User", role: "super_admin" },
-        permissions: ["dashboard.view", "shift.view", "timesheet.view", "staff.view", "analytics.view"]
-      });
-    });
-  }
-
   // Setup authentication routes with handleImpersonation middleware
   setupAuth(app, handleImpersonation);
 

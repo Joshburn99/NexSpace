@@ -1,5 +1,5 @@
 import { useAuth } from "./use-auth";
-import { User } from "@/types";
+import { User } from "@shared/schema";
 
 /**
  * Hook to get the current user data

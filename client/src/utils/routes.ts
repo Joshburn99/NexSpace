@@ -9,7 +9,7 @@
  * - User experience: Consistent navigation patterns regardless of entry method
  */
 
-import type { SystemRole } from "@/types";
+import type { SystemRole } from "@shared/rbac";
 
 /**
  * Maps each system role to its appropriate dashboard route

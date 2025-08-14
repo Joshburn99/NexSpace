@@ -11,7 +11,7 @@ import {
   ClipboardCheck,
   MessageSquare,
 } from "lucide-react";
-import { UserRole } from "@/types";
+import { UserRole } from "@shared/schema";
 import { Link } from "wouter";
 
 interface QuickAction {

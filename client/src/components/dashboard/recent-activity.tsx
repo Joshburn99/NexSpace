@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Clock, UserCheck, FileText, AlertCircle, Settings } from "lucide-react";
-import { type AuditLog } from "@/types";
+import { type AuditLog } from "@shared/schema";
 
 interface ActivityItem {
   id: string;

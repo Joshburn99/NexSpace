@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { getDashboardPathByRole, validateRoleRouteAccess } from "@/utils/routes";
-import type { SystemRole } from "@/types";
+import type { SystemRole } from "@shared/rbac";
 
 export default function NotFound() {
   const { user } = useAuth();
