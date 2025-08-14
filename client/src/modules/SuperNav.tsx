@@ -31,8 +31,11 @@ export function SuperNav({ className }: SuperNavProps) {
   // Get current user from auth hook
   const { user } = useAuth();
 
-  // Only show for superusers
-  const isSuperuser = user?.role === "super_admin" || user?.role === "admin";
+  // Only show for superusers - handle different role formats
+  const normalizedRole = user?.role?.toLowerCase().replace(/\s+/g, '_');
+  const isSuperuser = normalizedRole === "super_admin" || 
+                      normalizedRole === "admin" ||
+                      user?.role === "Super Admin";
   
   if (!isSuperuser) {
     return null;

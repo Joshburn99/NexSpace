@@ -35,7 +35,9 @@ export function TopBar() {
 
       <div className="flex items-center space-x-4">
         {/* Super Admin All Pages Navigation */}
-        {(currentUser?.role === 'super_admin' || currentUser?.role === 'admin') && (
+        {(currentUser?.role?.toLowerCase().replace(/\s+/g, '_') === 'super_admin' || 
+          currentUser?.role?.toLowerCase() === 'admin' ||
+          currentUser?.role === 'Super Admin') && (
           <SuperNav className="mr-2" />
         )}
         
