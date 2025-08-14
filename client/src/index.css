@@ -47,6 +47,82 @@
   --nexspace-900: hsl(224, 64%, 33%);
 }
 
+/* FullCalendar Custom Styles for Shift Display */
+.fc-event {
+  border: none !important;
+  padding: 2px 4px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  overflow: hidden !important;
+  white-space: normal !important;
+  word-wrap: break-word !important;
+  font-weight: 500 !important;
+}
+
+.fc-daygrid-event {
+  white-space: normal !important;
+  align-items: start !important;
+}
+
+.fc-daygrid-event-harness {
+  margin: 1px !important;
+}
+
+.fc-event-title {
+  font-weight: 600 !important;
+  white-space: pre-line !important;
+}
+
+.fc-daygrid-dot-event {
+  display: none !important;
+}
+
+.fc-daygrid-day-events {
+  margin-top: 1px !important;
+}
+
+/* Month view specific styles */
+.fc-dayGridMonth-view .fc-daygrid-event {
+  white-space: normal !important;
+  overflow: visible !important;
+}
+
+.fc-dayGridMonth-view .fc-daygrid-day-frame {
+  min-height: 100px !important;
+}
+
+/* Shift event colors - matching the screenshot */
+.shift-event {
+  opacity: 0.95 !important;
+}
+
+.shift-event.unassigned {
+  background-color: #6366f1 !important; /* Blue for unassigned */
+  color: white !important;
+}
+
+.shift-event.rn-unassigned {
+  background-color: #ef4444 !important; /* Red for unassigned RN */
+  color: white !important;
+}
+
+.shift-event.filled {
+  background-color: #22c55e !important; /* Green for filled */
+  color: white !important;
+}
+
+.shift-event.partial {
+  background-color: #f59e0b !important; /* Yellow for partially filled */
+  color: white !important;
+}
+
+.shift-event.cancelled {
+  background-color: #6b7280 !important; /* Gray for cancelled */
+  color: white !important;
+}
+
 .dark {
   --background: hsl(240, 10%, 3.9%);
   --foreground: hsl(0, 0%, 98%);
