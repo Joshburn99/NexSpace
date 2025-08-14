@@ -38,7 +38,7 @@ import JobBoard from "@/pages/job-board";
 import EnhancedJobBoard from "@/pages/enhanced-job-board";
 import JobBoardPage from "@/pages/JobBoardPage";
 import FacilityJobsPage from "@/pages/FacilityJobsPage";
-import UnifiedCalendarPage from "@/pages/unified-calendar-page";
+// import UnifiedCalendarPage from "@/pages/unified-calendar-page";
 import MessagingPage from "@/pages/messaging-page";
 import AnalyticsPage from "@/pages/analytics-page";
 import CredentialsPage from "@/pages/credentials-page";
@@ -117,11 +117,21 @@ import RoleManagementPage from "@/pages/RoleManagementPage";
 import NotFound from "@/pages/not-found";
 import DesignSystemDemo from "@/pages/design-system-demo";
 import TestPage from "@/pages/test-page";
+import TestCalendar from "@/pages/test-calendar";
 
 function AppContent() {
+  console.log("AppContent rendering...");
   const [location] = useLocation();
   const isAuthPage = location === "/auth";
-  const { user } = useAuth();
+  
+  // Wrap useAuth in try-catch to handle errors
+  let user = null;
+  try {
+    const authResult = useAuth();
+    user = authResult?.user;
+  } catch (error) {
+    console.error("Error accessing auth context:", error);
+  }
 
   // Show onboarding wizard for new users who haven't completed it
   // Skip onboarding for impersonated users, staff members, and facility users
@@ -132,6 +142,7 @@ function AppContent() {
 
   const router = (
     <Switch>
+      <Route path="/test-calendar" component={TestCalendar} />
       <ProtectedRoute path="/" component={HomePage} />
       
       {/* Main Role-Based Dashboard Routes */}
@@ -149,10 +160,10 @@ function AppContent() {
       <ProtectedRoute path="/jobs" component={EnhancedJobBoard} />
       <ProtectedRoute path="/jobs/post" component={EnhancedJobPostingPage} />
       <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />
-      <ProtectedRoute path="/schedule" component={UnifiedCalendarPage} />
+      <ProtectedRoute path="/schedule" component={EnhancedCalendarPage} />
       <ProtectedRoute path="/calendar" component={EnhancedCalendarPage} />
-      <ProtectedRoute path="/calendar-view" component={UnifiedCalendarPage} />
-      <ProtectedRoute path="/enhanced-calendar" component={UnifiedCalendarPage} />
+      <ProtectedRoute path="/calendar-view" component={EnhancedCalendarPage} />
+      <ProtectedRoute path="/enhanced-calendar" component={EnhancedCalendarPage} />
       <ProtectedRoute path="/calendar-dnd" component={EnhancedCalendarPage} />
       <ProtectedRoute path="/shift-templates" component={ShiftTemplatesPage} />
       <ProtectedRoute path="/facility-schedule" component={FacilitySchedulePage} />
@@ -382,57 +393,33 @@ function AppContent() {
 }
 
 function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider>
-        <ErrorBoundary>
-          <AuthProvider>
-            <SessionProvider>
-              <RBACProvider>
-                <FacilityPermissionsProvider>
-                  <NotificationProvider>
-                    <ShiftProvider>
-                      <TimeClockProvider>
-                        <StaffProvider>
-                          <TeamProvider>
-                                <MessageProvider>
-                                <MessagingProvider>
-                                  <EnhancedCredentialProvider>
-                                    <CredentialVerificationProvider>
-                                      <PTOProvider>
-                                        <JobProvider>
-                                          <ProfileProvider>
-                                            <CredentialsProvider>
-                                              <InsightsProvider>
-                                                <InvoiceProvider>
-                                                  <DashboardProvider>
-                                                    <TooltipProvider>
-                                                      <Toaster />
-                                                      <AppContent />
-                                                    </TooltipProvider>
-                                                  </DashboardProvider>
-                                                </InvoiceProvider>
-                                              </InsightsProvider>
-                                            </CredentialsProvider>
-                                          </ProfileProvider>
-                                        </JobProvider>
-                                      </PTOProvider>
-                                    </CredentialVerificationProvider>
-                                  </EnhancedCredentialProvider>
-                                </MessagingProvider>
-                              </MessageProvider>
-                            </TeamProvider>
-                          </StaffProvider>
-                        </TimeClockProvider>
-                      </ShiftProvider>
-                    </NotificationProvider>
-                  </FacilityPermissionsProvider>
-                </RBACProvider>
-              </SessionProvider>
-            </AuthProvider>
-          </ErrorBoundary>
-        </ThemeProvider>
-    </QueryClientProvider>
+  console.log("App component rendering...");
+  
+  // Use React.createElement to avoid JSX compilation issues
+  return React.createElement(
+    'div',
+    { 
+      style: { 
+        padding: '20px', 
+        position: 'fixed',
+        top: '0px',
+        left: '0px',
+        zIndex: 99999,
+        backgroundColor: 'red',
+        width: '100vw',
+        height: '100vh',
+        color: 'white'
+      }
+    },
+    React.createElement('h1', { style: { fontSize: '48px' } }, 'NexSpace is Working!'),
+    React.createElement('p', null, 'Time: ' + new Date().toLocaleTimeString()),
+    React.createElement('button', 
+      { 
+        onClick: () => { window.location.href = '/calendar'; },
+        style: { padding: '20px', fontSize: '20px' }
+      }, 
+      'Open Calendar'
+    )
   );
 }
 

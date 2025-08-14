@@ -435,21 +435,35 @@ export default function EnhancedCalendarPage() {
               <Loader2 className="w-8 h-8 animate-spin" />
             </div>
           ) : (
-            <FullCalendar
-              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-              initialView={viewMode}
-              headerToolbar={{
-                left: "prev,next today",
-                center: "title",
-                right: "dayGridMonth,timeGridWeek,timeGridDay",
-              }}
-              events={fullCalendarEvents}
-              eventClick={handleEventClick}
-              editable={canCreateShifts}
-              selectable={canCreateShifts}
-              height="auto"
-              aspectRatio={1.8}
-            />
+            <div className="google-calendar-wrapper">
+              <FullCalendar
+                plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                initialView={viewMode}
+                headerToolbar={{
+                  left: "prev,next today",
+                  center: "title",
+                  right: "dayGridMonth,timeGridWeek,timeGridDay",
+                }}
+                events={fullCalendarEvents}
+                eventClick={handleEventClick}
+                editable={canCreateShifts}
+                selectable={canCreateShifts}
+                height="auto"
+                aspectRatio={1.8}
+                eventDisplay="block"
+                dayMaxEvents={3}
+                eventTimeFormat={{
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  meridiem: false
+                }}
+                slotLabelFormat={{
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  meridiem: false
+                }}
+              />
+            </div>
           )}
         </CardContent>
       </Card>
