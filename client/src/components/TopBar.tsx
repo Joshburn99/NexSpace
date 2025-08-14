@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { LogOut, User } from "lucide-react";
 import { GlobalSearch } from "./GlobalSearch";
 import { NotificationDropdown } from "./NotificationDropdown";
+import { SuperNav } from "@/modules/SuperNav";
 
 export function TopBar() {
   const { user, impersonatedUser, quitImpersonation, originalUser } = useAuth();
@@ -33,6 +34,11 @@ export function TopBar() {
       </div>
 
       <div className="flex items-center space-x-4">
+        {/* Super Admin All Pages Navigation */}
+        {(currentUser?.role === 'super_admin' || currentUser?.role === 'admin') && (
+          <SuperNav className="mr-2" />
+        )}
+        
         {isImpersonating && (
           <div className="flex items-center space-x-2 px-3 py-1 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
             <User className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
