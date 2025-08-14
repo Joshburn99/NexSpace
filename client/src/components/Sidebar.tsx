@@ -22,7 +22,7 @@ import {
   Building,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { UserRole } from "@shared/schema";
+import { UserRole } from "@/types";
 
 interface NavItem {
   label: string;

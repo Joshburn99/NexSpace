@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
-import { Shift, User } from "@shared/schema";
+import { Shift, User } from "@/types";
 
 interface ShiftWithStaffing {
   shift: Shift & {

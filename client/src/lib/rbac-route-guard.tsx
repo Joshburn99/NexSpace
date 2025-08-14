@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useRBAC } from "@/hooks/use-rbac";
 import { Loader2, Shield } from "lucide-react";
 import { Redirect, Route } from "wouter";
-import type { Permission, SystemRole } from "@shared/rbac";
+import type { Permission, SystemRole } from "@/types";
 
 /**
  * Enhanced Route Protection with RBAC

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AlertTriangle, UserCheck, Calendar, Clock } from "lucide-react";
-import { type Shift } from "@shared/schema";
+import { type Shift } from "@/types";
 
 export function TodaysSchedule() {
   const { user } = useAuth();

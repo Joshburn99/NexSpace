@@ -32,7 +32,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { apiRequest } from "@/lib/queryClient";
-import { SystemRole, ROLE_METADATA } from "@shared/rbac";
+import { SystemRole, ROLE_METADATA } from "@/types";
 import { Search, Shield, Edit, UserCheck, Users } from "lucide-react";
 
 interface User {

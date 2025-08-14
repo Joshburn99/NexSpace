@@ -12,7 +12,7 @@ import {
   UserRound,
   Briefcase,
 } from "lucide-react";
-import { type Job } from "@shared/schema";
+import { type Job } from "@/types";
 
 export function JobBoardPreview() {
   const { data: jobs = [], isLoading } = useQuery<Job[]>({

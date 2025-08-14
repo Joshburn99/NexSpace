@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, CheckCircle, Clock, AlertCircle } from "lucide-react";
-import { type Credential } from "@shared/schema";
+import { type Credential } from "@/types";
 
 interface ComplianceAlert {
   id: string;

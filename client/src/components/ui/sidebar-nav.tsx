@@ -18,7 +18,7 @@ import {
   Menu,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { User, UserRole } from "@shared/schema";
+import { User, UserRole } from "@/types";
 
 interface SidebarNavProps {
   user: User;

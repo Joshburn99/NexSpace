@@ -165,7 +165,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     },
     onSuccess: (data: any) => {
       // Store quick auth for future auto-restore (dev only)
-      if (process.env.NODE_ENV === "development") {
+      if (import.meta.env.DEV) {
         localStorage.setItem(
           STORAGE_KEYS.QUICK_AUTH,
           JSON.stringify({

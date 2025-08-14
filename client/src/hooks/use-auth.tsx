@@ -1,11 +1,10 @@
 import React, { createContext, ReactNode, useContext, useState, useEffect } from "react";
 import { useQuery, useMutation, UseMutationResult } from "@tanstack/react-query";
-import { insertUserSchema, User as SelectUser, InsertUser } from "@shared/schema";
+import { User as SelectUser, InsertUser } from "@/types";
 import { getQueryFn, apiRequest, queryClient } from "../lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 import { getDashboardPathByRole } from "@/utils/routes";
-import type { SystemRole } from "@shared/rbac";
 
 type AuthContextType = {
   user: SelectUser | null; // Always returns the current user (impersonated or original)
