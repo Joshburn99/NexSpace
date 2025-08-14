@@ -34,6 +34,7 @@ export function SuperNav({ className }: SuperNavProps) {
   // Only show for superusers - handle different role formats
   const userRole = user?.role;
   if (!userRole) {
+    console.log("[SuperNav] No user role found");
     return null;
   }
   
@@ -41,6 +42,8 @@ export function SuperNav({ className }: SuperNavProps) {
   const isSuperuser = normalizedRole === "super_admin" || 
                       normalizedRole === "admin" ||
                       userRole === "Super Admin";
+  
+  console.log("[SuperNav] User role:", userRole, "Normalized:", normalizedRole, "Is Superuser:", isSuperuser);
   
   if (!isSuperuser) {
     return null;
@@ -130,6 +133,18 @@ export function SuperNav({ className }: SuperNavProps) {
     setActiveGroup(null);
   };
 
+  // Calculate dropdown position
+  const getDropdownPosition = () => {
+    if (!buttonRef.current) return { top: 0, left: 0 };
+    const rect = buttonRef.current.getBoundingClientRect();
+    return {
+      top: rect.bottom + 8, // 8px gap below button
+      left: Math.max(10, rect.left - 400 + rect.width / 2) // Center under button but keep on screen
+    };
+  };
+
+  const dropdownPosition = isOpen ? getDropdownPosition() : { top: 0, left: 0 };
+
   return (
     <>
       <button
@@ -146,7 +161,7 @@ export function SuperNav({ className }: SuperNavProps) {
         aria-label="All Pages Navigation"
       >
         <Grid className="h-4 w-4" />
-        <span>All Pages</span>
+        <span className="hidden sm:inline">All Pages</span>
         <ChevronDown className={cn(
           "h-3 w-3 transition-transform",
           isOpen && "rotate-180"
@@ -157,10 +172,10 @@ export function SuperNav({ className }: SuperNavProps) {
         <div
           ref={dropdownRef}
           id="super-nav-dropdown"
-          className="fixed z-50 mt-2 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
+          className="fixed z-[100] bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden"
           style={{
-            top: buttonRef.current ? buttonRef.current.offsetTop + buttonRef.current.offsetHeight : 0,
-            left: buttonRef.current ? buttonRef.current.offsetLeft : 0,
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
             minWidth: "800px",
             maxHeight: "calc(100vh - 100px)"
           }}
