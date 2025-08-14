@@ -1,3 +1,4 @@
+import React from "react";
 import { Switch, Route, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -118,30 +119,41 @@ import NotFound from "@/pages/not-found";
 import DesignSystemDemo from "@/pages/design-system-demo";
 import TestPage from "@/pages/test-page";
 import TestCalendar from "@/pages/test-calendar";
+import UIHealthPage from "@/pages/ui-health";
+import { AppErrorBoundary } from "@/lib/AppErrorBoundary";
 
 function AppContent() {
   console.log("AppContent rendering...");
   const [location] = useLocation();
   const isAuthPage = location === "/auth";
   
+  // Check if we're on a public route that doesn't need auth
+  const publicRoutes = ['/ui-health', '/test-calendar', '/auth'];
+  const isPublicRoute = publicRoutes.includes(location);
+  
   // Wrap useAuth in try-catch to handle errors
   let user = null;
   try {
-    const authResult = useAuth();
-    user = authResult?.user;
+    // Only use auth if not on public route
+    if (!isPublicRoute) {
+      const authResult = useAuth();
+      user = authResult?.user;
+    }
   } catch (error) {
     console.error("Error accessing auth context:", error);
   }
 
   // Show onboarding wizard for new users who haven't completed it
   // Skip onboarding for impersonated users, staff members, and facility users
-  if (user && !user.onboardingCompleted && !isAuthPage && 
+  // But not on public routes
+  if (!isPublicRoute && user && !user.onboardingCompleted && !isAuthPage && 
       user.role !== 'staff') {
     return <OnboardingWizard />;
   }
 
   const router = (
     <Switch>
+      <Route path="/ui-health" component={UIHealthPage} />
       <Route path="/test-calendar" component={TestCalendar} />
       <ProtectedRoute path="/" component={HomePage} />
       
@@ -160,11 +172,31 @@ function AppContent() {
       <ProtectedRoute path="/jobs" component={EnhancedJobBoard} />
       <ProtectedRoute path="/jobs/post" component={EnhancedJobPostingPage} />
       <ProtectedRoute path="/job-board" component={EnhancedJobBoard} />
-      <ProtectedRoute path="/schedule" component={EnhancedCalendarPage} />
-      <ProtectedRoute path="/calendar" component={EnhancedCalendarPage} />
-      <ProtectedRoute path="/calendar-view" component={EnhancedCalendarPage} />
-      <ProtectedRoute path="/enhanced-calendar" component={EnhancedCalendarPage} />
-      <ProtectedRoute path="/calendar-dnd" component={EnhancedCalendarPage} />
+      <ProtectedRoute path="/schedule">
+        <AppErrorBoundary>
+          <EnhancedCalendarPage />
+        </AppErrorBoundary>
+      </ProtectedRoute>
+      <ProtectedRoute path="/calendar">
+        <AppErrorBoundary>
+          <EnhancedCalendarPage />
+        </AppErrorBoundary>
+      </ProtectedRoute>
+      <ProtectedRoute path="/calendar-view">
+        <AppErrorBoundary>
+          <EnhancedCalendarPage />
+        </AppErrorBoundary>
+      </ProtectedRoute>
+      <ProtectedRoute path="/enhanced-calendar">
+        <AppErrorBoundary>
+          <EnhancedCalendarPage />
+        </AppErrorBoundary>
+      </ProtectedRoute>
+      <ProtectedRoute path="/calendar-dnd">
+        <AppErrorBoundary>
+          <EnhancedCalendarPage />
+        </AppErrorBoundary>
+      </ProtectedRoute>
       <ProtectedRoute path="/shift-templates" component={ShiftTemplatesPage} />
       <ProtectedRoute path="/facility-schedule" component={FacilitySchedulePage} />
       <ProtectedRoute path="/scheduling" component={ShiftTemplatesPage} />
@@ -394,32 +426,50 @@ function AppContent() {
 
 function App() {
   console.log("App component rendering...");
+  const [location] = useLocation();
+  console.log("Current location:", location);
   
-  // Use React.createElement to avoid JSX compilation issues
-  return React.createElement(
-    'div',
-    { 
-      style: { 
-        padding: '20px', 
-        position: 'fixed',
-        top: '0px',
-        left: '0px',
-        zIndex: 99999,
-        backgroundColor: 'red',
-        width: '100vw',
-        height: '100vh',
-        color: 'white'
-      }
-    },
-    React.createElement('h1', { style: { fontSize: '48px' } }, 'NexSpace is Working!'),
-    React.createElement('p', null, 'Time: ' + new Date().toLocaleTimeString()),
-    React.createElement('button', 
-      { 
-        onClick: () => { window.location.href = '/calendar'; },
-        style: { padding: '20px', fontSize: '20px' }
-      }, 
-      'Open Calendar'
-    )
+  // Special health check routes that bypass everything
+  if (location === '/ui-health') {
+    return <UIHealthPage />;
+  }
+  
+  if (location === '/test-calendar') {
+    return <TestCalendar />;
+  }
+  
+  // Show health page on root for testing
+  if (location === '/') {
+    return (
+      <div style={{ padding: 24, fontFamily: "ui-sans-serif", backgroundColor: "white", minHeight: "100vh" }}>
+        <h1 style={{ fontSize: "2rem", color: "green" }}>✅ NexSpace is Working!</h1>
+        <p>The React app is now rendering successfully.</p>
+        <p>Current route: {location}</p>
+        <div style={{ marginTop: 20 }}>
+          <a href="/ui-health" style={{ marginRight: 20, color: "blue" }}>Go to UI Health</a>
+          <a href="/calendar" style={{ marginRight: 20, color: "blue" }}>Go to Calendar</a>
+          <a href="/auth" style={{ color: "blue" }}>Go to Login</a>
+        </div>
+      </div>
+    );
+  }
+  
+  // Back to normal app structure with hardened components
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            <RBACProvider>
+              <TooltipProvider>
+                <Toaster />
+                <AppContent />
+              </TooltipProvider>
+            </RBACProvider>
+          </AuthProvider>
+        </ErrorBoundary>
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 

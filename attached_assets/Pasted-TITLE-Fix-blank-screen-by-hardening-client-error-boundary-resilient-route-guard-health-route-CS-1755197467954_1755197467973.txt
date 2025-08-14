@@ -1,0 +1,187 @@
+TITLE: Fix blank screen by hardening client (error boundary, resilient route guard, health route, CSS, dev fetch shim, SW cleanup) and add dev /api/me stub
+
+OBJECTIVE:
+The React app mounts but shows a blank screen. Before touching calendar code, harden the client so a single failing fetch/guard can’t blank the UI. Add a health route, CSS safety, dev fetch logger, service worker/cache cleanup, page-level boundary for the calendar page, and a development-only /api/me stub so the UI can boot even if auth is flaky.
+
+SCOPE: Make ONLY the changes below.
+	1.	Add global error boundary and wrap the root.
+	2.	Replace ProtectedRoute with a resilient version that shows fallback UI instead of returning null. Support “safe mode” via ?safe=1 or #safe to bypass guard for debugging.
+	3.	Add a no-fetch health route at /ui-health.
+	4.	Add minimal CSS to prevent invisible UI.
+	5.	Add a dev-only fetch shim to log failing API calls without crashing the UI.
+	6.	Unregister any service workers and clear caches in dev, then hard reload.
+	7.	Wrap the calendar page (EnhancedStaffPage) with a page-level boundary so it can’t blank the whole app.
+	8.	Add a development-only stub for GET /api/me on the server.
+
+ASSUMPTIONS:
+	•	Frontend uses React + wouter (or similar) and @tanstack/react-query.
+	•	If router differs, adapt route wiring but keep behavior identical.
+	•	Keep existing auth in place; the stub only affects development.
+
+MAKE THESE FILE CHANGES EXACTLY:
+
+=== FILE: src/lib/AppErrorBoundary.tsx (CREATE OR REPLACE) ===
+import React from “react”;
+
+type State = { hasError: boolean; error?: Error };
+
+export class AppErrorBoundary extends React.Component<React.PropsWithChildren, State> {
+state: State = { hasError: false };
+static getDerivedStateFromError(error: Error) { return { hasError: true, error }; }
+componentDidCatch(error: Error, info: React.ErrorInfo) {
+console.error(“App crashed:”, error, info);
+}
+render() {
+if (this.state.hasError) {
+return (
+<div style={{ padding: 24, fontFamily: “ui-sans-serif” }}>
+Something went wrong.
+UI kept running — details are in the console.
+<pre style={{ whiteSpace: “pre-wrap”, background:”#f6f6f6”, padding:12, borderRadius:8 }}>
+{String(this.state.error)}
+
+<button onClick={() => this.setState({ hasError: false, error: undefined })}>
+Try again
+
+
+);
+}
+return this.props.children;
+}
+}
+
+=== FILE: src/main.tsx OR src/index.tsx (EDIT) ===
+	1.	Import and wrap the root render with AppErrorBoundary.
+	2.	In development only, add:
+	•	fetch shim that logs non-OK responses but returns them
+	•	service worker unregister + cache clear
+
+Example snippet to include BEFORE ReactDOM.createRoot:
+if (import.meta.env.DEV) {
+const _fetch = window.fetch.bind(window);
+window.fetch = async (…args) => {
+const res = await _fetch(…args);
+if (!res.ok) {
+const clone = res.clone();
+let body = “”;
+try { body = await clone.text(); } catch {}
+console.warn(”[fetch fail]”, args[0], res.status, body.slice(0, 400));
+}
+return res;
+};
+navigator.serviceWorker?.getRegistrations()?.then(rs => rs.forEach(r => r.unregister()));
+caches?.keys()?.then(keys => keys.forEach(k => caches.delete(k)));
+}
+
+Wrap the root:
+ReactDOM.createRoot(document.getElementById(“root”)!).render(
+/* Temporarily disable StrictMode while debugging */
+// <React.StrictMode>
+
+
+
+// </React.StrictMode>
+);
+
+=== FILE: src/lib/protected-route.tsx (CREATE OR REPLACE) ===
+import { ReactNode } from “react”;
+import { useQuery } from “@tanstack/react-query”;
+import { Navigate, useLocation } from “wouter”;
+
+async function fetchMe() {
+const r = await fetch(”/api/me”, { credentials: “include” });
+if (!r.ok) throw new Error(Auth check failed: ${r.status});
+return r.json();
+}
+
+function hasPermissions(me: any, required?: string[]) {
+if (!required || required.length === 0) return true;
+const perms: string[] = me?.permissions ?? [];
+return required.every(p => perms.includes(p));
+}
+
+function FullScreenLoader() { return <div style={{ padding: 24 }}>Loading…; }
+function AuthErrorFallback() {
+return (
+<div style={{ padding: 24 }}>
+We couldn’t verify your session.
+Please sign in again.
+Go to Login
+
+);
+}
+
+export function ProtectedRoute({
+children,
+required
+}: { children: ReactNode; required?: string[] }) {
+const [location] = useLocation();
+const safeMode =
+typeof window !== “undefined” &&
+(window.location.search.includes(“safe=1”) || window.location.hash.includes(“safe”));
+
+const { data, isLoading, isError, error } = useQuery({
+queryKey: [“me”],
+queryFn: fetchMe,
+retry: 0,
+staleTime: 0,
+refetchOnWindowFocus: false,
+networkMode: “always”
+});
+
+if (safeMode) return <>{children}</>;
+if (isLoading) return ;
+if (isError) { console.warn(“Auth check failed:”, error); return ; }
+if (!data?.user) return ;
+if (!hasPermissions(data, required)) return <div style={{ padding: 24 }}>Access denied.;
+return <>{children}</>;
+}
+
+=== FILE: src/routes OR your router config (EDIT) ===
+Add a no-fetch health route:
+Route path: /ui-health
+Component: returns a simple UI is alive ✅
+
+=== FILE: src/index.css OR global stylesheet (EDIT) ===
+Add these lines (ensure they are applied globally):
+html, body, #root { height: 100%; }
+body { color: #111; background: #fff; }
+#root:empty::before { content: “Booting…”; display: block; padding: 16px; }
+Remove any app-wide “hidden until hydrated” styles (e.g., body.opacity-0) that only clear in useEffect.
+
+=== FILE: calendar route wrapper (EDIT) ===
+Wrap EnhancedStaffPage with a page-level boundary:
+Import AppErrorBoundary and render:
+
+
+Apply this to the route that renders the calendar page (e.g., /schedule).
+
+=== SERVER: development-only /api/me stub (EDIT) ===
+In your Node/Express (or Fastify) API, add a dev-only fallback for GET /api/me that returns:
+{
+user: { id: “dev”, name: “Dev User” },
+permissions: [“dashboard.view”,“shift.view”,“timesheet.view”]
+}
+Only apply this when NODE_ENV === “development”. Keep the real handler for non-dev.
+
+ACCEPTANCE CRITERIA (verify in this order):
+	1.	Visit /ui-health → “UI is alive ✅” renders.
+	2.	Visit any guarded route with ?safe=1 → page content renders even if backend is down.
+	3.	Break /api/me intentionally in dev → you see the AuthErrorFallback instead of a white screen.
+	4.	Console logs “[fetch fail] …” for any 4xx/5xx but the app still renders.
+	5.	Navigating to the calendar route no longer blanks the entire app; if the calendar crashes, the page-level boundary shows an error UI, not a white screen.
+
+NON-GOALS (do not change yet):
+	•	Do not refactor calendar internals or data fetching beyond the wrappers above.
+	•	Do not redesign auth; just add the dev stub and resilient guard.
+	•	Do not add new dependencies.
+
+COMMIT PLAN:
+	•	feat: add AppErrorBoundary and wrap root
+	•	feat: resilient ProtectedRoute with safe mode
+	•	feat: add /ui-health and CSS guardrail
+	•	chore: dev fetch shim + SW/cache cleanup
+	•	feat: page boundary for EnhancedStaffPage
+	•	feat(dev): stub /api/me in development
+
+After applying, hard-reload the browser. If a blank still occurs, capture a new HAR with Preserve log + XHR/Fetch and surface the first failing endpoint and response body.

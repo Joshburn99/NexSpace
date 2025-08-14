@@ -4,6 +4,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS safety for preventing invisible UI */
+html, body, #root { height: 100%; }
+body { color: #111; background: #fff; }
+#root:empty::before { content: "Booting..."; display: block; padding: 16px; }
+
 :root {
   --background: hsl(0, 0%, 100%);
   --foreground: hsl(20, 14.3%, 4.1%);
