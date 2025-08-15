@@ -48,6 +48,7 @@ import { NotificationDropdown } from "./NotificationDropdown";
 import { ImpersonationIndicator } from "./ImpersonationIndicator";
 import { CompactNavigationDropdown } from "./CompactNavigationDropdown";
 import { AdminBadge } from "./AdminBadge";
+import { SuperNav } from "@/modules/SuperNav";
 
 // Type for navigation items
 type NavigationItem = {
@@ -343,6 +344,13 @@ export function UnifiedHeader() {
           <div className="flex items-center gap-1 sm:gap-2 lg:gap-3">
             {/* Admin Badge */}
             <AdminBadge variant="compact" />
+            
+            {/* Super Admin All Pages Navigation */}
+            {(currentUser?.role === "super_admin" || 
+              currentUser?.role === "Super Admin" ||
+              currentUser?.role === "admin") && (
+              <SuperNav className="hidden sm:block" />
+            )}
             
             {/* Help Button - Hidden on mobile */}
             <Button
