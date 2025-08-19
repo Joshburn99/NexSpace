@@ -1,31 +1,16 @@
+
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useFacilities } from "@/hooks/use-facility";
-import { useRBAC, PermissionGate } from "@/hooks/use-rbac";
-import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -34,540 +19,710 @@ import {
   Calendar,
   Clock,
   Users,
-  Filter,
   Search,
+  Filter,
+  Plus,
+  Edit,
+  Trash2,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
+  User,
   Building,
   MapPin,
   DollarSign,
-  ChevronLeft,
-  ChevronRight,
-  User,
-  AlertCircle,
-  CheckCircle,
-  X,
-  Plus,
-  Save,
+  History,
+  Eye,
+  UserCheck,
+  UserX,
   Loader2,
 } from "lucide-react";
-import { addDays, subDays, startOfWeek, endOfWeek } from "date-fns";
-import { CalendarSkeleton, ShiftListSkeleton } from "@/components/LoadingSkeletons";
-import { CalendarEmptyState, ErrorState } from "@/components/EmptyStates";
-import { QuickFilters, type FilterState } from "@/components/QuickFilters";
-import { ShiftDetailsModal } from "@/components/shift/ShiftDetailsModal";
-import { 
-  safelyFormat, 
-  formatRange, 
-  formatDuration,
-  getDateLabel,
-  normalizeShiftEvent
-} from "@/lib/datetime";
+import { addDays, subDays, startOfWeek, endOfWeek, format } from "date-fns";
 
-// Types
-interface Shift {
+// Enhanced types for better type safety
+interface EnhancedShift {
   id: number;
   title: string;
-  start: string;
-  end: string;
   facilityId: number;
   facilityName: string;
   department: string;
-  requiredWorkers: number;
-  assignedWorkerIds: number[];
+  specialty: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  status: 'open' | 'pending' | 'filled' | 'cancelled';
+  urgency: 'low' | 'medium' | 'high' | 'critical';
   rate: number;
-  isUrgent: boolean;
+  requiredStaff: number;
+  assignedStaffIds: number[];
+  requestedStaffIds: number[];
+  requirements: string[];
   notes?: string;
-  requirements?: string[];
-  color?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-interface Staff {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-  facilityId: number;
-  specialties: string[];
-  isActive: boolean;
-}
-
-interface Facility {
-  id: number;
-  name: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  timezone?: string;
-}
-
-const getShiftColor = (shift: Shift) => {
-  if (shift.isUrgent) return "#ef4444"; // red
-  if (shift.assignedWorkerIds.length >= shift.requiredWorkers) return "#22c55e"; // green
-  if (shift.assignedWorkerIds.length > 0) return "#f59e0b"; // yellow
-  return "#6b7280"; // gray
+// Role-based color scheme
+const getShiftColorByStatus = (shift: EnhancedShift) => {
+  switch (shift.status) {
+    case 'open': return '#3B82F6'; // Blue
+    case 'pending': return '#F59E0B'; // Amber
+    case 'filled': return '#10B981'; // Green
+    case 'cancelled': return '#EF4444'; // Red
+    default: return '#6B7280'; // Gray
+  }
 };
 
-export default function EnhancedCalendarPage() {
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const rbac = useRBAC();
-  const canCreateShifts = user?.role === 'super_admin' || user?.role === 'facility_admin';
-  const { data: facilities = [] } = useFacilities();
+const getUrgencyIndicator = (urgency: string) => {
+  switch (urgency) {
+    case 'critical': return '🔴';
+    case 'high': return '🟠';
+    case 'medium': return '🟡';
+    default: return '🟢';
+  }
+};
 
-  // State
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+// Superuser Calendar Component
+const SuperuserCalendar: React.FC<{
+  shifts: EnhancedShift[];
+  facilities: any[];
+  onShiftClick: (shift: EnhancedShift) => void;
+  onCreateShift: () => void;
+}> = ({ shifts, facilities, onShiftClick, onCreateShift }) => {
   const [selectedFacilities, setSelectedFacilities] = useState<number[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isAddShiftOpen, setIsAddShiftOpen] = useState(false);
-  const [selectedShift, setSelectedShift] = useState<Shift | null>(null);
-  const [isShiftDetailsOpen, setIsShiftDetailsOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<"dayGridMonth" | "timeGridWeek" | "timeGridDay">("timeGridWeek");
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [urgencyFilter, setUrgencyFilter] = useState<string>('all');
 
-  // Form state for new shift
-  const [newShift, setNewShift] = useState({
-    title: "",
-    facilityId: "",
-    department: "",
-    start: "",
-    end: "",
-    requiredWorkers: 1,
-    rate: 50,
-    isUrgent: false,
-    notes: "",
-    requirements: [] as string[],
-  });
-
-  // Get calendar date range
-  const [calendarStart, calendarEnd] = useMemo(() => {
-    const now = new Date();
-    const start = startOfWeek(subDays(now, 7));
-    const end = endOfWeek(addDays(now, 30));
-    return [
-      start.toISOString(),
-      end.toISOString()
-    ];
-  }, []);
-
-  // Fetch shifts from calendar API
-  const {
-    data: calendarEvents = [],
-    isLoading: shiftsLoading,
-    error: shiftsError,
-    refetch: refetchShifts,
-  } = useQuery({
-    queryKey: ["/api/calendar/shifts", { 
-      start: calendarStart, 
-      end: calendarEnd,
-      facilities: selectedFacilities, 
-      search: searchQuery 
-    }],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      params.append("start", calendarStart);
-      params.append("end", calendarEnd);
-      if (selectedFacilities.length > 0) {
-        selectedFacilities.forEach(f => params.append("facilityId", f.toString()));
-      }
-      if (searchQuery) {
-        params.append("search", searchQuery);
-      }
-      
-      const response = await fetch(`/api/calendar/shifts?${params.toString()}`, {
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error("Failed to fetch calendar events");
-      }
-      return response.json();
-    },
-  });
-
-  // Fetch staff
-  const { data: staff = [] } = useQuery({
-    queryKey: ["/api/staff"],
-    queryFn: async () => {
-      const response = await apiRequest("GET", "/api/staff");
-      if (!response.ok) {
-        throw new Error("Failed to fetch staff");
-      }
-      return response.json();
-    },
-  });
-
-  // Create shift mutation
-  const createShiftMutation = useMutation({
-    mutationFn: async (shiftData: any) => {
-      const response = await apiRequest("POST", "/api/shifts", shiftData);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to create shift");
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Shift created successfully",
-      });
-      setIsAddShiftOpen(false);
-      setNewShift({
-        title: "",
-        facilityId: "",
-        department: "",
-        start: "",
-        end: "",
-        requiredWorkers: 1,
-        rate: 50,
-        isUrgent: false,
-        notes: "",
-        requirements: [],
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/shifts"] });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Transform calendar events for FullCalendar with normalized data
-  const fullCalendarEvents = useMemo(() => {
-    return calendarEvents.map((event: any) => {
-      const normalized = normalizeShiftEvent(event);
-      const timeRange = formatRange(normalized.startUtc, normalized.endUtc, normalized.timezone);
-      const filled = normalized.filledCount;
-      const required = normalized.requiredCount;
-      
-      // Determine color based on status
-      let backgroundColor = '#6b7280'; // gray for open
-      if (normalized.status === 'filled') backgroundColor = '#22c55e'; // green
-      else if (normalized.status === 'pending') backgroundColor = '#f59e0b'; // yellow
-      else if (normalized.status === 'cancelled') backgroundColor = '#ef4444'; // red
-      
-      return {
-        id: normalized.id.toString(),
-        title: `${normalized.specialty} • ${timeRange} • ${filled}/${required}`,
-        start: normalized.startUtc,
-        end: normalized.endUtc,
-        backgroundColor,
-        borderColor: backgroundColor,
-        classNames: ['shift-chip'],
-        extendedProps: {
-          shift: normalized,
-        },
-      };
+  const filteredShifts = useMemo(() => {
+    return shifts.filter(shift => {
+      if (selectedFacilities.length > 0 && !selectedFacilities.includes(shift.facilityId)) return false;
+      if (statusFilter !== 'all' && shift.status !== statusFilter) return false;
+      if (urgencyFilter !== 'all' && shift.urgency !== urgencyFilter) return false;
+      return true;
     });
-  }, [calendarEvents]);
+  }, [shifts, selectedFacilities, statusFilter, urgencyFilter]);
 
-  // Handle event click
-  const handleEventClick = (clickInfo: any) => {
-    const shift = clickInfo.event.extendedProps.shift;
-    setSelectedShift(shift);
-    setIsShiftDetailsOpen(true);
-  };
-
-  // Handle create shift
-  const handleCreateShift = () => {
-    if (!newShift.title || !newShift.facilityId || !newShift.start || !newShift.end) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    createShiftMutation.mutate(newShift);
-  };
-
-  // Handle facility filter
-  const handleFacilityFilter = (facilityId: string) => {
-    const id = parseInt(facilityId);
-    setSelectedFacilities(prev => 
-      prev.includes(id) 
-        ? prev.filter(f => f !== id)
-        : [...prev, id]
-    );
-  };
-
-  if (shiftsError) {
-    return (
-      <ErrorState 
-        title="Failed to load calendar data"
-        description="Please try refreshing the page or check your connection."
-        onRetry={() => refetchShifts()}
-      />
-    );
-  }
-
-  // Show loading skeleton
-  if (shiftsLoading) {
-    return <CalendarSkeleton />;
-  }
+  const calendarEvents = filteredShifts.map(shift => ({
+    id: shift.id.toString(),
+    title: `${getUrgencyIndicator(shift.urgency)} ${shift.specialty} • ${shift.facilityName}`,
+    start: `${shift.date}T${shift.startTime}`,
+    end: `${shift.date}T${shift.endTime}`,
+    backgroundColor: getShiftColorByStatus(shift),
+    borderColor: getShiftColorByStatus(shift),
+    extendedProps: { shift }
+  }));
 
   return (
-    <div className="w-full space-y-4 md:space-y-6 p-4">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold">Enhanced Calendar</h1>
-          <p className="text-muted-foreground">Drag-and-drop shift scheduling dashboard</p>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          {canCreateShifts && (
-            <Button onClick={() => setIsAddShiftOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Shift
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Filters */}
+    <div className="space-y-6">
+      {/* Superuser Controls */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                <Input
-                  placeholder="Search shifts..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-
-            {/* View Mode */}
-            <Select value={viewMode} onValueChange={(value: any) => setViewMode(value)}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="dayGridMonth">Month</SelectItem>
-                <SelectItem value="timeGridWeek">Week</SelectItem>
-                <SelectItem value="timeGridDay">Day</SelectItem>
-              </SelectContent>
-            </Select>
-
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Building className="w-5 h-5" />
+              System-Wide Schedule Management
+            </span>
+            <Button onClick={onCreateShift}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Shift
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Facility Filter */}
-            <Select onValueChange={handleFacilityFilter}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filter by facility" />
+            <Select onValueChange={(value) => {
+              if (value === 'all') setSelectedFacilities([]);
+              else setSelectedFacilities([parseInt(value)]);
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="All Facilities" />
               </SelectTrigger>
               <SelectContent>
-                {facilities.map((facility: any) => (
+                <SelectItem value="all">All Facilities</SelectItem>
+                {facilities.map(facility => (
                   <SelectItem key={facility.id} value={facility.id.toString()}>
                     {facility.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-          </div>
-          
-          {selectedFacilities.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4">
-              {selectedFacilities.map(facilityId => {
-                const facility = facilities.find(f => f.id === facilityId);
-                return facility ? (
-                  <Badge key={facilityId} variant="secondary" className="flex items-center gap-1">
-                    {facility.name}
-                    <X 
-                      className="w-3 h-3 cursor-pointer" 
-                      onClick={() => setSelectedFacilities(prev => prev.filter(f => f !== facilityId))}
-                    />
-                  </Badge>
-                ) : null;
-              })}
+
+            {/* Status Filter */}
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="open">Open</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="filled">Filled</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Urgency Filter */}
+            <Select value={urgencyFilter} onValueChange={setUrgencyFilter}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Urgency</SelectItem>
+                <SelectItem value="critical">Critical</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Quick Stats */}
+            <div className="text-sm space-y-1">
+              <div>Total Shifts: {filteredShifts.length}</div>
+              <div>Open: {filteredShifts.filter(s => s.status === 'open').length}</div>
+              <div>Critical: {filteredShifts.filter(s => s.urgency === 'critical').length}</div>
             </div>
-          )}
+          </div>
         </CardContent>
       </Card>
 
       {/* Calendar */}
       <Card>
         <CardContent className="p-4">
-          {shiftsLoading ? (
-            <div className="flex items-center justify-center h-96">
-              <Loader2 className="w-8 h-8 animate-spin" />
+          <FullCalendar
+            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+            initialView="timeGridWeek"
+            headerToolbar={{
+              left: 'prev,next today',
+              center: 'title',
+              right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            }}
+            events={calendarEvents}
+            eventClick={(info) => onShiftClick(info.event.extendedProps.shift)}
+            height="auto"
+            slotMinTime="06:00:00"
+            slotMaxTime="24:00:00"
+          />
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+// Facility User Calendar Component
+const FacilityUserCalendar: React.FC<{
+  shifts: EnhancedShift[];
+  onShiftClick: (shift: EnhancedShift) => void;
+  onCreateShift: () => void;
+  onAssignShift: (shiftId: number, staffId: number) => void;
+  onCancelShift: (shiftId: number) => void;
+}> = ({ shifts, onShiftClick, onCreateShift, onAssignShift, onCancelShift }) => {
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
+  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+
+  const departments = useMemo(() => {
+    const deps = [...new Set(shifts.map(s => s.department))];
+    return deps.filter(Boolean);
+  }, [shifts]);
+
+  const filteredShifts = useMemo(() => {
+    return shifts.filter(shift => 
+      departmentFilter === 'all' || shift.department === departmentFilter
+    );
+  }, [shifts, departmentFilter]);
+
+  const calendarEvents = filteredShifts.map(shift => {
+    const staffingRatio = `${shift.assignedStaffIds.length}/${shift.requiredStaff}`;
+    return {
+      id: shift.id.toString(),
+      title: `${shift.specialty} (${staffingRatio}) • ${shift.department}`,
+      start: `${shift.date}T${shift.startTime}`,
+      end: `${shift.date}T${shift.endTime}`,
+      backgroundColor: getShiftColorByStatus(shift),
+      borderColor: getShiftColorByStatus(shift),
+      extendedProps: { shift }
+    };
+  });
+
+  return (
+    <div className="space-y-6">
+      {/* Facility Controls */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <Calendar className="w-5 h-5" />
+              Facility Schedule Management
+            </span>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setViewMode(viewMode === 'calendar' ? 'list' : 'calendar')}>
+                {viewMode === 'calendar' ? 'List View' : 'Calendar View'}
+              </Button>
+              <Button onClick={onCreateShift}>
+                <Plus className="w-4 h-4 mr-2" />
+                Post Shift
+              </Button>
             </div>
-          ) : (
-            <FullCalendar
-              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-              initialView={viewMode}
-              headerToolbar={{
-                left: "prev,next today",
-                center: "title",
-                right: "dayGridMonth,timeGridWeek,timeGridDay",
-              }}
-              events={fullCalendarEvents}
-              eventClick={handleEventClick}
-              editable={canCreateShifts}
-              selectable={canCreateShifts}
-              height="auto"
-              aspectRatio={1.8}
-            />
-          )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-4 items-center">
+            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+              <SelectTrigger className="w-48">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Departments</SelectItem>
+                {departments.map(dept => (
+                  <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="flex gap-4 text-sm">
+              <Badge variant="outline" className="bg-blue-50">
+                <div className="w-3 h-3 bg-blue-500 rounded mr-2"></div>
+                Open
+              </Badge>
+              <Badge variant="outline" className="bg-amber-50">
+                <div className="w-3 h-3 bg-amber-500 rounded mr-2"></div>
+                Pending
+              </Badge>
+              <Badge variant="outline" className="bg-green-50">
+                <div className="w-3 h-3 bg-green-500 rounded mr-2"></div>
+                Filled
+              </Badge>
+              <Badge variant="outline" className="bg-red-50">
+                <div className="w-3 h-3 bg-red-500 rounded mr-2"></div>
+                Cancelled
+              </Badge>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Add Shift Dialog */}
-      <Dialog open={isAddShiftOpen} onOpenChange={setIsAddShiftOpen}>
-        <DialogContent className="max-w-md">
+      {/* Calendar or List View */}
+      {viewMode === 'calendar' ? (
+        <Card>
+          <CardContent className="p-4">
+            <FullCalendar
+              plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+              initialView="timeGridWeek"
+              headerToolbar={{
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+              }}
+              events={calendarEvents}
+              eventClick={(info) => onShiftClick(info.event.extendedProps.shift)}
+              height="auto"
+              slotMinTime="06:00:00"
+              slotMaxTime="24:00:00"
+            />
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardContent className="p-4">
+            <div className="space-y-4">
+              {filteredShifts.map(shift => (
+                <div key={shift.id} className="border rounded-lg p-4 hover:bg-gray-50">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className={`w-4 h-4 rounded`} style={{ backgroundColor: getShiftColorByStatus(shift) }}></div>
+                      <div>
+                        <h3 className="font-medium">{shift.title}</h3>
+                        <p className="text-sm text-gray-600">
+                          {format(new Date(shift.date), 'MMM dd')} • {shift.startTime} - {shift.endTime} • {shift.department}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={shift.status === 'open' ? 'destructive' : 'default'}>
+                        {shift.assignedStaffIds.length}/{shift.requiredStaff} Staffed
+                      </Badge>
+                      <Button size="sm" variant="outline" onClick={() => onShiftClick(shift)}>
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+};
+
+// Staff Calendar Component
+const StaffCalendar: React.FC<{
+  openShifts: EnhancedShift[];
+  myShifts: EnhancedShift[];
+  shiftHistory: EnhancedShift[];
+  onRequestShift: (shiftId: number) => void;
+  onShiftClick: (shift: EnhancedShift) => void;
+}> = ({ openShifts, myShifts, shiftHistory, onRequestShift, onShiftClick }) => {
+  const [activeTab, setActiveTab] = useState('available');
+  const [specialtyFilter, setSpecialtyFilter] = useState<string>('all');
+
+  const specialties = useMemo(() => {
+    const specs = [...new Set(openShifts.map(s => s.specialty))];
+    return specs.filter(Boolean);
+  }, [openShifts]);
+
+  const filteredOpenShifts = useMemo(() => {
+    return openShifts.filter(shift => 
+      specialtyFilter === 'all' || shift.specialty === specialtyFilter
+    );
+  }, [openShifts, specialtyFilter]);
+
+  return (
+    <div className="space-y-6">
+      {/* Staff Header */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="w-5 h-5" />
+            My Schedule & Available Shifts
+          </CardTitle>
+        </CardHeader>
+      </Card>
+
+      {/* Tabs for different views */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="available">Available Shifts ({filteredOpenShifts.length})</TabsTrigger>
+          <TabsTrigger value="my-shifts">My Shifts ({myShifts.length})</TabsTrigger>
+          <TabsTrigger value="history">History ({shiftHistory.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="available" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-4">
+                <Select value={specialtyFilter} onValueChange={setSpecialtyFilter}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Filter by specialty" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Specialties</SelectItem>
+                    {specialties.map(spec => (
+                      <SelectItem key={spec} value={spec}>{spec}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                {filteredOpenShifts.map(shift => (
+                  <div key={shift.id} className="border rounded-lg p-4 hover:bg-blue-50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium">{shift.title}</h3>
+                          <Badge variant="secondary">{shift.specialty}</Badge>
+                          {shift.urgency === 'critical' && <Badge variant="destructive">Critical</Badge>}
+                          {shift.urgency === 'high' && <Badge variant="destructive">High Priority</Badge>}
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-4 h-4" />
+                            {format(new Date(shift.date), 'MMM dd, yyyy')}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-4 h-4" />
+                            {shift.startTime} - {shift.endTime}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Building className="w-4 h-4" />
+                            {shift.facilityName}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <DollarSign className="w-4 h-4" />
+                            ${shift.rate}/hr
+                          </div>
+                        </div>
+                        {shift.requirements.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {shift.requirements.map((req, idx) => (
+                              <Badge key={idx} variant="outline" className="text-xs">
+                                {req}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => onShiftClick(shift)}>
+                          View Details
+                        </Button>
+                        <Button size="sm" onClick={() => onRequestShift(shift.id)}>
+                          Request Shift
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="my-shifts">
+          <Card>
+            <CardContent className="p-4">
+              <FullCalendar
+                plugins={[dayGridPlugin, timeGridPlugin]}
+                initialView="timeGridWeek"
+                headerToolbar={{
+                  left: 'prev,next today',
+                  center: 'title',
+                  right: 'timeGridWeek,timeGridDay'
+                }}
+                events={myShifts.map(shift => ({
+                  id: shift.id.toString(),
+                  title: `${shift.specialty} • ${shift.facilityName}`,
+                  start: `${shift.date}T${shift.startTime}`,
+                  end: `${shift.date}T${shift.endTime}`,
+                  backgroundColor: '#10B981',
+                  borderColor: '#10B981',
+                  extendedProps: { shift }
+                }))}
+                eventClick={(info) => onShiftClick(info.event.extendedProps.shift)}
+                height="auto"
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history">
+          <Card>
+            <CardContent className="p-4">
+              <div className="space-y-4">
+                {shiftHistory.map(shift => (
+                  <div key={shift.id} className="border rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium">{shift.title}</h3>
+                        <p className="text-sm text-gray-600">
+                          {format(new Date(shift.date), 'MMM dd, yyyy')} • {shift.startTime} - {shift.endTime}
+                        </p>
+                        <p className="text-sm text-gray-600">{shift.facilityName} • {shift.department}</p>
+                      </div>
+                      <div className="text-right">
+                        <Badge variant="secondary">{shift.status}</Badge>
+                        <p className="text-sm text-gray-600 mt-1">${shift.rate}/hr</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+// Main Enhanced Calendar Page
+export default function EnhancedCalendarPage() {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const { data: facilities = [] } = useFacilities();
+
+  const [selectedShift, setSelectedShift] = useState<EnhancedShift | null>(null);
+  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
+  const [isCreateShiftOpen, setIsCreateShiftOpen] = useState(false);
+
+  // Fetch shifts based on user role
+  const { data: shifts = [], isLoading } = useQuery({
+    queryKey: ['/api/calendar/shifts', user?.role, user?.id],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      
+      if (user?.role === 'staff') {
+        params.append('staffId', user.id.toString());
+      } else if (user?.role === 'facility_admin' && user?.facilityId) {
+        params.append('facilityId', user.facilityId.toString());
+      }
+      
+      const response = await fetch(`/api/calendar/shifts?${params}`, {
+        credentials: 'include',
+      });
+      
+      if (!response.ok) throw new Error('Failed to fetch shifts');
+      return response.json();
+    },
+  });
+
+  // Mutation for requesting shifts
+  const requestShiftMutation = useMutation({
+    mutationFn: async (shiftId: number) => {
+      const response = await fetch(`/api/shifts/${shiftId}/request`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!response.ok) throw new Error('Failed to request shift');
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({ title: 'Success', description: 'Shift request submitted successfully' });
+      queryClient.invalidateQueries({ queryKey: ['/api/calendar/shifts'] });
+    },
+    onError: () => {
+      toast({ title: 'Error', description: 'Failed to request shift', variant: 'destructive' });
+    },
+  });
+
+  const handleShiftClick = (shift: EnhancedShift) => {
+    setSelectedShift(shift);
+    setIsShiftModalOpen(true);
+  };
+
+  const handleRequestShift = (shiftId: number) => {
+    requestShiftMutation.mutate(shiftId);
+  };
+
+  const handleCreateShift = () => {
+    setIsCreateShiftOpen(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // Render appropriate calendar based on user role
+  const renderCalendar = () => {
+    switch (user?.role) {
+      case 'super_admin':
+        return (
+          <SuperuserCalendar
+            shifts={shifts}
+            facilities={facilities}
+            onShiftClick={handleShiftClick}
+            onCreateShift={handleCreateShift}
+          />
+        );
+      
+      case 'facility_admin':
+      case 'facility_manager':
+        return (
+          <FacilityUserCalendar
+            shifts={shifts}
+            onShiftClick={handleShiftClick}
+            onCreateShift={handleCreateShift}
+            onAssignShift={(shiftId, staffId) => {
+              // TODO: Implement assign shift mutation
+            }}
+            onCancelShift={(shiftId) => {
+              // TODO: Implement cancel shift mutation
+            }}
+          />
+        );
+      
+      case 'staff':
+        const openShifts = shifts.filter((s: EnhancedShift) => s.status === 'open');
+        const myShifts = shifts.filter((s: EnhancedShift) => 
+          s.assignedStaffIds.includes(user?.id || 0) || s.requestedStaffIds.includes(user?.id || 0)
+        );
+        const shiftHistory = shifts.filter((s: EnhancedShift) => 
+          s.status === 'completed' && s.assignedStaffIds.includes(user?.id || 0)
+        );
+        
+        return (
+          <StaffCalendar
+            openShifts={openShifts}
+            myShifts={myShifts}
+            shiftHistory={shiftHistory}
+            onRequestShift={handleRequestShift}
+            onShiftClick={handleShiftClick}
+          />
+        );
+      
+      default:
+        return <div>Access denied. Please contact your administrator.</div>;
+    }
+  };
+
+  return (
+    <div className="container mx-auto p-6">
+      {renderCalendar()}
+      
+      {/* Shift Details Modal */}
+      <Dialog open={isShiftModalOpen} onOpenChange={setIsShiftModalOpen}>
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Add New Shift</DialogTitle>
-            <DialogDescription>Create a new shift assignment</DialogDescription>
+            <DialogTitle>Shift Details</DialogTitle>
           </DialogHeader>
-          
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="title">Shift Title *</Label>
-              <Input
-                id="title"
-                value={newShift.title}
-                onChange={(e) => setNewShift(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="e.g., Day Nurse"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="facility">Facility *</Label>
-              <Select value={newShift.facilityId} onValueChange={(value) => setNewShift(prev => ({ ...prev, facilityId: value }))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select facility" />
-                </SelectTrigger>
-                <SelectContent>
-                  {facilities.map((facility: any) => (
-                    <SelectItem key={facility.id} value={facility.id.toString()}>
-                      {facility.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="department">Department</Label>
-              <Input
-                id="department"
-                value={newShift.department}
-                onChange={(e) => setNewShift(prev => ({ ...prev, department: e.target.value }))}
-                placeholder="e.g., ICU, Emergency"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="start">Start Time *</Label>
-                <Input
-                  id="start"
-                  type="datetime-local"
-                  value={newShift.start}
-                  onChange={(e) => setNewShift(prev => ({ ...prev, start: e.target.value }))}
-                />
+          {selectedShift && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium">Title</label>
+                  <p>{selectedShift.title}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Facility</label>
+                  <p>{selectedShift.facilityName}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Department</label>
+                  <p>{selectedShift.department}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Specialty</label>
+                  <p>{selectedShift.specialty}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Date & Time</label>
+                  <p>{format(new Date(selectedShift.date), 'MMM dd, yyyy')} • {selectedShift.startTime} - {selectedShift.endTime}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Rate</label>
+                  <p>${selectedShift.rate}/hour</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Staffing</label>
+                  <p>{selectedShift.assignedStaffIds.length}/{selectedShift.requiredStaff} filled</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Status</label>
+                  <Badge variant={selectedShift.status === 'open' ? 'destructive' : 'default'}>
+                    {selectedShift.status}
+                  </Badge>
+                </div>
               </div>
-              <div>
-                <Label htmlFor="end">End Time *</Label>
-                <Input
-                  id="end"
-                  type="datetime-local"
-                  value={newShift.end}
-                  onChange={(e) => setNewShift(prev => ({ ...prev, end: e.target.value }))}
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="requiredWorkers">Required Workers</Label>
-                <Input
-                  id="requiredWorkers"
-                  type="number"
-                  min="1"
-                  value={newShift.requiredWorkers}
-                  onChange={(e) => setNewShift(prev => ({ ...prev, requiredWorkers: parseInt(e.target.value) || 1 }))}
-                />
-              </div>
-              <div>
-                <Label htmlFor="rate">Hourly Rate ($)</Label>
-                <Input
-                  id="rate"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={newShift.rate}
-                  onChange={(e) => setNewShift(prev => ({ ...prev, rate: parseFloat(e.target.value) || 0 }))}
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                value={newShift.notes}
-                onChange={(e) => setNewShift(prev => ({ ...prev, notes: e.target.value }))}
-                placeholder="Additional information..."
-                rows={3}
-              />
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="isUrgent"
-                checked={newShift.isUrgent}
-                onChange={(e) => setNewShift(prev => ({ ...prev, isUrgent: e.target.checked }))}
-                className="w-4 h-4"
-              />
-              <Label htmlFor="isUrgent">Mark as urgent</Label>
-            </div>
-          </div>
-
-          <div className="flex justify-end gap-2 mt-6">
-            <Button variant="outline" onClick={() => setIsAddShiftOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleCreateShift}
-              disabled={createShiftMutation.isPending}
-            >
-              {createShiftMutation.isPending ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4 mr-2" />
-                  Create Shift
-                </>
+              
+              {selectedShift.requirements.length > 0 && (
+                <div>
+                  <label className="text-sm font-medium">Requirements</label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {selectedShift.requirements.map((req, idx) => (
+                      <Badge key={idx} variant="outline">{req}</Badge>
+                    ))}
+                  </div>
+                </div>
               )}
-            </Button>
-          </div>
+              
+              {selectedShift.notes && (
+                <div>
+                  <label className="text-sm font-medium">Notes</label>
+                  <p className="text-sm">{selectedShift.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
-
-      {/* Shift Details Modal with safe date handling */}
-      <ShiftDetailsModal
-        open={isShiftDetailsOpen}
-        onOpenChange={setIsShiftDetailsOpen}
-        shift={selectedShift}
-        onSuccess={() => {
-          refetchShifts();
-        }}
-      />
     </div>
   );
 }

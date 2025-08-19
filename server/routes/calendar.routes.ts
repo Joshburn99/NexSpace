@@ -38,47 +38,69 @@ const calendarEventSchema = z.object({
   color: z.string().optional(),
 });
 
-// GET /api/calendar/shifts - Get shifts for calendar view
+// GET /api/calendar/shifts - Get shifts for calendar view with role-based filtering
 router.get("/api/calendar/shifts", requireAuth, async (req: any, res) => {
   try {
-    const { start, end, facilityId, role, status } = req.query;
+    const { start, end, facilityId, role, status, staffId } = req.query;
+    const userRole = req.user.role;
+    const userId = req.user.id;
 
-    if (!start || !end) {
-      return res.status(400).json({ 
-        error: "start and end dates are required",
-        message: "Please provide start and end date parameters" 
-      });
-    }
+    // Default date range if not provided
+    const now = new Date();
+    const startDate = start ? parseISO(start) : new Date(now.getFullYear(), now.getMonth(), 1);
+    const endDate = end ? parseISO(end) : new Date(now.getFullYear(), now.getMonth() + 2, 0);
 
-    // Parse dates
-    const startDate = parseISO(start);
-    const endDate = parseISO(end);
-
-    // Build query conditions
+    // Build base query conditions
     const conditions = [
       gte(shifts.date, format(startDate, 'yyyy-MM-dd')),
       lte(shifts.date, format(endDate, 'yyyy-MM-dd'))
     ];
 
-    // Filter by facility if specified or user's facility
-    if (facilityId) {
+    // Role-based access control
+    if (userRole === 'staff') {
+      // Staff can see:
+      // 1. Open shifts they're eligible for
+      // 2. Shifts they're assigned to
+      // 3. Shifts they've requested
+      
+      if (staffId && parseInt(staffId) === userId) {
+        // Get shifts for specific staff member
+        conditions.push(
+          or(
+            eq(shifts.status, 'open'),
+            sql`${shifts.assignedStaffIds} @> ARRAY[${userId}]::integer[]`,
+            sql`${shifts.requestedStaffIds} @> ARRAY[${userId}]::integer[]`
+          )
+        );
+      } else {
+        // Just open shifts for general staff view
+        conditions.push(eq(shifts.status, 'open'));
+      }
+    } else if (userRole === 'facility_admin' || userRole === 'facility_manager') {
+      // Facility users can only see shifts from their associated facilities
+      if (req.user.facilityId) {
+        conditions.push(eq(shifts.facilityId, req.user.facilityId));
+      } else if (req.user.associatedFacilities && req.user.associatedFacilities.length > 0) {
+        conditions.push(inArray(shifts.facilityId, req.user.associatedFacilities));
+      }
+    }
+    // Super admins can see all shifts (no additional filtering)
+
+    // Additional filters
+    if (facilityId && userRole === 'super_admin') {
       conditions.push(eq(shifts.facilityId, parseInt(facilityId)));
-    } else if (req.user.facilityId) {
-      conditions.push(eq(shifts.facilityId, req.user.facilityId));
     }
 
-    // Filter by role (maps to specialty in database)
     if (role) {
       conditions.push(eq(shifts.specialty, role));
     }
 
-    // Filter by status if specified
     if (status) {
       const statusList = status.split(',').map((s: string) => s.trim());
       conditions.push(inArray(shifts.status, statusList));
     }
 
-    // Query shifts with facility info
+    // Query shifts with facility and staff information
     const shiftsData = await db
       .select({
         shift: shifts,
@@ -89,7 +111,7 @@ router.get("/api/calendar/shifts", requireAuth, async (req: any, res) => {
       .where(and(...conditions))
       .orderBy(shifts.date, shifts.startTime);
 
-    // Map to calendar event format
+    // Enhanced mapping with better data structure
     const events = shiftsData.map((row) => {
       const shift = row.shift;
       const facility = row.facility;
@@ -105,36 +127,40 @@ router.get("/api/calendar/shifts", requireAuth, async (req: any, res) => {
       const startUtc = fromZonedTime(startDateTime, timezone).toISOString();
       const endUtc = fromZonedTime(endDateTime, timezone).toISOString();
       
-      // Get assigned staff name if available
-      let assignedStaffName = null;
-      if (shift.assignedStaffIds && shift.assignedStaffIds.length > 0) {
-        // We'd need to join with staff table for names, simplified for now
-        assignedStaffName = `${shift.assignedStaffIds.length} staff assigned`;
-      }
-      
-      // Determine color based on status
-      let color = '#3B82F6'; // blue for open
-      if (shift.status === 'filled') color = '#10B981'; // green
-      else if (shift.status === 'pending') color = '#F59E0B'; // yellow
-      else if (shift.status === 'cancelled') color = '#EF4444'; // red
-      
+      // Enhanced shift data
       return {
         id: shift.id,
+        title: shift.title || `${shift.specialty} - ${shift.department}`,
         facilityId: shift.facilityId,
         facilityName: facility?.name || 'Unknown Facility',
-        role: shift.specialty, // Using specialty as role
-        status: shift.status,
+        department: shift.department,
+        specialty: shift.specialty,
+        date: shift.date,
+        startTime: shift.startTime,
+        endTime: shift.endTime,
         startUtc,
         endUtc,
         timezone,
-        assignedStaffId: shift.assignedStaffIds?.[0] || null,
-        assignedStaffName,
+        status: shift.status,
+        urgency: shift.urgency || 'medium',
+        rate: parseFloat(shift.rate),
+        requiredStaff: shift.requiredStaff || 1,
+        assignedStaffIds: shift.assignedStaffIds || [],
+        requestedStaffIds: shift.requestedStaffIds || [],
+        requirements: shift.specialRequirements || [],
+        notes: shift.description,
+        createdAt: shift.createdAt,
+        updatedAt: shift.updatedAt,
+        
+        // Legacy compatibility
+        role: shift.specialty,
         requiredWorkers: shift.requiredStaff || 1,
         assignedWorkerIds: shift.assignedStaffIds || [],
-        notes: shift.description,
-        department: shift.department,
-        rate: parseFloat(shift.rate),
-        color,
+        assignedStaffId: shift.assignedStaffIds?.[0] || null,
+        assignedStaffName: shift.assignedStaffIds?.length 
+          ? `${shift.assignedStaffIds.length} staff assigned` 
+          : null,
+        color: getShiftStatusColor(shift.status),
       };
     });
 
@@ -147,6 +173,17 @@ router.get("/api/calendar/shifts", requireAuth, async (req: any, res) => {
     });
   }
 });
+
+// Helper function for status colors
+function getShiftStatusColor(status: string): string {
+  switch (status) {
+    case 'open': return '#3B82F6'; // blue
+    case 'pending': return '#F59E0B'; // amber
+    case 'filled': return '#10B981'; // green
+    case 'cancelled': return '#EF4444'; // red
+    default: return '#6B7280'; // gray
+  }
+}
 
 // POST /api/shifts/:id/assign - Assign staff to shift
 router.post("/api/shifts/:id/assign", requireAuth, async (req: any, res) => {
