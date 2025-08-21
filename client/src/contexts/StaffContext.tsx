@@ -117,12 +117,22 @@ export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   // Fetch staff data from backend API
   const { data: staffData = [], isLoading } = useQuery({
     queryKey: ["/api/staff"],
-    queryFn: () => fetch("/api/staff", { credentials: 'include' }).then((res) => {
-      if (!res.ok) throw new Error(`Staff fetch failed: ${res.status}`);
-      return res.json();
-    }),
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/staff", { credentials: 'include' });
+        if (!res.ok) {
+          console.warn(`[staff] non-OK response: ${res.status}`);
+          return [] as StaffMember[];
+        }
+        return (await res.json()) as StaffMember[];
+      } catch (err) {
+        console.error('[staff] fetch error', err);
+        return [] as StaffMember[];
+      }
+    },
     enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: false,
   });
 
   // Mutation for updating staff profiles
