@@ -11,7 +11,8 @@
     "db:push": "drizzle-kit push",
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint:fix": "eslint . --ext .ts,.tsx --fix"
   },
   "dependencies": {
     "@fullcalendar/daygrid": "^6.1.17",
@@ -127,7 +128,8 @@
     "wouter": "^3.3.5",
     "ws": "^8.18.0",
     "yaml": "^2.8.1",
-    "zod": "^3.24.2"
+    "zod": "^3.24.2",
+    "react-helmet-async": "^1.2.0"
   },
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.21.4",
