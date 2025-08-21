@@ -207,6 +207,7 @@ export default function AuthPage() {
                       <Input
                         id="password"
                         type="password"
+                        autoComplete="current-password"
                         value={loginData.password}
                         onChange={(e) =>
                           setLoginData((prev) => ({ ...prev, password: e.target.value }))

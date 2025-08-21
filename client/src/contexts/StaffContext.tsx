@@ -105,11 +105,23 @@ const StaffContext = createContext<StaffContextType | null>(null);
 
 export const StaffProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const queryClient = useQueryClient();
+  // Gate staff fetches until user is authenticated to avoid 401s pre-login
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  useEffect(() => {
+    fetch('/api/user', { credentials: 'include' })
+      .then((res) => (res.status === 200 ? res.json() : null))
+      .then((user) => setIsAuthenticated(Boolean(user)))
+      .catch(() => setIsAuthenticated(false));
+  }, []);
 
   // Fetch staff data from backend API
   const { data: staffData = [], isLoading } = useQuery({
     queryKey: ["/api/staff"],
-    queryFn: () => fetch("/api/staff").then((res) => res.json()),
+    queryFn: () => fetch("/api/staff", { credentials: 'include' }).then((res) => {
+      if (!res.ok) throw new Error(`Staff fetch failed: ${res.status}`);
+      return res.json();
+    }),
+    enabled: isAuthenticated,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
