@@ -19,11 +19,14 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
+  const publicHmrHost = process.env.VITE_HMR_HOST;
   const serverOptions = {
     middlewareMode: true,
-    hmr: { server },
+    hmr: publicHmrHost
+      ? { server, host: publicHmrHost, clientPort: 443, protocol: 'wss' as const }
+      : { server },
     allowedHosts: true,
-  };
+  } as const;
 
   const vite = await createViteServer({
     ...viteConfig,
