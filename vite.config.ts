@@ -33,12 +33,14 @@ export default defineConfig({
       deny: ["**/*.*"],
     },
     // Enable HMR over public Replit URL when present
-    hmr: process.env.VITE_HMR_HOST
-      ? {
-          host: process.env.VITE_HMR_HOST,
-          clientPort: 443,
-          protocol: 'wss',
-        }
-      : true,
+    hmr: process.env.VITE_DISABLE_HMR === '1'
+      ? false
+      : (process.env.VITE_HMR_HOST
+          ? {
+              host: process.env.VITE_HMR_HOST,
+              clientPort: 443,
+              protocol: 'wss',
+            }
+          : true),
   },
 });
