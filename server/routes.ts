@@ -3594,7 +3594,14 @@ export function registerRoutes(app: Express): Server {
   app.get("/api/staff", requireAuth, handleImpersonation, requirePermission("staff.view"), async (req: any, res) => {
     try {
       // Get staff data using storage method
-      let dbStaffData = await storage.getAllStaff();
+      let dbStaffData: any[] = [];
+      try {
+        dbStaffData = await storage.getAllStaff();
+      } catch (err) {
+        console.error("storage.getAllStaff failed, returning empty list", err);
+        dbStaffData = [];
+        res.setHeader("X-Fallback", "staff-empty");
+      }
 
       // Format staff data for consistency with frontend expectations
       dbStaffData = dbStaffData.map((staffMember) => {
@@ -5546,8 +5553,10 @@ export function registerRoutes(app: Express): Server {
       ];
       res.json(samplePosts);
     } catch (error) {
-
-      res.status(500).json({ message: "Failed to fetch staff posts" });
+      console.error("/api/staff/posts error", error);
+      // Return empty array rather than 500 to avoid breaking dashboards
+      res.setHeader("X-Fallback", "staff-posts-empty");
+      res.json([]);
     }
   });
 
