@@ -129,7 +129,9 @@
     "ws": "^8.18.0",
     "yaml": "^2.8.1",
     "zod": "^3.24.2",
-    "react-helmet-async": "^1.2.0"
+    "react-helmet-async": "^1.2.0",
+    "@sentry/react": "^8.30.0",
+    "web-vitals": "^4.2.4"
   },
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.21.4",
