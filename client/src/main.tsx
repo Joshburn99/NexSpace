@@ -1,5 +1,13 @@
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { HelmetProvider } from "react-helmet-async";
+import { initTelemetry } from "./telemetry";
 import "./index.css";
 
-createRoot(document.getElementById("root")!).render(<App />);
+initTelemetry();
+
+createRoot(document.getElementById("root")!).render(
+  <HelmetProvider>
+    <App />
+  </HelmetProvider>
+);
